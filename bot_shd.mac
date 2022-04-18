@@ -1,0 +1,278 @@
+|**
+----------------------------
+BOT_SHD.mac
+----------------------------
+This macro is configured for use by the SHADOWKNIGHT class
+Modify the BOT_CLS_CHARNAME.ini file for use by a specific toon
+This was written ground up for usage with xiris's bots.
+It heavily relies on mq2melee for specific class functionality.
+
+Usage: /mac bot_shd ${_tank1Name} ${_tank2Name} ${_healPoint} ${_assistArgs}
+
+______________________________________________
+REVISION HISTORY
+    10.02.18	xiris	INITIAL REVISION
+	04.16.22	xiris	Small code refactor
+______________________________________________
+REQUIRED PLUGINS
+    mq2melee
+    mq2cast
+    mq2eqbc
+    mq2debuffs
+    mq2moveutils
+    
+______________________________________________
+REQUIRED INCLUDES  
+	xiris_common/xiris_common.inc
+**|
+
+
+#include xiris_common/xiris_common.inc
+
+#Turbo 40
+Sub InitEvents_Class
+	/call RegisterClassEvents Events_SHD 0
+/return
+
+Sub Events_SHD
+/return 
+
+Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint, string _assistArgs)
+	/echo This line and the next here because calling a macro from a macro ...
+	/echo ... apparently causes problems for the first line in the second macro
+	/echo You are now in xiris_bot_${Me.Class.ShortName}.mac [I learned this from E3!~]
+
+	|-- initialize the common xbot libraries
+	/call xbot_initialize ${_tank1Name} ${_tank2Name} ${_tank3Name} ${_healPoint} ${_assistArgs}
+
+	|-- initialize the macro specific libraries
+	/call variant_initialize
+
+	|-- report my status
+	/bc [${Me.Class.ShortName}] ${Me.Name} ${str_action} >> ${Spawn[${_tank1Name}].CleanName} <<
+
+	|-- target the MT
+	/call TrueTarget ${int_MTID}
+	
+	|**
+	----------------------------
+	Main Loop
+	----------------------------
+	Runs in order listed,
+	if adding any routine add the call here
+	----------------------------
+	**|
+
+	:MainLoop
+		/if (${Me.Casting.ID} && ${Me.Hovering}||${Window[tradewnd].Open}||${Window[lootwnd].Open}) /goto :MainLoop
+		
+		|-- Check to make sure MT is still alive, if not, find another
+		/call chkMTAlive FALSE
+		
+		|-- Check Offtanking
+		/call chkOffTanking
+		
+		|-- Check to see if self needs to be cured
+		|   Note: method is in xiris_healing.inc
+		/call RunAllEvents
+		/call chkNeedCure
+		
+		/if (${bln_engaged}) {
+			|-- class specific
+			/call RunAllEvents
+			/call chkPetAttack
+			/call chkLifetap
+			/call chkFeignDeath
+			
+			|-- dps lib
+			/call RunRaidEvents
+    		/call RunClassEvents
+			/call chkTarget
+			/call chkTargetDist
+			/call chkDOT
+			/call chkNuke
+			
+			|-- std library
+			/call RunRaidEvents
+    		/call RunClassEvents
+			/call chkAAs
+			/call chkBurn
+			/call chkClicks
+		}
+		
+		|-- check utilities, includes: sit,loot,leash (out of combat only)
+		/if (!${bln_engaged}) {
+			/call chkUtils
+			/call chkDownshits
+		}
+	|-- start again	
+	/call chkMobDead
+    /goto :MainLoop
+/return
+
+
+
+|**
+ ----------------------------
+ Target Checking
+ ----------------------------
+ Determines if the main assist has a new target, and whether we can attack
+ ----------------------------
+**|
+Sub chkTarget
+	
+    /if ((!${Target.ID} || ${Target.Type.NotEqual[NPC]}) && ${bln_engaged}) {
+		/echo Mob is dead. Engage off.
+        /varset bln_engaged FALSE
+		/varset int_targetID 0
+		/stick off
+		/melee reset
+		/varset AssistStickDistance 25
+		/return
+    } else /if (${Me.TargetOfTarget.CleanName.Equal[${Me.CleanName}]} && !${meleeAggro}) {
+		/echo pulled aggro, resetting for 2s
+		/melee reset
+		/delay 20
+		/if (${Target.ID} && ${Target.Type.Equal[NPC]}) /killthis
+	}
+/return
+
+|**
+ ----------------------------
+ Target Engage
+ ----------------------------
+ Engage the target
+ ----------------------------
+**|
+
+Sub engageTarget(_targetID)
+	/echo engageTarget ${Spawn[id ${_targetID}].CleanName} (${_targetID})
+	/if (${_targetID} == 0) /return
+	/varset int_targetID ${_targetID}
+	/call TrueTarget ${_targetID}
+	/varset bln_engaged TRUE
+	/call GetAssistStickDist
+	/call StickToAssistTarget
+	/killthis
+/return
+
+Sub targetReset
+	/varset bln_engaged FALSE
+	/stick off
+	/melee reset
+/return
+
+|**
+ ----------------------------
+ Lifetap  
+ ----------------------------
+ Checks current health, and if necessary, lifetaps the target
+ ----------------------------
+**|
+
+Sub chkLifetap
+	/if (!${bln_engaged}) /return
+	/if (!${Target.ID}) /return
+	/if (${Target.PctHPs}<=${int_dotStartHP} && ${bln_lifetapUse} && ${Target.ID}==${int_targetID} && (${Me.PctHPs} <= ${int_lifetapHP})) {
+		/echo chkLifetap: Lifetapping
+		/call Cast "${str_lifetapSpell}" ${str_lifetapGem} 2s
+	}
+/return
+
+
+|**
+ ----------------------------
+ FeignDeath  
+ ----------------------------
+ If FD counter is hit, FDs to kill aggro
+ ----------------------------
+**|
+Sub chkFeignDeath
+	/if (${Me.Invis}||${Me.Moving}||!${bln_feignUse}) /return 
+	/if (${bln_feignUse} && ${Me.Standing} && (${int_concCount}>=${int_feignCountActive}||${Me.PctHPs}<${FDat})) {
+		/call Cast "${str_feignSpell}" ${str_feignGem}
+		/varset timer_feignDelay ${timer_feignDelay.OriginalValue}
+		/varset int_concCount 0
+		/varset bln_feignAggro TRUE
+	}
+	/if (${Me.PctHPs}>${int_feignStandHP} && ${Me.Feigning} && !${timer_feignDelay} && ${bln_feignAggro}) {
+		/stand
+		/varset bln_feignAggro FALSE
+	}
+/return
+
+
+|**
+ ----------------------------
+ Utility Checking
+ ----------------------------
+ Checks the utilities such as fail states (GM, Lobby, etc)
+ Checks to see if we should med, loot, leash
+ ----------------------------
+**|
+Sub chkUtils
+	/call chkPetBuffs
+	
+	|-- Standard Methods
+	/call chkSit
+	/call chkLoot
+	/call chkLeash
+	
+/return
+
+
+
+|**
+ ----------------------------
+ INITIALIZATION Sub
+ ----------------------------
+ Initialization of values for this specific macro variant
+ ----------------------------
+**| 
+Sub variant_initialize	
+	|--Set Aggro
+	/if (${str_tankName1.NotEqual[${Me.Name}]} && ${str_tankName2.NotEqual[${Me.Name}]}) {
+		/melee aggro=0	
+	} else {
+		/melee aggro=1
+	}
+	
+	|-- set up default vars
+	/declare    str_action				string	outer	Assisting	
+	
+	
+	|--ShadowKnight Specific Settings
+	|--Lifetap
+	/declare bln_lifetapUse				bool	outer	${Ini[botINI,Lifetap,bln_lifetapUse,TRUE]}
+	/declare str_lifetapSpell			string	outer	${Ini[botINI,Lifetap,str_lifetapSpell,Divert Essence Rk. II]}
+	/declare str_lifetapGem				string	outer	${Ini[botINI,Lifetap,str_lifetapGem,gem12]}
+	/declare int_lifetapHP				string	outer	${Ini[botINI,Lifetap,int_lifetapHP,70]}
+	
+	|--Feign Death
+	/declare bln_feignUse				bool	outer 	${Ini[botINI,FeignDeath,bln_feignUse,TRUE]}
+	/declare bln_feignAggro				bool	outer 	${Ini[botINI,FeignDeath,bln_feignAggro,TRUE]}
+	/declare int_feignCountActive		int		outer	${Ini[botINI,FeignDeath,int_feignCountActive,5]}
+	/declare int_feignHP				int		outer   ${Ini[botINI,FeignDeath,int_feignHP,25]}
+	/declare int_feignStandHP			int		outer   ${Ini[botINI,FeignDeath,int_feignStandHP,65]}
+	/declare str_feignSpell				string	outer   ${Ini[botINI,FeignDeath,str_feignSpell,Improved Death Peace]}
+	/declare str_feignGem				string	outer   ${Ini[botINI,FeignDeath,str_feignGem,alt]}
+	/declare timer_feignDelay			timer	outer   ${Ini[botINI,FeignDeath,timer_feignDelay,3s]}
+	
+	|--Snaring
+	/declare bln_snareUse				bool	outer	${Ini[botINI,Snare,bln_snareUse,FALSE]}
+	/declare int_snareHP				int		outer	${Ini[botINI,Snare,int_snareHP,35]}
+	/if (!${Defined[str_snareSpell]}) /declare str_snareSpell string	outer	${Ini[botINI,Snare,str_snareSpell,Embracing Darkness]}
+	/varset str_snareSpell	${Ini[botINI,Snare,str_snareSpell,Embracing Darkness]}
+	/declare str_snareGem				string	outer   ${Ini[botINI,Snare,str_snareSpell,alt]}
+	/declare int_snareLocalNPC			int		outer	${Ini[botINI,Snare,int_snareLocalNPC,99]}
+	/declare bln_snareActive			bool	outer	FALSE
+	/declare int_snareCounter			int		outer	0
+	
+	
+	/memspellset default
+	/cecho \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID})HealPoint:${int_point_tankNormal} SAName: ${str_tankName2}(${int_STID})
+	/call InitEvents_Class
+/return
+
+
+

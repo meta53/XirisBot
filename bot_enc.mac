@@ -1,0 +1,282 @@
+|**
+----------------------------
+BOT_ENC.mac 
+----------------------------
+This macro is configured for use by the enchanter class
+Modify the BOT_CLS_CHARNAME.ini file for use by a specific toon
+This was written ground up for usage with xiris's bots.
+
+
+Usage: /mac bot_enc ${intTankID} ${intAssistHP} ${RV_healpoint} ${RV_secondassist}
+
+______________________________________________
+REVISION HISTORY
+    09.27.16	xiris 	INITIAL REVISION (logic outline from autoenc.mac)
+	10.24.16	xiris 	ADDED Buffing from external include
+	11.14.16	xiris 	Added support for an exclude list (see xiris_common for include)	
+	09.01.17	xiris 	Swapped some subs with the better written shaman versions
+	09.17.18    xiris   Included ALL xiris bot libraries in common instead of in individual macros
+	01.12.22	xiris	Modified a bit to work a little smoother 
+	04.01.22	xiris   Added Rune Spamming
+	04.05.22 	xiris	Added new Events aggregator and handlers
+	04.16.22	xiris	Cleaned up some older code, normalized all vars/name
+	 					Added a basis for Mezzing, Charming, MemoryFluxing
+______________________________________________
+REQUIRED PLUGINS
+    mq2cast
+    mq2eqbc
+    mq2debuffs
+    mq2moveutils
+    
+______________________________________________
+REQUIRED INCLUDES  
+	xiris_common/xiris_common.inc
+**|
+
+
+#include xiris_common/xiris_common.inc
+
+#EVENT RUNEON "<#1#> RuneOn#*#"
+#EVENT RUNEON "[#1#(msg)] RuneOn#*#"
+#EVENT RUNEON "#1# tells you, 'RuneOn#*#'"
+#EVENT RUNEON "#1# tells the group, 'RuneOn#*#'"
+#EVENT RUNEON "#1# you tell your party, 'RuneOn#*#'"
+
+#EVENT RUNEOFF "<#1#> RuneOff#*#"
+#EVENT RUNEOFF "[#1#(msg)] RuneOff#*#"
+#EVENT RUNEOFF "#1# tells you, 'RuneOff#*#'"
+#EVENT RUNEOFF "#1# tells the group, 'RuneOff#*#'"
+#EVENT RUNEOFF "#1# you tell your party, 'RuneOff#*#'"
+
+#turbo 40
+
+Sub InitEvents_Class
+	/call RegisterClassEvents Events_ENC 2
+/return
+
+Sub Events_ENC
+	/doevents RUNEON
+	/doevents RUNEOFF
+/return 
+
+Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint, string _assistArgs)
+	/echo This line and the next here because calling a macro from a macro ...
+	/echo ... apparently causes problems for the first line in the second macro
+	/echo You are now in xiris_bot_${Me.Class.ShortName}.mac [I learned this from E3!~]
+
+	|-- initialize the common xbot libraries
+	/call xbot_initialize ${_tank1Name} ${_tank2Name} ${_tank3Name} ${_healPoint} ${_assistArgs}
+
+	|-- initialize the macro specific libraries
+	/call variant_initialize
+
+	|-- report my status
+	/bc [${Me.Class.ShortName}] ${Me.Name} ${str_action} >> ${Spawn[${_tank1Name}].CleanName} <<  @ ${_healPoint} ? ${_assistArgs}
+
+	|-- target the MT
+	/call TrueTarget ${int_MTID}
+
+	|**
+	| ----------------------------
+	| Main Loop
+	| ----------------------------
+	| Runs in order listed,
+	| if adding any routine add the call here
+	| ----------------------------
+	|**|
+
+	:MainLoop
+		
+		/if (${Me.Casting.ID} && ${Me.Hovering}||${Window[tradewnd].Open}||${Window[lootwnd].Open}) /goto :MainLoop
+		
+		|-- Check to make sure MT is still alive, if not, find another
+		/call chkMTAlive FALSE
+
+		|-- Check to see if self needs to be cured (xiris_curing.inc)
+		/call RunAllEvents
+		/call chkNeedCure
+
+		|-- Check for out of combat buffs (xiris_buffing.inc)
+		/call RunAllEvents
+		/call chkOOCBuffs
+		
+		|-- Check for local targets (xiris_debuffing.inc)
+		/if (${SpawnCount[NPC radius 85 range 50 100]} > 0) {
+			|-- get a list of the local NPCs
+			/call getTargets
+		} else {
+			/call targetReset
+		}
+		
+		/if (${bln_engaged}) {
+			|-- class specific
+			/call RunRaidEvents
+    		/call RunClassEvent
+			/call chkPetAttack			
+			
+			|-- debuff lib
+			/call chkDebuffs
+		
+			|-- dps lib
+			/call RunRaidEvents
+    		/call RunClassEvents
+			/call chkDOT
+			/call chkNuke
+			
+			|-- std library
+			/call RunRaidEvents
+    		/call RunClassEvents
+			/call chkAAs
+			/call chkBurn
+			/call chkClicks
+			
+			|-- check in combat buffs
+			/call RunRaidEvents
+    		/call RunClassEvents
+			/call cmbtBuffGRP
+		}
+		|-- check utilities, includes: sit,loot,leash (out of combat only)
+		/if (!${bln_engaged}) {
+			/call chkUtils
+			/call chkDownshits
+		}
+		
+	|-- start again	
+	/call chkMobDead
+    /goto :MainLoop
+/return
+
+
+|**
+ ----------------------------
+ Target Engage
+ ----------------------------
+ Engage the target, note usually triggered by EVENT_KILLMOB (see xiris_common.inc)
+ Note: this is a variant of the sub in /xiris_common/xiris_common.inc
+ ----------------------------
+**|
+
+Sub engageTarget(_targetID)
+	/echo engageTarget ${Spawn[id ${_targetID}].CleanName} (${_targetID})
+	/if (${_targetID} == 0) /return
+	/varset int_targetID ${_targetID}
+	/call TrueTarget ${_targetID}
+	
+	/varset bln_engaged TRUE
+	/call Add2TargetArray ${_targetID}
+/return
+
+Sub targetReset
+	/varset bln_engaged FALSE
+	/varset bln_petAttacking FALSE
+/return
+
+
+
+
+|**
+ ----------------------------
+ Utility Checking
+ ----------------------------
+ Checks the utilities such as fail states (GM, Lobby, etc)
+ Checks to see if we should med, loot, leash
+ note: these routines are defined in xiris_common for the most part
+ ----------------------------
+**|
+Sub chkUtils
+	|-- Class Methods
+	/call chkPet
+	
+	|-- Standard Methods
+	/call chkSit
+	/call chkLoot
+	/call chkLeash
+	
+/return
+
+
+|**
+ ----------------------------
+ RUNIC Subs
+ ----------------------------
+ Handles the chain runing of target (usually MT)
+ ----------------------------
+**|
+
+
+
+Sub EVENT_RUNEON(_line, _sender, _eventParams)
+	/varset bln_runeActive TRUE
+	/call RuneSpam ${_sender}
+/return
+
+Sub RuneSpam(_name)
+	/echo Runing ${_name}:${str_rune} ${str_runeGem}
+	/call chkSpellMemorized "${str_rune}" TRUE 9
+	:runeLoop
+		/call TrueTarget ${Spawn[pc ${_name}].ID}
+		:runeReadyWait
+		/if (!${Me.SpellReady[${str_rune}]}) {
+			/delay 2
+			/goto :runeLoop
+		}
+		/call Cast "${str_rune}" ${str_runeGem} 5s
+		/call RunRaidEvents
+		/if (${bln_runeActive}) /goto :runeLoop
+/return
+
+
+
+
+Sub EVENT_RUNEOFF
+	/call RuneSpamOff
+/return
+	
+Sub RuneSpamOff
+	/echo --turning rune off--
+	/varset bln_runeActive FALSE
+/return
+
+|**
+ ----------------------------
+ INITIALIZATION Subs
+ ----------------------------
+ Initialization of values for this specific macro variant
+ ----------------------------
+**|
+
+Sub variant_initialize
+
+	|-- set up default vars
+	/declare    str_action				string	outer	Enchanteraping	
+
+	
+	|--Enchanter Specific Settings
+	/declare 	str_mezSingle			string	outer	${Ini[botINI,ENC_Spells,Mez_Single,Bliss]}
+	/declare	use_mezSingle			bool	outer	${Ini[botINI,ENC_Spells,Mez_Single_Use,TRUE]}
+	/declare	int_mezSingleMinLvl		int		outer	${Ini[botINI,ENC_Spells,Mez_Single_MinLevel,40]}
+	/declare	int_mezSingleMaxLvl		int		outer	${Ini[botINI,ENC_Spells,Mez_Single_MaxLevel,68]}
+	/declare	int_mezSingleGem		string	outer	${Ini[botINI,ENC_Spells,Mez_Single_Gem,gem4]}
+
+	/declare 	str_mezAE				string	outer	${Ini[botINI,ENC_Spells,Mez_AE,Bliss of the Nihil]}
+	/declare	use_mezAE				bool	outer	${Ini[botINI,ENC_Spells,Mez_AE,TRUE]}
+	/declare	int_mezAEMinLvl			int		outer	${Ini[botINI,ENC_Spells,Mez_AE_MinLevel,40]}
+	/declare	int_mezAEMaxLvl			int		outer	${Ini[botINI,ENC_Spells,Mez_AE_MaxLevel,68]}
+	/declare	int_mezAEGem			string	outer	${Ini[botINI,ENC_Spells,Mez_AE_Gem,gem5]}
+	
+	/declare	str_rune				string	outer 	${Ini[botINI,ENC_Spells,Rune,Rune of Salik]}
+	/declare	use_rune				bool	outer	${Ini[botINI,ENC_Spells,Rune_Use,TRUE]}
+	/declare	str_runeGem				string	outer	${Ini[botINI,ENC_Spells,Rune_Gem,gem6]}
+	/declare 	bln_runeActive			bool	outer	FALSE
+
+	/memspellset default
+	/cecho \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID})HealPoint:${int_point_tankNormal} SAName: ${str_tankName2}(${int_STID})
+	/call InitEvents_Class
+/return
+	
+	
+	
+	
+	
+	
+	

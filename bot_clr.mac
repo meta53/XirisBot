@@ -1,0 +1,462 @@
+|**
+----------------------------
+BOT_CLR.mac
+----------------------------
+This macro is configured for use by the CLERIC class
+Modify the BOT_CLR_CHARNAME.ini file for use by a specific toon
+This was written ground up for usage with xiris's bots
+    
+Usage: /mac bot_clr ${_tank1Name} ${_tank2Name} ${_healPoint} ${_assistArgs}
+______________________________________________
+REVISION HISTORY
+    08.10.10    xiris	INITIAL REVISION
+    10.02.10	xiris	Fixed Group Healing issues
+    10.09.10	xiris	Added rez routines
+    10.12.10	xiris	Refactored the includes
+    10.21.10	xiris	Renamed some of the methods
+	11.01.10	xiris	Reverted to using spell_routines.inc
+						Modified the cast calls to use this.    
+	11.09.10	xiris	Modified getMT to check to see if the real MT is 
+						available again.
+	11.15.10	xiris	Modified some of the variable names	
+						Removed the redundant chkMana (it is now in chkSit in mbot)
+	09.04.15	xiris	Changed the variant_initialize to better handle the output from the loader	
+    10.05.15	xiris	Commented out Divine Arbitration check	for emu (no oow yet)
+	12.04.15	xiris 	Modified how the initialization of parameters works
+	03.27.15	xiris	Added handlers for chchain (see xiris_healing.inc)
+	09.10.17	xiris 	Cleaned up extraneous buffing stuff (see xiris_buffing.inc)
+	09.17.18    xiris   Included ALL xiris bot libraries in common instead of in individual macros
+	12.22.21	xiris	Added ability to be a battle cleric (chkNuke)
+						Cleaned up some of the MT checking if inside own group
+	04.16.22	xiris	Overhauled group heal method and variable names
+						Moved commons healing functions to the include					
+______________________________________________
+REQUIRED PLUGINS
+    mq2cast
+    mq2eqbc
+    mq2debuffs
+    mq2moveutils
+
+______________________________________________
+REQUIRED INCLUDES 
+	xiris_common/xiris_common.inc
+**|
+
+#EVENT BattleCleric "<#1#> BattleOn #2#"
+#EVENT BattleCleric "[#1#(msg)] BattleOn #2#"
+#EVENT BattleCleric "#1# tells you, 'BattleOn #2#'"
+#EVENT BattleCleric "#1# tells the group, 'BattleOn #2#'"
+#EVENT BattleCleric "#1# you tell your party, 'BattleOn #2#'"
+
+
+#include xiris_common/xiris_common.inc
+
+#Turbo 40
+
+Sub InitEvents_Class 
+	/call RegisterClassEvents Events_CLR 1
+/return
+
+Sub Events_CLR
+	/doevents BattleCleric
+/return 
+
+
+Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint, string _assistArgs)
+	/echo This line and the next here because calling a macro from a macro ...
+	/echo ... apparently causes problems for the first line in the second macro
+	/echo You are now in xiris_bot_${Me.Class.ShortName}.mac [I learned this from E3!~]
+
+	|-- initialize the common xbot libraries
+	/call xbot_initialize ${_tank1Name} ${_tank2Name} ${_tank3Name} ${_healPoint} ${_assistArgs}
+
+	|-- initialize the macro specific libraries
+	/call variant_initialize
+
+	|-- report my status
+	/bc [${Me.Class.ShortName}] ${Me.Name} ${str_action} >> ${Spawn[${_tank1Name}].CleanName} <<  @ ${int_point_tankNormal} ${_assistArgs}
+
+	|-- target the MT
+	/call TrueTarget ${int_MTID}
+|**
+ ----------------------------
+ Main Loop
+ ----------------------------
+ Runs in order listed,
+ if adding any routine add the call here
+ ----------------------------
+**|
+
+
+	:MainLoop
+		/if (${Me.Casting.ID} && ${Me.Hovering}||${Window[tradewnd].Open}||${Window[lootwnd].Open}) /goto :MainLoop
+		
+		|-- Check to make sure MT is still alive, if not, find another
+		/call chkMTAlive TRUE
+
+		|-- Check to see if self needs to be cured (xiris_curing.inc)
+		/call RunAllEvents
+		/call chkNeedCure
+		
+		|-- Check the three main groupings of heal classes (xiris_healing.inc)
+		/call chkHeal_MT
+		/call chkHeal_Self
+		/call chkHeal_Group
+		
+		|-- Check to see if we are autorezzing
+		/call chkRez
+		
+		|-- If Engaged run Raid Events
+		/if (${bln_engaged}) {
+			/call RunRaidEvents
+			/call RunClassEvents
+			/call chkYaulp
+		}
+		
+		|-- If Engaged And A Battle Cleric run DPS/ETC
+		/if (${bln_engaged} && ${bln_battleCleric}) {
+			/if (!${Target.ID} || ${Target.ID} !=  ${int_targetID} && ${int_targetID} !=0 ) /call TrueTarget ${int_targetID}
+			|-- dps lib
+			/call RunRaidEvents
+			/call RunClassEvents
+			/call chkNuke
+			
+			|-- std library
+			/call chkAAs
+			/call chkBurn
+			/call chkClicks
+		}
+
+		|-- check utilities, includes: sit,loot,leash (out of combat only)
+		/if (!${bln_engaged}) {
+			/call chkUtils
+			/call chkDownshits
+		}
+		|-- start again	
+		/call chkMobDead
+		/goto :MainLoop
+    
+/return
+
+|**
+ ----------------------------
+ Target Engage
+ ----------------------------
+ Engage the target, note usually triggered by EVENT_KILLMOB (see xiris_common.inc)
+ ----------------------------
+**|
+
+Sub engageTarget(_targetID)
+	/if (${_targetID} == 0) /return
+	/echo engageTarget ${Spawn[id ${_targetID}].CleanName} (${_targetID})
+	/varset int_targetID ${_targetID}
+	/varset bln_engaged TRUE
+/return
+
+Sub targetReset
+	/varset bln_engaged		FALSE
+/return
+
+|**
+ ----------------------------
+ HealMainTank
+ ----------------------------
+ Healing Logic for the Main Tank
+ Determines which spell to cast, then casts it.
+ Note MT may be changed to be a non-plate class due to deaths, etc
+ This routine is modified from the common one in xiris_healing.inc
+ ----------------------------
+**|
+
+Sub healMAINTANK
+	/varcalc	int_point_calcStopHeal ${Math.Calc[${int_point_tankNormal}*1.1]}
+	/call chkFHealReady
+	/call setHealingSpell ${Target.Class.ShortName} ${Target.PctHPs}
+	/call healCast ${int_MTID}
+	/varset int_point_calcStopHeal	${int_point_tankNormal}
+/return
+
+|**
+ ----------------------------
+ HealSelf
+ ----------------------------
+ Healing Logic for the cleric
+ Determines which spell to cast, then casts it.
+ This routine is modified from the common one in xiris_healing.inc
+ ----------------------------
+**|
+
+Sub healSELF
+	/varcalc 	int_point_calcStopHeal ${Math.Calc[${int_point_selfNormal}*1.05]}
+	/call chkFHealReady
+	/call setHealingSpell ${Me.Class.ShortName}  ${Me.PctHPs}
+	/call healCast ${Me.ID}
+	/varset int_point_calcStopHeal	${int_point_selfNormal}
+/return
+
+|**
+ ----------------------------
+ HealGroup
+ ----------------------------
+ Healing Logic for entire group.
+ Determines which is the worst 'hurt' character, and heals based on what heal point to heal at.
+ Called by the Cast logic on cast of a heal spell
+ Note: There are variations between this and other PRIEST healGRP methods
+ This routine is modified from the common one in xiris_healing.inc
+ ----------------------------
+**|
+Sub healGRP
+	/varcalc	int_point_calcStopHeal ${Math.Calc[${int_point_grpHot}*1.1]}
+
+	/declare	int_numDamaged	int	local	0
+	/declare	int_worstHP		int	local	100
+	/declare	int_worstID		int local	0
+	/declare	int_minorHurt	int local	0
+	/declare	int_majorHurt	int local	0
+	/declare	gmember			int local	0
+	/declare    str_worstName	string local NULL
+	/declare	str_worstClass	string local NULL
+	/declare 	tmr_HoT 		string local
+	
+	| -- Cycle through the group and set the worst HP
+	/for gmember 0 to ${Group}
+		/if ( (${Group.Member[${gmember}].Distance}<=${int_range_normal}) && ${Target.Type.Equal[PC]}) { 	
+			/if (${Group.Member[${gmember}].PctHPs} < ${int_worstHP} && ${Group.Member[${gmember}].PctHPs} > 0 ) { 
+				/varset int_worstID     	${Group.Member[${gmember}].ID} 
+				/varset int_worstHP         ${Group.Member[${gmember}].PctHPs} 
+				/varset str_worstName		${Group.Member[${gmember}].Name}
+				/varset str_worstClass      ${Group.Member[${gmember}].Class.Name} 
+			} 
+		} 
+        /if ((${Group.Member[${gmember}].Distance}<=${int_range_normal})&&(${Group.Member[${gmember}].PctHPs}<=${int_point_calcStopHeal})) /varcalc int_numDamaged ${int_numDamaged}+1 
+        /if ((${Group.Member[${gmember}].PctHPs}<=${int_point_calcStopHeal})&&(${Group.Member[${gmember}].PctHPs}>=${int_point_grpPatch}))   /varcalc int_minorHurt ${int_minorHurt}+1 
+        /if ((${Group.Member[${gmember}].PctHPs}<=${int_point_calcStopHeal})&&(${Group.Member[${gmember}].PctHPs}< ${int_point_grpPatch}))   /varcalc int_majorHurt ${int_majorHurt}+1 
+    /next gmember
+	
+	|/echo healGRP ${int_worstHP} > ${int_point_calcStopHeal} major:${int_majorHurt} minor:${int_minorHurt}
+	| -- If no one needs healing...
+	/if ((${int_worstHP} > ${int_point_calcStopHeal}) ) /return
+	
+	| -- Determine appropriate heal
+	/varset int_currentHP ${int_worstHP}
+	
+	| -- Single Target Light && Single Target Remedy
+	/if (${int_majorHurt} == 1) { 
+		/if (${int_worstHP} > ${int_point_grpPatch}) /return
+		/echo PATCH single heal
+		/call setHealingSpell ${str_worstClass} ${int_worstHP}
+		/call healCast ${int_worstID}
+	
+	| -- Major Group Heal
+	} else /if (${int_majorHurt} > 1) {
+		/if (${int_worstHP} > ${int_point_grpPatch}) /return
+		/echo MAJOR group Heal
+	    /varset  str_currentHeal ${str_heal_group}
+		/call healCast ${int_worstID}
+	
+	| -- Minor Heals (HoTs) - and HOT enabled;
+	} else /if (${int_majorHurt} == 0 && ${use_heal_HoT}) {
+		| -- Single Target HoT
+		/if (${int_worstHP} > ${int_point_grpHot}) /return
+		/if (!${Defined[timer_HoT_${Group.Member[${str_worstName}]}]}) /declare timer_HoT_${Group.Member[${str_worstName}]} timer outer 40s
+		/varset tmr_HoT timer_HoT_${Group.Member[${str_worstName}]}
+		
+		/if (${int_minorHurt} <= 2 && ${${tmr_HoT}} == 0) {
+			/echo setting timer HOT for member: ${Group.Member[${str_worstName}]} , ${str_worstName}
+			/echo userHoT should be timer_HoT_${Group.Member[${str_worstName}]}
+			|--if no timer, cast, and if sucess, set timer
+			/varset	str_currentHeal		${str_heal_HoT}
+			/call healCast ${int_worstID}
+			
+			/if (${Macro.Return.Equal["CAST_SUCCESS"]}) {
+				/varset ${tmr_HoT} 40s
+			}
+			
+		| -- Group HoT (will not fire if the timer isnt up)
+		} else /if (${int_minorHurt} > 2 && ${timer_groupHoT} == 0 && ${str_heal_groupHoT.NotEqual[NULL]}) {
+			/varset	str_currentHeal		${str_heal_groupHoT}
+			/echo GROUP Hot
+			/call healCast ${int_worstID}
+			/if (${Macro.Return.Equal["CAST_SUCCESS"]}) {
+				/varset timer_groupHoT 28s
+				/echo timer_groupHoT: ${timer_groupHoT}
+			}
+		}
+	}
+/return
+
+
+Sub chkMGBCelestialRotation
+	| loop through the MGB Celestial Rotation members
+	| if they have all fired before (me) and ! celestial healing, then fire mine.
+
+/return
+
+|**
+------------------------- 
+
+END HEALING
+
+------------------------- 
+**|
+
+
+
+
+|**
+ ----------------------------
+ UTILITY Functions
+ ----------------------------
+ Various utilities here to get/set values
+ Such as Current Target Target, Main Tank, Divine Arb Status, etc
+ ----------------------------
+**|
+|**
+----------------------------
+Check|Set to see if your frantic heal is ready
+Note: This will always be ready since we don't really get frantic heals till SOF.
+Pre-SoF we use the Remedy line for fast heals
+----------------------------  
+**|
+Sub chkFHealReady
+	/varset bln_FHealReady	FALSE
+	/if (${Me.SpellReady[${str_heal_frantic}]})	/varset bln_FHealReady	TRUE
+/return
+
+
+|**
+----------------------------
+Check|Set to see if Divine Arbitration is Ready
+Note: Not currently in use.
+----------------------------  
+**|
+Sub chkDARBReady
+	/varset bln_DARBReady	FALSE
+	/if (${Me.AltAbilityReady[divine arbitration]} || !${FindItem[${str_epicName}].Timer}) /varset bln_DARBReady TRUE
+/return
+
+Sub chkDivineIntervention
+	/if (${FindItemCount[Emerald]} && ${Me.SpellReady[Divine Intervention]} && !${NetBots[${Target.Name}].Buff[Divine Intervention].Name.Equal[Divine Intervention]}) {
+		/say Casting Divine Intervention on ${Target.Name}!
+		/call Cast "Divine Intervention"
+	}
+/return
+
+
+|**
+----------------------------
+Check|Set whether I am in RAID or not
+----------------------------  
+**|
+
+Sub setRMode
+	/if (${Raid.Members} > 6) { 
+		/varset bln_RAID	TRUE
+		/varset str_RMode	RAID
+	}
+/return
+
+
+
+|**
+
+----------------------------
+Get the current target's ID (mob)
+----------------------------  
+**|
+Sub setCTGT
+	/if (${bln_RAID}) {
+		/varset int_CTGTID ${Me.XTarget.Type[Raid Assist 1 Target].ID}
+	} else {
+		/varset int_CTGTID	${Me.TargetOfTarget.ID}
+	}
+/return
+
+
+|**
+ ----------------------------
+ UTILITY Subs
+ ----------------------------
+ Things to do while OOC (or if in RAID)
+ ----------------------------
+**|   
+Sub chkUtils
+	|-- Standard Methods
+	/call chkSit
+	/call chkLoot
+	/call chkLeash
+/return
+
+Sub chkYaulp
+	|/echo chkYaulp (${bln_engaged} && ${Me.PctMana}<=${int_medPercent} && ${Me.SpellReady[${str_spellYaulp}]})
+	/if (!${bln_useYaulp}) /return
+	/if (${bln_engaged} && ${Me.PctMana}<=${int_medPercent} && ${Me.SpellReady[${str_spellYaulp}]}) {
+		/call Cast "${str_spellYaulp}" ${str_gemYaulp}
+	}
+/return
+
+|-------------------------------------------------------------------------------- 
+|SUB: setMTFromEvent
+|--------------------------------------------------------------------------------
+Sub setMTFromEvent(string cmd, string param)
+	/bc setMTFromEvent:: ${cmd} ${param}
+	/call setMT ${param}
+/return
+
+Sub EVENT_BattleCleric(string _line, string _sender, string _eventParams)
+	|--Toggle Battle Cleric mode!
+	/if (${_eventParams.Equal[ON]}) {
+		/bc ${Me.Name} is now a battle cleric!
+		/varset bln_battleCleric TRUE
+	}
+	/if (${_eventParamsEqual[OFF]}) {
+		/bc ${Me.Name} is no longer a battle cleric.
+		/varset bln_battleCleric FALSE
+	}
+/return		
+
+|**
+ ----------------------------
+ INITIALIZATION Subs
+ ----------------------------
+ Initialization of values for this specific macro variant
+ ----------------------------
+**| 
+
+Sub variant_initialize
+	
+	|-- set up default vars
+	/declare	int_CTGTID				int 	outer	0
+	/declare	int_currentFPoint		int		outer	30
+	/declare	bln_FHealReady			bool	outer	FALSE
+	/declare	bln_DARBReady			bool	outer	FALSE
+	/declare    str_action				string	outer	Healing
+	/declare	str_currHeal			string	outer	NULL
+
+	|-- Miscellaneous
+	/declare 	bln_battleCleric 		bool 	outer	FALSE
+
+	|-- Yaulp Settings
+	/declare	bln_useYaulp			bool	outer	${Ini[botINI,Yaulp,bln_useYaulp,FALSE]}
+	/declare	str_spellYaulp			string	outer 	${Ini[botINI,Yaulp,str_spellYaulp,Yaulp VII]}
+	/declare 	str_gemYaulp			string	outer 	${Ini[botINI,Yaulp,str_spellYaulp,gem9]}
+	
+	|-- Heal Settings
+	/declare	bln_useGRPHeal  		bool    outer   ${Ini[botINI,Cleric_Settings,bln_useGRPHeal,TRUE]}
+	/declare	bln_annouce     		bool    outer   ${Ini[botINI,Cleric_Settings,bln_annouce,FALSE]}
+	/declare	str_buffGem     		string  outer   ${Ini[botINI,Cleric_Settings,str_buffGem,gem9]}
+	
+	|-- Items 
+	/declare	str_epicName			string	outer	${Ini[botINI,Items,str_epicName,Aegis of Superior Divinity]}
+	/declare    bln_hasEpic				bool    outer   ${Ini[botINI,Items,bln_hasEpic,FALSE]}
+	/declare    bln_divineArb			bool    outer   ${Ini[botINI,Items,bln_divineArb,TRUE]}
+	/declare    int_interruptToDivineArb		int outer   ${Ini[botINI,Items,int_interruptToDivineArb,8]}
+	/declare 	bln_healAfterArb		bool	outer	${Ini[botINI,Items,bln_healAfterArb,TRUE]}
+
+	|-- Celestial MGB Rotation
+	/declare	arr_celestial[17]		string  outer
+
+	/memspellset default
+	/cecho \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID}) HealPoint:${int_point_tankNormal} SAName: ${str_tankName2}(${int_STID})
+	/call InitEvents_Class
+/return
