@@ -105,11 +105,6 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 		/call RunAllEvents
 		/call chkNeedCure
 
-		|-- Check Auto Assist if its on
-		/if (${bln_autoAssist}) {
-			/call chkAutoAssist
-		}
-		
 		|-- Check the to see if group needs healing (xiris_healing.inc)
 		/call chkHeal_Group
 
@@ -192,11 +187,12 @@ Sub engageTarget(_targetID)
 	/echo engageTarget ${Spawn[id ${_targetID}].CleanName} (${_targetID})
 	/if (${_targetID} == 0) /return
 	/varset int_targetID ${_targetID}
-	/call TrueTarget ${_targetID}
+	/call TrueTarget ${int_targetID}
 	/varset bln_engaged TRUE
+	/killthis
+	/attack on
 	/call GetAssistStickDist
 	/call StickToAssistTarget
-	/killthis
 /return
 
 Sub targetReset

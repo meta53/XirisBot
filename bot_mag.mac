@@ -160,6 +160,7 @@ Sub engageTarget(_targetID)
 	/if (${_targetID} == 0) /return
 	/varset int_targetID ${_targetID}
 	/call TrueTarget ${_targetID}
+	/pet attack
 	/varset bln_engaged TRUE
 /return
 

@@ -221,7 +221,8 @@ Sub healGRP
 		/if (${int_worstHP} > ${int_point_grpPatch}) /return
 		/echo PATCH single heal (Shaman only have 1 heal type here)
 		/varset str_currentHeal ${str_heal_normal}
-		/call healCast ${int_worstID}
+		/echo HealGroupMember ${int_MTID} ${Target.Name} "${str_currentHeal}"
+		/call healCast ${int_worstID} ${str_worstName} "${str_currentHeal}"
 	
 	| -- Minor Heals (HoTs) - and HOT enabled;
 	} else /if (${int_majorHurt} == 0 && ${use_heal_HoT}) {
@@ -235,7 +236,8 @@ Sub healGRP
 			/echo userHoT should be timer_HoT_${Group.Member[${str_worstName}]}
 			|--if no timer, cast, and if sucess, set timer
 			/varset	str_currentHeal		${str_heal_HoT}
-			/call healCast ${int_worstID}
+			/echo HealGroupMember ${int_MTID} ${Target.Name} "${str_currentHeal}"
+			/call healCast ${int_worstID} ${str_worstName} "${str_currentHeal}"
 			
 			/if (${Macro.Return.Equal["CAST_SUCCESS"]}) {
 				/varset ${tmr_HoT} 40s

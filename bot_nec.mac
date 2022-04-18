@@ -160,7 +160,7 @@ Sub engageTarget(_targetID)
 	/varset int_targetID ${_targetID}
 	/call TrueTarget ${_targetID}
 	/varset bln_engaged TRUE
-	
+	/pet attack
 	|- Necro specific things
 	/varset bln_snareActive		FALSE
 	/varset bln_debuffActive	FALSE

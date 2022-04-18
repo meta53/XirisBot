@@ -83,10 +83,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 		/call chkHeal_Group
 
 		|-- Check Auto Assist if its on
-		/if (${bln_autoAssist}) {
-			/call chkAutoAssist
-		}
-		
+		/if (${bln_autoAssist}) /call chkAutoAssist
 
 		/if (${bln_engaged}) {
 			|-- class specific
@@ -171,11 +168,12 @@ Sub engageTarget(_targetID)
 	/echo engageTarget ${Spawn[id ${_targetID}].CleanName} (${_targetID})
 	/if (${_targetID} == 0) /return
 	/varset int_targetID ${_targetID}
-	/call TrueTarget ${_targetID}
+	/call TrueTarget ${int_targetID}
 	/varset bln_engaged TRUE
+	/killthis
+	/attack on
 	/call GetAssistStickDist
 	/call StickToAssistTarget
-	/killthis
 /return
 
 Sub targetReset
@@ -289,13 +287,12 @@ Sub chkNuke
 **|
 
 Sub healRNG
-
 	/varcalc 	int_point_calcStopHeal ${Math.Calc[${int_point_selfNormal}*1.1]}
 	/varset 	int_currentHP		${Me.PctHPs}
-	
 	/keypress f1
-	/call healCast ${Me.ID}
-	
+	/varset str_currentHeal ${str_heal_normal}
+	/echo healSELF ${int_MTID} ${Target.Name} "${str_heal_normal}"
+	/call healCast ${Me.ID} ${Me.Name} "${str_heal_normal}"
 	/varset int_point_calcStopHeal	${int_point_selfNormal}
 /return
 
@@ -342,27 +339,13 @@ Sub healGRP
 	
 	/echo ${str_worstName} being healed!
 	| -- Cast the set heal	
-	/call healCast ${int_worstID}
+	/varset str_currentHeal ${str_heal_normal}
+	/echo HealGroupMember ${int_MTID} ${Target.Name} "${str_currentHeal}"
+	/call healCast ${int_worstID} ${str_worstName} "${str_currentHeal}"
 	
 	/varset int_point_calcStopHeal	${int_grpHealPoint}
 /return
 
-|**
- ----------------------------
- HealCasting
- ----------------------------
- Healing Cast pass through to Cast and spellroutines.inc
- This takes the set values from the above 3 logic routines and casts
- Calls chkHP while being cast in case we need to change
- ----------------------------
-**|
-Sub healCast(int intID)
-	/if (${int_currentHP} < ${int_point_calcStopHeal}) {
-		/if (${Target.ID} != ${intID}) /target id ${intID}
-		/if (${bln_annouce}) /${cmdChannel} Casting ${str_healSpell} on ${Target.Name} ${Target.PctHPs} LTE ${int_point_calcStopHeal}
-		/call Cast "${str_currentHeal}" gem4 1s
-	}
-/return
 
 |**
  ----------------------------
@@ -409,29 +392,7 @@ Sub chkSit
     }
 /return
 
-|**
- ----------------------------
- Snaring  
- ----------------------------
- Snare Spell is declared in the INI
- ----------------------------
-**|
-Sub chkSnare
-	/if (!${bln_engaged} || ${Me.Invis}||${Me.Moving}|| ${Me.Song[${GoM}].ID}||${list_immuneSnare.Find[${Spawn[${Target.CleanName}]}]}||${list_ignore.Find[${Spawn[${Target.CleanName}]}]}) /return
-	/if (${Target.PctHPs}<=${int_snareHP} && ${Target.ID} && ${Target.Type.Equal[NPC]} && !${bln_snareActive} && ${bln_snareUse} && ${SpawnCount[npc radius 50 zradius 10]}<=${int_snareLocalNPC}) {
-		/call Cast "${str_snareSpell}" ${str_snareGem} 
-	}
-	
-	/if (${Cast.Result.Equal[CAST_SUCCESS]}) {
-		/varset bln_snareActive TRUE
-	}
-	
-	/if (${Cast.Result.Equal[CAST_IMMUNE]}) {
-		/ini "${IniFile}" "SnareImmunes.${Zone.ShortName}" "SnareImmune" "${list_immuneSnare}${Target.CleanName}|"
-		/varset list_immuneSnare ${Ini[${ignoreINI},"SnareImmunes.${Zone.ShortName}","SnareImmune"]}
-		/varset bln_snareActive TRUE
-	}
-/return
+
 
 
 

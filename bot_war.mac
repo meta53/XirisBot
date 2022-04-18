@@ -154,10 +154,10 @@ Sub engageTarget(_targetID)
 	/varset int_targetID ${_targetID}
 	/call TrueTarget ${int_targetID}
 	/varset bln_engaged TRUE
-	/call GetAssistStickDist
-	/call StickToAssistTarget
 	/killthis
 	/attack on
+	/call GetAssistStickDist
+	/call StickToAssistTarget
 /return
 
 Sub targetReset

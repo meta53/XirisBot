@@ -154,11 +154,12 @@ Sub engageTarget(_targetID)
 	/echo engageTarget ${Spawn[id ${_targetID}].CleanName} (${_targetID})
 	/if (${_targetID} == 0) /return
 	/varset int_targetID ${_targetID}
-	/call TrueTarget ${_targetID}
+	/call TrueTarget ${int_targetID}
 	/varset bln_engaged TRUE
+	/killthis
+	/attack on
 	/call GetAssistStickDist
 	/call StickToAssistTarget
-	/killthis
 /return
 
 Sub targetReset

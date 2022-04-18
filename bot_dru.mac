@@ -192,9 +192,11 @@ Sub healGRP
 	| -- Single Target Heal
 	/if (${int_majorHurt} >= 1) {
 		/if (${int_worstHP} > ${int_point_grpPatch}) /return
-		/echo PATCH single heal (Shaman only have 1 heal type here)
+		/echo PATCH single heal (Druid only have 1 heal type here)
 		/varset str_currentHeal ${str_heal_normal}
-		/call healCast ${int_worstID}
+		/echo HealGroupMember ${int_MTID} ${Target.Name} "${str_heal_normal}"
+		/call healCast ${int_worstID} ${str_worstName} "${str_currentHeal}"
+		/varset int_point_calcStopHeal	${int_point_selfNormal}
 	}
 /return
 
