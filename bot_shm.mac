@@ -101,6 +101,9 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 		} else {
 			/call targetReset
 		}
+
+		|-- Check Auto Assist if its on
+		/if (${bln_autoAssist}) /call chkAutoAssist
 		
 		|-- If Engaged run DPS/ETC
 		/if (${bln_engaged}) {

@@ -42,7 +42,7 @@ REQUIRED INCLUDES
 #include xiris_common/xiris_common.inc
 
 #Turbo 40
-
+#warning
 Sub InitEvents_Class
 	/call RegisterClassEvents Events_WAR 0
 /return
@@ -62,7 +62,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 	/call variant_initialize
 
 	|-- report my status
-	/bc [${Me.Class.ShortName}] ${Me.Name} ${str_action} >> ${Spawn[${_tank1Name}].CleanName} <<  @ ${_healPoint} ? ${_assistArgs}
+	/bc [${Me.Class.ShortName}] ${Me.Name} ${str_action} >> ${Spawn[${_tank1Name}].CleanName} <<  ${_assistArgs}
 
 	|**
 	----------------------------
@@ -74,12 +74,11 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 	**|
 
 	:MainLoop
-		/if (${Me.Casting.ID} && ${Me.Hovering}||${Window[tradewnd].Open}||${Window[lootwnd].Open}) /goto :MainLoop
-		
+	
 		|-- Check to make sure MT is still alive, if not, find another
 		/call chkMTAlive FALSE
 		
-		|-- Check Offtanking
+		|-- Check Offtanking Situation (xiris_offtanking.inc)
 		/call chkOffTanking
 		
 		|-- Check to see if self needs to be cured
@@ -88,10 +87,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 		/call chkNeedCure
 
 		|-- Check Auto Assist if its on
-		/if (${bln_autoAssist}) {
-			/call chkAutoAssist
-		}
-		
+		/if (${bln_autoAssist}) /call chkAutoAssist
 		
 		/if (${bln_engaged}) {
 			|-- dps lib

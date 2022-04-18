@@ -47,7 +47,7 @@ REQUIRED INCLUDES
 #include xiris_common/xiris_common.inc
 
 #Turbo 40
-
+#warning
 Sub InitEvents_Class
 	/call RegisterClassEvents Events_AllMelee 0
 /return
@@ -67,10 +67,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 	/call variant_initialize
 
 	|-- report my status
-	/bc [${Me.Class.ShortName}] ${Me.Name} ${str_action} >> ${Spawn[${_tank1Name}].CleanName} << 
-
-	|-- target the MT
-	/call TrueTarget ${int_MTID}
+		/bc [${Me.Class.ShortName}] ${Me.Name} ${str_action} >> ${Spawn[${_tank1Name}].CleanName} <<  ${_assistArgs}
 
 	|**
 	----------------------------
@@ -96,12 +93,9 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 		/call chkNeedCure
 		
 		|-- Check Auto Assist if its on
-		/if (${bln_autoAssist}) {
-			/call chkAutoAssist
-		}
+		/if (${bln_autoAssist}) /call chkAutoAssist
 		
 		/if (${bln_engaged}) {
-			/if (!${Target.ID} || ${Target.ID} !=  ${int_targetID} && ${int_targetID} !=0 && (${SpawnCount[npc id ${_targetID}]} > 0) && (${Spawn[id ${int_targetID}].PctHPs} != 0)) /call TrueTarget ${int_targetID}
 			|-- dps lib
 			/call chkTarget
 			/call chkTargetDist
@@ -133,6 +127,9 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
  ----------------------------
 **|
 Sub chkTarget
+	|-- Make sure I have the target
+	/if (!${Target.ID} || ((${Target.ID} !=  ${int_targetID}) && ${int_targetID} !=0) && (${SpawnCount[npc id ${int_targetID}]} > 0) && (${Spawn[id ${int_targetID}].PctHPs} != 0)) /call TrueTarget ${int_targetID}
+
 	|-- Check for Target Death
 	:chkTargetDead
     /if ((!${Target.ID} || ${Target.Type.NotEqual[NPC]}) && ${bln_engaged}) {

@@ -85,6 +85,9 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 		/call RunAllEvents
 		/call chkNeedCure
 
+		|-- Check Auto Assist if its on
+		/if (${bln_autoAssist}) /call chkAutoAssist
+
 		/if (${bln_engaged}) {
 			|-- class specific
 			/call RunAllEvents
@@ -129,6 +132,9 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
  ----------------------------
 **|
 Sub chkTarget
+	|-- Make sure I have the target
+	/if (!${Target.ID} || ((${Target.ID} !=  ${int_targetID}) && ${int_targetID} !=0) && (${SpawnCount[npc id ${int_targetID}]} > 0) && (${Spawn[id ${int_targetID}].PctHPs} != 0)) /call TrueTarget ${int_targetID}
+
 	|-- Check for Target Death
 	:chkTargetDead
     /if ((!${Target.ID} || ${Target.Type.NotEqual[NPC]}) && ${bln_engaged}) {

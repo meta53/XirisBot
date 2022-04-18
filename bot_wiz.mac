@@ -88,6 +88,9 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 		/call RunAllEvents
 		/call chkNeedCure
     
+		|-- Check Auto Assist if its on
+		/if (${bln_autoAssist}) /call chkAutoAssist
+
 		/if (${bln_engaged}) {
 			|-- class specific
 			/call RunAllEvents
