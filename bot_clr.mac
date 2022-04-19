@@ -172,6 +172,7 @@ Sub healMAINTANK
 	/varcalc	int_point_calcStopHeal ${Math.Calc[${int_point_tankNormal}*1.1]}
 	/call chkFHealReady
 	/call setHealingSpell ${Target.Class.ShortName} ${Target.PctHPs}
+	/echo healMAINTANK: ${str_currentHeal}
 	/call healCast ${int_MTID} ${Target.Name} "${str_currentHeal}"
 	/varset int_point_calcStopHeal	${int_point_tankNormal}
 /return
@@ -190,6 +191,7 @@ Sub healSELF
 	/varcalc 	int_point_calcStopHeal ${Math.Calc[${int_point_selfNormal}*1.05]}
 	/call chkFHealReady
 	/call setHealingSpell ${Me.Class.ShortName}  ${Me.PctHPs}
+	/echo healSELF: ${str_currentHeal}
 	/call healCast ${Me.ID} ${Me.Name} "${str_currentHeal}"
 	/varset int_point_calcStopHeal	${int_point_selfNormal}
 /return
@@ -244,14 +246,14 @@ Sub healGRP
 	/if (${int_majorHurt} == 1) { 
 		/if (${int_worstHP} > ${int_point_grpPatch}) /return
 		/call setHealingSpell ${str_worstClass} ${int_worstHP}
-		/echo HealGroupMember ${int_MTID} ${Target.Name} ${str_currentHeal}
+		/echo healGRP ${int_MTID} ${Target.Name} ${str_currentHeal}
 		/call healCast ${int_worstID} ${str_worstName} "${str_currentHeal}"
 	
 	| -- Major Group Heal
 	} else /if (${int_majorHurt} > 1) {
 		/if (${int_worstHP} > ${int_point_grpPatch}) /return
 	    /varset  str_currentHeal ${str_heal_group}
-		/echo HealGroupMember ${int_MTID} ${Target.Name} ${str_currentHeal}
+		/echo healGRP ${int_MTID} ${Target.Name} ${str_currentHeal}
 		/call healCast ${int_worstID} ${str_worstName} "${str_currentHeal}"
 	
 	| -- Minor Heals (HoTs) - and HOT enabled;
@@ -266,7 +268,7 @@ Sub healGRP
 			/echo userHoT should be timer_HoT_${Group.Member[${str_worstName}]}
 			|--if no timer, cast, and if sucess, set timer
 			/varset	str_currentHeal		${str_heal_HoT}
-			/echo HealGroupMember ${int_MTID} ${Target.Name} ${str_currentHeal}
+			/echo healGRP ${int_MTID} ${Target.Name} ${str_currentHeal}
 			/call healCast ${int_worstID} ${str_worstName} "${str_currentHeal}"
 			
 			/if (${Macro.Return.Equal["CAST_SUCCESS"]}) {
