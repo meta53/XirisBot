@@ -32,7 +32,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 	/declare	str_defTank1		string	outer	${Ini[botINI,Settings,defaultTank1,Xiris]}
 	/declare	str_defTank2		string	outer	${Ini[botINI,Settings,defaultTank2,Xiria]}
 	/declare	str_defTank3		string	outer	${Ini[botINI,Settings,defaultTank3,Xirea]}
-	/declare	int_defHealPoint	int		outer	${Ini[botINI,Healpoints,int_point_tankNormal,65]}
+	/declare	int_defHealPoint	int		outer	${Ini[botINI,Heal_Points,int_point_tankNormal,65]}
 	/declare    str_defAssistArgs	string	outer 	FALSE,98
 
 	/if (!${_tank1Name.Length} || ${_tank1Name.Equal[NULL]}) /varset _tank1Name ${str_defTank1}

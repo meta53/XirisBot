@@ -47,7 +47,7 @@ REQUIRED INCLUDES
 #include xiris_common/xiris_common.inc
 
 #Turbo 40
-#warning
+
 Sub InitEvents_Class
 	/call RegisterClassEvents Events_AllMelee 0
 /return

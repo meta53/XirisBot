@@ -29,7 +29,8 @@ REVISION HISTORY
 	12.22.21	xiris	Added ability to be a battle cleric (chkNuke)
 						Cleaned up some of the MT checking if inside own group
 	04.16.22	xiris	Overhauled group heal method and variable names
-						Moved commons healing functions to the include					
+						Moved commons healing functions to the include		
+	04.19.22	xiris	Integrated the CH2 macro functionality so we don't have to switch macros								
 ______________________________________________
 REQUIRED PLUGINS
     mq2cast
@@ -48,17 +49,22 @@ REQUIRED INCLUDES
 #EVENT BattleCleric "#1# tells the group, 'BattleOn #2#'"
 #EVENT BattleCleric "#1# you tell your party, 'BattleOn #2#'"
 
-
 #include xiris_common/xiris_common.inc
 
 #Turbo 40
 
 Sub InitEvents_Class 
-	/call RegisterClassEvents Events_CLR 1
+	/call RegisterClassEvents Events_CLR 5
 /return
 
 Sub Events_CLR
 	/doevents BattleCleric
+	| Add the CH CHain watch events (enumerated in xiris_healing.inc)
+	/doevents CHStart
+	/doevents CHStop
+	/doevents CHPause
+	/doevents CHResume
+	/doevents CHSwitch
 /return 
 
 
@@ -295,6 +301,8 @@ Sub chkMGBCelestialRotation
 
 /return
 
+
+
 |**
 ------------------------- 
 
@@ -358,8 +366,6 @@ Sub setRMode
 		/varset str_RMode	RAID
 	}
 /return
-
-
 
 |**
 

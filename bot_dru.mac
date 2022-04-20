@@ -37,10 +37,16 @@ REQUIRED INCLUDES
 #turbo 40
 
 Sub InitEvents_Class
-	/call RegisterClassEvents Events_DRU 0
+	/call RegisterClassEvents Events_DRU 5
 /return
 
 Sub Events_DRU
+	| Add the CH CHain watch events (enumerated in xiris_healing.inc)
+	/doevents CHStart
+	/doevents CHStop
+	/doevents CHPause
+	/doevents CHResume
+	/doevents CHSwitch
 /return 
 
 Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint, string _assistArgs)

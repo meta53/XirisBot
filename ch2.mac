@@ -1,9 +1,9 @@
 |**
 ----------------------------
-CH2.mac updated version 10.01.2017
+CH2.mac
 ----------------------------
 This macro will run a chchain on clerics/druid/shaman.
-It can run multiple chchains at once
+It can run multiple chchains at once all delays are in ms so 300 = 30 seconds
 
     
 Usage: /mac ch2
@@ -13,16 +13,18 @@ Start Chain1: /bc chstart	1 		Xiris 		15 		Xirael,Xinshia,Xanshia,Xenshia
 Start Chain2: /bc chstart 1 tankName delay cleric1,cleric2,...clericN
 
 Stop  Chain:  /bc chstop 1
+
+Pause Chain:  /bc chpause 300
 ______________________________________________
 REVISION HISTORY
     03.04.2015	xiris	INITIAL REVISION
 	10.01.2017  xiris   Random code clean up
+	04.19.2022	xiris	Updated code to reflect the integrated bot_clr.mac xiris functionality
 ______________________________________________
 REQUIRED PLUGINS
     mq2cast
     mq2eqbc
     mq2moveutils
-	mq2twist
 ______________________________________________
 REQUIRED INCLUDES 
 	xiris_common/xiris_common.inc
@@ -31,7 +33,6 @@ REQUIRED INCLUDES
 
 #include xiris_common/xiris_common.inc
 
-#Event BC		"<#1#> #2#"
 
 #turbo 40
 
@@ -225,7 +226,7 @@ Sub variant_initialize
 	/declare	delay					int     outer
 	/declare	order					string  outer	
 	/declare	active					bool	outer	FALSE
-	/declare	bln_chChainMember		bool	outer	TRUE
+
 	
 	/declare chSpell 	string outer
 	/if (${Me.Class.Name.Equal[Cleric]}) /varset chSpell Complete Heal
