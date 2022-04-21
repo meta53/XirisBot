@@ -1,0 +1,54 @@
+#Turbo 40
+
+Sub Main(string _mode)
+	/if (!${Defined[_mode]}) /declare _mode string local RAID
+	/echo Settup up Voltron
+	
+	/call SetupGroups
+	/if (${_mode.Equal[RAID]}) /call InviteGroupsToRaid
+/return
+
+
+Sub InviteGroupsToRaid
+	/echo Inviting Groups to Raid
+	/raidinvite Xiris
+	/delay 1s
+	/raidinvite Xiria
+	/delay 1s
+	/raidinvite Theist
+	/delay 1s
+	/raidinvite Cereborn
+	/delay 1s
+	/raidinvite Sadelia
+	/delay 1s
+	/raidinvite Xaeliea
+	/delay 1s
+	/raidinvite Xaexa
+	/delay 1s
+	/raidinvite Xaia
+	/delay 1s
+	/raidinvite Xepatia
+
+	/bcaa //notify LargeDialogWindow LDW_YesButton leftmouseup
+	/bcaa //notify LargeDialogWindow LDW_OkButton leftmouseup
+/return
+
+Sub SetupGroups
+	/bct Xiris //multiline ; /invite Xanshia; /delay 5; /invite Ophidia; /invite Ophelia; /invite Ania; /invite Shinxia;
+	/delay 1s
+	/bct Xiria //multiline ; /invite Xirea; /delay 5; /invite Xirin; /invite Xirael; /invite Aergia; /invite Shynxia;
+	/delay 1s
+	/bct Theist //multiline ; /invite Xurael; /delay 5; /invite Xerael; /invite Xarael; /invite Xorael; /invite Xunshia;
+	/delay 1s
+	/bct Cereborn //multiline ; /invite Xeixa;  /delay 5; /invite Xiexa; /invite Xeixi; /invite Xeqisa; /invite Dogmatist;
+	/delay 1s
+	/bct Sadelia //multiline ; /invite Drexia;  /delay 5; /invite Mluian; /invite Xonshia; /invite Xeia; /invite Tragic;
+	/delay 1s
+	/bct Xaeliea //multiline ; /invite Ertres; /delay 5; /invite Pantheon; /invite Opheoia; /invite Achlys; /invite Xenshia;
+	/delay 1s
+	/bct Xaexa //multiline ; /invite Erinyes; /delay 5; /invite Deist; /invite Ophexia; /invite Adikia; /invite Xinshia;
+	/delay 1s
+	/bct Xaia //multiline ; /invite Ertris;  /delay 5;/invite Ophemia; /invite Opheyia; /invite Aidos; /invite Nihilist;
+	/delay 1s
+	/bct Xepatia //multiline ; /invite Erinyas; /delay 5; /invite Ophenia; /invite Ophezia; /invite Achos; /invite Empathic;
+/return

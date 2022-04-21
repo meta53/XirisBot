@@ -148,6 +148,8 @@ Sub chkTarget
 		| Fire Riposte Disc on hard hitters
 		/if (${Target.Name.Find[Pirik]} || ${Target.Name.Find[Yihst]} || ${Target.Name.Find[Tunat]}) {
 			/call FireRiposteDisc
+			/melee aggro=on
+			/rs I am tanking with riposte disc!
 		}
 		| If Riposting skip the rest
 		/if (${bln_riposting}) /goto :return 
