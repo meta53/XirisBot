@@ -1,81 +1,56 @@
-|**************************************************************************************************
-| MQ2Cast_Spell_Routines.inc
-|
-| Written by A_Enchanter_00
-| Last Modified 20060324
-|
-| Features:
-| This MQ2Cast_Spell_Routines.inc is much like The normal Spell_Routines.inc by Rusty~ this macro 
-| use the MQ2Cast Plugin by s0rcier
-|
-| This macro also require MQ2ExchangeItem
-|
-| Note: Easy to Replace with Normal because Syntas is the "same".
-|
-| - Casts spells, clicks items, or uses AA abilities for you 
-| - Allows back to back casting without waiting on spell gems to pop all the way up 
-| - Will interrupt spell if target dies while casting. If on a mount, it will dismount and duck.
-|    ** IMPORTANT: if you don't want to interrupt a spell while mounted, put this at the top of your macro: ** 
-|    **   /declare noInterrupt bool outer TRUE                                                              ** 
-| - Allows you to use items in bags. Equips item, clicks it, then returns it to its previous location
-|   NOTE: There is a known isue with the MQ2Cast Plugin not always geting swarped back corectly...
-| - Lets you set how long you want to keep trying to cast the spell (defaults to 0) 
-| - Lets you call a custom subroutine while waiting for spell to finish casting 
-|   Try to keep custom subroutines very small. A common use would be to interrupt the spell if a certain condition is true 
-| - This file also includes a sub named Interrupt. You can call this to interrupt any spell you're casting instantly. 
-| - Note: if you don't want this to cast spells while you're invis, in your main macro have this at the top: 
-|      /declare noInvis bool outer TRUE
-| - Note: if you don't want to stand up when Feig do the following:
-|      /declare noFeigning bool outer TRUE
-|   This will make it return CAST_CANCELLED if you're invis asking s0rcier to make it CAST_INVISIBLE insted.
-| - Added: defaultGem so that spells can be casted using only /call MQ2Cast "Howl of Tashan"
-|     /declare defaultGem string outer gem1
-|	Note: If spell is not memed and and NOT seting /call MQ2Cast "Howl of Tashan" gem#
-|   Set /declare defaultGem string outer gem# to change default gem#
-| - Added: "-targetid|#####" it will find target and cast a MQ2Cast plugin feature.
-| - Added: /call /call Interrupt - for use in mySub ect..
-| - Added: ${Cast.Timing} - for use in mySub Example below
-| - Added: -kill - will keep casting spell untill target is dead
-| - Added: -recast|# - recast spells # number of times
-| - Added: -maxtries|# - retry casting spell # number of times
-| - Changed: -bandolier|setname OR -setin|setname swarp items using MQ2Bandolier
-|**************************************************************************************************
-|  Cast: the main subroutine that casts spells or items for you 
-|     Usage: 
-|        /call MQ2Cast ["spell name"|"item name"|"AA name"|"AA#"] [[item|slotname]|alt|gem#] [give up time][s|m] [custom subroutine name] [-targetid|###] [-maxtries|#] [-recast|#] [-setin|setname] [-bandolier|setname]
-|     Examples: 
-| 
-|     To cast Howl of Tashan and mem it in slot 3 if not memmed:
-|       /call MQ2Cast "Howl of Tashan" gem3
-| 
-|     To cast Arcane Rune and keep trying for 7 seconds, in case of interrupts.
-|       /call MQ2Cast "Arcane Rune" gem5 7s
-|
-|     To click Grim Aura earring that's in a bag:
-|       /call MQ2Cast "Shrunken Goblin Skull Earring" item
-|
-|     To click Grim Aura earring that's in a bag:
-|       /call MQ2Cast "Shrunken Goblin Skull Earring" slotname
-|
-|     To use AA ability Eldritch Rune:
-|       /call MQ2Cast "Eldritch Rune" alt
-|         or
-|       /call MQ2Cast "173" alt
-| 
-|     To call a subroutine that interrupts CH if target gets healed before it lands:
-|       /call MQ2Cast "Complete Healing" gem1 0 CheckHP
-|     Then in your macro have somewhere:
-|       Sub CheckHP
-|          /if ( ${Target.PctHPs}>=80 ) /call Interrupt
-|       /return
-|
-|		3000 = 3 sec
-|		Sub CheckHP
-|		   /if ( ${Me.Casting.Name.Equal[Complete Healing]} && ${Target.PctHPs} < 40 && ${Cast.Timing} > 3000 ) ) /call Interrupt
-|		/return
-| 
-| Returns these values: ${Macro.Return} and ${Cast.Result} and ${castReturn}
-|----------------------+----------------------------------------------------------------------+ 
+|**
+----------------------------
+XIRIS_SPELL_ROUTINES.INC
+----------------------------
+This MQ2Cast_Spell_Routines.inc is much like The normal Spell_Routines.inc by Rusty~ this macro 
+use the MQ2Cast Plugin by s0rcier
+______________________________________________
+REQUIRED PLUGINS
+    
+______________________________________________
+REVISION HISTORY
+	04.06.22	xiris	Changed name to xiris_spell_routines.inc to avoid conflics with mmoloader updates
+						Incorprated some changes from Devestator's version
+	04.24.22	xiris	Incorporated some of the methods form mmobug's version written by Pete Sampras
+
+______________________________________________
+
+  Cast: the main subroutine that casts spells or items for you 
+     Usage: 
+        /call MQ2Cast ["spell name"|"item name"|"AA name"|"AA#"] [[item|slotname]|alt|gem#] [give up time][s|m] [custom subroutine name] [-targetid|###] [-maxtries|#] [-recast|#] [-setin|setname] [-bandolier|setname]
+     Examples: 
+ 
+     To cast Howl of Tashan and mem it in slot 3 if not memmed:
+       /call MQ2Cast "Howl of Tashan" gem3
+ 
+     To cast Arcane Rune and keep trying for 7 seconds, in case of interrupts.
+       /call MQ2Cast "Arcane Rune" gem5 7s
+
+     To click Grim Aura earring that's in a bag:
+       /call MQ2Cast "Shrunken Goblin Skull Earring" item
+
+     To click Grim Aura earring that's in a bag:
+       /call MQ2Cast "Shrunken Goblin Skull Earring" slotname
+
+     To use AA ability Eldritch Rune:
+       /call MQ2Cast "Eldritch Rune" alt
+         or
+       /call MQ2Cast "173" alt
+ 
+     To call a subroutine that interrupts CH if target gets healed before it lands:
+       /call MQ2Cast "Complete Healing" gem1 0 CheckHP
+     Then in your macro have somewhere:
+       Sub CheckHP
+          /if ( ${Target.PctHPs}>=80 ) /call Interrupt
+       /return
+
+		3000 = 3 sec
+		Sub CheckHP
+		   /if ( ${Me.Casting.Name.Equal[Complete Healing]} && ${Target.PctHPs} < 40 && ${Cast.Timing} > 3000 ) ) /call Interrupt
+		/return
+ 
+ Returns these values: ${Macro.Return} and ${Cast.Result} and ${castReturn}
++----------------------+----------------------------------------------------------------------+ 
 | CAST_CANCELLED       | Spell was cancelled by ducking (either manually or because mob died) | 
 | CAST_CANNOTSEE       | You can't see your target                                            | 
 | CAST_IMMUNE          | Target is immune to this spell                                       | 
@@ -97,34 +72,96 @@
 | CAST_STUNNED		   | Stunned 															  |
 | CAST_STANDING		   | Not Standing 														  |
 | CAST_DISTRACTED      | To Distracted ( spell book open )                                    |
-|----------------------+----------------------------------------------------------------------+
-**************************************************************************************************|
++----------------------+----------------------------------------------------------------------+
+
+**|	
+#Event BeginCast "You begin casting#*#"
+#Event Collapse "Your gate is too unstable, and collapses.#*#"
+#Event FDFail "#1# has fallen to the ground.#*#"
+#Event Fizzle "Your spell fizzles#*#"
+#Event Immune "Your target is immune to changes in its attack speed#*#"
+#Event Immune "Your target is immune to changes in its run speed#*#"
+#Event Immune "Your target cannot be mesmerized#*#"
+#Event Interrupt "Your casting has been interrupted#*#"
+#Event Interrupt "Your spell is interrupted#*#"
+#Event Invulnerable "You can't cast spells while invulnerable#*#"
+#Event Invulnerable "You cannot cast spells while invulnerable#*#"
+#Event Invulnerable "You *CANNOT* cast spells while invulnerable#*#"
+#Event NoHold "Your spell did not take hold#*#"
+#Event NoHold "Your spell would not have taken hold#*#"
+#Event NoHold "You must first target a group member#*#"
+#Event NoHold "Your spell is too powerful for your intended target#*#"
+#Event NoLOS "You cannot see your target.#*#"
+#Event NoMount "#*#You can not summon a mount here.#*#"
+#Event NoTarget "You must first select a target for this spell!#*#"
+#Event NotReady "Spell recast time not yet met.#*#"
+#Event OutOfMana "Insufficient Mana to cast this spell!#*#"
+#Event OutOfRange "Your target is out of range, get closer!#*#"
+#Event Recover "You haven't recovered yet...#*#"
+#Event Recover "Spell recovery time not yet met#*#"
+#Event Resisted "Your target resisted the #1# spell#*#"
+#Event Resisted2 "You resist the #1# spell#*#"
+#Event Standing "You must be standing to cast a spell#*#"
+#Event Stunned "You are stunned#*#"
+#Event Stunned "You can't cast spells while stunned!#*#"
+#Event Stunned "You *CANNOT* cast spells, you have been silenced!#*#"
+
+
+
+|- note these are not registered wtih the xiris_events handler because they are only used in this include
+Sub Events_SpellRoutines
+	/doevents Recover
+	/doevents BeginCast
+	/doevents Fizzle
+	/doevents Interrupt
+	/doevents Standing
+	/doevents FDFail
+	/doevents OutOfRange
+	/doevents OutOfMana
+	/doevents NoLOS
+	/doevents Resisted2
+	/doevents Resisted
+	/doevents Immune
+	/doevents Stunned
+	/doevents Collapse
+	/doevents NoTarget
+	/doevents NotReady
+	/doevents NoHold
+/return
+
+
+
 Sub xbot_initialize_spellRoutines
 	|-- Default values for xiris_spell_routines.inc
 	/declare noInvis 			bool 	outer 	TRUE
 	/declare noFeigning 		bool 	outer 	TRUE
-/return
+	/if ( !${Defined[castReturn]} )  /declare castReturn string outer NULL
+	/if ( !${Defined[defaultGem]} )  /declare defaultGem string outer gem9
 
-Sub Cast(string spellName,string spellType,timer giveUpTimer,string mySub,string MQ2Feature1,string MQ2Feature2,string MQ2Feature3,string MQ2Feature4,string MQ2Feature5,string MQ2Feature6,string MQ2Feature7,string MQ2Feature8)
+	|-- Verify MQ2Cast Plugin
 	/if ( !${Plugin[MQ2Cast].Name.Length} ) {
 		/squelch /plugin MQ2Cast noauto
 		/if ( !${Plugin[MQ2Cast].Name.Length} ) {
 			/echo You must have MQ2Cast plugin to use this macro!!
+			/beep
 			/endmacro
 		}
 	}
+	|-- Verify MQ2Exchange Plugin
 	/if ( !${Plugin[MQ2Exchange].Name.Length} ) {
 		/squelch /plugin MQ2Exchange noauto
 		/if ( !${Plugin[MQ2Exchange].Name.Length} ) {
 			/echo You must have MQ2Exchange plugin to use this macro!!
+			/beep
 			/endmacro
 		}
 	}
+/return
 
-	/if ( !${Defined[castReturn]} ) /declare castReturn string outer NULL
-	/if ( !${Defined[defaultGem]} ) /declare defaultGem string outer gem1
-	/if ( !${Defined[spellType]} ) /declare spellType string local NULL
-	/if ( !${Defined[giveUpTimer]} ) /declare giveUpTimer timer local 0
+
+Sub MQ2Cast(string spellName,string spellType,timer giveUpTimer,string mySub,string MQ2Feature1,string MQ2Feature2,string MQ2Feature3,string MQ2Feature4,string MQ2Feature5,string MQ2Feature6,string MQ2Feature7,string MQ2Feature8)
+	/if ( !${Defined[spellType]} )   /declare spellType   string local NULL
+	/if ( !${Defined[giveUpTimer]} ) /declare giveUpTimer timer  local 0
 	/if ( !${Defined[MQ2Feature1]} ) /declare MQ2Feature1 string local
 	/if ( !${Defined[MQ2Feature2]} ) /declare MQ2Feature2 string local
 	/if ( !${Defined[MQ2Feature3]} ) /declare MQ2Feature3 string local
@@ -186,8 +223,12 @@ Sub Cast(string spellName,string spellType,timer giveUpTimer,string mySub,string
 	
 	/if ( ${noInvis} ) {
 		/squelch /casting "${spellName}" ${spellType} "-invis" "${MQ2Feature1}" "${MQ2Feature2}" "${MQ2Feature3}" "${MQ2Feature4}" "${MQ2Feature5}" "${MQ2Feature6}" "${MQ2Feature7}" "${MQ2Feature8}"
+		/varset castReturn ${Cast.Result}
+		/call Events_SpellRoutines
 	} else {
 		/squelch /casting "${spellName}" ${spellType} "${MQ2Feature1}" "${MQ2Feature2}" "${MQ2Feature3}" "${MQ2Feature4}" "${MQ2Feature5}" "${MQ2Feature6}" "${MQ2Feature7}" "${MQ2Feature8}"
+		/varset castReturn ${Cast.Result}
+		/call Events_SpellRoutines
 	}
 :cast_spell_pending
 	/if ( ${Cast.Status.Find[C]} ) {
@@ -199,10 +240,61 @@ Sub Cast(string spellName,string spellType,timer giveUpTimer,string mySub,string
 		/if ( !${interruptFlag} && ( ${FindItem[${spellName}].ID} && ${giveUpTimer} && !${FindItem[${spellName}].Timer} ) || ( ${Me.AltAbility[${spellName}].ID} && ${Me.AltAbilityReady[${spellName}]} ) || ( ${Spell[${spellName}].ID} && ${giveUpTimer} > ${Spell[${spellName}].RecoveryTime} ) ) /goto :cast_spell
 	}
 	:CastEnd
-	/varset castReturn ${Cast.Result}
-/return ${Cast.Result}
+	
+/return ${castReturn}
+
 
 Sub Interrupt
 	/varset interruptFlag TRUE
 	/interrupt
+/return
+
+
+Sub Event_Fizzle
+	/if (${Defined[castReturn]}) /varset castReturn CAST_FIZZLE
+/return
+
+Sub Event_Immune
+	/if (${Defined[castReturn]}) /varset castReturn CAST_IMMUNE
+/return
+
+Sub Event_Interrupt
+	/if (${Defined[castReturn]}) /varset castReturn CAST_INTERRUPTED
+/return
+
+Sub Event_Invulnerable
+	/if (${Defined[castReturn]}) /varset castReturn CAST_INVULNERABLE
+/return
+
+Sub Event_NoHold
+	/if (${Defined[spellNotHold]}) /varset spellNotHold 1
+	/if (${Defined[castReturn]}) /varset castReturn CAST_NOTHOLD
+/return
+
+Sub Event_NoLOS
+	/if (${Defined[castReturn]}) /varset castReturn CAST_CANNOTSEE
+/return
+
+Sub Event_NoMount
+	/if (${Defined[castReturn]}) /varset castReturn CAST_NOMOUNT
+/return
+
+Sub Event_NoTarget
+	/if (${Defined[castReturn]}) /varset castReturn CAST_NOTARGET
+/return
+
+Sub Event_NotReady
+	/if (${Defined[castReturn]}) /varset castReturn CAST_NOTREADY
+/return
+
+Sub Event_OutOfMana
+	/if (${Defined[castReturn]}) /varset castReturn CAST_OUTOFMANA
+/return
+
+Sub Event_OutOfRange
+	/if (${Defined[castReturn]}) /varset castReturn CAST_OUTOFRANGE
+/return
+
+Sub Event_Recover
+	/if (${Defined[castReturn]}) /varset castReturn CAST_RECOVER
 /return

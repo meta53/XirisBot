@@ -165,7 +165,7 @@ Sub chkDownshits
 	/if (${bln_naked}) /return
 	
 	|- downshitif
-	/if ((${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]}) || ${Me.Moving} || (${SpawnCount[npc radius 55]}>0 && (${Zone.ID} != 344 && ${Zone.ID} != 340)) || ${Me.Feigning} || ${Me.Invis}) { 
+	/if ((${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]}) || ${Me.Moving} || (${SpawnCount[npc radius 55]}>0 && (${Zone.ID} != 340 && ${Zone.ID} != 344 && ${Zone.ID} != 345)) || ${Me.Feigning} || ${Me.Invis}) { 
 		/return
 	}
 
@@ -215,7 +215,7 @@ Sub chkDownshits
 					/if (${SpawnCount[ID ${tgtID}]} >= 1 )  /call TrueTarget ${tgtID}
 					|/echo downflag${df}: ${downflag${df}.Token[1,|]} | ${downflag${df}.Token[2,|]}|${downflag${df}.Token[3,|]}
 					/echo Downflag Cast ${castArg}
-					/call Cast ${castArg}
+					/call MQ2Cast ${castArg}
 					/delay 10
 					:dfcast
 					/if (${Me.Casting.ID}) /goto :dfcast
@@ -294,7 +294,7 @@ Sub chkComponents(string _component, int _count, string _type, string _summoner,
 				/if (${_reagent.Equal[NULL]}) {
 						/echo ${FindItemCount[=${_summoner}]}
 						/echo ${_summoner} summoning ${_component}	
-						/call Cast "${_summoner}" item
+						/call MQ2Cast "${_summoner}" item
 						/delay 50
 						/autoinv
 						/goto :chkComponent
@@ -302,7 +302,7 @@ Sub chkComponents(string _component, int _count, string _type, string _summoner,
 					/if (${FindItemCount[=${_reagent}]}>=10) {
 						/echo ${FindItemCount[=${_summoner}]}
 						/echo ${_summoner} summoning ${_component}	
-						/call Cast "${_summoner}" item
+						/call MQ2Cast "${_summoner}" item
 						/delay 50
 						/autoinv
 						/goto :chkComponent
@@ -331,7 +331,7 @@ Sub chkComponents(string _component, int _count, string _type, string _summoner,
 		} else /if (${_type.Equal[ALT]}) {
 			/echo ${_type}: ${_summoner} summoning ${_component} with ${_reagent}
 			/if (${FindItemCount[=${_reagent}]}>=20) {
-					/call Cast "${_summoner}" alt
+					/call MQ2Cast "${_summoner}" alt
 					/delay 50
 					/autoinv
 				} else {
@@ -408,15 +408,15 @@ Sub EVENT_AERAMP
 	/if (${Me.Combat}) {
 		/echo FIRING AERAMP
 		/if (${Me.Class.ShortName.Equal[MNK]}) {
-			/call cast "256" alt
+			/call MQ2Cast "256" alt
 		}
 		/if (${Me.Class.ShortName.Equal[WAR]}) {
-			/call cast "99" alt
+			/call MQ2Cast "99" alt
 		}
 		
 		/if (${Me.Class.ShortName.Equal[BER]}) {
 			/echo I should  be firing AE RAMP
-			/call cast "99" alt
+			/call MQ2Cast "99" alt
 		}
 	}
 	/doevents flush AERAMP
@@ -474,7 +474,7 @@ Sub chk_casterProvoke(string _provokeSpell)
 			/if (!${Me.SpellReady[${_provokeSpell}]}) {
 				|/echo |- attemptProvoke -| [${_provokeSpell}] is not ready.
 			} else {
-				/call Cast "${_provokeSpell}" ${spell_hateGem}
+				/call MQ2Cast "${_provokeSpell}" ${spell_hateGem}
 				/if (${Spawn[${Me.TargetOfTarget}].CleanName.Equal[${Me}]}) /varset provokeTimer 600
 			}
 		}

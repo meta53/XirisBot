@@ -235,7 +235,7 @@ Sub RuneSpam(_name)
 			/delay 2
 			/goto :runeLoop
 		}
-		/call Cast "${str_rune}" ${str_runeGem} 5s
+		/call MQ2Cast "${str_rune}" ${str_runeGem} 5s
 		/call RunAllEvents
 		/if (${bln_runeActive}) /goto :runeLoop
 /return

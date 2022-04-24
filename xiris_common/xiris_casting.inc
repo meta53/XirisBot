@@ -143,6 +143,11 @@ Sub chkNuke
 	|-- press pet attack for funsies
 	/if (${Me.Pet.ID} && ${bln_petUse} && !${Me.Pet.Combat}) /call chkPetAttack
 
+	|-- named check
+	/declare isNamed bool local FALSE
+	/call TargetNamedCheck ${Target.ID}
+	/varset isNamed ${Macro.Return}
+	
 	|-- Final Check before casting
 	/if (${Target.ID} && ${Target.Type.Equal[NPC]} && ${Target.LineOfSight}) {
 	
@@ -157,7 +162,7 @@ Sub chkNuke
 
 			|-- Named Target check
 			|-- if we only cast this spell on named, and this is NOT a named target, skip
-			/if (!${Spawn[npc id ${_id}].Named} && ${Nuke_${i}_NamedOnly}) {
+			/if (!${isNamed} && ${Nuke_${i}_NamedOnly}) {
 				/echo Skipping Nuke ${Nuke_${i}} is named only
 				/goto :NextNuke
 			}
@@ -185,7 +190,7 @@ Sub chkNuke
 			|-- All this ready, check for LOS/Distance/Mana
 			/if (${Target.PctHPs}<=${Nuke_${i}_StartHP} && ${Target.PctHPs}>=${Nuke_${i}_StopHP}) {
 				/if (${Me.CurrentMana}>=${Spell[${Nuke_${i}}].Mana} && ${Target.Distance}<=${Spell[${Nuke_${i}}].Range} && ${Target.LineOfSight}) {
-					/call Cast "${Nuke_${i}}" ${Nuke_${i}_Gem} 5s
+					/call MQ2Cast "${Nuke_${i}}" ${Nuke_${i}_Gem} 5s
 					/varcalc int_concCount ${int_concCount}+1
 					/if (${Cast.Result.Equal[CAST_SUCCESS]}) {
 						/cecho \ag ${Nuke_${i}} ${Cast.Result} : Concussion Count: \ay${int_concCount} 
@@ -210,6 +215,11 @@ Sub chkQNuke
 	
 	|-- press pet attack for funsies
 	/if (${Me.Pet.ID} && ${bln_petUse} && !${Me.Pet.Combat}) /call chkPetAttack
+
+	|-- named check
+	/declare isNamed bool local FALSE
+	/call TargetNamedCheck ${Target.ID}
+	/varset isNamed ${Macro.Return}
 	
 	|-- Final Check before casting
 	/if (${Target.ID} && ${Target.Type.Equal[NPC]} && ${Target.LineOfSight}) {
@@ -225,7 +235,8 @@ Sub chkQNuke
 
 			|-- Named Target check
 			|-- if we only cast this spell on named, and this is NOT a named target, skip
-			/if (!${Spawn[npc id ${_id}].Named} && ${QNuke_${i}_NamedOnly}) {
+	
+			/if (!${isNamed} && ${QNuke_${i}_NamedOnly}) {
 				/echo Skipping QuickNuke ${QNuke_${i}} is named only
 				/goto :NextQuickNuke
 			}
@@ -258,7 +269,7 @@ Sub chkQNuke
 			|-- All this ready, check for LOS/Distance/Mana
 			/if (${Target.PctHPs}<=${QNuke_${i}_StartHP} && ${Target.PctHPs}>=${QNuke_${i}_StopHP}) {
 				/if (${Me.CurrentMana}>=${Spell[${QNuke_${i}}].Mana} && ${Target.Distance}<=${Spell[${QNuke_${i}}].Range} && ${Target.LineOfSight}) {
-					/call Cast "${QNuke_${i}}" ${QNuke_${i}_Gem} 5s
+					/call MQ2Cast "${QNuke_${i}}" ${QNuke_${i}_Gem} 5s
 					/varcalc int_concCount ${int_concCount}+1
 					/if (${Cast.Result.Equal[CAST_SUCCESS]}) {
 						/cecho \ag ${QNuke_${i}} ${Cast.Result} : Concussion Count: \ay${int_concCount} 
@@ -293,7 +304,7 @@ Sub chkAENuke
 			/delay 2
 			/goto :AECastWait
 		}
-	/call Cast "${AENuke_1}"
+	/call MQ2Cast "${AENuke_1}"
 	/if (${Cast.Result.Equal[CAST_SUCCESS]}) {
 		/cecho \ag ${AENuke_1} ${Cast.Result}
 	}	
@@ -309,7 +320,7 @@ Sub chkAENuke
 Sub chkSnare
 	/if (!${bln_engaged} || ${Me.Invis}||${Me.Moving}|| ${Me.Song[${GoM}].ID}||${list_immuneSnare.Find[${Spawn[${Target.CleanName}]}]}||${list_ignore.Find[${Spawn[${Target.CleanName}]}]}) /return
 	/if (${Target.PctHPs}<=${int_snareHP} && ${Target.ID} && ${Target.Type.Equal[NPC]} && !${bln_snareActive} && ${bln_snareUse} && ${SpawnCount[npc radius 50 zradius 10]}<=${int_snareLocalNPC}) {
-		/call Cast "${str_snareSpell}" ${str_snareGem} 
+		/call MQ2Cast "${str_snareSpell}" ${str_snareGem} 
 	}
 	
 	/if (${Cast.Result.Equal[CAST_SUCCESS]}) {
@@ -364,7 +375,7 @@ Sub chkStun(bool _memorize)
 			|-- All this ready, check for LOS/Distance/Mana
 			/if (${Target.PctHPs}<=${Stun_${i}_StartHP} && ${Target.PctHPs}>=${Stun_${i}_StopHP}) {
 				/if (${Me.CurrentMana}>=${Spell[${Stun_${i}}].Mana} && ${Target.Distance}<=${Spell[${Stun_${i}}].Range} && ${Target.LineOfSight}) {
-					/call Cast "${Stun_${i}}" ${Stun_${i}_Gem} 5s
+					/call MQ2Cast "${Stun_${i}}" ${Stun_${i}_Gem} 5s
 					/if (${Cast.Result.Equal[CAST_SUCCESS]}) {
 						/cecho \ag ${Stun_${i}} ${Cast.Result}
 					}
@@ -423,6 +434,11 @@ Sub chkDOT
 	
 	/if (${Me.Casting.ID} || ${Me.Moving} || ${Me.Invis} || ${ExcludeList.Find[${Spawn[${Target.CleanName}]}]}) /return
 	
+	|-- named check
+	/declare isNamed bool local FALSE
+	/call TargetNamedCheck ${Target.ID}
+	/varset isNamed ${Macro.Return}
+
 	/if (${isNamed} &&  (${Me.PctMana} < ${int_namedDotStopHP})) /return
 	/if (!${isNamed} && (${Me.PctMana} < ${int_dotMinMana}))     /return
 	/if (${Me.Pet.ID} && ${bln_petUse} && !${Me.Pet.Combat}) /call chkPetAttack
@@ -457,7 +473,7 @@ Sub chkDOT
 			
 			|-- Named Target check
 			|-- if we only cast this spell on named, and this is NOT a named target, skip
-			/if (!${Spawn[npc id ${_id}].Named} && ${DOT_${i}_NamedOnly}) {
+			/if (!${isNamed} && ${DOT_${i}_NamedOnly}) {
 				/echo Skipping Dot ${DOT_${i}} is named only
 				/goto :NextDot
 			}
@@ -487,7 +503,7 @@ Sub chkDOT
 			|-- Think about adding the named stop point here at some point in future
 			/if (${Target.PctHPs}<=${DOT_${i}_StartHP} && ${Target.PctHPs}>=${DOT_${i}_StopHP}) {
 				/if (${Me.CurrentMana}>=${Spell[${DOT_${i}}].Mana} && ${Me.SpellReady[${DOT_${i}}]} && ${Target.Distance}<=${Spell[${DOT_${i}}].Range} && ${Target.LineOfSight} && (${DOT_${i}_Timer} <= 0)) {
-					/call Cast "${DOT_${i}}"
+					/call MQ2Cast "${DOT_${i}}"
 					/varcalc int_concCount ${int_concCount}+1
 					/if (${Cast.Result.Equal[CAST_SUCCESS]}) {
 						/varcalc dotDuration ${Spell[${DOT_${i}}].Duration} * 6
@@ -515,7 +531,7 @@ Sub chkSnare
 	/if (${Me.Invis}||${Me.Moving}|| ${Me.Song[${GoM}].ID}||${list_immuneSnare.Find[${Spawn[${Target.CleanName}]}]}||${ExcludeList.Find[${Spawn[${Target.CleanName}]}]}) /return
 	/if (${Target.PctHPs}<=${int_snareHP} && ${Target.ID} && ${Target.Type.Equal[NPC]} && !${bln_snareActive} && ${bln_snareUse} && ${SpawnCount[npc radius 50 zradius 10]}<=${int_snareLocalNPC}) {
 		/call chkSpellMemorized "${str_snareSpell}" TRUE ${str_snareGem} 
-		/call Cast "${str_snareSpell}"
+		/call MQ2Cast "${str_snareSpell}"
 	}
 	
 	/if (${Cast.Result.Equal[CAST_SUCCESS]}) {

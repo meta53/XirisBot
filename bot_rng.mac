@@ -234,7 +234,7 @@ Sub chkNuke
 				
 				/if (${Me.CurrentMana}>=${Spell[${Nuke_${k}}].Mana} && ${Me.SpellReady[${Nuke_${k}}]} && ${Target.Distance}<=${Spell[${Nuke_${k}}].Range} && ${Target.LineOfSight} && ${Nuke_${k}_Use}) {
 					/echo Current NUKE: ${Nuke_${k}}
-					/call Cast "${Nuke_${k}}" ${Nuke_${k}_Gem} 5s
+					/call MQ2Cast "${Nuke_${k}}" ${Nuke_${k}_Gem} 5s
 				}
 			}
 		
@@ -370,7 +370,7 @@ Sub chkConcussion
 	|/echo chkConcussion ${bln_concUse} ${timer_concDelay}
 	/if (${bln_concUse} && ${Me.Standing} && ((${timer_concDelay}==0) || ${Me.TargetOfTarget.Name.Equal[${Me.Name}]})) {
 		/call chkSpellMemorized "${str_concSpell}" ${str_concGem} TRUE
-		/call Cast "${str_concSpell}" ${str_concGem}
+		/call MQ2Cast "${str_concSpell}" ${str_concGem}
 		/varset timer_concDelay ${timer_concDelay.OriginalValue}
 		/varset int_concCount 0
 	}

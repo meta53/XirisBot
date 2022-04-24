@@ -30,10 +30,10 @@ Sub xbot_initialize_events
     |--Check for Special Events
 
     |- Gates of Discord
-    /if (${Zone.ShortName.Equal[uqua]})     /call InitEvents_GoD_Uqua
-    /if (${Zone.ShortName.Equal[ikkinz]})   /call InitEvents_GoD_Uqua
-    /if (${Zone.ShortName.Equal[inktuta]})  /call InitEvents_GoD_Inktuta
-    /if (${Zone.ShortName.Equal[tacvi]})    /call InitEvents_GoD_Tacvi
+    /if (${Zone.ShortName.Equal[uqua]})         /call InitEvents_GoD_Uqua
+    /if (${Zone.ShortName.Equal[ikkinz]})       /call InitEvents_GoD_Uqua
+    /if (${Zone.ShortName.Equal[inktuta]})      /call InitEvents_GoD_Inktuta
+    /if (${Zone.ShortName.Equal[tacvi]})        /call InitEvents_GoD_Tacvi
 
     |-- Omens of War
     /if (${Zone.ShortName.Equal[chambersa]})    /call InitEvents_OOW_MPG_Hatred
@@ -45,10 +45,10 @@ Sub xbot_initialize_events
     /if (${Zone.ShortName.Equal[anguish]})      /call InitEvents_OOW_Anguish
 
     |-- Dragons of Norrath
-    /if (${Zone.ShortName.Equal[thenest]}) /call InitEvents_DoN_Vishimtar
+    /if (${Zone.ShortName.Equal[thenest]})      /call InitEvents_DoN_Vishimtar
 
     |-- Depths of Darkhollow
-    /if (${Zone.ShortName.Equal[dreadspire]}) /call InitEvents_DoDH_Demiplane
+    /if (${Zone.ShortName.Equal[dreadspire]})   /call InitEvents_DoDH_Demiplane
 
 /return
 

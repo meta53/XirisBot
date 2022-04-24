@@ -375,11 +375,11 @@ Sub chkSit
 	|-- Mana Check
 	/if (${str_classArchetype.Equal[CASTER]} ||  ${str_classArchetype.Equal[PRIEST]}) {
 		| Check Mod Rods Rod of Spectral Transvergence
-		/if (!${Me.Invis} && ${Me.PctMana}<=${int_medPercent} && ${FindItem[Wand of Spectral Transvergance].InvSlot} && !${FindItem[Wand of Spectral Transvergance].TimerReady}) /call Cast "Wand of Spectral Transvergance" item
-		/if (!${Me.Invis} && ${Me.PctMana}<=${int_medPercent} && ${FindItem[Wand of Ethereal Transvergance].InvSlot} && !${FindItem[Wand of Ethereal Transvergance].TimerReady}) /call Cast "Wand of Ethereal Transvergance" item
-		/if (!${Me.Invis} && ${Me.PctMana}<=${int_medPercent} && ${FindItem[Wand of Elemental Transvergance].InvSlot} && !${FindItem[Wand of Elemental Transvergance].TimerReady}) /call Cast "Wand of Elemental Transvergance" item
-		/if (!${Me.Invis} && ${Me.PctMana}<=${int_medPercent} && ${FindItem[Rod of Mystical Transvergance].InvSlot} && !${FindItem[Rod of Mystical Transvergance].TimerReady}) /call Cast "Rod of Mystical Transvergance" item
-		/if (!${Me.Invis} && ${Me.PctMana}<=${int_medPercent} && ${FindItem[Summoned: Modulating Rod].InvSlot} && !${FindItem[Summoned: Modulating Rod].TimerReady}) /call Cast "Summoned: Modulating Rod" item
+		/if (!${Me.Invis} && ${Me.PctMana}<=${int_medPercent} && ${FindItem[Wand of Spectral Transvergance].InvSlot} && !${FindItem[Wand of Spectral Transvergance].TimerReady}) /call MQ2Cast "Wand of Spectral Transvergance" item
+		/if (!${Me.Invis} && ${Me.PctMana}<=${int_medPercent} && ${FindItem[Wand of Ethereal Transvergance].InvSlot} && !${FindItem[Wand of Ethereal Transvergance].TimerReady}) /call MQ2Cast "Wand of Ethereal Transvergance" item
+		/if (!${Me.Invis} && ${Me.PctMana}<=${int_medPercent} && ${FindItem[Wand of Elemental Transvergance].InvSlot} && !${FindItem[Wand of Elemental Transvergance].TimerReady}) /call MQ2Cast "Wand of Elemental Transvergance" item
+		/if (!${Me.Invis} && ${Me.PctMana}<=${int_medPercent} && ${FindItem[Rod of Mystical Transvergance].InvSlot} && !${FindItem[Rod of Mystical Transvergance].TimerReady}) /call MQ2Cast "Rod of Mystical Transvergance" item
+		/if (!${Me.Invis} && ${Me.PctMana}<=${int_medPercent} && ${FindItem[Summoned: Modulating Rod].InvSlot} && !${FindItem[Summoned: Modulating Rod].TimerReady}) /call MQ2Cast "Summoned: Modulating Rod" item
 	
 		| Sit my ass down
 		/if ( ${Me.PctMana}<=${int_medPercent} && !${bln_engaged} && (${SpawnCount[npc radius ${int_sitRadius} zradius 55]} == 0) && (${Melee.Casted} > 3000) ) {
@@ -538,7 +538,7 @@ Sub chkAAs
 						/doability "${AA_${intA}}"
 					} else {
 						|/aa act ${AA_${intA}}
-						/call Cast "${AA_${intA}}" alt
+						/call MQ2Cast "${AA_${intA}}" alt
 					}
 				}
 			}
@@ -584,7 +584,7 @@ Sub chkBurn
 					} else /if (${Burn_${Burn_${intB}_After}_Type.Equal[alt]} && !${Me.AltAbilityReady[${Burn_${Burn_${intB}_After}}]}) {
 						| It was an alt disc 
 						/cecho \agDISC Burn_${intB} clicked!
-						/call Cast "${Burn_${intB}}" alt
+						/call MQ2Cast "${Burn_${intB}}" alt
 						/delay 2
 					}
 				} else {
@@ -609,24 +609,33 @@ Sub chkBurn
 						| It was a combat disc 
 						| MGB?
 						/if (${Burn_${intB}_MGB}) {
-							/call Cast "Mass Group Buff" alt
+							/call MQ2Cast "Mass Group Buff" alt
+							/delay 5
 							/cecho \ag Mass Group Buff Activated!
 						} 
 						/cecho \agAA Burn_${intB} clicked!
-						/call Cast "${Burn_${intB}}" alt
+						/call MQ2Cast "${Burn_${intB}}" alt
 					} else /if (${Burn_${Burn_${intB}_After}_Type.Equal[alt]} && !${Me.AltAbilityReady[${Burn_${Burn_${intB}_After}}]}) {
 						| It was an alt disc 
 						/if (${Burn_${intB}_MGB}) {
-							/call Cast "Mass Group Buff" alt
+							/call MQ2Cast "Mass Group Buff" alt
 							/cecho \ag Mass Group Buff Activated!
 						} 
 						/cecho \agAA Burn_${intB} clicked!
-						/call Cast "${Burn_${intB}}" alt
+						/call MQ2Cast "${Burn_${intB}}" alt
 					}
 				} else {
 					/cecho \agAA Burn_${intB} clicked!
-					/call Cast "${Burn_${intB}}" alt
+					/call MQ2Cast "${Burn_${intB}}" alt
 				}	
+			} else /if (${Burn_${intB}_Type.Equal[item]} && ${FindItem[${Burn_${intB}}].TimerReady} && (${Burn_${intB}_Use}) ) {
+					/cecho \agAA Burn_${intB} clicked!
+					/if (${Me.Class.ShortName.Equal[BRD]}) {
+						/medley queue "${Burn_${intB}}"
+					} else {
+						/call MQ2Cast "${Burn_${intB}}" item 2s
+					}
+					
 			}
 		}
 	/next intB
@@ -651,7 +660,7 @@ Sub chkClicks
 		/if (${Target.PctHPs}<=${Click_${intC}_StartHP} && ${Target.PctHPs}>=${Click_${intC}_StopHP} && ${Target.ID} && !${Me.Casting.ID} && ${Target.Type.Equal[NPC]}) {
 			/if ((!${Click_${intC}_NamedOnly}||${Target.ID}==${NearestSpawn[named npc].ID}) && (${Click_${intC}_Timer} <= 0)) {
 				/if (${FindItem[${Click_${intC}}].InvSlot}) {
-					/call Cast "${Click_${intC}}" item 2s
+					/call MQ2Cast "${Click_${intC}}" item 2s
 					/varset Click_${intC}_Timer ${Click_${intC}_Recast}s
 				}
 			}
@@ -833,7 +842,7 @@ Sub EVENT_BurnOff
 
 Sub EVENT_IntensityON
 	/echo Enabling Intensity of the Resolute!
-	/call Cast "Intensity of the Resolute" alt
+	/call MQ2Cast "Intensity of the Resolute" alt
 	/doevents flush IntensityOn
 /return
 
@@ -1178,10 +1187,12 @@ SUB EVENT_shrinkGroup
 
 Sub TargetNamedCheck(_id)
 	/echo TargetNamedCheck ${_id}
-	/declare coll string local FALSE
-	/if (${Spawn[npc id ${_id}].Named}) /varset coll TRUE
-	/echo coll ${coll}
-/return ${coll}
+	/declare Named string local FALSE
+	/if (${Spawn[npc id ${_id}].Named} || ${Spawn[npc id ${_id}].Name.Find[#]}) /varset Named TRUE
+	/if (${Zone.ShortName.Equal[tacvi]} || ${Zone.ShortName.Equal[txevu]}) /varset Named TRUE
+	/if (${Zone.ShortName.Equal[chambersa]} ||${Zone.ShortName.Equal[chambersb]} ||${Zone.ShortName.Equal[chambersc]} ||${Zone.ShortName.Equal[chambersd]}||${Zone.ShortName.Equal[chamberse]}) /varset Named TRUE 
+	/if (${Zone.ShortName.Equal[anguish]}) /varset Named FALSE
+/return ${Named}
 	
 |------------------------------------------------------------|
 |- Send a box chat command to everyone in group				-|
@@ -1604,14 +1615,16 @@ Sub LoadRingset
 	/declare rightfinger string local ${Ini[botINI,SavedInventory,rightfinger]}
 	/if (${Me.Class.ShortName.Equal[BRD]}) /medley stop
 	/echo ${leftfinger},  ${rightfinger}
+	/autoinventory
 	/if (${leftfinger.NotEqual[NULL]}) {
 		 /exchange "${leftfinger}" leftfinger
 	}
-	/delay 5
+	/delay 10
 	/if (${rightfinger.NotEqual[NULL]}) {
 		/exchange "${rightfinger}" rightfinger
 	}
 	/cecho \agSaved Ringset Equipped 
+	/autoinventory
 	/if (${Me.Class.ShortName.Equal[BRD]}) /medley
 /return 
 
@@ -1708,6 +1721,7 @@ Sub LoadWeaponset(string _weaponset)
 		}
 	}
 	:return
+	/autoinventory
 	/if (${Me.Class.ShortName.Equal[BRD]}) /medley
 /return
 

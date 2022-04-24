@@ -84,7 +84,7 @@ Sub Main(int _pull_dist, string _channel, int _campCount)
 	 ----------------------------
 	**|
 	:MainLoop
-		/if (${MacroQuest.GameState.Equal[CHARSELECT]} || ${MacroQuest.GameState.Equal[PRECHARSELECT]} ) /end
+		/if (${/.GameState.Equal[CHARSELECT]} || ${MacroQuest.GameState.Equal[PRECHARSELECT]} ) /end
 		/if (${Me.Casting.ID} && ${Me.Hovering}||${Window[tradewnd].Open}||${Window[lootwnd].Open}) /goto :mainLoop
 		
 		/call RunAllEvents
@@ -179,6 +179,11 @@ Sub getTarget
 			/echo No NPCs on the alert 2 list are up, trying random NPC
 			/target npc range ${int_minTLevel} ${int_maxTLevel} radius ${int_maxRadius} noalert 1 
 			/delay 5
+			/if (!${Target.ID}) {
+				/echo no NPCs around, delaying 1m
+				/delay 1m 
+				/goto :AcquireLoop
+			}
 		} else {
 			/echo no NPCs around, delaying 1m
 			/delay 1m
@@ -249,7 +254,7 @@ Sub chkTarget
 		/call setTGTAlert
 		/return
 	}
-	/if (${Target.Underwater}) {
+	/if (${Target.Underwater} && ${Zone.ShortName.NotEqual[powater]}) {
 		/echo INVALID Target.Underwater
 		/call setTGTAlert
 		/return
@@ -359,7 +364,7 @@ Sub pullTarget
 			/ranged
 		} else {
 			/echo ${Me.SpellReady[${spell_hate}]} Cast "${spell_pull}" ${spell_pullGem} 2s
-			/call Cast "${spell_pull}" ${spell_pullGem} 2s
+			/call MQ2Cast "${spell_pull}" ${spell_pullGem} 2s
 		}
 
 		/doevents NoLOS
@@ -439,14 +444,14 @@ Sub killTarget
 		
 	:killMob
 	|--issue kill command
-	/docommand ${cmdChannel} KillMob ${Target.ID} "${Target.Name}" ${Time.Time24}
+	/bc KillMob ${Target.ID} "${Target.Name}" ${Time.Time24}
 	/killthis
 	/attack on
 	/g Called Kill ${Target.ID} ${Target.Name} ${Time.Time24}
 	
 	/if ((${SpawnCount[npc radius ${int_campRadius}]} > 1) && ${Me.Class.ShortName.Equal[SHD]}  && ${Me.SpellReady[${spell_aehate}]} ) {
 		/echo ${Me.SpellReady[${spell_aehate}]} Cast ${spell_aehate} ${spell_aehateGem} 5s
-		/call Cast "${spell_aehate}" ${spell_aehateGem}
+		/call MQ2Cast "${spell_aehate}" ${spell_aehateGem}
 	}
 	
 	/if ((${SpawnCount[npc radius ${int_campRadius}]} > 1) && ${Me.Class.ShortName.Equal[WAR]}  && ${Me.CombatAbilityReady[Area Taunt]} ) {
@@ -479,7 +484,7 @@ Sub killTarget
 			} 
 			/if ((${SpawnCount[npc radius ${int_campRadius}]} > 1) && ${Me.Class.ShortName.Equal[SHD]}  && ${Me.SpellReady[${spell_aehate}]} ) {
 				/echo ${Me.SpellReady[${spell_aehate}]} Cast ${spell_aehate} ${spell_aehateGem} 5s
-				/call Cast "${spell_aehate}" ${spell_aehateGem}
+				/call MQ2Cast "${spell_aehate}" ${spell_aehateGem}
 			}
 			/goto :combatLoop
 		} else {
@@ -540,7 +545,7 @@ Sub chkUtils
 			/echo Waiting for : mana: ${bln_wait4Mana} endurance: ${bln_wait4End} hitpoints: ${bln_wait4HP}
 			/if (${SpawnCount[npc radius ${int_campRadius}]} > 0) /return
 			/if (!${Me.Sitting}) /sit on 
-			|/delay 5s
+			/delay 50
 			/goto :chkUtilLoop
 		}
 		/if (${Me.Sitting}) /sit off
@@ -783,7 +788,7 @@ Sub chkComponents
 	/echo ${FindItemCount[=${item_summon}]}
 		/echo ${item_summon} summoning ${item_pull_clean}
 		:summon_item
-		/call Cast "${item_summon}"
+		/call MQ2Cast "${item_summon}"
 		/delay 50
 		/autoinv
 		/goto :chkComponent
@@ -1075,6 +1080,7 @@ Sub setAlerts
 	/squelch /alert add 1 "a gnome villager"
 	/squelch /alert add 1 "a human villager"
 	/squelch /alert add 1 "a troll villager"
+	/squelch /alert add 1 "a portal crystal"
 	
 	
 	|=================================
@@ -1140,7 +1146,6 @@ Sub setAlerts
 	| /squelch /alert add 2 "Keeper of Blood" |note spawns in spot you can't nav to
 	/squelch /alert add 2 "Yavrin"
 	
-	
 	|-- etc--|
 	/squelch /alert add 2 "night watchman"
 	/squelch /alert add 2 "officiator"
@@ -1152,8 +1157,7 @@ Sub setAlerts
 	/squelch /alert add 2 "Sikl"
 	/squelch /alert add 2 "Giddib"
 	/squelch /alert add 2 "officiator"
-	
-	
+
 	
 	/squelch /alert clear 3
 	/squelch /alert add 3 "All Powerful Gnome"

@@ -53,7 +53,7 @@ Sub chkPetBuffs
 		/for i 1 to ${int_petBuffTotal}  
 			/if (!${Me.PetBuff[${petBuff_${i}}]}) {
 				/call chkSpellMemorized "${petBuff_${i}}" TRUE ${petBuff_${i}_Gem}
-				/call Cast "${petBuff_${i}}" 
+				/call MQ2Cast "${petBuff_${i}}" 
 			}
 		/next i
 	}
@@ -86,7 +86,7 @@ Sub chkPetSpawn
 			/delay 3s ${Me.Pet.ID}
 			/if (!${Me.Pet.ID}) {
 				/call chkSpellMemorized "${str_petSpell}" TRUE ${str_petGem}
-				/call Cast "${str_petSpell}" ${str_petGem} 5s
+				/call MQ2Cast "${str_petSpell}" ${str_petGem} 5s
 				:castWait
 					/delay 10
 					/if (${Me.Casting.ID}) /goto :castWait
@@ -136,7 +136,7 @@ Sub chkPetWeaps
 	/if (${FindItemCount[=Summoned: ${str_petBelt}]}==0) {
 		/echo Belt: ${str_petBelt}
 		/call chkSpellMemorized "${str_petBelt}" TRUE
-		/call Cast "${str_petBelt}"
+		/call MQ2Cast "${str_petBelt}"
 		/target ${Me.Pet}
 		/if (${Cursor.ID}) /click left target
 		/delay 10
@@ -147,7 +147,7 @@ Sub chkPetWeaps
 	/if (${FindItemCount[=Summoned: ${str_petWeap1}]}==0) {
 		/echo Weapon 1: ${str_petWeap1}
 		/call chkSpellMemorized "${str_petWeap1}" TRUE
-		/call Cast "${str_petWeap1}"
+		/call MQ2Cast "${str_petWeap1}"
 		/target ${Me.Pet}
 		/if (${Cursor.ID}) /click left target
 		/delay 10
@@ -158,7 +158,7 @@ Sub chkPetWeaps
 	/if (${FindItemCount[=Summoned: ${str_petWeap2}]}==0) {
 		/echo Weapon 2: ${str_petWeap2}
 		/call chkSpellMemorized "${str_petWeap2}" TRUE
-		/call Cast "${str_petWeap2}"
+		/call MQ2Cast "${str_petWeap2}"
 		/target ${Me.Pet}
 		/if (${Cursor.ID}) /click left target
 		/delay 10
@@ -186,9 +186,7 @@ Sub ShrinkPet
 		/echo Shrinking: #${sc}: ${castArg}
 		/if (${sc}>2) /goto :return
 		/varcalc sc ${sc}+1
-		
-		/echo /call Cast ${castArg}
-		/call Cast ${castArg}
+		/call MQ2Cast ${castArg}
 		/goto :shrink
 :return
 	/varset bln_petShrunk TRUE

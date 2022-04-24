@@ -147,9 +147,9 @@ Sub chkTarget
 	:chkHoTT
 	/if (${Me.TargetOfTarget.CleanName.Equal[${Me.CleanName}]}) {
 		/echo pulled aggro, hitting mindcrash if ready, concussion if not
-		/if (${Me.AltAbilityReady[Mind Crash]}) /call Cast "Mind Crash" alt
+		/if (${Me.AltAbilityReady[Mind Crash]}) /call MQ2Cast "Mind Crash" alt
 		/delay 10
-		/if (${Me.SpellReady[${str_concSpell}]}) /call Cast "${str_concSpell}" ${str_concGem}
+		/if (${Me.SpellReady[${str_concSpell}]}) /call MQ2Cast "${str_concSpell}" ${str_concGem}
 		/delay 10
 	}
 	:return
@@ -194,7 +194,7 @@ Sub chkConcussion
 	|/echo chkConcussion: ${bln_concUse} && ${Me.Standing} && (${int_concCount}>=${int_concCountActive})
 	/if (${bln_concUse} && ${Me.Standing} && (${int_concCount}>=${int_concCountActive})) {
 		/call chkSpellMemorized "${str_concSpell}" ${str_concGem} TRUE
-		/call Cast "${str_concSpell}" ${str_concGem}
+		/call MQ2Cast "${str_concSpell}" ${str_concGem}
 		/varset timer_concDelay ${timer_concDelay.OriginalValue}
 		/varset int_concCount 0
 	}
@@ -260,7 +260,7 @@ Sub variant_initialize(string _strTankName, int _intAssistAt, int _intTankHealPo
 
 Sub EVENT_MANABURN
 	/echo MBURN CALLED
-	/call Cast "Mana Burn" alt
+	/call MQ2Cast "Mana Burn" alt
 	/doevents flush
 /return
 
@@ -279,7 +279,7 @@ SUB EVENT_FIRETL(line, ChatSender, eventParams)
 	/if (!${bln_tlUse}) /return
 	/doevents flush
 	/bc Firing TL
-	/call Cast "${str_tlSpell}" ${str_tlGem}
+	/call MQ2Cast "${str_tlSpell}" ${str_tlGem}
 	/delay 1m
 	/memspellset default
 /return

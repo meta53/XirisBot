@@ -206,10 +206,10 @@ Sub chkStun
 	/if (!${Target.ID}) /return
 	/if ( ${Me.SpellReady[${str_stun1Spell}]}) {
 		/echo chkStun: Stunning with ${str_stun1Spell}
-		/call Cast "${str_stun1Spell}" ${str_stun1Gem} 2s
+		/call MQ2Cast "${str_stun1Spell}" ${str_stun1Gem} 2s
 	} else /if ( ${Me.SpellReady[${str_stun2Spell}]}) {
 		/echo chkStun: Stunning with ${str_stun2Spell}
-		/call Cast "${str_stun2Spell}" ${str_stun2Gem} 2s
+		/call MQ2Cast "${str_stun2Spell}" ${str_stun2Gem} 2s
 	}
 /return
 
@@ -226,7 +226,7 @@ Sub chkHate
 	/if (!${Target.ID}) /return
 	/if ( ${Me.SpellReady[${spell_hate}]}) {
 		/echo chkHate: Hating with ${spell_hate}
-		/call Cast "${spell_hate}" ${spell_hateGem} 2s
+		/call MQ2Cast "${spell_hate}" ${spell_hateGem} 2s
 	}
 
 /return

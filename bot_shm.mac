@@ -260,12 +260,12 @@ Sub healGRP
 Sub chkManaConvert
 	/if (${Me.PctMana} < ${int_canniManaThreshold} && ${Me.SpellReady[${str_canniSpell}]} && ${Me.PctHPs} > ${int_canniHPThreshold}) {
 		/echo "${str_canniSpell}"
-		/call Cast "${str_canniSpell}" gem1 5s
+		/call MQ2Cast "${str_canniSpell}" gem1 5s
 	}
 	
 	/if (${Me.PctMana} < ${int_canniManaThreshold} && ${Me.AltAbilityReady[Cannibalization]} && ${Me.PctHPs} > ${int_canniHPThreshold}) {
 		/echo AA "Cannibalization"
-		/call Cast "Cannibalization" alt
+		/call MQ2Cast "Cannibalization" alt
 	}
 /return 
 
@@ -286,7 +286,7 @@ Sub chkChampion
 		| I must have just memmed champion, so uh, it takes 60s to be ready
 		/varset timer_champion 60s
 	} else {
-		/call Cast "Champion"
+		/call MQ2Cast "Champion"
 		/varset timer_champion 510s
 	}
 /return
@@ -317,7 +317,7 @@ Sub EVENT_DOSHRINK(line, ChatSender, eventParams)
 	/echo \ay doShrinkEventCalled
 	/if (${FindItemCount[Umbracite Swarm Orb]}) {
 		/cecho \agShrinking
-		/call Cast "Umbracite Swarm Orb" item
+		/call MQ2Cast "Umbracite Swarm Orb" item
 	}
 /return
 

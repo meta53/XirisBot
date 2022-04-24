@@ -49,16 +49,23 @@ REQUIRED INCLUDES
 #EVENT BattleCleric "#1# tells the group, 'BattleOn #2#'"
 #EVENT BattleCleric "#1# you tell your party, 'BattleOn #2#'"
 
+#EVENT CelestialRegeneration "<#1#> celregen#*#"
+#EVENT CelestialRegeneration "[#1#(msg)] celregen#*#"
+#EVENT CelestialRegeneration "#1# tells you, 'celregen#*'"
+#EVENT CelestialRegeneration "#1# tells the group, 'celregen#*#'"
+#EVENT CelestialRegeneration "#1# you tell your party, 'celregen#*#'"
+
 #include xiris_common/xiris_common.inc
 
 #Turbo 40
 
 Sub InitEvents_Class 
-	/call RegisterClassEvents Events_CLR 5
+	/call RegisterClassEvents Events_CLR 7
 /return
 
 Sub Events_CLR
 	/doevents BattleCleric
+	/doevents CelestialRegeneration
 	| Add the CH CHain watch events (enumerated in xiris_healing.inc)
 	/doevents CHStart
 	/doevents CHStop
@@ -297,9 +304,29 @@ Sub healGRP
 
 Sub chkMGBCelestialRotation
 	| loop through the MGB Celestial Rotation members
-	| if they have all fired before (me) and ! celestial healing, then fire mine.
+	| if they have all fired before (me) and ! Celestial Regeneration, then fire mine.
 
 /return
+
+Sub EVENT_CelestialRegeneration
+	/call MGBCelestialRegeneration
+/return
+
+Sub MGBCelestialRegeneration
+	/if (${Me.AltAbilityReady[Mass Group Buff]} && ${Me.AltAbilityReady[Celestial Regeneration]}) {
+		/call MQ2Cast "Mass Group Buff" alt
+		/delay 10
+		/call MQ2Cast "Celestial Regeneration" alt
+		/return
+	}
+
+	/if (${Me.AltAbilityReady[Celestial Regeneration]}) {
+		/call MQ2Cast "Celestial Regeneration" alt
+	}
+
+/return
+
+
 
 
 
@@ -349,7 +376,7 @@ Sub chkDARBReady
 Sub chkDivineIntervention
 	/if (${FindItemCount[Emerald]} && ${Me.SpellReady[Divine Intervention]} && !${NetBots[${Target.Name}].Buff[Divine Intervention].Name.Equal[Divine Intervention]}) {
 		/say Casting Divine Intervention on ${Target.Name}!
-		/call Cast "Divine Intervention"
+		/call MQ2Cast "Divine Intervention"
 	}
 /return
 
@@ -400,7 +427,7 @@ Sub chkYaulp
 	|/echo chkYaulp (${bln_engaged} && ${Me.PctMana}<=${int_medPercent} && ${Me.SpellReady[${str_spellYaulp}]})
 	/if (!${bln_useYaulp}) /return
 	/if (${bln_engaged} && ${Me.PctMana}<=${int_medPercent} && ${Me.SpellReady[${str_spellYaulp}]}) {
-		/call Cast "${str_spellYaulp}" ${str_gemYaulp}
+		/call MQ2Cast "${str_spellYaulp}" ${str_gemYaulp}
 	}
 /return
 

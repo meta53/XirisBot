@@ -257,7 +257,7 @@ Sub cmbtBuffGRP
 			:castCMBTBuff
 			/cecho \ayCasting ${buffSpell} on ${gName}
 			/call TrueTarget ${NetBots[${gName}].ID}
-			/call Cast "${buffSpell}" ${buffGem}
+			/call MQ2Cast "${buffSpell}" ${buffGem}
 			/if (${Cast.Result.Equal[CAST_SUCCESS]}) {
 				/cecho \ag ${buffSpell} ${Cast.Result} : DELAYING for \ay${NetBots[${gName}].Buff[${buffSpell}].Duration}s \agrefresh	
 			}
@@ -313,7 +313,7 @@ Sub doGroupBuffOnTarget(string tgt)
 		/if (!${Me.Standing}) /stand on
 		/if (${Me.SpellReady[${buffSpell}]} && (${Target.Distance}<=200)) {
 			/echo Cast "${buffSpell}" on TARGET: ${tgt}
-			/call Cast "${buffSpell}" ${buffGem} 10s
+			/call MQ2Cast "${buffSpell}" ${buffGem} 10s
 			/delay 10
 			/if (${Cast.Result.Equal[CAST_OUTOFMANA]})  	/goto :spellReadyWait
 			/if (${Cast.Result.Equal[CAST_CANNOTSEE]})  	/goto :spellReadyWait
@@ -391,7 +391,7 @@ Sub doSpecificBuffOnChar(string _char, string _spell)
 	/delay 10
 	:spellReadyWait
 	/if (${Me.SpellReady[${_spell}]} && (${Target.Distance}<=200)) {
-		/call Cast "${_spell}" gem1 10s
+		/call MQ2Cast "${_spell}" gem1 10s
 	} else {
 		/goto :spellReadyWait
 	}
@@ -460,7 +460,7 @@ Sub castSingleTargetBuff(string tgt, string buffSpell, string buffGem)
 		/if (!${Me.Standing}) /stand on
 		/if (${Me.SpellReady[${buffSpell}]} && (${Target.Distance}<=200)) {
 			/echo Cast "${buffSpell}" on TARGET: ${tgt}
-			/call Cast "${buffSpell}" ${buffGem} 10s
+			/call MQ2Cast "${buffSpell}" ${buffGem} 10s
 			/delay 10
 			/if (${Cast.Result.Equal[CAST_OUTOFMANA]})  	/goto :spellReadyWait2
 			/if (${Cast.Result.Equal[CAST_CANNOTSEE]})  	/goto :spellReadyWait2
@@ -612,7 +612,7 @@ Sub chkOOCBuffs
 		/keypress f1
 		/if (${Me.SpellReady[${buffSpell}]}) {
 			/echo Cast "${buffSpell}" on MYSELF
-			/call Cast "${buffSpell}" ${buffGem} 10s
+			/call MQ2Cast "${buffSpell}" ${buffGem} 10s
 			/delay 10
 			/if (${Cast.Result.Equal[CAST_OUTOFMANA]})  	/goto :spellReadyWait
 			/if (${Cast.Result.Equal[CAST_CANNOTSEE]})  	/goto :spellReadyWait

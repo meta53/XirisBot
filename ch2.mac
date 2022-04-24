@@ -168,7 +168,7 @@ Sub chcTwist
 		/delay 20s ${Me.SpellReady[${chSpell}]}
 	    /bc [${chainID}]:[${position}] CHC->${tankOne} hp:${Target.PctHPs} d:${Target.Distance} m:${Me.PctMana}
 		/delay ${delay}
-		/call Cast "${chSpell}" gem9 5s chcEvents
+		/call MQ2Cast "${chSpell}" gem9 5s chcEvents
 		/doevents
 	/goto :Loop
 /return

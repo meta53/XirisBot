@@ -297,7 +297,7 @@ Sub Event_KeeperPosition
 
 Sub EVENT_VORRAMP
 	/echo ah shit, yihst vor is about to rape my face
-	/if (${Me.Class.ShortName.Equal[CLR]}) /call Cast "${str_heal_group}" gem1 5s
+	/if (${Me.Class.ShortName.Equal[CLR]}) /call MQ2Cast "${str_heal_group}" gem1 5s
 	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
 		/call FireRiposteDisc
 	} else {
@@ -535,7 +535,7 @@ Sub EVENT_BALANCERAPE
 		/call RunRaidEvents	
 		/if (!${balanceRapeHeal}) /return
 		/if (${bln_annouce}) /${cmdChannel} ${str_currentHeal} > ${Target.Name} hp:${Target.PctHPs} m:${Me.PctMana} d:${Target.Distance}
-		/call Cast "${str_heal_normal}" gem2 1s
+		/call MQ2Cast "${str_heal_normal}" gem2 1s
 		|/if (${Me.Class.ShortName.Equal[CLR]}) /call chkDivineIntervention
 	/goto :balanceRapeHeal
 /return

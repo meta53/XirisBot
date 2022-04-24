@@ -88,7 +88,7 @@ Sub Events_Healing
 
 Sub EVENT_GroupHeal
 	/echo Blasting Group Heal!
-	/call Cast "${str_heal_group}" gem1 5s
+	/call MQ2Cast "${str_heal_group}" gem1 5s
 	/doevents flush GroupHeal
 /return
 
@@ -315,7 +315,7 @@ Sub healCast(int _id, string _name, string _spell)
 		/if (${Target.ID} != ${_id}) /call TrueTarget ${_id}
 		/delay 2s (${Target.ID} == ${_id})
 		/call chkSpellMemorized "${_spell}" TRUE 2
-		/call Cast "${_spell}" gem2 1s chkHP
+		/call MQ2Cast "${_spell}" gem2 1s chkHP
 		/if (${Macro.Return.Equal[CAST_SUCCESS]} && ${bln_annouce}) /${cmdChannel} ${_spell} > ${Target.Name} hp:${Target.PctHPs} m:${Me.PctMana} d:${Target.Distance}
 		/return ${Macro.Return}
 	}
@@ -334,15 +334,15 @@ Sub healDivineArbitration
 	/if (${bln_annouce}) /bc Incoming Divine Arbitration 
  
     /if (${Me.AltAbilityReady[divine arbitration]}) {
-        /call Cast "Divine Arbitration" alt 2s chkDA
+        /call MQ2Cast "Divine Arbitration" alt 2s chkDA
     } else /if (!${FindItem[${str_epicName}].Timer}) {
-        /call Cast ${str_epicName} item 2s chkDA
+        /call MQ2Cast ${str_epicName} item 2s chkDA
     } else {
         /if (${bln_annouce}) /bc No Saves Ready, we are boned.
     }
     /if ((${bln_healAfterArb})&&(${Me.PctMana}>40)) { 
         /if (${bln_annouce}) /bc Incoming ${str_heal_group}
-        /call Cast "${str_heal_group}" gem4 2s 
+        /call MQ2Cast "${str_heal_group}" gem4 2s 
     } 
 /return
 
@@ -509,7 +509,7 @@ Sub heal_chStart(string _chSettings, _position)
 		/call TrueTarget ${int_chTarget}
 		:chCast
 	 	/bc [${int_chChainID}]:[${pos}] CHC->${tank1} hp:${Target.PctHPs} d:${Target.Distance} m:${Me.PctMana}
-		/call Cast "${str_heal_complete}" gem9 1s RunClassEvents
+		/call MQ2Cast "${str_heal_complete}" gem9 1s RunClassEvents
 		/echo CH Cast ${Macro.Return}, delaying: ${delay}ms
 		/if (${Macro.Return.Equal[CAST_FIZZLE]}) {
 			/goto :chCast
@@ -632,7 +632,7 @@ Sub Event_CanRez
 		| use custom spell if defined, otherwise epic, or fall back to Reviviscence
 		/if (${FindItem[Water Sprinkler of Nem Ankh].InvSlot}) {
 			/corpse
-			/call Cast "Water Sprinkler of Nem Ankh" item 40 CheckOnline
+			/call MQ2Cast "Water Sprinkler of Nem Ankh" item 40 CheckOnline
 			/if (${Macro.Return.Equal[CAST_SUCCESS]}) {
 				/call AddIgnoreList ${Target.ID}
 				/bc Rezzed ${Target.Name}
@@ -640,7 +640,7 @@ Sub Event_CanRez
 			}
 		} else {
 			/corpse
-			/call Cast "${str_rezSpell}" ${str_rezGem} 20 CheckOnline
+			/call MQ2Cast "${str_rezSpell}" ${str_rezGem} 20 CheckOnline
 			/if (${Macro.Return.Equal[CAST_SUCCESS]}) {
 				/call AddIgnoreList ${Target.ID}
 				/bc Rezzed ${Target.Name}

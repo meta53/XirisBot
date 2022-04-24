@@ -341,7 +341,7 @@ Sub castCure(string _name, int _id, string _spell, int _count)
 	/declare i int local 1
 	/for i 1 to ${_count}
 		/cecho \aw Casting ${_spell}
-		/call Cast "${_spell}" gem7 8s
+		/call MQ2Cast "${_spell}" gem7 8s
 		/delay 10
 	/next i 
 	/bct ${_name} I cured you.

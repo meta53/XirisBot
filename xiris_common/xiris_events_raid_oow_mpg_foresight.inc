@@ -35,6 +35,7 @@ ______________________________________________
 
 #event ForesightAOEDPS		"#*#Doing enough damage to him might interrupt the process#*#"
 #event ForesightDS			"#*#before you is sprouting shard spikes#*#"
+#event ForesightDS			"#*#you are pierced by thorns"
 
 #event ForesightKyvMove		"#*#You should move#*#"
 #event ForesightKyvMoveSafe "#*#You are struck by a stray arrow#*#"
@@ -398,7 +399,7 @@ Sub EVENT_ForesightDS
 		/varcalc wait ${wait}+1
 		/if (${wait} < 11) {
 			/echo Waiting for DS to fade (no emote)
-			/delay 10
+			/delay 3
 			/goto :DSDelay
 		}
 	}

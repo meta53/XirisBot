@@ -203,17 +203,17 @@ Sub Event_TrisHuman
 		/if (${Select[${Target.Race},Werewolf]}) /return
 		/if (${Me.Class.ShortName.Equal[SHM]}) {
 			/if (${Target.PctHPs} >= 99) {
-				/call Cast "Remove Greater Curse" gem10 1s
+				/call MQ2Cast "Remove Greater Curse" gem10 1s
 			} else {
-				/call Cast "Qirik's Mending Rk. II" gem5 1s
+				/call MQ2Cast "Qirik's Mending Rk. II" gem5 1s
 			}
 			/goto :priestAssist
 		} else /if (${Me.Class.ShortName.Equal[CLR]}) {
 			/varset str_currentHeal ${str_heal_normal_efficient}
 			/if (${Target.PctHPs} >= 99) {
-				/call Cast "Remove Greater Curse" gem10 1s
+				/call MQ2Cast "Remove Greater Curse" gem10 1s
 			} else {
-				/call Cast "${str_currentHeal}" gem1 1s
+				/call MQ2Cast "${str_currentHeal}" gem1 1s
 			}
 			/goto :priestAssist
 		}

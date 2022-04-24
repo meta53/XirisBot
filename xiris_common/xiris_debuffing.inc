@@ -52,7 +52,7 @@ Sub EVENT_DebuffTarget(_line, _sender, _eventParams)
 					/delay 2
 					/goto :waitDB
 				}
-			/call Cast "${DEBUFF_${db}}" ${DEBUFF_${db}_Gem} 5s
+			/call MQ2Cast "${DEBUFF_${db}}" ${DEBUFF_${db}_Gem} 5s
 			/varset intTries   ${intTries}+1
 			
 			|-- Parse Cast Return
@@ -224,7 +224,7 @@ Sub debuffTarget(int _targetIndex, int _debuffIndex, bool _overrideArray)
 				/delay 2
 				/goto :debuffLoop
 			}
-		/call Cast "${debuffSpell}" gem3 5s chkCastTarget ${_targetIndex}
+		/call MQ2Cast "${debuffSpell}" gem3 5s chkCastTarget ${_targetIndex}
 		/varset intTries   ${intTries}+1
 		
 	|-- Parse Cast Return
@@ -280,12 +280,14 @@ Sub chkSingleTargetDebuff
 	/if (!${bln_engaged}) /return
 	/if (${int_debuffTotal} == 0) /return
 	|-- is target named?
+	/declare isNamed bool local FALSE
 	/call TargetNamedCheck ${NearestSpawn[NPC ID ${targetArray[${i},1]}].ID}
+	/varset isNamed ${Macro.Return}
 	/declare tgtArrayDBFIndex	int		local 
 	/declare j int local 0
-	/declare isNamed bool local FALSE
 	
-	/varset isNamed ${Macro.Return}
+	
+	
 	
 	|/echo chkSingleTargetDebuff total: #{int_debuffTotal}
 	
