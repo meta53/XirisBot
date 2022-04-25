@@ -53,7 +53,7 @@ ______________________________________________
 #event ForesightWeaponSafe  "#*#Your weaponry cools down#*#"
 #event ForesightWeaponSafe  "#*#searing your hands#*#"
 
-#event ForesightRing			"#*#bite into your fingers#*#"
+#event ForesightRing		"#*#bite into your fingers#*#"
 #event ForesightRingSafe	"#*#You regain the use of your fingers#*#"
 #event ForesightRingSafe	"#*#Your rings clamp down#*#"
 
@@ -117,14 +117,14 @@ Sub Events_OOW_MPG_Foresight
 	|/doevents ForesightWeaponSafe
 
 	/doevents ForesightRing
-	/doevents ForesightRingSafe
+	|/doevents ForesightRingSafe
 
 	|/doevents ForesightAEClose
 	|/doevents ForesightAECloseSafe
 
 	|--events that you need to just wait out
 	/doevents ForesightReflect
-	/doevents ForesightAEMaxDPS
+	|/doevents ForesightAEMaxDPS
 	/doevents ForesightDS
 	
 
@@ -247,6 +247,7 @@ Sub EVENT_ForesightKyvMove
 		/keypress forward hold
 		/delay 20
 		/keypress back
+		/varset IsMovingAnywhere FALSE
 	} else {
 		| Melee need to move to SafeCenterDPS
 		|/call ForesightNavigation D4 IsMovingAnywhere ForesightKyvSafe
@@ -266,7 +267,7 @@ Sub EVENT_ForesightKyvStill
 	|- set initial states (to restore at end)
 	/declare atk bool local FALSE
 	/declare tid int local ${Target.ID}
-
+	/declare kyvstill timer local 30s
 	/if (${Melee.Attack})   /varset atk TRUE
 	/if (${Navigation.Active}) /nav stop
 	/if (${Melee.Sticking})    /stick off
@@ -281,10 +282,13 @@ Sub EVENT_ForesightKyvStill
 		/delay 20
 		/doevents ForesightKyvStillSafe
 		/doevents flush ForesightKyvStillSafe
-		
+		/if (!${kyvstill}) /goto :return
 		/goto :stillnessDelay
 	}
 	:return
+	/varset IsHoldingStill FALSE
+	/if (${Me.Ducking}) /keypress duck
+	/if (${Me.State.NotEqual[STAND]}) /stand
 	/call TrueTarget ${tid}
 	/if (${atk}) /killthis
 /return
@@ -303,7 +307,7 @@ Sub EVENT_ForesightKyvDuck
 	|- set initial states (to restore at end)
 	/declare atk bool local FALSE
 	/declare tid int local ${Target.ID}
-	
+	/declare kyvduck timer local 30s
 	/if (${Melee.Attack})   /varset atk TRUE
 	/if (${Navigation.Active}) /nav stop
 	/if (${Melee.Sticking})    /stick off
@@ -322,10 +326,13 @@ Sub EVENT_ForesightKyvDuck
 		/delay 20
 		/doevents ForesightKyvDuckSafe
 		/doevents flush ForesightKyvDuckSafe
+		/if (!${kyvduck}) /goto :return
 		/goto :duckDelay
 	}
 	:return
+	/varset IsDucking FALSE
 	/if (${Me.Ducking}) /keypress duck
+	/if (${Me.State.NotEqual[STAND]}) /stand
 	/call TrueTarget ${tid}
 	/if (${atk}) /killthis
 /return
@@ -442,13 +449,7 @@ Sub EVENT_ForesightRing
 	/doevents flush ForesightRing
 	| The Hazard will cast spell 5695 Crippling Clamp, 1200 DD, 25% slow, 60 disease counters
 	| save the ring information and unequip
-	/varset Ring_1_Name ${Me.Inventory[leftfinger].Name}
-	/varset Ring_2_Name ${Me.Inventory[rightfinger].Name}
-	/cecho \ayRemoving \ar${Ring_1_Name} \ayfrom leftfinger
-	/unequip leftfinger
-	/delay 10
-	/cecho \ayRemoving \ar${Ring_2_Name} \ayfrom rightfinger
-	/unequip rightfinger
+	/call RemoveRingset
 	|- set the watch variable to TRUE
 	/varset HasRemovedRings TRUE
 /return
@@ -509,6 +510,7 @@ Sub EVENT_D1
 		/if (${Navigation.Active})  /goto :movement
 		/if (${str_classArchetype.NotEqual[PRIEST]}) {
 			/call TrueTarget ${Spawn[NPC "Dragorn Flamecaster"].ID}
+			/call EngageTarget  ${Spawn[NPC "Dragorn Flamecaster"].ID}
 			/if (${Target.Distance} < 50) /nav stop
 		} 
 
@@ -523,6 +525,7 @@ Sub EVENT_D2
 		/if (${Navigation.Active})  /goto :movement
 		/if (${str_classArchetype.NotEqual[PRIEST]}) {
 			/call TrueTarget ${Spawn[NPC "Dragorn Spellscribe"].ID}
+			/call EngageTarget  ${Spawn[NPC "Dragorn Spellscribe"].ID}
 			/if (${Target.Distance} < 50) /nav stop
 		} 
 /return
@@ -536,6 +539,7 @@ Sub EVENT_D3
 		/if (${Navigation.Active})  /goto :movement
 		/if (${str_classArchetype.NotEqual[PRIEST]}) {
 			/call TrueTarget ${Spawn[NPC "Dragorn Adept"].ID}
+			/call EngageTarget  ${Spawn[NPC "Dragorn Adept"].ID}
 			/if (${Target.Distance} < 50) /nav stop
 		} 
 /return
@@ -549,6 +553,7 @@ Sub EVENT_D4
 		/if (${Navigation.Active})  /goto :movement
 		/if (${str_classArchetype.NotEqual[PRIEST]}) {
 			/call TrueTarget ${Spawn[NPC "Dragorn Incinerator"].ID}
+			/call EngageTarget  ${Spawn[NPC "Dragorn Incinerator"].ID}
 			/if (${Target.Distance} < 50) /nav stop
 		} 
 /return
@@ -562,6 +567,7 @@ Sub EVENT_D5
 		/if (${Navigation.Active})  /goto :movement
 		/if (${str_classArchetype.NotEqual[PRIEST]}) {
 			/call TrueTarget ${Spawn[NPC "Dragorn Acolyte"].ID}
+			/call EngageTarget  ${Spawn[NPC "Dragorn Acolyte"].ID}
 			/if (${Target.Distance} < 50) /nav stop
 		} 
 /return

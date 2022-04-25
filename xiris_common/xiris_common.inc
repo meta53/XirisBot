@@ -619,15 +619,25 @@ Sub chkBurn
 						| It was an alt disc 
 						/if (${Burn_${intB}_MGB}) {
 							/call MQ2Cast "Mass Group Buff" alt
+							/delay 5
 							/cecho \ag Mass Group Buff Activated!
-						} 
+						}
 						/cecho \agAA Burn_${intB} clicked!
 						/call MQ2Cast "${Burn_${intB}}" alt
 					}
 				} else {
+					/if (${Burn_${intB}_MGB}) {
+						/call MQ2Cast "Mass Group Buff" alt
+						/delay 5
+						/cecho \ag Mass Group Buff Activated!
+					}
 					/cecho \agAA Burn_${intB} clicked!
 					/call MQ2Cast "${Burn_${intB}}" alt
-				}	
+				}
+			| ---------------	
+			| Item
+			| 		Additionally, if MGBable, (few) we have Burn_1_MGB = TRUE to look for (default FALSE)
+			| ---------------		
 			} else /if (${Burn_${intB}_Type.Equal[item]} && ${FindItem[${Burn_${intB}}].TimerReady} && (${Burn_${intB}_Use}) ) {
 					/cecho \agAA Burn_${intB} clicked!
 					/if (${Me.Class.ShortName.Equal[BRD]}) {
@@ -1186,7 +1196,7 @@ SUB EVENT_shrinkGroup
 
 
 Sub TargetNamedCheck(_id)
-	/echo TargetNamedCheck ${_id}
+	|/echo TargetNamedCheck ${_id}
 	/declare Named string local FALSE
 	/if (${Spawn[npc id ${_id}].Named} || ${Spawn[npc id ${_id}].Name.Find[#]}) /varset Named TRUE
 	/if (${Zone.ShortName.Equal[tacvi]} || ${Zone.ShortName.Equal[txevu]}) /varset Named TRUE
@@ -1603,6 +1613,29 @@ Sub SaveRingset
 	/ini botINI "SavedInventory" "rightfinger" "${rightfinger}"
 /return
 
+Sub EVENT_RemoveRingset
+	/cecho \ayRemoving Ringset ${_eventParams}
+	/call RemoveRingset
+/return
+
+Sub RemoveRingset
+	/varset Ring_1_Name ${Me.Inventory[leftfinger].Name}
+	/varset Ring_2_Name ${Me.Inventory[rightfinger].Name}
+	/declare notemptyCount int local 0
+	:notempty
+	/varcalc notemptyCount ${notemptyCount}+1
+	/autoinventory
+	/if (${notemptyCount} > 10) /return
+	/if (${Cursor.ID}) /goto :notempty
+
+	/cecho \ayRemoving \ar${Ring_1_Name} \ayfrom leftfinger
+	/unequip leftfinger
+	/delay 10
+	/cecho \ayRemoving \ar${Ring_2_Name} \ayfrom rightfinger
+	/unequip rightfinger
+	/delay 10
+	/autoinventory
+/return
 
 |-- method to load the saved rings from INI (primarily for Trial of Foresight)
 Sub EVENT_LoadRingset(string _line, string _sender, string _eventParams)
@@ -1615,7 +1648,14 @@ Sub LoadRingset
 	/declare rightfinger string local ${Ini[botINI,SavedInventory,rightfinger]}
 	/if (${Me.Class.ShortName.Equal[BRD]}) /medley stop
 	/echo ${leftfinger},  ${rightfinger}
+
+	/declare notemptyCount int local 0
+	:notempty
+	/varcalc notemptyCount ${notemptyCount}+1
 	/autoinventory
+	/if (${notemptyCount} > 10) /return
+	/if (${Cursor.ID}) /goto :notempty
+
 	/if (${leftfinger.NotEqual[NULL]}) {
 		 /exchange "${leftfinger}" leftfinger
 	}
@@ -1648,7 +1688,12 @@ Sub LoadWeaponset(string _weaponset)
 	/declare posi string local 
 
 	|-- auto inventory
+	/declare notemptyCount int local 0
+	:notempty
+	/varcalc notemptyCount ${notemptyCount}+1
 	/autoinventory
+	/if (${notemptyCount} > 10) /return
+	/if (${Cursor.ID}) /goto :notempty
 
 	|-- empty both hands
 	/if (${Me.Inventory[mainhand].Name.NotEqual[NULL]}) {

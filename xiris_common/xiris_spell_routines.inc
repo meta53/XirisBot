@@ -135,6 +135,7 @@ Sub xbot_initialize_spellRoutines
 	|-- Default values for xiris_spell_routines.inc
 	/declare noInvis 			bool 	outer 	TRUE
 	/declare noFeigning 		bool 	outer 	TRUE
+	/declare castReturn			string  outer
 	/if ( !${Defined[castReturn]} )  /declare castReturn string outer NULL
 	/if ( !${Defined[defaultGem]} )  /declare defaultGem string outer gem9
 
