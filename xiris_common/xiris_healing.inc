@@ -6,9 +6,10 @@ This includes the healing setup (INI READ)
 and sub routines as necessary
 ______________________________________________
 REVISION HISTORY
-    03.24.16    xiris  INITIAL REVISION - Consolidation of several macro embedded routines
-	10.15.16	xiris	 Cleaned up (removed CH) and added group healing event
-	01.13.22	xciris	 Added Rez routines
+    03.24.16    xiris	INITIAL REVISION - Consolidation of several macro embedded routines
+	10.15.16	xiris	Cleaned up (removed CH) and added group healing event
+	01.13.22	xiris	Added Rez routines
+	04.25.22	xiris 	Added healing potion routines
 **|
 
 #event GroupHeal  "#*#DoGroupHeal#*#"

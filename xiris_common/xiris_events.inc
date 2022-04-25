@@ -16,7 +16,8 @@ ______________________________________________
 #include xiris_common/xiris_events_raid_god.inc 
 #include xiris_common/xiris_events_raid_dodh_demi.inc 
 #include xiris_common/xiris_events_raid_oow_mpg_foresight.inc 
-
+#include xiris_common/xiris_events_raid_oow_mpg_hatred.inc 
+#include xiris_common/xiris_events_raid_oow_mpg_corruption.inc 
 
 Sub xbot_initialize_events
     |--Array

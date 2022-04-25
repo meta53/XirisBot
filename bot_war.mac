@@ -158,6 +158,7 @@ Sub engageTarget(_targetID)
 	/attack on
 	/call GetAssistStickDist
 	/call StickToAssistTarget
+	/if (${Me.ID} == ${int_MTID}) /stick front 25
 /return
 
 Sub targetReset

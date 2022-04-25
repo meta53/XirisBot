@@ -1,6 +1,6 @@
 |**
 ----------------------------
-EVENTS_OOW_MPG.INC updated version 04.03.22 
+EVENTS_OOW_MPG_FORESIGHT.INC
 ----------------------------
 This was written ground up for usage with xiris's bots
 NOTE: this requires MQ2NAV
@@ -9,11 +9,11 @@ REQUIRED PLUGINS
 	mq2nav
 ______________________________________________
 REVISION HISTORY
-	04.03.22    xiris  INITIAL REVISION
+	04.03.22    xiris	INITIAL REVISION
+	04.25.22	xiris	Updated D1-D6 movement to make sure toons stand.
 ______________________________________________
 **|	
 |-- Muramite Proving Grounds events
-
 |-- Mastery of Foresight
 #event ForesightNorth		"#*#dramatically. The north side looks safe#*#"
 #event ForesightSouth		"#*#dramatically. The south side looks safe#*#"
@@ -61,12 +61,12 @@ ______________________________________________
 #event ForesightAECloseSafe	"#*#You escape the blast unscathed#*#"
 #event ForesightAECloseSafe	"#*#The air around you ignites#*#"
 
-#event D1 					"#*#MoveD1#*#"
-#event D2					"#*#MoveD2#*#"
-#event D3 					"#*#MoveD3#*#"
-#event D4 					"#*#MoveD4#*#"
-#event D5 					"#*#MoveD5#*#"
-#event D6 					"#*#MoveD6#*#"
+#event D1 					"#*#MD1#*#"
+#event D2					"#*#MD2#*#"
+#event D3 					"#*#MD3#*#"
+#event D4 					"#*#MD4#*#"
+#event D5 					"#*#MD5#*#"
+#event D6 					"#*#MD6#*#"
 
 Sub InitEvents_OOW_MPG_Foresight
 	/cecho \ag Initializing MPG Foresight
@@ -505,28 +505,29 @@ Sub EVENT_D1
 	/doevents flush D1
 	/if (${Navigation.Active}) /nav stop
 	/nav wp D1
+	/if (!${Me.Standing}) /stand on
 	:movement
 		/delay 20
+		/if (${Target.Distance} < 50) /nav stop
 		/if (${Navigation.Active})  /goto :movement
 		/if (${str_classArchetype.NotEqual[PRIEST]}) {
 			/call TrueTarget ${Spawn[NPC "Dragorn Flamecaster"].ID}
 			/call EngageTarget  ${Spawn[NPC "Dragorn Flamecaster"].ID}
-			/if (${Target.Distance} < 50) /nav stop
 		} 
-
 /return
 
 Sub EVENT_D2
 	/doevents flush D2
 	/if (${Navigation.Active}) /nav stop
 	/nav wp D2
+	/if (!${Me.Standing}) /stand on
 	:movement
 		/delay 20
+		/if (${Target.Distance} < 50) /nav stop
 		/if (${Navigation.Active})  /goto :movement
 		/if (${str_classArchetype.NotEqual[PRIEST]}) {
 			/call TrueTarget ${Spawn[NPC "Dragorn Spellscribe"].ID}
 			/call EngageTarget  ${Spawn[NPC "Dragorn Spellscribe"].ID}
-			/if (${Target.Distance} < 50) /nav stop
 		} 
 /return
 
@@ -534,13 +535,14 @@ Sub EVENT_D3
 	/doevents flush D3
 	/if (${Navigation.Active}) /nav stop
 	/nav wp D3
+	/if (!${Me.Standing}) /stand on
 	:movement
 		/delay 20
+		/if (${Target.Distance} < 30) /nav stop
 		/if (${Navigation.Active})  /goto :movement
 		/if (${str_classArchetype.NotEqual[PRIEST]}) {
 			/call TrueTarget ${Spawn[NPC "Dragorn Adept"].ID}
 			/call EngageTarget  ${Spawn[NPC "Dragorn Adept"].ID}
-			/if (${Target.Distance} < 50) /nav stop
 		} 
 /return
 
@@ -548,13 +550,14 @@ Sub EVENT_D4
 	/doevents flush D4
 	/if (${Navigation.Active}) /nav stop
 	/nav wp D4
+	/if (!${Me.Standing}) /stand on
 	:movement
 		/delay 20
+		/if (${Target.Distance} < 50) /nav stop
 		/if (${Navigation.Active})  /goto :movement
 		/if (${str_classArchetype.NotEqual[PRIEST]}) {
 			/call TrueTarget ${Spawn[NPC "Dragorn Incinerator"].ID}
 			/call EngageTarget  ${Spawn[NPC "Dragorn Incinerator"].ID}
-			/if (${Target.Distance} < 50) /nav stop
 		} 
 /return
 
@@ -562,13 +565,14 @@ Sub EVENT_D5
 	/doevents flush D5
 	/if (${Navigation.Active}) /nav stop
 	/nav wp D5
+	/if (!${Me.Standing}) /stand on
 	:movement
 		/delay 20
+		/if (${Target.Distance} < 50) /nav stop
 		/if (${Navigation.Active})  /goto :movement
 		/if (${str_classArchetype.NotEqual[PRIEST]}) {
 			/call TrueTarget ${Spawn[NPC "Dragorn Acolyte"].ID}
 			/call EngageTarget  ${Spawn[NPC "Dragorn Acolyte"].ID}
-			/if (${Target.Distance} < 50) /nav stop
 		} 
 /return
 
@@ -576,11 +580,13 @@ Sub EVENT_D6
 	/doevents flush D6
 	/if (${Navigation.Active}) /nav stop
 	/nav wp D6
+	/if (!${Me.Standing}) /stand on
 	:movement
 		/delay 20
+		/if (${Target.Distance} < 50) /nav stop
 		/if (${Navigation.Active})  /goto :movement
 		/if (${str_classArchetype.NotEqual[PRIEST]}) {
 			/call TrueTarget ${Spawn[NPC "Dragorn Annihilator"].ID}
-			/if (${Target.Distance} < 50) /nav stop
+			/call EngageTarget  ${Spawn[NPC "Dragorn Annihilator"].ID}
 		} 
 /return
