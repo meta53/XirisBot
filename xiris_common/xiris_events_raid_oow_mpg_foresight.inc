@@ -10,7 +10,7 @@ REQUIRED PLUGINS
 ______________________________________________
 REVISION HISTORY
 	04.03.22    xiris	INITIAL REVISION
-	04.25.22	xiris	Updated D1-D6 movement to make sure toons stand.
+	04.25.22	xiris	Updated D1-D6 movement to make sure toons stand and fixed distance checking
 ______________________________________________
 **|	
 |-- Muramite Proving Grounds events
@@ -93,6 +93,40 @@ Sub InitEvents_OOW_MPG_Foresight
 	/declare Ring_1_Slot			int		outer	1
 	/declare Ring_2_Name			string	outer	NULL
 	/declare Ring_2_Slot			int		outer	1
+
+
+	|--Waypoints
+	|  Pulled from MQ2Nav		   X	   Y	  Z
+	/declare D1	string 	outer   155.939 152.306 55.822 
+	/declare D2	string 	outer  -255.035 149.536 55.822 
+	/declare D3	string 	outer  -333.305 219.533 55.822 
+	/declare D4	string 	outer  -329.153 323.222 55.822 
+	/declare D5	string 	outer  -256.868 400.682 55.822 
+	/declare D6	string 	outer  -156.151 399.493 55.822 
+
+	/declare D1X int outer ${D1.Arg[1, ]}
+	/declare D1Y int outer ${D1.Arg[2, ]}
+	/declare D1Z int outer ${D1.Arg[3, ]}
+
+	/declare D2X int outer ${D2.Arg[1, ]}
+	/declare D2Y int outer ${D2.Arg[2, ]}
+	/declare D2Z int outer ${D2.Arg[3, ]}
+	
+	/declare D3X int outer ${D3.Arg[1, ]}
+	/declare D3Y int outer ${D3.Arg[2, ]}
+	/declare D3Z int outer ${D3.Arg[3, ]}
+	
+	/declare D4X int outer ${D4.Arg[1, ]}
+	/declare D4Y int outer ${D4.Arg[2, ]}
+	/declare D4Z int outer ${D4.Arg[3, ]}
+	
+	/declare D5X int outer ${D5.Arg[1, ]}
+	/declare D5Y int outer ${D5.Arg[2, ]}
+	/declare D5Z int outer ${D5.Arg[3, ]}
+	
+	/declare D6X int outer ${D6.Arg[1, ]}
+	/declare D6Y int outer ${D6.Arg[2, ]}
+	/declare D6Z int outer ${D6.Arg[3, ]}
 /return
 
 Sub Events_OOW_MPG_Foresight
@@ -103,7 +137,6 @@ Sub Events_OOW_MPG_Foresight
 	|/doevents ForesightCenter
 	|/doevents ForesightPlatform
 	|/doevents ForesightPlatformSafe
-
 
 	/doevents ForesightKyvMove
 	/doevents ForesightKyvMoveSafe
@@ -505,10 +538,13 @@ Sub EVENT_D1
 	/doevents flush D1
 	/if (${Navigation.Active}) /nav stop
 	/nav wp D1
+	| moving to Destination Y,X,Z will movement loop until Distance between me, and destination < 50
+	/declare dist float local 100
 	/if (!${Me.Standing}) /stand on
 	:movement
 		/delay 20
-		/if (${Target.Distance} < 50) /nav stop
+		/varcalc dist ${Math.Distance[${Me.Y},${Me.X},${Me.Z}:${D1Y},${D1X},${D1Z}]}
+		/if (${dist} < 50) /nav stop
 		/if (${Navigation.Active})  /goto :movement
 		/if (${str_classArchetype.NotEqual[PRIEST]}) {
 			/call TrueTarget ${Spawn[NPC "Dragorn Flamecaster"].ID}
@@ -520,10 +556,13 @@ Sub EVENT_D2
 	/doevents flush D2
 	/if (${Navigation.Active}) /nav stop
 	/nav wp D2
+	| moving to Destination Y,X,Z will movement loop until Distance between me, and destination < 50
+	/declare dist float local 100
 	/if (!${Me.Standing}) /stand on
 	:movement
 		/delay 20
-		/if (${Target.Distance} < 50) /nav stop
+		/varcalc dist ${Math.Distance[${Me.Y},${Me.X},${Me.Z}:${D2Y},${D2X},${D2Z}]}
+		/if (${dist} < 50) /nav stop
 		/if (${Navigation.Active})  /goto :movement
 		/if (${str_classArchetype.NotEqual[PRIEST]}) {
 			/call TrueTarget ${Spawn[NPC "Dragorn Spellscribe"].ID}
@@ -535,10 +574,13 @@ Sub EVENT_D3
 	/doevents flush D3
 	/if (${Navigation.Active}) /nav stop
 	/nav wp D3
+	| moving to Destination Y,X,Z will movement loop until Distance between me, and destination < 50
+	/declare dist float local 100
 	/if (!${Me.Standing}) /stand on
 	:movement
 		/delay 20
-		/if (${Target.Distance} < 30) /nav stop
+		/varcalc dist ${Math.Distance[${Me.Y},${Me.X},${Me.Z}:${D3Y},${D3X},${D3Z}]}
+		/if (${dist} < 50) /nav stop
 		/if (${Navigation.Active})  /goto :movement
 		/if (${str_classArchetype.NotEqual[PRIEST]}) {
 			/call TrueTarget ${Spawn[NPC "Dragorn Adept"].ID}
@@ -550,10 +592,13 @@ Sub EVENT_D4
 	/doevents flush D4
 	/if (${Navigation.Active}) /nav stop
 	/nav wp D4
+	| moving to Destination Y,X,Z will movement loop until Distance between me, and destination < 50
+	/declare dist float local 100
 	/if (!${Me.Standing}) /stand on
 	:movement
 		/delay 20
-		/if (${Target.Distance} < 50) /nav stop
+		/varcalc dist ${Math.Distance[${Me.Y},${Me.X},${Me.Z}:${D4Y},${D4X},${D4Z}]}
+		/if (${dist} < 50) /nav stop
 		/if (${Navigation.Active})  /goto :movement
 		/if (${str_classArchetype.NotEqual[PRIEST]}) {
 			/call TrueTarget ${Spawn[NPC "Dragorn Incinerator"].ID}
@@ -565,11 +610,13 @@ Sub EVENT_D5
 	/doevents flush D5
 	/if (${Navigation.Active}) /nav stop
 	/nav wp D5
+	| moving to Destination Y,X,Z will movement loop until Distance between me, and destination < 50
+	/declare dist float local 100
 	/if (!${Me.Standing}) /stand on
 	:movement
 		/delay 20
-		/if (${Target.Distance} < 50) /nav stop
-		/if (${Navigation.Active})  /goto :movement
+		/varcalc dist ${Math.Distance[${Me.Y},${Me.X},${Me.Z}:${D5Y},${D5X},${D5Z}]}
+		/if (${dist} < 50) /nav stop
 		/if (${str_classArchetype.NotEqual[PRIEST]}) {
 			/call TrueTarget ${Spawn[NPC "Dragorn Acolyte"].ID}
 			/call EngageTarget  ${Spawn[NPC "Dragorn Acolyte"].ID}
@@ -580,10 +627,13 @@ Sub EVENT_D6
 	/doevents flush D6
 	/if (${Navigation.Active}) /nav stop
 	/nav wp D6
+	| moving to Destination Y,X,Z will movement loop until Distance between me, and destination < 50
+	/declare dist float local 100
 	/if (!${Me.Standing}) /stand on
 	:movement
 		/delay 20
-		/if (${Target.Distance} < 50) /nav stop
+		/varcalc dist ${Math.Distance[${Me.Y},${Me.X},${Me.Z}:${D6Y},${D6X},${D6Z}]}
+		/if (${dist} < 50) /nav stop
 		/if (${Navigation.Active})  /goto :movement
 		/if (${str_classArchetype.NotEqual[PRIEST]}) {
 			/call TrueTarget ${Spawn[NPC "Dragorn Annihilator"].ID}

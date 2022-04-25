@@ -9,7 +9,8 @@ REQUIRED PLUGINS
     
 ______________________________________________
 REVISION HISTORY
-	04.05.22    xiris  INITIAL REVISION
+	04.05.22    xiris   INITIAL REVISION
+    04.25.22    xiris   Added Hatred and Corruption
 ______________________________________________
 **|	
 
