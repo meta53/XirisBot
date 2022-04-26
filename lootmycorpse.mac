@@ -1,0 +1,10 @@
+#turbo 10
+Sub Main
+    /corpse
+    /corpse
+    /delay 5
+    /tar ${Me.Name}'s
+    /delay 15
+    /loot all
+
+/return
