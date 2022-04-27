@@ -170,21 +170,6 @@ Sub Events_OOW_MPG_Foresight
 	/doevents D6
 /return
 
-Sub InitEvents_MPG_Hate
-/return
-
-Sub InitEvents_MPG_Endurance
-/return
-
-Sub InitEvents_MPG_Specialization
-/return
-
-Sub InitEvents_MPG_Adaptation
-/return
-
-Sub InitEvents_MPG_Corruption
-/return
-
 Sub ForesightNavigation(string _wp, string _watch, string _event)
 	/say Navigating to ${_wp}
 	/declare atk bool local FALSE

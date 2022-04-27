@@ -19,6 +19,7 @@ ______________________________________________
 #include xiris_common/xiris_events_raid_oow_mpg_foresight.inc 
 #include xiris_common/xiris_events_raid_oow_mpg_hatred.inc 
 #include xiris_common/xiris_events_raid_oow_mpg_corruption.inc 
+#include xiris_common/xiris_events_raid_oow_mpg_specialization.inc
 
 Sub xbot_initialize_events
     |--Array

@@ -156,6 +156,14 @@ Sub FireRiposteDisc
 	:return
 /return
 
+Sub doBandolier(string _bando)
+	/cecho \ay Equipping set ${_bando}
+	/equipset ${_bando}
+	/delay 10
+	/equipset ${_bando}
+	/delay 10
+/return
+
 Sub chkDownshits
 	/if (${dfTimer}) /return
 	/if (${Target.ID} && ${Target.Type.Equal[NPC]}) /return

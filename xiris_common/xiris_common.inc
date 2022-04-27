@@ -434,7 +434,7 @@ Sub chkMTAlive(bool _setAsTarget)
 		/return
 	}
 	
-	|/echo chkMTAlive ${_setAsTarget} || ${str_tankName1}::${str_MTName} ${str_tankName2}::${str_tankName2}
+	/echo chkMTAlive ${_setAsTarget} || ${str_tankName1}::${str_MTName} ${str_tankName2}::${str_tankName2}
 	|--MT is dead, and I am BT
 	/if (${str_tankName2.Equal[${Me.CleanName}]}) {
 		/varset str_tankName1 ${str_tankName2}

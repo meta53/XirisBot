@@ -167,7 +167,7 @@ Sub chkNuke
 				/goto :NextNuke
 			}
 
-			|-- Check to see if this nuke fits current criteria (fast|!fast, allowable Resist type}
+			|-- Check to see if this nuke fits current criteria (allowable Resist type}
 			/if (${Bool[${str_useResistTypes.Find[${Nuke_${i}_Resist}]}]}) {
 				|/echo Nuke ${Nuke_${i}_Resist} matches resist
 			} else {
@@ -241,7 +241,7 @@ Sub chkQNuke
 				/goto :NextQuickNuke
 			}
 
-			|-- Check to see if this nuke fits current criteria (fast|!fast, allowable Resist type}
+			|-- Check to see if this nuke fits current criteria (allowable Resist type}
 			/if (${Bool[${str_useResistTypes.Find[${QNuke_${i}_Resist}]}]}) {
 				|/echo QuickNuke ${QNuke_${i}_Resist} matches resist
 			} else {
@@ -254,7 +254,7 @@ Sub chkQNuke
 			|-- Ready Wait loop waits for the DOT to be ready to cast
 			|   Used due to lag on raids sometimes lagging gems
 			|   Additionally spell might not be memmed due to swapping		
-			/call chkSpellMemorized "${QNuke_${i}}" TRUE ${QNuke_${i}_Gem}
+			/call chkSpellMemorized "${QNuke_${i}}" FALSE ${QNuke_${i}_Gem}
 			:QnukeNukeCastWait
 			/if (!${Me.SpellReady[${QNuke_${i}}]}) {
 				/delay 2
@@ -360,9 +360,9 @@ Sub chkStun(bool _memorize)
 			|-- skip if disabled
 			/if (!${Stun_${i}_Use}) /goto :NextStun
 
-			|-- Check to see if this nuke fits current criteria (fast|!fast, allowable Resist type}
+			|-- Check to see if this stun fits current criteria (allowable Resist type}
 			/if (${Bool[${str_useResistTypes.Find[${Stun_${i}_Resist}]}]}) {
-				|/echo QuickNuke ${Stun_${i}_Resist} matches resist
+				|/echo Stun ${Stun_${i}_Resist} matches resist
 			} else {
 				/echo Skipping Stun ${Stun_${i}_Resist} doesnt match resist
 				/goto :NextStun
@@ -478,7 +478,7 @@ Sub chkDOT
 				/goto :NextDot
 			}
 			
-			|-- Check to see if this nuke fits current criteria (fast|!fast, allowable Resist type}
+			|-- Check to see if this nuke fits current criteria (allowable Resist type}
 			/if (${Bool[${str_useResistTypes.Find[${DOT_${i}_Resist}]}]}) {
 				|/echo DOT ${DOT_${i}_Resist} matches resist
 			} else {
@@ -492,7 +492,7 @@ Sub chkDOT
 			|-- Ready Wait loop waits for the DOT to be ready to cast
 			|   Used due to lag on raids sometimes lagging gems
 			|   Additionally spell might not be memmed due to swapping
-			/call chkSpellMemorized "${DOT_${i}}" TRUE ${DOT_${i}_Gem}
+			/call chkSpellMemorized "${DOT_${i}}" FALSE ${DOT_${i}_Gem}
 			:dotReadyWait
 			/if (!${Me.SpellReady[${DOT_${i}}]} || ${Me.Casting.ID}) {
 				/delay 2
@@ -583,9 +583,15 @@ Sub chkSpellMemorized(string _spell, bool _wait, int _gem)
 		/echo memorizing "${_spell}" ${intGem} 
 		/memorize "${_spell}" ${intGem} 
 		/if (!${_wait}) /goto :return
+		/declare waitCount int local 0
 		:memwait
 			/delay 10
+			/varcalc waitCount ${waitCount}+1
 			/if (${Me.SpellReady[${_spell}]}) /goto :return
+			/if (${waitCount} > 10) {
+				/rs cannot memorize ${_spell}! Update INI
+				/goto :return
+			}
 			/goto :memwait
 :return
 /return 
