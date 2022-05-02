@@ -123,6 +123,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 		/if (${bln_engaged}) {
 			/call RunRaidEvents
 			/call RunClassEvents
+			/call chkDebuffs
 			/call chkYaulp
 		}
 		
@@ -183,6 +184,7 @@ Sub targetReset
 
 Sub healMAINTANK
 	/varcalc	int_point_calcStopHeal ${Math.Calc[${int_point_tankNormal}*1.1]}
+	/if (!${Me.Target.ID}) /call TrueTarget ${int_MTID}
 	/call chkFHealReady
 	/call setHealingSpell ${Target.Class.ShortName} ${Target.PctHPs}
 	/echo healMAINTANK: ${str_currentHeal}
@@ -202,11 +204,13 @@ Sub healMAINTANK
 
 Sub healSELF
 	/varcalc 	int_point_calcStopHeal ${Math.Calc[${int_point_selfNormal}*1.05]}
+	/if (!${Me.Target.ID}) /call TrueTarget ${Me.ID}
 	/call chkFHealReady
 	/call setHealingSpell ${Me.Class.ShortName}  ${Me.PctHPs}
 	/echo healSELF: ${str_currentHeal}
 	/call healCast ${Me.ID} ${Me.Name} "${str_currentHeal}"
 	/varset int_point_calcStopHeal	${int_point_selfNormal}
+	/call TrueTarget ${int_MTID}
 /return
 
 |**

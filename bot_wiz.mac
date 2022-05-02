@@ -95,7 +95,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 			|-- class specific
 			/call RunAllEvents
 			/call chkConcussion
-			/call chkSingleTargetDebuff
+			/call chkDebuffs
 			
 			|-- dps lib
 			/call RunRaidEvents

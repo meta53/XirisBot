@@ -11,7 +11,7 @@ Usage: /mac bot_melee ${_tank1Name} ${_tank2Name} ${_healPoint} ${_assistArgs}
 
 ______________________________________________
 REVISION HISTORY
-    06.16.10	xiris	INITIAL REVISION from PeteSampras
+    06.16.10	xiris	INITIAL REVISION inspired by PeteSampras
     10.12.10	xiris	Included a common include (common/xiris_common.inc) for subs and events
     10.13.10	xiris	Modification to remove some of the unused functionality
     10.15.10	xiris	Included burn routines
@@ -96,6 +96,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 		/if (${bln_autoAssist}) /call chkAutoAssist
 		
 		/if (${bln_engaged}) {
+			/if (!${Melee.Enable}) /call chkCombatAbilities
 			|-- dps lib
 			/call chkTarget
 			/call chkTargetDist
@@ -244,7 +245,6 @@ Sub chkUtils
 		/call chkComponentsAll
 	}
 /return
-
 
 
 |**

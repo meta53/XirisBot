@@ -159,9 +159,9 @@ Sub engageTarget(_targetID)
 	/echo engageTarget ${Spawn[id ${_targetID}].CleanName} (${_targetID})
 	/if (${_targetID} == 0) /return
 	/varset int_targetID ${_targetID}
-	/call TrueTarget ${_targetID}
-	/varset bln_engaged TRUE
+	/call TrueTarget ${int_targetID}
 	/call Add2TargetArray ${_targetID}
+	/varset bln_engaged TRUE
 /return
 
 
@@ -169,6 +169,7 @@ Sub targetReset
 	/varset bln_engaged 		FALSE
 	/varset bln_petAttacking 	FALSE
 	/pet hold on
+	/call CleanTargetArray
 /return
 
 

@@ -92,7 +92,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 			|-- class specific
 			/call RunAllEvents
 			/call chkPetAttack
-			/call chkSingleTargetDebuff
+			/call chkDebuffs
 			
 			|-- dps library
 			/call RunRaidEvents
@@ -141,7 +141,6 @@ Sub chkTarget
 		/echo Mob is dead. Engage off.
         /varset bln_engaged FALSE
 		/varset int_targetID 0
-		/goto :return
     } 
 /return
 
@@ -159,7 +158,8 @@ Sub engageTarget(_targetID)
 	/echo engageTarget ${Spawn[id ${_targetID}].CleanName} (${_targetID})
 	/if (${_targetID} == 0) /return
 	/varset int_targetID ${_targetID}
-	/call TrueTarget ${_targetID}
+	/call TrueTarget ${int_targetID}
+	/call Add2TargetArray ${_targetID}
 	/pet attack
 	/varset bln_engaged TRUE
 /return
@@ -169,6 +169,7 @@ Sub targetReset
 	/varset bln_engaged FALSE
 	/varset bln_petAttacking FALSE
 	/pet hold on
+	/call CleanTargetArray
 /return
 
 

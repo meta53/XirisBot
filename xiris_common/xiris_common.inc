@@ -1197,12 +1197,11 @@ SUB EVENT_shrinkGroup
 
 Sub TargetNamedCheck(_id)
 	|/echo TargetNamedCheck ${_id}
-	/declare Named string local FALSE
-	/if (${Spawn[npc id ${_id}].Named} || ${Spawn[npc id ${_id}].Name.Find[#]}) /varset Named TRUE
-	/if (${Zone.ShortName.Equal[tacvi]} || ${Zone.ShortName.Equal[txevu]}) /varset Named TRUE
-	/if (${Zone.ShortName.Equal[chambersa]} ||${Zone.ShortName.Equal[chambersb]} ||${Zone.ShortName.Equal[chambersc]} ||${Zone.ShortName.Equal[chambersd]}||${Zone.ShortName.Equal[chamberse]}) /varset Named TRUE 
-	/if (${Zone.ShortName.Equal[anguish]}) /varset Named FALSE
-/return ${Named}
+	/if (${Spawn[npc id ${_id}].Named} || ${Spawn[npc id ${_id}].Name.Find[#]}) /return TRUE
+	/if (${Zone.ShortName.Equal[tacvi]} || ${Zone.ShortName.Equal[txevu]}) /return TRUE
+	/if (${Zone.ShortName.Equal[chambersa]} ||${Zone.ShortName.Equal[chambersb]} ||${Zone.ShortName.Equal[chambersc]} ||${Zone.ShortName.Equal[chambersd]}||${Zone.ShortName.Equal[chamberse]}) /return TRUE
+	/if (${Zone.ShortName.Equal[anguish]}) /return TRUE
+/return FALSE
 	
 |------------------------------------------------------------|
 |- Send a box chat command to everyone in group				-|

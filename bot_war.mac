@@ -156,9 +156,12 @@ Sub engageTarget(_targetID)
 	/varset bln_engaged TRUE
 	/killthis
 	/attack on
-	/call GetAssistStickDist
-	/call StickToAssistTarget
-	/if (${Me.ID} == ${int_MTID}) /stick front 25
+	/if (${Me.ID} != ${int_MTID} || !${bln_tanking}) {
+		/call GetAssistStickDist
+		/call StickToAssistTarget
+	} else {
+		/stick off
+	}
 /return
 
 Sub targetReset
@@ -177,9 +180,11 @@ Sub targetReset
 **|
 Sub chkUtils
 	/if (!${Me.Combat}) {
-		/call chkSit
-		/call chkLoot
-		/call chkLeash
+		/if (${Me.ID} != ${int_MTID} || !${bln_tanking}) {
+			/call chkSit
+			/call chkLoot
+			/call chkLeash
+		}
 	}
 /return
 

@@ -10,6 +10,8 @@ REVISION HISTORY
 	06.28.18	xiris	Moved downshits back to MQ2Melee since ROF2 Emu actually supports Combat.State
 	11.22.21	xiris	Keeping this around as its useful in situations where I dont want to use melee
 	03.22.22	xiris 	Updated KillMob Event to be cleaner (ID first)
+	04.27.22	xiris 	Added chkCombatAbilities which can be called when we need to turn off
+						MQ2Melee for whatever reason (like.. MPG Specialization not working on berserkers!)
 **|
 
 |-- Manual Downshits since mq2melee was being flakey at the time
@@ -55,10 +57,16 @@ REVISION HISTORY
 #EVENT RiposteDisc "#1# tells the group, 'RiposteDisc#*#'"
 #EVENT RiposteDisc "#1# you tell your party, 'RiposteDisc#*#'"
 
+#EVENT RiposteDisc "<#1#> RiposteDisc"
+#EVENT RiposteDisc "[#1#(msg)] RiposteDisc#*#"
+#EVENT RiposteDisc "#1# tells you, 'RiposteDisc#*#"
+#EVENT RiposteDisc "#1# tells the group, 'RiposteDisc#*#'"
+#EVENT RiposteDisc "#1# you tell your party, 'RiposteDisc#*#'"
+
 #define dsINI xiris_common/xiris_damageshields.ini
 
 Sub InitEvents_Melee
-	/if (${str_classArchetype.NotEqual[PRIEST]} && ${str_classArchetype.NotEqual[CASTER]}) /call RegisterBackgroundEvents Events_Melee 8
+	/if (${str_classArchetype.NotEqual[PRIEST]} && ${str_classArchetype.NotEqual[CASTER]}) /call RegisterBackgroundEvents Events_Melee 9
 /return
 
 Sub Events_Melee
@@ -70,8 +78,23 @@ Sub Events_Melee
 	/doevents Sing
 	/doevents Hush
 	/doevents RiposteDisc
+	/doevents ToggleMQ2Melee
 /return
 
+Sub EVENT_ToggleMQ2Melee(string _pluginState)
+	/if (${_pluginState.Equal[ON]}) {
+		/call toggleMQ2Melee TRUE
+	} else {
+		/call toggleMQ2Melee FALSE
+	}
+	/doevents flush TOGGLEMQ2MELEE
+/return
+
+Sub toggleMQ2Melee(bool _state) 
+	/rs MQ2MELEE DISABLED
+	/melee plugin=${_state}
+	/melee save
+/return
 
 
 Sub EVENT_NoDS(_line, _sender, _eventParams)
@@ -116,7 +139,6 @@ Sub EVENT_RiposteDisc(_line, _sender, _eventParams)
 /return
 
 Sub FireRiposteDisc
-	
 	:monk
 	/if (${Me.Class.ShortName.Equal[MNK]}) {
 		/if (${Me.CombatAbilityReady[Whirlwind Discipline]}) {
@@ -361,7 +383,7 @@ Sub EVENT_GETCLOSER
 		/if (${Target.Distance} <= ${AssistStickDistanceSetting} && ${AssistStickDistanceSetting} > 10) {
 			/varcalc AssistStickDistance ${AssistStickDistance} - 5
 			/face fast
-			/stick ${AssistStickDistance} behind uw
+			/stick ${AssistStickDistance} behind
 		}
 		
 		/if (${Target.Distance} > 25) {
@@ -373,7 +395,7 @@ Sub EVENT_GETCLOSER
 				/delay 10
 				/if (${Navigation.Active}) /goto :navDelay
 			}
-			/stick ${AssistStickDistance} behind uw
+			/stick ${AssistStickDistance} behind
 			/killthis
 		}
 	}
@@ -403,8 +425,6 @@ Sub GetAssistStickDist
 	/if (${AssistStickDistance} > 25) /varset AssistStickDistance 25
 
 /return
-
-
 
 
 Sub chkTargetDist
@@ -450,9 +470,28 @@ Sub downshitInterrupt
 /return
 
 
-|-- Not Used
+|-- Used 04/27/2022 due to mq2melee acting retarded in MPG: Specialization
 Sub chkCombatAbilities
+	/if (${Melee.Enable}) /return
+	| Berserkers
+	/if (${Me.AbilityReady[Frenzy]} && ${Me.Class.Name.Equal[Berserker]} && ${Me.Combat} && ${Target.Distance}<=${Target.MaxRangeTo}) /doability "Frenzy"
+	/if (${Me.CombatAbilityReady[Rage Volley]} && ${Me.Class.Name.Equal[Berserker]} && ${Me.Combat} && ${Target.Distance}<=${Target.MaxRangeTo}) /doability "Rage Volley"
+
+	| Rogues
+	/if (${Me.AbilityReady[Backstab]} && ${Me.Class.Name.Equal[Rogue]} && ${Me.Combat} && ${Target.Distance}<=${Target.MaxRangeTo}) /doability "Backstab"
+
+	| Monks
+	/if (${Me.AbilityReady[Tiger Claw]} && ${Me.Class.Name.Equal[Rogue]} && ${Me.Combat} && ${Target.Distance}<=${Target.MaxRangeTo}) /doability "Tiger Claw"
+	/if (${Me.AbilityReady[Flying Kick]} && ${Me.Class.Name.Equal[Rogue]} && ${Me.Combat} && ${Target.Distance}<=${Target.MaxRangeTo}) /doability "Flying Kick"
 /return
+
+Sub chkCA_BER
+/return
+
+Sub chkCA_ROG
+	
+/return
+
 
 |-- Not Used
 Sub killthis
@@ -536,7 +575,7 @@ Sub xbot_initialize_melee
 	/declare 	MinBellowEndurance		int		outer	200
 	/declare	meleeAggro				bool	outer	FALSE
 	/declare    provokeTimer            timer   outer   0
-	/declare 	stickCmd				string	outer   ${Ini[botINI,Sticking,stickCmd,behindonce uw 35]}
+	/declare 	stickCmd				string	outer   ${Ini[botINI,Sticking,stickCmd,behindonce 35]}
 	/declare 	bln_chkComponents		bool	outer	TRUE
 	/declare 	bln_tgtDeadSoon			bool	outer	FALSE
 	/declare	timer_reAssist			timer	outer	5s

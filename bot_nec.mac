@@ -158,7 +158,8 @@ Sub engageTarget(_targetID)
 	/if (${_targetID} == 0) /return
 	/if (${Me.Feigning} && (${Me.PctHPs} > 75)) /stand
 	/varset int_targetID ${_targetID}
-	/call TrueTarget ${_targetID}
+	/call TrueTarget ${int_targetID}
+	/call Add2TargetArray ${_targetID}
 	/varset bln_engaged TRUE
 	/pet attack
 	|- Necro specific things
@@ -181,6 +182,7 @@ Sub targetReset
 	/varset bln_engaged FALSE
 	/varset bln_petAttacking FALSE
 	/pet hold on
+	/call CleanTargetArray
 /return
 
 

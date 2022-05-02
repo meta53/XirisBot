@@ -175,6 +175,13 @@ Sub chkNeedCure
 		/return
 	}
 
+	|-- Specialization Trials debuffs should not be cured (wastes time/mana)!
+	/if (${Me.Buff[Rigidity].ID} || ${Me.Buff[Curse of Misfortune].ID} || ${Me.Buff[Imprecision].ID} || ${Me.Buff[Impurity].ID}) {
+		/echo I have a [Specialization Debuff], a debuff that I cannot cure!
+		/varset bln_askedForCure TRUE
+		/return
+	}
+
 	|-- Mana Drains (casting classes)
 	/if (${str_classArchetype.Equal[PRIEST]} || ${str_classArchetype.Equal[CASTER]} || ${Me.Class.ShortName.Equal[PAL]}) {
 		/if (${Debuff.ManaDrain} >= ${int_manadrain_threshold}) /varset forceCure TRUE

@@ -311,6 +311,10 @@ Sub healGRP
  ----------------------------
 **|
 Sub healCast(int _id, string _name, string _spell)
+	/if (${_name.Equal[NULL]} || ${_id} == 0) {
+		/echo HEAL NAME is NULL something is fucked;
+		/return
+	}
 	/echo healCast Target:${_name}(${_id}) cHP: ${NetBots[${_name}].PctHPs} cSH: ${int_point_calcStopHeal} spell: "${_spell}"
 	/if (${NetBots[${_name}].PctHPs} < ${int_point_calcStopHeal} && (${Me.CurrentMana} > ${Spell[${_spell}].Mana})) {
 		/if (${Target.ID} != ${_id}) /call TrueTarget ${_id}
@@ -861,7 +865,7 @@ Sub xbot_initialize_healing(int _healPoint)
 	
 	|-- Various Flags
 	/declare	int_currentHP			int 	outer	100
-	/declare 	str_currentHeal			string	outer	Pious Light
+	/declare 	str_currentHeal			string	outer	${str_heal_normal}
 	/declare 	bln_chChainMember		bool	outer	FALSE
 	/declare	int_chTarget			int  	outer   0
 	/declare    int_chDelay				int		outer	2s

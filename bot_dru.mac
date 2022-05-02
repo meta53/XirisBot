@@ -143,12 +143,15 @@ Sub engageTarget(_targetID)
 	/if (${_targetID} == 0 || ${_targetID} == NULL || ${SpawnCount[npc id ${_targetID}]} == 0) /return
 	/varset int_targetID ${_targetID}
 	/call TrueTarget ${int_targetID}
+	/call Add2TargetArray ${_targetID}
 	/varset bln_engaged TRUE
+	
 /return
 
 
 Sub targetReset
 	/varset bln_engaged		FALSE
+	/call CleanTargetArray
 /return
 
 
