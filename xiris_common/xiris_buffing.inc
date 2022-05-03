@@ -47,12 +47,18 @@ REVISION HISTORY
 #EVENT DOCHARBUFFS 			"#1# tells the group, 'doCharBuffs #2#'"
 #EVENT DOCHARBUFFS 			"#1# tells the party, 'doCharBuffs #2#'"
 
-#EVENT RemoveBuff 			"[#1#] Remove buff #2#"
-#EVENT RemoveBuff 			"[#1#(msg)] Remove buff #2#"
-#EVENT RemoveBuff 			"<#1#> Remove buff #2#"
-#EVENT RemoveBuff 			"#1# tells you, 'Remove buff #2#'"
-#EVENT RemoveBuff 			"#1# tells the group, 'Remove buff #2#'"
-#EVENT RemoveBuff 			"#1# you tell your party, 'Remove buff #2#'"
+#EVENT REMOVEBUFF 			"[#1#] Remove buff #2#"
+#EVENT REMOVEBUFF 			"[#1#(msg)] Remove buff #2#"
+#EVENT REMOVEBUFF 			"<#1#> Remove buff #2#"
+#EVENT REMOVEBUFF 			"#1# tells you, 'Remove buff #2#'"
+#EVENT REMOVEBUFF 			"#1# tells the group, 'Remove buff #2#'"
+#EVENT REMOVEBUFF 			"#1# you tell your party, 'Remove buff #2#'"
+
+#EVENT REMOVEALLBUFFS		"<#1#> celregen#*#"
+#EVENT REMOVEALLBUFFS 		"[#1#(msg)] celregen#*#"
+#EVENT REMOVEALLBUFFS 		"#1# tells you, 'celregen#*'"
+#EVENT REMOVEALLBUFFS 		"#1# tells the group, 'celregen#*#'"
+#EVENT REMOVEALLBUFFS 		"#1# you tell your party, 'celregen#*#'"
 
 
 Sub InitEvents_Buffing
@@ -64,14 +70,14 @@ Sub Events_Buffing
 	/doevents DOGROUPBUFFS
 	/doevents DOSINGLETARGETBUFFS
 	/doevents DOCHARBUFFS
-	/doevents RemoveBuff
+	/doevents REMOVEBUFF
 /return
 
 
-Sub EVENT_DORAIDBUFFS(line, ChatSender, eventParams)
+Sub EVENT_DORAIDBUFFS(_line, _chatSender, _eventParams)
 	/echo doing raid buffs.
 	/if (!${bln_doRaidBuff} && !${bln_doSingleTargetBuff}) /return
-	/call verifyEvent "${ChatSender}" "${line}"
+	/call verifyEvent "${_chatSender}" "${_line}"
 	/echo ${Macro.Return}
 	/if (${Defined[ChatSender]}) /varset ChatSender ${Macro.Return.Arg[1,_]}
 	     |-----------Valid User----------|    |--------Included Bot-----------|    |-----------In Zone-------------|
@@ -79,30 +85,30 @@ Sub EVENT_DORAIDBUFFS(line, ChatSender, eventParams)
 		/echo doing buff
 		/memspellset buff
 		/delay 3s
-		/echo Doing Raid Buffs on ${eventParams}
+		/echo Doing Raid Buffs on ${_eventParams}
 		/delay 10
 		/if (${bln_doRaidBuff}) 		/call doRaidBuffs
 		/if (${bln_doSingleTargetBuff}) /call doSingleTargetBuffOnRaid
-		/bc ${Me.Class.Name} RAID BUFF [${eventParams}] COMPLETE
+		/bc ${Me.Class.Name} RAID BUFF [${_eventParams}] COMPLETE
 		/delay 10
 		/memspellset default
 	} 
 	/doevents flush DORAIDBUFFS
 /return
 
-Sub EVENT_DOCHARBUFFS(line, ChatSender, eventParams)
+Sub EVENT_DOCHARBUFFS(_line, _chatSender, _eventParams)
 	/if (!${bln_doRaidBuff}) /return
-	/call verifyEvent "${ChatSender}" "${line}"
+	/call verifyEvent "${_chatSender}" "${_line}"
 	/if (${Defined[ChatSender]}) /varset ChatSender ${Macro.Return.Arg[1,_]}
 	     |-----------Valid User----------|    |--------Included Bot-----------|    |-----------In Zone-------------|
 	/if (${Bool[${Macro.Return.Arg[2,_]}]} && ${Bool[${Macro.Return.Arg[3,_]}]} && ${Bool[${Macro.Return.Arg[4,_]}]}) {
 		/memspellset buff
 		/delay 3s
-		/echo Doing Group Buffs on ${eventParams}
+		/echo Doing Group Buffs on ${_eventParams}
 		/delay 10
-		/call doGroupBuffOnTarget ${eventParams}
-		/call doSingleTargetBuffOnChar ${eventParams}
-		/bc ${Me.Class.Name} CHARBUFF [${eventParams}] COMPLETE
+		/call doGroupBuffOnTarget ${_eventParams}
+		/call doSingleTargetBuffOnChar ${_eventParams}
+		/bc ${Me.Class.Name} CHARBUFF [${_eventParams}] COMPLETE
 		/delay 10
 		/memspellset default
 	}
@@ -110,9 +116,9 @@ Sub EVENT_DOCHARBUFFS(line, ChatSender, eventParams)
 /return
 
 
-Sub EVENT_DOGROUPBUFFS
+Sub EVENT_DOGROUPBUFFS(_line, _chatSender, _eventParams)
 	/if (!${bln_doGroupBuff}) /return
-	/call verifyEvent "${ChatSender}" "${line}"
+	/call verifyEvent "${_chatSender}" "${_line}"
 	/if (${Defined[ChatSender]}) /varset ChatSender ${Macro.Return.Arg[1,_]}
 	     |-----------Valid User----------|    |--------Included Bot-----------|    |-----------In Zone-------------|
 	/if (${Bool[${Macro.Return.Arg[2,_]}]} && ${Bool[${Macro.Return.Arg[3,_]}]} && ${Bool[${Macro.Return.Arg[4,_]}]}) {
@@ -126,9 +132,9 @@ Sub EVENT_DOGROUPBUFFS
 	/doevents flush DOGROUPBUFFS
 /return
 
-Sub EVENT_DOSINGLETARGETBUFFS(line, ChatSender, eventParams)
+Sub EVENT_DOSINGLETARGETBUFFS(_line, _chatSender, _eventParams)
 	/if (!${bln_doSingleTargetBuff}) /return
-	/call verifyEvent "${ChatSender}" "${line}"
+	/call verifyEvent "${_chatSender}" "${_line}"
 	/if (${Defined[ChatSender]}) /varset ChatSender ${Macro.Return.Arg[1,_]}
 	     |-----------Valid User----------|    |--------Included Bot-----------|    |-----------In Zone-------------|
 	/if (${Bool[${Macro.Return.Arg[2,_]}]} && ${Bool[${Macro.Return.Arg[3,_]}]} && ${Bool[${Macro.Return.Arg[4,_]}]}) {
@@ -136,7 +142,7 @@ Sub EVENT_DOSINGLETARGETBUFFS(line, ChatSender, eventParams)
 		/if (${Raid.Members}) {
 			/call doSingleTargetBuffOnRaid
 		} else {
-			/call doSingleTargetBuffOnChar ${eventParams}
+			/call doSingleTargetBuffOnChar ${_eventParams}
 		}
 		/memspellset default
 	}
@@ -622,9 +628,9 @@ Sub chkOOCBuffs
 		}
 		
 	:next
-	/next i
-	/memspellset default
-	/call TrueTarget ${int_targetID}
+		/next i
+		/memspellset default
+		/call TrueTarget ${int_targetID}
 /return
 
 
@@ -635,9 +641,13 @@ Sub chkOOCBuffs
 |- Use, /bc Remove [Name], or /bc Remove 'Name'.	-|
 |----------------------------------------------------|
 
-Sub EVENT_RemoveBuff(line, ChatSender, eventParams)
-	/declare badBuff string local ${eventParams.Arg[1,-]}
+Sub EVENT_REMOVEBUFF(_line, _chatSender, _eventParams)
+	/declare badBuff string local ${_eventParams.Arg[1,-]}
 	/call RemoveBuff ${badBuff}
+
+/return
+
+Sub EVENT_REMOVEALLBUFFS(_line, _chatSender, _eventParams)
 
 /return
 

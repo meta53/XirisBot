@@ -36,19 +36,19 @@ Sub xbot_initialize_following
 /return
 
 
-SUB EVENT_Follow(line, ChatSender, eventParams)
+SUB EVENT_Follow(_line, _chatSender, _eventParams)
 	| -Verify the event
-	/call verifyEvent "${ChatSender}" "${line}"
+	/call verifyEvent "${_chatSender}" "${_line}"
 	/if (${Defined[ChatSender]}) /if (${Defined[ChatSender]}) /varset ChatSender ${Macro.Return.Arg[1,_]}
 	|    |-----------Valid User----------|    |--------Included Bot-----------|    |-----------In Zone-------------|
 	/if (${Bool[${Macro.Return.Arg[2,_]}]} && ${Bool[${Macro.Return.Arg[3,_]}]} && ${Bool[${Macro.Return.Arg[4,_]}]}) {
 	
-		/declare SpawnToFollow string local ${If[${eventParams.Arg[1, ].Find[/]} || ${eventParams.Arg[1, ].Equal[me]} || ${eventParams.Arg[1, ].Equal[on]},${ChatSender},${eventParams.Arg[1, ]}]}
-		/declare FollowType string local ${If[${eventParams.Find[/type|NAV]},NAV,STICK]}
+		/declare SpawnToFollow string local ${If[${_eventParams.Arg[1, ].Find[/]} || ${_eventParams.Arg[1, ].Equal[me]} || ${_eventParams.Arg[1, ].Equal[on]},${_chatSender},${_eventParams.Arg[1, ]}]}
+		/declare FollowType string local ${If[${_eventParams.Find[/type|NAV]},NAV,STICK]}
 		
-		/echo eventParams: ${eventParams}
+		/echo_eventParams: ${_eventParams}
 		/echo FollowType: ${FollowType}
-		/if (!${Bool[${SpawnToFollow}]}) /varset SpawnToFollow ${ChatSender}
+		/if (!${Bool[${SpawnToFollow}]}) /varset SpawnToFollow ${_chatSender}
 		
 		| -Turn Following on and set the FollowTarget
 		/varset Following TRUE
@@ -187,7 +187,7 @@ SUB AquireFollow(string _type)
 |- Use, /stop, or, 'stop' in /tell, /goup, or /bc.							-|
 |----------------------------------------------------------------------------|
 
-SUB EVENT_Stop(line, ChatSender, eventParams)
+SUB EVENT_Stop(_line, _chatSender, _eventParams)
 	|- Check if I am attacking
 	/if (${bln_engaged}) {
 		/call targetReset
@@ -206,10 +206,10 @@ SUB EVENT_Stop(line, ChatSender, eventParams)
 /return
 
 
-SUB EVENT_MoveHere(line, ChatSender, eventParams)
+SUB EVENT_MoveHere(_line, _chatSender, _eventParams)
 
 	| -Verify the event
-	/if (${Defined[ChatSender]}) /call verifyEvent "${ChatSender}" "${line}"
+	/if (${Defined[ChatSender]}) /call verifyEvent "${_chatSender}" "${_line}"
 	/if (${Defined[ChatSender]}) /varset ChatSender ${Macro.Return.Arg[1,_]}
 	|    |-----------Valid User----------|    |--------Included Bot-----------|    |-----------In Zone-------------|    |------------In Range------------|
 	/if (${Bool[${Macro.Return.Arg[2,_]}]} && ${Bool[${Macro.Return.Arg[3,_]}]} && ${Bool[${Macro.Return.Arg[4,_]}]} && ${Bool[${Macro.Return.Arg[5,_]}]}) {
@@ -218,7 +218,7 @@ SUB EVENT_MoveHere(line, ChatSender, eventParams)
 		/if (${ChatSender.NotEqual[${Me}]}) {
 			| -Set WhereTo.
 			/declare moveTo_Name string local
-			/declare WhereTo string local ${If[${eventParams.Arg[1, ].Find[/]} || ${eventParams.Arg[1, ].Equal[me]} || ${eventParams.Arg[1, ].Equal[here]},${ChatSender},${eventParams.Arg[1, ]}]}
+			/declare WhereTo string local ${If[${_eventParams.Arg[1, ].Find[/]} || ${_eventParams.Arg[1, ].Equal[me]} || ${_eventParams.Arg[1, ].Equal[here]},${_chatSender},${_eventParams.Arg[1, ]}]}
 			
 			| -Change WhereTo to a spawnID
 			/if (!${Int[${WhereTo}]}) {

@@ -30,8 +30,8 @@ Sub Events_Looting
 	}
 /return
 
-Sub EVENT_LOOT_ON(line, ChatSender, eventParams)
-	/call EnableLooting ${eventParams}
+Sub EVENT_LOOT_ON(_line, _chatSender, _eventParams)
+	/call EnableLooting ${_eventParams}
 	/doevents flush LOOT_ON
 /return 
 

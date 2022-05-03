@@ -274,8 +274,8 @@ SUB EVENT_AEOFF
 	/varset AENuke_Active FALSE
 /return
 
-SUB EVENT_FIRETL(line, ChatSender, eventParams)
-	/echo EVENT_FIRETL: ${line}, ${ChatSender} ${eventParams}
+SUB EVENT_FIRETL(_line, _chatSender, _eventParams)
+	/echo EVENT_FIRETL: ${_line}, ${_chatSender} ${_eventParams}
 	/if (!${bln_tlUse}) /return
 	/doevents flush
 	/bc Firing TL

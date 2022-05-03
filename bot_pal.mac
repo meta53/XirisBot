@@ -216,21 +216,21 @@ Sub chkUtils
 	/call chkLeash
 /return
 
-Sub EVENT_STUNMOB(line, ChatSender, eventParams)
+Sub EVENT_STUNMOB(_line, _chatSender, _eventParams)
 	/cecho \ayI should stun this mob
 	/call TrueTarget(${_eventParams.Arg[1, ]})
 	/call chkStun
 	/doevents flush STUNMOB
 /return
 
-Sub EVENT_STUNLOCK(line, ChatSender, eventParams)
+Sub EVENT_STUNLOCK(_line, _chatSender, _eventParams)
 	/cecho \aoI am Stun Locking this mob
 	/call TrueTarget(${_eventParams.Arg[1, ]})
 	/call chkStunLock
 	/doevents flush STUNLOCK
 /return
 
-Sub EVENT_STUNSTOP(line, ChatSender, eventParams)
+Sub EVENT_STUNSTOP(_line, _chatSender, _eventParams)
 	/cecho \agI am no lnger Stun Locking the mob
 	/call chkStunLockStop
 	/doevents flush STUNLOCKSTOP

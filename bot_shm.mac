@@ -314,7 +314,7 @@ Sub chkUtils
 	/call chkLeash
 /return
 
-Sub EVENT_DOSHRINK(line, ChatSender, eventParams)
+Sub EVENT_DOSHRINK(_line, _chatSender, _eventParams)
 	/echo \ay doShrinkEventCalled
 	/if (${FindItemCount[Umbracite Swarm Orb]}) {
 		/cecho \agShrinking

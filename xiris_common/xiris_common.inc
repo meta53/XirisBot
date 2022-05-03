@@ -332,7 +332,7 @@ Sub EVENT_KillMob(_line, _sender, _eventParams)
 	/cecho \ayKMCalled ${_eventParams}
 	|-> #EVENT KillMob "<#1#> KillMob #2#"
 	|-> Sender> == #1
-	|-> EventParams> == #2
+	|->_eventParams> == #2
 	|-> _eventParams: ${Target.ID} "${Target.Name}" ${Time.Time24}
 	/call engageTarget ${_eventParams.Arg[1, ]}
 	/doevents flush KillMob
@@ -1372,57 +1372,57 @@ SUB verifyEvent(ChatSender, eventLine)
 	/if (${ChatSender.Equal[MQ2]}) /varset ChatSender ${Me.CleanName}
 	
 	| -Validate ChatSender.
-	/if (${NetBots[${ChatSender}].ID}) /varset userValidated TRUE
+	/if (${NetBots[${_chatSender}].ID}) /varset userValidated TRUE
 	
 	| -Check inZone
-	/if (${SpawnCount[pc =${ChatSender}]}) /varset inZone TRUE
+	/if (${SpawnCount[pc =${_chatSender}]}) /varset inZone TRUE
 	
 	| -Check inRange
-	/if (${SpawnCount[pc =${ChatSender} radius ${MaxResponseDist}]}) /varset inRange TRUE
+	/if (${SpawnCount[pc =${_chatSender} radius ${MaxResponseDist}]}) /varset inRange TRUE
 
 	| -Check for /only|
 	/if (${eventLine.Find[/only|]}) {
 		/varset includeBot FALSE
 		/call argueString only| "${eventLine}"
-		/call check_selectedBots "${Macro.Return}" "${ChatSender}"
+		/call check_selectedBots "${Macro.Return}" "${_chatSender}"
 		/if (${Macro.Return}) /varset includeBot TRUE
 	}
 		
 	| -Check for /exclude|
 	/if (${eventLine.Find[/exclude|]}) {
 		/call argueString exclude| "${eventLine}"
-		/call check_selectedBots "${Macro.Return}" "${ChatSender}"
+		/call check_selectedBots "${Macro.Return}" "${_chatSender}"
 		/if (${Macro.Return}) /varset includeBot FALSE
 	}
 	
 	| -Check for /not|
 	/if (${eventLine.Find[/not|]}) {
 		/call argueString not| "${eventLine}"
-		/call check_selectedBots "${Macro.Return}" "${ChatSender}"
+		/call check_selectedBots "${Macro.Return}" "${_chatSender}"
 		/if (${Macro.Return}) /varset includeBot FALSE
 	}
 	
 	| -Check for /include|
 	/if (${eventLine.Find[/include|]}) {
 		/call argueString include| "${eventLine}"
-		/call check_selectedBots "${Macro.Return}" "${ChatSender}"
+		/call check_selectedBots "${Macro.Return}" "${_chatSender}"
 		/if (${Macro.Return}) /varset includeBot TRUE
 	}
 	
-/return ${ChatSender}_${userValidated}_${includeBot}_${inZone}_${inRange}
+/return ${_chatSender}_${userValidated}_${includeBot}_${inZone}_${inRange}
 
 SUB check_selectedBots(selectedBots, ChatSender)
 
 	/declare botSelected bool local FALSE
 	/if (${selectedBots.Find[ ]}) /varset selectedBots ${selectedBots.Replace[ ,,]}
 
-	/if (${Select[priests,${selectedBots}]} && ${Select[${Me.Class.ShortName},${PriestClasses}]} || ${Select[healers,${selectedBots}]} && ${Select[${Me.Class.ShortName},${PriestClasses}]} || ${Select[ranged,${selectedBots}]} && ${Select[${Me.Class.ShortName},${RangedClasses}]} || ${Select[casters,${selectedBots}]} && ${Select[${Me.Class.ShortName},${CasterClasses}]} || ${Select[melee,${selectedBots}]} && ${Select[${Me.Class.ShortName},${MeleeClasses}]} || ${Select[me,${selectedBots}]} && ${ChatSender.Equal[${Me.CleanName}]} || ${Select[${Me.Class},${selectedBots}]} || ${Select[${Me.Class.ShortName},${selectedBots}]} || ${Select[${Me.CleanName},${selectedBots}]} || ${Select[all,${selectedBots}]} || ${Select[group,${selectedBots}]} && ${Me.CleanName.Equal[${ChatSender}]} || ${Select[group,${selectedBots}]} || ${Select[zone,${selectedBots}]} && ${SpawnCount[pc ${ChatSender}]}) /varset botSelected TRUE
+	/if (${Select[priests,${selectedBots}]} && ${Select[${Me.Class.ShortName},${PriestClasses}]} || ${Select[healers,${selectedBots}]} && ${Select[${Me.Class.ShortName},${PriestClasses}]} || ${Select[ranged,${selectedBots}]} && ${Select[${Me.Class.ShortName},${RangedClasses}]} || ${Select[casters,${selectedBots}]} && ${Select[${Me.Class.ShortName},${CasterClasses}]} || ${Select[melee,${selectedBots}]} && ${Select[${Me.Class.ShortName},${MeleeClasses}]} || ${Select[me,${selectedBots}]} && ${ChatSender.Equal[${Me.CleanName}]} || ${Select[${Me.Class},${selectedBots}]} || ${Select[${Me.Class.ShortName},${selectedBots}]} || ${Select[${Me.CleanName},${selectedBots}]} || ${Select[all,${selectedBots}]} || ${Select[group,${selectedBots}]} && ${Me.CleanName.Equal[${_chatSender}]} || ${Select[group,${selectedBots}]} || ${Select[zone,${selectedBots}]} && ${SpawnCount[pc ${_chatSender}]}) /varset botSelected TRUE
 	
 /return ${botSelected}
 
 Sub check_validBots(selectedBots, botName)
 	/declare botValidated bool local false
-	/if (${Select[priests,${selectedBots}]} && ${Select[${NetBots[${botName}].Class.ShortName},${PriestClasses}]} || ${Select[healers,${selectedBots}]} && ${Select[${NetBots[${botName}].Class.ShortName},${PriestClasses}]} || ${Select[ranged,${selectedBots}]} && ${Select[${NetBots[${botName}].Class.ShortName},${RangedClasses}]} || ${Select[casters,${selectedBots}]} && ${Select[${NetBots[${botName}].Class.ShortName},${CasterClasses}]} || ${Select[melee,${selectedBots}]} && ${Select[${NetBots[${botName}].Class.ShortName},${MeleeClasses}]} || ${Select[me,${selectedBots}]} && ${ChatSender.Equal[${Me.CleanName}]} || ${Select[${Me.Class},${selectedBots}]} || ${Select[${NetBots[${botName}].Class.ShortName},${selectedBots}]} || ${Select[${Me.CleanName},${selectedBots}]} || ${Select[all,${selectedBots}]} || ${Select[group,${selectedBots}]} && ${Me.CleanName.Equal[${ChatSender}]} || ${Select[group,${selectedBots}]} || ${Select[zone,${selectedBots}]} && ${SpawnCount[pc ${ChatSender}]}) /varset botValidated TRUE
+	/if (${Select[priests,${selectedBots}]} && ${Select[${NetBots[${botName}].Class.ShortName},${PriestClasses}]} || ${Select[healers,${selectedBots}]} && ${Select[${NetBots[${botName}].Class.ShortName},${PriestClasses}]} || ${Select[ranged,${selectedBots}]} && ${Select[${NetBots[${botName}].Class.ShortName},${RangedClasses}]} || ${Select[casters,${selectedBots}]} && ${Select[${NetBots[${botName}].Class.ShortName},${CasterClasses}]} || ${Select[melee,${selectedBots}]} && ${Select[${NetBots[${botName}].Class.ShortName},${MeleeClasses}]} || ${Select[me,${selectedBots}]} && ${ChatSender.Equal[${Me.CleanName}]} || ${Select[${Me.Class},${selectedBots}]} || ${Select[${NetBots[${botName}].Class.ShortName},${selectedBots}]} || ${Select[${Me.CleanName},${selectedBots}]} || ${Select[all,${selectedBots}]} || ${Select[group,${selectedBots}]} && ${Me.CleanName.Equal[${_chatSender}]} || ${Select[group,${selectedBots}]} || ${Select[zone,${selectedBots}]} && ${SpawnCount[pc ${_chatSender}]}) /varset botValidated TRUE
 	
 
 /return ${botValidated}
