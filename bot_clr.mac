@@ -184,7 +184,7 @@ Sub targetReset
 
 Sub healMAINTANK
 	/varcalc	int_point_calcStopHeal ${Math.Calc[${int_point_tankNormal}*1.1]}
-	/if (!${Me.Target.ID}) /call TrueTarget ${int_MTID}
+	/if (!${Target.ID}) /call TrueTarget ${int_MTID}
 	/call chkFHealReady
 	/call setHealingSpell ${Target.Class.ShortName} ${Target.PctHPs}
 	/echo healMAINTANK: ${str_currentHeal}
@@ -204,7 +204,7 @@ Sub healMAINTANK
 
 Sub healSELF
 	/varcalc 	int_point_calcStopHeal ${Math.Calc[${int_point_selfNormal}*1.05]}
-	/if (!${Me.Target.ID}) /call TrueTarget ${Me.ID}
+	/if (!${Target.ID}) /call TrueTarget ${Me.ID}
 	/call chkFHealReady
 	/call setHealingSpell ${Me.Class.ShortName}  ${Me.PctHPs}
 	/echo healSELF: ${str_currentHeal}
