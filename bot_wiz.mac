@@ -169,7 +169,7 @@ Sub engageTarget(_targetID)
 	/varset int_targetID ${_targetID}
 	/call TrueTarget ${_targetID}
 	/varset bln_engaged TRUE
-	
+	/call ResetCastTimers
 	|- Wizard specific things
 	/varset bln_snareActive		FALSE
 	

@@ -160,6 +160,7 @@ Sub engageTarget(_targetID)
 	/varset int_targetID ${_targetID}
 	/call TrueTarget ${int_targetID}
 	/call Add2TargetArray ${_targetID}
+	/call ResetCastTimers
 	/varset bln_engaged TRUE
 	/pet attack
 	|- Necro specific things

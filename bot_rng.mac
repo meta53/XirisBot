@@ -172,6 +172,7 @@ Sub engageTarget(_targetID)
 	/varset bln_engaged TRUE
 	/killthis
 	/attack on
+	/call ResetCastTimers
 	/call GetAssistStickDist
 	/call StickToAssistTarget
 /return

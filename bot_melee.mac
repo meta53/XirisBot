@@ -97,6 +97,11 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 		
 		/if (${bln_engaged}) {
 			/if (!${Melee.Enable}) /call chkCombatAbilities
+			|-- class specific
+			
+			|-- debuff lib
+			/call chkDebuffsOnSingleTarget ${int_targetID}
+
 			|-- dps lib
 			/call chkTarget
 			/call chkTargetDist
@@ -172,7 +177,7 @@ Sub chkTarget
 			/delay 10
 			/goto :chkHoTT
 		} else {
-			/echo pulled aggro, resetting for 2s
+			/echo Pulled aggro, resetting for 2s
 			/melee reset
 			/delay 20
 			/if (${Target.ID} && ${Target.Type.Equal[NPC]}) /killthis
@@ -187,6 +192,7 @@ Sub chkTarget
 			/if (${Me.CombatAbilityReady[Baffling Strike]} && ${FindItemCount[Axe of the Destroyer]}>0) /disc Baffling Strike
 			/if (${Me.CombatAbilityReady[Confusing Strike]} && ${FindItemCount[Rage Axe]}>0) /disc Confusing Strike
 			/if (${Me.CombatAbilityReady[Distracting Strike]} && ${FindItemCount[Bonesplicer Axe]}>0) /disc Distracting Strike
+			/goto :chkHoTT
 		}
 	} else {
 		|-- Not burning, turn RageVolley back on.

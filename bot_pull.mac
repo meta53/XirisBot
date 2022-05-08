@@ -442,6 +442,7 @@ Sub killTarget
 	|--issue kill command
 	/varcalc int_killCount ${int_killCount}+1
 	/bc KillMob ${Target.ID} "${Target.Name}" ${Time.Time24}
+	/call ResetCastTimers
 	/killthis
 	/attack on
 	/g Called Kill ${Target.ID} ${Target.Name} ${Time.Time24}

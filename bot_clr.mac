@@ -154,7 +154,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 		/if (${bln_engaged}) {
 			/call RunRaidEvents
 			/call RunClassEvents
-			/call chkDebuffs
+			/call chkDebuffsOnSingleTarget ${int_targetID}
 			/call chkYaulp
 			/call chkRez
 		}
@@ -197,6 +197,7 @@ Sub engageTarget(_targetID)
 	/echo engageTarget ${Spawn[id ${_targetID}].CleanName} (${_targetID})
 	/varset int_targetID ${_targetID}
 	/varset bln_engaged TRUE
+	/call ResetCastTimers
 /return
 
 Sub targetReset

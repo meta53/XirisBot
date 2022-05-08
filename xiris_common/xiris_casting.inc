@@ -9,6 +9,7 @@ REVISION HISTORY
 	08.02.18	xiris	Added QuickNukes and AENukes
 	03.31.22	xiris	Updated the named checking as well as normalizing all calls to MQ2Cast
 	04.16.22	xiris	Added chkStun and support for Stun Locking
+	05.08.22	xiris	Added support for bards in Nuke/DOT
 **|
 
 
@@ -132,25 +133,37 @@ Sub Events_Casting_DOT
 **|
 
 Sub chkNuke
-	/if (${bln_useFastOnly})	/return
-	/if (${AENuke_Active}) 		/return
 	/if (!${bln_engaged}) 		/return
+	/if (${bln_useFastOnly})	/return
 	/if (${int_nukeTotal} == 0) /return 
-	/if (${Me.PctMana} < ${int_nukeMinMana})  /return
-	/if (${Target.PctHPs}>${int_nukeStartHP}) /return
-	/if (${Me.Casting.ID} || ${Me.Moving} || ${Me.Invis} || ${ExcludeList.Find[${Spawn[${Target.CleanName}]}]}) /return
-	
+	/if (${AENuke_Active}) 		/return
+	/if (${timer_nukeDelay} && ${nuke_hasCastOnce})	 	/return 
+
+	/if ((${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]}) || ${Me.Moving} || ${Me.Invis} || ${ExcludeList.Find[${Spawn[${Target.CleanName}]}]}) /return
+
 	|-- press pet attack for funsies
 	/if (${Me.Pet.ID} && ${bln_petUse} && !${Me.Pet.Combat}) /call chkPetAttack
 
 	|-- named check
+	:named_check
 	/declare isNamed bool local FALSE
 	/call TargetNamedCheck ${Target.ID}
 	/varset isNamed ${Macro.Return}
+
+	|-- target HP and my mana check
+	/if (${isNamed}  && (${Target.PctHPs} < ${int_namedNukeStopHP}))	/return
+	/if (${isNamed}  && (${Target.PctHPs} > ${int_namedNukeStartHP}))	/return
+	/if (!${isNamed} && (${Target.PctHPs} < ${int_nukeStopHP}))			/return
+	/if (!${isNamed} && (${Target.PctHPs} > ${int_nukeStartHP}))		/return
+
+	/if (${isNamed}  && (${Me.PctMana} < ${int_namedNukeMinMana}))		/return
+	/if (!${isNamed} && (${Me.PctMana} < ${int_nukeMinMana}))			/return
+
+	:fd_check
+	/if (${Me.Feigning}) /stand
 	
 	|-- Final Check before casting
 	/if (${Target.ID} && ${Target.Type.Equal[NPC]} && ${Target.LineOfSight}) {
-	
 		/declare i 			int 	local
 		/declare gemStr 	string 	local 	
 		/declare gem		string  local
@@ -159,6 +172,17 @@ Sub chkNuke
 			:NukeLoopStart
 			|-- skip if disabled
 			/if (!${Nuke_${i}_Use}) /goto :NextNuke
+
+			|-- Check the timer on this nuke
+			/if (${Nuke_${i}_Timer} <= 0) /cecho \agTimer ready for \ay${Nuke_${i}} :: \ay${Nuke_${i}_Timer}
+			/if (${Nuke_${i}_Timer} > 0 && ${Nuke_${i}_HasCastOnce}) {
+				/if (${i}<${int_nukeTotal}) { 
+					/cecho \arTimer not ready for \ay${Nuke_${i}} :: \ay${Nuke_${i}_Timer}
+					/goto :NextNuke
+				} else {
+					/return
+				}
+			}
 
 			|-- Named Target check
 			|-- if we only cast this spell on named, and this is NOT a named target, skip
@@ -182,45 +206,65 @@ Sub chkNuke
 			|   Additionally spell might not be memmed due to swapping		
 			/call chkSpellMemorized "${Nuke_${i}}" TRUE ${Nuke_${i}_Gem}
 			:NukeCastWait
-			/if (!${Me.SpellReady[${Nuke_${i}}]} || ${Me.Casting.ID}) {
-				/delay 10
+			/if (!${Me.SpellReady[${Nuke_${i}}]} || (${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]})) {
+				/delay 2
 				/goto :NukeCastWait
 			}
 
 			|-- All this ready, check for LOS/Distance/Mana
 			/if (${Target.PctHPs}<=${Nuke_${i}_StartHP} && ${Target.PctHPs}>=${Nuke_${i}_StopHP}) {
 				/if (${Me.CurrentMana}>=${Spell[${Nuke_${i}}].Mana} && ${Target.Distance}<=${Spell[${Nuke_${i}}].Range} && ${Target.LineOfSight}) {
-					/call MQ2Cast "${Nuke_${i}}" ${Nuke_${i}_Gem} 5s
-					/varcalc int_concCount ${int_concCount}+1
-					/if (${Cast.Result.Equal[CAST_SUCCESS]}) {
-						/cecho \ag ${Nuke_${i}} ${Cast.Result} : Concussion Count: \ay${int_concCount} 
+	
+					/if (${Me.Class.ShortName.Equal[BRD]}) {
+						/medley queue "${Nuke_${i}}"
+						/cecho \ag ${Nuke_${i}}  : DELAYING for \ay${Nuke_${i}_Timer.OriginalValue}s \agrefresh	
+					} else {
+						/call MQ2Cast "${Nuke_${i}}"	
+						/if (${Macro.Return.Equal[CAST_SUCCESS]}) {
+							/cecho \ag ${Nuke_${i}} ${Macro.Return} : DELAYING for \ay${Nuke_${i}_Timer.OriginalValue}s \agrefresh	
+						}
 					}
+					/varset Nuke_${i}_Timer	${Nuke_${i}_Timer.OriginalValue}
+					/varset Nuke_${i}_HasCastOnce TRUE
+					/varcalc int_concCount ${int_concCount}+1
 				}
 			}
 		:NextNuke
-		/call RunAllEvents
 			
 		/next i
 	}
+	/varset nuke_hasCastOnce TRUE
+	/varset timer_nukeDelay ${timer_nukeDelay.OriginalValue}
 /return
 
 Sub chkQNuke
-	/if (!${bln_useFastOnly}) 	 /return
-	/if (${AENuke_Active}) 		 /return
 	/if (!${bln_engaged}) 		 /return
+	/if (!${bln_useFastOnly}) 	 /return
 	/if (${int_QnukeTotal} == 0) /return 
-	/if (${Me.PctMana} < ${int_QnukeMinMana}) 	/return
-	/if (${Target.PctHPs}>${int_QnukeStartHP})  /return
-	/if (${Me.Casting.ID} || ${Me.Moving} || ${Me.Invis} || ${ExcludeList.Find[${Spawn[${Target.CleanName}]}]}) /return
+	/if (${AENuke_Active}) 		 /return
+	/if (${timer_QnukeDelay} && ${qnuke_hasCastOnce})	 	/return 
+
+	/if ((${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]}) || ${Me.Moving} || ${Me.Invis} || ${ExcludeList.Find[${Spawn[${Target.CleanName}]}]}) /return
 	
 	|-- press pet attack for funsies
 	/if (${Me.Pet.ID} && ${bln_petUse} && !${Me.Pet.Combat}) /call chkPetAttack
 
 	|-- named check
+	:named_check
 	/declare isNamed bool local FALSE
 	/call TargetNamedCheck ${Target.ID}
 	/varset isNamed ${Macro.Return}
-	
+
+	|-- target HP and my mana check
+	/if (${isNamed}  && (${Target.PctHPs} < ${int_namedQNukeStopHP}))	/return
+	/if (${isNamed}  && (${Target.PctHPs} > ${int_namedQNukeStartHP}))	/return
+	/if (!${isNamed} && (${Target.PctHPs} < ${int_QnukeStopHP}))		/return
+	/if (!${isNamed} && (${Target.PctHPs} > ${int_QnukeStartHP}))		/return
+
+	/if (${isNamed}  && (${Me.PctMana} < ${int_namedQNukeMinMana}))		/return
+	/if (!${isNamed} && (${Me.PctMana} < ${int_QnukeMinMana}))			/return
+
+
 	|-- Final Check before casting
 	/if (${Target.ID} && ${Target.Type.Equal[NPC]} && ${Target.LineOfSight}) {
 
@@ -233,6 +277,16 @@ Sub chkQNuke
 			|-- skip if disabled
 			/if (!${QNuke_${i}_Use}) /goto :NextQuickNuke
 
+			|-- Check the timer on this nuke
+			/if (${QNuke_${i}_Timer} <= 0) /cecho \agTimer ready for \ay${QNuke_${i}} :: \ay${QNuke_${i}_Timer}
+			/if (${QNuke_${i}_Timer} > 0 && ${QNuke_${i}_HasCastOnce}) {
+				/if (${i}<${int_qnukeTotal}) { 
+					/cecho \arTimer not ready for \ay${QNuke_${i}} :: \ay${QNuke_${i}_Timer}
+					/goto :NextQuickNuke
+				} else {
+					/return
+				}
+			}
 			|-- Named Target check
 			|-- if we only cast this spell on named, and this is NOT a named target, skip
 	
@@ -256,11 +310,7 @@ Sub chkQNuke
 			|   Additionally spell might not be memmed due to swapping		
 			/call chkSpellMemorized "${QNuke_${i}}" FALSE ${QNuke_${i}_Gem}
 			:QnukeNukeCastWait
-			/if (!${Me.SpellReady[${QNuke_${i}}]}) {
-				/delay 2
-				/goto :QnukeNukeCastWait
-			}
-			/if (${Me.Casting.ID}) {
+			/if (!${Me.SpellReady[${QNuke_${i}}]} || (${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]})) {
 				/delay 2
 				/goto :QnukeNukeCastWait
 			}
@@ -269,11 +319,19 @@ Sub chkQNuke
 			|-- All this ready, check for LOS/Distance/Mana
 			/if (${Target.PctHPs}<=${QNuke_${i}_StartHP} && ${Target.PctHPs}>=${QNuke_${i}_StopHP}) {
 				/if (${Me.CurrentMana}>=${Spell[${QNuke_${i}}].Mana} && ${Target.Distance}<=${Spell[${QNuke_${i}}].Range} && ${Target.LineOfSight}) {
-					/call MQ2Cast "${QNuke_${i}}" ${QNuke_${i}_Gem} 5s
-					/varcalc int_concCount ${int_concCount}+1
-					/if (${Cast.Result.Equal[CAST_SUCCESS]}) {
-						/cecho \ag ${QNuke_${i}} ${Cast.Result} : Concussion Count: \ay${int_concCount} 
+					
+					/if (${Me.Class.ShortName.Equal[BRD]}) {
+						/medley queue "${QNuke_${i}}"
+						/cecho \ag ${QNuke_${i}}  : DELAYING for \ay${QNuke_${i}_Timer.OriginalValue}s \agrefresh	
+					} else {
+						/call MQ2Cast "${QNuke_${i}}"	
+						/if (${Macro.Return.Equal[CAST_SUCCESS]}) {
+							/cecho \ag ${QNuke_${i}} ${Macro.Return} : DELAYING for \ay${QNuke_${i}_Timer.OriginalValue}s \agrefresh	
+						}
 					}
+					/varset QNuke_${i}_Timer	${QNuke_${i}_Timer.OriginalValue}
+					/varset QNuke_${i}_HasCastOnce TRUE
+					/varcalc int_concCount ${int_concCount}+1
 				}
 			}
 		:NextQuickNuke
@@ -281,6 +339,8 @@ Sub chkQNuke
 			
 		/next i
 	}
+	/varset qnuke_hasCastOnce TRUE
+	/varset timer_QnukeDelay ${timer_QnukeDelay.OriginalValue}
 /return
 
 |**
@@ -345,8 +405,10 @@ Sub chkSnare
 Sub chkStun(bool _memorize)
 	/if (!${bln_engaged}) 		 /return
 	/if (${int_stunTotal} == 0)  /return 
+	/if (${timer_stunDelay} && ${stun_hasCastOnce})	 	/return 
+
 	/if (${Me.PctMana} < ${int_stunMinMana}) 	/return
-	/if (${Me.Casting.ID} || ${Me.Moving} || ${Me.Invis} || ${ExcludeList.Find[${Spawn[${Target.CleanName}]}]}) /return
+	/if ((${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]}) || ${Me.Moving} || ${Me.Invis} || ${ExcludeList.Find[${Spawn[${Target.CleanName}]}]}) /return
 	
 	|-- Final Check before casting
 	/if (${Target.ID} && ${Target.Type.Equal[NPC]} && ${Target.LineOfSight}) {
@@ -371,13 +433,13 @@ Sub chkStun(bool _memorize)
 			/call RunAllEvents	
 			/call chkSpellMemorized "${Stun_${i}}" ${_memorize} ${Stun_${i}_Gem}
 
-			
 			|-- All this ready, check for LOS/Distance/Mana
 			/if (${Target.PctHPs}<=${Stun_${i}_StartHP} && ${Target.PctHPs}>=${Stun_${i}_StopHP}) {
 				/if (${Me.CurrentMana}>=${Spell[${Stun_${i}}].Mana} && ${Target.Distance}<=${Spell[${Stun_${i}}].Range} && ${Target.LineOfSight}) {
 					/call MQ2Cast "${Stun_${i}}" ${Stun_${i}_Gem} 5s
 					/if (${Cast.Result.Equal[CAST_SUCCESS]}) {
 						/cecho \ag ${Stun_${i}} ${Cast.Result}
+						/varset Stun_${i}_HasCastOnce TRUE
 					}
 				}
 			}
@@ -386,6 +448,8 @@ Sub chkStun(bool _memorize)
 			
 		/next i
 	}
+	/varset stun_hasCastOnce TRUE
+	/varset timer_stunDelay ${timer_stunDelay.OriginalValue}
 /return
 
 
@@ -421,35 +485,41 @@ Sub chkStunLockStop
  ----------------------------
  This is the routine where the majority of the DPS will occur.
  Modified to now have a seperate fast DOT component call
+ Modified to allow for bards
  ----------------------------
 **|
 
 Sub chkDOT
+
 	/if (${bln_useFastOnly}) 	/return
 	/if (${AENuke_Active}) 		/return
 	/if (!${bln_engaged}) 		/return
 	/if (${int_dotTotal} == 0)	/return 
-	/if (${Me.PctMana} < ${int_dotMinMana})  /return
-	/if (${Target.PctHPs}>${int_dotStartHP}) /return
+	/if (${timer_dotDelay} && ${dot_hasCastOnce})	 	/return 
+
+	/if ((${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]}) || ${Me.Moving} || ${Me.Invis} || ${ExcludeList.Find[${Spawn[${Target.CleanName}]}]}) /return
 	
-	/if (${Me.Casting.ID} || ${Me.Moving} || ${Me.Invis} || ${ExcludeList.Find[${Spawn[${Target.CleanName}]}]}) /return
-	
+	|-- press pet attack for funsies
+	/if (${Me.Pet.ID} && ${bln_petUse} && !${Me.Pet.Combat}) /call chkPetAttack
+
 	|-- named check
+	:named_check
 	/declare isNamed bool local FALSE
 	/call TargetNamedCheck ${Target.ID}
 	/varset isNamed ${Macro.Return}
 
-	/if (${isNamed} &&  (${Me.PctMana} < ${int_namedDotStopHP})) /return
-	/if (!${isNamed} && (${Me.PctMana} < ${int_dotMinMana}))     /return
-	/if (${Me.Pet.ID} && ${bln_petUse} && !${Me.Pet.Combat}) /call chkPetAttack
+	|-- target HP and my mana check
+	/if (${isNamed}  && (${Target.PctHPs} < ${int_namedDotStopHP}))		/return
+	/if (${isNamed}  && (${Target.PctHPs} > ${int_namedDotStartHP}))	/return
+	/if (!${isNamed} && (${Target.PctHPs} < ${int_dotStopHP}))			/return
+	/if (!${isNamed} && (${Target.PctHPs} > ${int_dotStartHP}))			/return
 
-	:dotFDWait
-		/if (${Me.Feigning}) {
-			/echo waiting to stand...
-			/delay 2
-			/stand
-			/goto :dotFDWait
-		}
+	/if (${isNamed}  && (${Me.PctMana} < ${int_namedDotMinMana}))		/return
+	/if (!${isNamed} && (${Me.PctMana} < ${int_dotMinMana}))			/return
+	
+	:fd_check
+	/if (${Me.Feigning}) /stand
+
 	|-- Final Check before casting
 	/if (${Target.ID} && ${Target.Type.Equal[NPC]} && ${Target.LineOfSight}) {
 		/declare i 				int 	local
@@ -460,14 +530,16 @@ Sub chkDOT
 		/for i 1 to ${int_dotTotal}  
 			:DotLoopStart
 			|-- skip if disabled
-			/if (!${Nuke_${i}_Use}) /goto :NextDot
+			/if (!${DOT_${i}_Use}) /goto :NextDot
 
 			|-- Check the timer on this dot
-			/if (${DOT_${i}_Timer} <= 0) /echo \ayTimer ready for ${DOT_${i}} :: ${DOT_${i}_Timer}
-			/if (${DOT_${i}_Timer} > 0) {
+			/if (${DOT_${i}_Timer} <= 0) /cecho \agTimer ready for \ay${DOT_${i}} :: \ay${DOT_${i}_Timer}
+			/if (${DOT_${i}_Timer} > 0 && ${DOT_${i}_HasCastOnce}) {
 				/if (${i}<${int_dotTotal}) { 
-					/echo \arTimer not ready for ${DOT_${i}} :: ${DOT_${i}_Timer}
+					/cecho \arTimer not ready for \ay${DOT_${i}} :: \ay${DOT_${i}_Timer}
 					/goto :NextDot
+				} else {
+					/return
 				}
 			}
 			
@@ -493,23 +565,29 @@ Sub chkDOT
 			|   Used due to lag on raids sometimes lagging gems
 			|   Additionally spell might not be memmed due to swapping
 			/call chkSpellMemorized "${DOT_${i}}" FALSE ${DOT_${i}_Gem}
-			:dotReadyWait
-			/if (!${Me.SpellReady[${DOT_${i}}]} || ${Me.Casting.ID}) {
+			:DotReadyWait
+			/if ((!${Me.SpellReady[${DOT_${i}}]} || (${Me.Casting.ID}) && ${Me.Class.ShortName.NotEqual[BRD]})) {
 				/delay 2
-				/goto :dotReadyWait
+				/goto :DotReadyWait
 			}
 
 			|-- All this ready, check for LOS/Distance/Mana
 			|-- Think about adding the named stop point here at some point in future
 			/if (${Target.PctHPs}<=${DOT_${i}_StartHP} && ${Target.PctHPs}>=${DOT_${i}_StopHP}) {
-				/if (${Me.CurrentMana}>=${Spell[${DOT_${i}}].Mana} && ${Me.SpellReady[${DOT_${i}}]} && ${Target.Distance}<=${Spell[${DOT_${i}}].Range} && ${Target.LineOfSight} && (${DOT_${i}_Timer} <= 0)) {
-					/call MQ2Cast "${DOT_${i}}"
-					/varcalc int_concCount ${int_concCount}+1
-					/if (${Cast.Result.Equal[CAST_SUCCESS]}) {
-						/varcalc dotDuration ${Spell[${DOT_${i}}].Duration} * 6
-						/cecho \ag ${DOT_${i}} ${Cast.Result} : DELAYING for \ay${dotDuration}s \agrefresh	
-						/varset DOT_${i}_Timer	${dotDuration}s
+				/if (${Me.CurrentMana}>=${Spell[${DOT_${i}}].Mana} && (${Me.SpellReady[${DOT_${i}}]} || ${Me.Class.ShortName.Equal[BRD]}) && ${Target.Distance}<=${Spell[${DOT_${i}}].Range} && ${Target.LineOfSight} && (${DOT_${i}_Timer} <= 0)) {
+					/varcalc dotDuration ${Spell[${DOT_${i}}].Duration} * 6
+					/if (${Me.Class.ShortName.Equal[BRD]}) {
+						/medley queue "${DOT_${i}}"
+						/cecho \ag ${DOT_${i}}  : DELAYING for \ay${dotDuration}s \agrefresh	
+					} else {
+						/call MQ2Cast "${DOT_${i}}"	
+						/if (${Macro.Return.Equal[CAST_SUCCESS]}) {
+							/cecho \ag ${DOT_${i}} ${Macro.Return} : DELAYING for \ay${dotDuration}s \agrefresh	
+						}
 					}
+					/varset DOT_${i}_Timer	${dotDuration}s
+					/varset DOT_${i}_HasCastOnce TRUE
+					/varcalc int_concCount ${int_concCount}+1
 				}
 			}
 		:NextDot
@@ -517,6 +595,8 @@ Sub chkDOT
 			
 		/next i
 	}
+	/varset dot_hasCastOnce TRUE
+	/varset timer_dotDelay ${timer_dotDelay.OriginalValue}
 /return
 
 
@@ -555,9 +635,8 @@ Sub chkSnare
 |- Method will memorize a spell, to the optional attributed gem, and if wait is true, will wait until its ready to return
 |- note will call utility to string 'gem' from the gem # if found
 Sub chkSpellMemorized(string _spell, bool _wait, int _gem)
-	/echo chkSpellMemorized: ${_spell} (${Me.Gem[${_spell}]}) 
 	/if (${Me.Gem[${_spell}]}) /goto :return
-
+	/echo chkSpellMemorized: ${_spell} (${Me.Gem[${_spell}]}) 
 	/declare intGem int local 9
 	/if (${_gem} > 0) {
 		/echo integer
@@ -601,6 +680,47 @@ Sub StripGem(string _gem)
 	/declare r int local ${Math.Calc[${l} - 3]} 
 	/declare g int local ${_gem.Right[${r}]}
 /return ${g}
+
+|-- Reset the timers on everything DOT/DD/STUN
+Sub ResetCastTimers
+	/if (${str_classArchetype.Equal[MELEE_END]}) /return
+	/if (${Me.Class.ShortName.Equal[WAR]}) /return
+
+	/declare i int local
+	:nuke
+	/varset nuke_hasCastOnce  FALSE
+	/for i 1 to ${int_nukeTotal}
+		/varset Nuke_${i}_HasCastOnce FALSE
+	/next i
+
+	:qnuke
+	/varset qnuke_hasCastOnce  FALSE
+	/for i 1 to ${int_QnukeTotal}
+		/varset QNuke_${i}_HasCastOnce FALSE
+	/next i
+
+	:stuns
+	/varset stun_hasCastOnce  FALSE
+	/for i 1 to ${int_stunTotal}
+		/varset Stun_${i}_HasCastOnce FALSE
+	/next i
+
+	:fastDoT
+	/varset fast_hasCastOnce  FALSE
+	/for i 1 to ${int_fastTotal}
+		/varset FAST_${i}_HasCastOnce FALSE
+	/next i
+
+	:DoT
+	/varset dot_hasCastOnce  FALSE
+	/for i 1 to ${int_dotTotal}
+		/varset DOT_${i}_HasCastOnce FALSE
+	/next i
+
+	/echo Casting: Reset all timers
+
+/return 
+
 
 |-- MEZ IMMUNE
 Sub Event_MezImmune
@@ -851,9 +971,12 @@ Sub xbot_initialize_casting
 	|-- Nukes
 	/declare int_nukeTotal				int		outer	${Ini[botINI,DirectDamage,int_nukeTotal,0]}	
 	/declare timer_nukeDelay			timer	outer	${Ini[botINI,DirectDamage,timer_nukeDelay,1s]}
+	/declare nuke_hasCastOnce			bool	outer   FALSE
 	/declare int_nukeMinMana			int		outer	${Ini[botINI,DirectDamage,int_nukeMinMana,10]}
+	/declare int_namedNukeMinMana		int		outer	${Ini[botINI,DamageOverTime,int_namedNukeMinMana,10]} 
 	/declare int_nukeStartHP			int		outer	${Ini[botINI,DirectDamage,int_nukeStartHP,98]}
 	/declare int_nukeStopHP				int		outer	${Ini[botINI,DirectDamage,int_nukeStopHP,5]}
+	/declare int_namedNukeStopHP		int 	outer 	${Ini[botINI,DamageOverTime,int_namedNukeStopHP,0]}
 	
 	/echo int_nukeTotal: ${int_nukeTotal}
 	/declare nc 						int		local
@@ -866,9 +989,11 @@ Sub xbot_initialize_casting
 		/declare Nuke_${nc}_StopHP		int		outer	${Ini[botINI,DirectDamage,Nuke_${nc}_StopHP]}
 		/declare Nuke_${nc}_Resist      string  outer   ${Spell[${Nuke_${nc}}].ResistType} 
 		/declare Nuke_${nc}_NamedOnly   string  outer   ${Ini[botINI,DirectDamage,Nuke_${nc}_NamedOnly]}
+		/declare Nuke_${nc}_Timer		timer   outer   ${timer_nukeDelay}
+		/declare Nuke_${nc}_HasCastOnce	bool	outer   FALSE
 		
 		/echo Nuke_${nc} Use:  ${Nuke_${nc}_Use} || Gem: ${Nuke_${nc}_Gem} || Start: ${Nuke_${nc}_StartHP}
-		/echo Stop: ${Nuke_${nc}_StopHP} || Resist: ${Nuke_${nc}_Resist} || Named: ${Nuke_${nc}_NamedOnly}
+		/echo Stop: ${Nuke_${nc}_StopHP} || Resist: ${Nuke_${nc}_Resist} || Named: ${Nuke_${nc}_NamedOnly} || Timer: ${Nuke_${nc}_Timer}
 	/next nc
 
 	|--AE Nuke
@@ -883,10 +1008,13 @@ Sub xbot_initialize_casting
 	|--Quick Nuke
 	/declare int_QnukeTotal				int		outer	${Ini[botINI,QuickNuke,int_QnukeTotal,0]}	
 	/declare timer_QnukeDelay			timer	outer	${Ini[botINI,QuickNuke,timer_QnukeDelay,1s]}
+	/declare qnuke_hasCastOnce			bool	outer   FALSE
 	/declare int_QnukeMinMana			int		outer	${Ini[botINI,QuickNuke,int_QnukeMinMana,10]}
+	/declare int_namedQNukeMinMana		int		outer	${Ini[botINI,DamageOverTime,int_namedQNukeMinMana,10]} 
 	/declare int_QnukeStartHP			int		outer	${Ini[botINI,QuickNuke,int_QnukeStartHP,98]}
-	/declare int_QnukeStopHP			int		outer	${Ini[botINI,QuickNuke,int_QnukeStopHP,5]}
-	
+	/declare int_QnukeStopHP			int		outer	${Ini[botINI,QuickNuke,int_QnukeStopHP,0]}
+	/declare int_namedQNukeStopHP		int 	outer 	${Ini[botINI,DamageOverTime,int_namedQNukeStopHP,0]}
+
 	/declare qn 						int		local
 	/for qn 1 to ${int_QnukeTotal} 
 		/declare QNuke_${qn} 			string	outer	${Ini[botINI,QuickNuke,QNuke_${qn}]}
@@ -896,12 +1024,17 @@ Sub xbot_initialize_casting
 		/declare QNuke_${qn}_StopHP		int		outer	${Ini[botINI,QuickNuke,QNuke_${qn}_StopHP]}
 		/declare QNuke_${qn}_Resist     string  outer   ${Spell[${QNuke_${qn}}].ResistType} 
 		/declare QNuke_${qn}_NamedOnly 	string	outer	${Ini[botINI,QuickNuke,QNuke_${qn}_NamedOnly]}
+		/declare QNuke_${qn}_Timer		timer   outer   ${timer_QnukeDelay}
+		/declare QNuke_${qn}_HasCastOnce	bool	outer   FALSE
 	/next qn	
 
 	|--Stuns
 	/declare int_stunTotal				int		outer	${Ini[botINI,Stun,int_stunTotal,0]}	
+	/declare timer_stunDelay			timer	outer	${Ini[botINI,Stun,timer_stunDelay,1s]}
+	/declare stun_hasCastOnce			bool	outer   FALSE
 	/declare int_stunMinMana			int		outer	${Ini[botINI,Stun,int_stunMinMana,0]}
 	/declare bln_stunLocking			bool	outer	FALSE
+
 
 	/declare st 						int		local
 	/for st 1 to ${int_stunTotal} 
@@ -911,14 +1044,20 @@ Sub xbot_initialize_casting
 		/declare Stun_${st}_StartHP		int		outer	${Ini[botINI,Stun,Stun_${st}_StartHP]}
 		/declare Stun_${st}_StopHP		int		outer	${Ini[botINI,Stun,Stun_${st}_StopHP]}
 		/declare Stun_${st}_Resist 		string  outer   ${Spell[${Stun_${st}}].ResistType} 
+		/declare Stun_${st}_Timer		timer   outer   ${timer_stunDelay}
+		/declare Stun_${st}_HasCastOnce	bool	outer   FALSE
 	/next st	
 	
 	|-- DOTs MOAR DOTS!
 	|--FAST Damage Over Time
 	/declare int_fastTotal				int		outer	${Ini[botINI,FastDOT,int_fastTotal,0]}
 	/declare timer_fastDelay			timer	outer	${Ini[botINI,FastDOT,timer_fastDelay,1s]}
+	/declare fast_hasCastOnce			bool	outer   FALSE
+	/declare int_fastMinMana			int		outer	${Ini[botINI,DamageOverTime,int_fastMinMana,10]} 
+	/declare int_namedFastMinMana		int		outer	${Ini[botINI,DamageOverTime,int_namedFastMinMana,1]}
 	/declare int_fastStartHP			int		outer	${Ini[botINI,FastDOT,int_fastStartHP,94]}
 	/declare int_fastStopHP				int		outer	${Ini[botINI,FastDOT,int_fastStopHP,10]}
+	/declare int_namedFastStopHP		int 	outer 	${Ini[botINI,DamageOverTime,int_namedFastStopHP,5]}
 	/declare bln_fastTrigger			bool 	outer	FALSE
 	/declare int_fastTrigger			int		outer	${Ini[botINI,FastDOT,int_fastTrigger,3]}
 
@@ -932,17 +1071,21 @@ Sub xbot_initialize_casting
 		/declare FAST_${fa}_StartHP		int		outer	${Ini[botINI,DamageOverTime,FAST_${fa}_StartHP,${int_fastStartHP}]}
 		/declare FAST_${fa}_StopHP		int		outer	${Ini[botINI,DamageOverTime,FAST_${fa}_StopHP,${int_fastStopHP}]}
 		/declare FAST_${fa}_Resisted	int		outer 	0
-		/declare FAST_${fa}_Resist     string  outer   ${Spell[${FAST_${fa}}].ResistType} 
+		/declare FAST_${fa}_Resist      string  outer   ${Spell[${FAST_${fa}}].ResistType} 
 		/declare FAST_${fa}_Active		bool	outer 	FALSE
+		/declare FAST_${fa}_Timer		timer   outer   ${timer_fastDelay}
+		/declare FAST_${fa}_HasCastOnce	bool	outer   FALSE
 	/next fa	
 	
 	|--Damage Over Time
 	/declare int_dotTotal				int		outer	${Ini[botINI,DamageOverTime,int_dotTotal,0]}
 	/declare timer_dotDelay				timer	outer	${Ini[botINI,DamageOverTime,timer_dotDelay,1s]}
+	/declare dot_hasCastOnce			bool	outer   FALSE
 	/declare int_dotMinMana				int		outer	${Ini[botINI,DamageOverTime,int_dotMinMana,10]} 
+	/declare int_namedDotMinMana		int		outer	${Ini[botINI,DamageOverTime,int_namedDotMinMana,1]}
 	/declare int_dotStartHP				int		outer	${Ini[botINI,DamageOverTime,int_dotStartHP,98]}
 	/declare int_dotStopHP				int		outer	${Ini[botINI,DamageOverTime,int_dotStopHP,10]}
-	/declare int_namedDotStopHP			int 	outer 	${Ini[botINI,DamageOverTime,int_namedDotStopHP,50]}
+	/declare int_namedDotStopHP			int 	outer 	${Ini[botINI,DamageOverTime,int_namedDotStopHP,5]}
 	/declare int_dotStopSeconds			int		outer 	${Ini[botINI,DamageOverTime,int_dotStopSeconds,15]}
 	
 	/declare dc							int		local
@@ -958,7 +1101,8 @@ Sub xbot_initialize_casting
 		/declare DOT_${dc}_Resisted		int		outer 	0
 		/declare DOT_${dc}_Resist     	string  outer   ${Spell[${DOT_${dc}}].ResistType} 
 		/declare DOT_${dc}_Active		bool	outer 	FALSE
-		/declare DOT_${dc}_Timer		timer   outer   0
+		/declare DOT_${dc}_Timer		timer   outer   ${timer_dotDelay}
+		/declare DOT_${dc}_HasCastOnce	bool	outer   FALSE
 	/next dc
 
 	

@@ -173,8 +173,9 @@ Sub engageTarget(_targetID)
 	/if (${_targetID} == 0) /return
 	/varset int_targetID ${_targetID}
 	/call TrueTarget ${int_targetID}
-	/call Add2TargetArray ${_targetID}
 	/varset bln_engaged TRUE
+	/call Add2TargetArray ${_targetID}
+	/call ResetCastTimers
 /return
 
 Sub targetReset

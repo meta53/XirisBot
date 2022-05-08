@@ -115,7 +115,6 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 			/call chkChampion		
 			
 			|-- debuff lib
-			/call RunAllEvents
 			/call chkDebuffs
 			
 			|-- dps lib
@@ -125,8 +124,6 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 			/call chkNuke
 			
 			|-- std library
-			/call RunRaidEvents
-    		/call RunClassEvents
 			/call chkAAs
 			/call chkBurn
 			/call chkClicks
@@ -162,6 +159,7 @@ Sub engageTarget(_targetID)
 	/varset int_targetID ${_targetID}
 	/call TrueTarget ${int_targetID}
 	/call Add2TargetArray ${_targetID}
+	/call ResetCastTimers
 	/varset bln_engaged TRUE
 /return
 

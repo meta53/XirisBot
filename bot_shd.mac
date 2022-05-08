@@ -13,6 +13,7 @@ ______________________________________________
 REVISION HISTORY
     10.02.18	xiris	INITIAL REVISION
 	04.16.22	xiris	Small code refactor
+	05.08.22	xiris   Added Debuffing
 ______________________________________________
 REQUIRED PLUGINS
     mq2melee
@@ -81,15 +82,16 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 		/if (${bln_autoAssist}) /call chkAutoAssist
 
 		/if (${bln_engaged}) {
+			/if (!${Melee.Enable}) /call chkCombatAbilities
 			|-- class specific
-			/call RunAllEvents
 			/call chkPetAttack
 			/call chkLifetap
 			/call chkFeignDeath
-			
+
+			|-- debuff lib
+			/call chkDebuffsOnSingleTarget ${int_targetID}
+
 			|-- dps lib
-			/call RunRaidEvents
-    		/call RunClassEvents
 			/call chkTarget
 			/call chkTargetDist
 			/call chkDOT
@@ -158,6 +160,7 @@ Sub engageTarget(_targetID)
 	/varset bln_engaged TRUE
 	/killthis
 	/attack on
+	/call ResetCastTimers
 	/call GetAssistStickDist
 	/call StickToAssistTarget
 /return

@@ -131,6 +131,7 @@ Sub EVENT_NoDS(_line, _sender, _eventParams)
 	| if I am a bard, switch to the noDS medley
 	/if (${Me.Class.ShortName.Equal[BRD]} && ${Medley.Active})	/medley stop
 	/if (${Me.Class.ShortName.Equal[BRD]} && !${Medley.Active}) /medley nods
+	/if (${Me.Class.ShortName.Equal[BRD]}) /varset str_currentMedly nods
 	/doevents flush NoDS
 /return
 
@@ -141,12 +142,14 @@ Sub EVENT_YesDS(_line, _sender, _eventParams)
 	| if I am a bard, switch to the normal medley
 	/if (${Me.Class.ShortName.Equal[BRD]} && ${Medley.Active})	/medley stop
 	/if (${Me.Class.ShortName.Equal[BRD]} && !${Medley.Active}) /medley melee
+	/if (${Me.Class.ShortName.Equal[BRD]}) /varset str_currentMedly melee
 	/doevents flush YesDS
 /return
 
 Sub EVENT_Sing(_line, _sender, _eventParams)	
 	/if (${Me.Class.ShortName.Equal[BRD]} && ${Medley.Active}) /medley stop
 	/if (${Me.Class.ShortName.Equal[BRD]} && !${Medley.Active}) /medley ${_eventParams}
+	/if (${Me.Class.ShortName.Equal[BRD]}) /varset str_currentMedly ${_eventParams}
 	/doevents flush Sing
 /return
 
@@ -167,6 +170,7 @@ Sub FireRiposteDisc
 		/if (${Me.CombatAbilityReady[Whirlwind Discipline]}) {
 			/doability "Whirlwind Discipline"
 			/delay 10
+			/varset bln_riposting TRUE
 		} else {
 			/varset bln_riposting FALSE
 		}
@@ -176,6 +180,7 @@ Sub FireRiposteDisc
 		/if (${Me.CombatAbilityReady[Counterattack Discipline]}) {
 			/doability "Counterattack Discipline"
 			/delay 10
+			/varset bln_riposting TRUE
 		} else {
 			/varset bln_riposting FALSE
 		}
@@ -185,6 +190,7 @@ Sub FireRiposteDisc
 		/if (${Me.CombatAbilityReady[Reckless Discipline]}) {
 			/doability "Reckless Discipline"
 			/delay 10
+			/varset bln_riposting TRUE
 		} else {
 			/varset bln_riposting FALSE
 		}
@@ -194,6 +200,16 @@ Sub FireRiposteDisc
 		/if (${Me.CombatAbilityReady[Weapon Shield Discipline]}) {
 			/doability "Weapon Shield Discipline"
 			/delay 10
+			/varset bln_riposting TRUE
+		} else {
+			/varset bln_riposting FALSE
+		}
+	:bard
+	} else /if (${Me.Class.ShortName.Equal[BRD]}) {
+		/if (${Me.CombatAbilityReady[Deftdance Discipline]}) {
+			/doability "Deftdance Discipline"
+			/delay 10
+			/varset bln_riposting TRUE
 		} else {
 			/varset bln_riposting FALSE
 		}
@@ -266,7 +282,11 @@ Sub chkDownshits
 			/declare tid 		int 	local ${Target.ID}
 			/declare ds			int		local 
 			/declare buffName 	string 	local
+			/declare itemArgs	string  local
+			/declare itemID		int     local
+			/declare itemName	string  local
 			/declare castArg 	string 	local
+			/declare castTime	int     local
 			/declare tgtName 	string 	local
 			/declare tgtID 		int 	local
 			/declare isSpell	bool	local	TRUE
@@ -295,17 +315,28 @@ Sub chkDownshits
 				|/echo buffName: ${buffName} castArg: ${castArg} tgtName: ${tgtName} ready: ${Me.SpellReady[${buffName}]} isSpell: ${isSpell} ?: ${castArg.Find[item]}
 				|/echo ${Spell[${buffName}].Stacks} && !${Me.Buff[${buffName}].ID}
 				/if (${Spell[${buffName}].Stacks} && !${Me.Buff[${buffName}].ID}) {
-					| - Bard specific handler using mq2medley
-					/if (${Me.Class.ShortName.Equal[BRD]}) /medley stop 
-					/if (${Me.Casting.ID}) /stopcast
+
 					/delay 10
 					|- save existing target for buffs that take a target argument (3)
 					/if (${tgtName.NotEqual[NULL]}) 		/varset tgtID ${Spawn[pc ${tgtName}].ID}
 					/if (${SpawnCount[ID ${tgtID}]} >= 1 )  /call TrueTarget ${tgtID}
 					|/echo downflag${df}: ${downflag${df}.Token[1,|]} | ${downflag${df}.Token[2,|]}|${downflag${df}.Token[3,|]}
-					/echo Downflag Cast ${castArg}
-					/call MQ2Cast ${castArg}
-					/delay 10
+					
+					| - Bard specific handler using mq2medley
+					/if (${Me.Class.ShortName.Equal[BRD]}) {
+						/varset itemArgs ${downflag${df}.Token[2,|]}
+						/varset itemID ${itemArgs.Token[1, ]}
+						/varset itemName ${FindItem[${itemID}]}
+						/varcalc castTime ${FindItem[${itemID}].CastTime} / 1000
+						/echo bard downshit : ${itemID} ${itemName} ${castTime}
+						/if (!${Medley}) /medley ${str_currentMedly}
+						/medley queue "${itemName}" -interrupt
+						/delay ${castTime}s
+					} else {
+						/echo Downflag Cast ${castArg}
+						/call MQ2Cast ${castArg}
+					}
+					
 					:dfcast
 					/if (${Me.Casting.ID}) /goto :dfcast
 			
@@ -316,7 +347,6 @@ Sub chkDownshits
 			:nextDF
 			/next df
 			|- reset the DownFlag timer to 20seconds
-			/if (${Me.Class.ShortName.Equal[BRD]}) /medley
 			/varset dfTimer 20s
 			
 		}

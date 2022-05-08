@@ -240,15 +240,17 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	
 	|-- [Settings] : AAs & CAs
 	/declare	int_aaStopHP		int		outer	${Ini[botINI,AA,int_aaStopHP,5]}
+	/declare	int_aaStartHP		int		outer	${Ini[botINI,AA,int_aaStartHP,99]}
+	/declare 	int_aaNamedStopHP	int		outer 	${Ini[botINI,AA,int_aaNamedStopHP,5]}
+	/declare    int_aaNamedStartHP	int		outer 	${Ini[botINI,AA,int_aaNamedStartHP,99]}
 	/declare 	int_aaTotal			int		outer	${Ini[botINI,AA,int_aaTotal,0]}
 		/declare aa int local
 			/for aa 1 to ${int_aaTotal}
 				/declare AA_${aa} 				string 	outer ${Ini[botINI,AA,AA_${aa}]}
 				/declare AA_${aa}_Use 			bool 	outer ${Ini[botINI,AA,AA_${aa}_Use]}
 				/declare AA_${aa}_Gem 			string 	outer ${Ini[botINI,AA,AA_${aa}_Gem]}
-				/declare AA_${aa}_Num 			string 	outer ${Ini[botINI,AA,AA_${aa}_Num]}
 				/declare AA_${aa}_NamedOnly		int		outer ${Ini[botINI,AA,AA_${aa}_NamedOnly]}
-				/declare AA_${aa}_MyHP			int		outer ${Ini[botINI,AA,AA_${aa}_MyHP]}
+				/declare AA_${aa}_MyHP			int		outer ${Ini[botINI,AA,AA_${aa}_MyHP,100]}
 				/declare AA_${aa}_StartHP		int		outer ${Ini[botINI,AA,AA_${aa}_StartHP]}
 				/declare AA_${aa}_StopHP		int		outer ${Ini[botINI,AA,AA_${aa}_StopHP]}
 			/next aa
@@ -504,34 +506,73 @@ Sub getClassArchetype(string _shortName)
  ----------------------------
 **|
 Sub chkAAs
-	/if (!${bln_engaged}) /return
-	/if (${Me.Casting.ID} || ${Me.Moving} || ${Me.Invis} || ${Me.Feigning}) /return
-	/if (${int_aaTotal} < 1) /return 
-    /declare intA int local
-	/for intA 1 to ${int_aaTotal} 
-		/if (${Target.PctHPs}<${int_aaStopHP}) /return
-		
-		| Check that the AA is ready, note, Cast.Ready[] might work better
-		/if (${Me.AltAbilityReady[${AA_${intA}}]} || ${Me.CombatAbilityReady[${AA_${intA}}]} || ${Me.SpellReady[${AA_${intA}}]}) {
-			
-			| Check that the hitpoints of target fall into the range
-			/if (${AA_${intA}_Use} && ${Target.ID}==${int_targetID} && ${Target.PctHPs}<${AA_${intA}_StartHP} && ${Target.PctHPs}>${AA_${intA}_StopHP}) {
+	/if (${int_aaTotal} == 0) 	/return 
+	/if (!${bln_engaged}) 		/return
+	
+	/if ((${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]}) || ${Me.Moving} || ${Me.Invis} || ${Me.Feigning}) /return
+	
+	/if (${Target.Type.NotEqual[NPC]}) /return
+
+	|-- named check
+	:named_check
+	/declare isNamed bool local FALSE
+	/call TargetNamedCheck ${Target.ID}
+	/varset isNamed ${Macro.Return}
+
+	|-- target HP check
+	/if (${isNamed}  && (${Target.PctHPs} < ${int_aaNamedStopHP}))	/return
+	/if (${isNamed}  && (${Target.PctHPs} > ${int_aaNamedStartHP}))	/return
+	/if (!${isNamed} && (${Target.PctHPs} < ${int_aaStopHP}))		/return
+	/if (!${isNamed} && (${Target.PctHPs} > ${int_aaStartHP}))		/return
+
+	:fd_check
+	/if (${Me.Feigning}) /stand
+
+	|-- Final Check before casting
+	/if (${Target.ID} && ${Target.Type.Equal[NPC]} && ${Target.LineOfSight}) {
+		/declare aa int local
+
+		/for aa 1 to ${int_aaTotal} 
+			:AALoopStart
+			|-- skip if disabled
+			/if (!${AA_${aa}_Use}) /goto :NextAA
+
+			|-- Named Target check
+			|-- if we only cast this spell on named, and this is NOT a named target, skip
+			/if (!${isNamed} && ${AA_${i}_NamedOnly}) {
+				/echo Skipping Nuke ${AA_${i}} is named only
+				/goto :NextAA
+			}
+
+			| Check that the AA is ready
+			/if (${Me.AltAbilityReady[${AA_${aa}}]} || ${Me.CombatAbilityReady[${AA_${aa}}]} || ${Me.SpellReady[${AA_${aa}}]}) {
 				
-				| Check to see if the named checks pass & myHP match requirements
-				/if ( (${Target.ID}==${NearestSpawn[npc named].ID} || ${AA_${intA}_NamedOnly}) && (${Me.PctHPs} <= ${AA_${intA}_MyHP})) {
-					|/echo Firing AA/DISC: ${AA$_{intA}}
-					
-					| Everything checked out, launch the AA/combat ability
-					/if (${AAGem${intA}.Equal[combat]} && (${Me.PctEndurance} > 10)) {
-						/doability "${AA_${intA}}"
+				| Check that the hitpoints of target fall into the range
+				| Check to see that my HP is at or below the trigger range (for things like desperation)
+				/if ((${Target.ID}==${int_targetID}) && (${Target.PctHPs}<${AA_${aa}_StartHP}) && (${Me.PctHPs} <= ${AA_${aa}_MyHP}) && (${Target.PctHPs}>${AA_${aa}_StopHP})) {
+					/if (${Me.Class.ShortName.Equal[BRD]}) {
+						/if (${AAGem${aa}.Equal[combat]} && (${Me.PctEndurance} > 10)) {
+							/doability "${AA_${aa}}"
+						} else {
+							/medley queue "${AA_${aa}}"
+						}
+						/cecho \ag ${AA_${i}}  : FIRED	
 					} else {
-						|/aa act ${AA_${intA}}
-						/call MQ2Cast "${AA_${intA}}" alt
+						/if (${AAGem${aa}.Equal[combat]} && (${Me.PctEndurance} > 10)) {
+							/doability "${AA_${aa}}"
+						} else {
+							/call MQ2Cast "${AA_${aa}}"	alt
+							/if (${Macro.Return.Equal[CAST_SUCCESS]}) {
+							/cecho \ag ${AA_${aa}}  : FIRED	
+							}
+						}
 					}
+						
 				}
 			}
-		}
-	/next intA
+		:NextAA
+		/next aa
+	}
 /return
 |**
  ----------------------------
@@ -549,94 +590,79 @@ Sub chkBurn
 	/if (!${bln_BURNMode}) /return
 	/if (${int_burnModeTotal} < 1) /return 
 	
-	/declare intB int local
+	/declare burn int local
 	/echo BurnMode Activated! Total Burns: ${int_burnModeTotal}
-	/for intB 1 to ${int_burnModeTotal} 
+	/for burn 1 to ${int_burnModeTotal} 
 		
 		/if (${Target.ID} && !${Me.Casting.ID} && ${Target.Type.Equal[NPC]}) {
+
 			| ---------------
 			| Combat Ability
+			| Note: Run the DISC if it is a combat type, it is ready, and we aren't already discing
 			| ---------------
-			
-			| Run the DISC if it is a combat type, it is ready, and we aren't already discing
-			/if (${Burn_${intB}_Type.Equal[combat]} && ${Me.CombatAbilityReady[${Burn_${intB}}]} && ${Burn_${intB}_Use} && !${Melee.DiscID}) {
+			/if (${Burn_${burn}_Type.Equal[combat]} && ${Me.CombatAbilityReady[${Burn_${burn}}]} && ${Burn_${burn}_Use} && !${Melee.DiscID}) {
 				| Check to see if the burn Before disc/alt (0 if not) is already run
-				/if (${Burn_${intB}_After} > 0) {
-					/echo ${Burn_${intB}} must wait for ${Burn_${Burn_${intB}_After}}
+				/if (${Burn_${burn}_After} > 0) {
 					| Check to see if the burn Before is an alt or combatdisc (two different ways of checking)
-					/if (${Burn_${Burn_${intB}_After}_Type.Equal[combat]} && !${Me.CombatAbilityReady[${Burn_${Burn_${intB}_After}}]}) {
-						| It was a combat ability 
-						/cecho \agDISC Burn_${intB} clicked!
-						/doability "${Burn_${intB}}"
-						/delay 2
-					} else /if (${Burn_${Burn_${intB}_After}_Type.Equal[alt]} && !${Me.AltAbilityReady[${Burn_${Burn_${intB}_After}}]}) {
-						| It was an alt disc 
-						/cecho \agDISC Burn_${intB} clicked!
-						/call MQ2Cast "${Burn_${intB}}" alt
-						/delay 2
+					/if (${Burn_${Burn_${burn}_After}_Type.Equal[combat]} && !${Me.CombatAbilityReady[${Burn_${Burn_${burn}_After}}]}) {
+						/goto :doCombatAbility
+					} else /if (${Burn_${Burn_${burn}_After}_Type.Equal[alt]} && !${Me.AltAbilityReady[${Burn_${Burn_${burn}_After}}]}) {
+						/goto :doCombatAbility
 					}
-				} else {
-					/cecho \agDISC Burn_${intB} clicked!
-					/doability "${Burn_${intB}}"
-					/delay 2
 				}
+				:doCombatAbility
+					/if (${Me.Class.ShortName.Equal[BRD]}) {
+						/medley "${Burn_${burn}}"
+					} else {
+						/doability "${Burn_${burn}}"
+					}
+					/cecho \agDISC \ayBurn_${burn} \agclicked!
 			
 			| ---------------	
 			| Alt Ability
 			| Note: We prefer Alt abilities with NUMBERS, they are quicker to fire, with less lag
 			| 		Additionally, if MGBable, (few) we have Burn_1_MGB = TRUE to look for (default FALSE)
 			| ---------------
-			
-			} else /if ((${Burn_${intB}_Type.Equal[alt]}) && (${Me.AltAbilityReady[${Burn_${intB}}]}) && (${Burn_${intB}_Use}) && (${Spell[${Burn_${intB}}].Stacks})) {
+			} else /if ((${Burn_${burn}_Type.Equal[alt]}) && (${Me.AltAbilityReady[${Burn_${burn}}]}) && (${Burn_${burn}_Use}) && (${Spell[${Burn_${burn}}].Stacks})) {
 				| Check to see if the burn Before disc/alt (0 if not) is already run
-				/if (${Burn_${intB}_After} > 0) {
-					/echo ${Burn_${intB}} must wait for ${Burn_${Burn_${intB}_After}}
-					
+				/if (${Burn_${burn}_After} > 0) {
 					| Check to see if the burn Before is an alt or combatdisc  (two different ways of checking)
-					/if (${Burn${Burn_${intB}_After}_Type.Equal[combat]} && !${Me.CombatAbilityReady[${Burn_${Burn_${intB}_After}}]}) {
-						| It was a combat disc 
-						| MGB?
-						/if (${Burn_${intB}_MGB}) {
-							/call MQ2Cast "Mass Group Buff" alt
-							/delay 5
-							/cecho \ag Mass Group Buff Activated!
-						} 
-						/cecho \agAA Burn_${intB} clicked!
-						/call MQ2Cast "${Burn_${intB}}" alt
-					} else /if (${Burn_${Burn_${intB}_After}_Type.Equal[alt]} && !${Me.AltAbilityReady[${Burn_${Burn_${intB}_After}}]}) {
-						| It was an alt disc 
-						/if (${Burn_${intB}_MGB}) {
-							/call MQ2Cast "Mass Group Buff" alt
-							/delay 5
-							/cecho \ag Mass Group Buff Activated!
-						}
-						/cecho \agAA Burn_${intB} clicked!
-						/call MQ2Cast "${Burn_${intB}}" alt
+					/if (${Burn${Burn_${burn}_After}_Type.Equal[combat]} && !${Me.CombatAbilityReady[${Burn_${Burn_${burn}_After}}]}) {
+						/goto :doAltAbility
+					} else /if (${Burn_${Burn_${burn}_After}_Type.Equal[alt]} && !${Me.AltAbilityReady[${Burn_${Burn_${burn}_After}}]}) {
+						/goto :doAltAbility
 					}
-				} else {
-					/if (${Burn_${intB}_MGB}) {
+				} 
+				:doAltAbility
+					/if (${Burn_${burn}_MGB}) {
 						/call MQ2Cast "Mass Group Buff" alt
 						/delay 5
 						/cecho \ag Mass Group Buff Activated!
 					}
-					/cecho \agAA Burn_${intB} clicked!
-					/call MQ2Cast "${Burn_${intB}}" alt
-				}
+					/if (${Me.Class.ShortName.Equal[BRD]}) {
+						/medley "${Burn_${burn}}"
+					} else {
+						/call MQ2Cast "${Burn_${burn}}" alt
+					}
+					/cecho \agAA \ayBurn_${burn} \agclicked!
+			
 			| ---------------	
 			| Item
 			| 		Additionally, if MGBable, (few) we have Burn_1_MGB = TRUE to look for (default FALSE)
 			| ---------------		
-			} else /if (${Burn_${intB}_Type.Equal[item]} && ${FindItem[${Burn_${intB}}].TimerReady} && (${Burn_${intB}_Use}) ) {
-					/cecho \agAA Burn_${intB} clicked!
+			} else /if (${Burn_${burn}_Type.Equal[item]} && ${FindItem[${Burn_${burn}}].TimerReady} && (${Burn_${burn}_Use}) ) {
+				:doItemClick
 					/if (${Me.Class.ShortName.Equal[BRD]}) {
-						/medley queue "${Burn_${intB}}"
+						/medley queue "${Burn_${burn}}"
 					} else {
-						/call MQ2Cast "${Burn_${intB}}" item 2s
+						/call MQ2Cast "${Burn_${burn}}" item 2s
 					}
+					/cecho \agItem \ayBurn_${burn} \agclicked!
 					
 			}
 		}
-	/next intB
+	:nextBurn
+	/next burn
 /return
 
 |**
@@ -658,7 +684,13 @@ Sub chkClicks
 		/if (${Target.PctHPs}<=${Click_${intC}_StartHP} && ${Target.PctHPs}>=${Click_${intC}_StopHP} && ${Target.ID} && !${Me.Casting.ID} && ${Target.Type.Equal[NPC]}) {
 			/if ((!${Click_${intC}_NamedOnly}||${Target.ID}==${NearestSpawn[named npc].ID}) && (${Click_${intC}_Timer} <= 0)) {
 				/if (${FindItem[${Click_${intC}}].InvSlot}) {
-					/call MQ2Cast "${Click_${intC}}" item 2s
+
+					/if (${Me.Class.ShortName.Equal[BRD]}) {
+						/medley queue "${Click_${intC}}"
+					} else {
+						/call MQ2Cast "${Click_${intC}}" item 2s
+					}
+					/cecho \agItem \ayBurn_${burn} \agclicked!
 					/varset Click_${intC}_Timer ${Click_${intC}_Recast}s
 				}
 			}

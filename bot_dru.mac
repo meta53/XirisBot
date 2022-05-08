@@ -103,8 +103,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 			|-- class specific
 	
 			|-- debuff lib
-			/call RunAllEvents
-			/call chkDebuffs
+			/call chkDebuffsOnSingleTarget ${int_targetID}
 			
 			|-- dps lib
 			/call RunRaidEvents
@@ -144,9 +143,9 @@ Sub engageTarget(_targetID)
 	/if (${_targetID} == 0 || ${_targetID} == NULL || ${SpawnCount[npc id ${_targetID}]} == 0) /return
 	/varset int_targetID ${_targetID}
 	/call TrueTarget ${int_targetID}
-	/call Add2TargetArray ${_targetID}
 	/varset bln_engaged TRUE
-	
+	/call Add2TargetArray ${_targetID}
+	/call ResetCastTimers
 /return
 
 

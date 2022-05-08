@@ -1,3 +1,16 @@
+|**
+----------------------------
+DEBUFFING HANDLERS
+----------------------------
+This library supplements/abstracts mq2cast functionality
+______________________________________________
+REVISION HISTORY
+    11.09.17    xiris	INITIAL REVISION - Handling of clickies and other things
+	08.02.18	xiris	INITIAL REVISION
+	03.31.22	xiris	Updated the named checking as well as normalizing all calls to MQ2Cast
+	05.08.22	xiris	Added support for bards in Debuffs
+**|
+
 
 #EVENT DebuffTarget "<#1#> DebuffTarget #2#"
 #EVENT DebuffTarget "[#1#(msg)] DebuffTarget #2#"
@@ -5,17 +18,16 @@
 #EVENT DebuffTarget "#1# tells the group, 'DebuffTarget #2#'"
 #EVENT DebuffTarget "#1# you tell your party, 'DebuffTarget #2#'"
 
-#event Debuffed				"#1# looks very uncomfortable#*#"
-#event Debuffed				"#1# is surrounded by a dark haze#*#"
-#event Debuffed				"#1# is marked by the scent of afterlight#*#"
-#event Debuffed				"#1# is marked by the scent of doom#*#"
+#event Debuffed		"#1# looks very uncomfortable#*#"
+#event Debuffed		"#1# is surrounded by a dark haze#*#"
+#event Debuffed		"#1# is marked by the scent of afterlight#*#"
+#event Debuffed		"#1# is marked by the scent of doom#*#"
 
 Sub InitEvents_Debuffing
-	/call RegisterRaidEvents Events_Debuffing 1
-	/if (${Me.Class.ShortName.Equal[SHM]} || ${Me.Class.ShortName.Equal[DRU]} || ${Me.Class.ShortName.Equal[NEC]}) {
+	/if (${int_debuffTotal} > 0 ) {
+		/call RegisterRaidEvents Events_Debuffing 1
 		/call RegisterClassEvents Events_Debuffed 1
-	}
-		
+	}	
 /return
 
 Sub Events_Debuffed
@@ -69,41 +81,77 @@ Sub chkDebuffs
 		/next ti
 /return
 
+|-- Do not use the target array to check the targets, lets just check a single (current) target
+|   Useful for bards, and others that do not need to AE/Mez/Slow whatever will check if engaged on current target
+Sub chkDebuffsOnSingleTarget(int _targetID)
+	/if (!${int_debuffTotal}) /return
+	/declare isNamed	bool	local	FALSE
+	/call TargetNamedCheck ${Target.ID}
+	/varset isNamed ${Macro.Return}
+	/call CastDebuffsOnTarget ${_targetID} ${isNamed}
+/return
+
 
 |-- Loop through all debuffs, and attempt to cast one at a time
 |   Will check to see if the target already has the debuff and if so has more than 30s left on it
 Sub CastDebuffsOnTarget(int _targetID, bool isNamed) 
-	/declare	db		int		local	1
+	/if (!${int_debuffTotal}) /return
 	/if (!${Target.ID} || ${Target.ID} != ${_targetID}) /call TrueTarget ${_targetID}
+	/if (${Target.Type.NotEqual[NPC]}) /return
+
+	/declare	db		int		local	1
+	/declare 	debuffDuration int local
+
 	/for db 1 to ${int_debuffTotal}
-		/if (${DEBUFF_${db}_NamedOnly} && !${isNamed}) /goto :nextDB
-		/echo checking if the debuff is already on ${DEBUFF_${db}}:${Target.Buff[${DEBUFF_${db}}].ID} && ${Target.BuffDuration[${DEBUFF_${db}}]}
-		/if (${Target.Buff[${DEBUFF_${db}}].ID} && ${Target.BuffDuration[${DEBUFF_${db}}]} > 100) /goto :nextDB
-		/echo CastDebuffsOnTarget ${db}:: "${DEBUFF_${db}}" ${DEBUFF_${db}_Gem} ${DEBUFF_${db}_MaxTries} ${Target.ID}
-		/call CastDebuff "${DEBUFF_${db}}" ${DEBUFF_${db}_Gem} ${DEBUFF_${db}_MaxTries} ${Target.ID}
+		|/echo timer? ${DEBUFF_${db}_Timer} ${DEBUFF_${db}}
+		/if (${DEBUFF_${db}_NamedOnly} && !${isNamed} || ${DEBUFF_${db}_Timer}) /goto :nextDB
+		/if (${Me.Class.ShortName.NotEqual[BRD]}) {
+			|/echo checking if the debuff is already on ${DEBUFF_${db}}:${Target.Buff[${DEBUFF_${db}}].ID} && ${Target.BuffDuration[${DEBUFF_${db}}]}
+			/if (${Target.Buff[${DEBUFF_${db}}].ID} && ${Target.BuffDuration[${DEBUFF_${db}}]} > 100) /goto :nextDB
+		}
+		/call chkSpellMemorized "${DEBUFF_${db}}" TRUE ${DEBUFF_${db}_Gem}
+		
+		:debuffReadyWait 
+			/if ((!${Me.SpellReady[${DEBUFF_${db}}]} || ${Me.Casting.ID}) && ${Me.Class.ShortName.NotEqual[BRD]}) {
+				/delay 2
+				/goto :debuffReadyWait
+			}
+
+		:debuffCast
+			|/echo CastDebuffsOnTarget ${db}:: "${DEBUFF_${db}}" ${DEBUFF_${db}_Gem} ${DEBUFF_${db}_MaxTries} ${Target.ID}
+			/varcalc debuffDuration ${Spell[${DEBUFF_${db}}].Duration} * 6
+			/if (${Me.Class.ShortName.Equal[BRD]}) {
+				/medley queue "${DEBUFF_${db}}"
+				/docommand /${cmdChannel} << ${Target.Name} >> ${DEBUFF_${db}}
+				/cecho \ag ${DEBUFF_${db}}  : DELAYING for \ay${debuffDuration}s \agrefresh	
+			} else {
+				/call CastDebuff "${DEBUFF_${db}}" ${DEBUFF_${db}_Gem} ${DEBUFF_${db}_MaxTries} ${Target.ID}
+					
+			}
+
+			| duration is in ticks to set a timer, so we dont recast it immediately
+			/varset DEBUFF_${db}_Timer ${debuffDuration}s
 	:nextDB
 		/call RunRaidEvents
 		/next db
 	:return
-		/docommand /${cmdChannel} Debuffs Complete on << ${Target.Name} >>
 /return
 
 |-- Cast a Specific Debuff spell on the target
-Sub CastDebuff(string _spell, string _gem,  int _maxTries, int _targetID)
-	/echo CastDebuff _spell: ${_spell}, _gem: ${_gem}, _maxTries: ${_maxTries}
+Sub CastDebuff(string _debuff, string _gem,  int _maxTries, int _targetID)
+	/echo CastDebuff _spell: ${_debuff}, _gem: ${_gem}, _maxTries: ${_maxTries}
 	/declare	try		int		local	0
 	/if (!${Target.ID} || ${Target.ID} != ${_targetID}) /call TrueTarget ${_targetID}
-	/call chkSpellMemorized "${_spell}" TRUE ${_gem}
 	:attemptDebuff
 		/if (${try} >${_maxTries}) /goto :return
-		/call MQ2Cast "${_spell}" ${_gem} 5s
+		/call MQ2Cast "${_debuff}" ${_gem} 5s
 		/varcalc try ${try}+1
 		/if (${Macro.Return.Equal["CAST_INTERRUPTED"]}) /goto :attemptDebuff
 		/if (${Macro.Return.Equal["CAST_RESISTED"]}) /goto :attemptDebuff
 		/if (${Macro.Return.Equal["CAST_IMMUNE"]}) /goto :return
 		/if (${Macro.Return.Equal["CAST_SUCCESS"]}) /goto :return
 	:return
-		/docommand /${cmdChannel} << ${Target.Name} >> ${_spell} :: ${Macro.Return}
+		/cecho \ag ${DOT_${i}} ${Macro.Return} : DELAYING for \ay${dotDuration}s \agrefresh	
 /return
 
 
@@ -333,8 +381,7 @@ Sub xbot_initialize_debuffing
 	/if (${str_classArchetype.Equal[MELEE_END]}) /return
 	/if (${Me.Class.ShortName.Equal[WAR]}) /return
 	
-	/cecho \ao xbot_initialize_debuffing
-	/call InitEvents_Debuffing
+	
 	
 	|--Debuff(s)
 	/declare bln_debuffUse				bool	outer	${Ini[botINI,Debuff,bln_debuffUse,TRUE]}
@@ -364,6 +411,9 @@ Sub xbot_initialize_debuffing
 	/declare dbidx						int 	local
 	/varcalc dbidx	${int_debuffTotalIfNamed}+1
 	/declare targetArray[12,6] 	int		outer 0
+
+	/cecho \ao xbot_initialize_debuffing
+	/call InitEvents_Debuffing
 	
 
 /return
