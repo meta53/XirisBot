@@ -4,11 +4,11 @@
 #EVENT Follow "#1# tells the group, 'Follow #2#'"
 #EVENT Follow "#1# you tell your party, 'Follow #2#'"
 
-#EVENT Stop	"[#1#] Stop"
-#EVENT Stop	"<#1#> Stop"
-#EVENT Stop "#1# tells you, 'Stop'"
-#EVENT Stop "#1# tells the group, 'Stop'"
-#EVENT Stop "#1# you tell your party, 'Stop'"
+#EVENT Stop	"[#1#] Stop#*#"
+#EVENT Stop	"<#1#> Stop#*#"
+#EVENT Stop "#1# tells you, 'Stop#*#'"
+#EVENT Stop "#1# tells the group, 'Stop#*#'"
+#EVENT Stop "#1# you tell your party, 'Stop#*#'"
 
 #EVENT MoveHere "<#1#> Move to #2#"
 #EVENT MoveHere "#1# tells you, 'Move to #2#'"
@@ -37,19 +37,18 @@ Sub xbot_initialize_following
 
 
 SUB EVENT_Follow(_line, _chatSender, _eventParams)
+	/echo follow? ${_chatSender}  :: ${_eventParams}
 	| -Verify the event
-	/call verifyEvent "${_chatSender}" "${_line}"
-	/if (${Defined[ChatSender]}) /if (${Defined[ChatSender]}) /varset ChatSender ${Macro.Return.Arg[1,_]}
+	/call verifyEvent "${_chatSender}" "${_eventParams}"
+	/echo MacroReturn: ${Macro.Return}
 	|    |-----------Valid User----------|    |--------Included Bot-----------|    |-----------In Zone-------------|
 	/if (${Bool[${Macro.Return.Arg[2,_]}]} && ${Bool[${Macro.Return.Arg[3,_]}]} && ${Bool[${Macro.Return.Arg[4,_]}]}) {
 	
-		/declare SpawnToFollow string local ${If[${_eventParams.Arg[1, ].Find[/]} || ${_eventParams.Arg[1, ].Equal[me]} || ${_eventParams.Arg[1, ].Equal[on]},${_chatSender},${_eventParams.Arg[1, ]}]}
+		/declare SpawnToFollow string local ${Macro.Return.Arg[1,_]}
 		/declare FollowType string local ${If[${_eventParams.Find[/type|NAV]},NAV,STICK]}
-		
-		/echo_eventParams: ${_eventParams}
-		/echo FollowType: ${FollowType}
-		/if (!${Bool[${SpawnToFollow}]}) /varset SpawnToFollow ${_chatSender}
-		
+		/if (!${Bool[${SpawnToFollow}]}) /varset SpawnToFollow "${_chatSender}"
+
+		/echo SpawnToFollow: ${SpawnToFollow} FollowType: ${FollowType}
 		| -Turn Following on and set the FollowTarget
 		/varset Following TRUE
 		/varset FollowTarget ${Spawn[pc ${SpawnToFollow}].CleanName}
@@ -209,8 +208,8 @@ SUB EVENT_Stop(_line, _chatSender, _eventParams)
 SUB EVENT_MoveHere(_line, _chatSender, _eventParams)
 
 	| -Verify the event
-	/if (${Defined[ChatSender]}) /call verifyEvent "${_chatSender}" "${_line}"
-	/if (${Defined[ChatSender]}) /varset ChatSender ${Macro.Return.Arg[1,_]}
+	/if (${Defined[_chatSender]}) /call verifyEvent "${_chatSender}" "${_line}"
+	/if (${Defined[_chatSender]}) /varset ChatSender ${Macro.Return.Arg[1,_]}
 	|    |-----------Valid User----------|    |--------Included Bot-----------|    |-----------In Zone-------------|    |------------In Range------------|
 	/if (${Bool[${Macro.Return.Arg[2,_]}]} && ${Bool[${Macro.Return.Arg[3,_]}]} && ${Bool[${Macro.Return.Arg[4,_]}]} && ${Bool[${Macro.Return.Arg[5,_]}]}) {
 	

@@ -51,34 +51,57 @@ REVISION HISTORY
 #EVENT Hush "#1# tells the group, 'Hush#*#'"
 #EVENT Hush "#1# you tell your party, 'Hush#*#'"
 
-#EVENT RiposteDisc "<#1#> RiposteDisc"
+#EVENT RiposteDisc "<#1#> RiposteDisc#*#"
 #EVENT RiposteDisc "[#1#(msg)] RiposteDisc#*#"
 #EVENT RiposteDisc "#1# tells you, 'RiposteDisc#*#"
 #EVENT RiposteDisc "#1# tells the group, 'RiposteDisc#*#'"
 #EVENT RiposteDisc "#1# you tell your party, 'RiposteDisc#*#'"
 
-#EVENT RiposteDisc "<#1#> RiposteDisc"
-#EVENT RiposteDisc "[#1#(msg)] RiposteDisc#*#"
-#EVENT RiposteDisc "#1# tells you, 'RiposteDisc#*#"
-#EVENT RiposteDisc "#1# tells the group, 'RiposteDisc#*#'"
-#EVENT RiposteDisc "#1# you tell your party, 'RiposteDisc#*#'"
+#EVENT AutoAssist "<#1#> AutoAssist #2#"
+#EVENT AutoAssist "[#1#(msg)] AutoAssist #2#"
+#EVENT AutoAssist "#1# tells you, 'AutoAssist #2#"
+#EVENT AutoAssist "#1# tells the group, 'AutoAssist #2#'"
+#EVENT AutoAssist "#1# you tell your party, 'AutoAssist #2#'"
+
+#EVENT Leashing "<#1#> Leashing #2#"
+#EVENT Leashing "[#1#(msg)] Leashing #2#"
+#EVENT Leashing "#1# tells you, 'Leashing #2#"
+#EVENT Leashing "#1# tells the group, 'Leashing #2#'"
+#EVENT Leashing "#1# you tell your party, 'Leashing #2#'" 
+
+#EVENT XTargetRefresh "<#1#> RefreshXTarget#*#"
+#EVENT XTargetRefresh "[#1#(msg)] RefreshXTarget#*#"
+#EVENT XTargetRefresh "#1# tells you, 'RefreshXTarget#*#"
+#EVENT XTargetRefresh "#1# tells the group, 'RefreshXTarget#*#'"
+#EVENT XTargetRefresh "#1# you tell your party, 'RefreshXTarget#*#'"
+
 
 #define dsINI xiris_common/xiris_damageshields.ini
 
 Sub InitEvents_Melee
-	/if (${str_classArchetype.NotEqual[PRIEST]} && ${str_classArchetype.NotEqual[CASTER]}) /call RegisterBackgroundEvents Events_Melee 9
+ 	/call RegisterBackgroundEvents Events_Melee 15
+	/call RegisterRaidEvents Events_Melee_Engaged 4
 /return
 
 Sub Events_Melee
-	/doevents RESTICK
-	/doevents AERAMP
-	/doevents GETCLOSER
 	/doevents NoDS
 	/doevents YesDS
 	/doevents Sing
 	/doevents Hush
-	/doevents RiposteDisc
 	/doevents ToggleMQ2Melee
+	/doevents Leashing
+	/doevents AutoAssist
+	/doevents XTargetRefresh
+	/doevents RESTICK
+	/doevents AERAMP
+	/doevents GETCLOSER
+/return
+
+Sub Events_Melee_Engaged
+	/doevents RESTICK
+	/doevents AERAMP
+	/doevents GETCLOSER
+	/doevents RiposteDisc
 /return
 
 Sub EVENT_ToggleMQ2Melee(string _pluginState)
@@ -177,6 +200,42 @@ Sub FireRiposteDisc
 	}
 	:return
 /return
+
+
+Sub Event_AutoAssist(string _eventParams)
+	/if (${_eventParams.EQUAL[on]}) /call AutoAssistON 
+	/if (${_eventParams.NOTEQUAL[on]}) /call AutoAssistOFF
+/return
+
+Sub AutoAssistON
+	/bc ${Me.Name} is now AutoAssisting!
+	/varset bln_autoAssist TRUE
+/return
+
+Sub AutoAssistOFF
+	/bc ${Me.Name} is no longer AutoAssisting.
+	/varset bln_autoAssist FALSE
+/return
+
+Sub Event_Leashing(string _eventParams)
+	/if (${_eventParams.EQUAL[on]}) /call LeashingON 
+	/if (${_eventParams.NOTEQUAL[on]}) /call LeashingOFF
+/return 
+
+Sub LeashingON
+	/bc ${Me.Name} is now Leashing!
+	/varset bln_useLeash TRUE
+/return 
+
+Sub LeashingOFF
+	/bc ${Me.Name} is no longer Leashing.
+	/varset bln_useLeash FALSE
+/return
+
+Sub Event_XTargetRefresh
+	/call doRefreshXTarget
+/return 
+
 
 Sub doBandolier(string _bando)
 	/cecho \ay Equipping set ${_bando}

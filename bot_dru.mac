@@ -99,8 +99,9 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 		/if (${bln_autoAssist}) /call chkAutoAssist
 		
 		/if (${bln_engaged}) {
+			/if (!${Target.ID} || ${Target.ID} != ${int_targetID} && ${int_targetID} !=0 && (${Spawn[id ${int_targetID}].PctHPs} != 0)) /call TrueTarget ${int_targetID}
 			|-- class specific
-
+	
 			|-- debuff lib
 			/call RunAllEvents
 			/call chkDebuffs

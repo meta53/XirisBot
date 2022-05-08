@@ -36,7 +36,7 @@ REQUIRED INCLUDES
 #include xiris_common/xiris_common.inc
 
 #Turbo 40
-#warning
+
 #define INI_zoneInfo xiris_common/xiris_pull_zoneinfo.ini
 
 #event RageOff              "#*#is no longer enraged#*#"
@@ -62,6 +62,17 @@ Sub Main(int _pull_dist, string _channel, int _campCount)
 	|-- set base alerts for this camp
 	/call setAlerts
 	
+	|-- find a bard and tell them to sing their normal setup (bound to key 2 usually)
+	/declare bard string 	local "NOT_FOUND"
+	/declare looter string 	local "NOT_FOUND"
+	/declare i int local 0
+	/for i 0 to ${Group}
+		/if (${Group.Member[${i}].Class.ShortName.Equal[BRD]}) /varset bard ${Group.Member[${i}].Name}
+		/if (${Group.Member[${i}].Class.ShortName.NotEqual[WAR]} && ${Group.Member[${i}].Class.ShortName.NotEqual[CLR]} && ${Group.Member[${i}].Class.ShortName.NotEqual[PAL]} && ${Group.Member[${i}].Class.ShortName.NotEqual[SHD]}) /varset looter ${Group.Member[${i}].Name}
+	/next i
+	
+	/bct ${bard} //keypress 2
+	/squelch /bcza //melee on
 	/melee aggro=on
 	
 	|**
@@ -73,36 +84,29 @@ Sub Main(int _pull_dist, string _channel, int _campCount)
 	 ----------------------------
 	**|
 	:MainLoop
-		/if (${MacroQuest.GameState.Equal[CHARSELECT]} || ${MacroQuest.GameState.Equal[PRECHARSELECT]} ) /end
+		/if (${/.GameState.Equal[CHARSELECT]} || ${MacroQuest.GameState.Equal[PRECHARSELECT]} ) /end
 		/if (${Me.Casting.ID} && ${Me.Hovering}||${Window[tradewnd].Open}||${Window[lootwnd].Open}) /goto :mainLoop
 		
-		|-- Check to see if self needs to be cured (xiris_curing.inc)
-		/call RunAllEvents
-		/call chkNeedCure
+		|/call RunAllEvents
 
 		/call chkUtils
 		/call chkDownshits
 		
 		/call setRSTVars
 		/call chkZone
-
 		
 		|-- reset group to camp spot (leash) if its empty
 		/if (${SpawnCount[npc radius ${int_campRadius} zradius 25]} == 0) {
 			/call resetCamp
 			/docommand ${cmdChannel} refreshXTarget
-			/hidecorpse npc
-			/call RunAllEvents
-			/call chkNeedCure
 		}
 		
-		|-- run the pull/kill segment
-		:getAndKill
-			/call getTarget
-			/if (${Target.Distance} > 20) /call pullTarget
-			/call killTarget
-			
-			/echo We have killed ${int_killCount} mobs
+		/call getTarget
+		/if (${Target.Distance} > 20) /call pullTarget
+		/call killTarget
+		
+		/varcalc int_killCount ${int_killCount}+1
+		/echo We have killed ${int_killCount} mobs
 
 	/goto :MainLoop
 /return
@@ -163,11 +167,7 @@ Sub getTarget
 		/squelch /target clear
 		
 		|----------USE THIS FOR SPECIFIC HUNTER (ALERT 2) --------
-		/if (${SpawnCount[npc radius ${int_campRadius} zradius 15]} > 0) {
-			/echo NPC in camp, killing
-			/target npc range ${int_minTLevel} ${int_maxTLevel} radius ${int_maxRadius} noalert 1
-			/delay 5
-		} else /if (${SpawnCount[npc alert 2 radius ${int_alert2Radius} range ${int_minTLevel} ${int_maxTLevel}]} > 0) {
+		/if (${SpawnCount[npc alert 2 radius ${int_alert2Radius} range ${int_minTLevel} ${int_maxTLevel}]} > 0) {
 			/echo NPC on alert 2 is up, killing
 			/target npc alert 2
 			/delay 5
@@ -236,6 +236,13 @@ Sub getTarget
 Sub chkTarget
 	/echo chkTarget ${Target.Name}
 	/if (${Target.Type.NotEqual[NPC]}) /return
+
+    |--check to see if Xirin is already on HoTT
+    /if (${Me.TargetOfTarget.ID}) {
+        /echo INVALID Target already has target
+        /call setTGTAlert
+        /return
+    }
 	
 	|--check if there is a path to the target
 	/if (!${Navigation.PathExists[target]}) {
@@ -324,8 +331,8 @@ Sub pullTarget
 
 		
 		|-- check to see if I have aggro
-		/if (${Me.TargetOfTarget.CleanName.Equal[${Me.CleanName}]} || ${Me.XTarget} >= ${int_minPullCount}) {
-			/echo I have aggro of at least ${int_minPullCount}
+		/if (${Me.TargetOfTarget.CleanName.Equal[${Me.CleanName}]} || ${Me.XTarget} > 1) {
+			/echo I have aggro of at least 2
 			:returnStart
 				/echo Returning to camp.
 				/navigate waypoint bot_pull_nav
@@ -440,7 +447,6 @@ Sub killTarget
 		
 	:killMob
 	|--issue kill command
-	/varcalc int_killCount ${int_killCount}+1
 	/bc KillMob ${Target.ID} "${Target.Name}" ${Time.Time24}
 	/killthis
 	/attack on
@@ -566,12 +572,12 @@ Sub chkMana
 	}
 	
 	|-- I don't think you can check the mana of an out of group member without netbots, so ignore it
-	|/if (${int_localENCidx} != -1) {
+	/if (${int_localENCidx} != -1) {
 		|/target ID ${int_localENCidx}
 		|/delay 10
 		|/if (${Target.PctMana} < ${int_encManaFloor})
 		|/varset bln_wait4Mana TRUE
-	|}	
+	}	
 	
 /return
 
@@ -820,7 +826,6 @@ Sub variant_initialize(int _pull_dist, string _channel, int _campCount)
 	
 	|--melee plugin/aggro for the requester
 	/melee aggro=on
-	/declare useGroup	bool	outer	FALSE
 	
 	|--channel definitions
 	/if (!${Defined[cmdChannel]}) /declare cmdChannel string	outer	bcga
@@ -855,8 +860,7 @@ Sub variant_initialize(int _pull_dist, string _channel, int _campCount)
 	/varcalc int_maxZHeight		${Me.Z} + 200
 
 	|--target information
-	/declare int_minPullCount		int		outer   2
-	/declare int_minTLevel			int		outer	46
+	/declare int_minTLevel			int		outer	30
 	/declare int_maxTLevel			int		outer	73
 	/declare bln_validTGT			bool	outer	FALSE
 	/declare bln_TGTDead			bool	outer	FALSE
@@ -1080,7 +1084,6 @@ Sub setAlerts
 	/squelch /alert add 1 "a human villager"
 	/squelch /alert add 1 "a troll villager"
 	/squelch /alert add 1 "a portal crystal"
-	/squelch /alert add 1 "kenra"
 	
 	
 	|=================================

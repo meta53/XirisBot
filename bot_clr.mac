@@ -55,6 +55,30 @@ REQUIRED INCLUDES
 #EVENT CelestialRegeneration "#1# tells the group, 'celregen#*#'"
 #EVENT CelestialRegeneration "#1# you tell your party, 'celregen#*#'"
 
+#EVENT AutoRezON "<#1#>  AutoRezON#*#"
+#EVENT AutoRezON "[#1#(msg)] AutoRezON#*#"
+#EVENT AutoRezON "#1# tells you, 'AutoRezON#*'"
+#EVENT AutoRezON "#1# tells the group, 'AutoRezON#*#'"
+#EVENT AutoRezON "#1# you tell your party, 'AutoRezON#*#'"
+
+#EVENT AutoRezOFF "<#1#>  AutoRezOFF#*#"
+#EVENT AutoRezOFF "[#1#(msg)] AutoRezOFF#*#"
+#EVENT AutoRezOFF "#1# tells you, 'AutoRezOFF#*'"
+#EVENT AutoRezOFF "#1# tells the group, 'AutoRezOFF#*#'"
+#EVENT AutoRezOFF "#1# you tell your party, 'AutoRezOFF#*#'"
+
+#EVENT CombatRezON "<#1#>  CombatRezON#*#"
+#EVENT CombatRezON "[#1#(msg)] CombatRezON#*#"
+#EVENT CombatRezON "#1# tells you, 'CombatRezON#*'"
+#EVENT CombatRezON "#1# tells the group, 'CombatRezON#*#'"
+#EVENT CombatRezON "#1# you tell your party, 'CombatRezON#*#'"
+
+#EVENT CombatRezOFF "<#1#>  CombatRezOFF#*#"
+#EVENT CombatRezOFF "[#1#(msg)] CombatRezOFF#*#"
+#EVENT CombatRezOFF "#1# tells you, 'CombatRezOFF#*'"
+#EVENT CombatRezOFF "#1# tells the group, 'CombatRezOFF#*#'"
+#EVENT CombatRezOFF "#1# you tell your party, 'CombatRezOFF#*#'"
+
 #include xiris_common/xiris_common.inc
 
 #Turbo 40
@@ -66,6 +90,11 @@ Sub InitEvents_Class
 Sub Events_CLR
 	/doevents BattleCleric
 	/doevents CelestialRegeneration
+	/doevents AutoRezON
+	/doevents AutoRezOFF
+	/doevents CombatRezON
+	/doevents CombatRezOFF
+
 	| Add the CH CHain watch events (enumerated in xiris_healing.inc)
 	/doevents CHStart
 	/doevents CHStop
@@ -73,6 +102,8 @@ Sub Events_CLR
 	/doevents CHResume
 	/doevents CHSwitch
 /return 
+
+
 
 
 Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint, string _assistArgs)
@@ -125,6 +156,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 			/call RunClassEvents
 			/call chkDebuffs
 			/call chkYaulp
+			/call chkRez
 		}
 		
 		|-- If Engaged And A Battle Cleric run DPS/ETC
@@ -207,7 +239,7 @@ Sub healSELF
 	/if (!${Target.ID}) /call TrueTarget ${Me.ID}
 	/call chkFHealReady
 	/call setHealingSpell ${Me.Class.ShortName}  ${Me.PctHPs}
-	/echo healSELF: ${str_currentHeal}
+	/echo healSELF  (healing.inc): ${str_currentHeal}
 	/call healCast ${Me.ID} ${Me.Name} "${str_currentHeal}"
 	/varset int_point_calcStopHeal	${int_point_selfNormal}
 	/call TrueTarget ${int_MTID}
@@ -305,6 +337,9 @@ Sub healGRP
 	}
 /return
 
+Sub EVENT_CelestialRegeneration
+	/call MGBCelestialRegeneration
+/return
 
 Sub chkMGBCelestialRotation
 	| loop through the MGB Celestial Rotation members
@@ -312,9 +347,6 @@ Sub chkMGBCelestialRotation
 
 /return
 
-Sub EVENT_CelestialRegeneration
-	/call MGBCelestialRegeneration
-/return
 
 Sub MGBCelestialRegeneration
 	/if (${Me.AltAbilityReady[Mass Group Buff]} && ${Me.AltAbilityReady[Celestial Regeneration]}) {
@@ -331,7 +363,44 @@ Sub MGBCelestialRegeneration
 /return
 
 
+Sub Event_AutoRezOn
+	/call AutoRezON
+/return
 
+Sub AutoRezON
+	/bc ${Me.Name} is now auto rezzing out of combat.
+	/varset bln_autoRez TRUE
+/return 
+
+Sub Event_AutoRezOff
+	/call AutoRezOFF
+/return 
+
+Sub AutoRezOFF
+	/bc ${Me.Name} is no auto rezzing out of combat.
+	/varset bln_autoRez FALSE
+/return
+
+
+Sub Event_CombatRezON
+	/call CombatRezON
+/return
+
+Sub CombatRezON 
+	/bc ${Me.Name} is now auto rezzing during combat.
+	/varset bln_autoRez FALSE
+	/varset bln_combatRez FALSE
+/return 
+
+Sub Event_CombatRezOFF
+	/call CombatRezOFF
+/return 
+
+Sub CombatRezOFF
+	/bc ${Me.Name} is no auto rezzing during combat.
+	/varset bln_autoRez FALSE
+	/varset bln_combatRez FALSE
+/return
 
 
 |**

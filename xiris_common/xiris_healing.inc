@@ -10,27 +10,30 @@ REVISION HISTORY
 	10.15.16	xiris	Cleaned up (removed CH) and added group healing event
 	01.13.22	xiris	Added Rez routines
 	04.25.22	xiris 	Added healing potion routines
+	05.08.22	xiris	Integrated AERez.mac
 **|
 
-#event GroupHeal  "#*#DoGroupHeal#*#"
-#event CanRez     "This corpse can be resurrected."
-#event CannotRez  "This corpse cannot be resurrected."
-#event NotOnline  "You told #1#, '#2# is not online at this time'"
-#event NotOnline  "Your tell to #1# has been queued"
-#event ChangeHP   "#*#ChangeHP #1#"
 
-#EVENT HealMode "<#1#> HealMode #2#"
-#EVENT HealMode "[#1#(msg)] HealMode #2#"
-#EVENT HealMode "#1# tells you, 'HealMode #2#"
-#EVENT HealMode "#1# tells the group, 'HealMode #2#'"
-#EVENT HealMode "#1# you tell your party, 'HealMode #2#'"
+#event CanRez     	"This corpse can be resurrected."
+#event CannotRez  	"This corpse cannot be resurrected."
+#event NotOnline  	"You told #1#, '#2# is not online at this time'"
+#event NotOnline  	"Your tell to #1# has been queued"
+
+#event ChangeHP   	"#*#ChangeHP #1#"
+#event GroupHeal  	"#*#DoGroupHeal#*#"
+
+#EVENT HealMode 	"<#1#> HealMode #2#"
+#EVENT HealMode 	"[#1#(msg)] HealMode #2#"
+#EVENT HealMode 	"#1# tells you, 'HealMode #2#"
+#EVENT HealMode 	"#1# tells the group, 'HealMode #2#'"
+#EVENT HealMode 	"#1# you tell your party, 'HealMode #2#'"
 
 
-#EVENT InterruptON "<#1#> InterruptON#*#"
-#EVENT InterruptON "[#1#(msg)] InterruptON#*#"
-#EVENT InterruptON "#1# tells you, 'InterruptON#*#"
-#EVENT InterruptON "#1# tells the group, 'InterruptON#*#'"
-#EVENT InterruptON "#1# you tell your party, 'InterruptON#*#'"
+#EVENT InterruptON 	"<#1#> InterruptON#*#"
+#EVENT InterruptON 	"[#1#(msg)] InterruptON#*#"
+#EVENT InterruptON 	"#1# tells you, 'InterruptON#*#"
+#EVENT InterruptON 	"#1# tells the group, 'InterruptON#*#'"
+#EVENT InterruptON 	"#1# you tell your party, 'InterruptON#*#'"
 
 
 #EVENT InterruptOFF "<#1#> InterruptOFF#*#"
@@ -69,6 +72,7 @@ REVISION HISTORY
 #EVENT CHSwitch "#1# tells you, 'CHSwitch #2#'"
 #EVENT CHSwitch "#1# tells the group, 'CHSwitch #2#'"
 #EVENT CHSwitch "#1# you tell your party, 'CHSwitch #2#'"
+
 
 
 Sub InitEvents_Healing
@@ -191,10 +195,12 @@ Sub setHealingSpell(string _class, int _hp)
 
 Sub chkHeal_MT
 	| Use the power of Greyskull and Netbots to get the MTs HP
-	/if ((${NetBots[${Spawn[id ${int_MTID}].Name}].PctHPs}< ${int_point_tankNormal}) && (${NetBots[${Spawn[id ${int_MTID}].Name}].Distance}<${int_range_normal})) { 
-		/call chkMTAlive ${Me.Class.ShortName.Equal[CLR]} 
+	/call chkMTAlive ${Me.Class.ShortName.Equal[CLR]} 
+
+	/if (${NetBots[${str_tankName1}].PctHPs} < ${int_point_tankNormal}) {
 		/call healMAINTANK
 	}
+
 /return
 
 
@@ -222,9 +228,9 @@ Sub chkHeal_Group
 **|
 
 Sub healMAINTANK
-	/echo healMainTank(healing.inc)
 	/varcalc	int_point_calcStopHeal ${Math.Calc[${int_point_tankNormal}*1.1]}	
-	/echo healMAINTANK ${int_MTID} ${Target.Name} "${str_heal_normal}"
+	/if (${Target.ID} != ${int_MTID}) /call TrueTarget ${int_MTID}
+	/echo healMAINTANK (healing.inc): ${int_MTID} ${Target.Name} "${str_heal_normal}"
 	/call healCast ${int_MTID} ${Target.Name} "${str_heal_normal}"
 	/varset int_point_calcStopHeal	${int_point_tankNormal}
 /return
@@ -240,7 +246,8 @@ Sub healMAINTANK
 
 Sub healSELF
 	/varcalc 	int_point_calcStopHeal ${Math.Calc[${int_point_selfNormal}*1.1]}
-	/echo healSELF ${Me.ID} ${Target.Name} "${str_heal_normal}"
+	/if (${Target.ID} != ${Me.ID}) /call TrueTarget ${Me.ID}
+	/echo healSELF (healing.inc): ${Me.ID} ${Target.Name} "${str_heal_normal}"
 	/call healCast ${Me.ID} ${Me.Name} "${str_heal_normal}"
 	/varset int_point_calcStopHeal	${int_point_selfNormal}
 /return
@@ -605,124 +612,165 @@ Sub heal_chSwitch(int _chainID, string _targetName)
 Sub chkRez
 	/if (!${bln_autoRez}) /return
 	/if (!${bln_combatRez} && ${bln_engaged}) /return
-	/declare i int local
-	/declare CorpseCount int local ${SpawnCount[pc corpse radius ${int_range_rez}]}
-	/for i 1 to ${CorpseCount}
-		/target ${NearestSpawn[${i}, corpse pc radius ${int_range_rez}]}'s
-		
-		/delay 3s ${Target.ID} == ${NearestSpawn[${i}, corpse pc radius ${int_range_rez}].ID}
-		
-		/if (!${Target.LineOfSight}) /goto :next
-		/consider
-		/delay 3s
-		/call RunRaidEvents	
-		/delay 1s
-	:next
-	/next i
+
+	| find all corpses in range	
+	/squelch /hidecorpse npc
+	/declare int_corpses int local ${SpawnCount[pc corpse radius ${int_range_rez}]}
+	/if (!${int_corpses}) /return
+
+	| if corpses, then aerez
+	/call AERez ${int_corpses}
 /return
 
-Sub Event_CanRez
-	/declare TargetName string local ${Target.CleanName.Arg[1,']}
-	/declare TellMessage string local rezinc
+Sub AERez
+	/declare int_corpses int local ${SpawnCount[pc corpse radius ${int_range_rez}]}
+	/declare arr_corpses[${int_corpses}] int local 
+	/declare str_corpse		string local
 
+	/declare i 				int local
+	/declare x				int local
+	/declare id 			int local
+
+	/for i 1 to ${int_corpses}
+		/varset arr_corpses[${i}] ${NearestSpawn[${i}, pc corpse radius ${int_range_rez}].ID}
+	/next x
 	
-	/if (${Target.ID}) {
-		/varset DoingARez TRUE
-		/bct ${TargetName} //consent ${Me.Name}
-		
-		| announce the rez if quiet option not set
-		/tell ${Target.CleanName.Arg[1,']} ${TellMessage}
-		
+	:consider 
+	/for i 1 to ${int_corpses}
+		/varset id ${arr_corpses[${i}]}
+		/varset bln_skipCorpse FALSE
 
-		| use custom spell if defined, otherwise epic, or fall back to Reviviscence
-		/if (${FindItem[Water Sprinkler of Nem Ankh].InvSlot}) {
-			/corpse
-			/call MQ2Cast "Water Sprinkler of Nem Ankh" item 40 CheckOnline
-			/if (${Macro.Return.Equal[CAST_SUCCESS]}) {
-				/call AddIgnoreList ${Target.ID}
-				/bc Rezzed ${Target.Name}
-				/rs Rezzed ${Target.Name}
-			}
-		} else {
-			/corpse
-			/call MQ2Cast "${str_rezSpell}" ${str_rezGem} 20 CheckOnline
-			/if (${Macro.Return.Equal[CAST_SUCCESS]}) {
-				/call AddIgnoreList ${Target.ID}
-				/bc Rezzed ${Target.Name}
-				/rs Rezzed ${Target.Name}
-			}
+		| get the name from corpse	
+		/varset str_corpse ${Spawn[id ${id}].CleanName.Arg[1,']}
+
+		| check corpse name 
+		/if (${Spawn[id ${id}].CleanName.Find[corpse]} == NULL || !${NetBots[${str_corpse}].ID}) /varset bln_skipCorpse TRUE
+		/if (${bln_skipCorpse}) /goto :next_corpse
+
+
+		| check ignore list
+		/if (${int_rezIgnore}) {
+			/for x 1 to ${int_rezIgnore}
+				/if (${arr_corpses[${x}]} == ${arr_rezIgnore[${x}]}) /varset bln_skipCorpse TRUE
+			/next x
 		}
-		/varset DoingARez FALSE
+		/if (${bln_skipCorpse}) /goto :next_corpse
+
+		| check online
+		/call CheckOnline ${str_corpse}
+		/if (${bln_skipCorpse}) /goto :next_corpse
+
+		| consider the corpse
+		/call TrueTarget ${id}
+		/consider
+		/delay 10
+		/doevents CannotRez
+		/if (${bln_skipCorpse}) /goto :next_corpse
+			
+		| resurrect
+		/call Ressurect ${id}
+
+	:next_corpse
+	/next i
+
+	:clean_list
+	/call CleanRezIgnoreList
+/return
+
+Sub Ressurect(int _id)
+	/call TrueTarget ${_id}
+	/bct  ${Spawn[id ${_id}].CleanName.Arg[1,']} //consent ${Me.Name}
+	/delay 10
+	/corpse 
+
+	| Find my epic (if cleric)
+	/if (${FindItem[Water Sprinkler of Nem Ankh].InvSlot}) {
+		/call MQ2Cast "Water Sprinkler of Nem Ankh" item
+		/if (${Macro.Return.Equal[CAST_SUCCESS]}) {
+			/call Add2RezIgnore ${Target.ID}
+			/rs Rezzed ${Target.Name}
+		}
+	} else {	
+	| No epic or not cleric, use spell
+		/call chkSpellMemorized ${str_rezSpell} TRUE ${str_rezGem}
+		/call MQ2Cast ${str_rezSpell}
+		/if (${Macro.Return.Equal[CAST_SUCCESS]}) {
+			/call Add2RezIgnore ${Target.ID}
+			/rs Rezzed ${Target.Name}
+		}
 	}
 /return
 
-Sub CheckOnline
+
+Sub CheckOnline(string _name)
+	/tell ${_name} ${TellMessage}
 	/doevents NotOnline
 /return
 
 Sub Event_NotOnline(Line, Name)
 	| sent a tell on rez but got an offline message - interrupt cast
 	/if (${Target.CleanName.Arg[1,'].Equal[${Name}]}) /call Interrupt
-	/varset bln_rezzable FALSE
+	/call Add2RezIgnore ${Target.ID}
+	/varset bln_skipCorpse TRUE
 /return
 
 Sub Event_CannotRez
-	/if (${Target.ID} && (${DoingAERez} || ${AlwaysRezOnCon})) {
+	/if (${Target.ID}) {
 		/echo Could not rez ${Target.CleanName}, adding to ignore list.
-		/varset bln_rezzable FALSE
+		/call Add2RezIgnore ${Target.ID}
+		/varset bln_skipCorpse TRUE
 	}
 /return
 
-Sub AddIgnoreList(int NewID)
-	/if (!${Defined[RezIgnoreCount]}) /declare RezIgnoreCount int outer 0
+Sub Add2RezIgnore(int _id)
 	| ignore list is empty - create it with new id
-	/if (!${RezIgnoreCount}) {
-		/varset RezIgnoreCount 1
-		/if (${Defined[RezIgnoreList]}) /deletevar RezIgnoreList
-		/declare RezIgnoreList[1] int outer
-		/varset RezIgnoreList[1] ${NewID}
+	/if (!${int_rezIgnore}) {
+		/varset int_rezIgnore 1
+		/if (${Defined[arr_rezIgnore]}) /deletevar arr_rezIgnore
+		/declare arr_rezIgnore[1] int outer
+		/varset arr_rezIgnore[1] ${_id}
 		/return
 	}
 	| copy existing list temp list, one entry larger
-	/declare Temp[${Math.Calc[${RezIgnoreCount}+1]}] int local
+	/declare arrTemp[${Math.Calc[${int_rezIgnore}+1]}] int local
 	/declare x int local
-	/for x 1 to ${RezIgnoreCount}
+	/for x 1 to ${int_rezIgnore}
 		| return if new idis already in the ignore list
-		/if (${NewID} == ${RezIgnoreList[${x}]}) /return
-		/varset Temp[${x}] ${RezIgnoreList[${x}]}
+		/if (${_id} == ${arr_rezIgnore[${x}]}) /return
+		/varset Temp[${x}] ${arr_rezIgnore[${x}]}
 	/next x
-	/varset RezIgnoreCount ${Math.Calc[${RezIgnoreCount}+1]}
-	/varset Temp[${RezIgnoreCount}] ${NewID}
+	/varset int_rezIgnore ${Math.Calc[${int_rezIgnore}+1]}
+	/varset Temp[${int_rezIgnore}] ${_id}
 	| delete old ignore list and copy temp list to new ignore list
-	/deletevar RezIgnoreList
-	/declare RezIgnoreList[${RezIgnoreCount}] int outer
-	/for x 1 to ${RezIgnoreCount}
-		/varset RezIgnoreList[${x}] ${Temp[${x}]}
+	/deletevar arr_rezIgnore
+	/declare arr_rezIgnore[${int_rezIgnore}] int outer
+	/for x 1 to ${int_rezIgnore}
+		/varset arr_rezIgnore[${x}] ${Temp[${x}]}
 	/next x
 /return
 
-Sub CleanIgnoreList
-	/if (!${RezIgnoreCount}) /return
+Sub CleanRezIgnoreList
+	/if (!${int_rezIgnore}) /return
 	| remove ids from ignore list that are no longer in zone
 	/declare x int local
-	/declare Found int local 0
-	/declare Temp[${RezIgnoreCount}] int local
+	/declare found int local 0
+	/declare arrTemp[${int_rezIgnore}] int local
 
-	/for x 1 to ${RezIgnoreCount}
+	/for x 1 to ${int_rezIgnore}
 		| skip corpse id if it's not in the zone spawn list any more
-		/if (!${Spawn[id ${RezIgnoreList[${x}]}].ID}) /goto :nextIgnore
-		/varset Found ${Math.Calc[${Found}+1]}
-		/varset Temp[${Found}] ${RezIgnoreList[${x}]}
+		/if (!${Spawn[id ${arr_rezIgnore[${x}]}].ID}) /goto :nextIgnore
+		/varset found ${Math.Calc[${found}+1]}
+		/varset arrTemp[${found}] ${arr_rezIgnore[${x}]}
 	:nextIgnore
 	/next x
 	
 	| shrink ignore list
-	/if (${Found} != ${RezIgnoreCount}) {
-		/deletevar RezIgnoreList
-		/varset RezIgnoreCount ${Found}
-		/declare RezIgnoreList[${RezIgnoreCount}] int outer
-		/for x 1 to ${RezIgnoreCount}
-			/varset RezIgnoreList[${x}] ${Temp[${x}]}
+	/if (${found} != ${int_rezIgnore}) {
+		/deletevar arr_rezIgnore
+		/varset int_rezIgnore ${found}
+		/declare arr_rezIgnore[${int_rezIgnore}] int outer
+		/for x 1 to ${int_rezIgnore}
+			/varset arr_rezIgnore[${x}] ${arrTemp[${x}]}
 		/next x
 	}
 /return
@@ -832,7 +880,7 @@ Sub xbot_initialize_healing(int _healPoint)
 	|-- Heal Points
 		|-- Cleric (self)
 		/declare	int_point_selfPatch		int 	outer 	${Ini[botINI,Heal_Points,int_point_selfPatch,85]}
-		/declare	int_point_selfNormal	int		outer	${Ini[botINI,Heal_Points,int_point_selfNormal,65]}
+		/declare	int_point_selfNormal	int		outer	${Ini[botINI,Heal_Points,int_point_selfNormal,75]}
 		/declare	int_point_selfFrantic	int		outer	${Ini[botINI,Heal_Points,int_point_selfFrantic,40]}
 		/declare	int_point_selfHot		int		outer	${Ini[botINI,Heal_Points,int_point_selfHot,95]}
 	
@@ -872,6 +920,9 @@ Sub xbot_initialize_healing(int _healPoint)
 	/declare    bln_chPaused			bool	outer	FALSE
 	/declare	timer_chPaused			timer   outer   30s
 	/declare   	int_chChainID			int		outer	0
+	/declare	int_rezIgnore			int     outer   0 
+	/declare 	arr_rezIgnore[1]		int		outer
+	/declare 	bln_skipCorpse			bool	outer	FALSE
 
 	|-- OLD Healing Spells
 	/declare    bln_rezzable			bool    outer   TRUE

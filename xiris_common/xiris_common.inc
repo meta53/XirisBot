@@ -53,8 +53,6 @@ ______________________________________________
 #EVENT KillMob "#1# tells the group, 'KillMob #2#'"
 #EVENT KillMob "#1# you tell your party, 'KillMob #2#'"
 
-#Event BC					"<#1#> #2#"
-#Event BC					"[#1#(msg)] #2#"
 #EVENT Zoned				"You have entered#*#"
 #EVENT Zoned				"LOADING, PLEASE WAIT..."
 #EVENT EndMac				"#*#end macro#*#"
@@ -80,17 +78,8 @@ ______________________________________________
 #EVENT ChangeAP "#1# tells the group, 'changeAP #2#'"
 #EVENT ChangeAP "#1# you tell your party, 'changeAP #2#'"
 
-#EVENT LEASHON "<#1#> LeashOn#*#"
-#EVENT LEASHON "[#1#(msg)] LeashOn#*#"
-#EVENT LEASHON "#1# tells you, 'LeashOn#*#'"
-#EVENT LEASHON "#1# tells the group, 'LeashOn#*#'"
-#EVENT LEASHON "#1# you tell your party, 'LeashOn#*#'"
 
-#EVENT LEASHOFF "<#1#> LeashOff#*#"
-#EVENT LEASHOFF "[#1#(msg)] LeashOff#*#"
-#EVENT LEASHOFF "#1# tells you, 'LeashOff#*#'"
-#EVENT LEASHOFF "#1# tells the group, 'LeashOff#*#'"
-#EVENT LEASHOFF "#1# you tell your party, 'LeashOff#*#'"
+
 
 |MISC events
 #EVENT ConnectEQBC			"#*#ConnectEQBC#*#"
@@ -106,34 +95,32 @@ ______________________________________________
 #EVENT ImDead          		"#*#You have been slain by#*#"
 #EVENT ImDead          		"Returning to home point, please wait..."
 #EVENT ImDead          		"#*#Returning to Bind Location#*#"
-#EVENT shrinkGroup 			"<#*#> Shrink your group!#*#"
 #EVENT LoadRingset 			"#1#LoadRingset#*#"
 #EVENT LoadWeaponset		"#1#LoadWeaponset #2#"
 #EVENT SaveRingset      	"#1#SaveRingset#*#"
 #EVENT SaveWeaponset  		"#1#SaveWeaponset #2#"
 #EVENT SaveCurrentWeaponset "#1#SaveCurrentWeaponset #2#"
+#EVENT InvisOFF				"#1#InvisOff#*#"
 
 Sub InitEvents_Common
-	/call RegisterRaidEvents Events_Raid 13
-	/call RegisterBackgroundEvents Events_Common 14
+	/call RegisterRaidEvents Events_Raid 9
+	/call RegisterBackgroundEvents Events_Common 17
 /return
 
 Sub Events_Raid 
 	/doevents BurnOnALL
 	/doevents BurnOn1
 	/doevents BurnOn2
+	/doevents BurnOff
 	/doevents BackOff
 	/doevents ChangeMT
 	/doevents ChangeSA
 	/doevents ChangeAP
 	/doevents IntensityOn
-	/doevents BurnOff
-	/doevents SaveRingset
 /return
 
 Sub Events_Common 
 	/doevents KillMob
-	/doevents BC	
 	/doevents Zoned	
 	/doevents CheckNaked
 	/doevents RageOff
@@ -144,11 +131,12 @@ Sub Events_Common
 	/doevents ImDead
 	/doevents ImDead
 	/doevents ImDead
-	/doevents shrinkGroup
-	/doevents SaveWeaponset
-	/doevents SaveCurrentWeaponset
 	/doevents LoadRingset
 	/doevents LoadWeaponset
+	/doevents SaveWeaponset
+	/doevents SaveCurrentWeaponset
+	/doevents SaveRingset
+	/doevents InvisOFF
 /return
 
 
@@ -721,76 +709,6 @@ Sub EVENT_LEASHOFF
 /return
 
 
-
-
-|-------------------------------------------------------------------------------- 
-|SUB: Event_EQBC
-|--------------------------------------------------------------------------------
-Sub Event_BC(chatType,chatSender,chatText)
-	| ignore my own damn directives since sometimes they are echoed
-	/if (${chatSender.Equal[${Me.Name}]} && ${chatText.Arg[1].NotEqual[refreshXTarget]}) /return
-
-	|--Toggle AutoAssist
-	/if (${chatText.Arg[1].Equal[assiston]}) {
-		/bc ${Me.Name} is now AutoAssisting!
-		/varset bln_autoAssist TRUE
-	}
-	/if (${chatText.Arg[1].Equal[assistoff]}) {
-		/bc ${Me.Name} is no longer AutoAssisting.
-		/varset bln_autoAssist FALSE
-	}
-
-	|--Toggle Leashing
-	/if (${chatText.Arg[1].Equal[leashon]}) {
-		/bc ${Me.Name} is now Leashing!
-		/varset bln_useLeash TRUE
-	}
-	/if (${chatText.Arg[1].Equal[leashoff]}) {
-		/bc ${Me.Name} is no longer Leashing.
-		/varset bln_useLeash FALSE
-	}
-		
-	|--Reset XTarget
-	/if (${chatText.Arg[1].Equal[refreshXTarget]}) {
-		|/bc ${Me.Name} refreshing xtarget.
-		/call doRefreshXTarget
-	}
-	|-- Turn off Invis
-	/if (${chatText.Arg[1].Equal[invisoff]}) {
-		/if (${Me.Buff[Group Perfected Invisibility].ID}) /nomodkey /notify BuffWindow Buff${Math.Calc[${Me.Buff[Group Perfected Invisibility].ID}-1].Int} leftmouseup
-		/if (${Me.Buff[Gather Shadows].ID}) /nomodkey /notify BuffWindow Buff${Math.Calc[${Me.Buff[Gather Shadows].ID}-1].Int} leftmouseup
-		/if (${Me.Buff[Invisibility].ID}) /nomodkey /notify BuffWindow Buff${Math.Calc[${Me.Buff[Invisibility].ID}-1].Int} leftmouseup
-	}
-
-	
-	/if (${Me.Class.ShortName.Equal[CLR]} || ${Me.Class.ShortName.Equal[DRU]}) {
-
-		|--Toggle AutoRezzing
-		/if (${chatText.Arg[1].Equal[autoRezOn]}) {
-			/bc ${Me.Name} is now auto rezzing out of combat.
-			/varset bln_autoRez TRUE
-		}
-		/if (${chatText.Arg[1].Equal[autoRezOff]}) {
-			/bc ${Me.Name} is no auto rezzing out of combat.
-			/varset bln_autoRez FALSE
-		}
-		
-		|--Toggle CombatRezzing
-		/if (${chatText.Arg[1].Equal[bln_combatRez]}) {
-			/bc ${Me.Name} is now auto rezzing during combat.
-			/varset bln_autoRez FALSE
-			/varset bln_combatRez FALSE
-		}
-		/if (${chatText.Arg[1].Equal[bln_combatRez]}) {
-			/bc ${Me.Name} is no auto rezzing during combat.
-			/varset bln_autoRez FALSE
-			/varset bln_combatRez FALSE
-		}
-					
-	}
-	/doevents flush BC
-/return
-
 |**
  ------------------------
  EVENTS
@@ -799,6 +717,18 @@ Sub Event_BC(chatType,chatSender,chatText)
  ------------------------
 **|
 
+|-------------------------------------------------------------------------------- 
+|SUB: Event_InvisOff
+|--------------------------------------------------------------------------------
+Sub Event_InvisOFF 
+	/call InvisOff
+/return 
+
+Sub InvisOff
+	/if (${Me.Buff[Group Perfected Invisibility].ID}) /nomodkey /notify BuffWindow Buff${Math.Calc[${Me.Buff[Group Perfected Invisibility].ID}-1].Int} leftmouseup
+	/if (${Me.Buff[Gather Shadows].ID}) /nomodkey /notify BuffWindow Buff${Math.Calc[${Me.Buff[Gather Shadows].ID}-1].Int} leftmouseup
+	/if (${Me.Buff[Invisibility].ID}) /nomodkey /notify BuffWindow Buff${Math.Calc[${Me.Buff[Invisibility].ID}-1].Int} leftmouseup
+/return 
 
 |-------------------------------------------------------------------------------- 
 |SUB: Event_EndMac
@@ -1220,8 +1150,8 @@ Sub commandAllInGroup(command)
 
 
 SUB argueString(WhatToFind, givenData)
-/if (${Debug}) /echo |- argueString ==>
-
+	/echo |- argueString ==> ${WhatToFind}  => ${givenData}
+ 
 	/declare i int local 1
 	/declare foundData string local NULL
 	
@@ -1249,7 +1179,7 @@ SUB argueString(WhatToFind, givenData)
 		}
 	}
 
-/if (${Debug}) /echo <== argueString -|
+	/echo foundData? ${foundData}
 /return ${foundData}
 
 
@@ -1359,57 +1289,58 @@ Sub saveGroup
 
 /return
 
-SUB verifyEvent(ChatSender, eventLine)
+SUB verifyEvent(sring _chatSender, string _eventParams)
 	/declare userValidated 	bool local FALSE
 	/declare includeBot 	bool local TRUE
 	/declare inZone 		bool local FALSE
 	/declare inRange 		bool local FALSE
 	/declare inAssistRange 	bool local FALSE
-
+	/declare sender         string local ${_chatSender}
 	| -Reset ChatSender.
-	/if (${ChatSender.Left[1].Compare[ ]}<0) /varset ChatSender ${ChatSender.Right[-2].Left[-1]}
-	/if (${ChatSender.Equal[You]}) /varset ChatSender ${Me.CleanName}
-	/if (${ChatSender.Equal[MQ2]}) /varset ChatSender ${Me.CleanName}
+	/if (${_chatSender.Left[1].Compare[ ]}<0) /varset sender ${_chatSender.Right[-2].Left[-1]}
+	/if (${_chatSender.Equal[You]}) /varset sender ${Me.CleanName}
+	/if (${_chatSender.Equal[MQ2]}) /varset sender ${Me.CleanName}
 	
 	| -Validate ChatSender.
-	/if (${NetBots[${_chatSender}].ID}) /varset userValidated TRUE
+	/if (${NetBots[${sender}].ID}) /varset userValidated TRUE
 	
 	| -Check inZone
-	/if (${SpawnCount[pc =${_chatSender}]}) /varset inZone TRUE
+	/if (${SpawnCount[pc =${sender}]}) /varset inZone TRUE
 	
 	| -Check inRange
-	/if (${SpawnCount[pc =${_chatSender} radius ${MaxResponseDist}]}) /varset inRange TRUE
+	/if (${SpawnCount[pc =${sender} radius ${MaxResponseDist}]}) /varset inRange TRUE
 
+	/echo verifyEvent ${sender} :: ${_eventParams}
 	| -Check for /only|
-	/if (${eventLine.Find[/only|]}) {
+	/if (${_eventParams.Find[/only|]}) {
 		/varset includeBot FALSE
-		/call argueString only| "${eventLine}"
-		/call check_selectedBots "${Macro.Return}" "${_chatSender}"
+		/call argueString only| "${_eventParams}"
+		/call check_selectedBots "${Macro.Return}" "${sender}"
 		/if (${Macro.Return}) /varset includeBot TRUE
 	}
 		
 	| -Check for /exclude|
-	/if (${eventLine.Find[/exclude|]}) {
-		/call argueString exclude| "${eventLine}"
-		/call check_selectedBots "${Macro.Return}" "${_chatSender}"
+	/if (${_eventParams.Find[/exclude|]}) {
+		/call argueString exclude| "${_eventParams}"
+		/call check_selectedBots "${Macro.Return}" "${sender}"
 		/if (${Macro.Return}) /varset includeBot FALSE
 	}
 	
 	| -Check for /not|
-	/if (${eventLine.Find[/not|]}) {
-		/call argueString not| "${eventLine}"
-		/call check_selectedBots "${Macro.Return}" "${_chatSender}"
+	/if (${_eventParams.Find[/not|]}) {
+		/call argueString not| "${_eventParams}"
+		/call check_selectedBots "${Macro.Return}" "${sender}"
 		/if (${Macro.Return}) /varset includeBot FALSE
 	}
 	
 	| -Check for /include|
-	/if (${eventLine.Find[/include|]}) {
-		/call argueString include| "${eventLine}"
-		/call check_selectedBots "${Macro.Return}" "${_chatSender}"
+	/if (${_eventParams.Find[/include|]}) {
+		/call argueString include| "${_eventParams}"
+		/call check_selectedBots "${Macro.Return}" "${sender}"
 		/if (${Macro.Return}) /varset includeBot TRUE
 	}
-	
-/return ${_chatSender}_${userValidated}_${includeBot}_${inZone}_${inRange}
+	/echo returning ${sender}_${userValidated}_${includeBot}_${inZone}_${inRange}
+/return ${sender}_${userValidated}_${includeBot}_${inZone}_${inRange}
 
 SUB check_selectedBots(selectedBots, ChatSender)
 
@@ -1491,7 +1422,7 @@ SUB doRefreshXTarget
 	/declare i int local 1
 	/for i 1 to 5
 		/xtarget set ${i} grouptank
-		/delay 1
+		/delay 2
 		/xtarget set ${i} autohater
 	/next i
 /return

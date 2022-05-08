@@ -143,7 +143,7 @@ Sub chkNeedCure
 	}
 
 	|-- Verify need
-	/if (${bln_askedForCure} == TRUE) 	/return
+	/if (${bln_askedForCure} == TRUE && ${timer_cure_request}) 	/return
 	|-- Verify need/ability
 	/if (${Debuff.Count} == 0 || ${Debuff.Counters} > 200) /return
 	|-- Verify ability to be cured
@@ -172,6 +172,7 @@ Sub chkNeedCure
 	/if (${Me.Buff[Aura of Destruction].ID}) {
 		/echo I have [Wanton Destruction], a debuff that I cannot cure!
 		/varset bln_askedForCure TRUE
+		/varset timer_cure_request 30s
 		/return
 	}
 
@@ -179,6 +180,7 @@ Sub chkNeedCure
 	/if (${Me.Buff[Rigidity].ID} || ${Me.Buff[Curse of Misfortune].ID} || ${Me.Buff[Imprecision].ID} || ${Me.Buff[Impurity].ID}) {
 		/echo I have a [Specialization Debuff], a debuff that I cannot cure!
 		/varset bln_askedForCure TRUE
+		/varset timer_cure_request 30s
 		/return
 	}
 
@@ -234,6 +236,7 @@ Sub chkNeedCure
 					/bct ${str_myCurer} cureRequest ${Me.Name} ${Me.ID} ${cureType} ${counters}
 			}
 		}
+		/varset timer_cure_request 30s
 		/varset bln_askedForCure TRUE
 	}
 
@@ -367,6 +370,7 @@ Sub xbot_initialize_curing
 	/declare 	bln_needsCure 			bool	outer	FALSE
 	/declare    bln_askedForCure        bool    outer   FALSE
 	/declare    str_myCurer				string	outer 	NULL
+	/declare	timer_cure_request		timer   outer
 	/call 		getGroupCurer
 	/varset 	str_myCurer ${Macro.Return}
 	
