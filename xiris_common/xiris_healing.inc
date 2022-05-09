@@ -197,7 +197,7 @@ Sub chkHeal_MT
 	| Use the power of Greyskull and Netbots to get the MTs HP
 	/call chkMTAlive ${Me.Class.ShortName.Equal[CLR]} 
 
-	/if (${NetBots[${str_tankName1}].PctHPs} < ${int_point_tankNormal}) {
+	/if ((${NetBots[${str_tankName1}].PctHPs} < ${int_point_tankNormal}) && (${NetBots[${str_tankName1}].Distance} < ${int_range_normal})) {
 		/call healMAINTANK
 	}
 
