@@ -57,7 +57,7 @@ Sub xbot_initialize_events
 
 
 Sub RegisterBackgroundEvents(string _EventSet, int _EventCount)
-    |/cecho \agRegisterBackgroundEvents(\ay${_EventSet}:${_EventCount})
+    /cecho \agRegisterBackgroundEvents(\ay${_EventSet}:${_EventCount})
     | find the first index in BackgroundEvents thats empty
     /declare i int local -1
     /declare bound int local 0
@@ -66,6 +66,7 @@ Sub RegisterBackgroundEvents(string _EventSet, int _EventCount)
             /echo inserting ${_EventSet} @ index: ${i}
             /varset BackgroundEventsRaw[${i}] ${_EventSet}
             |/cecho \agBackgroundEvents[${i}]: ${BackgroundEventsRaw[${i}]} 
+            /call ${_EventSet}
             /goto :postInsert
         }
     /next i
@@ -98,9 +99,9 @@ Sub TrimBackgroundEvents(int _count)
         }
     /next i
 
-      |/for i 1 to ${BackgroundEvents.Size}
-        |/cecho  \agBackgroundEvents[${i}] ${BackgroundEvents[${i}]}
-    |/next i
+    /for i 1 to ${BackgroundEvents.Size}
+        /cecho  \agBackgroundEvents[${i}] ${BackgroundEvents[${i}]}
+    /next i
 
 /return
 
@@ -147,9 +148,9 @@ Sub TrimRaidEvents(int _count)
         }
     /next i
 
-      |/for i 1 to ${RaidEvents.Size}
-     |   /cecho  \agRaidEvents[${i}] ${RaidEvents[${i}]}
-    |/next i
+    /for i 1 to ${RaidEvents.Size}
+      /cecho  \agRaidEvents[${i}] ${RaidEvents[${i}]}
+    /next i
 
 /return
 
@@ -196,37 +197,47 @@ Sub TrimClassEvents(int _count)
         }
     /next i
 
-      |/for i 1 to ${ClassEvents.Size}
-      |  /cecho  \agClassEvents[${i}] ${ClassEvents[${i}]}
-    |/next i
+    /for i 1 to ${ClassEvents.Size}
+       /cecho  \agClassEvents[${i}] ${ClassEvents[${i}]}
+    /next i
 
 /return
 
 
 Sub RunBackgroundEvents
+    /echo RunBackgroundEvents
+    /if (${BackgroundEvents.Size} == 0) /return
     /declare i int local 1
     /for i 1 to ${BackgroundEvents.Size}
-        |/echo calling ${BackgroundEvents[${i}]}
+        /if (${BackgroundEvents[${i}].Equal[NULL]})  /goto :nextBGEvent
+        |/echo bg: calling ${BackgroundEvents[${i}]}
         /call ${BackgroundEvents[${i}]}
+    :nextBGEvent
     /next i
 /return
 
 Sub RunRaidEvents
+    /echo RunRaidEvents
     /if (${RaidEvents.Size} == 0) /return
-    /declare i int local 1
-    /for i 1 to ${RaidEvents.Size}
-        |/echo calling ${RaidEvents[${i}]}
-        /call ${RaidEvents[${i}]}
-    /next i
+    /declare j int local 1
+    /for j 1 to ${RaidEvents.Size}
+        /if (${RaidEvents[${j}].Equal[NULL]})  /goto :nextRaidEvent
+        |/echo rd: calling ${RaidEvents[${i}]}
+        /call ${RaidEvents[${j}]}
+    :nextRaidEvent    
+    /next j
 /return
 
-Sub RunClassEvents(string _EventSet)
+Sub RunClassEvents
+    /echo RunClassEvents
     /if (${ClassEvents.Size} == 0) /return
-    /declare i int local 1
-    /for i 1 to ${ClassEvents.Size}
-        |/echo calling ${ClassEvents[${i}]}
-        /call ${ClassEvents[${i}]}
-    /next i
+    /declare k int local 1
+    /for k 1 to ${ClassEvents.Size}
+        /if (${ClassEvents[${k}].Equal[NULL]})  /goto :nextClassEvent
+        |/echo cls: calling ${ClassEvents[${i}]}
+        /call ${ClassEvents[${k}]}
+    :nextClassEvent
+    /next k
 /return
 
 

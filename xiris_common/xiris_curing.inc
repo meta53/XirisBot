@@ -46,7 +46,7 @@ REVISION HISTORY
 
 Sub InitEvents_Curing
 	/if (${str_classArchetype.Equal[PRIEST]}) /call RegisterClassEvents Events_Curing 34
-	/call RegisterBackgroundEvents Events_Curing_Background
+	/call RegisterBackgroundEvents Events_Curing_Background 2
 /return
 
 Sub Events_Curing
@@ -362,9 +362,7 @@ Sub castCure(string _name, int _id, string _spell, int _count)
 
 
 Sub xbot_initialize_curing
-	/cecho \ao xbot_initialize_curing
-	/call InitEvents_Curing
-	
+
 	/declare 	int_manadrain_threshold int		outer 	200
 	/declare	int_hpdrain_threshold	int		outer	500
 	/declare 	bln_needsCure 			bool	outer	FALSE
@@ -405,5 +403,7 @@ Sub xbot_initialize_curing
 	/if (${str_cure_poison.Equal[NULL]}) 	/varset bln_hasPoisonCure 	FALSE
 	/if (${str_cure_disease.Equal[NULL]}) 	/varset bln_hasDiseaseCure 	FALSE
 	
+	/cecho \ao xbot_initialize_curing
+	/call InitEvents_Curing
 	
 /return

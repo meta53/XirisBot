@@ -666,8 +666,7 @@ Sub RemoveBuff(_badBuff)
 
 
 Sub xbot_initialize_buffing
-	/cecho \aoxbot_initialize_buffing
-	/call InitEvents_Buffing
+
 	
 	|-- Manually set an array with the standard group leaders(ugh)
 	| 	Xiris,Xiria,Xirian,Xeixa,Sadelia,Xaeliea,Xaexa,Xaia,Xepatia
@@ -809,7 +808,10 @@ Sub xbot_initialize_buffing
 		/next cmbtG
 	
 	/next cmbt
-	
+
+
+	/cecho \aoxbot_initialize_buffing
+	/call InitEvents_Buffing
 	
 /return
 

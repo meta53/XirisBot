@@ -125,8 +125,6 @@ Sub EVENT_LootTooFar
 
 
 Sub xbot_initialize_looting
-	/cecho \aoxbot_initialize_looting
-	/call InitEvents_Looting 
 
 	/declare bln_lootAuto			bool	outer 	${Ini[botINI,Settings,lootUse,FALSE]}
 	/declare bln_onlyQuest			bool 	outer	FALSE
@@ -141,6 +139,9 @@ Sub xbot_initialize_looting
 
 	|-- turn on looting by default if the Bot's INI is set to true (unlikely)
 	|/if (${bln_lootAuto}) /call EnableLooting
+
+	/cecho \aoxbot_initialize_looting
+	/call InitEvents_Looting 
 /return
 	
 

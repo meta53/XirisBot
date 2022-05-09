@@ -28,11 +28,13 @@ Sub Events_Following
 
 
 Sub xbot_initialize_following
-	/call InitEvents_Following
-	/cecho \aoxbot_initialize_following
+
 	/declare Following 		bool 	outer FALSE
 	/declare FollowTarget 	string 	outer NULL
 	/declare MaxResponseDist	int outer 5000
+
+	/call InitEvents_Following
+	/cecho \aoxbot_initialize_following
 /return
 
 

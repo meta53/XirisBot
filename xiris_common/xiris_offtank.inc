@@ -235,13 +235,13 @@ Sub chkHate
 
 
 Sub xbot_initialize_offtanking
-	/cecho \ao xbot_initialize_offtanking
-	/call InitEvents_Offtanking
-	
+
 	|-- [Settings] : Off Tanking
 	/declare bln_offTank		 	bool 	outer FALSE
 	/declare int_OT_dist 			int 	outer 65
 	
+	/cecho \ao xbot_initialize_offtanking
+	/call InitEvents_Offtanking
 	
 
 /return

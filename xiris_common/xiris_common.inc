@@ -91,7 +91,6 @@ ______________________________________________
 #EVENT IntensityOn			"#*#IntensityOn#*#"
 #EVENT RageOff				"#*#is no longer enraged#*#"
 #EVENT RageOn				"#*#has become ENRAGED#*#"
-#EVENT SwitchTarget    		"#*# switchtarget #1#"
 #EVENT ImDead          		"#*#You have been slain by#*#"
 #EVENT ImDead          		"Returning to home point, please wait..."
 #EVENT ImDead          		"#*#Returning to Bind Location#*#"
@@ -125,9 +124,6 @@ Sub Events_Common
 	/doevents CheckNaked
 	/doevents RageOff
 	/doevents RageOn
-	/doevents SwitchTarget
-	/doevents ToggleVar
-	/doevents ToggleString
 	/doevents ImDead
 	/doevents ImDead
 	/doevents ImDead
@@ -160,7 +156,7 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	
 	|-- [Settings] : Class Archetype (used in case switching)
 	/declare 	str_classArchetype		string	outer	UNKNOWN
-	/call 	 	getClassArchetype ${Me.Class.ShortName}
+	/call 	 	getClassArchetype 		${Me.Class.ShortName}
 	/varset 	str_classArchetype		${Macro.Return}
 	/declare 	MeleeClasses 			string	outer	BRD,BER,BST,MNK,PAL,RNG,ROG,SHD,WAR
 	/declare 	PriestClasses 			string	outer	CLR,DRU,SHM
@@ -512,7 +508,7 @@ Sub chkAAs
 	/if ((${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]}) || ${Me.Moving} || ${Me.Invis} || ${Me.Feigning}) /return
 	
 	/if (${Target.Type.NotEqual[NPC]}) /return
-
+	/echo chkAAs
 	|-- named check
 	:named_check
 	/declare isNamed bool local FALSE
@@ -550,20 +546,21 @@ Sub chkAAs
 				| Check that the hitpoints of target fall into the range
 				| Check to see that my HP is at or below the trigger range (for things like desperation)
 				/if ((${Target.ID}==${int_targetID}) && (${Target.PctHPs}<${AA_${aa}_StartHP}) && (${Me.PctHPs} <= ${AA_${aa}_MyHP}) && (${Target.PctHPs}>${AA_${aa}_StopHP})) {
+					/echo checking ${AA_${aa}}
 					/if (${Me.Class.ShortName.Equal[BRD]}) {
 						/if (${AAGem${aa}.Equal[combat]} && (${Me.PctEndurance} > 10)) {
 							/doability "${AA_${aa}}"
 						} else {
 							/medley queue "${AA_${aa}}"
 						}
-						/cecho \ag ${AA_${i}}  : FIRED	
+						/cecho \ag ${AA_${aa}}  : FIRED	
 					} else {
 						/if (${AAGem${aa}.Equal[combat]} && (${Me.PctEndurance} > 10)) {
 							/doability "${AA_${aa}}"
 						} else {
 							/call MQ2Cast "${AA_${aa}}"	alt
 							/if (${Macro.Return.Equal[CAST_SUCCESS]}) {
-							/cecho \ag ${AA_${aa}}  : FIRED	
+							/cecho \ag ${AA_${aa}} : FIRED	
 							}
 						}
 					}
@@ -585,6 +582,7 @@ Sub chkAAs
 **|
 
 Sub chkBurn
+	/echo chkBurn
 	/if (!${bln_engaged}) /return
 	/if (${Me.Casting.ID} || ${Me.Moving} || ${Me.Invis} || ${Me.Feigning}) /return
 	/if (!${bln_BURNMode}) /return
@@ -673,11 +671,12 @@ Sub chkBurn
  ----------------------------
 **|
 Sub chkClicks
+	/echo chkClicks 0
 	/if (!${bln_engaged}) /return
 	/if (${Me.Casting.ID} || ${Me.Moving} || ${Me.Invis} || ${Me.Feigning}) /return
 	/if (${Target.PctHPs}<${int_clickStopHP}) /return
 	/if (${int_clickTotal} == 0) /return
-
+	/echo chkClicks 1
 	/declare intC int local
 	/for intC 1 to ${int_clickTotal} 
 		
@@ -1163,6 +1162,7 @@ Sub TargetNamedCheck(_id)
 	/if (${Zone.ShortName.Equal[tacvi]} || ${Zone.ShortName.Equal[txevu]}) /return TRUE
 	/if (${Zone.ShortName.Equal[chambersa]} ||${Zone.ShortName.Equal[chambersb]} ||${Zone.ShortName.Equal[chambersc]} ||${Zone.ShortName.Equal[chambersd]}||${Zone.ShortName.Equal[chamberse]}) /return TRUE
 	/if (${Zone.ShortName.Equal[anguish]}) /return TRUE
+	/if (${Zone.ShortName.Equal[arena]}) /return TRUE
 /return FALSE
 	
 |------------------------------------------------------------|

@@ -29,7 +29,7 @@ REQUIRED INCLUDES
 
 #include xiris_common/xiris_common.inc
 
-#Turbo 40
+#Turbo 20
 
 #event AutoFireOn      		"#*#AutoFire on#*#"
 #event AutoFireOff     		"#*#AutoFire off#*#"
@@ -76,7 +76,10 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 		/call chkMTAlive FALSE
 		
 		|-- Check to see if self needs to be cured (xiris_curing.inc)
+
+		/echo start again
 		/call RunAllEvents
+		/echo into need cure
 		/call chkNeedCure
 		
 		|-- Check the to see if group needs healing (xiris_healing.inc)
@@ -101,7 +104,9 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
     		/call RunClassEvents
 			/call chkAAs
 			/call chkBurn
-			/call chkClicks
+			|/call chkClicks
+			/echo post burn, running all
+			/call RunAllEvents
 		}
 	
 		|-- check utilities, includes: sit,loot,leash (out of combat only)
@@ -110,6 +115,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 			/call chkDownshits
 		}
 	|-- start again	
+	/echo chkmobdead
 	/call chkMobDead
     /goto :MainLoop
 /return

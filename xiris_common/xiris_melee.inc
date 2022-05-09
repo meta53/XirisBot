@@ -656,8 +656,6 @@ Sub chk_warProvoke(string _provokeDisc)
 
 
 Sub xbot_initialize_melee
-	/cecho \ao xbot_initialize_melee
-	/call InitEvents_Melee
 
 	|-- [Settings] : Melee Defaults
 	/declare 	MinStrikeEndurance 		int		outer	200
@@ -738,4 +736,6 @@ Sub xbot_initialize_melee
 	/declare dsSongsTotal	int		outer   ${Ini[dsListINI,Settings,SongCount,0]}
 	/declare dsSongs[${dsSongsTotal}]	string outer
 
+	/cecho \ao xbot_initialize_melee
+	/call InitEvents_Melee
 /return

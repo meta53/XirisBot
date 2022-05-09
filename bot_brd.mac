@@ -28,7 +28,7 @@ REQUIRED INCLUDES
 
 #include xiris_common/xiris_common.inc
 
-#Turbo 40
+#Turbo 20
 Sub InitEvents_Class
 	/call RegisterClassEvents Events_BRD 0
 /return

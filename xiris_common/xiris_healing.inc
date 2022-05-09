@@ -805,9 +805,7 @@ Sub xbot_initialize_healing(int _healPoint)
 	|/if (${str_classArchetype.Equal[MELEE_END]})	/return
 	|/if (${Me.Class.ShortName.Equal[WAR]}) 			/return
 
-	/call InitEvents_Healing
-	/cecho \ao xbot_initialize_healing ${_healPoint}
-	
+
 	|-- Set spellset to default so we can probe the properties of these
 	/memspellset default
 
@@ -961,5 +959,6 @@ Sub xbot_initialize_healing(int _healPoint)
 
 	/declare timer_groupHoT  timer outer 0
 
-
+	/call InitEvents_Healing
+	/cecho \ao xbot_initialize_healing ${_healPoint}
 /return

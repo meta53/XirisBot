@@ -199,8 +199,6 @@ Sub chkNuke
 				/goto :NextNuke
 			}
 			
-			/call RunAllEvents
-			
 			|-- Ready Wait loop waits for the DOT to be ready to cast
 			|   Used due to lag on raids sometimes lagging gems
 			|   Additionally spell might not be memmed due to swapping		
@@ -957,10 +955,6 @@ Sub xbot_initialize_casting
 	/if (${str_classArchetype.Equal[MELEE_END]}) /return
 	/if (${Me.Class.ShortName.Equal[WAR]}) /return
 	
-	/cecho \aoxbot_initialize_casting
-	/call InitEvents_Casting
-
-	
 	|-- Misc (resist types, fast only, etc
 	/declare str_useResistTypes	string	outer 	Fire,Magic,Cold,Poison,Disease
 	/if (${Zone.ShortName.Equal[pofire]}) /varset str_useResistTypes Cold,Magic,Poison,Disease
@@ -1105,7 +1099,9 @@ Sub xbot_initialize_casting
 		/declare DOT_${dc}_HasCastOnce	bool	outer   FALSE
 	/next dc
 
-	
+	/cecho \aoxbot_initialize_casting
+	/call InitEvents_Casting
+
 /return
 	
 	

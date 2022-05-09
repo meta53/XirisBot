@@ -32,7 +32,7 @@ REQUIRED INCLUDES
 
 #include xiris_common/xiris_common.inc
 
-#Turbo 40
+#Turbo 20
 
 #EVENT MANABURN	"#*#manaburnON"
 #EVENT AEON 	"#*#aeNukeON"
