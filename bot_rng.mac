@@ -77,9 +77,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 		
 		|-- Check to see if self needs to be cured (xiris_curing.inc)
 
-		/echo start again
 		/call RunAllEvents
-		/echo into need cure
 		/call chkNeedCure
 		
 		|-- Check the to see if group needs healing (xiris_healing.inc)
@@ -103,10 +101,14 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 			/call RunRaidEvents
     		/call RunClassEvents
 			/call chkAAs
-			/call chkBurn
-			|/call chkClicks
-			/echo post burn, running all
 			/call RunAllEvents
+			/echo postAA, burn next
+			/call chkBurn
+			/call RunAllEvents
+			/echo postBurn, clicks next
+			/call chkClicks
+			/call RunAllEvents
+			/echo postClick reloop next
 		}
 	
 		|-- check utilities, includes: sit,loot,leash (out of combat only)
@@ -115,7 +117,6 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 			/call chkDownshits
 		}
 	|-- start again	
-	/echo chkmobdead
 	/call chkMobDead
     /goto :MainLoop
 /return

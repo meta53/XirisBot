@@ -205,7 +205,7 @@ Sub TrimClassEvents(int _count)
 
 
 Sub RunBackgroundEvents
-    /echo RunBackgroundEvents
+    |/echo RunBackgroundEvents
     /if (${BackgroundEvents.Size} == 0) /return
     /declare i int local 1
     /for i 1 to ${BackgroundEvents.Size}
@@ -217,7 +217,7 @@ Sub RunBackgroundEvents
 /return
 
 Sub RunRaidEvents
-    /echo RunRaidEvents
+    |/echo RunRaidEvents
     /if (${RaidEvents.Size} == 0) /return
     /declare j int local 1
     /for j 1 to ${RaidEvents.Size}
@@ -229,7 +229,7 @@ Sub RunRaidEvents
 /return
 
 Sub RunClassEvents
-    /echo RunClassEvents
+    |/echo RunClassEvents
     /if (${ClassEvents.Size} == 0) /return
     /declare k int local 1
     /for k 1 to ${ClassEvents.Size}

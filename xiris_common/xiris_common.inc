@@ -502,6 +502,7 @@ Sub getClassArchetype(string _shortName)
  ----------------------------
 **|
 Sub chkAAs
+
 	/if (${int_aaTotal} == 0) 	/return 
 	/if (!${bln_engaged}) 		/return
 	
@@ -535,8 +536,8 @@ Sub chkAAs
 
 			|-- Named Target check
 			|-- if we only cast this spell on named, and this is NOT a named target, skip
-			/if (!${isNamed} && ${AA_${i}_NamedOnly}) {
-				/echo Skipping Nuke ${AA_${i}} is named only
+			/if (!${isNamed} && ${AA_${aa}_NamedOnly}) {
+				/echo Skipping AA ${AA_${aa}} is named only
 				/goto :NextAA
 			}
 
