@@ -465,9 +465,9 @@ Sub chkComponents(string _component, int _count, string _type, string _summoner,
 
 
 Sub EVENT_GETCLOSER
+	/if (!${Target.ID} || ${Target.PctHps} == 0) /return 
 	/if (${bln_engaged} && !${getCloserTimer} && !${Me.AutoFire}) {
 		/varset getCloserTimer 20
-		
 		| If the spawn has moved, stick back to the target
 		/if (${Target.Distance} <= ${AssistStickDistanceSetting} && ${AssistStickDistanceSetting} > 10) {
 			/varcalc AssistStickDistance ${AssistStickDistance} - 5

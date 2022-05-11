@@ -222,7 +222,13 @@ Sub chkNuke
 							/cecho \ag ${Nuke_${i}} ${Macro.Return} : DELAYING for \ay${Nuke_${i}_Timer.OriginalValue}s \agrefresh	
 						}
 					}
-					/varset Nuke_${i}_Timer	${Nuke_${i}_Timer.OriginalValue}
+
+					/if (${Nuke_${i}_Delay} > 0) {
+						/varset Nuke_${i}_Timer	${Nuke_${i}_Delay}
+					} else {
+						/varset Nuke_${i}_Timer	${Nuke_${i}_Timer.OriginalValue}
+					}
+					
 					/varset Nuke_${i}_HasCastOnce TRUE
 					/varcalc int_concCount ${int_concCount}+1
 				}
@@ -237,7 +243,7 @@ Sub chkNuke
 
 Sub chkQNuke
 	/if (!${bln_engaged}) 		 /return
-	/if (!${bln_useFastOnly}) 	 /return
+	|/if (!${bln_useFastOnly}) 	 /return
 	/if (${int_QnukeTotal} == 0) /return 
 	/if (${AENuke_Active}) 		 /return
 	/if (${timer_QnukeDelay} && ${qnuke_hasCastOnce})	 	/return 
@@ -327,7 +333,13 @@ Sub chkQNuke
 							/cecho \ag ${QNuke_${i}} ${Macro.Return} : DELAYING for \ay${QNuke_${i}_Timer.OriginalValue}s \agrefresh	
 						}
 					}
-					/varset QNuke_${i}_Timer	${QNuke_${i}_Timer.OriginalValue}
+
+					/if (${QNuke_${i}_Delay} > 0) {
+						/varset QNuke_${i}_Timer	${QNuke_${i}_Delay}
+					} else {
+						/varset QNuke_${i}_Timer	${QNuke_${i}_Timer.OriginalValue}
+					}
+
 					/varset QNuke_${i}_HasCastOnce TRUE
 					/varcalc int_concCount ${int_concCount}+1
 				}
@@ -985,6 +997,7 @@ Sub xbot_initialize_casting
 		/declare Nuke_${nc}_NamedOnly   string  outer   ${Ini[botINI,DirectDamage,Nuke_${nc}_NamedOnly]}
 		/declare Nuke_${nc}_Timer		timer   outer   ${timer_nukeDelay}
 		/declare Nuke_${nc}_HasCastOnce	bool	outer   FALSE
+		/declare Nuke_${nc}_Delay   	int     outer   ${Ini[botINI,DirectDamage,Nuke_${nc}_NamedOnly,0]}
 		
 		/echo Nuke_${nc} Use:  ${Nuke_${nc}_Use} || Gem: ${Nuke_${nc}_Gem} || Start: ${Nuke_${nc}_StartHP}
 		/echo Stop: ${Nuke_${nc}_StopHP} || Resist: ${Nuke_${nc}_Resist} || Named: ${Nuke_${nc}_NamedOnly} || Timer: ${Nuke_${nc}_Timer}

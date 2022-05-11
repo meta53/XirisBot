@@ -608,14 +608,13 @@ Sub chkBurn
 					} else /if (${Burn_${Burn_${burn}_After}_Type.Equal[alt]} && !${Me.AltAbilityReady[${Burn_${Burn_${burn}_After}}]}) {
 						/goto :doCombatAbility
 					}
+				} else {
+					:doCombatAbility
+					| Bards can click discs while singing
+					/doability "${Burn_${burn}}"
+					/cecho \agDISC \ayBurn_${burn} \agclicked!		
 				}
-				:doCombatAbility
-					/if (${Me.Class.ShortName.Equal[BRD]}) {
-						/medley "${Burn_${burn}}"
-					} else {
-						/doability "${Burn_${burn}}"
-					}
-					/cecho \agDISC \ayBurn_${burn} \agclicked!
+				
 			
 			| ---------------	
 			| Alt Ability
@@ -631,23 +630,22 @@ Sub chkBurn
 					} else /if (${Burn_${Burn_${burn}_After}_Type.Equal[alt]} && !${Me.AltAbilityReady[${Burn_${Burn_${burn}_After}}]}) {
 						/goto :doAltAbility
 					}
-				} 
-				:doAltAbility
-					/if (${Burn_${burn}_MGB}) {
-						/call MQ2Cast "Mass Group Buff" alt
-						/delay 5
-						/cecho \ag Mass Group Buff Activated!
-					}
-					/if (${Me.Class.ShortName.Equal[BRD]}) {
-						/medley "${Burn_${burn}}"
-					} else {
-						/call MQ2Cast "${Burn_${burn}}" alt
-					}
-					/cecho \agAA \ayBurn_${burn} \agclicked!
-			
+				} else {
+					:doAltAbility
+						/if (${Burn_${burn}_MGB}) {
+							/call MQ2Cast "Mass Group Buff" alt
+							/delay 5
+							/cecho \ag Mass Group Buff Activated!
+						}
+						/if (${Me.Class.ShortName.Equal[BRD]}) {
+							/medley "${Burn_${burn}}"
+						} else {
+							/call MQ2Cast "${Burn_${burn}}" alt
+						}
+						/cecho \agAA \ayBurn_${burn} \agclicked!
+				}
 			| ---------------	
 			| Item
-			| 		Additionally, if MGBable, (few) we have Burn_1_MGB = TRUE to look for (default FALSE)
 			| ---------------		
 			} else /if (${Burn_${burn}_Type.Equal[item]} && ${FindItem[${Burn_${burn}}].TimerReady} && (${Burn_${burn}_Use}) ) {
 				:doItemClick

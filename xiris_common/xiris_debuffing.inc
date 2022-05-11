@@ -126,7 +126,6 @@ Sub CastDebuffsOnTarget(int _targetID, bool isNamed)
 				/cecho \ag ${DEBUFF_${db}}  : DELAYING for \ay${debuffDuration}s \agrefresh	
 			} else {
 				/call CastDebuff "${DEBUFF_${db}}" ${DEBUFF_${db}_Gem} ${DEBUFF_${db}_MaxTries} ${Target.ID}
-					
 			}
 
 			| duration is in ticks to set a timer, so we dont recast it immediately
@@ -151,7 +150,7 @@ Sub CastDebuff(string _debuff, string _gem,  int _maxTries, int _targetID)
 		/if (${Macro.Return.Equal["CAST_IMMUNE"]}) /goto :return
 		/if (${Macro.Return.Equal["CAST_SUCCESS"]}) /goto :return
 	:return
-		/cecho \ag ${DOT_${i}} ${Macro.Return} : DELAYING for \ay${dotDuration}s \agrefresh	
+	/cecho \ag ${_debuff} ${Macro.Return}
 /return
 
 
