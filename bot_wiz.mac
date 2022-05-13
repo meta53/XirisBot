@@ -32,12 +32,12 @@ REQUIRED INCLUDES
 
 #include xiris_common/xiris_common.inc
 
-#Turbo 20
+#Turbo 40
 
 #EVENT MANABURN	"#*#manaburnON"
 #EVENT AEON 	"#*#aeNukeON"
 #EVENT AEOFF	"#*#aeNukeOFF"
-#EVENT FIRETL "#*#firetl#*#"
+#EVENT FIRETL 	"#*#firetl#*#"
 
 Sub InitEvents_Class
 	/call RegisterClassEvents Events_WIZ 4
@@ -76,84 +76,59 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 	if adding any routine add the call here
 	----------------------------
 	**|
-
-	:MainLoop
-    
-		/if (${Me.Casting.ID} && ${Me.Hovering}||${Window[tradewnd].Open}||${Window[lootwnd].Open}) /goto :MainLoop
 	
+	:MainLoop
+		/if (${Me.Hovering} || ${Window[tradewnd].Open} || ${Window[lootwnd].Open}) /goto :MainLoop
+		|-- Check all Events
+		/call RunAllEvents
+
 		|-- Check to make sure MT is still alive, if not, find another
 		/call chkMTAlive FALSE
 		
 		|-- Check to see if self needs to be cured (xiris_curing.inc)
-		/call RunAllEvents
 		/call chkNeedCure
     
 		|-- Check Auto Assist if its on
 		/if (${bln_autoAssist}) /call chkAutoAssist
 
 		/if (${bln_engaged}) {
+			|-- check engaged events
+			/call RunRaidEvents
+			/call RunClassEvents
+
+			|-- verify target status
+			/call chkTarget
+
+			|-- debuff lib
+			/call chkDebuffsOnSingleTarget ${int_targetID}
+
 			|-- class specific
-			/call RunAllEvents
 			/call chkConcussion
 			/call chkDebuffs
 			
-			|-- dps lib
+			|-- dps library (caster)
 			/call RunRaidEvents
     		/call RunClassEvents
-			/call chkTarget
 			/call chkQNuke
 			/call chkNuke
 			/call chkAENuke
 			/call chkConcussion
 			
-			|-- std library
+			|-- std library (burns/aa/clicks)
 			/call RunRaidEvents
     		/call RunClassEvents
 			/call chkAAs
 			/call chkBurn
 			/call chkClicks
-			/call chkConcussion
-		}
-		
-		|-- check utilities, includes: sit,loot,leash (out of combat only)
-		/if (!${bln_engaged}) {
+		} else {
+			|-- check utilities, includes: sit,loot,leash (out of combat only)
 			/call chkUtils
 			/call chkDownshits
 		}
 	|-- start again	
-	/call chkMobDead
     /goto :MainLoop
 /return
 
-
-|**
- ----------------------------
- Target Checking
- ----------------------------
- Determines if the main assist has a new target, and whether we can attack
- ----------------------------
-**|
-Sub chkTarget
-	|-- Check for Target Death
-	:chkTargetDead
-    /if ((!${Target.ID} || ${Target.Type.NotEqual[NPC]}) && ${bln_engaged}) {
-		/echo Mob is dead. Engage off.
-        /varset bln_engaged FALSE
-		/varset int_targetID 0
-		/goto :return
-    } 
-	
-	|-- Check to see if I am on HoTT
-	:chkHoTT
-	/if (${Me.TargetOfTarget.CleanName.Equal[${Me.CleanName}]}) {
-		/echo pulled aggro, hitting mindcrash if ready, concussion if not
-		/if (${Me.AltAbilityReady[Mind Crash]}) /call MQ2Cast "Mind Crash" alt
-		/delay 10
-		/if (${Me.SpellReady[${str_concSpell}]}) /call MQ2Cast "${str_concSpell}" ${str_concGem}
-		/delay 10
-	}
-	:return
-/return
 
 |**
  ----------------------------
@@ -163,21 +138,15 @@ Sub chkTarget
  ----------------------------
 **|
 
-Sub engageTarget(_targetID)
-	/echo engageTarget ${Spawn[id ${_targetID}].CleanName} (${_targetID})
+Sub EngageTarget(_targetID)
+	/echo EngageTarget ${Spawn[id ${_targetID}].CleanName} (${_targetID})
 	/if (${_targetID} == 0) /return
 	/varset int_targetID ${_targetID}
-	/call TrueTarget ${_targetID}
 	/varset bln_engaged TRUE
+	/call TrueTarget ${int_targetID}
 	/call ResetCastTimers
 	|- Wizard specific things
 	/varset bln_snareActive		FALSE
-	
-/return
-
-
-Sub targetReset
-	/varset bln_engaged FALSE
 /return
 
 

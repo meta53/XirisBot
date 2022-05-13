@@ -35,7 +35,7 @@ REQUIRED INCLUDES
 
 #include xiris_common/xiris_common.inc
 
-#Turbo 20
+#Turbo 40
 #warning
 #define INI_zoneInfo xiris_common/xiris_pull_zoneinfo.ini
 
@@ -491,7 +491,7 @@ Sub killTarget
 		}
 /return
 
-Sub engageTarget(_targetID) 
+Sub EngageTarget(_targetID) 
 /return
 
 

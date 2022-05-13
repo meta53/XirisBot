@@ -55,13 +55,13 @@ Sub ToggleOfftanking(bool _blnOT)
 		/bc ${Me.Name} is now OFF TANKING!
 		/varset  bln_offTank TRUE
 		/melee aggro=on
-		/varset meleeAggro TRUE
+		/varset bln_aggro TRUE
 	}
 	/if (!${_blnOT}) {
 		/bc ${Me.Name} is ENDING OFF TANKING.
 		/varset  bln_offTank FALSE
 		/melee aggro=off
-		/varset meleeAggro FALSE
+		/varset bln_aggro FALSE
 	}
 	
 /return

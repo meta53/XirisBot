@@ -24,59 +24,37 @@ REVISION HISTORY
 
 #EVENT HealMode 	"<#1#> HealMode #2#"
 #EVENT HealMode 	"[#1#(msg)] HealMode #2#"
-#EVENT HealMode 	"#1# tells you, 'HealMode #2#"
-#EVENT HealMode 	"#1# tells the group, 'HealMode #2#'"
-#EVENT HealMode 	"#1# you tell your party, 'HealMode #2#'"
-
 
 #EVENT InterruptON 	"<#1#> InterruptON#*#"
 #EVENT InterruptON 	"[#1#(msg)] InterruptON#*#"
-#EVENT InterruptON 	"#1# tells you, 'InterruptON#*#"
-#EVENT InterruptON 	"#1# tells the group, 'InterruptON#*#'"
-#EVENT InterruptON 	"#1# you tell your party, 'InterruptON#*#'"
-
 
 #EVENT InterruptOFF "<#1#> InterruptOFF#*#"
 #EVENT InterruptOFF "[#1#(msg)] InterruptOFF#*#"
-#EVENT InterruptOFF "#1# tells you, 'InterruptOFF#*#"
-#EVENT InterruptOFF "#1# tells the group, 'InterruptOFF#*#'"
-#EVENT InterruptOFF "#1# you tell your party, 'InterruptOFF#*#'"
+
 
 |-- CHEvents should only be listened for in the class handlers (cleric, druid)
 #EVENT CHStart "<#1#> CHStart #2#"
 #EVENT CHStart "[#1#(msg)] CHStart #2#"
-#EVENT CHStart "#1# tells you, 'CHStart #2#'"
-#EVENT CHStart "#1# tells the group, 'CHStart #2#'"
-#EVENT CHStart "#1# you tell your party, 'CHStart #2#'"
 
 #EVENT CHStop "<#1#> CHStop #2#"
 #EVENT CHStop "[#1#(msg)] CHStop #2#"
-#EVENT CHStop "#1# tells you, 'CHStop #2#'"
-#EVENT CHStop "#1# tells the group, 'CHStop #2#'"
-#EVENT CHStop "#1# you tell your party, 'CHStop #2#'"
+"
 
 #EVENT CHPause "<#1#> CHPause #2#"
 #EVENT CHPause "[#1#(msg)] CHPause #2#"
-#EVENT CHPause "#1# tells you, 'CHPause #2#'"
-#EVENT CHPause "#1# tells the group, 'CHPause #2#'"
-#EVENT CHPause "#1# you tell your party, 'CHPause #2#'"
 
 #EVENT CHResume "<#1#> CHResume#*#"
 #EVENT CHResume "[#1#(msg)] CHResume#*#"
-#EVENT CHResume "#1# tells you, 'CHResume#*#'"
-#EVENT CHResume "#1# tells the group, 'CHResume#*#'"
-#EVENT CHResume "#1# you tell your party, 'CHResume#*#'"
 
 #EVENT CHSwitch "<#1#> CHSwitch #2#"
 #EVENT CHSwitch "[#1#(msg)] CHSwitch #2#"
-#EVENT CHSwitch "#1# tells you, 'CHSwitch #2#'"
-#EVENT CHSwitch "#1# tells the group, 'CHSwitch #2#'"
-#EVENT CHSwitch "#1# you tell your party, 'CHSwitch #2#'"
+
 
 
 
 Sub InitEvents_Healing
 	/if (${str_classArchetype.Equal[PRIEST]} || ${str_classArchetype.Equal[MELEE_MANA]} ) /call RegisterBackgroundEvents Events_Healing 6
+	/if (${str_classArchetype.Equal[PRIEST]}) /call RegisterBackgroundEvents Events_CH 5
 /return
 
 Sub Events_Healing
@@ -88,7 +66,16 @@ Sub Events_Healing
 	/doevents HealMode
 	/doevents InterruptON
 	/doevents InterruptOFF
+
 /return
+
+Sub Events_CH 
+	/doevents CHStart
+	/doevents CHStop
+	/doevents CHPause
+	/doevents CHResume
+	/doevents CHSwitch
+/return 
 
 
 Sub EVENT_GroupHeal
@@ -437,8 +424,7 @@ Sub chkTargetDead
 |**
  ------------------------
  CHCHAIN EVENT HANDLERS
-	Note: CHCHAIN is handled by seperate macro. 
-	Leaving stubbs here only to prevent breakage
+	Note: CHCHAIN is only listened for by PRIEST classes
  ------------------------
 **|
 Sub EVENT_CHStart(_line, _sender, _eventParams)

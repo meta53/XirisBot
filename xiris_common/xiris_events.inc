@@ -57,7 +57,7 @@ Sub xbot_initialize_events
 
 
 Sub RegisterBackgroundEvents(string _EventSet, int _EventCount)
-    /cecho \agRegisterBackgroundEvents(\ay${_EventSet}:${_EventCount})
+    |/cecho \agRegisterBackgroundEvents(\ay${_EventSet}:${_EventCount})
     | find the first index in BackgroundEvents thats empty
     /declare i int local -1
     /declare bound int local 0
@@ -99,9 +99,9 @@ Sub TrimBackgroundEvents(int _count)
         }
     /next i
 
-    /for i 1 to ${BackgroundEvents.Size}
-        /cecho  \agBackgroundEvents[${i}] ${BackgroundEvents[${i}]}
-    /next i
+   | /for i 1 to ${BackgroundEvents.Size}
+   |     /cecho  \agBackgroundEvents[${i}] ${BackgroundEvents[${i}]}
+   | /next i
 
 /return
 
@@ -148,9 +148,9 @@ Sub TrimRaidEvents(int _count)
         }
     /next i
 
-    /for i 1 to ${RaidEvents.Size}
-      /cecho  \agRaidEvents[${i}] ${RaidEvents[${i}]}
-    /next i
+    |/for i 1 to ${RaidEvents.Size}
+    |  /cecho  \agRaidEvents[${i}] ${RaidEvents[${i}]}
+    |/next i
 
 /return
 
@@ -197,9 +197,9 @@ Sub TrimClassEvents(int _count)
         }
     /next i
 
-    /for i 1 to ${ClassEvents.Size}
-       /cecho  \agClassEvents[${i}] ${ClassEvents[${i}]}
-    /next i
+    |/for i 1 to ${ClassEvents.Size}
+    |   /cecho  \agClassEvents[${i}] ${ClassEvents[${i}]}
+    |/next i
 
 /return
 

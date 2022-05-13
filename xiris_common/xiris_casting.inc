@@ -725,6 +725,8 @@ Sub ResetCastTimers
 	/varset dot_hasCastOnce  FALSE
 	/for i 1 to ${int_dotTotal}
 		/varset DOT_${i}_HasCastOnce FALSE
+		/varset DOT_${i}_Active FALSE
+		/varset DOT_${i}_Resisted 0
 	/next i
 
 	/echo Casting: Reset all timers
@@ -795,7 +797,7 @@ Sub Event_SnareWornOff
 	/doevents flush SnareWornOff
 /return
 
-Sub EVENT_SetUseFastOnly(_chatText,_use)
+Sub EVENT_SetUseFastOnly(_chatText, _use)
 	/if (${int_QnukeTotal} > 0) {
 		/echo setting fast only:${_use}
 		/varset bln_useFastOnly ${_use}

@@ -43,7 +43,7 @@ REQUIRED INCLUDES
 
 #include xiris_common/xiris_common.inc
 
-#Turbo 20
+#Turbo 40
 
 #define INI_ldonInfo xiris_common/xiris_ldon_definitions.ini
 
@@ -630,7 +630,12 @@ Sub OriginToLobby
 	/if (${AltAbilityTimer[Origin]} == 0) {
 		/if (${Zone.ShortName.NotEqual[guildlobby]}) {
 			/varcalc originAttempt ${originAttempt} + 1
-			/docommand /${cmdChannel} //casting "Origin" alt
+			|-- tell each group member that isn't a bard to cast origin, bard add origin to queue
+			/for i 0 to ${Group}
+				/if (${Group.Member[${i}].Class.ShortName.Equal[BRD]}) 	  /bct ${Group.Member[${i}]} //medley queue origin
+				/if (${Group.Member[${i}].Class.ShortName.NotEqual[BRD]}) /bct ${Group.Member[${i}]} //casting "Origin" alt
+			/next i
+
 			/delay 40s
 			/return
 		} else {
@@ -862,8 +867,8 @@ Sub pullTarget
 			/if (${Target.Distance} < ${int_castDistance} && ${Target.LineOfSight}) {
 				|/echo Calling aggro loop because dist is within castDist range
 				/goto :aggroLoop
-			} else {
-				
+			}
+			
 		}
 		/goto :pullLoop
 		
@@ -880,7 +885,7 @@ Sub pullTarget
 			/ranged
 		} else {
 			/echo ${Me.SpellReady[${spell_hate}]} Cast "${spell_pull}" ${spell_pullGem} 5s
-			/call Cast "${spell_pull}" ${spell_pullGem} 2s
+			/call MQ2Cast "${spell_pull}" ${spell_pullGem}
 		}
 		/delay 5
 		/doevents NoLOS
@@ -959,14 +964,14 @@ Sub killTarget
 	
 	/if ((${SpawnCount[npc radius ${int_campRadius}]} > 1) && (${Me.Class.ShortName.Equal[SHD]} || ${Me.Class.ShortName.Equal[PAL]}) && ${Me.SpellReady[${spell_aehate}]} ) {
 		|/echo ${Me.SpellReady[${spell_aehate}]} Cast ${spell_aehate} ${spell_aehateGem} 5s
-		/call Cast "${spell_aehate}" ${spell_aehateGem} 2s
+		/call MQ2Cast "${spell_aehate}" ${spell_aehateGem}
 	}
 	
 	/if ((${SpawnCount[npc radius ${int_campRadius}]} > 1) && ${Me.Class.ShortName.Equal[WAR]} && ${Me.CombatAbilityReady[Area Taunt]}) {
 		|/echo ${Me.CombatAbilityReady[Area Taunt]}
 		/doability "Area Taunt"
 	} else /if ((${SpawnCount[npc radius ${int_campRadius}]} > 1) && ${Me.Class.ShortName.Equal[WAR]} && ${Me.AltAbilityReady[Rampage]}) {
-		/call Cast "Rampage" alt
+		/call MQ2Cast "Rampage" alt
 	}
 	
 	/if (!${Me.Combat}) {
@@ -986,11 +991,12 @@ Sub killTarget
 			/if ((${Me.TargetOfTarget.ID} != ${Me.ID}) && !${Target.Fleeing}) {
 				/if ((${Me.Class.ShortName.Equal[SHD]} || ${Me.Class.ShortName.Equal[PAL]})  && ${Me.SpellReady[${spell_hate}]}) {
 					|/echo ${Me.SpellReady[${spell_hate}]} Cast ${spell_hate} ${spell_hateGem} 5s
-					/call Cast "${spell_pull}" ${spell_pullGem} 2s
+					/call MQ2Cast "${spell_pull}" ${spell_pullGem}
 				} else /if (${Me.Class.ShortName.Equal[WAR]} && (${Me.CombatAbilityReady[${war_ca_hate_1}]})) {
-					/doability ${war_ca_hate_1}
+					/doability "${war_ca_hate_1}"
 				} else /if (${Me.Class.ShortName.Equal[WAR]} && (${Me.CombatAbilityReady[${war_ca_hate_2}]})) {
-					/doability ${war_ca_hate_2}
+					/doability "${war_ca_hate_2}"
+
 				} 
 			} 
 			/goto :combatLoop
@@ -1033,7 +1039,6 @@ Sub chkLDONCompletion
 		/delay 10
 		/docommand /${cmdChannel} //melee off
 		/delay 10
-	    /docommand /${cmdChannel} //twist off
 		/delay 15s
 		
 		/varset missionComplete TRUE
@@ -1061,7 +1066,7 @@ Sub chkLDONCompletion
 /return
 
 
-Sub engageTarget(_targetID) 
+Sub EngageTarget(_targetID) 
 /return
 
 |**
@@ -1276,8 +1281,7 @@ Sub chkBuffs
 Sub setGroupCommands
 	/echo setGroupCommands
 	|-- find a bard and tell them to sing their normal setup (bound to key 2 usually)
-	/declare bard string 	local NOT_FOUND
-	/declare looter string 	local NOT_FOUND
+
 	/declare i int local 0
 	/for i 0 to ${Group}
 		/if (${Group.Member[${i}].Class.ShortName.Equal[BRD]}) /varset bard ${Group.Member[${i}].Name}
@@ -1294,7 +1298,7 @@ Sub setGroupCommands
 		
 	}
 	|-- tell the bard to sing a song
-	/if (${bard.NotEqual[NOT_FOUND]})  /bct ${bard} /medley melee
+	/if (${bard.NotEqual[NOT_FOUND]})  /bct ${bard} //medley melee
 
 	|-- find not cleric/tank to loot
 	/if (${looter.NotEqual[NOT_FOUND]}) /bct ${looter} lootOn
@@ -1395,6 +1399,9 @@ Sub variant_initialize(string _channel, string _offtank, bool _highRisk)
 	/declare zoneRequest  			string  outer   ${Zone.ShortName}
 	/declare adventureGiver         string  outer   ${Ini[INI_ldonInfo,${zoneRequest},adventureGiver]}
 	/declare zoneMagus         		string  outer   ${Ini[INI_ldonInfo,[${zoneRequest}],magus]}
+
+	/declare bard 					string 	outer NOT_FOUND
+	/declare looter 				string 	outer NOT_FOUND
 	
 	/if (${zoneRequest.Equal[nro]}) {
 		/varset	zoneMagus "North Ro" 

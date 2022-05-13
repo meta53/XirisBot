@@ -192,16 +192,12 @@ Sub chcEvents
  Engage the target, note usually triggered by EVENT_KILLMOB (see xiris_common.inc)
  ----------------------------
 **|
-Sub engageTarget(_targetID)
-	/echo engageTarget ${Spawn[id ${_targetID}].CleanName} (${_targetID})
+Sub EngageTarget(_targetID)
+	/echo EngageTarget ${Spawn[id ${_targetID}].CleanName} (${_targetID})
 	/varset int_targetID ${_targetID}
 	/varset bln_engaged TRUE
 /return
 
-
-Sub targetReset
-	/varset bln_engaged FALSE
-/return
 
 
 

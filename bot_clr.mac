@@ -30,7 +30,8 @@ REVISION HISTORY
 						Cleaned up some of the MT checking if inside own group
 	04.16.22	xiris	Overhauled group heal method and variable names
 						Moved commons healing functions to the include		
-	04.19.22	xiris	Integrated the CH2 macro functionality so we don't have to switch macros								
+	04.19.22	xiris	Integrated the CH2 macro functionality so we don't have to switch macros
+	05.13.22	xiris	Updated Events to only listen to BC				
 ______________________________________________
 REQUIRED PLUGINS
     mq2cast
@@ -45,43 +46,25 @@ REQUIRED INCLUDES
 
 #EVENT BattleCleric "<#1#> BattleOn #2#"
 #EVENT BattleCleric "[#1#(msg)] BattleOn #2#"
-#EVENT BattleCleric "#1# tells you, 'BattleOn #2#'"
-#EVENT BattleCleric "#1# tells the group, 'BattleOn #2#'"
-#EVENT BattleCleric "#1# you tell your party, 'BattleOn #2#'"
 
 #EVENT CelestialRegeneration "<#1#> celregen#*#"
 #EVENT CelestialRegeneration "[#1#(msg)] celregen#*#"
-#EVENT CelestialRegeneration "#1# tells you, 'celregen#*'"
-#EVENT CelestialRegeneration "#1# tells the group, 'celregen#*#'"
-#EVENT CelestialRegeneration "#1# you tell your party, 'celregen#*#'"
 
 #EVENT AutoRezON "<#1#>  AutoRezON#*#"
 #EVENT AutoRezON "[#1#(msg)] AutoRezON#*#"
-#EVENT AutoRezON "#1# tells you, 'AutoRezON#*'"
-#EVENT AutoRezON "#1# tells the group, 'AutoRezON#*#'"
-#EVENT AutoRezON "#1# you tell your party, 'AutoRezON#*#'"
 
 #EVENT AutoRezOFF "<#1#>  AutoRezOFF#*#"
 #EVENT AutoRezOFF "[#1#(msg)] AutoRezOFF#*#"
-#EVENT AutoRezOFF "#1# tells you, 'AutoRezOFF#*'"
-#EVENT AutoRezOFF "#1# tells the group, 'AutoRezOFF#*#'"
-#EVENT AutoRezOFF "#1# you tell your party, 'AutoRezOFF#*#'"
 
 #EVENT CombatRezON "<#1#>  CombatRezON#*#"
 #EVENT CombatRezON "[#1#(msg)] CombatRezON#*#"
-#EVENT CombatRezON "#1# tells you, 'CombatRezON#*'"
-#EVENT CombatRezON "#1# tells the group, 'CombatRezON#*#'"
-#EVENT CombatRezON "#1# you tell your party, 'CombatRezON#*#'"
 
 #EVENT CombatRezOFF "<#1#>  CombatRezOFF#*#"
 #EVENT CombatRezOFF "[#1#(msg)] CombatRezOFF#*#"
-#EVENT CombatRezOFF "#1# tells you, 'CombatRezOFF#*'"
-#EVENT CombatRezOFF "#1# tells the group, 'CombatRezOFF#*#'"
-#EVENT CombatRezOFF "#1# you tell your party, 'CombatRezOFF#*#'"
 
 #include xiris_common/xiris_common.inc
 
-#Turbo 20
+#Turbo 40
 
 Sub InitEvents_Class 
 	/call RegisterClassEvents Events_CLR 7
@@ -94,13 +77,6 @@ Sub Events_CLR
 	/doevents AutoRezOFF
 	/doevents CombatRezON
 	/doevents CombatRezOFF
-
-	| Add the CH CHain watch events (enumerated in xiris_healing.inc)
-	/doevents CHStart
-	/doevents CHStop
-	/doevents CHPause
-	/doevents CHResume
-	/doevents CHSwitch
 /return 
 
 
@@ -122,24 +98,25 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 
 	|-- target the MT
 	/call TrueTarget ${int_MTID}
-|**
- ----------------------------
- Main Loop
- ----------------------------
- Runs in order listed,
- if adding any routine add the call here
- ----------------------------
-**|
 
-
+	|**
+	----------------------------
+	Main Loop
+	----------------------------
+	Runs in order listed,
+	if adding any routine add the call here
+	----------------------------
+	**|
+	
 	:MainLoop
-		/if (${Me.Casting.ID} && ${Me.Hovering}||${Window[tradewnd].Open}||${Window[lootwnd].Open}) /goto :MainLoop
-		
-		|-- Check to make sure MT is still alive, if not, find another
+		/if (${Me.Hovering} || ${Window[tradewnd].Open} || ${Window[lootwnd].Open}) /goto :MainLoop	
+		|-- Check all Events
+		/call RunAllEvents
+
+		|-- Check to make sure MT is still alive, if not, find another and target it
 		/call chkMTAlive TRUE
 
 		|-- Check to see if self needs to be cured (xiris_curing.inc)
-		/call RunAllEvents
 		/call chkNeedCure
 		
 		|-- Check the three main groupings of heal classes (xiris_healing.inc)
@@ -149,59 +126,43 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 		
 		|-- Check to see if we are autorezzing
 		/call chkRez
+
+		|-- Check Auto Assist if its on
+		/if (${bln_autoAssist}) /call chkAutoAssist
 		
 		|-- If Engaged run Raid Events
 		/if (${bln_engaged}) {
+			|-- check engaged events
 			/call RunRaidEvents
 			/call RunClassEvents
+
+			|-- verify target status
+			/call chkTarget
+
+			|-- class specific
 			/call chkDebuffsOnSingleTarget ${int_targetID}
 			/call chkYaulp
-			/call chkRez
-		}
-		
-		|-- If Engaged And A Battle Cleric run DPS/ETC
-		/if (${bln_engaged} && ${bln_battleCleric}) {
-			/if (!${Target.ID} || ${Target.ID} !=  ${int_targetID} && ${int_targetID} !=0 ) /call TrueTarget ${int_targetID}
-			|-- dps lib
-			/call RunRaidEvents
-			/call RunClassEvents
-			/call chkNuke
-			
-			|-- std library
-			/call chkAAs
-			/call chkBurn
-			/call chkClicks
-		}
 
-		|-- check utilities, includes: sit,loot,leash (out of combat only)
-		/if (!${bln_engaged}) {
+			/if (${bln_battleCleric}) {
+				|-- dps library (caster)
+				/call RunRaidEvents
+				/call RunClassEvents
+				/call chkNuke
+				
+				|-- std library (burns/aa/clicks)
+				/call RunRaidEvents
+				/call RunClassEvents
+				/call chkAAs
+				/call chkBurn
+				/call chkClicks
+			}
+		} else {
+			|-- check utilities, includes: sit,loot,leash (out of combat only)
 			/call chkUtils
 			/call chkDownshits
 		}
-		|-- start again	
-		/call chkMobDead
-		/goto :MainLoop
-    
-/return
-
-|**
- ----------------------------
- Target Engage
- ----------------------------
- Engage the target, note usually triggered by EVENT_KILLMOB (see xiris_common.inc)
- ----------------------------
-**|
-
-Sub engageTarget(_targetID)
-	/if (${_targetID} == 0) /return
-	/echo engageTarget ${Spawn[id ${_targetID}].CleanName} (${_targetID})
-	/varset int_targetID ${_targetID}
-	/varset bln_engaged TRUE
-	/call ResetCastTimers
-/return
-
-Sub targetReset
-	/varset bln_engaged		FALSE
+	|-- start again	
+    /goto :MainLoop
 /return
 
 |**

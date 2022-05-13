@@ -27,7 +27,7 @@ Sub InitEvents_OOW_MPG_Specialization
 	/cecho \ag Initializing MPG Specialization
 	/declare str_currentMode string outer RIGIDITY
 	/call RegisterRaidEvents Events_OOW_MPG_Specialization FALSE
-	/if (${str_classArchetype.NotEqual[PRIEST]} && ${str_classArchetype.NotEqual[CASTER]}) /call toggleMQ2Melee FALSE
+	|/if (${str_classArchetype.NotEqual[PRIEST]} && ${str_classArchetype.NotEqual[CASTER]}) /call toggleMQ2Melee FALSE
 /return
 
 Sub Events_OOW_MPG_Specialization

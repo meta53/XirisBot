@@ -41,10 +41,10 @@ REQUIRED INCLUDES
 
 #include xiris_common/xiris_common.inc
 
-#Turbo 20
+#Turbo 40
 
 Sub InitEvents_Class
-	/call RegisterClassEvents Events_NEC 0
+	|/call RegisterClassEvents Events_NEC 0
 /return
 
 Sub Events_NEC
@@ -75,117 +75,57 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 	if adding any routine add the call here
 	----------------------------
 	**|
-
+	
 	:MainLoop
-		
-		/if (${Me.Casting.ID} && ${Me.Hovering}||${Window[tradewnd].Open}||${Window[lootwnd].Open}) /goto :MainLoop
-		
+		/if (${Me.Hovering} || ${Window[tradewnd].Open} || ${Window[lootwnd].Open}) /goto :MainLoop
+		|-- Check all Events
+		/call RunAllEvents
+
 		|-- Check to make sure MT is still alive, if not, find another
 		/call chkMTAlive FALSE
 		
 		|-- Check to see if self needs to be cured (xiris_curing.inc)
-		/call RunAllEvents
 		/call chkNeedCure
 
 		|-- Check Auto Assist if its on
 		/if (${bln_autoAssist}) /call chkAutoAssist
 		
 		/if (${bln_engaged}) {
-			|-- class specific
+			|-- check engaged events
 			/call RunRaidEvents
-    		/call RunClassEvents
+			/call RunClassEvents
+
+			|-- verify target status
+			/call chkTarget
+
+			|-- debuff lib
+			/call chkDebuffsOnSingleTarget ${int_targetID}
+
+			|-- class specific
 			/call chkPetAttack
 			/call chkLifetap
 			/call chkFeignDeath
 
-			|-- dps library
+			|-- dps library (caster)
 			/call RunRaidEvents
     		/call RunClassEvents
-			/call chkTarget
 			/call chkDOT
 			/call chkNuke
 			
-			|-- std library
+			|-- std library (burns/aa/clicks)
 			/call RunRaidEvents
     		/call RunClassEvents
 			/call chkAAs
 			/call chkBurn
 			/call chkClicks
-		}
-
-		|-- check utilities, includes: sit,loot,leash (out of combat only)
-		/if (!${bln_engaged}) {
+		} else {
+			|-- check utilities, includes: sit,loot,leash (out of combat only)
 			/call chkUtils
 			/call chkDownshits
 		}
-
 	|-- start again	
-	/call chkMobDead
     /goto :MainLoop
 /return
-
-
-|**
- ----------------------------
- Target Checking
- ----------------------------
- Determines if the main assist has a new target, and whether we can attack
- Note: this is a variant of the sub in /xiris_common/xiris_common.inc
- ----------------------------
-**|
-Sub chkTarget
-	|-- Make sure I have the target
-	/if (!${Target.ID} || ((${Target.ID} !=  ${int_targetID}) && ${int_targetID} !=0) && (${SpawnCount[npc id ${int_targetID}]} > 0) && (${Spawn[id ${int_targetID}].PctHPs} != 0)) /call TrueTarget ${int_targetID}
-	
-    /if ((!${Target.ID} || ${Target.Type.NotEqual[NPC]}) && ${bln_engaged}) {
-		/echo Mob is dead. Engage off.
-        /varset bln_engaged FALSE
-		/varset int_targetID 0
-    }
-/return
-
-|**
- ----------------------------
- Target Engage
- ----------------------------
- Engage the target, note usually triggered by EVENT_KILLMOB (see xiris_common.inc)
- Note: this is a variant of the sub in /xiris_common/xiris_common.inc
- ----------------------------
-**|
-
-Sub engageTarget(_targetID)
-	/echo engageTarget ${Spawn[id ${_targetID}].CleanName} (${_targetID})
-	/if (${_targetID} == 0) /return
-	/if (${Me.Feigning} && (${Me.PctHPs} > 75)) /stand
-	/varset int_targetID ${_targetID}
-	/call TrueTarget ${int_targetID}
-	/call Add2TargetArray ${_targetID}
-	/call ResetCastTimers
-	/varset bln_engaged TRUE
-	/pet attack
-	|- Necro specific things
-	/varset bln_snareActive		FALSE
-	/varset bln_debuffActive	FALSE
-	/varset timer_debuff		10s
-	/varset bln_petAttacking	FALSE
-	/varset bln_tgtDeadSoon		FALSE
-		
-	/declare i int local
-	/for i 1 to ${int_dotTotal} 
-		/varset DOT_${i}_Resisted 0
-		/varset DOT_${i}_Active FALSE
-	/next i
-
-/return
-
-
-Sub targetReset
-	/varset bln_engaged FALSE
-	/varset bln_petAttacking FALSE
-	/pet hold on
-	/call CleanTargetArray
-/return
-
 
 |**
  ----------------------------
@@ -275,7 +215,7 @@ Sub variant_initialize
 	/declare int_feignCountActive		int		outer	${Ini[botINI,FeignDeath,int_feignCountActive,5]}
 	/declare int_feignHP				int		outer   ${Ini[botINI,FeignDeath,int_feignHP,25]}
 	/declare int_feignStandHP			int		outer   ${Ini[botINI,FeignDeath,int_feignStandHP,65]}
-	/declare str_feignSpell				string	outer   ${Ini[botINI,FeignDeath,str_feignSpell,Improved Death Peace]}
+	/declare str_feignSpell				string	outer   ${Ini[botINI,FeignDeath,str_feignSpell,Death Peace]}
 	/declare str_feignGem				string	outer   ${Ini[botINI,FeignDeath,str_feignGem,alt]}
 	/declare timer_feignDelay			timer	outer   ${Ini[botINI,FeignDeath,timer_feignDelay,3s]}
 	

@@ -41,10 +41,10 @@ REQUIRED INCLUDES
 
 #include xiris_common/xiris_common.inc
 
-#Turbo 20
+#Turbo 40
 
 Sub InitEvents_Class
-	/call RegisterClassEvents Events_WAR 0
+	|/call RegisterClassEvents Events_WAR 0
 /return
 
 Sub Events_WAR
@@ -62,7 +62,10 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 	/call variant_initialize
 
 	|-- report my status
-	/bc [${Me.Class.ShortName}] ${Me.Name} ${str_action} >> ${Spawn[${_tank1Name}].CleanName} <<  ${_assistArgs}
+		/bc [${Me.Class.ShortName}] ${Me.Name} ${str_action} >> ${Spawn[${_tank1Name}].CleanName} <<  ${_assistArgs}
+
+	|-- target the MT
+	/call TrueTarget ${int_MTID}
 
 	|**
 	----------------------------
@@ -72,71 +75,47 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 	if adding any routine add the call here
 	----------------------------
 	**|
-
-	:MainLoop
 	
+	:MainLoop
+		/if (${Me.Hovering}||${Window[tradewnd].Open}||${Window[lootwnd].Open}) /goto :MainLoop
+		|-- Check all Events
+		/call RunAllEvents
+
 		|-- Check to make sure MT is still alive, if not, find another
 		/call chkMTAlive FALSE
 		
 		|-- Check Offtanking Situation (xiris_offtanking.inc)
 		/call chkOffTanking
 		
-		|-- Check to see if self needs to be cured
-		|   Note: method is in xiris_healing.inc
-		/call RunAllEvents
+		|-- Check to see if self needs to be cured (xiris_curing.inc)
 		/call chkNeedCure
-
+		
 		|-- Check Auto Assist if its on
 		/if (${bln_autoAssist}) /call chkAutoAssist
 		
 		/if (${bln_engaged}) {
-			|-- dps lib
-			/call chkTarget
-			/call chkTargetDist
-			
-			|-- std library
+			|-- check engaged events
 			/call RunRaidEvents
-    		/call RunClassEvents
+			/call RunClassEvents
+
+			|-- verify target status
+			/call chkTarget
+
+			|-- std library (burns/aa/clicks)
+			/call RunRaidEvents
+			/call RunClassEvents
 			/call chkAAs
 			/call chkBurn
 			/call chkClicks
-		}
-
-		|-- check utilities, includes: sit,loot,leash (out of combat only)
-		/if (!${bln_engaged}) {
+		} else {
+			|-- check utilities, includes: sit,loot,leash (out of combat only)
 			/call chkUtils
 			/call chkDownshits
 		}
 
 	|-- start again	
-	/call chkMobDead
     /goto :MainLoop
 /return
-
-|**
- ----------------------------
- Target Checking
- ----------------------------
- Determines if the main assist has a new target, and whether we can attack
- ----------------------------
-**|
-Sub chkTarget
-    /if ((!${Target.ID} || ${Target.Type.NotEqual[NPC]}) && ${bln_engaged}) {
-		/echo Mob is dead. Engage off.
-        /varset bln_engaged FALSE
-		/varset int_targetID 0
-		/stick off
-		/melee reset
-		/varset AssistStickDistance 25
-		/return
-    } else /if (${Me.TargetOfTarget.CleanName.Equal[${Me.CleanName}]} && !${bln_tanking}) {
-		/echo pulled aggro, resetting for 2s
-		/melee reset
-		/delay 20
-		/if (${Target.ID} && ${Target.Type.Equal[NPC]}) /killthis
-	}
-/return
-
 
 |**
  ----------------------------
@@ -147,8 +126,8 @@ Sub chkTarget
 **|
 
 
-Sub engageTarget(_targetID)
-	/echo engageTarget ${Spawn[id ${_targetID}].CleanName} (${_targetID})
+Sub EngageTarget(_targetID)
+	/echo EngageTarget ${Spawn[id ${_targetID}].CleanName} (${_targetID})
 	/if (${_targetID} == 0 || ${_targetID} == NULL) /return
 	/if (${Me.Feigning} && (${Me.PctHPs} > 75)) /stand
 	/varset int_targetID ${_targetID}
@@ -157,17 +136,10 @@ Sub engageTarget(_targetID)
 	/killthis
 	/attack on
 	/if (${Me.ID} != ${int_MTID} || !${bln_tanking}) {
-		/call GetAssistStickDist
-		/call StickToAssistTarget
+		/call StickToTarget
 	} else {
 		/stick off
 	}
-/return
-
-Sub targetReset
-	/varset bln_engaged FALSE
-	/stick off
-	/melee reset
 /return
 
 |**

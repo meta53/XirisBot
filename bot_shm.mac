@@ -38,9 +38,6 @@ REQUIRED INCLUDES
 
 #EVENT DOSHRINK "<#1#> doShrink#*#"
 #EVENT DOSHRINK "[#1#(msg)] doShrink#*#"
-#EVENT DOSHRINK "#1# tells you, 'doShrink#*#'"
-#EVENT DOSHRINK "#1# tells the group, 'doShrink#*#'"
-#EVENT DOSHRINK "#1# you tell your party, 'doShrink#*#'"
 
 Sub InitEvents_Class
 	/call RegisterClassEvents Events_SHM 1
@@ -66,6 +63,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 
 	|-- target the MT
 	/call TrueTarget ${int_MTID}
+
 	|**
 	| ----------------------------
 	| Main Loop
@@ -76,15 +74,16 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 	|**|
 	
 	:MainLoop
-		
-		/if (${Me.Casting.ID} && ${Me.Hovering}||${Window[tradewnd].Open}||${Window[lootwnd].Open}) /goto :MainLoop
+		/if (${Me.Hovering} || ${Window[tradewnd].Open} || ${Window[lootwnd].Open}) /goto :MainLoop
+		|-- Check all Events
+		/call RunAllEvents
+
 		|-- Check to make sure MT is still alive, if not, find another
 		/call chkMTAlive FALSE
-
-		|-- Check to see if self needs to be cured (xiris_curing.inc)
-		/call RunAllEvents
-		/call chkNeedCure
 		
+		|-- Check to see if self needs to be cured (xiris_curing.inc)
+		/call chkNeedCure
+
 		|-- Check the three main groupings of heal classes (xiris_healing.inc)
 		/call chkHeal_MT
 		/call chkHeal_Self
@@ -94,82 +93,48 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 		/call RunAllEvents
 		/call chkOOCBuffs
 		
-		|-- Check for local targets (xiris_debuffing.inc)
-		/if (${SpawnCount[NPC radius 85 range 50 100]} > 0) {
-			|-- get a list of the local NPCs
-			/call getTargets
-		} else {
-			/call targetReset
-		}
+		|-- Get all local targets
+		|   Need to rework this to only be called if engage, and then debuff all targets that have tanks
 
 		|-- Check Auto Assist if its on
 		/if (${bln_autoAssist}) /call chkAutoAssist
 		
-		|-- If Engaged run DPS/ETC
 		/if (${bln_engaged}) {
-			/if (!${Target.ID} || ${Target.ID} != ${int_targetID} && ${int_targetID} !=0 && (${Spawn[id ${int_targetID}].PctHPs} != 0)) /call TrueTarget ${int_targetID}
+			|-- check engaged events
+			/call RunRaidEvents
+			/call RunClassEvents
+
+			|-- verify target status
+			/call chkTarget	
+
+			|-- debuff lib
+			/call chkDebuffsOnSingleTarget ${int_targetID}
 			
 			|-- class specific
-			/call RunAllEvents
 			/call chkPetAttack	
-			/call chkChampion		
+			/call chkChampion	
+			/call cmbtBuffGRP	
 			
-			|-- debuff lib
-			/call chkDebuffs
-			
-			|-- dps lib
+			|-- dps library (caster)
 			/call RunRaidEvents
     		/call RunClassEvents
 			/call chkDOT
 			/call chkNuke
 			
-			|-- std library
+			|-- std library (burns/aa/clicks)
+			/call RunRaidEvents
+    		/call RunClassEvents
 			/call chkAAs
 			/call chkBurn
 			/call chkClicks
-			
-			|-- check in combat buffs
-			/call RunRaidEvents
-    		/call RunClassEvents
-			/call cmbtBuffGRP
-		}
-		
-		|-- check utilities, includes: sit,loot,leash (out of combat only)
-		/if (!${bln_engaged}) {
+		} else {
+			|-- check utilities, includes: sit,loot,leash (out of combat only)
 			/call chkUtils
 			/call chkDownshits
 		}
-		
 	|-- start again	
-	/call chkMobDead
     /goto :MainLoop
-/return		
-
-|**
- ----------------------------
- Target Engage
- ----------------------------
- Engage the target, note usually triggered by EVENT_KILLMOB (see xiris_common.inc)
- ----------------------------
-**|
-
-Sub engageTarget(_targetID)
-	/echo engageTarget ${Spawn[id ${_targetID}].CleanName} (${_targetID})
-	/if (${_targetID} == 0) /return
-	/varset int_targetID ${_targetID}
-	/call TrueTarget ${int_targetID}
-	/call Add2TargetArray ${_targetID}
-	/call ResetCastTimers
-	/varset bln_engaged TRUE
-/return
-
-
-Sub targetReset
-	/varset bln_engaged 		FALSE
-	/varset bln_petAttacking 	FALSE
-	/pet hold on
-	/call CleanTargetArray
-/return
+/return	
 
 
 |**

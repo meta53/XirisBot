@@ -35,8 +35,7 @@ ______________________________________________
 |-- Performer
 #event FailStats    "[MQ2] stat#*#"
 
-
-#event Flawless        "#*#Your performance is flawless.  The skeletal musician nods their head approvingly.#*#"
+#event Flawless      "#*#Your performance is flawless.  The skeletal musician nods their head approvingly.#*#"
 #event Failed        "The Performer says 'Come on, #1#, stay with us.  I'm counting on you to help perform this medley.  No more mistakes!'"
 
 

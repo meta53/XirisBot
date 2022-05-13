@@ -9,29 +9,17 @@ REVISION HISTORY
 	08.02.18	xiris	INITIAL REVISION
 	03.31.22	xiris	Updated the named checking as well as normalizing all calls to MQ2Cast
 	05.08.22	xiris	Added support for bards in Debuffs
+	05.13.22	xiris   Cleaned up events
 **|
 
 
 #EVENT DebuffTarget "<#1#> DebuffTarget #2#"
 #EVENT DebuffTarget "[#1#(msg)] DebuffTarget #2#"
-#EVENT DebuffTarget "#1# tells you, 'DebuffTarget #2#"
-#EVENT DebuffTarget "#1# tells the group, 'DebuffTarget #2#'"
-#EVENT DebuffTarget "#1# you tell your party, 'DebuffTarget #2#'"
-
-#event Debuffed		"#1# looks very uncomfortable#*#"
-#event Debuffed		"#1# is surrounded by a dark haze#*#"
-#event Debuffed		"#1# is marked by the scent of afterlight#*#"
-#event Debuffed		"#1# is marked by the scent of doom#*#"
 
 Sub InitEvents_Debuffing
 	/if (${int_debuffTotal} > 0 ) {
 		/call RegisterRaidEvents Events_Debuffing 1
-		/call RegisterClassEvents Events_Debuffed 1
 	}	
-/return
-
-Sub Events_Debuffed
-	/doevents Debuffed
 /return
 
 Sub Events_Debuffing
@@ -85,9 +73,8 @@ Sub chkDebuffs
 |   Useful for bards, and others that do not need to AE/Mez/Slow whatever will check if engaged on current target
 Sub chkDebuffsOnSingleTarget(int _targetID)
 	/if (!${int_debuffTotal}) /return
-	/declare isNamed	bool	local	FALSE
 	/call TargetNamedCheck ${Target.ID}
-	/varset isNamed ${Macro.Return}
+	/declare isNamed	bool	local	${Macro.Return}
 	/call CastDebuffsOnTarget ${_targetID} ${isNamed}
 /return
 
@@ -103,7 +90,6 @@ Sub CastDebuffsOnTarget(int _targetID, bool isNamed)
 	/declare 	debuffDuration int local
 
 	/for db 1 to ${int_debuffTotal}
-		|/echo timer? ${DEBUFF_${db}_Timer} ${DEBUFF_${db}}
 		/if (${DEBUFF_${db}_NamedOnly} && !${isNamed} || ${DEBUFF_${db}_Timer}) /goto :nextDB
 		/if (${Me.Class.ShortName.NotEqual[BRD]}) {
 			|/echo checking if the debuff is already on ${DEBUFF_${db}}:${Target.Buff[${DEBUFF_${db}}].ID} && ${Target.BuffDuration[${DEBUFF_${db}}]}
@@ -363,18 +349,6 @@ Sub ResetDebuffsOnIndex(int _targetIndex)
 	/next i
 
 /return 
-
-Sub Event_Debuffed (string Line, string MobName)
-	/varset	bln_debuffActive	TRUE
-	/varset timer_debuff		120s
-	/doevents flush Debuffed
-/return
-
-Sub Event_DebuffResist
-	/varcalc int_debuffResist	${int_debuffResist}+1
-	/if (${int_debuffResist} >3) /varset bln_debuffActive TRUE
-	/doevents flush DebuffResist
-/return
 
 Sub xbot_initialize_debuffing
 	/if (${str_classArchetype.Equal[MELEE_END]}) /return

@@ -352,7 +352,7 @@ SUB EVENT_BALANCE
 	/if (${str_classArchetype.Equal[CASTER]}) {
 		/echo CASTER CLASS checking
 		/varset bln_engaged FALSE
-		/call targetReset
+		/call ResetTarget
 		/pet back off
 		/if (${Me.Class.ShortName.Equal[ENC]}) /call RuneSpamOff
 
@@ -431,7 +431,7 @@ Sub BalancerKillMelee(string _targetName, int _targetID, int _balanceTo)
 		/echo BalancerKillMelee ${_targetName}, ${_targetID} =>${_balanceTo}
 		/varset bln_balancing TRUE
 		/nav stop
-		/call engageTarget ${Target.ID}
+		/call EngageTarget ${Target.ID}
 	:BalancerMeleeLoop
 		|/echo BalancerMeleeLoop
 		/doevents GETCLOSER
@@ -448,7 +448,7 @@ Sub BalancerKillMelee(string _targetName, int _targetID, int _balanceTo)
 	:return
 	/echo BalancerKillMelee return
 	/melee reset
-	/call targetReset
+	/call ResetTarget
 	/varset bln_engaged FALSE
 /return 
 
@@ -463,7 +463,7 @@ Sub BalancerKillCaster(string _targetName, int _targetID, int _balanceTo)
 	:BalancerCasterKill
 		/echo BalancerKillCaster ${_targetName}, ${_targetID} =>${_balanceTo}
 		/varset bln_balancing TRUE
-		/call engageTarget ${_targetID}
+		/call EngageTarget ${_targetID}
 		/if (${Me.Class.ShortName.Equal[WIZ]}) /twist 3 4
 		/if (${Me.Class.ShortName.Equal[NEC]}) /twist 7
 		/if (${Me.Class.ShortName.Equal[MAG]}) /twist 4
@@ -480,7 +480,7 @@ Sub BalancerKillCaster(string _targetName, int _targetID, int _balanceTo)
 		/if (${Target.PctHPs} > ${_balanceTo}) /goto :BalancerCasterLoop
 	:return
 	/if (${Twist.Twisting}) /twist off
-	/call targetReset
+	/call ResetTarget
 	/varset bln_engaged FALSE
 /return
 
@@ -494,7 +494,7 @@ Sub BalancerReset
 	/if (${Defined[bln_balancing]}) /varset bln_balancing FALSE
 	/if (${str_classArchetype.Equal[PRIEST]}) /return
 	
-	/call targetReset
+	/call ResetTarget
 	/doevents flush
 	/melee reset
 

@@ -1,19 +1,27 @@
+|**
+----------------------------
+XIRIS_FOLLOW.INC
+----------------------------
+This was written ground up for usage with xiris's bots
+Allows to following via stick or nav
+______________________________________________
+REQUIRED PLUGINS
+    
+______________________________________________
+REVISION HISTORY
+	04.05.22    xiris   INITIAL REVISION
+______________________________________________
+**|	
+
+
 #EVENT Follow "[#1#] Follow #2#"
 #EVENT Follow "<#1#> Follow #2#"
-#EVENT Follow "#1# tells you, 'Follow #2#'"
-#EVENT Follow "#1# tells the group, 'Follow #2#'"
-#EVENT Follow "#1# you tell your party, 'Follow #2#'"
 
 #EVENT Stop	"[#1#] Stop#*#"
 #EVENT Stop	"<#1#> Stop#*#"
-#EVENT Stop "#1# tells you, 'Stop#*#'"
-#EVENT Stop "#1# tells the group, 'Stop#*#'"
-#EVENT Stop "#1# you tell your party, 'Stop#*#'"
 
 #EVENT MoveHere "<#1#> Move to #2#"
 #EVENT MoveHere "#1# tells you, 'Move to #2#'"
-#EVENT MoveHere "#1# tells the group, 'Move to #2#'"
-#EVENT MoveHere "#1# you tell your party, 'Move to #2#'"
 
 Sub InitEvents_Following
 	/call RegisterBackgroundEvents Events_Following 3
@@ -29,9 +37,9 @@ Sub Events_Following
 
 Sub xbot_initialize_following
 
-	/declare Following 		bool 	outer FALSE
-	/declare FollowTarget 	string 	outer NULL
-	/declare MaxResponseDist	int outer 5000
+	/declare Following 			bool 	outer FALSE
+	/declare FollowTarget 		string 	outer NULL
+	/declare MaxResponseDist	int 	outer 1000
 
 	/call InitEvents_Following
 	/cecho \aoxbot_initialize_following
@@ -189,16 +197,9 @@ SUB AquireFollow(string _type)
 |----------------------------------------------------------------------------|
 
 SUB EVENT_Stop(_line, _chatSender, _eventParams)
-	|- Check if I am attacking
-	/if (${bln_engaged}) {
-		/call targetReset
-	}
-
 	| -Check if I'm following.
 	/if (${Following}) {
-			/echo Stopping
 			/if (${Stick.Active}) 			/squelch /stick off
-			|/if (${NetAdvPath.State}==1) 	/squelch /netfollow off
 			/if (${Navigation.Active}) 		/squelch /nav stop
 			/varset FollowTarget NULL
 			/varset Following 	 FALSE

@@ -19,7 +19,6 @@ ______________________________________________
 
 Sub InitEvents_OOW_MPG_Corruption
 	/cecho \ag Initializing MPG Corruption
-
 /return
 
 Sub Events_OOW_MPG_Corruption

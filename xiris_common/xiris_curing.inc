@@ -19,8 +19,8 @@ REVISION HISTORY
 						If in combat, only important debuffs, out of combat, all debuffs
 	03.17.22	xiris	Updated cure request EVENT and cleaned up some code
 						Adding curer interrogation on start up to bypass un-equiped (no spell) potential group curers
+	05.23.22	xiris	Reduced events to only have BC
 **|
-
 
 #EVENT cureRequest 				"[#1#(msg)] cureRequest #2#"
 #EVENT cureReceived             "[#1#(msg)] I cured you"
@@ -28,21 +28,13 @@ REVISION HISTORY
 
 #EVENT cureGroupPoison "<#1#> cureGroupPoison #2#"
 #EVENT cureGroupPoison "[#1#(msg)] cureGroupPoison #2#"
-#EVENT cureGroupPoison "#1# tells you, 'cureGroupPoison #2#'"
-#EVENT cureGroupPoison "#1# tells the group, 'cureGroupPoison #2#'"
-#EVENT cureGroupPoison "#1# you tell your party, 'cureGroupPoison #2#'"
 
 #EVENT cureGroupDisease "<#1#> cureGroupDisease #2#"
 #EVENT cureGroupDisease "[#1#(msg)] cureGroupDisease #2#"
-#EVENT cureGroupDisease "#1# tells you, 'cureGroupDisease #2#'"
-#EVENT cureGroupDisease "#1# tells the group, 'cureGroupDisease #2#'"
-#EVENT cureGroupDisease "#1# you tell your party, 'cureGroupDisease #2#'"
 
 #EVENT cureGroupCurse "<#1#> cureGroupCurse #2#"
 #EVENT cureGroupCurse "[#1#(msg)] cureGroupCurse #2#"
-#EVENT cureGroupCurse "#1# tells you, 'cureGroupCurse #2#'"
-#EVENT cureGroupCurse "#1# tells the group, 'cureGroupCurse #2#'"
-#EVENT cureGroupCurse "#1# you tell your party, 'cureGroupCurse #2#'"
+
 
 Sub InitEvents_Curing
 	/if (${str_classArchetype.Equal[PRIEST]}) /call RegisterClassEvents Events_Curing 34

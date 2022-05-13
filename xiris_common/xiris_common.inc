@@ -47,11 +47,8 @@ ______________________________________________
 #include xiris_common/xiris_spell_routines.inc
 
 |COMMON
-#EVENT KillMob "<#1#> KillMob #2#"
-#EVENT KillMob "[#1#(msg)] KillMob #2#"
-#EVENT KillMob "#1# tells you, 'KillMob #2#'"
-#EVENT KillMob "#1# tells the group, 'KillMob #2#'"
-#EVENT KillMob "#1# you tell your party, 'KillMob #2#'"
+#EVENT KillMob 				"<#1#> KillMob #2#"
+#EVENT KillMob 				"[#1#(msg)] KillMob #2#"
 
 #EVENT Zoned				"You have entered#*#"
 #EVENT Zoned				"LOADING, PLEASE WAIT..."
@@ -60,26 +57,14 @@ ______________________________________________
 #EVENT BackOff				"<#1#> BackOff"
 #EVENT BackOff				"[#1#(msg)] BackOff"
 
-#EVENT ChangeMT "<#1#> changeMT #2#"
-#EVENT ChangeMT "[#1#(msg)] changeMT #2#"
-#EVENT ChangeMT "#1# tells you, 'changeMT #2#'"
-#EVENT ChangeMT "#1# tells the group, 'changeMT #2#'"
-#EVENT ChangeMT "#1# you tell your party, 'changeMT #2#'"
+#EVENT ChangeMT 			"<#1#> changeMT #2#"
+#EVENT ChangeMT 			"[#1#(msg)] changeMT #2#"
 
-#EVENT ChangeSA "<#1#> changeSA #2#"
-#EVENT ChangeSA "[#1#(msg)] changeSA #2#"
-#EVENT ChangeSA "#1# tells you, 'changeSA #2#'"
-#EVENT ChangeSA "#1# tells the group, 'changeSA #2#'"
-#EVENT ChangeSA "#1# you tell your party, 'changeSA #2#'"
+#EVENT ChangeSA 			"<#1#> changeSA #2#"
+#EVENT ChangeSA 			"[#1#(msg)] changeSA #2#"
 
-#EVENT ChangeAP "<#1#> changeAP #2#"
-#EVENT ChangeAP "[#1#(msg)] changeAP #2#"
-#EVENT ChangeAP "#1# tells you, 'changeAP #2#'"
-#EVENT ChangeAP "#1# tells the group, 'changeAP #2#'"
-#EVENT ChangeAP "#1# you tell your party, 'changeAP #2#'"
-
-
-
+#EVENT ChangeAP 			"<#1#> changeAP #2#"
+#EVENT ChangeAP 			"[#1#(msg)] changeAP #2#"
 
 |MISC events
 #EVENT ConnectEQBC			"#*#ConnectEQBC#*#"
@@ -102,8 +87,9 @@ ______________________________________________
 #EVENT InvisOFF				"#1#InvisOff#*#"
 
 Sub InitEvents_Common
-	/call RegisterRaidEvents Events_Raid 9
 	/call RegisterBackgroundEvents Events_Common 17
+	/call RegisterRaidEvents Events_Raid 9
+	
 /return
 
 Sub Events_Raid 
@@ -124,8 +110,6 @@ Sub Events_Common
 	/doevents CheckNaked
 	/doevents RageOff
 	/doevents RageOn
-	/doevents ImDead
-	/doevents ImDead
 	/doevents ImDead
 	/doevents LoadRingset
 	/doevents LoadWeaponset
@@ -165,7 +149,11 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	
 	|-- [Settings] :Tank Settings
 	/declare	bln_tanking				bool	outer	FALSE
-	/if (${_tank1Name.Equal[${Me.Name}]}) /varset bln_tanking TRUE
+	/declare	bln_aggro				bool	outer	FALSE
+	/if (${_tank1Name.Equal[${Me.Name}]}) 	/varset bln_tanking TRUE
+	/if (${_tank1Name.Equal[${Me.Name}]}) 	/varset bln_aggro TRUE
+	/if (${bln_tanking} || ${bln_aggro}) 	/squelch /melee aggro=on 
+	/if (!${bln_tanking} || !${bln_aggro}) 	/squelch /melee aggro=off
 	/declare	str_defTank1			string	outer	${Ini[botINI,Settings,defaultTank1,Xiris]}
 	/declare	str_defTank2			string	outer	${Ini[botINI,Settings,defaultTank2,Xiria]}
 	/declare	str_defTank3			string	outer	${Ini[botINI,Settings,defaultTank3,Xirea]}
@@ -209,6 +197,7 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/declare    bln_naked               bool	outer   FALSE
 	/declare 	bln_ducking				bool	outer	FALSE
 	/declare	timer_naked 			timer   outer	30s
+	/declare 	timer_hott				timer   outer   20s
 
 	|-- [Settings] : Meditation
 	/declare int_sitRadius   		int     outer ${Ini[botINI,Settings,sitRadius,50]}
@@ -313,17 +302,6 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 /return
 
 
-|--Engage Target EVENT, calls engageTarget which is in the class macros since each class handles this differently
-Sub EVENT_KillMob(_line, _sender, _eventParams)
-	/cecho \ayKMCalled ${_eventParams}
-	|-> #EVENT KillMob "<#1#> KillMob #2#"
-	|-> Sender> == #1
-	|->_eventParams> == #2
-	|-> _eventParams: ${Target.ID} "${Target.Name}" ${Time.Time24}
-	/call engageTarget ${_eventParams.Arg[1, ]}
-	/doevents flush KillMob
-/return
-
 
 |**
  ----------------------------
@@ -332,10 +310,6 @@ Sub EVENT_KillMob(_line, _sender, _eventParams)
  Check things that should be/should not be
  ----------------------------
 **|
-
-Sub chkEmotes
-	|/doevents
-/return
 
 |-- No Need to check fail states on EMU!
 Sub chkFailStates
@@ -394,14 +368,118 @@ Sub chkSit
  Determines if the main assist has a new target, and whether we can attack
  ----------------------------
 **|
+
 Sub chkTarget
-    /if ((!${Target.ID} || ${Target.Type.NotEqual[NPC]}) && ${bln_engaged}) {
-		/echo Mob is dead. Engage off.
-        /varset bln_engaged FALSE
-		/varset int_targetID 0
-    }
-	/if (${Cursor.ID}) /autoinventory
+	:chkTargetValid
+	/if ((${Target.ID} != ${int_targetID}) && (${Spawn[id ${int_targetID}].PctHPs} > 0 && !${Spawn[id ${int_targetID}].Name.Find[corpse]})) {
+		/call TrueTarget ${int_targetID}
+	}
+
+	:chkTargetDead
+	/if ((${Me.XTarget}==0 && ${SpawnCount[npc id ${int_targetID} radius 250]} == 0) && ${bln_engaged}) {
+		/echo chkMobDead triggered Xtarget:!${Me.XTarget[1].ID} || SpawnCount:!${SpawnCount[npc id ${int_targetID} radius 250]}  && engaged:${bln_engaged}
+		/call ResetTarget
+		/goto :return
+	}
+	
+	:chkTargetTarget
+	/if (${Me.TargetOfTarget.CleanName.Equal[${Me.CleanName}]} && !${bln_aggro} && !${timer_hott}) {
+		| Priest/Caster (with some sort of a aggro dump ability)
+		/if (${str_classArchetype.Equal[PRIEST]} || ${str_classArchetype.Equal[CASTER]}) {
+			| Wizard
+			/if (${Me.Class.ShortName.Equal[WIZ]}) {
+				/if (${Me.AltAbilityReady[Mind Crash]})   	/call MQ2Cast "Mind Crash" alt
+				/if (${Me.SpellReady[${str_concSpell}]})	/call MQ2Cast "${str_concSpell}" ${str_concGem}
+			} else /if (${Me.Class.ShortName.Equal[NEC]}) {
+				/if (${Me.AltAbilityReady[Death Peace]})   	/call MQ2Cast "Death Peace" alt
+				/if (!${Me.Standing}) /stand
+			} else /if (${Me.Class.ShortName.Equal[ENC]}) {
+				/if (${Me.AltAbilityReady[Soothing Words]}) /call MQ2Cast "Soothing Words" alt	
+			} else /if (${Me.Class.ShortName.Equal[MAG]}) {
+
+			} else /if (${Me.Class.ShortName.Equal[CLR]}) {
+				/if (${Me.AltAbilityReady[Sanctuary]}) /call MQ2Cast "Sanctuary" alt	
+			} else /if (${Me.Class.ShortName.Equal[SHM]}) {
+
+			} else /if (${Me.Class.ShortName.Equal[DRU]}) { 
+
+			}
+		} else /if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
+			/declare use_riposte bool local FALSE
+			/if (${Target.Name.Find[Pirik]} || ${Target.Name.Find[Yihst]} || ${Target.Name.Find[Tunat]}) /varset use_riposte TRUE
+
+			/if (${Me.Class.ShortName.Equal[SHD]}) {
+				/if (${Me.AltAbilityReady[Death Peace]})   	/call MQ2Cast "Death Peace" alt
+				/if (!${Me.Standing}) /stand
+			} else /if (${Me.Class.ShortName.Equal[BER]}) { 
+				/if (${Me.CombatAbilityReady[Baffling Strike]} && ${FindItemCount[Axe of the Destroyer]}>0) /disc Baffling Strike
+				/if (${Me.CombatAbilityReady[Confusing Strike]} && ${FindItemCount[Rage Axe]}>0) /disc Confusing Strike
+				/if (${Me.CombatAbilityReady[Distracting Strike]} && ${FindItemCount[Bonesplicer Axe]}>0) /disc Distracting Strike
+				/if (${use_riposte}) /call FireRiposteDisc
+			} else /if (${Me.Class.ShortName.Equal[ROG]}) { 
+				/if (${use_riposte}) /call FireRiposteDisc
+			} else /if (${Me.Class.ShortName.Equal[RNG]}) { 
+				/if (${Me.SpellReady[${str_concSpell}]})	/call MQ2Cast "${str_concSpell}" ${str_concGem}
+				/if (${use_riposte}) /call FireRiposteDisc	
+			} else /if (${Me.Class.ShortName.Equal[MNK]}) { 
+				/if (${Me.AbilityReady[Feign Death]}) /doability "Feign Death"
+				/if (${use_riposte}) /call FireRiposteDisc	
+				/if (!${Me.Standing}) /stand
+			}
+		}
+		/varset timer_hott ${timer_hott.OriginalValue}
+	}
+	:chkTargetDistance
+	| Note this is unlikely needed as the EVENT_GETCLOSER (xiris_melee.inc) will have fired.
+	|/call StickToTarget
+	:return
 /return
+
+
+|--Engage Target EVENT, calls EngageTarget
+Sub EVENT_KillMob(_line, _sender, _eventParams)
+	/cecho \ayKMCalled ${_eventParams}
+	|-> #EVENT KillMob "<#1#> KillMob #2#"
+	|-> Sender> == #1
+	|->_eventParams> == #2
+	|-> _eventParams: ${Target.ID} "${Target.Name}" ${Time.Time24}
+	/call EngageTarget ${_eventParams.Arg[1, ]}
+	/doevents flush KillMob
+/return
+
+|-- Engage Target Sub, handles class specific modifications (minor)
+Sub EngageTarget(int _targetID)
+	/echo EngageTarget ${Spawn[id ${_targetID}].CleanName} (${_targetID})
+	/if (${_targetID} == 0) /return
+	/varset int_targetID ${_targetID}
+	/varset bln_engaged TRUE
+	/if (${Me.Class.ShortName.NotEqual[CLR]}) /call TrueTarget ${int_targetID}
+	/call ResetCastTimers
+	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
+		/killthis
+		/attack on
+	}
+/return
+
+|-- Resets targetting and engagmenent, handles class specicic modifications (very minor)
+Sub ResetTarget
+	|-- global reset
+	/varset bln_engaged 		FALSE
+
+	|-- class archetype resets
+	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
+		/stick off
+		/melee reset
+	} 
+
+	|-- pet resets
+	/if (${Me.Pet.ID} && ${Defined[bln_petAttacking]}) {
+		/varset bln_petAttacking 	FALSE
+		/pet hold on
+	}
+
+/return
+
 
 |**
  ----------------------------
@@ -411,47 +489,38 @@ Sub chkTarget
  ----------------------------
 **|
 Sub chkMTAlive(bool _setAsTarget)
-
-	|--MT is still alive; ignore
-	/if (${Spawn[PC ${str_tankName1}].ID}) {
-		/if (${_setAsTarget} && (${Target.ID} != ${Spawn[PC ${str_tankName1}].ID})) {
-			/call TrueTarget ${int_MTID}
-		}
-		/return
-	}
-	
-	/echo chkMTAlive ${_setAsTarget} || ${str_tankName1}::${str_MTName} ${str_tankName2}::${str_tankName2}
-	|--MT is dead, and I am BT
-	/if (${str_tankName2.Equal[${Me.CleanName}]}) {
-		/varset str_tankName1 ${str_tankName2}
-		/varset str_tankName2 NULL
-		/melee aggro=on
-		/return
-	}
-	
-	|--MT is dead, check to see if BT is alive; chkBTAlive
-	/if (${Spawn[PC ${str_tankName2}].ID}) {
-		/echo setting ${str_tankName2} to MT 
-		/if (${Spawn[PC ${str_tankName2}].ID}) {
-			|-- BT is alive, set it as the new MT
-			/varset str_tankName1 ${str_tankName2}
-			/varset str_tankName2 NULL
-		} else {
-			|-- BT is dead, get MT by Precedence
-			/echo Secondary Tank also dead, get MT by Precedence!
-			/call getMTbyPrecedence
-			/varset str_tankName1 {Spawn[PC ${Macro.Return}].ID}
-			/varset str_tankName2 NULL
-		}
-		|-- Set the MT ID
+	|--MT is alive; 
+	/if (${Spawn[PC ${str_tankName1}].ID} && (${intMTID} != ${Spawn[PC ${str_tankName1}].ID})) {
 		/varset int_MTID ${Spawn[${str_tankName1}].ID}
+		/goto :return
+	}
+
+	|--ST is still alive; 
+	/if (${Spawn[PC ${str_tankName2}].ID} && (${intMTID} != ${Spawn[PC ${str_tankName2}].ID})) {
+		/varset int_MTID ${Spawn[${str_tankName2}].ID}
+		/goto :return
 	}
 	
+	|--TT is still alive; 
+	/if (${Spawn[PC ${str_tankName3}].ID} && (${intMTID} != ${Spawn[PC ${str_tankName3}].ID})) {
+		/varset int_MTID ${Spawn[${str_tankName3}].ID}
+		/goto :return
+	}
+
+	|--Check if any tanks are alive
+	/if (!${Spawn[PC ${str_tankName1}].ID} && !${Spawn[PC ${str_tankName2}].ID} && !${Spawn[PC ${str_tankName3}].ID}) {
+		/cecho \arALL TANKS ARE DEAD!
+		/call getMTbyPrecedence
+		/varset int_MTID ${Spawn[PC ${Macro.Return}].ID}
+		/goto :return
+	}
+	
+	:return
 	|-- If set as target, target the new MT immediately
 	/if (${_setAsTarget} && (${Target.ID} != ${int_MTID})) {
 		/call TrueTarget ${int_MTID}
 	}
-	
+
 /return
 
 
@@ -491,6 +560,32 @@ Sub getClassArchetype(string _shortName)
 	}		
 /return
 
+Sub getClassBaseType(string _shortName)
+	/if (${Select[${_shortName},CLR,DRU,SHM]}) {
+		/return PRIEST
+	}
+	
+	| CASTER CLASS ENUMERATION
+	/if (${Select[${_shortName},NEC,WIZ,MAG,ENC]}) {
+		/return CASTER
+	}
+
+	| MELEE DPS CLASS ENUMERATION - Endurance Focus
+	/if (${Select[${_shortName},ROG,BER,MNK]}) {
+		/return MELEE
+	}
+	
+	| MELEE DPS CLASS ENUMERATION - Mana Focus
+	/if (${Select[${_shortName},BST,RNG,BRD]}) {
+		/return MELEE
+	}	
+	
+	| TANK CLASS ENUMERATION
+	/if (${Select[${_shortName},WAR,SHD,PAL]}) {
+		/return MELEE
+	}	
+
+/return 
 
 
 |**
@@ -509,7 +604,7 @@ Sub chkAAs
 	/if ((${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]}) || ${Me.Moving} || ${Me.Invis} || ${Me.Feigning}) /return
 	
 	/if (${Target.Type.NotEqual[NPC]}) /return
-	/echo chkAAs
+	
 	|-- named check
 	:named_check
 	/declare isNamed bool local FALSE
@@ -583,7 +678,7 @@ Sub chkAAs
 **|
 
 Sub chkBurn
-	/echo chkBurn
+	
 	/if (!${bln_engaged}) /return
 	/if (${Me.Casting.ID} || ${Me.Moving} || ${Me.Invis} || ${Me.Feigning}) /return
 	/if (!${bln_BURNMode}) /return
@@ -612,7 +707,8 @@ Sub chkBurn
 					:doCombatAbility
 					| Bards can click discs while singing
 					/doability "${Burn_${burn}}"
-					/cecho \agDISC \ayBurn_${burn} \agclicked!		
+					/cecho \agDISC \ayBurn_${burn} \agclicked!
+					/goto :nextBurn		
 				}
 				
 			
@@ -643,6 +739,7 @@ Sub chkBurn
 							/call MQ2Cast "${Burn_${burn}}" alt
 						}
 						/cecho \agAA \ayBurn_${burn} \agclicked!
+						/goto :nextBurn	
 				}
 			| ---------------	
 			| Item
@@ -655,6 +752,7 @@ Sub chkBurn
 						/call MQ2Cast "${Burn_${burn}}" item 2s
 					}
 					/cecho \agItem \ayBurn_${burn} \agclicked!
+					/goto :nextBurn	
 					
 			}
 		}
@@ -670,12 +768,11 @@ Sub chkBurn
  ----------------------------
 **|
 Sub chkClicks
-	/echo chkClicks 0
 	/if (!${bln_engaged}) /return
 	/if (${Me.Casting.ID} || ${Me.Moving} || ${Me.Invis} || ${Me.Feigning}) /return
 	/if (${Target.PctHPs}<${int_clickStopHP}) /return
 	/if (${int_clickTotal} == 0) /return
-	/echo chkClicks 1
+
 	/declare intC int local
 	/for intC 1 to ${int_clickTotal} 
 		
@@ -818,8 +915,6 @@ Sub EVENT_IntensityON
 
 
 
-
-
 |-------------------------------------------------------------------------------- 
 |SUB: Event_ENRAGE HANDLERS
 |--------------------------------------------------------------------------------
@@ -850,7 +945,7 @@ Sub Event_BackOff
 	/varset bln_engaged FALSE
 	/pet back off
 	/pet hold
-	/call targetReset
+	/call ResetTarget
 	/doevents clear
 	/doevents flush BackOff
 /return
@@ -1043,14 +1138,14 @@ Sub EVENT_MOBDEAD
 	/echo EVENT_MOBDEAD triggered
 	/varset bln_engaged FALSE
 	/varset int_targetID 0
-	/call targetReset
+	/call ResetTarget
 	/doevents flush MOBDEAD
 /return
 
 Sub chkMobDead
-	/if ((!${Me.XTarget[1].ID} && ${SpawnCount[npc id ${int_targetID} radius 250]} == 0) && ${bln_engaged}) {
-		|/echo chkMobDead triggered Xtarget:!${Me.XTarget[1].ID} || SpawnCount:!${SpawnCount[npc id ${int_targetID} radius 250]}  && engaged:${bln_engaged}
-		/call targetReset
+	/if ((${Me.XTarget}==0 && ${SpawnCount[npc id ${int_targetID} radius 250]} == 0) && ${bln_engaged}) {
+		/echo chkMobDead triggered Xtarget:!${Me.XTarget[1].ID} || SpawnCount:!${SpawnCount[npc id ${int_targetID} radius 250]}  && engaged:${bln_engaged}
+		/call ResetTarget
 	}
 /return
 
@@ -1097,7 +1192,7 @@ Sub TrueTarget(int _targetID)
 Sub chkAutoAssist
 	/if (!${bln_autoAssist}) /return
 	/call TrueTarget ${NetBots[${str_tankName1}].TargetID}
-	/call engageTarget ${NetBots[${str_tankName1}].TargetID}
+	/call EngageTarget ${NetBots[${str_tankName1}].TargetID}
 /return
 
 

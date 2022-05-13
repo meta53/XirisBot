@@ -29,51 +29,27 @@ REVISION HISTORY
 
 #EVENT NoDS "<#1#> NoDS"
 #EVENT NoDS "[#1#(msg)] NoDS#*#"
-#EVENT NoDS "#1# tells you, 'NoDS#*#"
-#EVENT NoDS "#1# tells the group, 'NoDS#*#'"
-#EVENT NoDS "#1# you tell your party, 'NoDS#*#'"
 
 #EVENT YesDS "<#1#> YesDS#*#"
 #EVENT YesDS "[#1#(msg)] YesDS#*#"
-#EVENT YesDS "#1# tells you, 'YesDS#*#"
-#EVENT YesDS "#1# tells the group, 'YesDS#*#'"
-#EVENT YesDS "#1# you tell your party, 'YesDS#*#'"
 
 #EVENT Sing "<#1#> Sing #2#"
 #EVENT Sing "[#1#(msg)] Sing #2#"
-#EVENT Sing "#1# tells you, 'Sing #2#"
-#EVENT Sing "#1# tells the group, 'Sing #2#'"
-#EVENT Sing "#1# you tell your party, 'Sing #2#'"
 
 #EVENT Hush "<#1#> Hush#*#"
 #EVENT Hush "[#1#(msg)] Hush#*#"
-#EVENT Hush "#1# tells you, 'Hush#*#"
-#EVENT Hush "#1# tells the group, 'Hush#*#'"
-#EVENT Hush "#1# you tell your party, 'Hush#*#'"
 
 #EVENT RiposteDisc "<#1#> RiposteDisc#*#"
 #EVENT RiposteDisc "[#1#(msg)] RiposteDisc#*#"
-#EVENT RiposteDisc "#1# tells you, 'RiposteDisc#*#"
-#EVENT RiposteDisc "#1# tells the group, 'RiposteDisc#*#'"
-#EVENT RiposteDisc "#1# you tell your party, 'RiposteDisc#*#'"
 
 #EVENT AutoAssist "<#1#> AutoAssist #2#"
 #EVENT AutoAssist "[#1#(msg)] AutoAssist #2#"
-#EVENT AutoAssist "#1# tells you, 'AutoAssist #2#"
-#EVENT AutoAssist "#1# tells the group, 'AutoAssist #2#'"
-#EVENT AutoAssist "#1# you tell your party, 'AutoAssist #2#'"
 
 #EVENT Leashing "<#1#> Leashing #2#"
 #EVENT Leashing "[#1#(msg)] Leashing #2#"
-#EVENT Leashing "#1# tells you, 'Leashing #2#"
-#EVENT Leashing "#1# tells the group, 'Leashing #2#'"
-#EVENT Leashing "#1# you tell your party, 'Leashing #2#'" 
 
 #EVENT XTargetRefresh "<#1#> RefreshXTarget#*#"
 #EVENT XTargetRefresh "[#1#(msg)] RefreshXTarget#*#"
-#EVENT XTargetRefresh "#1# tells you, 'RefreshXTarget#*#"
-#EVENT XTargetRefresh "#1# tells the group, 'RefreshXTarget#*#'"
-#EVENT XTargetRefresh "#1# you tell your party, 'RefreshXTarget#*#'"
 
 
 #define dsINI xiris_common/xiris_damageshields.ini
@@ -92,9 +68,6 @@ Sub Events_Melee
 	/doevents Leashing
 	/doevents AutoAssist
 	/doevents XTargetRefresh
-	/doevents RESTICK
-	/doevents AERAMP
-	/doevents GETCLOSER
 /return
 
 Sub Events_Melee_Engaged
@@ -462,64 +435,60 @@ Sub chkComponents(string _component, int _count, string _type, string _summoner,
 /return	${message}
 
 
-
-
 Sub EVENT_GETCLOSER
-	/if (!${Target.ID} || ${Target.PctHps} == 0) /return 
-	/if (${bln_engaged} && !${getCloserTimer} && !${Me.AutoFire}) {
-		/varset getCloserTimer 20
-		| If the spawn has moved, stick back to the target
-		/if (${Target.Distance} <= ${AssistStickDistanceSetting} && ${AssistStickDistanceSetting} > 10) {
-			/varcalc AssistStickDistance ${AssistStickDistance} - 5
-			/face fast
-			/stick ${AssistStickDistance} behind
-		}
-		
-		/if (${Target.Distance} > 25) {
-			/stick off
-			/call TrueTarget ${int_targetID}
-			/if (${Plugin[MQ2Nav].Name.Length}) {
-				/nav target
-				:navDelay
-				/delay 10
-				/if (${Navigation.Active}) /goto :navDelay
-			}
-			/stick ${AssistStickDistance} behind
-			/killthis
-		}
-	}
+	/if ((!${Target.ID} || ${Target.PctHPs} == 0 || !${bln_engaged}) && ${timer_getCloser}) /return 
 	/doevents flush GETCLOSER
+	/varset timer_getCloser ${timer_getCloser.OriginalValue}
+	| If the target is less than max stick distance, adjust the stick
+	/call StickToTarget
+/return
+
+Sub StickToTarget
+	|/echo dist: ${Target.Distance} currentstick: ${int_currentStickDistance} minstick: ${int_minStickDistance} maxstick: ${int_maxStickDistance}
+	:tryStick
+	
+	/if (${Target.Distance} <= ${int_maxStickDistance} ) {
+		|/echo currentstick: ${int_currentStickDistance} minstick: ${int_minStickDistance} maxstick: ${int_maxStickDistance}
+		/if (${int_currentStickDistance} > ${int_minStickDistance})  /varcalc int_currentStickDistance ${int_currentStickDistance} - 5
+		/stick ${stickCmd} ${int_currentStickDistance}
+	} else /if (${Target.Distance} > ${int_maxStickDistance} && ${Target.Distance} < ${int_maxNavDistance}) {
+		/declare navDelayWait int local 0
+		/stick off
+		/nav target
+		:navDelay
+		/varcalc navDelayWait ${navDelayWait}+1
+		/if (${Target.Distance} < ${int_maxStickDistance}) {
+			/nav stop
+			/goto :tryStick
+		} else /if (${navDelayWait} < 20) {
+			/delay 1
+			/goto :navDelay
+		}
+	} else {
+		/rs Target is too far away to get to.
+		/if (${Navigation.Active}) /nav stop
+		/stick off
+		/melee reset
+		/return
+	}
 /return
 
 
 Sub EVENT_RESTICK
 	/if (${bln_engaged}) {
-		/call StickToAssistTarget
+		/call StickToTarget
 	}
 	/doevents flush RESTICK
-/return
-
-Sub StickToAssistTarget
-	/if (!${bln_engaged}) /return 
-	/if (!${Target.Type.Equal[NPC]}) /return
-	|-- move to back
-	/squelch /stick ${AssistStickDistance} ${stickCmd}
-	/delay 30 ${Me.Moving}
-/return
-
-Sub GetAssistStickDist
-	/varset AssistStickDistance ${Math.Calc[${Spawn[${Target.ID}].MaxRangeTo}*.8].Int}
-
-	|-- Check MaxRangeTo, make sure it is not out of bounds.
-	/if (${AssistStickDistance} > 25) /varset AssistStickDistance 25
-
 /return
 
 
 Sub chkTargetDist
 	/if (!${bln_engaged} || !${Me.Combat}) /return
-	/if (!${Me.AutoFire} && (${Target.Distance} > ${Math.Calc[${AssistStickDistance}*1.1].Int}  )) /call StickToAssistTarget
+	/if (!${Me.AutoFire} && (${Target.Distance} > ${Math.Calc[${int_currentStickDistance}*1.1].Int}  )) /call StickToTarget
 /return 
+
+
+
 
 Sub EVENT_AERAMP
 	/if (${Me.Combat}) {
@@ -659,8 +628,7 @@ Sub xbot_initialize_melee
 
 	|-- [Settings] : Melee Defaults
 	/declare 	MinStrikeEndurance 		int		outer	200
-	/declare 	MinBellowEndurance		int		outer	200
-	/declare	meleeAggro				bool	outer	FALSE
+	/declare 	MinBellowEndurance		int		outer	200FireRiposteDisc
 	/declare    provokeTimer            timer   outer   0
 	/declare 	stickCmd				string	outer   ${Ini[botINI,Sticking,stickCmd,behindonce 35]}
 	/declare 	bln_chkComponents		bool	outer	TRUE
@@ -668,9 +636,11 @@ Sub xbot_initialize_melee
 	/declare	timer_reAssist			timer	outer	5s
 	/declare    bln_riposting			bool    outer   FALSE
 
-	/declare 	AssistStickDistance		int		outer   25
-	/declare	AssistStickDistanceSetting int outer 	250
-	/declare	getCloserTimer			timer	outer	50
+	/declare 	int_currentStickDistance		int		outer   25
+	/declare	int_maxStickDistance 	int 	outer 	70
+	/declare 	int_minStickDistance	int		outer 	10
+	/declare    int_maxNavDistance		int		outer   300
+	/declare	timer_getCloser			timer	outer	30
 
 	|-- [Settings] : Downflags
 	/declare 	dfTimer					timer	outer 	0
