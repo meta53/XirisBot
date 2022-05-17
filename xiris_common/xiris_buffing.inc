@@ -32,11 +32,11 @@ REVISION HISTORY
 #EVENT DOSINGLETARGETBUFFS	"<#1#> doSingleTargetBuff #2#"
 #EVENT DOSINGLETARGETBUFFS	"[#1#(msg)] doSingleTargetBuff #2#"
 
-#EVENT DOCHARBUFFS 			"[#1#] doCharBuffs #2#"
+#EVENT DOCHARBUFFS 			"<#1#> doCharBuffs #2#"
 #EVENT DOCHARBUFFS 			"[#1#(msg)] doCharBuffs #2#"
 
-#EVENT REMOVEBUFF 			"[#1#] Remove buff #2#"
-#EVENT REMOVEBUFF 			"[#1#(msg)] Remove buff #2#"
+#EVENT REMOVEBUFF 			"<#1#> removebuff #2#"
+#EVENT REMOVEBUFF 			"[#1#(msg)] rmovebuff #2#"
 
 #EVENT REMOVEALLBUFFS		"<#1#> removeallbuffs#*#"
 #EVENT REMOVEALLBUFFS 		"[#1#(msg)] removeallbuffs#*#"
@@ -214,7 +214,7 @@ Sub cmbtBuffGRP
 
 			|-- Check to see if member has the buff
 			/varset gName ${Group.Member[${g}]}
-			/call check_validBots melee ${gName}
+			/call check_validBots melee ${gName} ${Me.Name} 
 
 			/if (${Macro.Return}) {
 				/if (${NetBots[${gName}].Buff[${buffSpell}].ID} ) {
@@ -256,31 +256,33 @@ Sub cmbtBuffGRP
  ----------------------------
 **|
 Sub doGroupBuffOnTarget(string tgt)
-
+	
 	/declare i    		  		int		local
 	/declare buffDuration 		int		local
 	/declare buffSpell    		string	local
 	/declare buffGem	  		string	local
 	/declare spellReadyCount	int 	local 0
 	/target pc ${tgt}
-	/delay 1s
+	/delay 10
+
 	/for i 1 to ${int_oocBuffTotal}
 		/varset 	buffSpell    ${OOCBUFF_${i}}
 		/varcalc	buffDuration ${Spell[${OOCBUFF_${i}}].Duration} * 6
 		/varset		buffGem		 ${OOCBUFF_${i}_Gem}
 
+		|/echo spell:${buffSpell} duration: ${buffDuration} gem: ${buffGem}
 		:spellReadyWait
 		/varcalc spellReadyCount ${spellReadyCount}+1
 		/if (${spellReadyCount} > 50) {
-			/echo waited for 5 minutes, it aint happening.
+			/echo Waited for 50s, it aint happening.
 			/varset int_oocBuffTotal 0
 			/return
 		}
 		/if (!${Me.SpellReady[${buffSpell}]} || ${Me.CurrentMana} < ${Spell[${buffSpell}].Mana}) {
-			/echo Waiting for ${buffSpell} a Tick (6s)
+			|/echo Waiting for ${buffSpell} Half a Tick (3s)
 			/if (${Me.Class.ShortName.Equal[SHM]}) /call chkManaConvert
 			/if (${Me.Standing}) /sit
-			/delay 6s
+			/delay 10
 			/call RunAllEvents
 			/if (${bln_engaged}) /return
 			/goto :spellReadyWait
@@ -612,13 +614,14 @@ Sub chkOOCBuffs
 |----------------------------------------------------|
 
 Sub EVENT_REMOVEBUFF(_line, _chatSender, _eventParams)
-	/declare badBuff string local ${_eventParams.Arg[1,-]}
-	/call RemoveBuff ${badBuff}
-
+	/declare buffToRemove string local ${_eventParams.Arg[1,-]}
+	/call RemoveBuff ${buffToRemove}
+	/doevents flush REMOVEBUFF
 /return
 
 Sub EVENT_REMOVEALLBUFFS(_line, _chatSender, _eventParams)
 	/call RemoveAllBuffs
+	/doevents flush REMOVEALLBUFFS
 /return
 
 Sub RemoveAllBuffs
@@ -632,7 +635,7 @@ Sub RemoveBuff(_badBuff)
 	/declare i int local
 
 	/for i 0 to 24
-		|/echo RemoveBuff ${i}
+		|/echo Remove_Buff ${i}
 		|/echo 1: ${Bool[${Window[BuffWindow].Child[BW_Buff${i}_Button].Tooltip}]}
 		|/echo 2: ${Window[BuffWindow].Child[BW_Buff${i}_Button].Tooltip.Find[${_badBuff}]}
 		/if (${Bool[${Window[BuffWindow].Child[BW_Buff${i}_Button].Tooltip}]} && ${Window[BuffWindow].Child[BW_Buff${i}_Button].Tooltip.Find[${_badBuff}]}) {

@@ -98,7 +98,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 			/call RunRaidEvents
 			/call RunClassEvents
 
-			|-- verify target status
+			|-- verify target status (this "should" target the NPC)
 			/call chkTarget	
 
 			|-- debuff lib
@@ -137,7 +137,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
  ----------------------------
 **|
 Sub healGRP
-	/varcalc	int_point_calcStopHeal ${Math.Calc[${int_grpHealPoint}*1.1]}
+	/varcalc	int_point_calcStopHeal ${Math.Calc[${int_point_grpNormal}*1.1]}
 
 	/declare	int_numDamaged	int	local	0
 	/declare	int_worstHP		int	local	100

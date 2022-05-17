@@ -689,7 +689,6 @@ Sub xbot_initialize_melee
 	/declare bln_useSnare			bool	outer	${Ini[botINI,Puller,bln_useSnare,FALSE]}
 	/declare war_ca_hate_1			string	outer	${Ini[botINI,Puller,war_ca_hate_1,Bazu Bellow]}
 	/declare war_ca_hate_2			string	outer 	${Ini[botINI,Puller,war_ca_hate_2,Bellow of the Mastruq]}
-	/declare spell_stun				string	outer	${Ini[botINI,Puller,pal_ca_hate_1,${spell_hate}]}
 	/declare int_castDistance		int		outer	${Ini[botINI,Puller,int_castDistance,120]}
 	
 	|-- [Settings] Damage shield/ no damage shield (specifically for events like pixxt riel tavas)

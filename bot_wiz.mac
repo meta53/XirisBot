@@ -104,7 +104,6 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 
 			|-- class specific
 			/call chkConcussion
-			/call chkDebuffs
 			
 			|-- dps library (caster)
 			/call RunRaidEvents
@@ -206,9 +205,9 @@ Sub variant_initialize(string _strTankName, int _intAssistAt, int _intTankHealPo
 	/declare timer_concDelay			timer	outer   ${Ini[botINI,Concussion,timer_concDelay,3s]}
 	
 	|--Translocation
-	/declare bln_tlUse					bool	outer  ${Ini[botINI,Translocation,bln_tlUse,TRUE]}
+	/declare bln_tlUse					bool	outer   ${Ini[botINI,Translocation,bln_tlUse,TRUE]}
 	/declare str_tlSpell				string	outer   ${Ini[botINI,Translocation,str_tlSpell,Teleport]}
-	/declare str_tlGem				string	outer   ${Ini[botINI,Translocation,str_tlGem,gem6]}
+	/declare str_tlGem					string	outer   ${Ini[botINI,Translocation,str_tlGem,gem6]}
 
 	|--Snaring
 	/declare bln_snareUse				bool	outer	${Ini[botINI,Snare,bln_snareUse,FALSE]}
@@ -243,8 +242,7 @@ SUB EVENT_AEOFF
 	/varset AENuke_Active FALSE
 /return
 
-SUB EVENT_FIRETL(_line, _chatSender, _eventParams)
-	/echo EVENT_FIRETL: ${_line}, ${_chatSender} ${_eventParams}
+SUB EVENT_FIRETL
 	/if (!${bln_tlUse}) /return
 	/doevents flush
 	/bc Firing TL

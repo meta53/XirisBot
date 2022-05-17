@@ -984,6 +984,7 @@ Sub xbot_initialize_casting
 	/declare int_namedNukeMinMana		int		outer	${Ini[botINI,DamageOverTime,int_namedNukeMinMana,10]} 
 	/declare int_nukeStartHP			int		outer	${Ini[botINI,DirectDamage,int_nukeStartHP,98]}
 	/declare int_nukeStopHP				int		outer	${Ini[botINI,DirectDamage,int_nukeStopHP,5]}
+	/declare int_namedNukeStartHP		int 	outer 	${Ini[botINI,DamageOverTime,int_namedNukeStartHP,100]}
 	/declare int_namedNukeStopHP		int 	outer 	${Ini[botINI,DamageOverTime,int_namedNukeStopHP,0]}
 	
 	/echo int_nukeTotal: ${int_nukeTotal}
@@ -999,7 +1000,7 @@ Sub xbot_initialize_casting
 		/declare Nuke_${nc}_NamedOnly   string  outer   ${Ini[botINI,DirectDamage,Nuke_${nc}_NamedOnly]}
 		/declare Nuke_${nc}_Timer		timer   outer   ${timer_nukeDelay}
 		/declare Nuke_${nc}_HasCastOnce	bool	outer   FALSE
-		/declare Nuke_${nc}_Delay   	int     outer   ${Ini[botINI,DirectDamage,Nuke_${nc}_NamedOnly,0]}
+		/declare Nuke_${nc}_Delay   	int     outer   ${Ini[botINI,DirectDamage,Nuke_${nc}_Delay,0]}
 		
 		/echo Nuke_${nc} Use:  ${Nuke_${nc}_Use} || Gem: ${Nuke_${nc}_Gem} || Start: ${Nuke_${nc}_StartHP}
 		/echo Stop: ${Nuke_${nc}_StopHP} || Resist: ${Nuke_${nc}_Resist} || Named: ${Nuke_${nc}_NamedOnly} || Timer: ${Nuke_${nc}_Timer}
@@ -1022,6 +1023,7 @@ Sub xbot_initialize_casting
 	/declare int_namedQNukeMinMana		int		outer	${Ini[botINI,DamageOverTime,int_namedQNukeMinMana,10]} 
 	/declare int_QnukeStartHP			int		outer	${Ini[botINI,QuickNuke,int_QnukeStartHP,98]}
 	/declare int_QnukeStopHP			int		outer	${Ini[botINI,QuickNuke,int_QnukeStopHP,0]}
+	/declare int_namedQNukeStartHP		int 	outer 	${Ini[botINI,DamageOverTime,int_namedQNukeStartHP,100]}
 	/declare int_namedQNukeStopHP		int 	outer 	${Ini[botINI,DamageOverTime,int_namedQNukeStopHP,0]}
 
 	/declare qn 						int		local
@@ -1035,6 +1037,7 @@ Sub xbot_initialize_casting
 		/declare QNuke_${qn}_NamedOnly 	string	outer	${Ini[botINI,QuickNuke,QNuke_${qn}_NamedOnly]}
 		/declare QNuke_${qn}_Timer		timer   outer   ${timer_QnukeDelay}
 		/declare QNuke_${qn}_HasCastOnce	bool	outer   FALSE
+		/declare QNuke_${qn}_Delay   	int     outer   ${Ini[botINI,QuickNuke,QNuke_${qn}_Delay,0]}
 	/next qn	
 
 	|--Stuns
@@ -1043,7 +1046,6 @@ Sub xbot_initialize_casting
 	/declare stun_hasCastOnce			bool	outer   FALSE
 	/declare int_stunMinMana			int		outer	${Ini[botINI,Stun,int_stunMinMana,0]}
 	/declare bln_stunLocking			bool	outer	FALSE
-
 
 	/declare st 						int		local
 	/for st 1 to ${int_stunTotal} 
@@ -1062,11 +1064,12 @@ Sub xbot_initialize_casting
 	/declare int_fastTotal				int		outer	${Ini[botINI,FastDOT,int_fastTotal,0]}
 	/declare timer_fastDelay			timer	outer	${Ini[botINI,FastDOT,timer_fastDelay,1s]}
 	/declare fast_hasCastOnce			bool	outer   FALSE
-	/declare int_fastMinMana			int		outer	${Ini[botINI,DamageOverTime,int_fastMinMana,10]} 
-	/declare int_namedFastMinMana		int		outer	${Ini[botINI,DamageOverTime,int_namedFastMinMana,1]}
+	/declare int_fastMinMana			int		outer	${Ini[botINI,FastDOT,int_fastMinMana,10]} 
+	/declare int_namedFastMinMana		int		outer	${Ini[botINI,FastDOT,int_namedFastMinMana,1]}
 	/declare int_fastStartHP			int		outer	${Ini[botINI,FastDOT,int_fastStartHP,94]}
 	/declare int_fastStopHP				int		outer	${Ini[botINI,FastDOT,int_fastStopHP,10]}
-	/declare int_namedFastStopHP		int 	outer 	${Ini[botINI,DamageOverTime,int_namedFastStopHP,5]}
+	/declare int_namedFastStartHP		int 	outer 	${Ini[botINI,FastDOT,int_namedFastStartHP,100]}
+	/declare int_namedFastStopHP		int 	outer 	${Ini[botINI,FastDOT,int_namedFastStopHP,5]}
 	/declare bln_fastTrigger			bool 	outer	FALSE
 	/declare int_fastTrigger			int		outer	${Ini[botINI,FastDOT,int_fastTrigger,3]}
 
@@ -1077,8 +1080,8 @@ Sub xbot_initialize_casting
 		/declare FAST_${fa}_Gem 		string	outer	${Ini[botINI,FastDOT,FAST_${fa}_Gem]}
 		/declare FAST_${fa}_MaxTries 	int		outer	${Ini[botINI,FastDOT,FAST_${fa}_MaxTries]}
 		/declare FAST_${fa}_NamedOnly 	int		outer	${Ini[botINI,FastDOT,FAST_${fa}_NamedOnly]}
-		/declare FAST_${fa}_StartHP		int		outer	${Ini[botINI,DamageOverTime,FAST_${fa}_StartHP,${int_fastStartHP}]}
-		/declare FAST_${fa}_StopHP		int		outer	${Ini[botINI,DamageOverTime,FAST_${fa}_StopHP,${int_fastStopHP}]}
+		/declare FAST_${fa}_StartHP		int		outer	${Ini[botINI,FastDOT,FAST_${fa}_StartHP,${int_fastStartHP}]}
+		/declare FAST_${fa}_StopHP		int		outer	${Ini[botINI,FastDOT,FAST_${fa}_StopHP,${int_fastStopHP}]}
 		/declare FAST_${fa}_Resisted	int		outer 	0
 		/declare FAST_${fa}_Resist      string  outer   ${Spell[${FAST_${fa}}].ResistType} 
 		/declare FAST_${fa}_Active		bool	outer 	FALSE
@@ -1094,6 +1097,7 @@ Sub xbot_initialize_casting
 	/declare int_namedDotMinMana		int		outer	${Ini[botINI,DamageOverTime,int_namedDotMinMana,1]}
 	/declare int_dotStartHP				int		outer	${Ini[botINI,DamageOverTime,int_dotStartHP,98]}
 	/declare int_dotStopHP				int		outer	${Ini[botINI,DamageOverTime,int_dotStopHP,10]}
+	/declare int_namedDotStartHP		int 	outer 	${Ini[botINI,DamageOverTime,int_namedDotStartHP,100]}
 	/declare int_namedDotStopHP			int 	outer 	${Ini[botINI,DamageOverTime,int_namedDotStopHP,5]}
 	/declare int_dotStopSeconds			int		outer 	${Ini[botINI,DamageOverTime,int_dotStopSeconds,15]}
 	

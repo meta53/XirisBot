@@ -146,7 +146,7 @@ Sub chkLifetap
 **|
 Sub chkFeignDeath
 	/if (${Me.Invis}||${Me.Moving}||!${bln_feignUse}) /return 
-	/if (${bln_feignUse} && ${Me.Standing} && (${int_concCount}>=${int_feignCountActive}||${Me.PctHPs}<${FDat})) {
+	/if (${bln_feignUse} && ${Me.Standing} && (${int_concCount}>=${int_feignCountActive}||${Me.PctHPs}<${int_feignHP})) {
 		/call MQ2Cast "${str_feignSpell}" ${str_feignGem}
 		/varset timer_feignDelay ${timer_feignDelay.OriginalValue}
 		/varset int_concCount 0

@@ -114,6 +114,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 		/call RunAllEvents
 
 		|-- Check to make sure MT is still alive, if not, find another and target it
+		|/echo chkMTAlive
 		/call chkMTAlive TRUE
 
 		|-- Check to see if self needs to be cured (xiris_curing.inc)
@@ -136,9 +137,6 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 			/call RunRaidEvents
 			/call RunClassEvents
 
-			|-- verify target status
-			/call chkTarget
-
 			|-- class specific
 			/call chkDebuffsOnSingleTarget ${int_targetID}
 			/call chkYaulp
@@ -148,6 +146,9 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 				/call RunRaidEvents
 				/call RunClassEvents
 				/call chkNuke
+
+				|-- verify target status
+				/call chkTarget
 				
 				|-- std library (burns/aa/clicks)
 				/call RunRaidEvents

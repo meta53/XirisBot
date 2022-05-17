@@ -144,51 +144,6 @@ Sub chkUtils
 	/call chkLeash
 /return
 
-|**
- ----------------------------
- Direct Damage  
- ----------------------------
- Loops through the nuke list and applies
- ----------------------------
-**|
-
-Sub chkNuke
-	/if (!${bln_engaged}) /return
-	/if (${Me.Casting.ID} || ${Me.Moving} || ${Me.Invis}) /return
-	/if (${int_nukeTotal} == 0) /return 
-	/if (${Me.PctMana} < 1) /return
-	
-	/if (${Target.PctHPs}<=${int_nukeStartHP} && ${Target.ID} && ${Target.Type.Equal[NPC]} && ${Me.PctMana}>=${int_nukeMinMana}) {
-	
-		/declare k int local
-		/for k 1 to ${int_nukeTotal}  
-			:nukeStart
-			|-- Check to see if this spell is ready, if not, goto next spell
-			/if (!${Me.SpellReady[${Nuke_${k}}]}) {
-				/if (${k} <= ${int_nukeTotal}) {
-					/next k
-					/goto :nukeStart
-				} else {
-					/return
-				}
-			}
-			:nukeCastWait
-			/if (${Me.Casting.ID}) {
-				/delay 2
-				/goto :nukeCastWait
-			}
-		
-			/if (${Target.PctHPs}<=${Nuke_${k}_StartHP} && ${Target.PctHPs}>=${Nuke_${k}_StopHP}) {
-				
-				/if (${Me.CurrentMana}>=${Spell[${Nuke_${k}}].Mana} && ${Me.SpellReady[${Nuke_${k}}]} && ${Target.Distance}<=${Spell[${Nuke_${k}}].Range} && ${Target.LineOfSight} && ${Nuke_${k}_Use}) {
-					/echo Current NUKE: ${Nuke_${k}}
-					/call MQ2Cast "${Nuke_${k}}" ${Nuke_${k}_Gem} 5s
-				}
-			}
-		
-		/next k
-	}
-/return
 
 |**
  ----------------------------
@@ -255,7 +210,7 @@ Sub healRNG
  ----------------------------
 **|
 Sub healGRP
-	/varcalc	int_point_calcStopHeal ${Math.Calc[${int_grpHealPoint}*1.1]}
+	/varcalc	int_point_calcStopHeal ${Math.Calc[${int_point_grpNormal}*1.1]}
 	
 	/declare	int_numDamaged	int	local	0
 	/declare	int_worstHP		int	local	100
@@ -291,7 +246,7 @@ Sub healGRP
 	/echo HealGroupMember ${int_MTID} ${Target.Name} "${str_currentHeal}"
 	/call healCast ${int_worstID} ${str_worstName} "${str_currentHeal}"
 	
-	/varset int_point_calcStopHeal	${int_grpHealPoint}
+	/varset int_point_calcStopHeal	${int_point_grpNormal}
 /return
 
 

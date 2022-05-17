@@ -38,7 +38,6 @@ REVISION HISTORY
 
 #EVENT CHStop "<#1#> CHStop #2#"
 #EVENT CHStop "[#1#(msg)] CHStop #2#"
-"
 
 #EVENT CHPause "<#1#> CHPause #2#"
 #EVENT CHPause "[#1#(msg)] CHPause #2#"
@@ -250,7 +249,7 @@ Sub healSELF
  ----------------------------
 **|
 Sub healGRP
-	/varcalc	int_point_calcStopHeal ${Math.Calc[${int_grpHealPoint}*1.1]}
+	/varcalc	int_point_calcStopHeal ${Math.Calc[${int_point_grpNormal}*1.1]}
 
 	/declare	int_numDamaged	int	local	0
 	/declare	int_worstHP		int	local	100
@@ -372,11 +371,15 @@ Sub chkHP
 		/call Interrupt
 		/return
 	}
-	
+
+	| TODO: Old Spellroutines.inc had giveuptimer, and castEndTime
+	|/declare giveUpTimer timer outer
+  	|/declare castEndTime timer outer
+  	|/declare refreshTime timer outer
 	| I'm no longer casting, or no longer need to stop it ie, target is MT
 	/if (!${Window[CastingWindow].Open}) /return 
-	/if (( ${use_interrupt_selfHeal})&&(${Target.ID}==${int_MTID}))	/if ((${Me.PctHPs}>=90)&&(${castEndTime}>=12)) /return
-	/if ((!${use_interrupt_selfHeal})&&(${Target.ID}==${int_MTID}))	/if (${castEndTime}>=12) /return 
+	|/if (( ${use_interrupt_selfHeal})&&(${Target.ID}==${int_MTID}))	/if ((${Me.PctHPs}>=90)&&(${castEndTime}>=12)) /return
+	|/if ((!${use_interrupt_selfHeal})&&(${Target.ID}==${int_MTID}))	/if (${castEndTime}>=12) /return 
 
 	| Check to see if I should interrupt because target is healed
 	/if ((${bln_autointerrupt})&&(${Target.PctHPs}>${int_point_calcStopHeal})) { 
@@ -516,9 +519,7 @@ Sub heal_chStart(string _chSettings, _position)
 		} else {
 			/delay ${delay}
 		}
-		
-		/call RunClassEvents
-		/call RunRaidEvents
+		/call RunAllEvents
 		/goto :chLoop
 	:chPause
 		/echo chPaused ${timer_chPaused}

@@ -1462,7 +1462,7 @@ Sub variant_initialize(string _channel, string _offtank, bool _highRisk)
 	/if (!${Defined[cmdChannel]}) /declare cmdChannel string	outer	bcga
 	/varset cmdChannel bcga
 	/echo 	 cmdChannel is ${cmdChannel}
-	/docommand /${cmdChannel}	//speed 1.1
+	/docommand /${cmdChannel}	//speed 1
 	
 
 	

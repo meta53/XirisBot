@@ -32,68 +32,38 @@ Sub EVENT_DebuffTarget(_line, _sender, _eventParams)
 	/call CastDebuffsOnTarget ${_eventParams.Arg[1, ]} TRUE
 /return
 
-|-- Loop through the target array, 
-|   and if target has a target, 
-|   and if pctHps is below 98%,
-|   and if LOS
-|   and the target is a tank, debuff it.
-Sub chkDebuffs
-	/if (${int_debuffTotal} == 0) /return 
-	/declare	ti		int		local	1
-	/declare isNamed	bool	local	FALSE
-
-	|-- clean the array
-	/call CleanTargetArray
-
-	|-- loop through the targets and check the debuff status
-	/for ti 1 to ${targetArray.Size}
-		/if (!${targetArray[${ti}]}) /goto :nextTarget
-		/if (${NearestSpawn[NPC ID ${targetArray[${i},1]}].ID} == NULL) {
-			/call CleanTarget ${ti}
-			/goto :nextTarget
-
-			| Verify the target has a target, is in LOS, pctHPs is less than DebuffStart and target is tank
-			/call TrueTarget ${targetArray[${ti},1]}
-			/if (!${Me.TargetOfTarget.ID} || !${Target.LineOfSight} || (${Target.AggroHolder.Class.ShortName.NotEqual[PAL]} || ${Target.AggroHolder.Class.ShortName.NotEqual[SHD]} || ${Target.AggroHolder.Class.ShortName.NotEqual[WAR]})) {
-				/goto :nextTarget
-			}
-
-			| Check to see if the target is named
-			/call TargetNamedCheck ${Target.ID}
-			/varset isNamed ${Macro.Return}
-
-			| Passed Checks, Cast all the debuffs on Target
-			/call CastDebuffsOnTarget ${Target.ID} ${isNamed}
-		}
-	:nextTarget
-		/next ti
-/return
 
 |-- Do not use the target array to check the targets, lets just check a single (current) target
 |   Useful for bards, and others that do not need to AE/Mez/Slow whatever will check if engaged on current target
+|   Note we currently disabled the array of targets so this is the only debuff check method
 Sub chkDebuffsOnSingleTarget(int _targetID)
 	/if (!${int_debuffTotal}) /return
-	/call TargetNamedCheck ${Target.ID}
-	/declare isNamed	bool	local	${Macro.Return}
-	/call CastDebuffsOnTarget ${_targetID} ${isNamed}
+	/call CastDebuffsOnTarget ${_targetID} FALSE
 /return
 
 
 |-- Loop through all debuffs, and attempt to cast one at a time
 |   Will check to see if the target already has the debuff and if so has more than 30s left on it
-Sub CastDebuffsOnTarget(int _targetID, bool isNamed) 
-	/if (!${int_debuffTotal}) /return
-	/if (!${Target.ID} || ${Target.ID} != ${_targetID}) /call TrueTarget ${_targetID}
-	/if (${Target.Type.NotEqual[NPC]}) /return
+Sub CastDebuffsOnTarget(int _targetID, bool _forced) 	
+	/if (!${int_debuffTotal}) 		/return
+
+	/call TargetNamedCheck ${_targetID}
+	/declare isNamed	bool	local	${Macro.Return}
+	/if (${_forced}) /varset isNamed TRUE
+	/if (${isNamed} && ${int_debuffTotalIfNamed} == 0) /return
+	/if (${int_debuffTotal} == 1 && ${DEBUFF_1_Timer} && !$!{_forced}) /return
 
 	/declare	db		int		local	1
 	/declare 	debuffDuration int local
 
+	|-- things passed, lets target the NPC
+	/call TrueTarget ${_targetID}
+
 	/for db 1 to ${int_debuffTotal}
-		/if (${DEBUFF_${db}_NamedOnly} && !${isNamed} || ${DEBUFF_${db}_Timer}) /goto :nextDB
+		/if ((${DEBUFF_${db}_NamedOnly} && !${isNamed} || ${DEBUFF_${db}_Timer}) || !${_forced}) /goto :nextDB
 		/if (${Me.Class.ShortName.NotEqual[BRD]}) {
-			|/echo checking if the debuff is already on ${DEBUFF_${db}}:${Target.Buff[${DEBUFF_${db}}].ID} && ${Target.BuffDuration[${DEBUFF_${db}}]}
-			/if (${Target.Buff[${DEBUFF_${db}}].ID} && ${Target.BuffDuration[${DEBUFF_${db}}]} > 100) /goto :nextDB
+			|/echo checking if the debuff is already on ${DEBUFF_${db}}:${Target.Buff[${DEBUFF_${db}}].ID} && ${Target.BuffDuration[${DEBUFF_${db}}]} and we arent forcing
+			/if (${Target.Buff[${DEBUFF_${db}}].ID} && ${Target.BuffDuration[${DEBUFF_${db}}]} > 100 && !${forced}) /goto :nextDB
 		}
 		/call chkSpellMemorized "${DEBUFF_${db}}" TRUE ${DEBUFF_${db}_Gem}
 		
@@ -120,6 +90,7 @@ Sub CastDebuffsOnTarget(int _targetID, bool isNamed)
 		/call RunRaidEvents
 		/next db
 	:return
+
 /return
 
 |-- Cast a Specific Debuff spell on the target
@@ -128,15 +99,15 @@ Sub CastDebuff(string _debuff, string _gem,  int _maxTries, int _targetID)
 	/declare	try		int		local	0
 	/if (!${Target.ID} || ${Target.ID} != ${_targetID}) /call TrueTarget ${_targetID}
 	:attemptDebuff
-		/if (${try} >${_maxTries}) /goto :return
+		/if (${try} > ${_maxTries}) /goto :return
 		/call MQ2Cast "${_debuff}" ${_gem} 5s
 		/varcalc try ${try}+1
-		/if (${Macro.Return.Equal["CAST_INTERRUPTED"]}) /goto :attemptDebuff
-		/if (${Macro.Return.Equal["CAST_RESISTED"]}) /goto :attemptDebuff
 		/if (${Macro.Return.Equal["CAST_IMMUNE"]}) /goto :return
 		/if (${Macro.Return.Equal["CAST_SUCCESS"]}) /goto :return
+		/goto :attemptDebuff
 	:return
 	/cecho \ag ${_debuff} ${Macro.Return}
+	/if (${try} > ${_maxTries}) /rs Unable to ${_debuff} on ${Target.Name} after ${_maxTries} tries!
 /return
 
 
@@ -351,24 +322,19 @@ Sub ResetDebuffsOnIndex(int _targetIndex)
 /return 
 
 Sub xbot_initialize_debuffing
-	/if (${str_classArchetype.Equal[MELEE_END]}) /return
-	/if (${Me.Class.ShortName.Equal[WAR]}) /return
-	
-	
-	
+
 	|--Debuff(s)
 	/declare bln_debuffUse				bool	outer	${Ini[botINI,Debuff,bln_debuffUse,TRUE]}
 	/declare bln_debuffActive			bool	outer	FALSE
-	/declare timer_debuff				timer	outer	30s
 	/declare int_debuffResist			int		outer	0
 	/declare int_tmpIndex				int		outer   0
 	/alert clear 4
 	
+	/declare int_debuffTotal			int		outer	${Ini[botINI,Debuff,int_debuffTotal,0]}
+	/declare int_debuffTotalIfNamed		int		outer	${Ini[botINI,Debuff,int_debuffTotalIfNamed,${int_debuffTotal}]}
 	/declare int_debuffStartHP			int		outer   ${Ini[botINI,Debuff,int_debuffStartHP,100]}
 	/declare int_debuffStopHP			int		outer   ${Ini[botINI,Debuff,int_debuffStartHP,10]}
 	
-	/declare int_debuffTotal			int		outer	${Ini[botINI,Debuff,int_debuffTotal,0]}
-	/declare int_debuffTotalIfNamed		int		outer	${Ini[botINI,Debuff,int_debuffTotalIfNamed,${int_debuffTotal}]}
 	/declare db							int		local
 	/for db 1 to ${int_debuffTotalIfNamed} 
 		/declare DEBUFF_${db} 				string	outer	${Ini[botINI,Debuff,DEBUFF_${db}]}
@@ -387,6 +353,5 @@ Sub xbot_initialize_debuffing
 
 	/cecho \ao xbot_initialize_debuffing
 	/call InitEvents_Debuffing
-	
 
 /return

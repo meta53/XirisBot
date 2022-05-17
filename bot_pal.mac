@@ -128,7 +128,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 			|-- dps library (caster)
 			/call RunRaidEvents
     		/call RunClassEvents
-			/call chkStun
+			/call chkStun FALSE
 			
 			|-- std library (burns/aa/clicks)
 			/call RunRaidEvents
@@ -164,7 +164,7 @@ Sub chkUtils
 Sub EVENT_STUNMOB(_line, _chatSender, _eventParams)
 	/cecho \ayI should stun this mob
 	/call TrueTarget(${_eventParams.Arg[1, ]})
-	/call chkStun
+	/call chkStun TRUE
 	/doevents flush STUNMOB
 /return
 

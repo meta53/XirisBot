@@ -165,7 +165,7 @@ Sub aggroByID(int _targetID)
 	|-- if SK/PAL try casting on it, if not, smack it;
 	/if (${Me.Class.ShortName.Equal[PAL]}) {
 		| Paladin should try to stun the NPC
-		/call chkStun
+		/call chkStun FALSE
 	} else /if (${Me.Class.ShortName.Equal[SHD]}) {
 		| SK should try hate spell
 		/call chkHate
@@ -193,25 +193,6 @@ Sub aggroByID(int _targetID)
 /return
 
 
-|**
- ----------------------------
- Stunning
- ----------------------------
- Checks current target, stuns if not on MT or Self
- ----------------------------
-**|
-
-Sub chkStun
-	/if (!${bln_engaged}) /return
-	/if (!${Target.ID}) /return
-	/if ( ${Me.SpellReady[${str_stun1Spell}]}) {
-		/echo chkStun: Stunning with ${str_stun1Spell}
-		/call MQ2Cast "${str_stun1Spell}" ${str_stun1Gem} 2s
-	} else /if ( ${Me.SpellReady[${str_stun2Spell}]}) {
-		/echo chkStun: Stunning with ${str_stun2Spell}
-		/call MQ2Cast "${str_stun2Spell}" ${str_stun2Gem} 2s
-	}
-/return
 
 |**
  ----------------------------

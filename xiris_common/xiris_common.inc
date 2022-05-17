@@ -298,7 +298,7 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 
 	|-- report that the common things are initialized
 	/cecho \agxbot_initialize: [ MT: ${str_MTName}(${int_MTID}) @ ${int_point_tankNormal} ] STName: ${str_tankName2}(${int_STID})
-
+	
 /return
 
 
@@ -489,20 +489,34 @@ Sub ResetTarget
  ----------------------------
 **|
 Sub chkMTAlive(bool _setAsTarget)
-	|--MT is alive; 
-	/if (${Spawn[PC ${str_tankName1}].ID} && (${intMTID} != ${Spawn[PC ${str_tankName1}].ID})) {
+	|/echo chkMTAlive ${str_tankName1}(${int_MTID})(${_setAsTarget})
+
+	|--MT is a live and ID is correct
+	/if (${Spawn[PC ${str_tankName1}].ID} && (${int_MTID} == ${Spawn[PC ${str_tankName1}].ID})) {
+		|/echo MT ${str_tankName1} is alive, and my MTID ${int_MTID} is correct
+		/goto :return
+	}
+
+	|--MT is alive but ID is wrong; 
+	/if (${Spawn[PC ${str_tankName1}].ID} && (${int_MTID} != ${Spawn[PC ${str_tankName1}].ID})) {
+		|/cecho \ag MT ${str_tankName1} is alive, and my MTID ${int_MTID} is wrong
 		/varset int_MTID ${Spawn[${str_tankName1}].ID}
 		/goto :return
 	}
 
 	|--ST is still alive; 
-	/if (${Spawn[PC ${str_tankName2}].ID} && (${intMTID} != ${Spawn[PC ${str_tankName2}].ID})) {
+	/if (${Spawn[PC ${str_tankName2}].ID} && (${int_MTID} != ${Spawn[PC ${str_tankName2}].ID})) {
+		/cecho \ag ST  is still alive, switching!
+		/varset str_tankName1 ${str_tankName2}
+		/varset str_tankName2 ${str_tankName3}
 		/varset int_MTID ${Spawn[${str_tankName2}].ID}
 		/goto :return
 	}
 	
 	|--TT is still alive; 
-	/if (${Spawn[PC ${str_tankName3}].ID} && (${intMTID} != ${Spawn[PC ${str_tankName3}].ID})) {
+	/if (${Spawn[PC ${str_tankName3}].ID} && (${int_MTID} != ${Spawn[PC ${str_tankName3}].ID})) {
+		/cecho \ag TT is still alive, switching!
+		/varset str_tankName1 ${str_tankName3}
 		/varset int_MTID ${Spawn[${str_tankName3}].ID}
 		/goto :return
 	}
@@ -512,12 +526,14 @@ Sub chkMTAlive(bool _setAsTarget)
 		/cecho \arALL TANKS ARE DEAD!
 		/call getMTbyPrecedence
 		/varset int_MTID ${Spawn[PC ${Macro.Return}].ID}
+		/varset str_tankName1 ${Spawn[PC ${Macro.Return}].Name}
 		/goto :return
 	}
 	
 	:return
 	|-- If set as target, target the new MT immediately
 	/if (${_setAsTarget} && (${Target.ID} != ${int_MTID})) {
+		/echo ${_setAsTarget} ${int_MTID}
 		/call TrueTarget ${int_MTID}
 	}
 
@@ -644,14 +660,14 @@ Sub chkAAs
 				/if ((${Target.ID}==${int_targetID}) && (${Target.PctHPs}<${AA_${aa}_StartHP}) && (${Me.PctHPs} <= ${AA_${aa}_MyHP}) && (${Target.PctHPs}>${AA_${aa}_StopHP})) {
 					/echo checking ${AA_${aa}}
 					/if (${Me.Class.ShortName.Equal[BRD]}) {
-						/if (${AAGem${aa}.Equal[combat]} && (${Me.PctEndurance} > 10)) {
+						/if (${AA_${aa}_Gem.Equal[combat]} && (${Me.PctEndurance} > 10)) {
 							/doability "${AA_${aa}}"
 						} else {
 							/medley queue "${AA_${aa}}"
 						}
 						/cecho \ag ${AA_${aa}}  : FIRED	
 					} else {
-						/if (${AAGem${aa}.Equal[combat]} && (${Me.PctEndurance} > 10)) {
+						/if (${AA_${aa}_Gem.Equal[combat]} && (${Me.PctEndurance} > 10)) {
 							/doability "${AA_${aa}}"
 						} else {
 							/call MQ2Cast "${AA_${aa}}"	alt
@@ -721,7 +737,7 @@ Sub chkBurn
 				| Check to see if the burn Before disc/alt (0 if not) is already run
 				/if (${Burn_${burn}_After} > 0) {
 					| Check to see if the burn Before is an alt or combatdisc  (two different ways of checking)
-					/if (${Burn${Burn_${burn}_After}_Type.Equal[combat]} && !${Me.CombatAbilityReady[${Burn_${Burn_${burn}_After}}]}) {
+					/if (${Burn_${Burn_${burn}_After}_Type.Equal[combat]} && !${Me.CombatAbilityReady[${Burn_${Burn_${burn}_After}}]}) {
 						/goto :doAltAbility
 					} else /if (${Burn_${Burn_${burn}_After}_Type.Equal[alt]} && !${Me.AltAbilityReady[${Burn_${Burn_${burn}_After}}]}) {
 						/goto :doAltAbility
@@ -1058,13 +1074,13 @@ Sub getMTbyPrecedence
 	/declare newID 		int 	local
 
 	|-- Start with the defined str_tankName1,...3
-	/if (${SpawnCount[pc ${str_tankName1}]} > 0) {
+	/if (${SpawnCount[pc ${str_tankName1}]} == 1) {
 		/varset newTank ${str_tankName1}
 		/goto :return
-	} else /if (${SpawnCount[pc ${str_tankName2}]} > 0) {
+	} else /if (${SpawnCount[pc ${str_tankName2}]} == 1) {
 		/varset newTank ${str_tankName2}
 		/goto :return
-	}  else /if (${SpawnCount[pc ${str_tankName3}]} > 0) {
+	}  else /if (${SpawnCount[pc ${str_tankName3}]} == 1) {
 		/varset newTank ${str_tankName3}
 		/goto :return
 	}
@@ -1075,7 +1091,7 @@ Sub getMTbyPrecedence
 	/if (${NearestSpawn[PC WAR].Name.NotEqual[NULL]}) {
 		/varset newTank ${NearestSpawn[PC WAR].Name}
 	} else /if (${NearestSpawn[PC SK].Name.NotEqual[NULL]}) {
-		/varset newTank ${NearestSpawn[PC SK].Name}
+		/varset newTank ${NearestSpawn[PC SHD].Name}
 	} else /if (${NearestSpawn[PC PAL].Name.NotEqual[NULL]}) {
 		/varset newTank ${NearestSpawn[PC PAL].Name}
 	} else /if (${NearestSpawn[PC MNK].Name.NotEqual[NULL]}) {
@@ -1100,7 +1116,9 @@ Sub EVENT_ChangeMT(_line, _sender, _eventParams)
 	/echo _eventParams:${_eventParams}
 	/declare name string local ${_eventParams.Arg[1, ]}
 	/varset	int_MTID ${Spawn[pc ${name}].ID}
-	/if (${Defined[_strTankName]})	/varset str_tankName1 ${name} 
+	/varset str_tankName1 ${name} 
+	
+	/echo MTID: ${int_MTID} MTName: ${name}
 	/bc [${Me.Class.ShortName}] ${Me.Name} ${str_action} >> ${Spawn[id ${int_MTID}].CleanName} <<  @ ${int_point_tankNormal}
 	/if (${Me.Class.ShortName.Equal[CLR]}) /call TrueTarget ${int_MTID}
 	/if (${Me.Name.Equal[${name}]}) {
@@ -1422,12 +1440,12 @@ SUB verifyEvent(sring _chatSender, string _eventParams)
 	/declare inRange 		bool local FALSE
 	/declare inAssistRange 	bool local FALSE
 	/declare sender         string local ${_chatSender}
-	| -Reset ChatSender.
+	| -Reset _chatSender.
 	/if (${_chatSender.Left[1].Compare[ ]}<0) /varset sender ${_chatSender.Right[-2].Left[-1]}
 	/if (${_chatSender.Equal[You]}) /varset sender ${Me.CleanName}
 	/if (${_chatSender.Equal[MQ2]}) /varset sender ${Me.CleanName}
 	
-	| -Validate ChatSender.
+	| -Validate _chatSender.
 	/if (${NetBots[${sender}].ID}) /varset userValidated TRUE
 	
 	| -Check inZone
@@ -1468,18 +1486,18 @@ SUB verifyEvent(sring _chatSender, string _eventParams)
 	/echo returning ${sender}_${userValidated}_${includeBot}_${inZone}_${inRange}
 /return ${sender}_${userValidated}_${includeBot}_${inZone}_${inRange}
 
-SUB check_selectedBots(selectedBots, ChatSender)
+SUB check_selectedBots(_selectedBots, _chatSender)
 
 	/declare botSelected bool local FALSE
-	/if (${selectedBots.Find[ ]}) /varset selectedBots ${selectedBots.Replace[ ,,]}
+	/if (${_selectedBots.Find[ ]}) /varset _selectedBots ${_selectedBots.Replace[ ,,]}
 
-	/if (${Select[priests,${selectedBots}]} && ${Select[${Me.Class.ShortName},${PriestClasses}]} || ${Select[healers,${selectedBots}]} && ${Select[${Me.Class.ShortName},${PriestClasses}]} || ${Select[ranged,${selectedBots}]} && ${Select[${Me.Class.ShortName},${RangedClasses}]} || ${Select[casters,${selectedBots}]} && ${Select[${Me.Class.ShortName},${CasterClasses}]} || ${Select[melee,${selectedBots}]} && ${Select[${Me.Class.ShortName},${MeleeClasses}]} || ${Select[me,${selectedBots}]} && ${ChatSender.Equal[${Me.CleanName}]} || ${Select[${Me.Class},${selectedBots}]} || ${Select[${Me.Class.ShortName},${selectedBots}]} || ${Select[${Me.CleanName},${selectedBots}]} || ${Select[all,${selectedBots}]} || ${Select[group,${selectedBots}]} && ${Me.CleanName.Equal[${_chatSender}]} || ${Select[group,${selectedBots}]} || ${Select[zone,${selectedBots}]} && ${SpawnCount[pc ${_chatSender}]}) /varset botSelected TRUE
+	/if (${Select[priests,${_selectedBots}]} && ${Select[${Me.Class.ShortName},${PriestClasses}]} || ${Select[healers,${_selectedBots}]} && ${Select[${Me.Class.ShortName},${PriestClasses}]} || ${Select[ranged,${_selectedBots}]} && ${Select[${Me.Class.ShortName},${RangedClasses}]} || ${Select[casters,${_selectedBots}]} && ${Select[${Me.Class.ShortName},${CasterClasses}]} || ${Select[melee,${_selectedBots}]} && ${Select[${Me.Class.ShortName},${MeleeClasses}]} || ${Select[me,${_selectedBots}]} && ${_chatSender.Equal[${Me.CleanName}]} || ${Select[${Me.Class},${_selectedBots}]} || ${Select[${Me.Class.ShortName},${_selectedBots}]} || ${Select[${Me.CleanName},${_selectedBots}]} || ${Select[all,${_selectedBots}]} || ${Select[group,${_selectedBots}]} && ${Me.CleanName.Equal[${_chatSender}]} || ${Select[group,${_selectedBots}]} || ${Select[zone,${_selectedBots}]} && ${SpawnCount[pc ${_chatSender}]}) /varset botSelected TRUE
 	
 /return ${botSelected}
 
-Sub check_validBots(selectedBots, botName)
+Sub check_validBots(_selectedBots, _botName, _chatSender)
 	/declare botValidated bool local false
-	/if (${Select[priests,${selectedBots}]} && ${Select[${NetBots[${botName}].Class.ShortName},${PriestClasses}]} || ${Select[healers,${selectedBots}]} && ${Select[${NetBots[${botName}].Class.ShortName},${PriestClasses}]} || ${Select[ranged,${selectedBots}]} && ${Select[${NetBots[${botName}].Class.ShortName},${RangedClasses}]} || ${Select[casters,${selectedBots}]} && ${Select[${NetBots[${botName}].Class.ShortName},${CasterClasses}]} || ${Select[melee,${selectedBots}]} && ${Select[${NetBots[${botName}].Class.ShortName},${MeleeClasses}]} || ${Select[me,${selectedBots}]} && ${ChatSender.Equal[${Me.CleanName}]} || ${Select[${Me.Class},${selectedBots}]} || ${Select[${NetBots[${botName}].Class.ShortName},${selectedBots}]} || ${Select[${Me.CleanName},${selectedBots}]} || ${Select[all,${selectedBots}]} || ${Select[group,${selectedBots}]} && ${Me.CleanName.Equal[${_chatSender}]} || ${Select[group,${selectedBots}]} || ${Select[zone,${selectedBots}]} && ${SpawnCount[pc ${_chatSender}]}) /varset botValidated TRUE
+	/if (${Select[priests,${_selectedBots}]} && ${Select[${NetBots[${_botName}].Class.ShortName},${PriestClasses}]} || ${Select[healers,${_selectedBots}]} && ${Select[${NetBots[${_botName}].Class.ShortName},${PriestClasses}]} || ${Select[ranged,${_selectedBots}]} && ${Select[${NetBots[${_botName}].Class.ShortName},${RangedClasses}]} || ${Select[casters,${_selectedBots}]} && ${Select[${NetBots[${_botName}].Class.ShortName},${CasterClasses}]} || ${Select[melee,${_selectedBots}]} && ${Select[${NetBots[${_botName}].Class.ShortName},${MeleeClasses}]} || ${Select[me,${_selectedBots}]} && ${_chatSender.Equal[${Me.CleanName}]} || ${Select[${Me.Class},${_selectedBots}]} || ${Select[${NetBots[${_botName}].Class.ShortName},${_selectedBots}]} || ${Select[${Me.CleanName},${_selectedBots}]} || ${Select[all,${_selectedBots}]} || ${Select[group,${_selectedBots}]} && ${Me.CleanName.Equal[${_chatSender}]} || ${Select[group,${_selectedBots}]} || ${Select[zone,${_selectedBots}]} && ${SpawnCount[pc ${_chatSender}]}) /varset botValidated TRUE
 	
 
 /return ${botValidated}
