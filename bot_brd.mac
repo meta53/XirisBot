@@ -191,13 +191,10 @@ Sub variant_initialize
 	|-- set up default vars
 	/declare    str_action				string	outer	Assisting	
 	
-	
 	|--Bard Specific Settings
 	|--Medley
-	/declare    str_currentMedly	    string	outer	melee
+	/declare    str_currentMedley	    string	outer	melee
 
-
-	
 	/memspellset default
 	/cecho \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID})HealPoint:${int_point_tankNormal} SAName: ${str_tankName2}(${int_STID})
 	/call InitEvents_Class

@@ -104,7 +104,7 @@ Sub EVENT_NoDS(_line, _sender, _eventParams)
 	| if I am a bard, switch to the noDS medley
 	/if (${Me.Class.ShortName.Equal[BRD]} && ${Medley.Active})	/medley stop
 	/if (${Me.Class.ShortName.Equal[BRD]} && !${Medley.Active}) /medley nods
-	/if (${Me.Class.ShortName.Equal[BRD]}) /varset str_currentMedly nods
+	/if (${Me.Class.ShortName.Equal[BRD]}) /varset str_currentMedley nods
 	/doevents flush NoDS
 /return
 
@@ -115,14 +115,14 @@ Sub EVENT_YesDS(_line, _sender, _eventParams)
 	| if I am a bard, switch to the normal medley
 	/if (${Me.Class.ShortName.Equal[BRD]} && ${Medley.Active})	/medley stop
 	/if (${Me.Class.ShortName.Equal[BRD]} && !${Medley.Active}) /medley melee
-	/if (${Me.Class.ShortName.Equal[BRD]}) /varset str_currentMedly melee
+	/if (${Me.Class.ShortName.Equal[BRD]}) /varset str_currentMedley melee
 	/doevents flush YesDS
 /return
 
 Sub EVENT_Sing(_line, _sender, _eventParams)	
 	/if (${Me.Class.ShortName.Equal[BRD]} && ${Medley.Active}) /medley stop
 	/if (${Me.Class.ShortName.Equal[BRD]} && !${Medley.Active}) /medley ${_eventParams}
-	/if (${Me.Class.ShortName.Equal[BRD]}) /varset str_currentMedly ${_eventParams}
+	/if (${Me.Class.ShortName.Equal[BRD]}) /varset str_currentMedley ${_eventParams}
 	/doevents flush Sing
 /return
 
@@ -235,8 +235,9 @@ Sub doBandolier(string _bando)
 /return
 
 Sub chkDownshits
-	/if (${dfTimer}) /return
+	/if (${timer_downflags}) /return
 	/if (${Target.ID} && ${Target.Type.Equal[NPC]}) /return
+	/if (${bln_engaged}) /return
 	|-- we don't buff at bind point because we might be naked.
 	/call chkNaked
 	/varset bln_naked ${Macro.Return}
@@ -283,7 +284,7 @@ Sub chkDownshits
 						/if (${buffName.Equal[${dsSpells[${ds}]}]}) /goto :nextDF
 					/next ds
 				}
-				/call RunRaidEvents	
+				/call RunAllEvents	
 				/if (${bln_engaged}) /return
 				|/echo buffName: ${buffName} castArg: ${castArg} tgtName: ${tgtName} ready: ${Me.SpellReady[${buffName}]} isSpell: ${isSpell} ?: ${castArg.Find[item]}
 				|/echo ${Spell[${buffName}].Stacks} && !${Me.Buff[${buffName}].ID}
@@ -302,7 +303,7 @@ Sub chkDownshits
 						/varset itemName ${FindItem[${itemID}]}
 						/varcalc castTime ${FindItem[${itemID}].CastTime} / 1000
 						/echo bard downshit : ${itemID} ${itemName} ${castTime}
-						/if (!${Medley}) /medley ${str_currentMedly}
+						/if (!${Medley}) /medley ${str_currentMedley}
 						/medley queue "${itemName}" -interrupt
 						/delay ${castTime}s
 					} else {
@@ -319,9 +320,8 @@ Sub chkDownshits
 				}
 			:nextDF
 			/next df
-			|- reset the DownFlag timer to 20seconds
-			/varset dfTimer 20s
-			
+			|- reset the DownFlag timer to 30seconds
+			/varset timer_downflags 30s
 		}
 	}
 /return
@@ -643,7 +643,7 @@ Sub xbot_initialize_melee
 	/declare	timer_getCloser			timer	outer	30
 
 	|-- [Settings] : Downflags
-	/declare 	dfTimer					timer	outer 	0
+	/declare 	timer_downflags			timer	outer 	0
 	/declare	downflagCount			int		outer	${Ini[botINI,Downflags,downflagCount,0]}
 	/declare df int local
 		/for df 1 to ${downflagCount} 

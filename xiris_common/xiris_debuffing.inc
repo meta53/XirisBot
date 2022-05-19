@@ -49,9 +49,10 @@ Sub CastDebuffsOnTarget(int _targetID, bool _forced)
 
 	/call TargetNamedCheck ${_targetID}
 	/declare isNamed	bool	local	${Macro.Return}
+
 	/if (${_forced}) /varset isNamed TRUE
 	/if (${isNamed} && ${int_debuffTotalIfNamed} == 0) /return
-	/if (${int_debuffTotal} == 1 && ${DEBUFF_1_Timer} && !$!{_forced}) /return
+	/if (${int_debuffTotal} == 1 && ${DEBUFF_1_Timer} && !${_forced}) /return
 
 	/declare	db		int		local	1
 	/declare 	debuffDuration int local

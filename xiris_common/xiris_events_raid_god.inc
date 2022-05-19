@@ -366,6 +366,7 @@ SUB EVENT_BALANCE
 		/if (${bpct} < 75 && ${bpct} >=65) {
 			|-- Balance of Defense	
 			/call BalancerKillCaster "Balance of Defense" ${Spawn[npc radius 5000 Defense].ID} ${bpct}
+			/call BalancerReset
 			
 		} 
 		|-post 60% have the casters help with rage
@@ -373,6 +374,7 @@ SUB EVENT_BALANCE
 			|-- Balance of Defense	
 			/call BalancerKillCaster "Balance of Rage" 		${Spawn[npc radius 5000 Rage].ID} ${bpct}
 			/call BalancerKillCaster "Balance of Defense" 	${Spawn[npc radius 5000 Defense].ID} ${bpct}
+			/call BalancerReset
 		} 
 
 		|-post 50% have the casters help with fury
@@ -381,6 +383,7 @@ SUB EVENT_BALANCE
 			/call BalancerKillCaster "Balance of Fury" 		${Spawn[npc radius 5000 Fury].ID} ${bpct}
 			/call BalancerKillCaster "Balance of Rage" 		${Spawn[npc radius 500 Rage].ID} ${bpct}
 			/call BalancerKillCaster "Balance of Defense" 	${Spawn[npc radius 5000 Defense].ID} ${bpct}
+			/call BalancerReset
 		} 
 
 		|-post 40% have the casters help with speed;
@@ -390,6 +393,7 @@ SUB EVENT_BALANCE
 			/call BalancerKillCaster "Balance of Fury" 		${Spawn[npc radius 5000 Fury].ID} ${bpct}
 			/call BalancerKillCaster "Balance of Rage" 		${Spawn[npc radius 5000 Rage].ID} ${bpct}
 			/call BalancerKillCaster "Balance of Defense" 	${Spawn[npc radius 5000 Defense].ID} ${bpct}
+			/call BalancerReset
 		} 
 	}
 
@@ -480,8 +484,6 @@ Sub BalancerKillCaster(string _targetName, int _targetID, int _balanceTo)
 		/if (${Target.PctHPs} > ${_balanceTo}) /goto :BalancerCasterLoop
 	:return
 	/if (${Twist.Twisting}) /twist off
-	/call ResetTarget
-	/varset bln_engaged FALSE
 /return
 
 Sub EVENT_BALANCEOFF
@@ -494,9 +496,20 @@ Sub BalancerReset
 	/if (${Defined[bln_balancing]}) /varset bln_balancing FALSE
 	/if (${str_classArchetype.Equal[PRIEST]}) /return
 	
-	/call ResetTarget
+	|-- reset various flags *WITHOUT* taking us out of engaged status
+	|-- class archetype resets
+	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
+		/stick off
+		/melee reset
+	} 
+
+	|-- pet resets
+	/if (${Me.Pet.ID} && ${Defined[bln_petAttacking]}) {
+		/varset bln_petAttacking 	FALSE
+		/pet hold on
+	}
 	/doevents flush
-	/melee reset
+
 
 	|-- Kvxe
 	/if (${str_classArchetype.NotEqual[CASTER]}) {

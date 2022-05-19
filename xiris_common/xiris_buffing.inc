@@ -193,7 +193,8 @@ Sub cmbtBuffSingle
 Sub cmbtBuffGRP
 	/if (!${bln_engaged})     /return
 	/if (!${bln_cmbtBuffUse}) /return
-	
+	/if (${int_cmbtBuffTotal} == 0 && ${CMBTBUFF_1_Timer}) /return
+
 	|-- loop through group members that get combat buff
 	/declare i    		  int		local
 	/declare g			  int		local
@@ -219,7 +220,8 @@ Sub cmbtBuffGRP
 			/if (${Macro.Return}) {
 				/if (${NetBots[${gName}].Buff[${buffSpell}].ID} ) {
 					|-- Check to see what the duration is (in ticks)
-					/if (${NetBots[${gName}].Buff[${buffSpell}].Duration} < 2) {
+					|/echo ${buffSpell} duration on ${gName} ${NetBots[${gName}].Buff[${buffSpell}].Duration}
+					/if (${NetBots[${gName}].Buff[${buffSpell}].Duration} < 1 ) {
 						/goto :castCMBTBuff
 					} else {
 						/goto :nextGroupMember
@@ -240,6 +242,7 @@ Sub cmbtBuffGRP
 		:nextGroupMember
 		/next g
 	:nextCMBT
+	/varset CMBTBUFF_${i}_Timer ${CMBTBUFF_${i}_Timer.OriginalValue}
 	/next i
 	/call RunRaidEvents
 	/call TrueTarget ${int_targetID}
@@ -781,13 +784,15 @@ Sub xbot_initialize_buffing
 	/declare int_cmbtBuffTotal			int		outer	${Ini[botINI,CombatBuffs,int_cmbtBuffTotal,0]}
 	/declare cmbt						int		local
 	/declare cmbtG						int		local
-	
+
+
+
 	/for cmbt 1 to ${int_cmbtBuffTotal} 
 		/declare CMBTBUFF_${cmbt} 				string	outer	${Ini[botINI,CombatBuffs,CMBTBUFF_${cmbt}]}
 		/declare CMBTBUFF_${cmbt}_Use 			bool	outer	${Ini[botINI,CombatBuffs,CMBTBUFF_${cmbt}_Use]}
 		/declare CMBTBUFF_${cmbt}_Gem 			string	outer	${Ini[botINI,CombatBuffs,CMBTBUFF_${cmbt}_Gem]}
 		/declare CMBTBUFF_${cmbt}_Active		bool	outer 	FALSE
-		
+		/declare CMBTBUFF_${cmbt}_Timer			timer   outer   ${Spell[CMBTBUFF_${cmbt}].Duration} * 6
 		/for cmbtG 0 to ${Group}
 			/declare CMBTBUFF_${cmbt}_${cmbtG}_Timer	timer   outer   0
 		/next cmbtG

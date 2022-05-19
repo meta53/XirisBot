@@ -351,8 +351,8 @@ Sub Event_CombatRezON
 
 Sub CombatRezON 
 	/bc ${Me.Name} is now auto rezzing during combat.
-	/varset bln_autoRez FALSE
-	/varset bln_combatRez FALSE
+	/varset bln_autoRez TRUE
+	/varset bln_combatRez TRUE
 /return 
 
 Sub Event_CombatRezOFF

@@ -533,7 +533,7 @@ Sub chkMTAlive(bool _setAsTarget)
 	:return
 	|-- If set as target, target the new MT immediately
 	/if (${_setAsTarget} && (${Target.ID} != ${int_MTID})) {
-		/echo ${_setAsTarget} ${int_MTID}
+		|/echo ${_setAsTarget} ${int_MTID}
 		/call TrueTarget ${int_MTID}
 	}
 
@@ -704,7 +704,7 @@ Sub chkBurn
 	/echo BurnMode Activated! Total Burns: ${int_burnModeTotal}
 	/for burn 1 to ${int_burnModeTotal} 
 		
-		/if (${Target.ID} && !${Me.Casting.ID} && ${Target.Type.Equal[NPC]}) {
+		/if (${Target.ID} && (!${Me.Casting.ID} || ${Me.Class.ShortName.Equal[BRD]}) && ${Target.Type.Equal[NPC]}) {
 
 			| ---------------
 			| Combat Ability
@@ -723,6 +723,7 @@ Sub chkBurn
 					:doCombatAbility
 					| Bards can click discs while singing
 					/doability "${Burn_${burn}}"
+					/rs ${burn}:DISC "${Burn_${burn}}" Clicked!
 					/cecho \agDISC \ayBurn_${burn} \agclicked!
 					/goto :nextBurn		
 				}
@@ -754,6 +755,7 @@ Sub chkBurn
 						} else {
 							/call MQ2Cast "${Burn_${burn}}" alt
 						}
+						/rs ${burn}:AA "${Burn_${burn}}" Clicked!
 						/cecho \agAA \ayBurn_${burn} \agclicked!
 						/goto :nextBurn	
 				}
@@ -767,6 +769,7 @@ Sub chkBurn
 					} else {
 						/call MQ2Cast "${Burn_${burn}}" item 2s
 					}
+					/rs ${burn}:ITEM  "${Burn_${burn}}" Clicked!
 					/cecho \agItem \ayBurn_${burn} \agclicked!
 					/goto :nextBurn	
 					
@@ -1117,7 +1120,7 @@ Sub EVENT_ChangeMT(_line, _sender, _eventParams)
 	/declare name string local ${_eventParams.Arg[1, ]}
 	/varset	int_MTID ${Spawn[pc ${name}].ID}
 	/varset str_tankName1 ${name} 
-	
+
 	/echo MTID: ${int_MTID} MTName: ${name}
 	/bc [${Me.Class.ShortName}] ${Me.Name} ${str_action} >> ${Spawn[id ${int_MTID}].CleanName} <<  @ ${int_point_tankNormal}
 	/if (${Me.Class.ShortName.Equal[CLR]}) /call TrueTarget ${int_MTID}

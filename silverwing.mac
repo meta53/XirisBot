@@ -1,0 +1,342 @@
+|**
+----------------------------
+Silverwing.mac
+----------------------------
+This macro is configured for use by the the puller for zones
+Sets the looters for Silverwing object by zone so I don't have to tell each toon to loot manually
+______________________________________________
+REVISION HISTORY
+    05.19.22	xiris	INITIAL REVISION
+______________________________________________
+REQUIRED PLUGINS
+
+______________________________________________
+REQUIRED INCLUDES  
+	xiris_common/xiris_common.inc
+**|
+
+
+Sub Main
+    |switch by zone shortname
+    /if (${Zone.ShortName.Equal[mistmoore]}) /call Mistmoore 
+    /if (${Zone.ShortName.Equal[permafrost]}) /call Permafrost 
+    /if (${Zone.ShortName.Equal[trakanon]}) /call Trakanon 
+    /if (${Zone.ShortName.Equal[warslikswood]}) /call Warsliks 
+    /if (${Zone.ShortName.Equal[dawnshroud]}) /call Dawnshroud 
+    /if (${Zone.ShortName.Equal[velketor]}) /call Velketor 
+    /if (${Zone.ShortName.Equal[thedeep]}) /call TheDeep 
+    /if (${Zone.ShortName.Equal[droga]}) /call Droga 
+    /if (${Zone.ShortName.Equal[riwwi]}) /call Riwwi 
+    /if (${Zone.ShortName.Equal[hohonora]}) /call HOH 
+
+/return
+
+Sub Mistmoore
+    /bct Xirea looton ALL
+    /bct Ania looton ALL
+    /bct Aergia looton ALL
+    /bct Achos looton ALL
+    /bct Aidos looton ALL
+    /bct Xerael looton ALL
+    /bct Xarael looton ALL
+    /bct Xorael looton ALL
+    /bct Xurael looton ALL
+    /bct Theist looton ALL
+    /bct Deist looton ALL
+    /bct Empathic looton ALL
+    /bct Nihilist looton ALL
+    /bct Dogmatist looton ALL
+    /bct Pantheon looton ALL
+    /bct Tragic looton ALL
+    /bct Ophemia looton ALL
+    /bct Opheoia looton ALL
+    /bct Ophexia looton ALL
+    /bct Opheyia looton ALL
+    /bct Ophexzia looton ALL
+    /bct Mluian looton ALL
+    /bct Shynxia looton ALL
+    /bct Xeixi looton ALL
+    /bct Xiexi looton ALL
+    /bct Xeia looton ALL
+    /bct Xeqisa looton ALL
+    /bct Cereborn looton ALL
+/return
+
+Sub Permafrost
+    /bct Xirea looton ALL
+    /bct Ania looton ALL
+    /bct Aergia looton ALL
+    /bct Achos looton ALL
+    /bct Aidos looton ALL
+    /bct Xerael looton ALL
+    /bct Xarael looton ALL
+    /bct Xorael looton ALL
+    /bct Xurael looton ALL
+    /bct Theist looton ALL
+    /bct Deist looton ALL
+    /bct Empathic looton ALL
+    /bct Nihilist looton ALL
+    /bct Dogmatist looton ALL
+    /bct Pantheon looton ALL
+    /bct Tragic looton ALL
+    /bct Ophemia looton ALL
+    /bct Opheoia looton ALL
+    /bct Ophexia looton ALL
+    /bct Opheyia looton ALL
+    /bct Ophexzia looton ALL
+    /bct Mluian looton ALL
+    /bct Shynxia looton ALL
+    /bct Drexia looton ALL
+    /bct Xeixi looton ALL
+    /bct Xiexi looton ALL
+    /bct Xeia looton ALL
+    /bct Xeqisa looton ALL
+    /bct Cereborn looton ALL
+/return
+
+Sub Trakanon
+    /bct Xirea looton ALL
+    /bct Ania looton ALL
+    /bct Aergia looton ALL
+    /bct Achos looton ALL
+    /bct Aidos looton ALL
+    /bct Xerael looton ALL
+    /bct Xarael looton ALL
+    /bct Xorael looton ALL
+    /bct Xurael looton ALL
+    /bct Theist looton ALL
+    /bct Deist looton ALL
+    /bct Empathic looton ALL
+    /bct Nihilist looton ALL
+    /bct Dogmatist looton ALL
+    /bct Pantheon looton ALL
+    /bct Tragic looton ALL
+    /bct Ophemia looton ALL
+    /bct Opheoia looton ALL
+    /bct Ophexia looton ALL
+    /bct Opheyia looton ALL
+    /bct Ophexzia looton ALL
+    /bct Mluian looton ALL
+    /bct Shynxia looton ALL
+    /bct Drexia looton ALL
+    /bct Xeixi looton ALL
+    /bct Xiexi looton ALL
+    /bct Xeia looton ALL
+    /bct Xeqisa looton ALL
+    /bct Cereborn looton ALL
+/return
+
+Sub Warsliks
+    /bct Xirea looton ALL
+    /bct Ania looton ALL
+    /bct Aergia looton ALL
+    /bct Achos looton ALL
+    /bct Aidos looton ALL
+    /bct Xerael looton ALL
+    /bct Xarael looton ALL
+    /bct Xorael looton ALL
+    /bct Xurael looton ALL
+    /bct Theist looton ALL
+    /bct Deist looton ALL
+    /bct Empathic looton ALL
+    /bct Nihilist looton ALL
+    /bct Dogmatist looton ALL
+    /bct Pantheon looton ALL
+    /bct Tragic looton ALL
+    /bct Ophemia looton ALL
+    /bct Opheoia looton ALL
+    /bct Ophexia looton ALL
+    /bct Opheyia looton ALL
+    /bct Ophexzia looton ALL
+    /bct Mluian looton ALL
+    /bct Shynxia looton ALL
+    /bct Drexia looton ALL
+    /bct Xeixi looton ALL
+    /bct Xiexi looton ALL
+    /bct Xeia looton ALL
+    /bct Xeqisa looton ALL
+    /bct Cereborn looton ALL
+/return
+
+Sub Dawnshroud
+    /bct Xirea looton ALL
+    /bct Ania looton ALL
+    /bct Aergia looton ALL
+    /bct Achos looton ALL
+    /bct Aidos looton ALL
+    /bct Xerael looton ALL
+    /bct Xarael looton ALL
+    /bct Xorael looton ALL
+    /bct Xurael looton ALL
+    /bct Theist looton ALL
+    /bct Deist looton ALL
+    /bct Empathic looton ALL
+    /bct Nihilist looton ALL
+    /bct Dogmatist looton ALL
+    /bct Pantheon looton ALL
+    /bct Tragic looton ALL
+    /bct Ophemia looton ALL
+    /bct Opheoia looton ALL
+    /bct Ophexia looton ALL
+    /bct Opheyia looton ALL
+    /bct Ophexzia looton ALL
+    /bct Mluian looton ALL
+    /bct Shynxia looton ALL
+    /bct Drexia looton ALL
+    /bct Xeixi looton ALL
+    /bct Xiexi looton ALL
+    /bct Xeia looton ALL
+    /bct Xeqisa looton ALL
+    /bct Cereborn looton ALL
+/return
+
+Sub Velketor
+    /bct Xirea looton ALL
+    /bct Ania looton ALL
+    /bct Aergia looton ALL
+    /bct Xerael looton ALL
+    /bct Xarael looton ALL
+    /bct Xorael looton ALL
+    /bct Xurael looton ALL
+    /bct Theist looton ALL
+    /bct Deist looton ALL
+    /bct Empathic looton ALL
+    /bct Nihilist looton ALL
+    /bct Dogmatist looton ALL
+    /bct Pantheon looton ALL
+    /bct Tragic looton ALL
+    /bct Opheoia looton ALL
+    /bct Ophexia looton ALL
+    /bct Opheyia looton ALL
+    /bct Ophexzia looton ALL
+    /bct Mluian looton ALL
+    /bct Shynxia looton ALL
+    /bct Xeixi looton ALL
+    /bct Xiexi looton ALL
+    /bct Xeia looton ALL
+    /bct Xeqisa looton ALL
+    /bct Cereborn looton ALL
+/return
+
+Sub TheDeep
+    /bct Xirea looton ALL
+    /bct Ania looton ALL
+    /bct Aergia looton ALL
+    /bct Achos looton ALL
+    /bct Xonshia looton ALL
+    /bct Xerael looton ALL
+    /bct Xarael looton ALL
+    /bct Xorael looton ALL
+    /bct Xurael looton ALL
+    /bct Theist looton ALL
+    /bct Deist looton ALL
+    /bct Empathic looton ALL
+    /bct Nihilist looton ALL
+    /bct Dogmatist looton ALL
+    /bct Pantheon looton ALL
+    /bct Tragic looton ALL
+    /bct Opheoia looton ALL
+    /bct Ophexia looton ALL
+    /bct Opheyia looton ALL
+    /bct Ophexzia looton ALL
+    /bct Mluian looton ALL
+    /bct Shynxia looton ALL
+    /bct Xeixi looton ALL
+    /bct Xiexi looton ALL
+    /bct Xeia looton ALL
+    /bct Xeqisa looton ALL
+    /bct Cereborn looton ALL
+/return
+
+Sub Droga
+    /bct Xirea looton ALL
+    /bct Ania looton ALL
+    /bct Aergia looton ALL
+    /bct Achos looton ALL
+    /bct Xonshia looton ALL
+    /bct Xerael looton ALL
+    /bct Xarael looton ALL
+    /bct Xorael looton ALL
+    /bct Xurael looton ALL
+    /bct Theist looton ALL
+    /bct Deist looton ALL
+    /bct Empathic looton ALL
+    /bct Nihilist looton ALL
+    /bct Dogmatist looton ALL
+    /bct Pantheon looton ALL
+    /bct Tragic looton ALL
+    /bct Ophenia looton ALL
+    /bct Opheoia looton ALL
+    /bct Ophexia looton ALL
+    /bct Opheyia looton ALL
+    /bct Ophexzia looton ALL
+    /bct Mluian looton ALL
+    /bct Shynxia looton ALL
+    /bct Xeixi looton ALL
+    /bct Xiexi looton ALL
+    /bct Xeia looton ALL
+    /bct Xeqisa looton ALL
+    /bct Cereborn looton ALL
+/return
+
+Sub Riwwi 
+    /bct Xirea looton ALL
+    /bct Ania looton ALL
+    /bct Aergia looton ALL
+    /bct Achos looton ALL
+    /bct Xonshia looton ALL
+    /bct Xerael looton ALL
+    /bct Xarael looton ALL
+    /bct Xorael looton ALL
+    /bct Xurael looton ALL
+    /bct Theist looton ALL
+    /bct Deist looton ALL
+    /bct Empathic looton ALL
+    /bct Nihilist looton ALL
+    /bct Dogmatist looton ALL
+    /bct Pantheon looton ALL
+    /bct Tragic looton ALL
+    /bct Opheoia looton ALL
+    /bct Ophexia looton ALL
+    /bct Opheyia looton ALL
+    /bct Ophexzia looton ALL
+    /bct Mluian looton ALL
+    /bct Shynxia looton ALL
+    /bct Xeixi looton ALL
+    /bct Xiexi looton ALL
+    /bct Xeia looton ALL
+    /bct Xeqisa looton ALL
+    /bct Cereborn looton ALL
+/return 
+
+Sub HOH 
+    /bct Xirea looton ALL
+    /bct Ania looton ALL
+    /bct Aergia looton ALL
+    /bct Aidos looton ALL
+    /bct Xerael looton ALL
+    /bct Xarael looton ALL
+    /bct Xorael looton ALL
+    /bct Xurael looton ALL
+    /bct Theist looton ALL
+    /bct Deist looton ALL
+    /bct Empathic looton ALL
+    /bct Dogmatist looton ALL
+    /bct Pantheon looton ALL
+    /bct Tragic looton ALL
+    /bct Ophidia looton ALL
+    /bct Ophelia looton ALL
+    /bct Opheoia looton ALL
+    /bct Ophexia looton ALL
+    /bct Opheyia looton ALL
+    /bct Ophexzia looton ALL
+    /bct Mluian looton ALL
+    /bct Shynxia looton ALL
+    /bct Ertris looton ALL
+    /bct Erinyas looton ALL
+    /bct Xeixi looton ALL
+    /bct Xiexi looton ALL
+    /bct Xeia looton ALL
+    /bct Xeqisa looton ALL
+    /bct Cereborn looton ALL
+/return
