@@ -1082,6 +1082,7 @@ Sub setAlerts
 	/squelch /alert add 1 "a troll villager"
 	/squelch /alert add 1 "a portal crystal"
 	/squelch /alert add 1 "kenra"
+	/squelch /alert add 1 "irak"
 	
 	
 	|=================================
