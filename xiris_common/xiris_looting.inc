@@ -331,7 +331,6 @@ Sub LootTarget(int _corpseID)
 			}
 			/if (${FindItemCount[${lootName}]} > ${lootCount}) {
 				/cecho \arWe already have more than we need of this item
-				/beep
 				/varset keep FALSE
 			} 
 			/if (!${lootClass}) {

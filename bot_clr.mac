@@ -137,6 +137,9 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 			/call RunRaidEvents
 			/call RunClassEvents
 
+			|-- verify engagement status (Acts like chkTarget, but for non meleeing)
+			/call chkMobDead
+
 			|-- class specific
 			/call chkDebuffsOnSingleTarget ${int_targetID}
 			/call chkYaulp
