@@ -191,14 +191,14 @@ Sub chkHeal_MT
 
 
 Sub chkHeal_Self
-	/if (${int_healmode}>=1 && ${Me.PctHPs}<${int_point_selfNormal}) {
+	/if (${int_healMode}>=1 && ${Me.PctHPs}<${int_point_selfNormal}) {
 		/call healSELF		
 	}
 /return
 
 
 Sub chkHeal_Group
-	/if (${int_healmode}>=2) {
+	/if (${int_healMode}>=2) {
         /call healGRP		
 	}
 /return
@@ -465,6 +465,7 @@ Sub heal_chStatus
 
 Sub heal_chStart(string _chSettings, _position)
 	/cecho \agheal_chStart id:${_chSettings.Arg[1]} tank1:${_chSettings.Arg[2]} tank2:${_chSettings.Arg[3]} delay:${_chSettings.Arg[4]} order:${_chSettings.Arg[5]}  position:${_position}
+	/varset str_savedHealMode ${str_healMode}
 	/call ChangeHealMode CHCHAIN
 	/varset bln_chChainMember TRUE
 
@@ -573,7 +574,7 @@ Sub heal_chStop(int _chainID)
 	/if ((${_chainID} == ${int_chChainID}) && ${bln_chChainMember}) {
 		/if (${Me.Casting.ID}) /call Interrupt
 		/varset bln_chChainMember FALSE
-		/call ChangeHealMode NORMAL
+		/call ChangeHealMode ${str_savedHealMode}
 	}
 /return
 
@@ -801,8 +802,9 @@ Sub xbot_initialize_healing(int _healPoint)
 	/declare	str_spellset				string  outer 	default
 	| 	Heal Mode NORMAL|EFFICIENT|CHCHAIN
 	/declare    str_healMode				string  outer 	NORMAL
+	/declare	str_savedHealMode			string  outer   ${str_healMode}
 	| 	Heal Mode 1 - self, 2 - group (default)
-	/declare	int_healmode    			int     outer   ${Ini[botINI,Healing_Settings,int_healmode,2]}
+	/declare	int_healMode    			int     outer   ${Ini[botINI,Healing_Settings,int_healMode,2]}
 	/declare	use_heal_divineArb			bool	outer	${Ini[botINI,Healing_Settings,use_heal_divineArb,FALSE]}
 	
 	|-- Healing Spells

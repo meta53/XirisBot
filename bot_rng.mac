@@ -310,8 +310,7 @@ Sub variant_initialize
 
 	|-- set up default vars
 	/declare    str_action				string	outer	Assisting	
-	/memspellset default
-	
+
 	|-- set up ranger specific variables
 	/declare	bln_preEngaged			bool	outer	FALSE
 	/declare	bln_snared				bool	outer	FALSE

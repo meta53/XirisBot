@@ -123,12 +123,7 @@ Sub chkPetWeaps
 		/delay 5s
 	}
 	/delay 10
-	/if (${Target.Distance} > 40) {
-		/melee reset
-		/varset bln_petWeaponized TRUE
-		/memspellset default
-		/return
-	}
+	/if (${Target.Distance} > 40) /goto :return
 	/stick 10
 	/delay 10
 
@@ -164,11 +159,12 @@ Sub chkPetWeaps
 		/delay 10
 		/if (${Window[GiveWnd].Open}) /notify GiveWnd GVW_Give_Button leftmouseup 
 	}
+
+	:return
 	/melee reset
 	/varset bln_petWeaponized TRUE
 	/memspellset default
 	/autoinv
-	
 /return
 
 
