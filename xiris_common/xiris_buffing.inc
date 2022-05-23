@@ -237,12 +237,13 @@ Sub cmbtBuffGRP
 			/call TrueTarget ${NetBots[${gName}].ID}
 			/call MQ2Cast "${buffSpell}" ${buffGem}
 			/if (${Cast.Result.Equal[CAST_SUCCESS]}) {
-				/cecho \ag ${buffSpell} ${Cast.Result} : DELAYING for \ay${NetBots[${gName}].Buff[${buffSpell}].Duration}s \agrefresh	
+				/cecho \ag ${buffSpell} ${Cast.Result} : DELAYING for \ay ${Spell[${buffSpell}].Duration}s \agrefresh	
+				/varset CMBTBUFF_${i}_Timer ${Spell[${buffSpell}].Duration}s
 			}
 		:nextGroupMember
 		/next g
 	:nextCMBT
-	/varset CMBTBUFF_${i}_Timer ${CMBTBUFF_${i}_Timer.OriginalValue}
+	
 	/next i
 	/call RunRaidEvents
 	/call TrueTarget ${int_targetID}

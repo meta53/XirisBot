@@ -856,8 +856,8 @@ Sub variant_initialize(int _pull_dist, string _channel, int _campCount)
 	/varcalc int_maxZHeight		${Me.Z} + 200
 
 	|--target information
-	/declare int_minPullCount		int		outer   2
-	/declare int_minTLevel			int		outer	46
+	/declare int_minPullCount		int		outer   20
+	/declare int_minTLevel			int		outer	26
 	/declare int_maxTLevel			int		outer	73
 	/declare bln_validTGT			bool	outer	FALSE
 	/declare bln_TGTDead			bool	outer	FALSE

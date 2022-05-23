@@ -48,8 +48,10 @@ Sub EnableLooting(string _eventParams)
 	| Announce
 	/bc ${Me.Name} is now Looting
 	/hidecorpse looted
-	/varset bln_lootAuto TRUE
 	/varset bln_onlyQuest FALSE
+	/if (${_eventParams.Equal[QUEST]}) /varset bln_onlyQuest TRUE
+	/varset bln_lootAuto TRUE
+	
 	/if (!${Plugin[MQ2Nav].Name.Length}) /plugin mq2nav
 /return
 
@@ -173,10 +175,10 @@ Sub ParseLootINI
 	|	[4] Class|*
 	|   [5] CharExclusion|Xiris, etc or..
 	|   [6] CharOnly|Xiris, etc or...
-	/declare loot_ALL[${int_total},4]		string  outer
-	/declare loot_VENDOR[${int_vendor},4]	string	outer
-	/declare loot_TRADE[${int_trade},4]		string	outer
-	/declare loot_QUEST[${int_quest},4]		string	outer
+	/declare loot_ALL[${int_total},5]		string  outer
+	/declare loot_VENDOR[${int_vendor},5]	string	outer
+	/declare loot_TRADE[${int_trade},5]		string	outer
+	/declare loot_QUEST[${int_quest},5]		string	outer
 	
 	/declare n int local 1
 	/declare item_loot string local
@@ -195,27 +197,31 @@ Sub ParseLootINI
 			/varset loot_VENDOR[${vc},2] ${item_loot.Arg[2,|]}
 			/varset loot_VENDOR[${vc},3] ${item_loot.Arg[3,|]} 
 			/varset loot_VENDOR[${vc},4] ${item_loot.Arg[4,|]} 
+			/varset loot_VENDOR[${vc},5] ${item_loot.Arg[5,|]} 
 		} else /if (${item_loot.Arg[2,|].Equal[TRADE]}) {
 			/varcalc tc ${tc}+1
 			/varset loot_TRADE[${tc},1] ${item_loot.Arg[1,|]} 
 			/varset loot_TRADE[${tc},2] ${item_loot.Arg[2,|]}
 			/varset loot_TRADE[${tc},3] ${item_loot.Arg[3,|]} 
 			/varset loot_TRADE[${tc},4] ${item_loot.Arg[4,|]} 
+			/varset loot_TRADE[${tc},5] ${item_loot.Arg[5,|]} 
 		} else /if (${item_loot.Arg[2,|].Equal[QUEST]} && !${item_loot.Arg[5,|].Find[${Me.Name}]}) {
 			/varcalc qc ${qc}+1
 			/varset loot_QUEST[${qc},1] ${item_loot.Arg[1,|]} 
 			/varset loot_QUEST[${qc},2] ${item_loot.Arg[2,|]}
 			/varset loot_QUEST[${qc},3] ${item_loot.Arg[3,|]} 
 			/varset loot_QUEST[${qc},4] ${item_loot.Arg[4,|]} 
+			/varset loot_QUEST[${qc},5] ${item_loot.Arg[5,|]} 
 		}
 
 		/varset loot_ALL[${n},1] ${item_loot.Arg[1,|]} 
 		/varset loot_ALL[${n},2] ${item_loot.Arg[2,|]}
 		/varset loot_ALL[${n},3] ${item_loot.Arg[3,|]} 
 		/varset loot_ALL[${n},4] ${item_loot.Arg[4,|]} 
+		/varset loot_ALL[${n},5] ${item_loot.Arg[5,|]} 
 	/next n
 
-	/echo loot_ALL: ${loot_ALL.Size}
+	/echo loot_ALL: ${loot_ALL.Size[1]}
 
 /return
 
@@ -267,20 +273,23 @@ Sub LootTarget(int _corpseID)
 		}
 
 		|-corpse looting
-		/declare n 			int 	local
-		/declare i 			int 	local
-		/declare keep  		bool 	local 	TRUE
-		/declare lootName 	string 	local 
-		/declare lootType 	string 	local
-		/declare lootCount	int		local	1000
-		/declare lootClass 	bool 	local 	FALSE
+		/declare n 						int 	local
+		/declare i 						int 	local
+		/declare keep  					bool 	local 	TRUE
+		/declare lootName 				string 	local 
+		/declare lootType 				string 	local
+		/declare lootCount				int		local	1000
+		/declare lootClass 				bool 	local 	FALSE
+		/declare lootCharExclusion   	bool    local   TRUE	| do not loot on this character [if found, dont loot]
+		/declare lootCharOnly 			bool	local	FALSE	| loot only on this character
+
 
 		/for n 1 to ${Corpse.Items}
 			|-check to see if I want the item
 			| [item][1] Name [2] type|* [3] count|* [4] class|*
 			/if (!${bln_onlyQuest}) {
 				/echo Slot ${n}: ${Corpse.Item[${n}].Name}
-				/for i 1 to ${loot_ALL.Size}
+				/for i 1 to ${loot_ALL.Size[1]}
 					|/echo ${i} ${loot_ALL[${i},1]}
 					/if (${loot_ALL[${i},1].Equal[${Corpse.Item[${n}].Name}]}) {
 
@@ -294,6 +303,12 @@ Sub LootTarget(int _corpseID)
 
 						|- classes to loot
 						/if (${loot_ALL[${i},4].Find[${Me.Class.ShortName}]} ||${loot_ALL[${i},4].Equal[*]} ) /varset lootClass TRUE
+
+						|- characters that shouldn't loot
+						/if (${loot_ALL[${i},5].Find[${Me.Name}]}) /varset lootCharExclusion FALSE
+
+						|- characters that should loot
+						/if (!${loot_ALL[${i},6].Find[${Me.Name}]} || ${loot_ALL[${i},6].Equal[*]}) /varset lootCharOnly TRUE
 
 						/goto :loot_validation
 					} 
@@ -314,6 +329,16 @@ Sub LootTarget(int _corpseID)
 					|- classes to loot
 					/if (${loot_QUEST[${i},4].Find[${Me.Class.ShortName}]} ||${loot_ALL[${i},4].Equal[*]} ) /varset lootClass TRUE
 
+					|- characters that shouldn't loot
+					/if (${loot_QUEST[${i},5].Find[${Me.Name}]}) {
+						/echo my name is found in ${loot_QUEST[${i},5]} excluding myself
+						/varset lootCharExclusion FALSE
+					} 
+
+					|- characters that should loot
+					/if (!${loot_QUEST[${i},6].Find[${Me.Name}]} || ${loot_QUEST[${i},6].Equal[*]}) /varset lootCharOnly TRUE
+
+
 					/goto :loot_validation
 				} 
 				/next i
@@ -324,7 +349,7 @@ Sub LootTarget(int _corpseID)
 
 			|-check to see if item is lore
 			:loot_validation
-			/cecho Count in Inventory:\ay${FindItemCount[${lootName}]} Maximum: \ay${lootCount} Class Lootable?: \ay${lootClass}
+			/cecho ${lootName} \awCount in Inventory:\ay${FindItemCount[${lootName}]} \awMaximum: \ay${lootCount} \awClass Lootable?: \ay${lootClass} \awExcluded by Name: \ay${lootCharExclusion} \awLoot By Me Only? \ay${lootCharOnly}
 			/if (${Corpse.Item[${n}].Lore} && ${FindItemCount[${lootName}]} == 1) {
 				/cecho \arItem is lore, and we have more than 1
 				/varset keep FALSE
@@ -337,6 +362,14 @@ Sub LootTarget(int _corpseID)
 				/cecho \arMy class cant keep this
 				/varset keep FALSE
 			} 
+			/if (${lootCharExclusion}) {
+				/cecho \arI shouldn't keep this (name - by lootCharExclusion)
+				/varset keep FALSE
+			}
+			/if (!${lootCharOnly}) {
+				/cecho \arI shouldn't keep this (name - by lootCharOnly)
+				/varset keep FALSE
+			}
 			:loot_gank
 			
 			/if (${keep}) {

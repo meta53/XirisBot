@@ -282,9 +282,9 @@ Sub chkQNuke
 			/if (!${QNuke_${i}_Use}) /goto :NextQuickNuke
 
 			|-- Check the timer on this nuke
-			/if (${QNuke_${i}_Timer} <= 0) /cecho \agTimer ready for \ay${QNuke_${i}} :: \ay${QNuke_${i}_Timer}
+			/if (${QNuke_${i}_Timer} == 0) /cecho \agTimer ready for \ay${QNuke_${i}} :: \ay${QNuke_${i}_Timer}
 			/if (${QNuke_${i}_Timer} > 0 && ${QNuke_${i}_HasCastOnce}) {
-				/if (${i}<${int_qnukeTotal}) { 
+				/if (${i}<${int_QnukeTotal}) { 
 					/cecho \arTimer not ready for \ay${QNuke_${i}} :: \ay${QNuke_${i}_Timer}
 					/goto :NextQuickNuke
 				} else {
@@ -357,28 +357,50 @@ Sub chkQNuke
  ----------------------------
  AE Direct Damage  
  ----------------------------
- Loops through the AE nuke list and applies
+ Loops through the AE nuke list and applies, doesn't do much checking because
+ this is usually triggered via an event
  ----------------------------
 **|
 Sub chkAENuke
 	/if (!${AENuke_Active}) /return
 	|-- AE Nuke is active, let's light them up!
-	/echo Lighting them up with AE Nuke ${AENuke_1}
-	/call chkSpellMemorized "${AENuke_1}" TRUE
-	:AECastWait
-		/if (${Me.Casting.ID}) {
-			/delay 2
-			/goto :AECastWait
+	/rs Lighting them up with ${int_AENukeTotal} AE Nukes!
+
+	/declare i int local
+	:AENukeLoop
+	/for i 1 to ${int_AENukeTotal}
+		:AENukeStart 
+		/if (${AENuke_${i}_Timer} == 0) /cecho \agTimer ready for \ay${AENuke_${i}} :: \ay${AENuke_${i}_Timer}
+		/if (${AENuke_${i}_Timer} > 0 && ${AENuke_${i}_HasCastOnce}) {
+			/if (${i}<${int_AENukeTotal}) { 
+				/cecho \arTimer not ready for \ay${AENuke_${i}} :: \ay${AENuke_${i}_Timer}
+				/goto :NextAENuke
+			}
 		}
-		/if (!${Me.SpellReady[${AENuke_1}]}) {
+		/call chkSpellMemorized "${AENuke_${i}}" TRUE ${AENuke_${i}_Gem}
+		:AENukeCastWait
+		/if (!${Me.SpellReady[${AENuke_${i}}]} || (${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]})) {
 			/delay 2
-			/goto :AECastWait
+			/goto :AENukeCastWait
 		}
-	/call MQ2Cast "${AENuke_1}"
-	/if (${Cast.Result.Equal[CAST_SUCCESS]}) {
-		/cecho \ag ${AENuke_1} ${Cast.Result}
-	}	
-/return
+
+		/call MQ2Cast "${AENuke_${i}}"	
+		/if (${Macro.Return.Equal[CAST_SUCCESS]}) {
+			/cecho \ag ${AENuke_${i}} ${Macro.Return} : DELAYING for \ay${AENuke_${i}_Timer.OriginalValue}s \agrefresh	
+		}
+
+		/if (${AENuke_${i}_Delay} > 0) {
+			/varset AENuke_${i}_Timer	${AENuke_${i}_Delay}
+		} else {
+			/varset AENuke_${i}_Timer	${AENuke_${i}_Timer.OriginalValue}
+		}
+		/varset AENuke_${i}_HasCastOnce TRUE
+	:NextAENuke
+	/call RunAllEvents
+	/next i
+	/if (${AENuke_Active}) /goto :AENukeLoop
+	:Return
+/return	
 
 |**
  ----------------------------
@@ -984,14 +1006,13 @@ Sub xbot_initialize_casting
 	/declare int_namedNukeMinMana		int		outer	${Ini[botINI,DamageOverTime,int_namedNukeMinMana,10]} 
 	/declare int_nukeStartHP			int		outer	${Ini[botINI,DirectDamage,int_nukeStartHP,98]}
 	/declare int_nukeStopHP				int		outer	${Ini[botINI,DirectDamage,int_nukeStopHP,5]}
-	/declare int_namedNukeStartHP		int 	outer 	${Ini[botINI,DamageOverTime,int_namedNukeStartHP,100]}
-	/declare int_namedNukeStopHP		int 	outer 	${Ini[botINI,DamageOverTime,int_namedNukeStopHP,0]}
+	/declare int_namedNukeStartHP		int 	outer 	${Ini[botINI,DirectDamage,int_namedNukeStartHP,100]}
+	/declare int_namedNukeStopHP		int 	outer 	${Ini[botINI,DirectDamage,int_namedNukeStopHP,0]}
 	
 	/echo int_nukeTotal: ${int_nukeTotal}
 	/declare nc 						int		local
 	/for nc 1 to ${int_nukeTotal} 
 		/declare Nuke_${nc} 			string	outer	${Ini[botINI,DirectDamage,Nuke_${nc}]}
- 
 		/declare Nuke_${nc}_Use 		bool	outer	${Ini[botINI,DirectDamage,Nuke_${nc}_Use]}
 		/declare Nuke_${nc}_Gem 		string	outer	${Ini[botINI,DirectDamage,Nuke_${nc}_Gem]}
 		/declare Nuke_${nc}_StartHP		int		outer	${Ini[botINI,DirectDamage,Nuke_${nc}_StartHP]}
@@ -1007,24 +1028,38 @@ Sub xbot_initialize_casting
 	/next nc
 
 	|--AE Nuke
-	/declare AENuke_Active				bool	outer	FALSE
-	/declare AENuke_1					string	outer 	${Ini[botINI,AENuke,AENuke_1,NULL]}
-	/declare AENuke_1_Use 				bool	outer	${Ini[botINI,AENuke,AENuke_1_Use,FALSE]}
-	/declare AENuke_1_Gem 				string	outer	${Ini[botINI,AENuke,AENuke_1_Gem]}
-	/declare AENuke_1_StartHP			int		outer	${Ini[botINI,AENuke,AENuke_1_StartHP]}
-	/declare AENuke_1_StopHP			int		outer	${Ini[botINI,AENuke,AENuke_1_StopHP]}
-	/declare AENuke_1_NamedOnly			bool	outer   ${Ini[botINI,AENuke,AENuke_1_NamedOnly]}
-	
+	/declare int_AENuke_Total 			int		outer	${Ini[botINI,AENuke,int_AENuke_Total,0]}	
+	/declare timer_AENuke_Delay			timer	outer	${Ini[botINI,AENuke,timer_AENuke_Delay,0]}
+
+	/echo int_AENuke_Total: ${int_AENuke_Total}
+	/declare ae 						int		local
+	/for ae 1 to ${int_AENuke_Total} 
+		/declare AENuke_${ae} 				string	outer	${Ini[botINI,AENuke,AENuke_${ae}]}
+		/declare AENuke_${ae}_Use 			bool	outer	${Ini[botINI,AENuke,AENuke_${ae}_Use]}
+		/declare AENuke_${ae}_Gem 			string	outer	${Ini[botINI,AENuke,AENuke_${ae}_Gem]}
+		/declare AENuke_${ae}_StartHP		int		outer	${Ini[botINI,AENuke,AENuke_${ae}_StartHP,0]}
+		/declare AENuke_${ae}_StopHP		int		outer	${Ini[botINI,AENuke,AENuke_${ae}_StopHP,0]}
+		/declare AENuke_${ae}_Resist    	string  outer   ${Spell[${AENuke_${ae}}].ResistType} 
+		/declare AENuke_${ae}_NamedOnly 	string  outer   ${Ini[botINI,AENuke,AENuke_${ae}_NamedOnly,FALSE]}
+		/declare AENuke_${ae}_Timer			timer   outer   ${timer_AENuke_Delay}
+		/declare AENuke_${ae}_HasCastOnce	bool	outer   FALSE
+		/declare AENuke_${ae}_Delay   		int     outer   ${Ini[botINI,AENuke,AENuke_${ae}_Delay,0]}
+		
+		/echo AENuke_${ae} Use:  ${AENuke_${ae}_Use} || Gem: ${AENuke_${ae}_Gem} || Start: ${AENuke_${ae}_StartHP}
+		/echo Stop: ${AENuke_${ae}_StopHP} || Resist: ${AENuke_${ae}_Resist} || Named: ${AENuke_${ae}_NamedOnly} || Timer: ${AENuke_${ae}_Timer}
+	/next ae
+
+
 	|--Quick Nuke
 	/declare int_QnukeTotal				int		outer	${Ini[botINI,QuickNuke,int_QnukeTotal,0]}	
 	/declare timer_QnukeDelay			timer	outer	${Ini[botINI,QuickNuke,timer_QnukeDelay,1s]}
 	/declare qnuke_hasCastOnce			bool	outer   FALSE
 	/declare int_QnukeMinMana			int		outer	${Ini[botINI,QuickNuke,int_QnukeMinMana,10]}
-	/declare int_namedQNukeMinMana		int		outer	${Ini[botINI,DamageOverTime,int_namedQNukeMinMana,10]} 
+	/declare int_namedQNukeMinMana		int		outer	${Ini[botINI,QuickNuke,int_namedQNukeMinMana,10]} 
 	/declare int_QnukeStartHP			int		outer	${Ini[botINI,QuickNuke,int_QnukeStartHP,98]}
 	/declare int_QnukeStopHP			int		outer	${Ini[botINI,QuickNuke,int_QnukeStopHP,0]}
-	/declare int_namedQNukeStartHP		int 	outer 	${Ini[botINI,DamageOverTime,int_namedQNukeStartHP,100]}
-	/declare int_namedQNukeStopHP		int 	outer 	${Ini[botINI,DamageOverTime,int_namedQNukeStopHP,0]}
+	/declare int_namedQNukeStartHP		int 	outer 	${Ini[botINI,QuickNuke,int_namedQNukeStartHP,100]}
+	/declare int_namedQNukeStopHP		int 	outer 	${Ini[botINI,QuickNuke,int_namedQNukeStopHP,0]}
 
 	/declare qn 						int		local
 	/for qn 1 to ${int_QnukeTotal} 
