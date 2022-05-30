@@ -275,7 +275,7 @@ Sub chkDownshits
 				/varset tgtName   ${downflag${df}.Token[3,|]}
 				/varset isSpell TRUE
 				/if (${castArg.Find[item]}>0) /varset isSpell FALSE
-				/if (${isSpell} && !${Me.SpellReady[${buffName}]}) /goto :nextDF
+				
 
 				|- If we have Damage Shields turned off, check to see if this is a damage shield before casting it
 				|  If found, skip the downflag
@@ -289,8 +289,13 @@ Sub chkDownshits
 				|/echo buffName: ${buffName} castArg: ${castArg} tgtName: ${tgtName} ready: ${Me.SpellReady[${buffName}]} isSpell: ${isSpell} ?: ${castArg.Find[item]}
 				|/echo ${Spell[${buffName}].Stacks} && !${Me.Buff[${buffName}].ID}
 				/if (${Spell[${buffName}].Stacks} && !${Me.Buff[${buffName}].ID}) {
+					/if (${isSpell} && !${Me.SpellReady[${buffName}]}) {
+						/cecho \ay${buffName} \awis \arNOT \awReady, Memorizing
+						| Spell is not ready, memorize it
+						/call chkSpellMemorized ${castArg} TRUE
+						/delay 10
+					} 
 
-					/delay 10
 					|- save existing target for buffs that take a target argument (3)
 					/if (${tgtName.NotEqual[NULL]}) 		/varset tgtID ${Spawn[pc ${tgtName}].ID}
 					/if (${SpawnCount[ID ${tgtID}]} >= 1 )  /call TrueTarget ${tgtID}

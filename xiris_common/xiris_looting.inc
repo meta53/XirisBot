@@ -57,6 +57,8 @@ Sub EnableLooting(string _eventParams)
 
 Sub EVENT_LOOT_OFF
 	/call DisableLooting
+	| Announce
+	/bc ${Me.Name} is no longer Looting
 	/doevents flush LOOT_OFF
 /return
 
@@ -231,7 +233,7 @@ Sub ParseLootINI
 |	- Loots if count < max, my class is a looter on the list
 |-------------------------------------------------------------------------------- 
 Sub LootTarget(int _corpseID)
-	|/echo lootTarget
+	/echo lootTarget
 	/call TrueTarget ${_corpseID}
 	
 	|-corpse validation
@@ -302,7 +304,7 @@ Sub LootTarget(int _corpseID)
 						/if (${loot_ALL[${i},3].NotEqual[*]}) /varset lootCount ${loot_ALL[${i},3]}
 
 						|- classes to loot
-						/if (${loot_ALL[${i},4].Find[${Me.Class.ShortName}]} ||${loot_ALL[${i},4].Equal[*]} ) /varset lootClass TRUE
+						/if (${loot_ALL[${i},4].Find[${Me.Class.ShortName}]} || ${loot_ALL[${i},4].Equal[*]} ) /varset lootClass TRUE
 
 						|- characters that shouldn't loot
 						/if (${loot_ALL[${i},5].Find[${Me.Name}]}) /varset lootCharExclusion FALSE
@@ -327,7 +329,7 @@ Sub LootTarget(int _corpseID)
 					/if (${loot_QUEST[${i},3].NotEqual[*]}) /varset lootCount ${loot_QUEST[${i},3]}
 
 					|- classes to loot
-					/if (${loot_QUEST[${i},4].Find[${Me.Class.ShortName}]} ||${loot_ALL[${i},4].Equal[*]} ) /varset lootClass TRUE
+					/if (${loot_QUEST[${i},4].Find[${Me.Class.ShortName}]} ||${loot_QUEST[${i},4].Equal[*]} ) /varset lootClass TRUE
 
 					|- characters that shouldn't loot
 					/if (${loot_QUEST[${i},5].Find[${Me.Name}]}) {

@@ -21,6 +21,7 @@ ______________________________________________
 #event D4 					"#*#MD4#*#"
 #event D5 					"#*#MD5#*#"
 #event D6 					"#*#MD6#*#"
+#event SetupHatred			"#*#SETUP#*#"
 
 Sub InitEvents_OOW_MPG_Hatred
 	/cecho \ag Initializing MPG Hatred
@@ -69,6 +70,12 @@ Sub Events_OOW_MPG_Hatred
 	/doevents D4
 	/doevents D5
 	/doevents D6
+	/doevents SetupHatred
+/return
+
+
+Sub EVENT_SetupHatred 
+
 /return
 
 Sub EVENT_D1
@@ -83,6 +90,10 @@ Sub EVENT_D1
 		/varcalc dist ${Math.Distance[${Me.Y},${Me.X},${Me.Z}:${D1Y},${D1X},${D1Z}]}
 		/if (${dist} < 50) /nav stop
 		/if (${Navigation.Active})  /goto :movement
+	:final
+	/warp loc ${D1Y} ${D1X} ${D1Z}
+	/if (${str_classArchetype.NotEqual[PRIEST]}) /call TrueTarget ${NearestSpawn[NPC Voracious].ID}
+	
 /return
 
 Sub EVENT_D2
@@ -97,6 +108,9 @@ Sub EVENT_D2
 		/varcalc dist ${Math.Distance[${Me.Y},${Me.X},${Me.Z}:${D2Y},${D2X},${D2Z}]}
 		/if (${dist} < 50) /nav stop
 		/if (${Navigation.Active})  /goto :movement
+	:final
+	/warp loc ${D2Y} ${D2X} ${D2Z}
+	/if (${str_classArchetype.NotEqual[PRIEST]}) /call TrueTarget ${NearestSpawn[NPC Voracious].ID}
 /return
 
 Sub EVENT_D3
@@ -111,6 +125,9 @@ Sub EVENT_D3
 		/varcalc dist ${Math.Distance[${Me.Y},${Me.X},${Me.Z}:${D3Y},${D3X},${D3Z}]}
 		/if (${dist} < 50) /nav stop
 		/if (${Navigation.Active})  /goto :movement
+	:final	
+	/warp loc ${D3Y} ${D3X} ${D3Z}
+	/if (${str_classArchetype.NotEqual[PRIEST]}) /call TrueTarget ${NearestSpawn[NPC Voracious].ID}	
 /return
 
 Sub EVENT_D4
@@ -125,6 +142,9 @@ Sub EVENT_D4
 		/varcalc dist ${Math.Distance[${Me.Y},${Me.X},${Me.Z}:${D4Y},${D4X},${D4Z}]}
 		/if (${dist} < 50) /nav stop
 		/if (${Navigation.Active})  /goto :movement
+	
+	/warp loc ${D4Y} ${D4X} ${D4Z}
+	/if (${str_classArchetype.NotEqual[PRIEST]}) /call TrueTarget ${NearestSpawn[NPC Voracious].ID}	
 /return
 
 Sub EVENT_D5
@@ -139,6 +159,9 @@ Sub EVENT_D5
 		/varcalc dist ${Math.Distance[${Me.Y},${Me.X},${Me.Z}:${D5Y},${D5X},${D5Z}]}
 		/if (${dist} < 50) /nav stop
 		/if (${Navigation.Active})  /goto :movement
+	:final
+	/warp loc ${D5Y} ${D5X} ${D5Z}
+	/if (${str_classArchetype.NotEqual[PRIEST]}) /call TrueTarget ${NearestSpawn[NPC Voracious].ID}			
 /return
 
 Sub EVENT_D6
@@ -153,4 +176,7 @@ Sub EVENT_D6
 		/varcalc dist ${Math.Distance[${Me.Y},${Me.X},${Me.Z}:${D6Y},${D6X},${D6Z}]}
 		/if (${dist} < 50) /nav stop
 		/if (${Navigation.Active})  /goto :movement
+	:final
+	/warp loc ${D6Y} ${D6X} ${D6Z}
+	/if (${str_classArchetype.NotEqual[PRIEST]}) /call TrueTarget ${NearestSpawn[NPC Voracious].ID}			
 /return

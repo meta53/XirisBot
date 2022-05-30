@@ -136,7 +136,7 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	|-- [Settings] : Communications & INI Declarations
 	/declare Debug 						bool	outer 	FALSE
 	/declare Verbosity					bool	outer	FALSE
-	/declare cmdChannel 				string	outer	${Ini[botINI,Settings,cmdChannel,bc]}
+	/declare cmdChannel 				string	outer	${Ini[botINI,Settings,cmdChannel,bcaa]}
 	
 	|-- [Settings] : Class Archetype (used in case switching)
 	/declare 	str_classArchetype		string	outer	UNKNOWN
@@ -1569,7 +1569,7 @@ SUB doRefreshXTarget
 	/declare i int local 1
 	/for i 1 to 5
 		/xtarget set ${i} grouptank
-		/delay 2
+		/delay 1
 		/xtarget set ${i} autohater
 	/next i
 /return

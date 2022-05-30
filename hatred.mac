@@ -1,0 +1,25 @@
+#Turbo 20
+Sub Main 
+    | Set Xiris (MT) Healing
+    /bct Xerael changeMT Xiris
+    /bct Xarael changeMT Xiris
+    /bct Xorael changeMT Xiris
+    /bct Xunshia changeMT Xiris
+    /bct Xurael changeMT Xiris
+    /bct Xanshia changeMT Xiris
+    /bct Dogmatist changeMT Xiris
+
+    | Set Xirin (SA) Healing
+    /bct Theist changeMT Xirin
+    /bct Tragic changeMT Xirin
+    /bct Xirael changeMT Xirin
+    /bct Xenshia changeMT Xirin
+    /bct Xinshia changeMT Xirin
+
+    | Set Sadelia (OT) Healing
+    /bct Xonshia changeMT Sadelia
+    /bct Deist changeMT Sadelia
+    /bct Nihilist changeMT Sadelia
+    /bct Empathic changeMT Sadelia
+    /bct Pantheon changeMT Sadelia
+/return

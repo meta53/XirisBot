@@ -201,6 +201,7 @@ Sub cmbtBuffGRP
 	/declare gName 	  	  string	local
 	/declare buffSpell    string	local
 	/declare buffGem	  string	local
+	/declare delay		  int       local	0
 
 	| -- loop through the combat buffs
 	/for i 1 to ${int_cmbtBuffTotal}
@@ -219,9 +220,10 @@ Sub cmbtBuffGRP
 
 			/if (${Macro.Return}) {
 				/if (${NetBots[${gName}].Buff[${buffSpell}].ID} ) {
+					|/cecho \ag ${buffSpell} ${NetBots[${gName}].Buff[${buffSpell}].Duration} remaining on ${gName}
 					|-- Check to see what the duration is (in ticks)
 					|/echo ${buffSpell} duration on ${gName} ${NetBots[${gName}].Buff[${buffSpell}].Duration}
-					/if (${NetBots[${gName}].Buff[${buffSpell}].Duration} < 1 ) {
+					/if (${NetBots[${gName}].Buff[${buffSpell}].Duration} < 3 ) {
 						/goto :castCMBTBuff
 					} else {
 						/goto :nextGroupMember
@@ -233,14 +235,16 @@ Sub cmbtBuffGRP
 				/goto :nextGroupMember
 			}
 			:castCMBTBuff
-			/cecho \ayCasting ${buffSpell} on ${gName}
+			|/cecho \ayCasting ${buffSpell} on ${gName}
 			/call TrueTarget ${NetBots[${gName}].ID}
 			/call MQ2Cast "${buffSpell}" ${buffGem}
 			/if (${Cast.Result.Equal[CAST_SUCCESS]}) {
-				/cecho \ag ${buffSpell} ${Cast.Result} : DELAYING for \ay ${Spell[${buffSpell}].Duration}s \agrefresh	
-				/varset CMBTBUFF_${i}_Timer ${Spell[${buffSpell}].Duration}s
+				/cecho \ag ${buffSpell} ${Cast.Result} : DELAYING for \ay ${Spell[${buffSpell}].Duration}s \agrefresh
+				/varcalc delay	(${Spell[${buffSpell}].Duration} * 6) - 10
+				/varset CMBTBUFF_${i}_Timer ${delay}s
 			}
 		:nextGroupMember
+		|/echo NextGroupMember ${g}
 		/next g
 	:nextCMBT
 	
@@ -563,6 +567,10 @@ Sub chkBuffByType(string _key)
 
 |-- check OOC Buffs for myself
 Sub chkOOCBuffs
+	|- downshitif (this is essentially a downshit)
+	/if ((${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]}) || ${Me.Moving} || (${SpawnCount[npc radius 55]}>0 && (${Zone.ID} != 340 && ${Zone.ID} != 344 && ${Zone.ID} != 345)) || ${Me.Feigning} || ${Me.Invis}) { 
+		/return
+	}
 
 	/declare i    		  int		local
 	/declare buffDuration int		local

@@ -33,7 +33,6 @@ Sub Events_Following
 /return
 
 
-
 Sub xbot_initialize_following
 
 	/declare Following 			bool 	outer FALSE
@@ -46,7 +45,6 @@ Sub xbot_initialize_following
 
 
 SUB EVENT_Follow(_line, _chatSender, _eventParams)
-	/echo follow? ${_chatSender}  :: ${_eventParams}
 	| -Verify the event
 	/call verifyEvent "${_chatSender}" "${_eventParams}"
 	/echo MacroReturn: ${Macro.Return}

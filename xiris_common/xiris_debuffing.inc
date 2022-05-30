@@ -49,25 +49,31 @@ Sub CastDebuffsOnTarget(int _targetID, bool _forced)
 
 	/call TargetNamedCheck ${_targetID}
 	/declare isNamed	bool	local	${Macro.Return}
-
+	/if (${_forced}) /cecho \agCastDebuffsOnTarget \awID:\ay${_targetID}  \awisNamed:\ay${isNamed}  \awforcing?:\ay${_forced}
 	/if (${_forced}) /varset isNamed TRUE
-	/if (${isNamed} && ${int_debuffTotalIfNamed} == 0) /return
-	/if (${int_debuffTotal} == 1 && ${DEBUFF_1_Timer} && !${_forced}) /return
+	/if (${_forced}) /goto :debuffTarget
+
+	/if (${isNamed} && ${int_debuffTotalIfNamed} == 0) /goto :return
+	/if (${int_debuffTotal} == 1 && ${DEBUFF_1_Timer} && !${_forced}) /goto :return
+
+
+
+	|-- things passed, lets target the NPC
+	:debuffTarget
+	/call TrueTarget ${_targetID}
 
 	/declare	db		int		local	1
 	/declare 	debuffDuration int local
-
-	|-- things passed, lets target the NPC
-	/call TrueTarget ${_targetID}
-
 	/for db 1 to ${int_debuffTotal}
-		/if ((${DEBUFF_${db}_NamedOnly} && !${isNamed} || ${DEBUFF_${db}_Timer}) || !${_forced}) /goto :nextDB
+		/if (${_forced}) /goto :debuffSpellCheck
+		/if ((${DEBUFF_${db}_NamedOnly} && !${isNamed}) || (${DEBUFF_${db}_Timer} && !${_forced})) /goto :nextDB
 		/if (${Me.Class.ShortName.NotEqual[BRD]}) {
 			|/echo checking if the debuff is already on ${DEBUFF_${db}}:${Target.Buff[${DEBUFF_${db}}].ID} && ${Target.BuffDuration[${DEBUFF_${db}}]} and we arent forcing
 			/if (${Target.Buff[${DEBUFF_${db}}].ID} && ${Target.BuffDuration[${DEBUFF_${db}}]} > 100 && !${forced}) /goto :nextDB
 		}
-		/call chkSpellMemorized "${DEBUFF_${db}}" TRUE ${DEBUFF_${db}_Gem}
-		
+
+		:debuffSpellCheck
+			/call chkSpellMemorized "${DEBUFF_${db}}" TRUE ${DEBUFF_${db}_Gem}
 		:debuffReadyWait 
 			/if ((!${Me.SpellReady[${DEBUFF_${db}}]} || ${Me.Casting.ID}) && ${Me.Class.ShortName.NotEqual[BRD]}) {
 				/delay 2

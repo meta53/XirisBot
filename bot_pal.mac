@@ -128,7 +128,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 			|-- dps library (caster)
 			/call RunRaidEvents
     		/call RunClassEvents
-			/call chkStun FALSE
+			/if (${bln_tanking}) /call chkStun FALSE
 			
 			|-- std library (burns/aa/clicks)
 			/call RunRaidEvents

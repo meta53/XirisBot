@@ -18,6 +18,8 @@ REVISION HISTORY
 	12.01.21	xiris	Added some tweaked events around pulling (NOLOS/TOOCLOSE) to handle weird edge cases
 	01.17.22	xiris	Added support for buff lines in chkBuffs, see xiris_buffing_lines.inc
 	04.10.22	xiris	Normalized arguments
+	05.24.22	xiris	Reworked the pulling sub - gained performance
+	05.28.22	xiris	Refactored /docommand /${cmdChannel} to be consistent globally
 ______________________________________________
 REQUIRED PLUGINS
     mq2melee
@@ -36,25 +38,24 @@ REQUIRED INCLUDES
 #include xiris_common/xiris_common.inc
 
 #Turbo 40
-#warning
+
 #define INI_zoneInfo xiris_common/xiris_pull_zoneinfo.ini
 
 #event RageOff              "#*#is no longer enraged#*#"
 #event RageOn               "#*#has become ENRAGED#*#"
 #event Zoned                "You have entered#*#"
 #event Zoned                "LOADING, PLEASE WAIT..."
-#event EndMac				"#*#monkeybutter#*#"
 #event NoLOS				"#*#you cannot see your target#*#"
 #event TooClose				"#*#your target is too close#*#"
 
-Sub Main(int _pull_dist, string _channel, int _campCount)
+Sub Main(int _pull_dist, string _channel, string _announce, int _campCount, bool _useDownFlags)
 	/delay 5
 
 	|-- initialize common xbot variables
 	/call xbot_initialize ${Me.Name}
 	
 	|-- initialize variables specific to this macro
-	/call variant_initialize ${_pull_dist} ${_channel} ${_campCount}
+	/call variant_initialize ${_pull_dist} ${_channel} ${_announce} ${_campCount} ${_useDownFlags}
 
 	|-- report status
 	/echo Pulling >> ${Zone.Name} @ ${int_maxRadius} Range<<
@@ -81,50 +82,38 @@ Sub Main(int _pull_dist, string _channel, int _campCount)
 		/call chkNeedCure
 
 		/call chkUtils
-		/call chkDownshits
+		/if (${useDownFlags}) /call chkDownshits
 		
-		/call setRSTVars
 		/call chkZone
-
 		
 		|-- reset group to camp spot (leash) if its empty
 		/if (${SpawnCount[npc radius ${int_campRadius} zradius 25]} == 0) {
 			/call resetCamp
-			/docommand ${cmdChannel} refreshXTarget
+			/docommand /${cmdChannel} refreshXTarget
+			/docommand /${cmdChannel} //varset bln_engaged FALSE
 			/hidecorpse npc
-			/call RunAllEvents
-			/call chkNeedCure
 		}
 		
 		|-- run the pull/kill segment
 		:getAndKill
 			/call getTarget
 			/if (${Target.Distance} > 20) /call pullTarget
-			/call killTarget
+			/if (!${Target.ID}) /goto :getAndKill
+			/if (${Target.ID}) /call killTarget
 			
 			/echo We have killed ${int_killCount} mobs
 
 	/goto :MainLoop
 /return
 
-
-
-
-
 Sub chkZone
 	/if (${Zone.ShortName.NotEqual[${SZ_shortName}]}) {
 		/if (${Zone.ShortName.Equal[GuildLobby]}) {
-			/docommand ${cmdChannel}  I died! GTFO! ${Time}
+			/docommand /${cmdChannel}  I died! GTFO! ${Time}
 			/delay 5s
-			|/docommand ${cmdChannel}  //melee off
-			/docommand ${cmdChannel}  //dzquit
+			/docommand /${cmdChannel}  //dzquit
 			/delay 10s
-			
-			/docommand ${cmdChannel}  offtankon
-			
-		    |/docommand ${cmdChannel}   Camping...${Time}
-			|/docommand ${cmdChannel}  //icampdesk
-			|/docommand ${cmdChannel}  //end
+			/docommand /${cmdChannel}  offtankon
 			/end
 		}
 	}
@@ -158,33 +147,25 @@ Sub getTarget
 	/echo getTarget
 	/if (${Me.Sitting}) /sit off
 
-	:acquireLoop
+	:AcquireLoop
+		| set the vars like target validity to FALSE so we can check
 		/call setRSTVars
 		/squelch /target clear
 		
 		|----------USE THIS FOR SPECIFIC HUNTER (ALERT 2) --------
 		/if (${SpawnCount[npc radius ${int_campRadius} zradius 15]} > 0) {
 			/echo NPC in camp, killing
-			/target npc range ${int_minTLevel} ${int_maxTLevel} radius ${int_maxRadius} noalert 1
+			/call TrueTarget ${NearestSpawn[npc radius ${int_campRadius} zradius 15].ID} 
 			/delay 5
 		} else /if (${SpawnCount[npc alert 2 radius ${int_alert2Radius} range ${int_minTLevel} ${int_maxTLevel}]} > 0) {
 			/echo NPC on alert 2 is up, killing
-			/target npc alert 2
+			/call TrueTarget ${NearestSpawn[npc range ${int_minTLevel} ${int_maxTLevel} radius ${int_alert2Radius} alert 2].ID}
 			/delay 5
 		} else /if (${SpawnCount[npc alert 2 radius ${int_alert2Radius} range ${int_minTLevel} ${int_maxTLevel}]} == 0 && ${SpawnCount[npc noalert 1]} > 0) {
 			/echo No NPCs on the alert 2 list are up, trying random NPC
-			/target npc range ${int_minTLevel} ${int_maxTLevel} radius ${int_maxRadius} noalert 1 
+			/call TrueTarget ${NearestSpawn[npc range ${int_minTLevel} ${int_maxTLevel} radius ${int_maxRadius} noalert 1].ID} 
 			/delay 5
-			/if (!${Target.ID}) {
-				/echo no NPCs around, delaying 1m
-				/delay 1m 
-				/goto :AcquireLoop
-			}
-		} else {
-			/echo no NPCs around, delaying 1m
-			/delay 1m
-			/goto :AcquireLoop
-		}
+		} 
 
 		/if (${Target.ID} && (${Target.Distance} <= ${int_campRadius})) {
 			|--if it is close, its valid;
@@ -195,32 +176,40 @@ Sub getTarget
 		}
 		
 		
-		|--restart
+		|--restart if there is no valid target
 		/if (!${bln_validTGT}) {
 			|-- if there is more than 1 camp in our dataset, we can start walking through the camps
 			/if (${int_campCount} > 1) {
-					/echo Checking on moving the camp
+					/echo Checking on Moving the Camp
 					:MoveCamp
-					/if (${int_currentCamp} < ${int_campCount}) {
-						/varcalc int_currentCamp ${int_currentCamp} + 1
-					} else {
-						/varcalc int_currentCamp ${int_currentCamp} - 1
+					|-- if we are less than the current camp and we are incrementing, move forward
+					/if (${int_currentCamp} == ${int_campCount}) {
+						/varset bln_increment FALSE
+					} else /if (${int_currentCamp} == 1) {
+						/varset bln_increment TRUE
 					}
-					
-					/echo Moving Camp to ${int_currentCamp}
+
+					/if (${bln_increment}) {
+						/varset int_currentCamp ${int_currentCamp}+1
+						/docommand /${cmdChannel} Incrementing Camp to ${int_currentCamp}
+					} else {
+						/varset int_currentCamp ${int_currentCamp}-1
+						/docommand /${cmdChannel} Decrementing Camp to ${int_currentCamp}
+					}
+				
 					/call moveCamp ${int_currentCamp}
 					/delay 10
 			} else {
-				|/echo no valid target delaying 5s
-				|/delay 5s
+				/echo no valid target delaying 5s
+				/delay 5s
 			}
-			/goto :acquireLoop
+			/goto :AcquireLoop
 		}
+
 		|--target is valid, continue
-		
-		/varset int_targetID ${Target.ID}
+		/varset int_targetID 	${Target.ID}
 		/varset bln_TGTDead		FALSE
-		/varset int_distTGT ${Int[${Target.Distance}]}
+		/varset int_distTGT 	${Int[${Target.Distance}]}
 		/echo Acquired ${Target.Name} at range ${Int[${Target.Distance}]}
 /return
 
@@ -269,14 +258,17 @@ Sub chkTarget
 		/return
 	}
 	
-	
-	
 	/varset bln_validTGT	TRUE
 /return 
 
 Sub setCamp
 	/echo Setting camp at camp${int_currentCamp} out of ${int_campCount}
 	/navigate RecordWaypoint bot_pull_nav
+	
+	/varset D1X int outer ${Me.X}
+	/varset D1Y int outer ${Me.Y}
+	/varset D1Z int outer ${Me.Z}
+
 	/varset int_campY ${Me.Y}
 	/varset int_campX ${Me.X}
 	/delay 1s
@@ -285,7 +277,7 @@ Sub setCamp
 
 Sub moveCamp(int _campNumber) 
 	/echo Moving to Camp ${_campNumber}
-	/docommand ${cmdChannel} //nav wp camp${_campNumber}
+	/docommand /${cmdChannel} //nav wp camp${_campNumber}
 	/delay 1
 	:moveCampNavLoop
 		/echo moveCampNavLoop
@@ -311,84 +303,108 @@ Sub moveCamp(int _campNumber)
 Sub pullTarget
 	/echo pullTarget
 	/declare campDist int local
+	/declare dist int local
 	|--check to see if we have a valid target, or skip
 	/declare attempt int local 0
 
 	
 	:pullLoop
-		
 		/if (!${bln_validTGT}) 				/goto :return
 		/if (!${Target.ID}) 				/goto :return
 		/if (${Target.Type.NotEqual[NPC]}) 	/goto :return
 	
+		| Start the pull by running to the target
+		:RunningToTarget
+		/if (${Me.TargetOfTarget.Name.Equal[${Me.Name}]}) /goto :ReturnWithPull
+		/if (${attempt} > 10) {
+			/target clear
+			/goto :ReturnWithPull
+		} 
+		/if (!${Target.ID}) /goto :return
+		/if (!${Navigation.Active}) /navigate target
+		/delay 10
 
-		
-		|-- check to see if I have aggro
-		/if (${Me.TargetOfTarget.CleanName.Equal[${Me.CleanName}]} || ${Me.XTarget} >= ${int_minPullCount}) {
-			/echo I have aggro of at least ${int_minPullCount}
-			:returnStart
-				/echo Returning to camp.
-				/navigate waypoint bot_pull_nav
-			:returnLoop
-				/delay 1s
-				/if (${Navigation.Active}) /goto :returnLoop
-				/goto :return
-		} else {
-			|-- Am I close enough to aggro?
+		|-- Check to see if I don't yet have aggro
+		:AggroCheck
+		/if (!${Me.TargetOfTarget.ID} && (${Me.XTarget} < ${int_minPullCount})) {
+			| I do not yet have aggro;
+			:AggroDistCheck 
+			| Am I close enough to aggro?
 			/if (${Target.Distance} < ${int_castDistance} && ${Target.LineOfSight}) {
-				|/echo Calling aggro loop because dist is within castDist range
-				/goto :aggroLoop
+				| I am, call aggro sub.
+				/call AggroTarget
+				/varcalc attempt ${attempt} + 1
+				/if (${Me.TargetOfTarget.Name.Equal[${Me.Name}]}) 	/goto :ReturnWithPull
+				/if (${Macro.Return.Equal[NOLOS]})    				/goto :RunningToTarget
+				/if (${Macro.Return.Equal[CAST_FIZZLE]})    		/goto :AggroCheck
+				/if (${Macro.Return.Equal[NOTARGET]}) 				/goto :return
+				/if (${Macro.Return.Equal[SUCCESS]})  {
+					/doevents NoLoS 
+					/if (${bln_noLOS}) {
+						/varset bln_noLOS FALSE
+						/goto :RunningToTarget
+					} else {
+						/goto :ReturnWithPull 
+					}
+				}
 			} else {
-				|-- start navigating if you havent
-				/if (!${Navigation.Active}) /navigate target
+				/goto :RunningToTarget
 			}
-		}
-		/goto :pullLoop
-	
-	
-	:aggroLoop
-		
-		/navigate stop
-		/face fast
-		/if (!${Target.ID}) 		  /goto :return
-		/if (${Me.TargetOfTarget.ID}) /goto :return
-		/if (!${Target.LineOfSight})  /goto :pullLoop
-
-		
-		|--attempt to aggro the mob
-		/if (${strPullType.Equal[RANGED]}) {
-			/ranged
 		} else {
-			/echo ${Me.SpellReady[${spell_hate}]} Cast "${spell_pull}" ${spell_pullGem} 2s
-			/call MQ2Cast "${spell_pull}" ${spell_pullGem} 2s
+			| I have aggro, returning to camp
+			:ReturnWithPull
+			/cecho \agReturning to Camp with \ay${Me.XTarget}+ \agmobs.
+			/navigate waypoint bot_pull_nav 
+			
+			:ReturnLoop
+				/delay 10
+				/varcalc dist ${Math.Distance[${Me.Y},${Me.X},${Me.Z}:${D1Y},${D1X},${D1Z}]}
+				/if (${dist} < 50) /nav stop
+				/if (${Navigation.Active})  /goto :ReturnLoop
 		}
-
-		/doevents NoLOS
-		/doevents TooClose
-		/delay 5
-		|-- Sometimes if we aren't spell casting and using range weapons we might be too close, and cannot hit them with it.
-		/if (${bln_tooClose}) {
-			/echo Too Close! Handling
-			/if (${Me.Class.ShortName.Equal[WAR]}) /call chk_warProvoke ${war_ca_hate_1}
-			/delay 1
-			/if (${Me.CombatAbilityReady[Taunt]}) /doability Taunt
-			/varset bln_tooClose FALSE
-		}
-		
-		|-- Target.LineOfSight gets a little wonky sometimes with floor items (boxes, etc) in the way
-		/if (${bln_noLOS}) {
-			/echo NoLOS! Handling
-			/navigate target
-			/delay 4s
-			/varset bln_noLOS FALSE
-		}
-		/goto :pullLoop
-		
-
 	:return
 /return	
 
 
+
+Sub AggroTarget 
+	/if (${Navigation.Active}) /navigate stop
+	/declare ret string local FAILED
+	:TargetAggroCheck
+	/if (!${Target.ID}) {
+		/varset ret NOTARGET
+	} else /if (!${Target.LineOfSight}) {
+		/varset ret NOLOS
+	} else /if (${Me.TargetOfTarget.Name.Equal[${Me.Name}]}) {
+		/varset ret SUCCESS
+	} else {
+		| Need to aggro the mob somehow
+		:AttemptAggro
+		/if (${strPullType.Equal[RANGED]}) {
+			/ranged
+			/doevents TooClose
+			|-- Sometimes if we aren't spell casting and using range weapons we might be too close, and cannot hit them with it.
+			/if (${bln_tooClose}) {
+				/echo Too Close! Handling
+				/if (${Me.Class.ShortName.Equal[WAR]}) /call chk_warProvoke "${war_ca_hate_1}"
+				/delay 1
+				/if (${Me.CombatAbilityReady[Taunt]}) /doability Taunt
+				/varset bln_tooClose FALSE
+				/goto :TargetAggroCheck
+			}
+			/delay 10
+			/goto :TargetAggroCheck
+		} else {
+			/call chkSpellMemorized "${spell_pull}" TRUE ${spell_pullGem}
+			/echo ${Me.SpellReady[${spell_pull}]} Cast "${spell_pull}" ${spell_pullGem} 2s
+			/call MQ2Cast "${spell_pull}" ${spell_pullGem} 2s
+			/if (${Macro.Return.Equal[CAST_SUCCESS]}) /varset ret SUCCESS
+			/if (${Macro.Return.Equal[CAST_CANNOTSEE]}) /varset ret NOLOS
+			/if (${Macro.Return.Equal[CAST_INTERRUPTED]}) /goto :AttemptAggro
+		} 
+	}
+	:return
+/return ${ret}
 
 |**
  ----------------------------
@@ -441,7 +457,8 @@ Sub killTarget
 	:killMob
 	|--issue kill command
 	/varcalc int_killCount ${int_killCount}+1
-	/bc KillMob ${Target.ID} "${Target.Name}" ${Time.Time24}
+	|TODO: make kill command use cmd chanenl
+	/docommand /${announceChannel} KillMob ${Target.ID} "${Target.Name}" ${Time.Time24}
 	/call ResetCastTimers
 	/killthis
 	/attack on
@@ -452,16 +469,17 @@ Sub killTarget
 		/call MQ2Cast "${spell_aehate}" ${spell_aehateGem}
 	}
 	
-	/if ((${SpawnCount[npc radius ${int_campRadius}]} > 1) && ${Me.Class.ShortName.Equal[WAR]}  && ${Me.CombatAbilityReady[Area Taunt]} ) {
-		|/echo ${Me.CombatAbilityReady[Area Taunt]}
-		/doability Area Taunt
+	/if ((${SpawnCount[npc radius ${int_campRadius}]} > 1) && ${Me.Class.ShortName.Equal[WAR]} && ${Me.CombatAbilityReady[Area Taunt]}) {
+		/doability "Area Taunt"
+	} else /if ((${SpawnCount[npc radius ${int_campRadius}]} > 1) && ${Me.Class.ShortName.Equal[WAR]} && ${Me.AltAbilityReady[Rampage]}) {
+		/call MQ2Cast "Rampage" alt
 	}
+	
 	
 	/if (!${Me.Combat}) {
 		/killthis
 	}
-	
-	/doevents flush
+
 	
 	|--while in combat do these things
 	:combatLoop
@@ -472,13 +490,13 @@ Sub killTarget
 
 		/if (!${bln_TGTDead}) {
 			/if ((${Me.TargetOfTarget.ID} != ${Me.ID}) && !${Target.Fleeing}) {
-				/if (${Me.Class.ShortName.Equal[SHD]} || ${Me.Class.ShortName.Equal[PAL]}) {
-					|/echo ${Me.SpellReady[${spell_hate}]} Cast ${spell_hate} ${spell_hateGem} 5s
-					/call chk_casterProvoke ${spell_hate}
-				} else /if (${Me.Class.ShortName.Equal[WAR]}) {
-					/call chk_warProvoke ${war_ca_hate_1}
+				/if ((${Me.Class.ShortName.Equal[SHD]} || ${Me.Class.ShortName.Equal[PAL]}) && ${Me.SpellReady[${spell_hate}]}) {
+					/call MQ2Cast "${spell_hate}" ${spell_hateGem}
+				} else /if (${Me.Class.ShortName.Equal[WAR]} && (${Me.CombatAbilityReady[${war_ca_hate_1}]})) {
+					/doability "${war_ca_hate_1}"
+				} else /if (${Me.Class.ShortName.Equal[WAR]} && (${Me.CombatAbilityReady[${war_ca_hate_2}]})) {
+					/doability "${war_ca_hate_2}"
 				} 
-			
 			} 
 			/if ((${SpawnCount[npc radius ${int_campRadius}]} > 1) && ${Me.Class.ShortName.Equal[SHD]}  && ${Me.SpellReady[${spell_aehate}]} ) {
 				/echo ${Me.SpellReady[${spell_aehate}]} Cast ${spell_aehate} ${spell_aehateGem} 5s
@@ -487,7 +505,6 @@ Sub killTarget
 			/goto :combatLoop
 		} else {
 			/echo target is dead, return
-			/return
 		}
 /return
 
@@ -533,9 +550,9 @@ Sub chkUtils
 
 	:chkUtilLoop
 		
-		/call chkBuffs
-		/call chkMana
-		/call chkEndurance
+		|/call chkBuffs
+		|/call chkMana
+		|/call chkEndurance
 		/call chkHP
 		/call chkComponentsAll
 			
@@ -803,7 +820,7 @@ Sub chkComponents
 **|
 
 Sub resetCamp
-	/bca //nav wp camp${int_currentCamp}
+	/docommand /${cmdChannel} //nav wp camp${int_currentCamp}
 /return
 
 |**
@@ -814,23 +831,55 @@ Sub resetCamp
  Eventually this needs to be pulled from an INI per zone and per puller!
  ----------------------------
 **|
-Sub variant_initialize(int _pull_dist, string _channel, int _campCount)
+Sub variant_initialize(int _pull_dist, string _channel, string _announce, int _campCount, bool _useDownFlags)
 	|--loot
 	/varset bln_lootAuto			FALSE
 	/if (${bln_lootAuto}) 			/call EnableLooting
+
+	|--downflags 
+	/declare useDownFlags	bool	outer	TRUE
+	/if (${Defined[_useDownFlags]} && !${_useDownFlags}) /varset useDownFlags FALSE
 	
 	|--melee plugin/aggro for the requester
 	/melee aggro=on
+	/docrack preventspeed on
 	/declare useGroup	bool	outer	FALSE
 	
-	|--channel definitions
+	|--command channel setup
 	/if (!${Defined[cmdChannel]}) /declare cmdChannel string	outer	bcga
 	/varset cmdChannel bcga
-	/if (${Defined[_channel]}) /varset cmdChannel /${_channel}
-	/echo 	 cmdChannel is ${cmdChannel}
-	/docommand ${cmdChannel}	//speed 1.25
-	/docrack preventspeed on
+	/if (${Defined[_channel]}) /varset cmdChannel ${_channel}
+	/echo 	cmdChannel is ${cmdChannel}
+	/docommand /${cmdChannel}	//speed 1.25
+
+	|--announce channel set
+	/if (!${Defined[announceChannel]}) /declare announceChannel string	outer	bcga
+	/varset announceChannel bcga
+	/if (${Defined[_announce]}) /varset announceChannel ${_announce}
+	/echo announceChannel is ${announceChannel}
+	/docommand /${cmdChannel}	//speed 1.25
+
 	
+	|--camp counts
+	/declare int_currentCamp		int		outer	1
+	/declare int_campCount			int 	outer	1
+	/declare bln_increment 			bool	outer	TRUE
+	/if (${Defined[_campCount]}) {
+		/varset int_campCount ${_campCount}
+	}	
+
+	|--set up the camp logic
+	/if (!${Defined[int_campX]}) /declare int_campX 				int outer ${Me.X}
+	/if (!${Defined[int_campY]}) /declare int_campY 				int outer ${Me.Y}
+	/if (!${Defined[int_campZ]}) /declare int_campZ 				int outer ${Me.Z}
+
+	/declare D1X int outer ${Me.X}
+	/declare D1Y int outer ${Me.Y}
+	/declare D1Z int outer ${Me.Z}
+
+	|--set the camp spot
+	/call setCamp
+
 	|--radii
 	/declare int_pcCount			int 	outer   ${SpawnCount[PC]}
 	/declare int_campRadius			int		outer	50
@@ -839,25 +888,18 @@ Sub variant_initialize(int _pull_dist, string _channel, int _campCount)
 		/varset int_maxRadius ${_pull_dist}
 	}
 	
-	|--camp counts
-	/declare int_currentCamp		int		outer	1
-	/declare int_campCount			int 	outer	1
-	/if (${Defined[_campCount]}) {
-		/varset int_campCount ${_campCount}
-	}	
-	
 	|--how far we can go for alert 2 mobs (note, seperate from maxRadius)
 	/declare int_alert2Radius		int 	outer 	2050
 
 	|-- use 40 for POFire
 	/declare int_minZHeight			int		outer 	0
 	/declare int_maxZHeight			int		outer	250
-	/varcalc int_minZHeight		${Me.Z} - 200
+	/varcalc int_minZHeight		${Me.Z} - 100
 	/varcalc int_maxZHeight		${Me.Z} + 200
 
 	|--target information
-	/declare int_minPullCount		int		outer   20
-	/declare int_minTLevel			int		outer	26
+	/declare int_minPullCount		int		outer   3
+	/declare int_minTLevel			int		outer	40
 	/declare int_maxTLevel			int		outer	73
 	/declare bln_validTGT			bool	outer	FALSE
 	/declare bln_TGTDead			bool	outer	FALSE
@@ -878,28 +920,12 @@ Sub variant_initialize(int _pull_dist, string _channel, int _campCount)
 	/declare bln_wait4HP			bool	outer	FALSE
 	/declare bln_wait4End			bool	outer	FALSE
 	
-
-	|--channel definitions
-	/declare str_channel			string	outer	"bc"
-	
-	|--set up the camp logic
-	/if (!${Defined[int_campX]}) /declare int_campX 				int outer ${Me.X}
-	/if (!${Defined[int_campY]}) /declare int_campY 				int outer ${Me.Y}
-	/if (!${Defined[int_campZ]}) /declare int_campZ 				int outer ${Me.Z}
-	
-	
+	|--spell & support definitions are declared in xiris_melee.inc
 	/declare timer_taunt            timer 	outer    3s
-	/varset int_campX ${Me.X}
-	/varset int_campY ${Me.Y}
-	/varset int_campZ ${Me.Z}
-	
-	|--set the camp spot
-	/call setCamp
 
 	|--set the puller type 
 	/declare strPullType	string	outer	RANGED
 	
-
 	| MELEE DPS CLASS ENUMERATION - Endurance Focus
 	/if (${Select[${Me.Class.ShortName},ROG,BER,MNK]}) {
 		/varset strPullType RANGED
@@ -959,6 +985,7 @@ Sub setAlerts
 	|--- specific zone mobs to avoid;
 	|=================================
 	/squelch /alert clear 1
+	/squelch /alert add 1 "a young dire wolf"
 	/squelch /alert add 1 "All Powerful Gnome"
 	/squelch /alert add 1 "Guardian of Doomfire"
 	/squelch /alert add 1 "The Fabled Kobold Noble"
@@ -969,7 +996,7 @@ Sub setAlerts
 	/squelch /alert add 1 "fire giant warrior"
 	/squelch /alert add 1 "neiroth"
 	/squelch /alert add 1 "zordak ragefire"
-	/squelch /alert add 1 "lord nagafen
+	/squelch /alert add 1 "lord nagafen"
 	/squelch /alert add 1 "magus rokyl"
 	/squelch /alert add 1 "fire giant wizard"
 	/squelch /alert add 1 "Warlord Skarlon"
@@ -1083,7 +1110,8 @@ Sub setAlerts
 	/squelch /alert add 1 "a portal crystal"
 	/squelch /alert add 1 "kenra"
 	/squelch /alert add 1 "irak"
-	
+	/squelch /alert add 1 "Gazak"
+	/squelch /alert add 1 "Maroley"
 	
 	|=================================
 	|--- specific zone mobs to hunt;
@@ -1169,24 +1197,26 @@ Sub setAlerts
 Sub Event_TooClose
 	/echo Event_TooClose
 	/varset bln_tooClose TRUE
+	/doevents flush TooClose
 /return
 
 Sub Event_NoLOS
 	/echo Event_NoLOS
 	/varset bln_noLOS TRUE
+	/doevents flush NoLOS
 /return
 
 
 Sub Event_EndMac
-	/bc Someone told me to end it! ${Time}
+	/docommand /${cmdChannel} Someone told me to end it! ${Time}
 	/delay 1s
-	/docommand ${cmdChannel}  //melee off
-	/docommand ${cmdChannel}  //end
-	/docommand ${cmdChannel}  //gate
+	/docommand /${cmdChannel}  //melee off
+	/docommand /${cmdChannel}  //end
+	/docommand /${cmdChannel}  //gate
 	/delay 2m
-	/docommand ${cmdChannel}  //end
-	/docommand ${cmdChannel}  //melee off
-	/docommand ${cmdChannel}  //camp desktop
-	/docommand ${cmdChannel}  //end
+	/docommand /${cmdChannel}  //end
+	/docommand /${cmdChannel}  //melee off
+	/docommand /${cmdChannel}  //camp desktop
+	/docommand /${cmdChannel}  //end
 	/end
 /return

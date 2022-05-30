@@ -962,7 +962,7 @@ Sub killTarget
 	|--issue kill command
 	/docommand /${cmdChannel} KillMob ${Target.ID} "${Target.Name}" ${Time.Time24}
 	
-	/if ((${SpawnCount[npc radius ${int_campRadius}]} > 1) && (${Me.Class.ShortName.Equal[SHD]} || ${Me.Class.ShortName.Equal[PAL]}) && ${Me.SpellReady[${spell_aehate}]} ) {
+	/if ((${SpawnCount[npc radius ${int_campRadius}]} > 1) && (${Me.Class.ShortName.Equal[SHD]}) && ${Me.SpellReady[${spell_aehate}]} ) {
 		|/echo ${Me.SpellReady[${spell_aehate}]} Cast ${spell_aehate} ${spell_aehateGem} 5s
 		/call MQ2Cast "${spell_aehate}" ${spell_aehateGem}
 	}
@@ -989,7 +989,7 @@ Sub killTarget
 
 		/if (!${bln_TGTDead}) {
 			/if ((${Me.TargetOfTarget.ID} != ${Me.ID}) && !${Target.Fleeing}) {
-				/if ((${Me.Class.ShortName.Equal[SHD]} || ${Me.Class.ShortName.Equal[PAL]})  && ${Me.SpellReady[${spell_hate}]}) {
+				/if ((${Me.Class.ShortName.Equal[SHD]})  && ${Me.SpellReady[${spell_hate}]}) {
 					|/echo ${Me.SpellReady[${spell_hate}]} Cast ${spell_hate} ${spell_hateGem} 5s
 					/call MQ2Cast "${spell_pull}" ${spell_pullGem}
 				} else /if (${Me.Class.ShortName.Equal[WAR]} && (${Me.CombatAbilityReady[${war_ca_hate_1}]})) {
@@ -1301,7 +1301,7 @@ Sub setGroupCommands
 	/if (${bard.NotEqual[NOT_FOUND]})  /bct ${bard} //medley melee
 
 	|-- find not cleric/tank to loot
-	/if (${looter.NotEqual[NOT_FOUND]}) /bct ${looter} lootOn
+	/if (${looter.NotEqual[NOT_FOUND]}) /bct ${looter} lootOn ALL
 	
 	|-- turn on melee and aggro
 	/squelch /bcga //melee on
@@ -1457,12 +1457,14 @@ Sub variant_initialize(string _channel, string _offtank, bool _highRisk)
 	|--melee plugin/aggro for the requester
 	/melee aggro=on
 	
-	|--channel definitions
-	/varset _channel /bcga  |-- hard set this for now while debugging
+	|--command channel setup
 	/if (!${Defined[cmdChannel]}) /declare cmdChannel string	outer	bcga
 	/varset cmdChannel bcga
+	/if (${Defined[_channel]}) /varset cmdChannel ${_channel}
 	/echo 	 cmdChannel is ${cmdChannel}
-	/docommand /${cmdChannel}	//speed 1
+	/docommand /${cmdChannel}	//speed 1.25
+	/docrack preventspeed on
+	
 	
 
 	
@@ -1522,7 +1524,7 @@ Sub variant_initialize(string _channel, string _offtank, bool _highRisk)
 	}
 	
 	| MELEE DPS CLASS ENUMERATION - Mana Focus
-	/if (${Select[${Me.Class.ShortName},BST,RNG,BRD]}) {
+	/if (${Select[${Me.Class.ShortName},BST,RNG,BRD,PAL]}) {
 		/varset strPullType RANGED
 	}	
 	
@@ -1532,11 +1534,10 @@ Sub variant_initialize(string _channel, string _offtank, bool _highRisk)
 	}		
 	
 	| TANK CASTER CLASS ENUMERATION
-		/if (${Select[${Me.Class.ShortName},SHD,PAL]}) {
+		/if (${Select[${Me.Class.ShortName},SHD]}) {
 		/varset strPullType SPELL
 	}	
-	
-	/if (${Me.Name.Equal[Sadelia]}) /varset strPullType RANGED
+
 	
 	/declare int_obstacleCNT		int 	outer 	0
 	/declare bln_noLOS				bool	outer	FALSE	
