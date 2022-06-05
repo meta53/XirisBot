@@ -66,6 +66,10 @@ Sub ToggleOfftanking(bool _blnOT)
 	
 /return
 
+Sub chkOffTankingCorruption
+
+/return
+
 Sub chkOffTanking	
 	/if (!${bln_offTank}) 	 /return
 	

@@ -177,7 +177,7 @@ Sub chkNeedCure
 	}
 
 	|-- Mana Drains (casting classes)
-	/if (${str_classArchetype.Equal[PRIEST]} || ${str_classArchetype.Equal[CASTER]} || ${Me.Class.ShortName.Equal[PAL]}) {
+	/if (${str_classArchetype.Equal[PRIEST]} || ${str_classArchetype.Equal[CASTER]} || ${Me.Class.ShortName.Equal[PAL]} || ${Me.Class.ShortName.Equal[SHD]}) {
 		/if (${Debuff.ManaDrain} >= ${int_manadrain_threshold}) /varset forceCure TRUE
 	} 
 

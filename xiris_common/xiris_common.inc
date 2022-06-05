@@ -455,6 +455,7 @@ Sub EngageTarget(int _targetID)
 	/varset bln_engaged TRUE
 	/if (${Me.Class.ShortName.NotEqual[CLR]}) /call TrueTarget ${int_targetID}
 	/call ResetCastTimers
+	/if (!${Me.Standing}) /stand
 	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
 		/killthis
 		/attack on
@@ -1449,7 +1450,7 @@ SUB verifyEvent(sring _chatSender, string _eventParams)
 	/if (${_chatSender.Equal[MQ2]}) /varset sender ${Me.CleanName}
 	
 	| -Validate _chatSender.
-	/if (${NetBots[${sender}].ID}) /varset userValidated TRUE
+	/varset userValidated TRUE
 	
 	| -Check inZone
 	/if (${SpawnCount[pc =${sender}]}) /varset inZone TRUE

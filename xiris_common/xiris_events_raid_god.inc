@@ -306,7 +306,7 @@ Sub EVENT_VORRAMP
 /return
 
 Sub EVENT_VORBLUR
-	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
+	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]} && ${bln_engaged}) {
 		/if (!${bln_riposting}) {
 			/melee reset
 			/attack off
@@ -493,7 +493,8 @@ Sub EVENT_BALANCEOFF
 Sub BalancerReset
 	/echo BALANCE OFF ${Target.Name}
 	/if (${Twist.Twisting}) /twist off
-	/if (${Defined[bln_balancing]}) /varset bln_balancing FALSE
+	/varset bln_balancing FALSE
+	
 	/if (${str_classArchetype.Equal[PRIEST]}) /return
 	
 	|-- reset various flags *WITHOUT* taking us out of engaged status

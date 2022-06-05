@@ -177,10 +177,10 @@ Sub ParseLootINI
 	|	[4] Class|*
 	|   [5] CharExclusion|Xiris, etc or..
 	|   [6] CharOnly|Xiris, etc or...
-	/declare loot_ALL[${int_total},5]		string  outer
-	/declare loot_VENDOR[${int_vendor},5]	string	outer
-	/declare loot_TRADE[${int_trade},5]		string	outer
-	/declare loot_QUEST[${int_quest},5]		string	outer
+	/declare loot_ALL[${int_total},6]		string  outer
+	/declare loot_VENDOR[${int_vendor},6]	string	outer
+	/declare loot_TRADE[${int_trade},6]		string	outer
+	/declare loot_QUEST[${int_quest},6]		string	outer
 	
 	/declare n int local 1
 	/declare item_loot string local
@@ -200,6 +200,7 @@ Sub ParseLootINI
 			/varset loot_VENDOR[${vc},3] ${item_loot.Arg[3,|]} 
 			/varset loot_VENDOR[${vc},4] ${item_loot.Arg[4,|]} 
 			/varset loot_VENDOR[${vc},5] ${item_loot.Arg[5,|]} 
+			/varset loot_VENDOR[${vc},6] ${item_loot.Arg[6,|]} 
 		} else /if (${item_loot.Arg[2,|].Equal[TRADE]}) {
 			/varcalc tc ${tc}+1
 			/varset loot_TRADE[${tc},1] ${item_loot.Arg[1,|]} 
@@ -207,6 +208,7 @@ Sub ParseLootINI
 			/varset loot_TRADE[${tc},3] ${item_loot.Arg[3,|]} 
 			/varset loot_TRADE[${tc},4] ${item_loot.Arg[4,|]} 
 			/varset loot_TRADE[${tc},5] ${item_loot.Arg[5,|]} 
+			/varset loot_TRADE[${tc},6] ${item_loot.Arg[6,|]} 
 		} else /if (${item_loot.Arg[2,|].Equal[QUEST]} && !${item_loot.Arg[5,|].Find[${Me.Name}]}) {
 			/varcalc qc ${qc}+1
 			/varset loot_QUEST[${qc},1] ${item_loot.Arg[1,|]} 
@@ -214,6 +216,7 @@ Sub ParseLootINI
 			/varset loot_QUEST[${qc},3] ${item_loot.Arg[3,|]} 
 			/varset loot_QUEST[${qc},4] ${item_loot.Arg[4,|]} 
 			/varset loot_QUEST[${qc},5] ${item_loot.Arg[5,|]} 
+			/varset loot_QUEST[${qc},6] ${item_loot.Arg[6,|]} 
 		}
 
 		/varset loot_ALL[${n},1] ${item_loot.Arg[1,|]} 
@@ -221,6 +224,7 @@ Sub ParseLootINI
 		/varset loot_ALL[${n},3] ${item_loot.Arg[3,|]} 
 		/varset loot_ALL[${n},4] ${item_loot.Arg[4,|]} 
 		/varset loot_ALL[${n},5] ${item_loot.Arg[5,|]} 
+		/varset loot_ALL[${n},6] ${item_loot.Arg[5,|]} 
 	/next n
 
 	/echo loot_ALL: ${loot_ALL.Size[1]}

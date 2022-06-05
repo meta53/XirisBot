@@ -29,7 +29,7 @@ Sub InitEvents_OOW_MPG_Hatred
 
 	|--Waypoints
 	|  Pulled from MQ2Nav		   X	   Y	  Z
-	/declare D1	string 	outer   155.939 152.306 55.822 
+	/declare D1	string 	outer  -155.939 152.306 55.822 
 	/declare D2	string 	outer  -255.035 149.536 55.822 
 	/declare D3	string 	outer  -333.305 219.533 55.822 
 	/declare D4	string 	outer  -329.153 323.222 55.822 

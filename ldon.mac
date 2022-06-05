@@ -53,18 +53,18 @@ REQUIRED INCLUDES
 #event Zoned                "LOADING, PLEASE WAIT..."
 #event EndMac				"#*#monkeybutter#*#"
 #event NoLOS				"#*#you cannot see your target#*#"
-#event TooClose				"#*#your target is too close#*#
+#event TooClose				"#*#your target is too close#*#"
+#event MoveFail				"#*#Could not find path to destination#*#"
 
 
-
-Sub Main(string _channel, string _offtank, bool _highRisk)
+Sub Main(string _channel, string _announce, bool _useDownFlags, bool _highRisk)
 	/delay 5
 
 	|-- initialize common xbot variables
 	/call xbot_initialize ${Me.Name}
 	
 	|-- initialize variables specific to this macro
-	/call variant_initialize ${_channel} ${_offtank} ${_highRisk}
+	/call variant_initialize  ${_channel} ${_announce} ${_useDownFlags} ${_highRisk}
 	
 	|-- report status
 	/delay 10
@@ -661,6 +661,7 @@ Sub ResetAtLobby
 
 Sub setCamp
 	/echo Setting camp at camp${int_currentCamp} out of ${int_campCount}
+	/waypoint add camp${int_currentCamp} 
 	/if (${Plugin[mq2nav].Name.Length}) /navigate RecordWaypoint bot_pull_nav
 	/varset int_campX ${Me.X}
 	/varset int_campY ${Me.Y}
@@ -668,11 +669,23 @@ Sub setCamp
 	/delay 1s
 /return
 
+|-- Moves the current camp to n+1
+|   If we cannot navigate (probably in a wall or geometry)
+|   We will warp back to the current camp and then continue.
 Sub moveCamp(int _campNumber) 
+	/declare prevCamp int local 1
+	/varcalc prevCamp ${_campNumber}-1
 	/echo Moving to Camp ${_campNumber}
 	/bcg //mqpause on
 	/docommand /${cmdChannel} //nav wp camp${_campNumber}
 	/delay 10
+	/doevents MoveFail 
+	/if (${bln_moveFail}) {
+		/varset bln_moveFail FALSE
+		/docommand /${cmdChannel} //warp wp camp${prevCamp}
+		/delay 10
+		/docommand /${cmdChannel} //nav wp camp${_campNumber}
+	} 
 	:moveCampNavLoop
 		/echo Moving to Camp ${_campNumber}
 		/if (${Navigation.Active}) {
@@ -682,6 +695,11 @@ Sub moveCamp(int _campNumber)
 	/bcg //mqpause off
 	/call setCamp
 /return
+
+Sub Event_MoveFail
+	/varset bln_moveFail TRUE 
+	/doevents flush MoveFail
+/return 
 
 
 Sub setRSTVars
@@ -1388,7 +1406,7 @@ Sub resetCamp
  Eventually this needs to be pulled from an INI per zone and per puller!
  ----------------------------
 **|
-Sub variant_initialize(string _channel, string _offtank, bool _highRisk)
+Sub variant_initialize(string _channel, string _announce, bool _useDownFlags, bool _highRisk)
 
 	|-- variant specific vars
 	/declare inMission 				bool 	outer 	FALSE
@@ -1461,12 +1479,19 @@ Sub variant_initialize(string _channel, string _offtank, bool _highRisk)
 	/if (!${Defined[cmdChannel]}) /declare cmdChannel string	outer	bcga
 	/varset cmdChannel bcga
 	/if (${Defined[_channel]}) /varset cmdChannel ${_channel}
-	/echo 	 cmdChannel is ${cmdChannel}
+	/echo 	cmdChannel is ${cmdChannel}
 	/docommand /${cmdChannel}	//speed 1.25
-	/docrack preventspeed on
 	
-	
+	|--announce channel set
+	/if (!${Defined[announceChannel]}) /declare announceChannel string	outer	bcga
+	/varset announceChannel bcga
+	/if (${Defined[_announce]}) /varset announceChannel ${_announce}
+	/echo announceChannel is ${announceChannel}
+	/docommand /${cmdChannel}	//speed 1.25
 
+	|--downflags 
+	/declare useDownFlags	bool	outer	TRUE
+	/if (${Defined[_useDownFlags]} && !${_useDownFlags}) /varset useDownFlags FALSE
 	
 	|--radii
 	/declare int_pcCount			int 	outer   ${SpawnCount[PC]}
@@ -1542,6 +1567,7 @@ Sub variant_initialize(string _channel, string _offtank, bool _highRisk)
 	/declare int_obstacleCNT		int 	outer 	0
 	/declare bln_noLOS				bool	outer	FALSE	
 	/declare bln_tooClose			bool	outer	FALSE
+	/declare bln_moveFail			bool    outer 	FALSE
 	
 	|--find the support members of the group for use in keeping up buffs
 	/declare int_groupCLRidx int outer -1

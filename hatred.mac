@@ -1,6 +1,7 @@
 #Turbo 20
 Sub Main 
     | Set Xiris (MT) Healing
+    /bct Xiris //end
     /bct Xerael changeMT Xiris
     /bct Xarael changeMT Xiris
     /bct Xorael changeMT Xiris
@@ -16,10 +17,17 @@ Sub Main
     /bct Xenshia changeMT Xirin
     /bct Xinshia changeMT Xirin
 
-    | Set Sadelia (OT) Healing
-    /bct Xonshia changeMT Sadelia
-    /bct Deist changeMT Sadelia
-    /bct Nihilist changeMT Sadelia
-    /bct Empathic changeMT Sadelia
-    /bct Pantheon changeMT Sadelia
+    | Set Xiria (OT) Healing
+    /bct Xiria //end
+    /bct Xonshia changeMT Xiria
+    /bct Deist changeMT Xiria
+    /bct Nihilist changeMT Xiria
+    /bct Empathic changeMT Xiria
+    /bct Pantheon changeMT Xiria
+
+    | Set the mode to efficient
+    /bc healMode EFFICIENT 
+    /bct Xiris //melee aggro=on
+    /bct Xiria //melee aggro=on
+    /bct Sadelia offtankON
 /return

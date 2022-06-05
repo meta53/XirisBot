@@ -32,6 +32,10 @@ Sub Main
     /if (${Zone.ShortName.Equal[hohonora]})     /call HOH 
     /if (${Zone.ShortName.Equal[poknowledge]})  /call POK 
     /if (${Zone.ShortName.Equal[kodtaz]})       /call SkinSamples 
+    /if (${Zone.ShortName.Equal[ferubi]})       /call SkinSamples 
+    /if (${Zone.ShortName.Equal[qinimi]})       /call SkinSamples 
+    /if (${Zone.ShortName.Equal[riwwi]})        /call SkinSamples 
+    /if (${Zone.ShortName.Equal[barindu]})     /call SkinSamples 
 /return
 
 Sub SkinSamples 
@@ -48,7 +52,6 @@ Sub SkinSamples
     /bct Empathic   looton QUEST
     /bct Erinyas    looton QUEST
     /bct Erinyes    looton QUEST
-    /bct Ertres     looton QUEST
     /bct Ertris     looton QUEST
     /bct Mluian     looton QUEST
     /bct Nihilist   looton QUEST
@@ -59,7 +62,6 @@ Sub SkinSamples
     /bct Ophexia    looton QUEST
     /bct Opheyia    looton QUEST
     /bct Ophezia    looton QUEST
-    /bct Ophidia    looton QUEST
     /bct Pantheon   looton QUEST
     /bct Sadelia    looton QUEST
     /bct Shinxia    looton QUEST
@@ -83,6 +85,10 @@ Sub SkinSamples
     /bct Xirael     looton QUEST
     /bct Xirin      looton QUEST
     /bct Xonshia    looton QUEST
+    /bct Xorael     looton QUEST
+    /bct Xunshia    looton QUEST
+    /bct Xurael     looton QUEST
+
 /return 
 
 

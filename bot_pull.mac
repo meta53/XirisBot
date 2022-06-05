@@ -82,7 +82,6 @@ Sub Main(int _pull_dist, string _channel, string _announce, int _campCount, bool
 		/call chkNeedCure
 
 		/call chkUtils
-		/if (${useDownFlags}) /call chkDownshits
 		
 		/call chkZone
 		
@@ -338,6 +337,7 @@ Sub pullTarget
 				/if (${Macro.Return.Equal[NOLOS]})    				/goto :RunningToTarget
 				/if (${Macro.Return.Equal[CAST_FIZZLE]})    		/goto :AggroCheck
 				/if (${Macro.Return.Equal[NOTARGET]}) 				/goto :return
+				/if (${Macro.Return.Equal[NOMANA]})					/goto :RunningToTarget
 				/if (${Macro.Return.Equal[SUCCESS]})  {
 					/doevents NoLoS 
 					/if (${bln_noLOS}) {
@@ -381,6 +381,8 @@ Sub AggroTarget
 		| Need to aggro the mob somehow
 		:AttemptAggro
 		/if (${strPullType.Equal[RANGED]}) {
+			/face fast
+			/delay 5
 			/ranged
 			/doevents TooClose
 			|-- Sometimes if we aren't spell casting and using range weapons we might be too close, and cannot hit them with it.
@@ -395,12 +397,16 @@ Sub AggroTarget
 			/delay 10
 			/goto :TargetAggroCheck
 		} else {
-			/call chkSpellMemorized "${spell_pull}" TRUE ${spell_pullGem}
-			/echo ${Me.SpellReady[${spell_pull}]} Cast "${spell_pull}" ${spell_pullGem} 2s
-			/call MQ2Cast "${spell_pull}" ${spell_pullGem} 2s
-			/if (${Macro.Return.Equal[CAST_SUCCESS]}) /varset ret SUCCESS
-			/if (${Macro.Return.Equal[CAST_CANNOTSEE]}) /varset ret NOLOS
-			/if (${Macro.Return.Equal[CAST_INTERRUPTED]}) /goto :AttemptAggro
+			/if (${Me.PctMana} > 10) {
+				/call chkSpellMemorized "${spell_pull}" TRUE ${spell_pullGem}
+				/echo ${Me.SpellReady[${spell_pull}]} Cast "${spell_pull}" ${spell_pullGem} 2s
+				/call MQ2Cast "${spell_pull}" ${spell_pullGem} 2s
+				/if (${Macro.Return.Equal[CAST_SUCCESS]}) /varset ret SUCCESS
+				/if (${Macro.Return.Equal[CAST_CANNOTSEE]}) /varset ret NOLOS
+				/if (${Macro.Return.Equal[CAST_INTERRUPTED]}) /goto :AttemptAggro
+			} else {
+				/varset ret NOMANA
+			}
 		} 
 	}
 	:return
@@ -553,8 +559,20 @@ Sub chkUtils
 		|/call chkBuffs
 		|/call chkMana
 		|/call chkEndurance
+		/if (${useDownFlags}) /call chkDownshits
 		/call chkHP
 		/call chkComponentsAll
+		/if (!${timer_allBuffs}) {
+			/cecho \ayRequesting Buffs @${Time.Time24}
+			/docommand /${cmdChannel} //hidecorpse npc
+			/delay 5s
+			/docommand /${cmdChannel} //hidecorpse looted
+ 			/docommand /${announceChannel} docharbuffs ${Me.Name}
+			/cecho \awBuffs Requested, setting timer to 45m, and waiting 45s!
+			/varset timer_allBuffs 45m
+			/echo ${timer_allBuffs}
+			/delay 45s
+		}
 			
 		/if (${bln_wait4Mana} || ${bln_wait4End} || ${bln_wait4HP}) {
 			/echo Waiting for : mana: ${bln_wait4Mana} endurance: ${bln_wait4End} hitpoints: ${bln_wait4HP}
@@ -821,6 +839,7 @@ Sub chkComponents
 
 Sub resetCamp
 	/docommand /${cmdChannel} //nav wp camp${int_currentCamp}
+	/nav stop
 /return
 
 |**
@@ -882,14 +901,14 @@ Sub variant_initialize(int _pull_dist, string _channel, string _announce, int _c
 
 	|--radii
 	/declare int_pcCount			int 	outer   ${SpawnCount[PC]}
-	/declare int_campRadius			int		outer	50
+	/declare int_campRadius			int		outer	100
 	/declare int_maxRadius			int		outer	425
 	/if (${Defined[_pull_dist]}) {
 		/varset int_maxRadius ${_pull_dist}
 	}
 	
 	|--how far we can go for alert 2 mobs (note, seperate from maxRadius)
-	/declare int_alert2Radius		int 	outer 	2050
+	/declare int_alert2Radius		int 	outer 	650
 
 	|-- use 40 for POFire
 	/declare int_minZHeight			int		outer 	0
@@ -898,7 +917,7 @@ Sub variant_initialize(int _pull_dist, string _channel, string _announce, int _c
 	/varcalc int_maxZHeight		${Me.Z} + 200
 
 	|--target information
-	/declare int_minPullCount		int		outer   3
+	/declare int_minPullCount		int		outer   4
 	/declare int_minTLevel			int		outer	40
 	/declare int_maxTLevel			int		outer	73
 	/declare bln_validTGT			bool	outer	FALSE
@@ -953,6 +972,7 @@ Sub variant_initialize(int _pull_dist, string _channel, string _announce, int _c
 	/declare int_obstacleCNT		int 	outer 	0
 	/declare bln_noLOS				bool	outer	FALSE	
 	/declare bln_tooClose			bool	outer	FALSE
+	/declare timer_allBuffs         timer   outer   0
 	
 	|--find the support members of the group for use in keeping up buffs
 	/declare int_groupCLRidx int outer -1
@@ -1167,6 +1187,9 @@ Sub setAlerts
 	/squelch /alert add 2 "Hierophant Ixyl"
 	/squelch /alert add 2 "Master Fasliw"
 	/squelch /alert add 2 "Sigra"
+
+	/if (${Zone.ShortName.Equal[kodtaz]}) /alert add 2 "ikaav"
+	/if (${Zone.ShortName.Equal[kodtaz]}) /alert add 2 "ixt"
 	
 	|-- Anguish Signets--|
 	/squelch /alert add 2 "turncoat"
