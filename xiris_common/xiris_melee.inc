@@ -264,6 +264,8 @@ Sub chkDownshits
 			/declare tgtName 	string 	local
 			/declare tgtID 		int 	local
 			/declare isSpell	bool	local	TRUE
+			/declare wornSlot   string  local 
+			/declare itemInSlot string  local
 			
 			/for df 1 to ${downflagCount} 
 				| down flags look like: 
@@ -302,15 +304,31 @@ Sub chkDownshits
 					|/echo downflag${df}: ${downflag${df}.Token[1,|]} | ${downflag${df}.Token[2,|]}|${downflag${df}.Token[3,|]}
 					
 					| - Bard specific handler using mq2medley
+					| - Note mq2medley will not auto swap items!
 					/if (${Me.Class.ShortName.Equal[BRD]}) {
 						/varset itemArgs ${downflag${df}.Token[2,|]}
 						/varset itemID ${itemArgs.Token[1, ]}
 						/varset itemName ${FindItem[${itemID}]}
 						/varcalc castTime ${FindItem[${itemID}].CastTime} / 1000
 						/echo bard downshit : ${itemID} ${itemName} ${castTime}
+						
+						|-- check if the item is worn or in a bag. If its in a bag, we need to exchange it
+						|   to at least our open inventory slot (8)
+						| Slot the item is supposed to be worn in
+						/varset wornSlot ${InvSlot[${FindItem[=${itemName}].WornSlot[1]}].Name}
+						| Item that is currently in that slot
+						/varset itemInSlot ${InvSlot[${wornSlot}].Item.Name}
+						| exchange itemName with itemInSlot
+						/cecho \ay Exchanging \ag${itemName} \ayin \ag${wornSlot} \ar(${itemInSlot})
+						/exchange "${itemName}" ${wornSlot}
+
 						/if (!${Medley}) /medley ${str_currentMedley}
 						/medley queue "${itemName}" -interrupt
 						/delay ${castTime}s
+						/delay 2s 
+						| exchange itemInSlot with itemName (back to the way it was)
+						/cecho \ag Returning \ay${itemInSlot}\ag to \ay${wornSlot}
+						/exchange "${itemInSlot}" ${wornSlot}
 					} else {
 						/echo Downflag Cast ${castArg}
 						/call MQ2Cast ${castArg}
