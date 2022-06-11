@@ -21,7 +21,6 @@ ______________________________________________
 #event D4 					"#*#MD4#*#"
 #event D5 					"#*#MD5#*#"
 #event D6 					"#*#MD6#*#"
-#event SetupHatred			"#*#SETUP#*#"
 
 Sub InitEvents_OOW_MPG_Hatred
 	/cecho \ag Initializing MPG Hatred
@@ -70,12 +69,6 @@ Sub Events_OOW_MPG_Hatred
 	/doevents D4
 	/doevents D5
 	/doevents D6
-	/doevents SetupHatred
-/return
-
-
-Sub EVENT_SetupHatred 
-
 /return
 
 Sub EVENT_D1

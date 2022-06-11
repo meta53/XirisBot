@@ -250,15 +250,11 @@ Sub healSELF
 **|
 Sub healGRP
 	/varcalc	int_point_calcStopHeal ${Math.Calc[${int_point_grpNormal}*1.1]}
-
-	/declare	int_numDamaged	int	local	0
 	/declare	int_worstHP		int	local	100
 	/declare	int_worstID		int local	0
-	/declare	int_minorHurt	int local	0
 	/declare	int_majorHurt	int local	0
 	/declare	gmember			int local	0
 	/declare    str_worstName	string local NULL
-	/declare	str_worstClass	string local NULL
 	
 	| -- Cycle through the group and set the worst HP
 	/for gmember 0 to ${Group}
@@ -267,11 +263,8 @@ Sub healGRP
 				/varset int_worstID     	${Group.Member[${gmember}].ID} 
 				/varset int_worstHP         ${Group.Member[${gmember}].PctHPs} 
 				/varset str_worstName		${Group.Member[${gmember}].Name}
-				/varset str_worstClass      ${Group.Member[${gmember}].Class.Name} 
 			} 
 		} 
-        /if ((${Group.Member[${gmember}].Distance}<=${int_range_normal})&&(${Group.Member[${gmember}].PctHPs}<=${int_point_calcStopHeal})) /varcalc int_numDamaged ${int_numDamaged}+1 
-        /if ((${Group.Member[${gmember}].PctHPs}<=${int_point_calcStopHeal})&&(${Group.Member[${gmember}].PctHPs}>=${int_point_grpPatch}))   /varcalc int_minorHurt ${int_minorHurt}+1 
         /if ((${Group.Member[${gmember}].PctHPs}<=${int_point_calcStopHeal})&&(${Group.Member[${gmember}].PctHPs}< ${int_point_grpPatch}))   /varcalc int_majorHurt ${int_majorHurt}+1 
      /next gmember
 
@@ -282,9 +275,8 @@ Sub healGRP
 	/varset int_currentHP ${int_worstHP}
 
 	| -- Single Target Heal
-	/if (${int_majorHurt} >= 1) {
-		/if (${int_worstHP} > ${int_point_grpPatch}) /return
-		/echo PATCH single heal (Many have only 1 heal type, for multiple heal types the class method will override this)
+	/if (${int_majorHurt} >= 1 && (${int_worstHP} < ${int_point_grpPatch})) {
+		|/echo PATCH single heal (Many have only 1 heal type, for multiple heal types the class method will override this)
 		/varset str_currentHeal ${str_heal_normal}
 		/echo HealGroupMember ${int_MTID} ${Target.Name} "${str_currentHeal}"
 		/call healCast ${int_worstID} ${str_worstName} "${str_currentHeal}"
@@ -305,13 +297,12 @@ Sub healGRP
 **|
 Sub healCast(int _id, string _name, string _spell)
 	/if (${_name.Equal[NULL]} || ${_id} == 0) {
-		/echo HEAL NAME is NULL something is fucked;
+		/echo HEAL NAME is NULL || ID is 0 something is fucked;
 		/return
 	}
 	/echo healCast Target:${_name}(${_id}) cHP: ${NetBots[${_name}].PctHPs} cSH: ${int_point_calcStopHeal} spell: "${_spell}"
 	/if (${NetBots[${_name}].PctHPs} < ${int_point_calcStopHeal} && (${Me.CurrentMana} > ${Spell[${_spell}].Mana})) {
 		/if (${Target.ID} != ${_id}) /call TrueTarget ${_id}
-		/delay 2s (${Target.ID} == ${_id})
 		/call chkSpellMemorized "${_spell}" TRUE 2
 		/call MQ2Cast "${_spell}" gem2 1s chkHP
 		/if (${Macro.Return.Equal[CAST_SUCCESS]} && ${bln_annouce}) /${cmdChannel} ${_spell} > ${Target.Name} hp:${Target.PctHPs} m:${Me.PctMana} d:${Target.Distance}
@@ -372,17 +363,12 @@ Sub chkHP
 		/return
 	}
 
-	| TODO: Old Spellroutines.inc had giveuptimer, and castEndTime
-	|/declare giveUpTimer timer outer
-  	|/declare castEndTime timer outer
-  	|/declare refreshTime timer outer
+
 	| I'm no longer casting, or no longer need to stop it ie, target is MT
 	/if (!${Window[CastingWindow].Open}) /return 
-	|/if (( ${use_interrupt_selfHeal})&&(${Target.ID}==${int_MTID}))	/if ((${Me.PctHPs}>=90)&&(${castEndTime}>=12)) /return
-	|/if ((!${use_interrupt_selfHeal})&&(${Target.ID}==${int_MTID}))	/if (${castEndTime}>=12) /return 
 
 	| Check to see if I should interrupt because target is healed
-	/if ((${bln_autointerrupt})&&(${Target.PctHPs}>${int_point_calcStopHeal})) { 
+	/if ((${bln_autointerrupt}) && (${Target.PctHPs} > ${int_point_calcStopHeal})) { 
 		/call Interrupt 
 		/return
 	}

@@ -10,14 +10,16 @@ Sub Main
     /bct Xanshia changeMT Xiris
     /bct Dogmatist changeMT Xiris
 
-    | Set Xirin (SA) Healing
-    /bct Theist changeMT Xirin
-    /bct Tragic changeMT Xirin
-    /bct Xirael changeMT Xirin
-    /bct Xenshia changeMT Xirin
-    /bct Xinshia changeMT Xirin
+    | Set Xirea (SA) Healing
+    /bct Xirea offtankON
+    /bct Theist changeMT Xirea
+    /bct Tragic changeMT Xirea
+    /bct Xirael changeMT Xirea
+    /bct Xenshia changeMT Xirea
+    /bct Xinshia changeMT Xirea
 
     | Set Xiria (OT) Healing
+    /bct Xiria offtankON
     /bct Xonshia changeMT Xiria
     /bct Deist changeMT Xiria
     /bct Nihilist changeMT Xiria
@@ -28,8 +30,5 @@ Sub Main
     /bc healMode EFFICIENT 
     /bct Xiris //melee aggro=on
     /bct Xiria //melee aggro=on
-    /bct Xirin //melee aggro=on
-    /bct Xiria offtankON
-    /bct Xirea offtankON
-    /bct Sadelia offtankON
+    /bct Xirea //melee aggro=on
 /return

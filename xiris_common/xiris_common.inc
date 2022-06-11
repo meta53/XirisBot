@@ -85,9 +85,10 @@ ______________________________________________
 #EVENT SaveWeaponset  		"#1#SaveWeaponset #2#"
 #EVENT SaveCurrentWeaponset "#1#SaveCurrentWeaponset #2#"
 #EVENT InvisOFF				"#1#InvisOff#*#"
+#EVENT SkillCheck           "<#1#> SkillCheck #2#"
 
 Sub InitEvents_Common
-	/call RegisterBackgroundEvents Events_Common 17
+	/call RegisterBackgroundEvents Events_Common 18
 	/call RegisterRaidEvents Events_Raid 9
 	
 /return
@@ -117,6 +118,7 @@ Sub Events_Common
 	/doevents SaveCurrentWeaponset
 	/doevents SaveRingset
 	/doevents InvisOFF
+	/doevents SkillCheck
 /return
 
 
@@ -684,6 +686,9 @@ Sub chkAAs
 		/next aa
 	}
 /return
+
+
+
 |**
  ----------------------------
  Check BURN routine
@@ -695,7 +700,6 @@ Sub chkAAs
 **|
 
 Sub chkBurn
-	
 	/if (!${bln_engaged}) /return
 	/if (${Me.Casting.ID} || ${Me.Moving} || ${Me.Invis} || ${Me.Feigning}) /return
 	/if (!${bln_BURNMode}) /return
@@ -712,6 +716,7 @@ Sub chkBurn
 			| Note: Run the DISC if it is a combat type, it is ready, and we aren't already discing
 			| ---------------
 			/if (${Burn_${burn}_Type.Equal[combat]} && ${Me.CombatAbilityReady[${Burn_${burn}}]} && ${Burn_${burn}_Use} && !${Melee.DiscID}) {
+				/echo burnis combat, trying ${Burn_${burn}}
 				| Check to see if the burn Before disc/alt (0 if not) is already run
 				/if (${Burn_${burn}_After} > 0) {
 					| Check to see if the burn Before is an alt or combatdisc (two different ways of checking)
@@ -855,6 +860,15 @@ Sub EVENT_LEASHOFF
 	/doevents flush LEASHOFF
 /return
 
+Sub Event_SKILLCHECK(_line, _sender, _eventParams) 	
+	/echo ${_sender} checking skill archetype:${_eventParams.Arg[1,|]} | skill:${_eventParams.Arg[2,|]}
+	/echo str_classArchetype: ${str_classArchetype}
+	/if (${str_classArchetype.Equal[${_eventParams.Arg[1,|]}]})  {
+		/echo found ${Me.Skill[${_eventParams.Arg[2,|]}]}
+		/rsay ${_eventParams.Arg[1,|]}:${Me.Skill[${_eventParams.Arg[2,|]}]}
+	}
+	
+/return
 
 |**
  ------------------------
@@ -1435,6 +1449,23 @@ Sub fixCorpses
 
 Sub saveGroup
 
+/return
+
+Sub ClearCursor
+	/declare i int local
+	:auto_inv
+	/if (${Cursor.ID}) {
+	/if (${Cursor.Container}) {
+		|---- Inventory Bag Slots
+		/for i 1 to 10   
+		/if (!${InvSlot[pack${i}].Item.Container}) /nomodkey /itemnotify pack${i} leftmouseup
+		/next i
+		|---- Inventory Bag Slots   
+	} else {
+		/timed 5 /autoinventory
+	}
+	/goto :auto_inv
+	}
 /return
 
 SUB verifyEvent(sring _chatSender, string _eventParams)

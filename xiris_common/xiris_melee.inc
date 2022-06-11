@@ -335,7 +335,7 @@ Sub chkDownshits
 					}
 					
 					:dfcast
-					/if (${Me.Casting.ID}) /goto :dfcast
+					/if (${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]}) /goto :dfcast
 			
 					|- return existing target
 					/if (${tgtName.NotEqual[NULL]}) /call TrueTarget ${tid}

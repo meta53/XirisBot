@@ -330,6 +330,7 @@ SUB EVENT_PIRIKACTIVE
 /return
 
 SUB EVENT_BALANCE
+	/if (!${Defined[bln_balancing]}) /declare bln_balancing bool outer TRUE
 	/declare bpct	int	local	100
 	/varcalc bpct ${Spawn[npc Kvxe].PctHPs}+1
 	/if (${str_classArchetype.Equal[PRIEST]}) {
@@ -347,7 +348,6 @@ SUB EVENT_BALANCE
 	}
 	
 	|- determine percentage to run to based on Kvxe's Hitpoints
-	/if (!${Defined[bln_balancing]}) /declare bln_balancing bool outer TRUE
 	/varset bln_balancing TRUE
 	/if (${str_classArchetype.Equal[CASTER]}) {
 		/echo CASTER CLASS checking

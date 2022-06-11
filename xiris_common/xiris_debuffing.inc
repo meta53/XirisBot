@@ -106,6 +106,7 @@ Sub CastDebuff(string _debuff, string _gem,  int _maxTries, int _targetID)
 	/declare	try		int		local	0
 	/if (!${Target.ID} || ${Target.ID} != ${_targetID}) /call TrueTarget ${_targetID}
 	:attemptDebuff
+		/if (${Target.PctHPs} == 0 || !${Target.ID} ) /goto :return
 		/if (${try} > ${_maxTries}) /goto :return
 		/call MQ2Cast "${_debuff}" ${_gem} 5s
 		/varcalc try ${try}+1
@@ -113,7 +114,6 @@ Sub CastDebuff(string _debuff, string _gem,  int _maxTries, int _targetID)
 		/if (${Macro.Return.Equal["CAST_SUCCESS"]}) /goto :return
 		/goto :attemptDebuff
 	:return
-	/cecho \ag ${_debuff} ${Macro.Return}
 	/if (${try} > ${_maxTries}) /rs Unable to ${_debuff} on ${Target.Name} after ${_maxTries} tries!
 /return
 
