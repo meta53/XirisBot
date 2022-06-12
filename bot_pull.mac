@@ -162,7 +162,7 @@ Sub getTarget
 			/delay 5
 		} else /if (${SpawnCount[npc alert 2 radius ${int_alert2Radius} range ${int_minTLevel} ${int_maxTLevel}]} == 0 && ${SpawnCount[npc noalert 1]} > 0) {
 			/echo No NPCs on the alert 2 list are up, trying random NPC
-			/call TrueTarget ${NearestSpawn[npc range ${int_minTLevel} ${int_maxTLevel} radius ${int_maxRadius} noalert 1].ID} 
+			/call TrueTarget ${NearestSpawn[npc zradius 50 range ${int_minTLevel} ${int_maxTLevel} radius ${int_maxRadius} noalert 1].ID} 
 			/delay 5
 		} 
 
@@ -567,7 +567,7 @@ Sub chkUtils
 			/docommand /${cmdChannel} //hidecorpse npc
 			/delay 5s
 			/docommand /${cmdChannel} //hidecorpse looted
- 			/docommand /${announceChannel} docharbuffs ${Me.Name}
+ 			/docommand /${announceChannel} doraidbuffs ALL
 			/cecho \awBuffs Requested, setting timer to 45m, and waiting 45s!
 			/varset timer_allBuffs 45m
 			/echo ${timer_allBuffs}
@@ -913,9 +913,11 @@ Sub variant_initialize(int _pull_dist, string _channel, string _announce, int _c
 	|-- use 40 for POFire
 	/declare int_minZHeight			int		outer 	0
 	/declare int_maxZHeight			int		outer	250
-	/varcalc int_minZHeight		${Me.Z} - 100
-	/varcalc int_maxZHeight		${Me.Z} + 200
+	/varcalc int_minZHeight			${Me.Z} - 50
+	/varcalc int_maxZHeight			${Me.Z} + 150
 
+	/g min z ${int_minZHeight}
+	/g max z ${int_maxZHeight}
 	|--target information
 	/declare int_minPullCount		int		outer   4
 	/declare int_minTLevel			int		outer	40
@@ -972,7 +974,7 @@ Sub variant_initialize(int _pull_dist, string _channel, string _announce, int _c
 	/declare int_obstacleCNT		int 	outer 	0
 	/declare bln_noLOS				bool	outer	FALSE	
 	/declare bln_tooClose			bool	outer	FALSE
-	/declare timer_allBuffs         timer   outer   0
+	/declare timer_allBuffs         timer   outer   20m
 	
 	|--find the support members of the group for use in keeping up buffs
 	/declare int_groupCLRidx int outer -1
