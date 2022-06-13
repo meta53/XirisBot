@@ -10,23 +10,12 @@ REVISION HISTORY
 	03.31.22	xiris	Updated the named checking as well as normalizing all calls to MQ2Cast
 	04.16.22	xiris	Added chkStun and support for Stun Locking
 	05.08.22	xiris	Added support for bards in Nuke/DOT
+	06.13.22	xiris   Removed resist events as the xiris_spell_routines.inc handles that.
 **|
 
 
 
 |NECRO/DOT/DEBUFF class stuff
-#event DotResist1			"#*#Your target resisted the |${DOT_1}|#*#"
-#event DotResist2			"#*#Your target resisted the |${DOT_2}|#*#"
-#event DotResist3			"#*#Your target resisted the |${DOT_3}|#*#"
-#event DotResist4			"#*#Your target resisted the |${DOT_4}|#*#"
-#event DotResist5			"#*#Your target resisted the |${DOT_5}|#*#"
-#event DotResist6			"#*#Your target resisted the |${DOT_6}|#*#"
-#event DotResist7			"#*#Your target resisted the |${DOT_7}|#*#"
-#event DotResist8			"#*#Your target resisted the |${DOT_8}|#*#"
-#event DotResist9			"#*#Your target resisted the |${DOT_9}|#*#"
-#event DotResist10			"#*#Your target resisted the |${DOT_10}|#*#"
-#event DotResist11			"#*#Your target resisted the |${DOT_11}|#*#"
-#event DotResist12			"#*#Your target resisted the |${DOT_12}|#*#"
 #event DotOff1				"#*#Your |${DOT_1}| spell has worn off#*#"
 #event DotOff2				"#*#Your |${DOT_2}| spell has worn off#*#"
 #event DotOff3				"#*#Your |${DOT_3}| spell has worn off#*#"
@@ -56,15 +45,6 @@ REVISION HISTORY
 #event NoSnare         		"#*#is immune to changes in its#*#"
 #event NoSnareHold     		"#*#Your spell did not take hold.#*#"
 
-#event InDoors				"#*#You can only cast this spell in the outdoors#*#"
-#event InDoors				"#*#This spell does not work here#*#"
-#event InDoors				"#*#You are already on a mount#*#"
-#event InDoors				"#*#You can not summon a mount here#*#"
-
-|NUKE class stuff
-#event SpellResist			"#*#Your target resisted the #*#"
-#event SpellResist			"#*#Your target resisted the #*#"
-
 |RESIST TYPE stuff
 #event SetResistType     	"#*#ResistTypes #1#"
 
@@ -74,10 +54,12 @@ REVISION HISTORY
 Sub InitEvents_Casting
 	/call RegisterBackgroundEvents Events_Casting_Background 2
 	
-	/if (${Me.Class.ShortName.Equal[SHM]} || ${Me.Class.ShortName.Equal[DRU]} || ${Me.Class.ShortName.Equal[NEC]}) {
-		/call RegisterClassEvents Events_Casting_DOT 24
-		/call RegisterRaidEvents Events_Casting_SlowSnare 8	
-		
+	/if (${Me.Class.ShortName.Equal[SHM]} || ${Me.Class.ShortName.Equal[ENC]} || ${Me.Class.ShortName.Equal[DRU]} || ${Me.Class.ShortName.Equal[NEC]}) {
+		/call RegisterClassEvents Events_Casting_DOT 12
+	}
+
+	/if (${Me.Class.ShortName.Equal[RNG]} || ${Me.Class.ShortName.Equal[DRU]} || ${Me.Class.ShortName.Equal[NEC]}) {
+		/call RegisterRaidEvents Events_Casting_Snare 3	
 	}
 
 /return
@@ -85,31 +67,15 @@ Sub InitEvents_Casting
 Sub Events_Casting_Background
 	/doevents SetResistType
 	/doevents SetUseFastOnly
-	/doevents InDoors
 /return
 
-Sub Events_Casting_SlowSnare
-	/doevents Slow
-	/doevents SlowResist
+Sub Events_Casting_Snare
 	/doevents Snareon
 	/doevents SnareResist
 	/doevents SnareWornOff
-	/doevents SpellResist
 /return
 
 Sub Events_Casting_DOT
-	/doevents DotResist1
-	/doevents DotResist2
-	/doevents DotResist3
-	/doevents DotResist4
-	/doevents DotResist5
-	/doevents DotResist6
-	/doevents DotResist7
-	/doevents DotResist8
-	/doevents DotResist9
-	/doevents DotResist10
-	/doevents DotResist11
-	/doevents DotResist12
 	/doevents DotOff1
 	/doevents DotOff2
 	/doevents DotOff3
@@ -767,31 +733,6 @@ Sub Event_SnareImmune
 	/varset bln_snareActive	TRUE
 	/${cmdChannel} snareimmunemob ${Target.CleanName}
 	/doevents flush SnareImmune
-/return
-
-|-- SLOW IMMUNE
-Sub Event_SlowImmune
-	/varset bln_slowed 	TRUE
-	/${cmdChannel} slowimmunemob ${Target.CleanName}
-	/doevents flush SlowImmune
-/return
-
-
-Sub Event_InDoors
-	/varset bln_outside	FALSE
-	/doevents flush Indoors
-/return
-
-Sub Event_Slow(string Line, string MobName)
-	/varset bln_slowed	TRUE
-	/if (${bln_slowUse}) /${cmdChannel} slowed: ${Target.CleanName}
-	/doevents flush Slow
-/return
-
-Sub Event_SlowResist
-	/varcalc int_slowResisted	${int_slowResisted}+1
-	/if (${int_slowResisted} > ${int_slowMaxTries}) /varset bln_slowed 	TRUE
-	/doevents flush SlowResist
 /return
 
 Sub Event_Snareon

@@ -1,0 +1,89 @@
+|**
+----------------------------
+Signets.mac
+----------------------------
+This macro is configured for use by the the puller for zones
+Sets the looters for Signet(s) by zone so I don't have to tell each toon to loot manually
+______________________________________________
+REVISION HISTORY
+    06.12.22	xiris	INITIAL REVISION
+______________________________________________
+REQUIRED PLUGINS
+
+______________________________________________
+REQUIRED INCLUDES  
+	xiris_common/xiris_common.inc
+**|
+
+
+Sub Main
+    |switch by zone shortname
+    /call ${Zone.ShortName}
+/return
+
+Sub riftseekers 
+    | Note: In Riftseeker we want to loot on QUEST, as signets and augments are categorized as such.
+    | Leave Aergia as the master looter
+    /bct Aergia looton ALL
+    | Clerics Group A
+    /bct Xirael looton QUEST
+    /bct Xinshia looton QUEST
+    /bct Xanshia looton QUEST
+    /bct Xunshia looton QUEST
+    /bct Xonshia looton QUEST
+    /bct Xerael looton QUEST
+    /bct Xarael looton QUEST
+    /bct Xorael looton QUEST
+    /bct Xurael looton QUEST
+    
+    | Clerics Group B
+    |**
+    /bct Theist looton QUEST
+    /bct Deist looton QUEST
+    /bct Empathic looton QUEST
+    /bct Nihilist looton QUEST
+    /bct Dogmatist looton QUEST
+    /bct Pantheon looton QUEST
+    /bct Tragic looton QUEST
+    **|
+
+    | Chain Classes Group A
+    /bct Xaeliea looton QUEST
+    /bct Xaexa looton QUEST
+    /bct Xaia looton QUEST
+    /bct Xepatia looton QUEST
+    /bct Ophidia looton QUEST
+    /bct Ophelia looton QUEST
+    /bct Ophemia looton QUEST
+    /bct Ophenia looton QUEST
+    /bct Opheoia looton QUEST
+
+| Chain Classes Group B
+|**
+    /bct Ophexia looton QUEST
+    /bct Opheyia looton QUEST
+    /bct Ophezia looton QUEST
+    /bct Mluian looton QUEST
+    /bct Shinxia looton QUEST
+    /bct Shynxia looton QUEST
+**|
+| Leather Classes
+|**   
+    /bct Ertres looton QUEST
+    /bct Erinyes looton QUEST
+    /bct Ertris looton QUEST
+    /bct Erinyas looton QUEST
+    /bct Drexia looton QUEST
+**|
+
+| Silk Classes
+|**
+    /bct Xeixa looton QUEST
+    /bct Xiexa looton QUEST
+    /bct Xeixi looton QUEST
+    /bct Cereborn looton QUEST
+    /bct Xeia looton QUEST
+    /bct Xeqisa looton QUEST
+**|
+/return 
+

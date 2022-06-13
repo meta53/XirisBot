@@ -10,17 +10,30 @@ REQUIRED PLUGINS
 ______________________________________________
 REVISION HISTORY
 	04.05.22    xiris   INITIAL REVISION
+	06.13.22	xiris   Updated events (minor)
 ______________________________________________
 **|	
 
-#EVENT Follow 	"<#1#> Follow #2#"
-#EVENT Follow 	"[#1#(msg)] Follow #2#"
+#EVENT Follow 		"[#1#] Follow #2#"
+#EVENT Follow 		"<#1#> Follow #2#"
+#EVENT Follow	 	"[#1#(msg)] Follow #2#"
+#EVENT Follow		"#1# tells the group, 'Follow #2#'"
+#EVENT Follow		"#1# tells the party, 'Follow #2#'"
+#EVENT Follow		"#1# tells the raid, 'Follow #2#'"
 
-#EVENT Stop		"<#1#> Stop#*#"
-#EVENT Stop		"[#1#(msg)] Stop#*#"
+#EVENT Stop 		"[#1#] Stop#*#"
+#EVENT Stop			"<#1#> Stop#*#"
+#EVENT Stop			"[#1#(msg)] Stop#*#"
+#EVENT Stop			"#1# tells the group, 'Stop#*#'"
+#EVENT Stop			"#1# tells the party, 'Stop#*#'"
+#EVENT Stop			"#1# tells the raid, 'Stop#*#'"
 
-#EVENT MoveHere "<#1#> Move to #2#"
-#EVENT MoveHere "[#1#(msg)] Move to #2#'"
+#EVENT MoveHere 	"[#1#] MoveTo #2#"
+#EVENT MoveHere 	"<#1#> MoveTo #2#"
+#EVENT MoveHere 	"[#1#(msg)] MoveTo #2#'"
+#EVENT MoveHere		"#1# tells the group, 'MoveTo #2#'"
+#EVENT MoveHere		"#1# tells the party, 'MoveTo #2#'"
+#EVENT MoveHere		"#1# tells the raid, 'MoveTo #2#'"
 
 Sub InitEvents_Following
 	/call RegisterBackgroundEvents Events_Following 3

@@ -12,9 +12,12 @@ REVISION HISTORY
 	05.13.22	xiris   Cleaned up events
 **|
 
-
-#EVENT DebuffTarget "<#1#> DebuffTarget #2#"
-#EVENT DebuffTarget "[#1#(msg)] DebuffTarget #2#"
+#EVENT DebuffTarget 	"[#1#] DebuffTarget #2#"
+#EVENT DebuffTarget 	"<#1#> DebuffTarget #2#"
+#EVENT DebuffTarget 	"[#1#(msg)] DebuffTarget #2#"
+#EVENT DebuffTarget		"#1# tells the group, 'DebuffTarget #2#'"
+#EVENT DebuffTarget		"#1# tells the party, 'DebuffTarget #2#'"
+#EVENT DebuffTarget		"#1# tells the raid, 'DebuffTarget #2#'"
 
 Sub InitEvents_Debuffing
 	/if (${int_debuffTotal} > 0 ) {

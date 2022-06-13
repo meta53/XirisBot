@@ -20,28 +20,57 @@ REVISION HISTORY
 	03.17.22	xiris	Updated cure request EVENT and cleaned up some code
 						Adding curer interrogation on start up to bypass un-equiped (no spell) potential group curers
 	05.23.22	xiris	Reduced events to only have BC
+	06.13.22	xiris	Restored events for Group/Party/Raid due to need to split raids sometimes (multiple camp pulling, jelvan balancing etc)	
+						Added 'simple' cureMe request handler for manual entry (usually by MT)
 **|
 
-#EVENT cureRequest 				"[#1#(msg)] cureRequest #2#"
-#EVENT cureReceived             "[#1#(msg)] I cured you"
-#EVENT cureRejected				"[#1#(msg)] I cannot cure you"
+|-- Single PC Cure Request eg: /g cureme poison
+#EVENT cureMe			"[#1#] cureMe #2#"
+#EVENT cureMe			"<#1#> cureMe #2#"
+#EVENT cureMe			"[#1#(msg)] cureMe #2#"
+#EVENT cureMe			"#1# tells the group, 'cureMe #2#'"
+#EVENT cureMe			"#1# tells the party, 'cureMe #2#'"
+#EVENT cureMe			"#1# tells the raid, 'cureMe #2#'"
 
-#EVENT cureGroupPoison "<#1#> cureGroupPoison #2#"
-#EVENT cureGroupPoison "[#1#(msg)] cureGroupPoison #2#"
+|-- Macro generated cure requests
+#EVENT cureRequest 		"[#1#(msg)] cureRequest #2#"
+#EVENT cureReceived     "[#1#(msg)] I cured you"
+#EVENT cureRejected		"[#1#(msg)] I cannot cure you"
 
+|-- Poison
+#EVENT cureGroupPoison	"[#1#] cureGroupPoison #2#"
+#EVENT cureGroupPoison	"<#1#> cureGroupPoison #2#"
+#EVENT cureGroupPoison	"[#1#(msg)] cureGroupPoison #2#"
+#EVENT cureGroupPoison	"#1# tells the group, 'cureGroupPoison #2#'"
+#EVENT cureGroupPoison	"#1# tells the party, 'cureGroupPoison #2#'"
+#EVENT cureGroupPoison	"#1# tells the raid, 'cureGroupPoison #2#'"
+
+|-- Disease
+#EVENT cureGroupDisease	"[#1#] cureGroupDisease #2#"
 #EVENT cureGroupDisease "<#1#> cureGroupDisease #2#"
 #EVENT cureGroupDisease "[#1#(msg)] cureGroupDisease #2#"
+#EVENT cureGroupDisease	"#1# tells the group, 'cureGroupDisease #2#'"
+#EVENT cureGroupDisease	"#1# tells the party, 'cureGroupDisease #2#'"
+#EVENT cureGroupDisease	"#1# tells the raid, 'cureGroupDisease #2#'"
 
-#EVENT cureGroupCurse "<#1#> cureGroupCurse #2#"
-#EVENT cureGroupCurse "[#1#(msg)] cureGroupCurse #2#"
+|-- Curse
+#EVENT cureGroupCurse	"[#1#] cureGroupCurse #2#"
+#EVENT cureGroupCurse 	"<#1#> cureGroupCurse #2#"
+#EVENT cureGroupCurse 	"[#1#(msg)] cureGroupCurse #2#"
+#EVENT cureGroupCurse	"#1# tells the group, 'cureGroupCurse #2#'"
+#EVENT cureGroupCurse	"#1# tells the party, 'cureGroupCurse #2#'"
+#EVENT cureGroupCurse	"#1# tells the raid, 'cureGroupCurse #2#'"
+
+|-- Corruption (N/A until TSS)
 
 
 Sub InitEvents_Curing
-	/if (${str_classArchetype.Equal[PRIEST]}) /call RegisterClassEvents Events_Curing 34
+	/if (${str_classArchetype.Equal[PRIEST]} || ${Me.Class.ShortName.Equal[PAL]}) /call RegisterClassEvents Events_Curing 5
 	/call RegisterBackgroundEvents Events_Curing_Background 2
 /return
 
 Sub Events_Curing
+	/doevents cureMe
 	/doevents cureRequest
 	/doevents cureGroupPoison
 	/doevents cureGroupDisease
@@ -53,6 +82,19 @@ Sub Events_Curing_Background
 	/doevents cureRejected
 /return
 
+|-- Single target cure, simple syntax (for manual entry)
+|   Counters determined by NetCure
+Sub Event_cureMe(_line, _sender, _eventParams)
+	/echo EVENT_CUREME ${_sender} type: ${_eventParams}
+	/declare type string local ${_eventParams}
+	/call getCureCounters ${_sender} ${_eventParams}
+	/call handleCureRequest ${_sender} ${Spawn[pc name ${_sender}].ID} ${_eventParams} ${Macro.Return}
+	/doevents flush cureMe
+/return
+
+
+|-- Single target cure, generated syntax (for macro call)
+|   Counters determined by NetCure
 Sub Event_cureRequest(_line, _sender, _eventParams)
 	/echo EVT_CUREREQUEST: _line:${_line}
 	/echo _sender: ${_sender}
@@ -64,12 +106,13 @@ Sub Event_cureRequest(_line, _sender, _eventParams)
 	/echo id: ${id}
 	/declare curetype string local  ${_eventParams.Arg[3, ]}
 	/echo curetype: ${curetype}
+	/call getCureCounters ${_sender} ${curetype}
 	/declare count int local  ${_eventParams.Arg[4, ]}
+	/if (${count} == 0) /varset count ${Macro.Return}
 	/echo count: ${count}
 	/call handleCureRequest ${name} ${id} ${curetype} ${count}
 	/doevents flush cureRequest
 /return
-
 
 Sub Event_cureReceived
 	/echo cure Received
@@ -125,6 +168,18 @@ Sub resetCureState
 	/varset bln_needsCure		FALSE
 /return 
 
+
+|-- Use NetHeal/NetCure to get the counters required
+Sub getCureCounters(string _pcName, string _type) 
+	/declare count int local 1
+	/if (${_eventParams.Equal[poison]}) {
+		/varset count ${NetCure[${_pcName}].Poisoned}
+	} else /if (${_eventParams.Equal[curse]}) {
+		/varset count ${NetCure[${_pcName}].Cursed}
+	} else /if (${_eventParams.Equal[disease]}) {
+		/varset count ${NetCure[${_pcName}].Diseased}
+	}
+/return ${count}
 
 |-- Check if I need a cure (all classes)
 Sub chkNeedCure

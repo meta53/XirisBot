@@ -19,27 +19,51 @@ REVISION HISTORY
 	02.15.22	xiris	EQTitan returns nonsense for raid.group stuff now, so we have to make it so we pass in the group leaders names (ugh)
 						Added Array named RaidGroupLeaders to store this manually (laaame)
 	03.01.22	xiris	Added Exclusions for Buffing use command /only|EXCLUSIONS eg: doRaidBuffs /only|ENC		
-	05.13.22	xiris	Reduced events to BC only			
+	05.13.22	xiris	Reduced events to BC only		
+	06.13.22	xiris	Restored events for Group/Party/Raid due to need to split raids sometimes (multiple camp pulling)	
 **|
 
-
+#EVENT DORAIDBUFFS 			"[#1#] doRaidBuffs #2#"
 #EVENT DORAIDBUFFS 			"<#1#> doRaidBuffs #2#"
 #EVENT DORAIDBUFFS 			"[#1#(msg)] doRaidBuffs #2#"
+#EVENT DORAIDBUFFS			"#1# tells the group, 'doRaidBuffs #2#'"
+#EVENT DORAIDBUFFS			"#1# tells the party, 'doRaidBuffs #2#'"
+#EVENT DORAIDBUFFS			"#1# tells the raid, 'doRaidBuffs #2#'"
 
+#EVENT DOGROUPBUFFS 		"[#1#] doGroupBuffs #2#"
 #EVENT DOGROUPBUFFS 		"<#1#> doGroupBuffs #2#"
 #EVENT DOGROUPBUFFS 		"[#1#(msg)] doGroupBuffs #2#"
+#EVENT DOGROUPBUFFS			"#1# tells the group, 'doGroupBuffs #2#'"
+#EVENT DOGROUPBUFFS			"#1# tells the party, 'doGroupBuffs #2#'"
+#EVENT DOGROUPBUFFS			"#1# tells the raid, 'doGroupBuffs #2#'"
 
-#EVENT DOSINGLETARGETBUFFS	"<#1#> doSingleTargetBuff #2#"
-#EVENT DOSINGLETARGETBUFFS	"[#1#(msg)] doSingleTargetBuff #2#"
+#EVENT DOSINGLETARGETBUFFS 	"[#1#] doSingleTargetBuffs #2#"
+#EVENT DOSINGLETARGETBUFFS	"<#1#> doSingleTargetBuffs #2#"
+#EVENT DOSINGLETARGETBUFFS	"[#1#(msg)] doSingleTargetBuffs #2#"
+#EVENT DOSINGLETARGETBUFFS	"#1# tells the group, 'doSingleTargetBuffs #2#'"
+#EVENT DOSINGLETARGETBUFFS	"#1# tells the party, 'doSingleTargetBuffs #2#'"
+#EVENT DOSINGLETARGETBUFFS	"#1# tells the raid, 'doSingleTargetBuffs #2#'"
 
+#EVENT DOCHARBUFFS 			"[#1#] doCharBuffs #2#"
 #EVENT DOCHARBUFFS 			"<#1#> doCharBuffs #2#"
 #EVENT DOCHARBUFFS 			"[#1#(msg)] doCharBuffs #2#"
+#EVENT DOCHARBUFFS			"#1# tells the group, 'doCharBuffs #2#'"
+#EVENT DOCHARBUFFS			"#1# tells the party, 'doCharBuffs #2#'"
+#EVENT DOCHARBUFFS			"#1# tells the raid, 'doCharBuffs #2#'"
 
+#EVENT REMOVEBUFF 			"[#1#] removebuff #2#"
 #EVENT REMOVEBUFF 			"<#1#> removebuff #2#"
 #EVENT REMOVEBUFF 			"[#1#(msg)] rmovebuff #2#"
+#EVENT REMOVEBUFF			"#1# tells the group, 'removebuff #2#'"
+#EVENT REMOVEBUFF			"#1# tells the party, 'removebuff #2#'"
+#EVENT REMOVEBUFF			"#1# tells the raid, 'removebuff #2#'"
 
+#EVENT REMOVEALLBUFFS 		"[#1#] removeallbuffs #2#"
 #EVENT REMOVEALLBUFFS		"<#1#> removeallbuffs#*#"
 #EVENT REMOVEALLBUFFS 		"[#1#(msg)] removeallbuffs#*#"
+#EVENT REMOVEALLBUFFS		"#1# tells the group, 'removeallbuffs #2#'"
+#EVENT REMOVEALLBUFFS		"#1# tells the party, 'removeallbuffs #2#'"
+#EVENT REMOVEALLBUFFS		"#1# tells the raid, 'removeallbuffs #2#'"
 
 
 

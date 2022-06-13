@@ -41,8 +41,6 @@ REQUIRED INCLUDES
 
 #define INI_zoneInfo xiris_common/xiris_pull_zoneinfo.ini
 
-#event RageOff              "#*#is no longer enraged#*#"
-#event RageOn               "#*#has become ENRAGED#*#"
 #event Zoned                "You have entered#*#"
 #event Zoned                "LOADING, PLEASE WAIT..."
 #event NoLOS				"#*#you cannot see your target#*#"
@@ -156,17 +154,17 @@ Sub getTarget
 			/echo NPC in camp, killing
 			/call TrueTarget ${NearestSpawn[npc radius ${int_campRadius} zradius 15].ID} 
 			/delay 5
-		} else /if (${SpawnCount[npc alert 2 radius ${int_alert2Radius} range ${int_minTLevel} ${int_maxTLevel}]} > 0) {
+		} else /if (${SpawnCount[npc alert 2 radius ${int_alert2Radius} range ${int_minTLevel} ${int_maxTLevel} zradius ${int_zRadius}]} > 0) {
 			/echo NPC on alert 2 is up, killing
-			/call TrueTarget ${NearestSpawn[npc range ${int_minTLevel} ${int_maxTLevel} radius ${int_alert2Radius} alert 2].ID}
+			/call TrueTarget ${NearestSpawn[npc alert 2 radius ${int_alert2Radius} range ${int_minTLevel} ${int_maxTLevel} zradius ${int_zRadius}].ID}
 			/delay 5
-		} else /if (${SpawnCount[npc alert 2 radius ${int_alert2Radius} range ${int_minTLevel} ${int_maxTLevel}]} == 0 && ${SpawnCount[npc noalert 1]} > 0) {
+		} else /if (${SpawnCount[npc noalert 1 radius ${int_maxRadius} range ${int_minTLevel} ${int_maxTLevel} zradius ${int_zRadius}]} > 0) {
 			/echo No NPCs on the alert 2 list are up, trying random NPC
-			/call TrueTarget ${NearestSpawn[npc zradius 50 range ${int_minTLevel} ${int_maxTLevel} radius ${int_maxRadius} noalert 1].ID} 
+			/call TrueTarget ${NearestSpawn[npc noalert 1 radius ${int_maxRadius} range ${int_minTLevel} ${int_maxTLevel} zradius ${int_zRadius}].ID} 
 			/delay 5
 		} 
 
-		/if (${Target.ID} && (${Target.Distance} <= ${int_campRadius})) {
+		/if (${Target.ID} && (${Target.Distance} <= ${int_campRadius}) && ${Target.DistanceZ} < 25) {
 			|--if it is close, its valid;
 			/varset bln_validTGT	TRUE
 		} else {
@@ -199,8 +197,10 @@ Sub getTarget
 					/call moveCamp ${int_currentCamp}
 					/delay 10
 			} else {
-				/echo no valid target delaying 5s
-				/delay 5s
+				/if (${SpawnCount[npc noalert 1 radius ${int_maxRadius} range ${int_minTLevel} ${int_maxTLevel} zradius ${int_zRadius}]} == 0) {
+					/echo No valid targets delaying 5s
+					/delay 5s
+				} 
 			}
 			/goto :AcquireLoop
 		}
@@ -839,6 +839,9 @@ Sub chkComponents
 
 Sub resetCamp
 	/docommand /${cmdChannel} //nav wp camp${int_currentCamp}
+	| -- don't run self back to camp its not necessary run to my pull spot instead
+	/nav wp bot_pull_nav
+	/delay 20
 	/nav stop
 /return
 
@@ -861,7 +864,7 @@ Sub variant_initialize(int _pull_dist, string _channel, string _announce, int _c
 	
 	|--melee plugin/aggro for the requester
 	/melee aggro=on
-	/docrack preventspeed on
+	|/docrack preventspeed on
 	/declare useGroup	bool	outer	FALSE
 	
 	|--command channel setup
@@ -901,8 +904,8 @@ Sub variant_initialize(int _pull_dist, string _channel, string _announce, int _c
 
 	|--radii
 	/declare int_pcCount			int 	outer   ${SpawnCount[PC]}
-	/declare int_campRadius			int		outer	100
-	/declare int_maxRadius			int		outer	425
+	/if (!${Defined[int_campRadius]}) /declare int_campRadius	int		outer	100
+	/declare int_maxRadius			int		outer	1525
 	/if (${Defined[_pull_dist]}) {
 		/varset int_maxRadius ${_pull_dist}
 	}
@@ -912,16 +915,16 @@ Sub variant_initialize(int _pull_dist, string _channel, string _announce, int _c
 
 	|-- use 40 for POFire
 	/declare int_minZHeight			int		outer 	0
-	/declare int_maxZHeight			int		outer	250
-	/varcalc int_minZHeight			${Me.Z} - 50
+	/declare int_maxZHeight			int		outer	0
+	/declare int_zRadius			int     outer   0
+	/varcalc int_minZHeight			${Me.Z} - 150
 	/varcalc int_maxZHeight			${Me.Z} + 150
+	/varcalc int_zRadius ${int_maxZHeight} - ${int_minZHeight}
 
-	/g min z ${int_minZHeight}
-	/g max z ${int_maxZHeight}
 	|--target information
-	/declare int_minPullCount		int		outer   4
+	/declare int_minPullCount		int		outer   2
 	/declare int_minTLevel			int		outer	40
-	/declare int_maxTLevel			int		outer	73
+	/declare int_maxTLevel			int		outer	77
 	/declare bln_validTGT			bool	outer	FALSE
 	/declare bln_TGTDead			bool	outer	FALSE
 	/declare bln_TGTLocal			bool	outer	FALSE
@@ -1005,218 +1008,165 @@ Sub variant_initialize(int _pull_dist, string _channel, string _announce, int _c
 Sub setAlerts
 	|=================================
 	|--- specific zone mobs to avoid;
+	|    06/12 ordered by zone for performance
 	|=================================
 	/squelch /alert clear 1
-	/squelch /alert add 1 "a young dire wolf"
-	/squelch /alert add 1 "All Powerful Gnome"
-	/squelch /alert add 1 "Guardian of Doomfire"
-	/squelch /alert add 1 "The Fabled Kobold Noble"
-	/squelch /alert add 1 "The Fabled Kobold Priest"
-	/squelch /alert add 1 "The Fabled Kobold Champion"
-	/squelch /alert add 1 "The Fabled Solusek Kobold King"
-	/squelch /alert add 1 "The Fabled Death Beetle"
-	/squelch /alert add 1 "fire giant warrior"
-	/squelch /alert add 1 "neiroth"
-	/squelch /alert add 1 "zordak ragefire"
-	/squelch /alert add 1 "lord nagafen"
-	/squelch /alert add 1 "magus rokyl"
-	/squelch /alert add 1 "fire giant wizard"
-	/squelch /alert add 1 "Warlord Skarlon"
-	/squelch /alert add 1 "King Tranix"
-	/squelch /alert add 1 "GREEmoteTrap"
-	/squelch /alert add 1 "The Wailing Sister"
-	/squelch /alert add 1 "Hatchling"
-	/squelch /alert add 1 "Hedge Trigger"
-	/squelch /alert add 1 "Odaen"
-	/squelch /alert add 1 "Ptav M'sha"
-	/squelch /alert add 1 "Dvoin M'sha"
-	/squelch /alert add 1 "Mnat M'sha"
-	/squelch /alert add 1 "Aganetti the Keeper"
-	/squelch /alert add 1 "Cynosure Kvanjji"
-	/squelch /alert add 1 "Qkav`d the Fourth Arbitor"
-	/squelch /alert add 1 "Svi`pral the Second Arbitor"
-	/squelch /alert add 1 "Vishai the First Arbitor"
-	/squelch /alert add 1 "Ytvagi the Third Arbitor"
-	/squelch /alert add 1 "General Reparm"
-	/squelch /alert add 1 "General Druav Flamesinger"
-	/squelch /alert add 1 "Blazzax the Omnifiend"
-	/squelch /alert add 1 "Pyronis"
-	/squelch /alert add 1 "Magmaton"
-	/squelch /alert add 1 "Arch Mage Yozanni"
-	/squelch /alert add 1 "Councilman"
-	/squelch /alert add 1 "Pixtt"
-	/squelch /alert add 1 "Mass of Stone"
-	/squelch /alert add 1 "Zelnithak"
-	/squelch /alert add 1 "remains of vah"
-	/squelch /alert add 1 "a guardian spirit"
-	/squelch /alert add 1 "spectre of corruption"
-	/squelch /alert add 1 "barban"
-	/squelch /alert add 1 "Tantisala"
-	/squelch /alert add 1 "Pixtt Uxnikk"
-	/squelch /alert add 1 "Pixtt Kekken"
-	/squelch /alert add 1 "A Kyv Runner"
-	/squelch /alert add 1 "Gamesh"
-	/squelch /alert add 1 "Scribe Gurru"
-	/squelch /alert add 1 "an enslaved yunjo"
-	/squelch /alert add 1 "etumer"
-	/squelch /alert add 1 "the wailing sister"
-	/squelch /alert add 1 "untel"
-	/squelch /alert add 1 "Warder Cecilia"
-	/squelch /alert add 1 "Zun`Muram Votal"
-	/squelch /alert add 1 "Pixtt Votal"
-	/squelch /alert add 1 "Packmaster Skoiat Pizak"
-	/squelch /alert add 1 "a hungry yunjo"
-	/squelch /alert add 1 "Smith Rondo"
-	/squelch /alert add 1 "Caridwi"
-	/squelch /alert add 1 "a waiting warder"
-	/squelch /alert add 1 "a yunjo"
-	/squelch /alert add 1 "Velketor"
-	/squelch /alert add 1 "a hissing"
-	/squelch /alert add 1 "the walls"
-	/squelch /alert add 1 "a chill"
-	/squelch /alert add 1 "a massive burrower"
-	/squelch /alert add 1 "The Burrower Beast"
-	/squelch /alert add 1 "Trydan Faye"
-	/squelch /alert add 1 "Rhalliq Trell"
-	/squelch /alert add 1 "Alekson Garn"
-	/squelch /alert add 1 "a bitten victim"
-	/squelch /alert add 1 "a petrified colossal tree"
-	/squelch /alert add 1 "a hollow tree"
-	/squelch /alert add 1 "a trap"
-	/squelch /alert add 1 "flavor text"
-	/squelch /alert add 1 "ten"
-	/squelch /alert add 1 "six"
-	/squelch /alert add 1 "two"
-	/squelch /alert add 1 "a hissing"
-	/squelch /alert add 1 "four"
-	/squelch /alert add 1 "eight"
-	/squelch /alert add 1 "three"
-	/squelch /alert add 1 "ten"
-	/squelch /alert add 1 "TerrorSpawner"
-	/squelch /alert add 1 "a shimmering orb"
-	/squelch /alert add 1 "aedispellph"
-	/squelch /alert add 1 "aerainph"
-	/squelch /alert add 1 "from no where"
-	/squelch /alert add 1 "mini named controller"
-	/squelch /alert add 1 "the hair"
-	/squelch /alert add 1 "a murkglider licheglider"
-	/squelch /alert add 1 "a murkglider soulstalker"
-	/squelch /alert add 1 "Ixt Imnes the Ironhoof"
-	/squelch /alert add 1 "Ikaav Salisa Mexmielk"
-	/squelch /alert add 1 "Dragorn Champion"
-	/squelch /alert add 1 "Filligno the Slayer"
-	/squelch /alert add 1 "a creaking crate"
-	/squelch /alert add 1 "Taromani"
-	/squelch /alert add 1 "Chailak"
-	/squelch /alert add 1 "Feratha"
-	/squelch /alert add 1 "Turlini"
-	/squelch /alert add 1 "Narundel"
-	/squelch /alert add 1 "Ranguali"
-	/squelch /alert add 1 "Namosa"
-	/squelch /alert add 1 "Nerask"
-	/squelch /alert add 1 "a ferocious chimera"
-	/squelch /alert add 1 "Manaetic Behemoth"
-	/squelch /alert add 1 "Trydan Faye"
-	/squelch /alert add 1 "Alekson Garn"
-	/squelch /alert add 1 "Rhaliq Trell"
-	/squelch /alert add 1 "Planar Projection"
-	/squelch /alert add 1 "a norrathian maiden"
-	/squelch /alert add 1 "villager"
-	/squelch /alert add 1 "an erudite villager"
-	/squelch /alert add 1 "a ogre villager"
-	/squelch /alert add 1 "a high elf villager"
-	/squelch /alert add 1 "a dwarf villager"
-	/squelch /alert add 1 "a gnome villager"
-	/squelch /alert add 1 "a human villager"
-	/squelch /alert add 1 "a troll villager"
-	/squelch /alert add 1 "a portal crystal"
-	/squelch /alert add 1 "kenra"
-	/squelch /alert add 1 "irak"
-	/squelch /alert add 1 "Gazak"
-	/squelch /alert add 1 "Maroley"
+
+	|-- Global Ignores
 	
+	|-- LDON Ignores
+		/squelch /alert add 1 "a bitten victim"
+		/squelch /alert add 1 "a petrified colossal tree"
+		/squelch /alert add 1 "a hollow tree"
+		/squelch /alert add 1 "a trap"
+		/squelch /alert add 1 "flavor text"
+		/squelch /alert add 1 "ten"
+		/squelch /alert add 1 "six"
+		/squelch /alert add 1 "two"
+		/squelch /alert add 1 "a hissing"
+		/squelch /alert add 1 "four"
+		/squelch /alert add 1 "eight"
+		/squelch /alert add 1 "three"
+		/squelch /alert add 1 "ten"
+		/squelch /alert add 1 "TerrorSpawner"
+		/squelch /alert add 1 "a shimmering orb"
+		/squelch /alert add 1 "aedispellph"
+		/squelch /alert add 1 "aerainph"
+		/squelch /alert add 1 "from no where"
+		/squelch /alert add 1 "mini named controller"
+		/squelch /alert add 1 "the hair"
+		/squelch /alert add 1 "a young dire wolf"
+
+	|-- Zone Specific Ignores
+	/if (${Zone.ShortName.Equal[dranik]}) {
+		/squelch /alert add 1 "Filligno the Slayer"
+	} else /if (${Zone.ShortName.Equal[pofire]}) {
+		/squelch /alert add 1 "Guardian of Doomfire"
+		/squelch /alert add 1 "General Reparm"
+		/squelch /alert add 1 "General Druav Flamesinger"
+		/squelch /alert add 1 "Blazzax the Omnifiend"
+		/squelch /alert add 1 "All Powerful Gnome"
+		/squelch /alert add 1 "Pyronis"
+		/squelch /alert add 1 "Magmaton"
+		/squelch /alert add 1 "Arch Mage Yozanni"
+	} else /if (${Zone.ShortName.Equal[qvic]}) {
+		/squelch /alert add 1 "Ptav M'sha"
+		/squelch /alert add 1 "Dvoin M'sha"
+		/squelch /alert add 1 "Mnat M'sha"
+		/squelch /alert add 1 "Aganetti the Keeper"
+		/squelch /alert add 1 "Cynosure Kvanjji"
+		/squelch /alert add 1 "Qkav`d the Fourth Arbitor"
+		/squelch /alert add 1 "Svi`pral the Second Arbitor"
+		/squelch /alert add 1 "Vishai the First Arbitor"
+		/squelch /alert add 1 "Ytvagi the Third Arbitor"
+	} else /if (${Zone.ShortName.Equal[riftseekers]}) {
+		/squelch /alert add 1 "a ferocious chimera"
+		/squelch /alert add 1 "a ferocious feran"
+		/squelch /alert add 1 "Chailak"
+		/squelch /alert add 1 "Feratha"
+		/squelch /alert add 1 "Prince Allin"
+		/squelch /alert add 1 "Prince Britalic" 
+		/squelch /alert add 1 "Prince Cynin"
+		/squelch /alert add 1 "Prince Ilsin"
+		/squelch /alert add 1 "Prince Kiranus"
+		/squelch /alert add 1 "Prince Scyllus"
+		/squelch /alert add 1 "Princess Kira"
+		/squelch /alert add 1 "Princess Lana"
+		/squelch /alert add 1 "Princess Puja"
+		/squelch /alert add 1 "Princess Quellon"
+		/squelch /alert add 1 "Princess Yelnia"
+		/squelch /alert add 1 "Princess Zulaqua"
+		/squelch /alert add 1 "King Gelaqua"
+		/squelch /alert add 1 "Queen Pyrilonis"
+		/squelch /alert add 1 "Taromani"
+		/squelch /alert add 1 "portal"
+	} 
+
+
+
 	|=================================
 	|--- specific zone mobs to hunt;
 	|=================================
 	/squelch /alert clear 2
 	|--Hunter Cycle--|
-	/squelch /alert add 2 "froglok hunter"
-	/squelch /alert add 2 "Oracle Froskil"
-	/squelch /alert add 2 "Harbinger Josk"
-	/squelch /alert add 2 "Knight Dragol"
-	/squelch /alert add 2 "Vessel Fryn"
-	/squelch /alert add 2 "Keeper Sepsis"
-	/squelch /alert add 2 "Ebon lotus"
-	/squelch /alert add 2 "Ffroaak"
-	/squelch /alert add 2 "Dreadlord Dekir"
-	/squelch /alert add 2 "Partisan Yinlen"
-	/squelch /alert add 2 "Doom"
-	/squelch /alert add 2 "Throkkok"
-	/squelch /alert add 2 "Hierophant Ixyl"
-	/squelch /alert add 2 "Master Fasliw"
-	/squelch /alert add 2 "Sigra"
+	/if (${Zone.ShortName.Equal[trakanon]}) {
+		/squelch /alert add 2 "froglok hunter"
+		/squelch /alert add 2 "Oracle Froskil"
+		/squelch /alert add 2 "Harbinger Josk"
+		/squelch /alert add 2 "Knight Dragol"
+		/squelch /alert add 2 "Vessel Fryn"
+		/squelch /alert add 2 "Keeper Sepsis"
+		/squelch /alert add 2 "Ebon lotus"
+		/squelch /alert add 2 "Ffroaak"
+		/squelch /alert add 2 "Dreadlord Dekir"
+		/squelch /alert add 2 "Partisan Yinlen"
+		/squelch /alert add 2 "Doom"
+		/squelch /alert add 2 "Throkkok"
+		/squelch /alert add 2 "Hierophant Ixyl"
+		/squelch /alert add 2 "Master Fasliw"
+		/squelch /alert add 2 "Sigra"
 
-	|-- Forager Cycle--|
-	/squelch /alert add 2 "froglok forager"
-	/squelch /alert add 2 "Champion Thenrin"
-	/squelch /alert add 2 "Commander Sils"
-	/squelch /alert add 2 "Titail Sinok"
-	/squelch /alert add 2 "Bloodeye"
-	/squelch /alert add 2 "Dreadlord Fanrik"
-	/squelch /alert add 2 "Hangman"
-	/squelch /alert add 2 "Dragontail"
-	/squelch /alert add 2 "Squire Glik"
-	/squelch /alert add 2 "Klok Denris"
-	/squelch /alert add 2 "Crusader Zoglic"
-	/squelch /alert add 2 "Harbinger Dronik"
-	/squelch /alert add 2 "Keeper Lasnik"
-	/squelch /alert add 2 "Silvermane"
-	/squelch /alert add 2 "Thruke"
-	/squelch /alert add 2 "Flayhte"
-	/squelch /alert add 2 "Champion Arlek"
-	/squelch /alert add 2 "froglok_hunter"
-	/squelch /alert add 2 "Oracle Froskil"
-	/squelch /alert add 2 "Harbinger Josk"
-	/squelch /alert add 2 "Knight Dragol"
-	/squelch /alert add 2 "Vessel Fryn"
-	/squelch /alert add 2 "Keeper Sepsis"
-	/squelch /alert add 2 "Ebon lotus"
-	/squelch /alert add 2 "Ffroaak"
-	/squelch /alert add 2 "Dreadlord Dekir"
-	/squelch /alert add 2 "Partisan Yinlen"
-	/squelch /alert add 2 "Doom"
-	/squelch /alert add 2 "Throkkok"
-	/squelch /alert add 2 "Hierophant Ixyl"
-	/squelch /alert add 2 "Master Fasliw"
-	/squelch /alert add 2 "Sigra"
+		|-- Forager Cycle--|
+		/squelch /alert add 2 "froglok forager"
+		/squelch /alert add 2 "Champion Thenrin"
+		/squelch /alert add 2 "Commander Sils"
+		/squelch /alert add 2 "Titail Sinok"
+		/squelch /alert add 2 "Bloodeye"
+		/squelch /alert add 2 "Dreadlord Fanrik"
+		/squelch /alert add 2 "Hangman"
+		/squelch /alert add 2 "Dragontail"
+		/squelch /alert add 2 "Squire Glik"
+		/squelch /alert add 2 "Klok Denris"
+		/squelch /alert add 2 "Crusader Zoglic"
+		/squelch /alert add 2 "Harbinger Dronik"
+		/squelch /alert add 2 "Keeper Lasnik"
+		/squelch /alert add 2 "Silvermane"
+		/squelch /alert add 2 "Thruke"
+		/squelch /alert add 2 "Flayhte"
+		/squelch /alert add 2 "Champion Arlek"
+		/squelch /alert add 2 "froglok_hunter"
+		/squelch /alert add 2 "Oracle Froskil"
+		/squelch /alert add 2 "Harbinger Josk"
+		/squelch /alert add 2 "Knight Dragol"
+		/squelch /alert add 2 "Vessel Fryn"
+		/squelch /alert add 2 "Keeper Sepsis"
+		/squelch /alert add 2 "Ebon lotus"
+		/squelch /alert add 2 "Ffroaak"
+		/squelch /alert add 2 "Dreadlord Dekir"
+		/squelch /alert add 2 "Partisan Yinlen"
+		/squelch /alert add 2 "Doom"
+		/squelch /alert add 2 "Throkkok"
+		/squelch /alert add 2 "Hierophant Ixyl"
+		/squelch /alert add 2 "Master Fasliw"
+		/squelch /alert add 2 "Sigra"
 
-	/if (${Zone.ShortName.Equal[kodtaz]}) /alert add 2 "ikaav"
-	/if (${Zone.ShortName.Equal[kodtaz]}) /alert add 2 "ixt"
-	
+	|-- Skin Samples--|	
+	} else /if (${Zone.ShortName.Equal[kodtaz]}) {
+		/squelch /alert add 2 "ikaav"
+		/squelch /alert add 2 "ixt"
+
 	|-- Anguish Signets--|
-	/squelch /alert add 2 "turncoat"
-	/squelch /alert add 2 "mastermind"
+	} else /if (${Zone.ShortName.Equal[riftseekers]}) {
+		/squelch /alert add 2 "Dragorn Battlemaster"
+	} else /if (${Zone.ShortName.Equal[draniksewersa]} || ${Zone.ShortName.Equal[draniksewersb]} || ${Zone.ShortName.Equal[draniksewersb]}) {
+		/squelch /alert add 2 "Cunning Dragorn"
+	} else /if (${Zone.ShortName.Equal[dranikcatacombsa]} || ${Zone.ShortName.Equal[dranikcatacombsb]} || ${Zone.ShortName.Equal[dranikcatacombsc]}) {
+		/squelch /alert add 2 "InsidiousDragorn"
+	} else /if (${Zone.ShortName.Equal[provinggrounds]}) {
+		/squelch /alert add 2 "Dragorn Tactician"
+	} else /if (${Zone.ShortName.Equal[wallofslaughter]}) {
+		/squelch /alert add 2 "Dragorn Mastermind"
+	} else /if (${Zone.ShortName.Equal[dranikhollowsa]} || ${Zone.ShortName.Equal[dranikhollowsb]} || ${Zone.ShortName.Equal[dranikhollowsc]} || ${Zone.ShortName.Equal[dranikhollowsd]} || ${Zone.ShortName.Equal[dranikhollowse]} || ${Zone.ShortName.Equal[dranikhollowsf]} || ${Zone.ShortName.Equal[dranikhollowsg]} || ${Zone.ShortName.Equal[dranikhollowsh]} || ${Zone.ShortName.Equal[dranikhollowsi]} || ${Zone.ShortName.Equal[dranikhollowsj]}) {
+		/squelch /alert add 2 "Shrewd Dragorn"
+		| Note, this should be dranikhollowsa "Watering Hole"
+	} else /if (${Zone.ShortName.Equal[dranik]}) {
+		/squelch /alert add 2 "Dragorn Prodigy"
 	
-	|-- LDON Hunter
-	| /squelch /alert add 2 "Keeper of Blood" |note spawns in spot you can't nav to
-	/squelch /alert add 2 "Yavrin"
-	
-	|-- etc--|
-	/squelch /alert add 2 "night watchman"
-	/squelch /alert add 2 "officiator"
-	/squelch /alert add 2 "Ulyist"
-	/squelch /alert add 2 "Keeper of Blood"
-	/squelch /alert add 2 "Yavrin"
-	/squelch /alert add 2 "Bial the Blade"
-	/squelch /alert add 2 "Jerrand"
-	/squelch /alert add 2 "Sikl"
-	/squelch /alert add 2 "Giddib"
-	/squelch /alert add 2 "officiator"
-
-	
-	/squelch /alert clear 3
-	/squelch /alert add 3 "All Powerful Gnome"
-
+	|--Breakdown in Communication
+	} else /if (${Zone.ShortName.Equal[riwwi]}) {
+		/squelch /alert add 2 "night watchman"
+		/squelch /alert add 2 "officiator"
+	}
 /return
 
 Sub Event_TooClose

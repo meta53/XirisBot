@@ -22,14 +22,9 @@ REVISION HISTORY
 #event ChangeHP   	"#*#ChangeHP #1#"
 #event GroupHeal  	"#*#DoGroupHeal#*#"
 
-#EVENT HealMode 	"<#1#> HealMode #2#"
-#EVENT HealMode 	"[#1#(msg)] HealMode #2#"
-
-#EVENT InterruptON 	"<#1#> InterruptON#*#"
-#EVENT InterruptON 	"[#1#(msg)] InterruptON#*#"
-
-#EVENT InterruptOFF "<#1#> InterruptOFF#*#"
-#EVENT InterruptOFF "[#1#(msg)] InterruptOFF#*#"
+#EVENT HealMode 	"#*#HealMode #1#"
+#EVENT InterruptON 	"#*#InterruptON#*#"
+#EVENT InterruptOFF "#*#InterruptOFF#*#"
 
 
 |-- CHEvents should only be listened for in the class handlers (cleric, druid)
@@ -47,8 +42,6 @@ REVISION HISTORY
 
 #EVENT CHSwitch "<#1#> CHSwitch #2#"
 #EVENT CHSwitch "[#1#(msg)] CHSwitch #2#"
-
-
 
 
 Sub InitEvents_Healing
@@ -93,10 +86,10 @@ Sub EVENT_ChangeHP(string chatText)
 	/doevents flush ChangeHP
 /return
 
-Sub EVENT_HealMode(_line, _sender, _eventParams)
+Sub EVENT_HealMode(string chatText)
 	/if (${Me.Class.ShortName.NotEqual[CLR]}) /return
 	/echo Changing Heal Mode?
-	/call ChangeHealMode ${_eventParams.Arg[1, ]}
+	/call ChangeHealMode ${chatText.Arg[3]}
 	/doevents flush HealMode
 /return
 
