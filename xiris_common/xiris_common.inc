@@ -47,8 +47,12 @@ ______________________________________________
 #include xiris_common/xiris_spell_routines.inc
 
 |COMMON
-#EVENT KillMob 				"<#1#> KillMob #2#"
+#EVENT KillMob 				"[#1#] KillMob #2#"
 #EVENT KillMob 				"[#1#(msg)] KillMob #2#"
+#EVENT KillMob 				"<#1#> KillMob #2#"
+#EVENT KillMob				"#1# tells the group, 'KillMob #2#'"
+#EVENT KillMob				"#1# tells the party, 'KillMob #2#'"
+#EVENT KillMob				"#1# tells the raid, 'KillMob #2#'"
 
 #EVENT Zoned				"You have entered#*#"
 #EVENT Zoned				"LOADING, PLEASE WAIT..."
@@ -57,14 +61,26 @@ ______________________________________________
 #EVENT BackOff				"<#1#> BackOff"
 #EVENT BackOff				"[#1#(msg)] BackOff"
 
+#EVENT ChangeMT 			"[#1#] changeMT #2#"
 #EVENT ChangeMT 			"<#1#> changeMT #2#"
 #EVENT ChangeMT 			"[#1#(msg)] changeMT #2#"
+#EVENT ChangeMT				"#1# tells the group, 'changeMT #2#'"
+#EVENT ChangeMT				"#1# tells the party, 'changeMT #2#'"
+#EVENT ChangeMT				"#1# tells the raid, 'changeMT #2#'"
 
+#EVENT ChangeSA 			"[#1#] ChangeSA #2#"
 #EVENT ChangeSA 			"<#1#> changeSA #2#"
 #EVENT ChangeSA 			"[#1#(msg)] changeSA #2#"
+#EVENT ChangeSA				"#1# tells the group, 'ChangeSA #2#'"
+#EVENT ChangeSA				"#1# tells the party, 'ChangeSA #2#'"
+#EVENT ChangeSA				"#1# tells the raid, 'ChangeSA #2#'"
 
+#EVENT ChangeAP 			"[#1#] ChangeAP #2#"
 #EVENT ChangeAP 			"<#1#> changeAP #2#"
 #EVENT ChangeAP 			"[#1#(msg)] changeAP #2#"
+#EVENT ChangeAP				"#1# tells the group, 'ChangeAP #2#'"
+#EVENT ChangeAP				"#1# tells the party, 'ChangeAP #2#'"
+#EVENT ChangeAP				"#1# tells the raid, 'ChangeAP #2#'"
 
 |MISC events
 #EVENT ConnectEQBC			"#*#ConnectEQBC#*#"
@@ -223,6 +239,7 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/declare int_leashZoneID		int		outer ${Zone.ID}
 	/declare bln_leashCamp			bool	outer ${Ini[botINI,Settings,leashCamp,FALSE]}
 	/declare bln_leashAutoSit		bool	outer ${Ini[botINI,Settings,leashAutoSit,TRUE]}
+	/declare int_campRadius			int		outer	85			
 	/declare SZ_shortName			string	outer ${Zone.ShortName}
 	
 	|-- [Settings] : AAs & CAs
