@@ -17,7 +17,7 @@ Sub SetupGroupsRAID
 	/bct Xiria //multiline ; /invite Xirea;  /invite Xirin; /invite Xirael; /invite Aergia; /invite Shynxia;
 	/bct Theist //multiline ; /invite Xurael;  /invite Xerael; /invite Xarael; /invite Xorael; /invite Xunshia;
 	/bct Cereborn //multiline ; /invite Xeixa;   /invite Xiexa; /invite Xeixi; /invite Xeqisa; /invite Dogmatist;
-	/bct Sadelia //multiline ; /invite Drexia;   /invite Mluian; /invite Xonshia; /invite Xeia; /invite Tragic;
+	/bct Sadelia //multiline ; /invite Drexia;   /invite Mluian; /invite Xonshia; /invite Eurydice; /invite Tragic;
 	/bct Xaeliea //multiline ; /invite Ertres;  /invite Pantheon; /invite Opheoia; /invite Achlys; /invite Xenshia;
 	/bct Xaexa //multiline ; /invite Erinyes;  /invite Deist; /invite Ophexia; /invite Adikia; /invite Xinshia;
 	/bct Xaia //multiline ; /invite Ertris;  /invite Ophemia; /invite Opheyia; /invite Aidos; /invite Nihilist;
@@ -47,7 +47,7 @@ Sub SetupGroupsHATRED
 	/bct Xiria //multiline ; /invite Theist;  /invite Tragic; /invite Xirin; /invite Aergia; /invite Shynxia;
 	/bct Xirea //multiline ; /invite Xirael;  /invite Xerael; /invite Xarael; /invite Xorael; /invite Xurael;
 	/bct Cereborn //multiline ; /invite Xeixa;   /invite Xiexa; /invite Xeixi; /invite Xeqisa; /invite Dogmatist;
-	/bct Sadelia //multiline ; /invite Drexia;   /invite Nihilist; /invite Mluian; /invite Xeia; /invite Xinshia;
+	/bct Sadelia //multiline ; /invite Drexia;   /invite Nihilist; /invite Mluian; /invite Eurydice; /invite Xinshia;
 	/bct Xaeliea //multiline ; /invite Ertres;  /invite Ophidia; /invite Opheoia; /invite Achlys; /invite Xenshia;
 	/bct Xaexa //multiline ; /invite Erinyes;  /invite Ophelia; /invite Ophexia; /invite Adikia; /invite Xunshia;
 	/bct Xaia //multiline ; /invite Ertris;  /invite Ophemia; /invite Opheyia; /invite Aidos; /invite Xonshia;
@@ -79,7 +79,7 @@ Sub SetupGroupsTRIAD
 
 	|-Raid 2
 	/bct Xiria 		//multiline ; /invite Xirael; /invite Tragic; /invite Xerael; /invite Achlys; /invite Shynxia;	
-	/bct Sadelia 	//multiline ; /invite Erinyas; /invite Xiexa; /invite Cereborn; /invite Xeia; /invite Dogmatist;
+	/bct Sadelia 	//multiline ; /invite Erinyas; /invite Xiexa; /invite Cereborn; /invite Eurydice; /invite Dogmatist;
 	/bct Xaexa		//multiline ; /invite Erinyes; /invite Ophelia; /invite Ophexia; /invite Adikia; /invite Xunshia;
 
 	|-Raid 3
