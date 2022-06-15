@@ -14,35 +14,51 @@ REVISION HISTORY
 ______________________________________________
 **|	
 
-#EVENT Follow 		"[#1#] Follow #2#"
-#EVENT Follow 		"<#1#> Follow #2#"
-#EVENT Follow	 	"[#1#(msg)] Follow #2#"
-#EVENT Follow		"#1# tells the group, 'Follow #2#'"
-#EVENT Follow		"#1# tells the party, 'Follow #2#'"
-#EVENT Follow		"#1# tells the raid, 'Follow #2#'"
+#EVENT Follow 		"[#1#] FollowMe #2#"
+#EVENT Follow 		"<#1#> FollowMe #2#"
+#EVENT Follow	 	"[#1#(msg)] FollowMe #2#"
+#EVENT Follow		"#1# tells you#*#'FollowMe #2#'"
+#EVENT Follow		"#1# tells the group#*#'FollowMe #2#'"
+#EVENT Follow		"#1# tells the raid#*#'FollowMe #2#'"
 
 #EVENT Stop 		"[#1#] Stop#*#"
 #EVENT Stop			"<#1#> Stop#*#"
 #EVENT Stop			"[#1#(msg)] Stop#*#"
-#EVENT Stop			"#1# tells the group, 'Stop#*#'"
-#EVENT Stop			"#1# tells the party, 'Stop#*#'"
-#EVENT Stop			"#1# tells the raid, 'Stop#*#'"
+#EVENT Stop			"#1# tells you#*#'Stop#*#'"
+#EVENT Stop			"#1# tells the group#*#'Stop#*#'"
+#EVENT Stop			"#1# tells the raid#*#'Stop#*#'"
 
 #EVENT MoveHere 	"[#1#] MoveTo #2#"
 #EVENT MoveHere 	"<#1#> MoveTo #2#"
-#EVENT MoveHere 	"[#1#(msg)] MoveTo #2#'"
-#EVENT MoveHere		"#1# tells the group, 'MoveTo #2#'"
-#EVENT MoveHere		"#1# tells the party, 'MoveTo #2#'"
-#EVENT MoveHere		"#1# tells the raid, 'MoveTo #2#'"
+#EVENT MoveHere 	"[#1#(msg)] MoveTo #2#"
+#EVENT MoveHere		"#1# tells you#*#'MoveTo #2#'"
+#EVENT MoveHere		"#1# tells the group#*#'MoveTo #2#'"
+#EVENT MoveHere		"#1# tells the raid#*#'MoveTo #2#'"
+
+#EVENT NavigateWP 	"[#1#] NavToWP #2#"
+#EVENT NavigateWP 	"<#1#> NavToWP #2#"
+#EVENT NavigateWP 	"[#1#(msg)] NavToWP #2#"
+#EVENT NavigateWP	"#1# tells you#*#'NavToWP #2#'"
+#EVENT NavigateWP	"#1# tells the group#*#'NavToWP #2#'"
+#EVENT NavigateWP	"#1# tells the raid#*#'NavToWP #2#'"
+
+#EVENT CreateCamp 	"[#1#] CreateCamp #2#"
+#EVENT CreateCamp 	"<#1#> CreateCamp #2#"
+#EVENT CreateCamp 	"[#1#(msg)] NavCreateCampToWP #2#"
+#EVENT CreateCamp	"#1# tells you#*#'CreateCamp #2#'"
+#EVENT CreateCamp	"#1# tells the group#*#'CreateCamp #2#'"
+#EVENT CreateCamp	"#1# tells the raid#*#'CreateCamp #2#'"
 
 Sub InitEvents_Following
-	/call RegisterBackgroundEvents Events_Following 3
+	/call RegisterBackgroundEvents Events_Following 5
 /return
 
 Sub Events_Following
+	/doevents NavigateWP
 	/doevents Follow
 	/doevents Stop
 	/doevents MoveHere
+	/doevents CreateCamp
 /return
 
 
@@ -55,6 +71,7 @@ Sub xbot_initialize_following
 	/call InitEvents_Following
 	/cecho \aoxbot_initialize_following
 /return
+
 
 
 SUB EVENT_Follow(_line, _chatSender, _eventParams)
@@ -108,7 +125,20 @@ SUB EVENT_Follow(_line, _chatSender, _eventParams)
 	/doevents flush Follow
 /return
 
+SUB EVENT_NavigateWP(_line, _chatSender, _eventParams)
+	/cecho \ayNavigate to waypoint: \ag${_eventParams}
+	/declare wp string local ${_eventParams.Arg[1]}
+	/nav wp ${wp}
+	/doevents flush NavigateWP
+/return
 
+
+SUB EVENT_CreateCamp(_line, _chatSender, _eventParams)
+	/cecho \ayCreating Camp: \ag${_eventParams}
+	/declare cmp string local ${_eventParams.Arg[1]}
+	/nav recordwaypoint ${cmp}
+	/doevents flush CreateCamp
+/return
 
 |----------------------------------------------------------------------------------------------------|
 |- Engages follow plugins on specified follow targets.												-|

@@ -633,6 +633,7 @@ Sub chkSnare
 |- Method will memorize a spell, to the optional attributed gem, and if wait is true, will wait until its ready to return
 |- note will call utility to string 'gem' from the gem # if found
 Sub chkSpellMemorized(string _spell, bool _wait, int _gem)
+	/if (${_spell.Equal[NULL]}) /goto :return
 	/if (${Me.Gem[${_spell}]}) /goto :return
 	/echo chkSpellMemorized: ${_spell} (${Me.Gem[${_spell}]}) 
 	/declare intGem int local 9
@@ -670,6 +671,8 @@ Sub chkSpellMemorized(string _spell, bool _wait, int _gem)
 				/goto :return
 			}
 			/goto :memwait
+:nullError 
+/rs There was a null error trying to memorize a spell; Check your scope!
 :return
 /return 
 

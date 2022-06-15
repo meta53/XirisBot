@@ -50,9 +50,9 @@ ______________________________________________
 #EVENT KillMob 				"[#1#] KillMob #2#"
 #EVENT KillMob 				"[#1#(msg)] KillMob #2#"
 #EVENT KillMob 				"<#1#> KillMob #2#"
-#EVENT KillMob				"#1# tells the group, 'KillMob #2#'"
-#EVENT KillMob				"#1# tells the party, 'KillMob #2#'"
-#EVENT KillMob				"#1# tells the raid, 'KillMob #2#'"
+#EVENT KillMob				"#1# tells the group#*#'KillMob #2#'"
+#EVENT KillMob				"#1# tells you#*#'KillMob #2#'"
+#EVENT KillMob				"#1# tells the raid#*#'KillMob #2#'"
 
 #EVENT Zoned				"You have entered#*#"
 #EVENT Zoned				"LOADING, PLEASE WAIT..."
@@ -61,26 +61,29 @@ ______________________________________________
 #EVENT BackOff				"<#1#> BackOff"
 #EVENT BackOff				"[#1#(msg)] BackOff"
 
+#EVENT Disengage   			"#*#Disengage#*#"
+#EVENT QuitExpedition       "#*#DZQUIT#*#"
+
 #EVENT ChangeMT 			"[#1#] changeMT #2#"
 #EVENT ChangeMT 			"<#1#> changeMT #2#"
 #EVENT ChangeMT 			"[#1#(msg)] changeMT #2#"
-#EVENT ChangeMT				"#1# tells the group, 'changeMT #2#'"
-#EVENT ChangeMT				"#1# tells the party, 'changeMT #2#'"
-#EVENT ChangeMT				"#1# tells the raid, 'changeMT #2#'"
+#EVENT ChangeMT				"#1# tells the group#*#'changeMT #2#'"
+#EVENT ChangeMT				"#1# tells you#*#'changeMT #2#'"
+#EVENT ChangeMT				"#1# tells the raid#*#'changeMT #2#'"
 
 #EVENT ChangeSA 			"[#1#] ChangeSA #2#"
 #EVENT ChangeSA 			"<#1#> changeSA #2#"
 #EVENT ChangeSA 			"[#1#(msg)] changeSA #2#"
-#EVENT ChangeSA				"#1# tells the group, 'ChangeSA #2#'"
-#EVENT ChangeSA				"#1# tells the party, 'ChangeSA #2#'"
-#EVENT ChangeSA				"#1# tells the raid, 'ChangeSA #2#'"
+#EVENT ChangeSA				"#1# tells the group#*#'ChangeSA #2#'"
+#EVENT ChangeSA				"#1# tells you#*#'ChangeSA #2#'"
+#EVENT ChangeSA				"#1# tells the raid#*#'ChangeSA #2#'"
 
 #EVENT ChangeAP 			"[#1#] ChangeAP #2#"
 #EVENT ChangeAP 			"<#1#> changeAP #2#"
 #EVENT ChangeAP 			"[#1#(msg)] changeAP #2#"
-#EVENT ChangeAP				"#1# tells the group, 'ChangeAP #2#'"
-#EVENT ChangeAP				"#1# tells the party, 'ChangeAP #2#'"
-#EVENT ChangeAP				"#1# tells the raid, 'ChangeAP #2#'"
+#EVENT ChangeAP				"#1# tells the group#*#'ChangeAP #2#'"
+#EVENT ChangeAP				"#1# tells you#*#'ChangeAP #2#'"
+#EVENT ChangeAP				"#1# tells the raid#*#'ChangeAP #2#'"
 
 |MISC events
 #EVENT ConnectEQBC			"#*#ConnectEQBC#*#"
@@ -135,6 +138,8 @@ Sub Events_Common
 	/doevents SaveRingset
 	/doevents InvisOFF
 	/doevents SkillCheck
+	/doevents Disengage
+	/doevents QuitExpedition
 /return
 
 
@@ -330,6 +335,10 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
  ----------------------------
 **|
 
+Sub Event_QuitExpedition
+	|echo yeah not going to do that here.
+/return  
+
 |-- No Need to check fail states on EMU!
 Sub chkFailStates
 	|--/call chkGM
@@ -457,7 +466,8 @@ Sub chkTarget
 
 |--Engage Target EVENT, calls EngageTarget
 Sub EVENT_KillMob(_line, _sender, _eventParams)
-	/cecho \ayKMCalled ${_eventParams}
+	/cecho \ayKMCalled ${_sender} ${_eventParams}
+	/if (${_eventParams.Equal[NULL]}) /return
 	|-> #EVENT KillMob "<#1#> KillMob #2#"
 	|-> Sender> == #1
 	|->_eventParams> == #2
@@ -480,6 +490,11 @@ Sub EngageTarget(int _targetID)
 		/attack on
 	}
 /return
+
+
+Sub EVENT_Disengage
+	/call ResetTarget
+/return 
 
 |-- Resets targetting and engagmenent, handles class specicic modifications (very minor)
 Sub ResetTarget

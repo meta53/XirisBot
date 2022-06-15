@@ -18,18 +18,18 @@ ______________________________________________
 #event OFFTANKON 			"[#1#] OFFTANKON#*#"
 #EVENT OFFTANKON 			"[#1#(msg)] OFFTANKON#*#"
 #event OFFTANKON 			"<#1#> OFFTANKON#*#"
-#event OFFTANKON 			"#1# tells you, 'OFFTANKON#*#'"
-#event OFFTANKON 			"#1# tells the group, 'OFFTANKON#*#'"
-#event OFFTANKON 			"#1# tells the party, 'OFFTANKON#*#'"
-#event OFFTANKON 			"#1# tells the raid, 'OFFTANKON#*#'"
+#event OFFTANKON 			"#1# tells you,#*#'OFFTANKON#*#'"
+#event OFFTANKON 			"#1# tells the group#*#'OFFTANKON#*#'"
+#event OFFTANKON 			"#1# tells you#*#'OFFTANKON#*#'"
+#event OFFTANKON 			"#1# tells the raid#*#'OFFTANKON#*#'"
 
 #event OFFTANKOFF 			"[#1#] OFFTANKOFF #2#"
 #EVENT OFFTANKOFF 			"[#1#(msg)] OFFTANKOFF#*#"
 #event OFFTANKOFF 			"<#1#> OFFTANKOFF#*#"
-#event OFFTANKOFF 			"#1# tells you, 'OFFTANKOFF#*#'"
-#event OFFTANKOFF 			"#1# tells the group, 'OFFTANKOFF#*#'"
-#event OFFTANKOFF 			"#1# tells the party, 'OFFTANKOFF#*#'"
-#event OFFTANKOFF 			"#1# tells the raid, 'OFFTANKOFF#*#'"
+#event OFFTANKOFF 			"#1# tells you,#*#'OFFTANKOFF#*#'"
+#event OFFTANKOFF 			"#1# tells the group#*#'OFFTANKOFF#*#'"
+#event OFFTANKOFF 			"#1# tells you#*#'OFFTANKOFF#*#'"
+#event OFFTANKOFF 			"#1# tells the raid#*#'OFFTANKOFF#*#'"
 
 Sub InitEvents_Offtanking 
 	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) /call RegisterBackgroundEvents Events_Offtanking 2

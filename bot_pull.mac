@@ -20,6 +20,8 @@ REVISION HISTORY
 	04.10.22	xiris	Normalized arguments
 	05.24.22	xiris	Reworked the pulling sub - gained performance
 	05.28.22	xiris	Refactored /docommand /${cmdChannel} to be consistent globally
+	06.13.22	xiris 	Changed things that were explicit commands to event requests so we don't
+						rely on bcaa (and can use rsay or gsay) and was able to remove announce Channel
 ______________________________________________
 REQUIRED PLUGINS
     mq2melee
@@ -46,14 +48,14 @@ REQUIRED INCLUDES
 #event NoLOS				"#*#you cannot see your target#*#"
 #event TooClose				"#*#your target is too close#*#"
 
-Sub Main(int _pull_dist, string _channel, string _announce, int _campCount, bool _useDownFlags)
+Sub Main(int _pull_dist, string _channel, int _campCount, bool _useDownFlags)
 	/delay 5
 
 	|-- initialize common xbot variables
 	/call xbot_initialize ${Me.Name}
 	
 	|-- initialize variables specific to this macro
-	/call variant_initialize ${_pull_dist} ${_channel} ${_announce} ${_campCount} ${_useDownFlags}
+	/call variant_initialize ${_pull_dist} ${_channel} ${_campCount} ${_useDownFlags}
 
 	|-- report status
 	/echo Pulling >> ${Zone.Name} @ ${int_maxRadius} Range<<
@@ -86,8 +88,9 @@ Sub Main(int _pull_dist, string _channel, string _announce, int _campCount, bool
 		|-- reset group to camp spot (leash) if its empty
 		/if (${SpawnCount[npc radius ${int_campRadius} zradius 25]} == 0) {
 			/call resetCamp
-			/docommand /${cmdChannel} refreshXTarget
-			/docommand /${cmdChannel} //varset bln_engaged FALSE
+			/call doRefreshXTarget
+			/docommand /${cmdChannel} RefreshXTarget
+			/docommand /${cmdChannel} Disengage
 			/hidecorpse npc
 		}
 		
@@ -107,9 +110,6 @@ Sub chkZone
 	/if (${Zone.ShortName.NotEqual[${SZ_shortName}]}) {
 		/if (${Zone.ShortName.Equal[GuildLobby]}) {
 			/docommand /${cmdChannel}  I died! GTFO! ${Time}
-			/delay 5s
-			/docommand /${cmdChannel}  //dzquit
-			/delay 10s
 			/docommand /${cmdChannel}  offtankon
 			/end
 		}
@@ -234,7 +234,7 @@ Sub chkTarget
 	
 	|--check my target is the apropriate level
 	/if ((${Target.ID}) && (${Target.Level} < ${int_minTLevel})) {
-		/echo INVALID Target.Level
+		/echo INVALID Target.Level (${Target.Level} < ${int_minTLevel})
 		/call setTGTAlert
 		/return
 	}
@@ -246,13 +246,13 @@ Sub chkTarget
 	
 	|--check my target is the above the apropriate z-radius floor
 	/if ((${Target.ID}) && ${Int[${Target.Z}]}<${int_minZHeight}) { 
-		/echo INVALID Target.Z
+		/echo INVALID Target.Z ${Int[${Target.Z}]}<${int_minZHeight}
 		/call setTGTAlert
 		/return
 	} 
 	|--check my target is the above the apropriate z-radius ceiling
-	/if ((${Target.ID}) &&${Int[${Target.Z}]}>${int_maxZHeight}) { 
-		/echo INVALID Target.Z
+	/if ((${Target.ID}) && ${Int[${Target.Z}]}>${int_maxZHeight}) { 
+		/echo INVALID Target.Z ${Int[${Target.Z}]}>${int_maxZHeight}
 		/call setTGTAlert
 		/return
 	}
@@ -263,6 +263,7 @@ Sub chkTarget
 Sub setCamp
 	/echo Setting camp at camp${int_currentCamp} out of ${int_campCount}
 	/navigate RecordWaypoint bot_pull_nav
+	/if (${int_currentCamp} == 1) /docommand /${cmdChannel} CreateCamp camp1
 	
 	/varset D1X int outer ${Me.X}
 	/varset D1Y int outer ${Me.Y}
@@ -276,7 +277,7 @@ Sub setCamp
 
 Sub moveCamp(int _campNumber) 
 	/echo Moving to Camp ${_campNumber}
-	/docommand /${cmdChannel} //nav wp camp${_campNumber}
+	/docommand /${cmdChannel} NavToWP camp${_campNumber}
 	/delay 1
 	:moveCampNavLoop
 		/echo moveCampNavLoop
@@ -464,7 +465,7 @@ Sub killTarget
 	|--issue kill command
 	/varcalc int_killCount ${int_killCount}+1
 	|TODO: make kill command use cmd chanenl
-	/docommand /${announceChannel} KillMob ${Target.ID} "${Target.Name}" ${Time.Time24}
+	/docommand /${cmdChannel} KillMob ${Target.ID} "${Target.Name}" ${Time.Time24}
 	/call ResetCastTimers
 	/killthis
 	/attack on
@@ -564,10 +565,10 @@ Sub chkUtils
 		/call chkComponentsAll
 		/if (!${timer_allBuffs}) {
 			/cecho \ayRequesting Buffs @${Time.Time24}
-			/docommand /${cmdChannel} //hidecorpse npc
+			/docommand /${cmdChannel} DoHideCorpses
 			/delay 5s
-			/docommand /${cmdChannel} //hidecorpse looted
- 			/docommand /${announceChannel} doraidbuffs ALL
+			/docommand /${cmdChannel} DoHideLooted
+ 			/docommand /${cmdChannel} Doraidbuffs ALL
 			/cecho \awBuffs Requested, setting timer to 45m, and waiting 45s!
 			/varset timer_allBuffs 45m
 			/echo ${timer_allBuffs}
@@ -838,7 +839,7 @@ Sub chkComponents
 **|
 
 Sub resetCamp
-	/docommand /${cmdChannel} //nav wp camp${int_currentCamp}
+	/docommand /${cmdChannel} NavToWP camp${int_currentCamp}
 	| -- don't run self back to camp its not necessary run to my pull spot instead
 	/nav wp bot_pull_nav
 	/delay 20
@@ -853,7 +854,7 @@ Sub resetCamp
  Eventually this needs to be pulled from an INI per zone and per puller!
  ----------------------------
 **|
-Sub variant_initialize(int _pull_dist, string _channel, string _announce, int _campCount, bool _useDownFlags)
+Sub variant_initialize(int _pull_dist, string _channel, int _campCount, bool _useDownFlags)
 	|--loot
 	/varset bln_lootAuto			FALSE
 	/if (${bln_lootAuto}) 			/call EnableLooting
@@ -864,7 +865,7 @@ Sub variant_initialize(int _pull_dist, string _channel, string _announce, int _c
 	
 	|--melee plugin/aggro for the requester
 	/melee aggro=on
-	|/docrack preventspeed on
+	/speed 1.25
 	/declare useGroup	bool	outer	FALSE
 	
 	|--command channel setup
@@ -872,16 +873,7 @@ Sub variant_initialize(int _pull_dist, string _channel, string _announce, int _c
 	/varset cmdChannel bcga
 	/if (${Defined[_channel]}) /varset cmdChannel ${_channel}
 	/echo 	cmdChannel is ${cmdChannel}
-	/docommand /${cmdChannel}	//speed 1.25
 
-	|--announce channel set
-	/if (!${Defined[announceChannel]}) /declare announceChannel string	outer	bcga
-	/varset announceChannel bcga
-	/if (${Defined[_announce]}) /varset announceChannel ${_announce}
-	/echo announceChannel is ${announceChannel}
-	/docommand /${cmdChannel}	//speed 1.25
-
-	
 	|--camp counts
 	/declare int_currentCamp		int		outer	1
 	/declare int_campCount			int 	outer	1
@@ -917,12 +909,12 @@ Sub variant_initialize(int _pull_dist, string _channel, string _announce, int _c
 	/declare int_minZHeight			int		outer 	0
 	/declare int_maxZHeight			int		outer	0
 	/declare int_zRadius			int     outer   0
-	/varcalc int_minZHeight			${Me.Z} - 150
+	/varcalc int_minZHeight			${Me.Z} - 205
 	/varcalc int_maxZHeight			${Me.Z} + 150
 	/varcalc int_zRadius ${int_maxZHeight} - ${int_minZHeight}
 
 	|--target information
-	/declare int_minPullCount		int		outer   2
+	/declare int_minPullCount		int		outer   3
 	/declare int_minTLevel			int		outer	40
 	/declare int_maxTLevel			int		outer	77
 	/declare bln_validTGT			bool	outer	FALSE
@@ -1040,6 +1032,11 @@ Sub setAlerts
 	|-- Zone Specific Ignores
 	/if (${Zone.ShortName.Equal[dranik]}) {
 		/squelch /alert add 1 "Filligno the Slayer"
+	} else /if (${Zone.ShortName.Equal[kodtaz]}) {
+		/squelch /alert add 1 "Kenra"
+		/squelch /alert add 1 "Gazak"
+		/squelch /alert add 1 "Maroley"
+	
 	} else /if (${Zone.ShortName.Equal[pofire]}) {
 		/squelch /alert add 1 "Guardian of Doomfire"
 		/squelch /alert add 1 "General Reparm"
@@ -1181,17 +1178,3 @@ Sub Event_NoLOS
 	/doevents flush NoLOS
 /return
 
-
-Sub Event_EndMac
-	/docommand /${cmdChannel} Someone told me to end it! ${Time}
-	/delay 1s
-	/docommand /${cmdChannel}  //melee off
-	/docommand /${cmdChannel}  //end
-	/docommand /${cmdChannel}  //gate
-	/delay 2m
-	/docommand /${cmdChannel}  //end
-	/docommand /${cmdChannel}  //melee off
-	/docommand /${cmdChannel}  //camp desktop
-	/docommand /${cmdChannel}  //end
-	/end
-/return

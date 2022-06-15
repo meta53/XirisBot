@@ -29,27 +29,27 @@ REVISION HISTORY
 
 #EVENT NoDS "<#1#> NoDS"
 #EVENT NoDS "[#1#(msg)] NoDS#*#"
-#EVENT NoDS	"#1# tells the group, 'NoDS#*#'"
-#EVENT NoDS	"#1# tells the party, 'NoDS#*#'"
-#EVENT NoDS	"#1# tells the raid, 'NoDS#*#'"
+#EVENT NoDS	"#1# tells the group#*#'NoDS#*#'"
+#EVENT NoDS	"#1# tells you#*#'NoDS#*#'"
+#EVENT NoDS	"#1# tells the raid#*#'NoDS#*#'"
 
 #EVENT YesDS	"<#1#> YesDS#*#"
 #EVENT YesDS	"[#1#(msg)] YesDS#*#"
-#EVENT YesDS	"#1# tells the group, 'YesDS #*#'"
-#EVENT YesDS	"#1# tells the party, 'YesDS #*#'"
-#EVENT YesDS	"#1# tells the raid, 'YesDS #*#'"
+#EVENT YesDS	"#1# tells the group#*#'YesDS #*#'"
+#EVENT YesDS	"#1# tells you#*#'YesDS #*#'"
+#EVENT YesDS	"#1# tells the raid#*#'YesDS #*#'"
 
 #EVENT Sing "<#1#> Sing #2#"
 #EVENT Sing "[#1#(msg)] Sing #2#"
-#EVENT Sing	"#1# tells the group, 'Sing #2#'"
-#EVENT Sing	"#1# tells the party, 'Sing #2#'"
-#EVENT Sing	"#1# tells the raid, 'Sing #2#'"
+#EVENT Sing	"#1# tells the group#*#'Sing #2#'"
+#EVENT Sing	"#1# tells you#*#'Sing #2#'"
+#EVENT Sing	"#1# tells the raid#*#'Sing #2#'"
 
 #EVENT Hush	"<#1#> Hush#*#"
 #EVENT Hush "[#1#(msg)] Hush#*#"
-#EVENT Hush	"#1# tells the group, 'Hush #*#'"
-#EVENT Hush	"#1# tells the party, 'Hush #*#'"
-#EVENT Hush	"#1# tells the raid, 'Hush #*#'"
+#EVENT Hush	"#1# tells the group#*#'Hush #*#'"
+#EVENT Hush	"#1# tells you#*#'Hush #*#'"
+#EVENT Hush	"#1# tells the raid#*#'Hush #*#'"
 
 #EVENT RiposteDisc "<#1#> RiposteDisc#*#"
 #EVENT RiposteDisc "[#1#(msg)] RiposteDisc#*#"
@@ -62,9 +62,9 @@ REVISION HISTORY
 
 #EVENT XTargetRefresh	"<#1#> RefreshXTarget#*#"
 #EVENT XTargetRefresh	"[#1#(msg)] RefreshXTarget#*#"
-#EVENT XTargetRefresh	"#1# tells the group, 'RefreshXTarget#*#'"
-#EVENT XTargetRefresh	"#1# tells the party, 'RefreshXTarget#*#'"
-#EVENT XTargetRefresh	"#1# tells the raid, 'RefreshXTarget#*#'"
+#EVENT XTargetRefresh	"#1# tells the group#*#'RefreshXTarget#*#'"
+#EVENT XTargetRefresh	"#1# tells you#*#'RefreshXTarget#*#'"
+#EVENT XTargetRefresh	"#1# tells the raid#*#'RefreshXTarget#*#'"
 
 
 #define dsINI xiris_common/xiris_damageshields.ini

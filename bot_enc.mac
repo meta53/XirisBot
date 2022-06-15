@@ -38,21 +38,21 @@ REQUIRED INCLUDES
 
 #EVENT RUNEON "<#1#> RuneOn#*#"
 #EVENT RUNEON "[#1#(msg)] RuneOn#*#"
-#EVENT RUNEON "#1# tells you, 'RuneOn#*#'"
-#EVENT RUNEON "#1# tells the group, 'RuneOn#*#'"
-#EVENT RUNEON "#1# you tell your party, 'RuneOn#*#'"
+#EVENT RUNEON "#1# tells you,#*#'RuneOn#*#'"
+#EVENT RUNEON "#1# tells the group#*#'RuneOn#*#'"
+#EVENT RUNEON "#1#tells the raid,#*#'RuneOn#*#'"
 
 #EVENT RUNEONName "<#1#> RuneOn #2#"
 #EVENT RUNEONName "[#1#(msg)] RuneOn #2#"
-#EVENT RUNEONName "#1# tells you, 'RuneOn #2#'"
-#EVENT RUNEONName "#1# tells the group, 'RuneOn #2#'"
-#EVENT RUNEONName "#1# you tell your party, 'RuneOn #2#'"
+#EVENT RUNEONName "#1# tells you,#*#'RuneOn #2#'"
+#EVENT RUNEONName "#1# tells the group#*#'RuneOn #2#'"
+#EVENT RUNEONName "#1#tells the raid,#*#'RuneOn #2#'"
 
 #EVENT RUNEOFF "<#1#> RuneOff#*#"
 #EVENT RUNEOFF "[#1#(msg)] RuneOff#*#"
-#EVENT RUNEOFF "#1# tells you, 'RuneOff#*#'"
-#EVENT RUNEOFF "#1# tells the group, 'RuneOff#*#'"
-#EVENT RUNEOFF "#1# you tell your party, 'RuneOff#*#'"
+#EVENT RUNEOFF "#1# tells you,#*#'RuneOff#*#'"
+#EVENT RUNEOFF "#1# tells the group#*#'RuneOff#*#'"
+#EVENT RUNEOFF "#1#tells the raid,#*#'RuneOff#*#'"
 
 #turbo 40
 

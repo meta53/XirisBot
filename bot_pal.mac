@@ -39,21 +39,21 @@ REQUIRED INCLUDES
 
 #EVENT STUNMOB "<#1#> stunThis #2#"
 #EVENT STUNMOB "[#1#(msg)] stunThis #2#"
-#EVENT STUNMOB "#1# tells you, 'stunThis #2#'"
-#EVENT STUNMOB "#1# tells the group, 'stunThis #2#'"
-#EVENT STUNMOB "#1# you tell your party, 'stunThis #2#'"
+#EVENT STUNMOB "#1# tells you,#*#'stunThis #2#'"
+#EVENT STUNMOB "#1# tells the group#*#'stunThis #2#'"
+#EVENT STUNMOB "#1#tells the raid,#*#'stunThis #2#'"
 
 #EVENT STUNLOCK "<#1#> stunLock #2#"
 #EVENT STUNLOCK "[#1#(msg)] stunLock #2#"
-#EVENT STUNLOCK "#1# tells you, 'stunLock #2#'"
-#EVENT STUNLOCK "#1# tells the group, 'stunLock #2#'"
-#EVENT STUNLOCK "#1# you tell your party, 'stunLock #2#'"
+#EVENT STUNLOCK "#1# tells you,#*#'stunLock #2#'"
+#EVENT STUNLOCK "#1# tells the group#*#'stunLock #2#'"
+#EVENT STUNLOCK "#1#tells the raid,#*#'stunLock #2#'"
 
 #EVENT STUNSTOP "<#1#> stunStop#*#"
 #EVENT STUNSTOP "[#1#(msg)] stunStop#*#"
-#EVENT STUNSTOP "#1# tells you, 'stunStop#*#'"
-#EVENT STUNSTOP "#1# tells the group, 'stunStop#*#'"
-#EVENT STUNSTOP "#1# you tell your party, 'stunStop#*#'"
+#EVENT STUNSTOP "#1# tells you,#*#'stunStop#*#'"
+#EVENT STUNSTOP "#1# tells the group#*#'stunStop#*#'"
+#EVENT STUNSTOP "#1#tells the raid,#*#'stunStop#*#'"
 
 
 Sub InitEvents_Class

@@ -164,7 +164,7 @@ Sub Main(string _channel, string _announce, bool _useDownFlags, bool _highRisk)
 		|-- reset group to camp spot (leash) if its empty
 		/if (${SpawnCount[npc radius ${int_campRadius} zradius 25]} == 0) {
 			/call resetCamp
-			/docommand /${cmdChannel} refreshXTarget
+			/docommand /${cmdChannel} RefreshXTarget
 		}
 		
 		|-- target hunter
