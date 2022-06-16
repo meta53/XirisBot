@@ -345,7 +345,7 @@ Sub chkDownshits
 						/cecho \ag Returning \ay${itemInSlot}\ag to \ay${wornSlot}
 						/exchange "${itemInSlot}" ${wornSlot}
 					} else {
-						/echo Downflag Cast ${castArg}
+						/cecho \ayDownflag (\ag${df}\ay) casting \ag${castArg}
 						/call MQ2Cast ${castArg}
 					}
 					

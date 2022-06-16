@@ -54,6 +54,7 @@ ______________________________________________
 #event BALANCEOFF			 	"#*#your failure to balance the scales#*#"
 #event BALANCEOFF			 	"#*#body trembles as he fails to gather power#*#"
 #event BALANCEOFF			 	"#*#BalanceOFF#*#"
+#event PIRIKDEAD				"#*#two heads face each otehr just before it falls to the floor#*#"
 
 Sub InitEvents_GoD_Ikkinz
 	/call RegisterBackgroundEvents Events_GoD_Ikkinz 18
@@ -102,6 +103,8 @@ Sub Events_GoD_Tacvi
 	/doevents BALANCERAPE
 	/doevents BALANCERAPEOFF
 	/doevents BALANCEOFF
+	/doevents PIRIKDEAD
+
 /return
 
 
@@ -446,7 +449,6 @@ Sub BalancerKillMelee(string _targetName, int _targetID, int _balanceTo)
 		/doevents BurnOn2
 		/doevents BurnOnAll
 		/doevents BurnOff
-		/call chkBurn
 		/if (!${bln_balancing}) /goto :return
 		/if (${Target.PctHPs} > ${_balanceTo}) /goto :BalancerMeleeLoop
 	:return
@@ -483,7 +485,10 @@ Sub BalancerKillCaster(string _targetName, int _targetID, int _balanceTo)
 		/if (!${bln_balancing}) /goto :return
 		/if (${Target.PctHPs} > ${_balanceTo}) /goto :BalancerCasterLoop
 	:return
-	/if (${Twist.Twisting}) /twist off
+	/echo BalancerKillCaster return
+	/twist off
+	/call ResetTarget
+	/varset bln_engaged FALSE
 /return
 
 Sub EVENT_BALANCEOFF
@@ -492,12 +497,12 @@ Sub EVENT_BALANCEOFF
 
 Sub BalancerReset
 	/echo BALANCE OFF ${Target.Name}
-	/if (${Twist.Twisting}) /twist off
+	/twist off
 	/varset bln_balancing FALSE
 	
 	/if (${str_classArchetype.Equal[PRIEST]}) /return
 	
-	|-- reset various flags *WITHOUT* taking us out of engaged status
+	|-- reset various flags
 	|-- class archetype resets
 	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
 		/stick off
@@ -524,6 +529,8 @@ Sub BalancerReset
 			/if (${Navigation.Active}) /goto :moveKvxe
 
 		:returnBalance
+		/stick 25 behind
+		/stick off
 		/melee reset
 		/if (${Me.Class.ShortName.Equal[WAR]} && ${int_MTID} != ${Me.ID}) /melee aggro=off
 	}

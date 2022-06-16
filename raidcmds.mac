@@ -1,0 +1,83 @@
+|**
+----------------------------
+raidcmds.mac
+----------------------------
+This macro is configured for use by the the MT for specific commands during a raid that take too long to type
+______________________________________________
+REVISION HISTORY
+    06.15.22	xiris	INITIAL REVISION
+______________________________________________
+REQUIRED PLUGINS
+
+______________________________________________
+REQUIRED INCLUDES  
+
+**|
+
+
+#Event burn1a "#*#b1a#*#"
+#Event burn1b "#*#b1b"
+#Event burn2a "#*#b2a#*#"
+#Event burn2b "#*#b2b#*#"
+
+#Turbo 5
+
+Sub Main
+    |switch by zone shortname
+    :mainloop
+    /doevents
+    /delay 10
+    /goto :mainloop
+/return
+
+Sub EVENT_burn1a 
+    /bct Ophelia    BurnOnALL
+    /bct Mluian     BurnOnALL
+    /bct Xaeliea    BurnOnALL
+    /bct Xaia       BurnOnALL
+    /bct Ophemia    BurnOnALL
+    /bct Xepatia    BurnOnALL
+    /bct Ophenia    BurnOnALL
+    /bct Erinyas    BurnOnALL
+    /bct Ophidia    BurnOnALL
+/return 
+
+Sub EVENT_burn1b
+    /bct  Opheoia   BurnOnALL
+    /bct Ophexia    BurnOnALL
+    /bct Ertris     BurnOnALL
+    /bct Erinyes    BurnOnALL
+    /bct Ertres     BurnOnALL
+    /bct Ophezia    BurnOnALL
+    /bct Xaexa      BurnOnALL
+    /bct Opheyia    BurnOnALL
+/return 
+
+Sub EVENT_burn2a
+    /bct Ertris     BurnOnALL
+    /bct Aidos      BurnOnALL
+    /bct Erinyas    BurnOnALL
+    /bct Ophelia    BurnOnALL
+    /bct Ania       BurnOnALL
+    /bct Achlys     BurnOnALL
+    /bct Achos      BurnOnALL
+    /bct Xaia       BurnOnALL
+    /bct Xepatia    BurnOnALL
+    /bct Ophenia    BurnOnALL
+    /bct Ophemia    BurnOnALL
+    /bct Xaexa      BurnOnALL
+/return 
+
+Sub EVENT_burn2b
+    /bct Erinyes    BurnOnALL
+    /bct Xaeliea    BurnOnALL
+    /bct Adikia     BurnOnALL
+    /bct Opheoia    BurnOnALL
+    /bct Ophexia    BurnOnALL
+    /bct Ertres     BurnOnALL
+    /bct Aergia     BurnOnALL
+    /bct Ophidia    BurnOnALL
+    /bct Ophezia    BurnOnALL
+    /bct Opheyia    BurnOnALL
+/return
+

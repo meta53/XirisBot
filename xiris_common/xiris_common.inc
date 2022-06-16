@@ -105,9 +105,10 @@ ______________________________________________
 #EVENT SaveCurrentWeaponset "#1#SaveCurrentWeaponset #2#"
 #EVENT InvisOFF				"#1#InvisOff#*#"
 #EVENT SkillCheck           "<#1#> SkillCheck #2#"
+#EVENT ReportBurnKey        "<#1#> ReportBurnKey #2#"
 
 Sub InitEvents_Common
-	/call RegisterBackgroundEvents Events_Common 18
+	/call RegisterBackgroundEvents Events_Common 19
 	/call RegisterRaidEvents Events_Raid 9
 	
 /return
@@ -130,16 +131,16 @@ Sub Events_Common
 	/doevents CheckNaked
 	/doevents RageOff
 	/doevents RageOn
-	/doevents ImDead
-	/doevents LoadRingset
-	/doevents LoadWeaponset
-	/doevents SaveWeaponset
-	/doevents SaveCurrentWeaponset
-	/doevents SaveRingset
+	|/doevents LoadRingset
+	|/doevents LoadWeaponset
+	|/doevents SaveWeaponset
+	|/doevents SaveCurrentWeaponset
+	|/doevents SaveRingset
 	/doevents InvisOFF
-	/doevents SkillCheck
+	|/doevents SkillCheck
 	/doevents Disengage
-	/doevents QuitExpedition
+	|/doevents QuitExpedition
+	|/doevents ReportBurnKey
 /return
 
 
@@ -281,7 +282,7 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	|- [Settings] : BurnMode
 	/declare bln_BURNMode			bool	outer FALSE
 	/declare int_burnModeTotal int outer ${Ini[botINI,BurnMode,int_burnModeTotal,0]}
-	/declare str_burnKey       int outer ${Ini[botINI,BurnMode,str_burnKey,ALL]}
+	/declare int_burnKey       int outer ${Ini[botINI,BurnMode,int_burnKey,ALL]}
 	
 		/declare bm int local
 		/for bm 1 to ${int_burnModeTotal} 
@@ -899,7 +900,16 @@ Sub Event_SKILLCHECK(_line, _sender, _eventParams)
 		/echo found ${Me.Skill[${_eventParams.Arg[2,|]}]}
 		/rsay ${_eventParams.Arg[1,|]}:${Me.Skill[${_eventParams.Arg[2,|]}]}
 	}
+/return
+
+Sub Event_ReportBurnKey(_line, _sender, _eventParams)
 	
+	/declare _burnKey int local ${_eventParams.Arg[1,|]}
+	/echo ${_sender} checking burnKey:${_burnKey}
+	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} && ${int_burnKey} == ${_burnKey}) {
+		/rs ${_burnKey} ${Me.CleanName} ${Me.Class.ShortName}
+	}
+
 /return
 
 |**
@@ -952,7 +962,7 @@ Sub EVENT_BurnOnAll
 /return
 
 Sub EVENT_BurnOn1
-	/if (${str_burnKey}==1) {
+	/if (${int_burnKey}==1) {
 		/echo Enabling Burn on Cohort 1
 		/varset bln_BURNMode TRUE
 	}
@@ -960,7 +970,7 @@ Sub EVENT_BurnOn1
 /return
 
 Sub EVENT_BurnOn2
-	/if (${str_burnKey}==2) {
+	/if (${int_burnKey}==2) {
 		/echo Enabling Burn on Cohort 2
 		/varset bln_BURNMode TRUE
 	}
@@ -982,7 +992,7 @@ Sub EVENT_IntensityON
 
 
 |-------------------------------------------------------------------------------- 
-|SUB: Event_ENRAGE HANDLERS
+|SUB: Event_ENRAGE HANDLERS for pets
 |--------------------------------------------------------------------------------
 Sub Event_RageOff(string line)
 	/if ((${line.Find[${Spawn[${int_targetID}].DisplayName}]} || ${line.Find[${Target.DisplayName}]}) && ${Me.Pet.ID}) {
