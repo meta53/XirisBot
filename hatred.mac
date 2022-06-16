@@ -32,4 +32,7 @@ Sub Main
     /bct Xiria offtankON
     /bct Xirea offtankON
     /bct Sadelia offtankON
+
+    | Set the macro to raid commands for Xirin
+    /bct xirin //mac raidcmds
 /return

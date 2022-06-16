@@ -27,12 +27,19 @@ Sub SetupGroupsRAID
 Sub InviteGroupsToRAID
 	/echo Inviting Groups to Raid
 	/raidinvite Xiria
+	/delay 5
 	/raidinvite Theist
+	/delay 5
 	/raidinvite Cereborn
+	/delay 5
 	/raidinvite Sadelia
+	/delay 5
 	/raidinvite Xaeliea
+	/delay 5
 	/raidinvite Xaexa
+	/delay 5
 	/raidinvite Xaia
+	/delay 5
 	/raidinvite Xepatia
 
 	/bcaa //notify LargeDialogWindow LDW_YesButton leftmouseup
@@ -57,12 +64,19 @@ Sub SetupGroupsHATRED
 Sub InviteGroupsToHATRED
 	/echo Inviting Groups to Raid
 	/raidinvite Xiria
+	/delay 5
 	/raidinvite Xirea
+	/delay 5
 	/raidinvite Cereborn
+	/delay 5
 	/raidinvite Sadelia
+	/delay 5
 	/raidinvite Xaeliea
+	/delay 5
 	/raidinvite Xaexa
+	/delay 5
 	/raidinvite Xaia
+	/delay 5
 	/raidinvite Xepatia
 
 	/bcaa //notify LargeDialogWindow LDW_YesButton leftmouseup

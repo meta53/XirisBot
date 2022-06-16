@@ -749,7 +749,7 @@ Sub chkBurn
 			| Note: Run the DISC if it is a combat type, it is ready, and we aren't already discing
 			| ---------------
 			/if (${Burn_${burn}_Type.Equal[combat]} && ${Me.CombatAbilityReady[${Burn_${burn}}]} && ${Burn_${burn}_Use} && !${Melee.DiscID}) {
-				/echo burnis combat, trying ${Burn_${burn}}
+				/echo burn is combat type, trying ${Burn_${burn}}
 				| Check to see if the burn Before disc/alt (0 if not) is already run
 				/if (${Burn_${burn}_After} > 0) {
 					| Check to see if the burn Before is an alt or combatdisc (two different ways of checking)

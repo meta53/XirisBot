@@ -21,12 +21,12 @@ ______________________________________________
 #EVENT Follow		"#1# tells the group#*#'FollowMe #2#'"
 #EVENT Follow		"#1# tells the raid#*#'FollowMe #2#'"
 
-#EVENT Stop 		"[#1#] Stop#*#"
-#EVENT Stop			"<#1#> Stop#*#"
-#EVENT Stop			"[#1#(msg)] Stop#*#"
-#EVENT Stop			"#1# tells you#*#'Stop#*#'"
-#EVENT Stop			"#1# tells the group#*#'Stop#*#'"
-#EVENT Stop			"#1# tells the raid#*#'Stop#*#'"
+#EVENT Stop 		"[#1#] NavStop#*#"
+#EVENT Stop			"<#1#> NavStop#*#"
+#EVENT Stop			"[#1#(msg)] NavStop#*#"
+#EVENT Stop			"#1# tells you#*#'NavStop#*#'"
+#EVENT Stop			"#1# tells the group#*#'NavStop#*#'"
+#EVENT Stop			"#1# tells the raid#*#'NavStop#*#'"
 
 #EVENT MoveHere 	"[#1#] MoveTo #2#"
 #EVENT MoveHere 	"<#1#> MoveTo #2#"
@@ -120,7 +120,6 @@ SUB EVENT_Follow(_line, _chatSender, _eventParams)
 				}
 			} 
 		}
-		
 	}
 	/doevents flush Follow
 /return
@@ -172,28 +171,14 @@ SUB AquireFollow(string _type)
 					/varset followTargetID ${Spawn[pet =${FollowTarget}].ID}
 				}
 				| If the FollowTarget declares that you need to use MQ2Nav...
-				
-				/if (${_type.Equal[NAV]}) /echo we should be navigating
-				
 				/if (${_type.Equal[NAV]}) {
-					/echo using MQ2Nav ${followTargetID}
+					/echo Using MQ2Nav ${followTargetID}
 					|-- We do not need to use LOS for MQ2Nav
 					/call TrueTarget ${followTargetID}
 					/delay 5s ${Target.ID} == ${followTargetID}
 					/squelch /nav target		
-				| If the FollowTarget is a NetBot, and you're using NetAdvPath
-				|} else /if (${NetBots[${FollowTarget}].ID} && ${NetAdvPath}) {
-				|	/echo using MQ2NetAdvPath
-				|	| If the FollowTarget is a NetBot, engage MQ2NetAdvPath.
-				|	/if (${Spawn[id ${followTargetID}].LineOfSight}) {
-				|		/call TrueTarget ${followTargetID}
-				|		/squelch /netfollow on
-				|	} else /if (${NetAdvPath.State}==2) {
-				|		/squelch /netfollow unpause
-				|	}
-					
 				} else {
-					/echo using MQ2MoveUtils
+					/echo Using MQ2MoveUtils (Stick)
 					| If MQ2NetAdvPath was not detected, or the FollowTarget was not a NetBot, engage MQ2MoveUtils.
 				
 					|---------------------------------------------------Check LoS
@@ -207,23 +192,21 @@ SUB AquireFollow(string _type)
 						
 					}
 				}
-
-				|-------------------------------------------------------Clear my target
-				|/if (${Target.ID} == ${followTargetID}) /squelch /target clear
 			}
 		}
 	}
 
 	/if (!${Defined[distCheck]}) /declare distCheck int local 10
+
 	:movingLoop
 	|-- Check all Events
 	/call RunAllEvents
-
+	|/cecho \ay movingLoop \ag ${Following}
 	/if (${Following}) {
 		/if (${_type.Equal[NAV]} && !${Navigation.Active} && (${Target.Distance3D} > ${distCheck} )) {
-			/echo :movingLoop ${_type.Equal[NAV]} && !${Navigation.Active} && (${Target.Distance3D} > ${distCheck})
+			|/echo :movingLoop ${_type.Equal[NAV]} && !${Navigation.Active} && (${Target.Distance3D} > ${distCheck})
 			/nav target
-			/delay 2s
+			/delay 10
 		}
 		/goto :movingLoop
 	}
