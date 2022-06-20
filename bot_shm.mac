@@ -301,7 +301,16 @@ Sub variant_initialize
 	/memspellset default
 
 	|-- Champion
-	/declare 	timer_champion			timer   outer 	60s
+	/declare 	champ_groups 				string  outer   ${Ini[botINI,Champion,champ_groups]}
+	|/rs ${Me.Name} responsible for champion on ${champ_groups}
+
+	/declare 	timer_champion				timer   outer   60s
+	/declare 	timer_champion_1			timer   outer 	60s
+	/declare 	timer_champion_2			timer   outer 	60s
+	/declare 	timer_champion_3			timer   outer 	60s
+	/declare 	timer_champion_4			timer   outer 	60s
+
+
 
 	|-- Cannibalization
 	/declare	int_canniManaThreshold	int		outer 	${Ini[botINI,Cannibalize,int_canni_mana_threshold,80]}

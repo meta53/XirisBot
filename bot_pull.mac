@@ -389,6 +389,7 @@ Sub AggroTarget
 			|-- Sometimes if we aren't spell casting and using range weapons we might be too close, and cannot hit them with it.
 			/if (${bln_tooClose}) {
 				/echo Too Close! Handling
+				/if (${Me.Class.ShortName.Equal[PAL]}) /call MQ2Cast "${spell_pull}" ${spell_pullGem} 2s
 				/if (${Me.Class.ShortName.Equal[WAR]}) /call chk_warProvoke "${war_ca_hate_1}"
 				/delay 1
 				/if (${Me.CombatAbilityReady[Taunt]}) /doability Taunt
@@ -914,8 +915,8 @@ Sub variant_initialize(int _pull_dist, string _channel, int _campCount, bool _us
 	/varcalc int_zRadius ${int_maxZHeight} - ${int_minZHeight}
 
 	|--target information
-	/declare int_minPullCount		int		outer   3
-	/declare int_minTLevel			int		outer	40
+	/declare int_minPullCount		int		outer   2
+	/declare int_minTLevel			int		outer	30
 	/declare int_maxTLevel			int		outer	77
 	/declare bln_validTGT			bool	outer	FALSE
 	/declare bln_TGTDead			bool	outer	FALSE
@@ -1036,7 +1037,22 @@ Sub setAlerts
 		/squelch /alert add 1 "Kenra"
 		/squelch /alert add 1 "Gazak"
 		/squelch /alert add 1 "Maroley"
-	
+	} else /if (${Zone.ShortName.Equal[riwwi]}) {
+		/squelch /alert add 1 "yunjo"
+		/squelch /alert add 1 "Kayin"
+		/squelch /alert add 1 "Turlini"
+		/squelch /alert add 1 "Narundel"
+		/squelch /alert add 1 "Namosa"
+		/squelch /alert add 1 "Ranguali"
+		/squelch /alert add 1 "Iniba"
+		/squelch /alert add 1 "Uxnikk"
+		/squelch /alert add 1 "Kekken"
+	} else /if (${Zone.ShortName.Equal[barindu]}) {
+		/squelch /alert add 1 "yunjo"
+		/squelch /alert add 1 "Chiaka"
+		/squelch /alert add 1 "Diru"
+		/squelch /alert add 1 "Abena"
+		/squelch /alert add 1 "Amari"
 	} else /if (${Zone.ShortName.Equal[pofire]}) {
 		/squelch /alert add 1 "Guardian of Doomfire"
 		/squelch /alert add 1 "General Reparm"
@@ -1138,10 +1154,9 @@ Sub setAlerts
 		/squelch /alert add 2 "Sigra"
 
 	|-- Skin Samples--|	
-	} else /if (${Zone.ShortName.Equal[kodtaz]}) {
+	} else /if (${Zone.ShortName.Equal[qvic]} || ${Zone.ShortName.Equal[kodtaz]} || ${Zone.ShortName.Equal[txevu]}) {
 		/squelch /alert add 2 "ikaav"
 		/squelch /alert add 2 "ixt"
-
 	|-- Anguish Signets--|
 	} else /if (${Zone.ShortName.Equal[riftseekers]}) {
 		/squelch /alert add 2 "Dragorn Battlemaster"

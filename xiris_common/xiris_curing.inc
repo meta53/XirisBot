@@ -226,7 +226,7 @@ Sub chkNeedCure
 
 	|-- Specialization Trials debuffs should not be cured (wastes time/mana)!
 	/if (${Me.Buff[Rigidity].ID} || ${Me.Buff[Curse of Misfortune].ID} || ${Me.Buff[Imprecision].ID} || ${Me.Buff[Impurity].ID}) {
-		/echo I have a [Specialization Debuff], a debuff that I cannot cure!
+		/echo I have a [MPG Specialization Debuff], a debuff that I cannot cure!
 		/varset bln_askedForCure TRUE
 		/varset timer_cure_request 30s
 		/return

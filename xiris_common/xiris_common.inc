@@ -114,6 +114,8 @@ Sub InitEvents_Common
 /return
 
 Sub Events_Raid 
+	/doevents RageOn
+	/doevents RageOff
 	/doevents BurnOnALL
 	/doevents BurnOn1
 	/doevents BurnOn2
@@ -129,8 +131,6 @@ Sub Events_Common
 	/doevents KillMob
 	/doevents Zoned	
 	/doevents CheckNaked
-	/doevents RageOff
-	/doevents RageOn
 	|/doevents LoadRingset
 	|/doevents LoadWeaponset
 	|/doevents SaveWeaponset
@@ -161,7 +161,9 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/declare Debug 						bool	outer 	FALSE
 	/declare Verbosity					bool	outer	FALSE
 	/declare cmdChannel 				string	outer	${Ini[botINI,Settings,cmdChannel,bcaa]}
-	
+	/declare 	mq2meleeEnabled			bool    outer   TRUE
+
+
 	|-- [Settings] : Class Archetype (used in case switching)
 	/declare 	str_classArchetype		string	outer	UNKNOWN
 	/call 	 	getClassArchetype 		${Me.Class.ShortName}
@@ -435,16 +437,17 @@ Sub chkTarget
 			}
 		} else /if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
 			/declare use_riposte bool local FALSE
-			/if (${Target.Name.Find[Pirik]} || ${Target.Name.Find[Yihst]} || ${Target.Name.Find[Tunat]}) /varset use_riposte TRUE
+			/if (${Target.Name.Find[Pirik]} || ${Target.Name.Find[Yihst]} || ${Target.Name.Find[Tunat]} || ${Target.Name.Find[Master]}) /varset use_riposte TRUE
+
 
 			/if (${Me.Class.ShortName.Equal[SHD]}) {
 				/if (${Me.AltAbilityReady[Death Peace]})   	/call MQ2Cast "Death Peace" alt
 				/if (!${Me.Standing}) /stand
 			} else /if (${Me.Class.ShortName.Equal[BER]}) { 
+				/if (${use_riposte}) /call FireRiposteDisc
 				/if (${Me.CombatAbilityReady[Baffling Strike]} && ${FindItemCount[Axe of the Destroyer]}>0) /disc Baffling Strike
 				/if (${Me.CombatAbilityReady[Confusing Strike]} && ${FindItemCount[Rage Axe]}>0) /disc Confusing Strike
 				/if (${Me.CombatAbilityReady[Distracting Strike]} && ${FindItemCount[Bonesplicer Axe]}>0) /disc Distracting Strike
-				/if (${use_riposte}) /call FireRiposteDisc
 			} else /if (${Me.Class.ShortName.Equal[ROG]}) { 
 				/if (${use_riposte}) /call FireRiposteDisc
 			} else /if (${Me.Class.ShortName.Equal[RNG]}) { 
@@ -487,8 +490,13 @@ Sub EngageTarget(int _targetID)
 	/call ResetCastTimers
 	/if (!${Me.Standing}) /stand
 	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
-		/killthis
-		/attack on
+		/if (!${mq2meleeEnabled}) {
+			/call StickToTarget
+			/face fast
+			/attack on
+		} else {
+			/killthis
+		}
 	}
 /return
 
@@ -679,7 +687,8 @@ Sub chkAAs
 		/for aa 1 to ${int_aaTotal} 
 			:AALoopStart
 			|-- skip if disabled
-			/if (!${AA_${aa}_Use}) /goto :NextAA
+			| Check that the AA is ready
+			/if (!${AA_${aa}_Use} || !${Me.AltAbilityReady[${AA_${aa}}]}) /goto :NextAA
 
 			|-- Named Target check
 			|-- if we only cast this spell on named, and this is NOT a named target, skip
@@ -688,33 +697,31 @@ Sub chkAAs
 				/goto :NextAA
 			}
 
-			| Check that the AA is ready
-			/if (${Me.AltAbilityReady[${AA_${aa}}]} || ${Me.CombatAbilityReady[${AA_${aa}}]} || ${Me.SpellReady[${AA_${aa}}]}) {
-				
-				| Check that the hitpoints of target fall into the range
-				| Check to see that my HP is at or below the trigger range (for things like desperation)
-				/if ((${Target.ID}==${int_targetID}) && (${Target.PctHPs}<${AA_${aa}_StartHP}) && (${Me.PctHPs} <= ${AA_${aa}_MyHP}) && (${Target.PctHPs}>${AA_${aa}_StopHP})) {
-					/echo checking ${AA_${aa}}
-					/if (${Me.Class.ShortName.Equal[BRD]}) {
-						/if (${AA_${aa}_Gem.Equal[combat]} && (${Me.PctEndurance} > 10)) {
-							/doability "${AA_${aa}}"
-						} else {
-							/medley queue "${AA_${aa}}"
-						}
-						/cecho \ag ${AA_${aa}}  : FIRED	
+			
+			| Check that the hitpoints of target fall into the range
+			| Check to see that my HP is at or below the trigger range (for things like desperation)
+			/if ((${Target.ID}==${int_targetID}) && (${Target.PctHPs}<${AA_${aa}_StartHP}) && (${Me.PctHPs} <= ${AA_${aa}_MyHP}) && (${Target.PctHPs}>${AA_${aa}_StopHP})) {
+				/echo checking ${AA_${aa}}
+				/if (${Me.Class.ShortName.Equal[BRD]}) {
+					/if (${AA_${aa}_Gem.Equal[combat]} && (${Me.PctEndurance} > 10)) {
+						/doability "${AA_${aa}}"
 					} else {
-						/if (${AA_${aa}_Gem.Equal[combat]} && (${Me.PctEndurance} > 10)) {
-							/doability "${AA_${aa}}"
-						} else {
-							/call MQ2Cast "${AA_${aa}}"	alt
-							/if (${Macro.Return.Equal[CAST_SUCCESS]}) {
-							/cecho \ag ${AA_${aa}} : FIRED	
-							}
+						/medley queue "${AA_${aa}}"
+					}
+					/cecho \ag ${AA_${aa}}  : FIRED	
+				} else {
+					/if (${AA_${aa}_Gem.Equal[combat]} && (${Me.PctEndurance} > 10)) {
+						/doability "${AA_${aa}}"
+					} else {
+						/call MQ2Cast "${AA_${aa}}"	alt
+						/if (${Macro.Return.Equal[CAST_SUCCESS]}) {
+						/cecho \ag ${AA_${aa}} : FIRED	
 						}
 					}
-						
 				}
+					
 			}
+			
 		:NextAA
 		/next aa
 	}
@@ -739,7 +746,7 @@ Sub chkBurn
 	/if (${int_burnModeTotal} < 1) /return 
 	
 	/declare burn int local
-	/echo BurnMode Activated! Total Burns: ${int_burnModeTotal}
+	|/echo BurnMode Activated! Total Burns: ${int_burnModeTotal}
 	/for burn 1 to ${int_burnModeTotal} 
 		
 		/if (${Target.ID} && (!${Me.Casting.ID} || ${Me.Class.ShortName.Equal[BRD]}) && ${Target.Type.Equal[NPC]}) {
@@ -992,9 +999,12 @@ Sub EVENT_IntensityON
 
 
 |-------------------------------------------------------------------------------- 
-|SUB: Event_ENRAGE HANDLERS for pets
+|SUB: Event_ENRAGE HANDLERS for pets (and melee if they aren't usign mq2melee, ala specialization)
 |--------------------------------------------------------------------------------
 Sub Event_RageOff(string line)
+	/if (!${mq2meleeEnabled} && (${line.Find[${Spawn[${int_targetID}].DisplayName}]} || ${line.Find[${Target.DisplayName}]})) {
+		/attack on
+	}
 	/if ((${line.Find[${Spawn[${int_targetID}].DisplayName}]} || ${line.Find[${Target.DisplayName}]}) && ${Me.Pet.ID}) {
 		/target id ${int_targetID}
 		/pet attack
@@ -1004,6 +1014,9 @@ Sub Event_RageOff(string line)
 /return
 
 Sub Event_RageOn(string line)
+	/if (!${mq2meleeEnabled} && (${line.Find[${Spawn[${int_targetID}].DisplayName}]} || ${line.Find[${Target.DisplayName}]})) {
+		/attack off
+	}
 	/if (((${line.Find[${Spawn[${int_targetID}].DisplayName}]} || ${line.Find[${Target.DisplayName}]}) && ${Me.Pet.ID}) && !${Me.PetBuff[Master's Aura Effect]}) {
 		/echo Enrage detected! Backing pet off.
 		/pet back off

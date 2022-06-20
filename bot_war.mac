@@ -133,8 +133,12 @@ Sub EngageTarget(_targetID)
 	/varset int_targetID ${_targetID}
 	/call TrueTarget ${int_targetID}
 	/varset bln_engaged TRUE
-	/killthis
-	/attack on
+	/if (!${mq2meleeEnabled}) {
+		/face fast
+		/attack on
+	} else {
+		/killthis
+	}
 	/if (${Me.ID} != ${int_MTID} || !${bln_tanking}) {
 		/call StickToTarget
 	} else {

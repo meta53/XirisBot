@@ -102,9 +102,14 @@ Sub EVENT_ToggleMQ2Melee(string _pluginState)
 /return
 
 Sub toggleMQ2Melee(bool _state) 
-	/rs MQ2MELEE DISABLED
-	/melee plugin=${_state}
-	/melee save
+	/varset mq2meleeEnabled ${_state}
+	/if (${state}) {
+		/rs MQ2MELEE ENABLED
+		/melee plugin=1
+	} else {
+		/rs MQ2MELEE DISABLED
+		/melee plugin=0
+	}
 /return
 
 
@@ -243,10 +248,21 @@ Sub Event_XTargetRefresh
 
 Sub doBandolier(string _bando)
 	/cecho \ay Equipping set ${_bando}
+	/autoinv
+	/autoinv
+	/delay 5
+	/if (${InvSlot[offhand].Item.ID}) {
+		/unequip 14
+		/delay 5
+		/autoinv
+	}
+	/if (${InvSlot[mainhand].Item.ID}) {
+		/unequip 13
+		/delay 5
+		/autoinv
+	}
+
 	/equipset ${_bando}
-	/delay 10
-	/equipset ${_bando}
-	/delay 10
 /return
 
 Sub chkDownshits
@@ -568,17 +584,17 @@ Sub downshitInterrupt
 
 |-- Used 04/27/2022 due to mq2melee acting retarded in MPG: Specialization
 Sub chkCombatAbilities
-	/if (${Melee.Enable}) /return
+	/if (${mq2meleeEnabled}) /return
 	| Berserkers
-	/if (${Me.AbilityReady[Frenzy]} && ${Me.Class.Name.Equal[Berserker]} && ${Me.Combat} && ${Target.Distance}<=${Target.MaxRangeTo}) /doability "Frenzy"
-	/if (${Me.CombatAbilityReady[Rage Volley]} && ${Me.Class.Name.Equal[Berserker]} && ${Me.Combat} && ${Target.Distance}<=${Target.MaxRangeTo}) /doability "Rage Volley"
+	/if (${Me.AbilityReady[Frenzy]} && ${Me.Class.ShortName.Equal[BER]} && ${Me.Combat} && ${Target.Distance}<=${Target.MaxRangeTo}) /doability "Frenzy"
+	/if (${Me.CombatAbilityReady[Rage Volley]} && ${Me.Class.ShortName.Equal[BER]} && ${Me.Combat} && ${Target.Distance}<=${Target.MaxRangeTo}) /doability "Rage Volley"
 
 	| Rogues
-	/if (${Me.AbilityReady[Backstab]} && ${Me.Class.Name.Equal[Rogue]} && ${Me.Combat} && ${Target.Distance}<=${Target.MaxRangeTo}) /doability "Backstab"
+	/if (${Me.AbilityReady[Backstab]} && ${Me.Class.ShortName.Equal[ROG]} && ${Me.Combat} && ${Target.Distance}<=${Target.MaxRangeTo}) /doability "Backstab"
 
 	| Monks
-	/if (${Me.AbilityReady[Tiger Claw]} && ${Me.Class.Name.Equal[Rogue]} && ${Me.Combat} && ${Target.Distance}<=${Target.MaxRangeTo}) /doability "Tiger Claw"
-	/if (${Me.AbilityReady[Flying Kick]} && ${Me.Class.Name.Equal[Rogue]} && ${Me.Combat} && ${Target.Distance}<=${Target.MaxRangeTo}) /doability "Flying Kick"
+	/if (${Me.AbilityReady[Tiger Claw]} && ${Me.Class.ShortName.Equal[MNK]} && ${Me.Combat} && ${Target.Distance}<=${Target.MaxRangeTo}) /doability "Tiger Claw"
+	/if (${Me.AbilityReady[Flying Kick]} && ${Me.Class.ShortName.Equal[MNK]} && ${Me.Combat} && ${Target.Distance}<=${Target.MaxRangeTo}) /doability "Flying Kick"
 /return
 
 Sub chkCA_BER
@@ -666,7 +682,7 @@ Sub xbot_initialize_melee
 
 	|-- [Settings] : Melee Defaults
 	/declare 	MinStrikeEndurance 		int		outer	200
-	/declare 	MinBellowEndurance		int		outer	200FireRiposteDisc
+	/declare 	MinBellowEndurance		int		outer	200
 	/declare    provokeTimer            timer   outer   0
 	/declare 	stickCmd				string	outer   ${Ini[botINI,Sticking,stickCmd,behindonce 35]}
 	/declare 	bln_chkComponents		bool	outer	TRUE

@@ -54,7 +54,7 @@ ______________________________________________
 #event BALANCEOFF			 	"#*#your failure to balance the scales#*#"
 #event BALANCEOFF			 	"#*#body trembles as he fails to gather power#*#"
 #event BALANCEOFF			 	"#*#BalanceOFF#*#"
-#event PIRIKDEAD				"#*#two heads face each otehr just before it falls to the floor#*#"
+#event PIRIKDEAD				"#*#two heads face each other just before it falls to the floor#*#"
 
 Sub InitEvents_GoD_Ikkinz
 	/call RegisterBackgroundEvents Events_GoD_Ikkinz 18
@@ -309,6 +309,7 @@ Sub EVENT_VORRAMP
 /return
 
 Sub EVENT_VORBLUR
+	/if (!${bln_engaged}) /return
 	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]} && ${bln_engaged}) {
 		/if (!${bln_riposting}) {
 			/melee reset
@@ -335,7 +336,7 @@ SUB EVENT_PIRIKACTIVE
 SUB EVENT_BALANCE
 	/if (!${Defined[bln_balancing]}) /declare bln_balancing bool outer TRUE
 	/declare bpct	int	local	100
-	/varcalc bpct ${Spawn[npc Kvxe].PctHPs}+1
+	/varcalc bpct ${Spawn[npc Kvxe].PctHPs}+2
 	/if (${str_classArchetype.Equal[PRIEST]}) {
 		/echo PRIEST CLASS handling
 
