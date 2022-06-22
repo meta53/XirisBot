@@ -43,10 +43,22 @@ REVISION HISTORY
 #EVENT CHSwitch "<#1#> CHSwitch #2#"
 #EVENT CHSwitch "[#1#(msg)] CHSwitch #2#"
 
+|-- Celestial Regeneration Events
+
+#EVENT RegenerateCRList "#*# RegenerateCRList#*#"
+
+#EVENT CelRegenStart "<#1#> CRStart#*#"
+#EVENT CelRegenStart "[#1#(msg)] CRStart#*#"
+
+#EVENT CelRegenStop "<#1#> CRStop#*#"
+#EVENT CelRegenStop "[#1#(msg)] CRStop#*#"
+
+
+
 
 Sub InitEvents_Healing
 	/if (${str_classArchetype.Equal[PRIEST]} || ${str_classArchetype.Equal[MELEE_MANA]} ) /call RegisterBackgroundEvents Events_Healing 6
-	/if (${str_classArchetype.Equal[PRIEST]}) /call RegisterBackgroundEvents Events_CH 5
+	/if (${str_classArchetype.Equal[PRIEST]}) /call RegisterBackgroundEvents Events_CH 7
 /return
 
 Sub Events_Healing
@@ -58,7 +70,6 @@ Sub Events_Healing
 	/doevents HealMode
 	/doevents InterruptON
 	/doevents InterruptOFF
-
 /return
 
 Sub Events_CH 
@@ -67,6 +78,9 @@ Sub Events_CH
 	/doevents CHPause
 	/doevents CHResume
 	/doevents CHSwitch
+	/doevents CelRegenStart
+	/doevents CelRegenStop
+	/if (${bln_celRegenActive}) /call chkCelRegen
 /return 
 
 
@@ -92,7 +106,6 @@ Sub EVENT_HealMode(string chatText)
 	/call ChangeHealMode ${chatText.Arg[3]}
 	/doevents flush HealMode
 /return
-
 
 |**
  ----------------------------
@@ -121,6 +134,138 @@ Sub ChangeHealMode(string _strMode)
 	/memspellset ${str_spellset}
 /return
 
+|**
+ ----------------------------
+ CELESTIAL REGENERATION EVENT HANDLERS
+ ----------------------------
+	Celestial Regen chain is nice to have for events with massive, consecutive AEs
+	such as Mastery of Specialization, etc. We cannot get the information we need
+	directly out of netbots, so we are going to try to write something for MQ2DanNet
+**|
+
+Sub setCelRegenChain
+	/declare i int local 1
+	/declare pPos int local 0
+	/declare nbName string local
+	/for i 1 to ${int_celRegenTotal}
+		| get the ID from NETBots
+		/varset nbName  ${Ini[${healINIFile},CelestialRegeneration,cr_${i}_name]}
+		| set the array value to the bot ID, and the celregen to READY
+		/varset arr_celRegen[${i}] ${nbName}
+		/if (${nbName.Equal[${Me.Name}]}) {
+			/echo setting my regen position to ${i}
+			/varset int_celRegenPosition ${i}
+			/varcalc pPos ${int_celRegenPosition} - 1
+			/varset str_celRegenPPriest ${arr_celRegen[${pPos}]}
+		}
+	/next i
+/return
+
+Sub EVENT_CelRegenStart
+	/varset bln_celRegenActive TRUE
+	/call chkCelRegen
+	/doevents flush CelRegenStart
+/return 
+
+Sub EVENT_CelRegenStop 
+	/varset bln_celRegenActive FALSE 
+	/doevents flush CelRegenStop
+/return 
+
+
+
+Sub chkCelRegen
+	/if (!${bln_celRegenActive}) /return 
+	/if (${timer_celregen}) /return
+	| CelRegenChain is active, lets see if we should be firing this.
+	| A. Is my Celestial Regen ready?
+	|	N --> /goto :return
+	|   Y --> /goto :B
+
+	| B. Am I in position #1?
+	|	N --> /goto :C
+	|   Y --> /goto :FireCelRegen
+
+	| C. Is there a previous priest in zone?
+	|	N --> /goto :FireCelRegen
+	|	Y --> /goto :D
+
+	| D. The nearest Living Previous Priest has he fired his celregen?
+	|	N --> /goto :return
+	|	Y --> /goto :FireCelRegen
+
+	| A |
+	/if (!${Me.AltAbilityReady[Celestial Regeneration]} && !${Me.AltAbilityReady[Mass Group Buff]}) /goto :return
+
+	| B |
+	/if (${int_celRegenPosition} == 1) /goto :FireCelRegen
+
+	| C |
+	/call getPreviousLivingPriest
+	/declare pp string local ${Macro.Return}
+	/if (${pp.Equal[NONE]}) /goto :FireCelRegen
+
+	| D | Determine preview priest cast status
+	/declare pMGB string local 
+	/declare pCR string local 
+	/dquery ${pp} -q "Me.AltAbilityReady[Mass Group Buff]" -o pMGB
+	/dquery ${pp} -q "Me.AltAbilityReady[Celestial Regeneration]" -o pCR
+	/if (!${Bool[${pMGB}]} || !${Bool[${pMGB}]}) {
+		/cecho \ar${pp}:\arDOES NOT \awhave MGB and Celestial Regen Ready. \agFiring!
+		/goto :FireCelRegen
+	} else {
+		/echo \ag${pp}:\aw \agHAS \awMGB and Celestial Regen Ready. \agWaiting...
+		|-- give the correct cleric a moment to fire their stuff
+		/varset timer_celregen 5s
+		/goto :return
+	}
+	
+	:FireCelRegen
+	/rs <FIRING CELESTIAL REGENERATION>
+	/call MQ2Cast "Mass Group Buff" alt 2s
+	/delay 10
+	/call MQ2Cast "Celestial Regeneration" alt 2s
+	/varset bln_celRegenActive FALSE
+	:return
+/return
+
+Sub listCelestialRegenCapable
+	/for i ${int_celRegenTotal} downto 1 
+		/varset prevPriest ${arr_celRegen[${i}]}
+		/dquery ${prevPriest} -q "Me.AltAbilityReady[Mass Group Buff]" -o pMGB
+		/dquery ${prevPriest} -q "Me.AltAbilityReady[Celestial Regeneration]" -o pCR
+		/delay 20 ${DanNet[${prevPriest}].Query["Me.AltAbilityReady[Celestial Regeneration]"].Received}
+		/if (${pMGB.Equal[FALSE]}) /varset c1 \ar
+		/if (${pCR.Equal[FALSE]})  /varset c2 \ar
+		/if (${pMGB.Equal[FALSE]} || (${pCR.Equal[FALSE]})) {
+			/cecho \awprevPriest[${i}]: \ar${prevPriest} \awMGB:${c1}${pMGB}\aw Regen:${c2}${pCR}
+		} else {
+			/cecho \awprevPriest[${i}]: \ag${prevPriest} \awMGB:${c1}${pMGB}\aw Regen:${c2}${pCR}
+		}
+
+	:nextPosition
+	/next i
+
+/return
+
+| Note the xiris_healing.ini contains the list of Celestial Regen capable clerics
+| We don't exclude any from that list, so we have to make sure its accurate
+Sub getPreviousLivingPriest
+	/declare i int local
+	/declare pPos	int local 
+	/varcalc pPos ${int_celRegenPosition} - 1 
+	/declare prevPriest string local NONE
+	| decrement through list 
+	/for i ${pPos} downto 1 
+		/varset prevPriest ${arr_celRegen[${i}]}
+		/if (${Spawn[pc ${prevPriest}].Name.Equal[${Me.Name}]}) /goto :nextPosition
+		/if (!${SpawnCount[pc ${prevPriest}]})  /goto :nextPosition
+		/goto :return
+	:nextPosition
+	/next i
+	
+	:return
+/return ${prevPriest}
 |**
 ----------------------------
 Check|Set the current heal spell
@@ -772,6 +917,7 @@ Sub xbot_initialize_healing(int _healPoint)
 	|/if (${str_classArchetype.Equal[MELEE_END]})	/return
 	|/if (${Me.Class.ShortName.Equal[WAR]}) 			/return
 
+	/declare 	healINIFile				string  outer	xiris_common/xiris_healing.ini
 
 	|-- Set spellset to default so we can probe the properties of these
 	/memspellset default
@@ -877,6 +1023,17 @@ Sub xbot_initialize_healing(int _healPoint)
 		/declare    use_interrupt_selfHeal  bool	outer   TRUE
 		/declare    int_point_interrupt		int		outer   ${Ini[botINI,Heal_Points,int_point_interrupt,50]}
 	
+	|-- Celestial Regeneration Chain
+	/declare bln_celRegenActive 			bool	outer	FALSE 
+	/declare int_celRegenTotal 				int 	outer	${Ini[${healINIFile},CelestialRegeneration,int_totalCR]}
+	/declare arr_celRegen[${int_celRegenTotal}] string outer
+    /declare timer_celregen					timer   outer	0
+	|   Parse the chain's character list to an array
+	/declare int_celRegenPosition			int		outer   1
+	/declare str_celRegenPPriest            string  outer 
+	/call setCelRegenChain
+
+
 	|-- Various Flags
 	/declare	int_currentHP			int 	outer	100
 	/declare 	str_currentHeal			string	outer	${str_heal_normal}

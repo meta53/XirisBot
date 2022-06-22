@@ -1101,8 +1101,9 @@ Sub setAlerts
 	|--- specific zone mobs to hunt;
 	|=================================
 	/squelch /alert clear 2
-	|--Hunter Cycle--|
+	
 	/if (${Zone.ShortName.Equal[trakanon]}) {
+		|--Hunter Cycle--|
 		/squelch /alert add 2 "froglok hunter"
 		/squelch /alert add 2 "Oracle Froskil"
 		/squelch /alert add 2 "Harbinger Josk"

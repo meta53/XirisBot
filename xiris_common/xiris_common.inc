@@ -30,6 +30,7 @@ ______________________________________________
 
 #define botINI xiris_class_ini/BOT_${Me.Class.ShortName}_${Me.CleanName}.ini
 
+#include xiris_common/xiris_dannet.inc
 #include xiris_common/xiris_buffing.inc
 #include xiris_common/xiris_buffing_lines.inc
 #include xiris_common/xiris_curing.inc
@@ -84,6 +85,17 @@ ______________________________________________
 #EVENT ChangeAP				"#1# tells the group#*#'ChangeAP #2#'"
 #EVENT ChangeAP				"#1# tells you#*#'ChangeAP #2#'"
 #EVENT ChangeAP				"#1# tells the raid#*#'ChangeAP #2#'"
+
+
+| Burninating
+#EVENT ShortBurnOn1 
+#EVENT ShortBurnOn2 
+
+#EVENT FullBurnOn1
+#EVENT FullBurnOn2 
+
+#EVENT MaxiumumBurn
+
 
 |MISC events
 #EVENT ConnectEQBC			"#*#ConnectEQBC#*#"

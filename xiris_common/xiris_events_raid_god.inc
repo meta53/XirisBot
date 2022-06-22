@@ -450,6 +450,7 @@ Sub BalancerKillMelee(string _targetName, int _targetID, int _balanceTo)
 		/doevents BurnOn2
 		/doevents BurnOnAll
 		/doevents BurnOff
+		/call chkBurn
 		/if (!${bln_balancing}) /goto :return
 		/if (${Target.PctHPs} > ${_balanceTo}) /goto :BalancerMeleeLoop
 	:return
@@ -483,6 +484,7 @@ Sub BalancerKillCaster(string _targetName, int _targetID, int _balanceTo)
 		/doevents BurnOn2
 		/doevents BurnOnAll
 		/doevents BurnOff
+		/call chkBurn
 		/if (!${bln_balancing}) /goto :return
 		/if (${Target.PctHPs} > ${_balanceTo}) /goto :BalancerCasterLoop
 	:return

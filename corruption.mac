@@ -1,7 +1,6 @@
 #Turbo 20
 Sub Main 
-    | Set Xiris (MT) Healing
-    /bct Xiris //end
+    | Set Xiris (MT) Healing 
     /bct Xerael changeMT Xiris
     /bct Xarael changeMT Xiris
     /bct Xorael changeMT Xiris

@@ -20,6 +20,7 @@ REQUIRED INCLUDES
 #Event burn2a "#*#b2a#*#"
 #Event burn2b "#*#b2b#*#"
 
+
 #Turbo 5
 
 Sub Main
@@ -31,53 +32,53 @@ Sub Main
 /return
 
 Sub EVENT_burn1a 
-    /bct Ophelia    BurnOnALL
-    /bct Mluian     BurnOnALL
-    /bct Xaeliea    BurnOnALL
-    /bct Xaia       BurnOnALL
-    /bct Ophemia    BurnOnALL
-    /bct Xepatia    BurnOnALL
-    /bct Ophenia    BurnOnALL
-    /bct Erinyas    BurnOnALL
-    /bct Ophidia    BurnOnALL
+    /bct Ophelia    //varset bln_BURNMode TRUE
+    /bct Mluian     //varset bln_BURNMode TRUE
+    /bct Xaeliea    //varset bln_BURNMode TRUE
+    /bct Xaia       //varset bln_BURNMode TRUE
+    /bct Ophemia    //varset bln_BURNMode TRUE
+    /bct Xepatia    //varset bln_BURNMode TRUE
+    /bct Ophenia    //varset bln_BURNMode TRUE
+    /bct Erinyas    //varset bln_BURNMode TRUE
+    /bct Ophidia    //varset bln_BURNMode TRUE
 /return 
 
 Sub EVENT_burn1b
-    /bct  Opheoia   BurnOnALL
-    /bct Ophexia    BurnOnALL
-    /bct Ertris     BurnOnALL
-    /bct Erinyes    BurnOnALL
-    /bct Ertres     BurnOnALL
-    /bct Ophezia    BurnOnALL
-    /bct Xaexa      BurnOnALL
-    /bct Opheyia    BurnOnALL
+    /bct  Opheoia   //varset bln_BURNMode TRUE
+    /bct Ophexia    //varset bln_BURNMode TRUE
+    /bct Ertris     //varset bln_BURNMode TRUE
+    /bct Erinyes    //varset bln_BURNMode TRUE
+    /bct Ertres     //varset bln_BURNMode TRUE
+    /bct Ophezia    //varset bln_BURNMode TRUE
+    /bct Xaexa      //varset bln_BURNMode TRUE
+    /bct Opheyia    //varset bln_BURNMode TRUE
 /return 
 
 Sub EVENT_burn2a
-    /bct Ertris     BurnOnALL
-    /bct Aidos      BurnOnALL
-    /bct Erinyas    BurnOnALL
-    /bct Ophelia    BurnOnALL
-    /bct Ania       BurnOnALL
-    /bct Achlys     BurnOnALL
-    /bct Achos      BurnOnALL
-    /bct Xaia       BurnOnALL
-    /bct Xepatia    BurnOnALL
-    /bct Ophenia    BurnOnALL
-    /bct Ophemia    BurnOnALL
-    /bct Xaexa      BurnOnALL
+    /bct Ertris     //varset bln_BURNMode TRUE
+    /bct Aidos      //varset bln_BURNMode TRUE
+    /bct Erinyas    //varset bln_BURNMode TRUE
+    /bct Ophelia    //varset bln_BURNMode TRUE
+    /bct Ania       //varset bln_BURNMode TRUE
+    /bct Achlys     //varset bln_BURNMode TRUE
+    /bct Achos      //varset bln_BURNMode TRUE
+    /bct Xaia       //varset bln_BURNMode TRUE
+    /bct Xepatia    //varset bln_BURNMode TRUE
+    /bct Ophenia    //varset bln_BURNMode TRUE
+    /bct Ophemia    //varset bln_BURNMode TRUE
+    /bct Xaexa      //varset bln_BURNMode TRUE
 /return 
 
 Sub EVENT_burn2b
-    /bct Erinyes    BurnOnALL
-    /bct Xaeliea    BurnOnALL
-    /bct Adikia     BurnOnALL
-    /bct Opheoia    BurnOnALL
-    /bct Ophexia    BurnOnALL
-    /bct Ertres     BurnOnALL
-    /bct Aergia     BurnOnALL
-    /bct Ophidia    BurnOnALL
-    /bct Ophezia    BurnOnALL
-    /bct Opheyia    BurnOnALL
+    /bct Erinyes    //varset bln_BURNMode TRUE
+    /bct Xaeliea    //varset bln_BURNMode TRUE
+    /bct Adikia     //varset bln_BURNMode TRUE
+    /bct Opheoia    //varset bln_BURNMode TRUE
+    /bct Ophexia    //varset bln_BURNMode TRUE
+    /bct Ertres     //varset bln_BURNMode TRUE
+    /bct Aergia     //varset bln_BURNMode TRUE
+    /bct Ophidia    //varset bln_BURNMode TRUE
+    /bct Ophezia    //varset bln_BURNMode TRUE
+    /bct Opheyia    //varset bln_BURNMode TRUE
 /return
 
