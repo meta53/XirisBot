@@ -78,9 +78,11 @@ Sub Events_CH
 	/doevents CHPause
 	/doevents CHResume
 	/doevents CHSwitch
-	/doevents CelRegenStart
-	/doevents CelRegenStop
-	/if (${bln_celRegenActive}) /call chkCelRegen
+	/if (${bln_hasCelRegen}) {
+		/doevents CelRegenStart
+		/doevents CelRegenStop
+		/if (${bln_celRegenActive}) /call chkCelRegen
+	} 
 /return 
 
 
@@ -149,7 +151,7 @@ Sub setCelRegenChain
 	/declare nbName string local
 	/for i 1 to ${int_celRegenTotal}
 		| get the ID from NETBots
-		/varset nbName  ${Ini[${healINIFile},CelestialRegeneration,cr_${i}_name]}
+		/varset nbName  ${Ini[${healINI},CelestialRegeneration,cr_${i}_name]}
 		| set the array value to the bot ID, and the celregen to READY
 		/varset arr_celRegen[${i}] ${nbName}
 		/if (${nbName.Equal[${Me.Name}]}) {
@@ -229,6 +231,28 @@ Sub chkCelRegen
 	:return
 /return
 
+| Note the xiris_healing.ini contains the list of Celestial Regen capable clerics
+| We want to check if anyone previous to my index is alive, and if they are, we will
+| use that result to check to see if they have fired CE, and if not, fire it ourselves
+Sub getPreviousLivingPriest
+	/declare i int local
+	/declare pPos	int local 
+	/varcalc pPos ${int_celRegenPosition} - 1 
+	/declare prevPriest string local NONE
+	| decrement through list 
+	/for i ${pPos} downto 1 
+		/varset prevPriest ${arr_celRegen[${i}]}
+		/if (${Spawn[pc ${prevPriest}].Name.Equal[${Me.Name}]}) /goto :nextPosition
+		/if (!${SpawnCount[pc ${prevPriest}]})  /goto :nextPosition
+		/goto :return
+	:nextPosition
+	/next i
+	
+	:return
+/return ${prevPriest}
+
+
+| Utility method to determine which clerics have Celestial Regen and MGB available
 Sub listCelestialRegenCapable
 	/for i ${int_celRegenTotal} downto 1 
 		/varset prevPriest ${arr_celRegen[${i}]}
@@ -248,24 +272,6 @@ Sub listCelestialRegenCapable
 
 /return
 
-| Note the xiris_healing.ini contains the list of Celestial Regen capable clerics
-| We don't exclude any from that list, so we have to make sure its accurate
-Sub getPreviousLivingPriest
-	/declare i int local
-	/declare pPos	int local 
-	/varcalc pPos ${int_celRegenPosition} - 1 
-	/declare prevPriest string local NONE
-	| decrement through list 
-	/for i ${pPos} downto 1 
-		/varset prevPriest ${arr_celRegen[${i}]}
-		/if (${Spawn[pc ${prevPriest}].Name.Equal[${Me.Name}]}) /goto :nextPosition
-		/if (!${SpawnCount[pc ${prevPriest}]})  /goto :nextPosition
-		/goto :return
-	:nextPosition
-	/next i
-	
-	:return
-/return ${prevPriest}
 |**
 ----------------------------
 Check|Set the current heal spell
@@ -318,8 +324,12 @@ Sub setHealingSpell(string _class, int _hp)
 **|
 
 Sub chkHeal_MT
-	| Use the power of Greyskull and Netbots to get the MTs HP
+	/if (${int_healMode}== 0) /return
+	| Use the power of Greyskull and <strike>Netbots</strike> DANNET to get the MTs HP (todo)
+	
 	/call chkMTAlive ${Me.Class.ShortName.Equal[CLR]} 
+	
+	|/dquery ${str_tankName1} -q "Me.PctHPs" -o mthp 
 
 	/if ((${NetBots[${str_tankName1}].PctHPs} < ${int_point_tankNormal}) && (${NetBots[${str_tankName1}].Distance} < ${int_range_normal})) {
 		/call healMAINTANK
@@ -329,7 +339,7 @@ Sub chkHeal_MT
 
 
 Sub chkHeal_Self
-	/if (${int_healMode}>=1 && ${Me.PctHPs}<${int_point_selfNormal}) {
+	/if (${int_healMode}>=0 && ${Me.PctHPs}<${int_point_selfNormal}) {
 		/call healSELF		
 	}
 /return
@@ -917,20 +927,23 @@ Sub xbot_initialize_healing(int _healPoint)
 	|/if (${str_classArchetype.Equal[MELEE_END]})	/return
 	|/if (${Me.Class.ShortName.Equal[WAR]}) 			/return
 
-	/declare 	healINIFile				string  outer	xiris_common/xiris_healing.ini
+	/declare 	healINI				string  outer	xiris_common/xiris_healing.ini
 
 	|-- Set spellset to default so we can probe the properties of these
 	/memspellset default
 
 	|-- Heal Settings
-	/declare 	bln_autointerrupt			bool	outer	TRUE
+	/declare    bln_defaultAutoInterrupt 	bool	outer  	${Ini[healINI,Heal_Settings,bln_autointerrupt]}
+	/declare 	bln_autointerrupt			bool	outer	${Ini[botINI,Healing_Settings,bln_autointerrupt,${bln_defaultAutoInterrupt}]}
 	/declare	str_spellset				string  outer 	default
-	| 	Heal Mode NORMAL|EFFICIENT|CHCHAIN
+	| 	Heal Mode: NORMAL|EFFICIENT|CHCHAIN
 	/declare    str_healMode				string  outer 	NORMAL
 	/declare	str_savedHealMode			string  outer   ${str_healMode}
-	| 	Heal Mode 1 - self, 2 - group (default)
-	/declare	int_healMode    			int     outer   ${Ini[botINI,Healing_Settings,int_healMode,2]}
-	/declare	use_heal_divineArb			bool	outer	${Ini[botINI,Healing_Settings,use_heal_divineArb,FALSE]}
+	| 	Heal Mode: 0|Self Only, 1|Self/MT 2|Self/MT/Group
+	/declare 	int_defaultHealMode			int 	outer   ${Ini[healINI,Heal_Settings,int_healMode]}
+	/declare	int_healMode    			int     outer   ${Ini[botINI,Healing_Settings,int_healMode,${int_defaultHealMode}]}
+	/declare 	use_heal_defaultDivineArb	bool	outer 	${Ini[healINI,Heal_Settings,use_heal_divineArb]}
+	/declare	use_heal_divineArb			bool	outer	${Ini[botINI,Healing_Settings,use_heal_divineArb,${use_heal_divineArb}]}
 	
 	|-- Healing Spells
 	/declare 	str_heal_normal_efficient	string	outer	${Ini[botINI,Healing_Spells,str_heal_normal_efficient,NULL]}
@@ -990,31 +1003,47 @@ Sub xbot_initialize_healing(int _healPoint)
 	/echo Heal Range: Patch:${int_range_normal_efficient} || Normal:${int_range_normal} || Frantic:${int_range_frantic} || HoT::${int_range_HoT} || Group:${int_range_group} || GroupHoT:${int_range_groupHoT} || Rez:${int_range_rez}
 	/echo ---------------
 	|-- Heal Points
-		|-- Cleric (self)
-		/declare	int_point_selfPatch		int 	outer 	${Ini[botINI,Heal_Points,int_point_selfPatch,85]}
-		/declare	int_point_selfNormal	int		outer	${Ini[botINI,Heal_Points,int_point_selfNormal,75]}
-		/declare	int_point_selfFrantic	int		outer	${Ini[botINI,Heal_Points,int_point_selfFrantic,40]}
-		/declare	int_point_selfHot		int		outer	${Ini[botINI,Heal_Points,int_point_selfHot,95]}
+		|-- SELF (Defaults)
+		/declare 	int_def_selfPatch		int     outer   ${Ini[healINI,Heal_Settings,int_point_selfPatch]}
+		/declare 	int_def_selfNormal		int     outer   ${Ini[healINI,Heal_Settings,int_point_selfNormal]}
+		/declare 	int_def_selfFrantic		int     outer   ${Ini[healINI,Heal_Settings,int_point_selfFrantic]}
+		/declare 	int_def_selfHot			int     outer   ${Ini[healINI,Heal_Settings,int_point_selfHot]}
+
+		|-- SELF (Overrides)
+		/declare	int_point_selfPatch		int 	outer 	${Ini[botINI,Heal_Points,int_point_selfPatch,${int_def_selfPatch}]}
+		/declare	int_point_selfNormal	int		outer	${Ini[botINI,Heal_Points,int_point_selfNormal,${int_def_selfNormal}]}
+		/declare	int_point_selfFrantic	int		outer	${Ini[botINI,Heal_Points,int_point_selfFrantic,${int_def_selfFrantic}]}
+		/declare	int_point_selfHot		int		outer	${Ini[botINI,Heal_Points,int_point_selfHot,${int_def_selfHot}]}
 	
-		|-- Tank
-		/declare	int_point_tankPatch		int		outer	${Ini[botINI,Heal_Points,int_point_tankPatch,85]}
-		/declare	int_point_tankNormal	int		outer	${Ini[botINI,Heal_Points,int_point_tankNormal,65]}	
+		|-- TANK (Defaults)
+		/declare 	int_def_tankPatch		int     outer   ${Ini[healINI,Heal_Settings,int_point_tankPatch]}
+		/declare 	int_def_tankNormal		int     outer   ${Ini[healINI,Heal_Settings,int_point_tankNormal]}
+		/declare 	int_def_tankFrantic		int     outer   ${Ini[healINI,Heal_Settings,int_point_tankFrantic]}
+		/declare 	int_def_tankHot			int     outer   ${Ini[healINI,Heal_Settings,int_point_tankHot]}
+
+		|-- TANK (Overrides)
+		/declare	int_point_tankPatch		int		outer	${Ini[botINI,Heal_Points,int_point_tankPatch,${int_def_tankPatch}]}
+		/declare	int_point_tankNormal	int		outer	${Ini[botINI,Heal_Points,int_point_tankNormal,${int_def_tankNormal}]}	
 		/if (${_healPoint} > 0) {
 			/cecho \agHealpoint setting overriding defaults: ${_healPoint}	
 			/varset	int_point_tankNormal	${_healPoint}
 		} else {
 			/echo No healpoint defined using INI values
 		}
-
-
-		/declare	int_point_tankFrantic	int		outer	${Ini[botINI,Heal_Points,int_point_tankFrantic,40]}
-		/declare	int_point_tankHot		int		outer	${Ini[botINI,Heal_Points,int_point_tankHot,95]}
+		/declare	int_point_tankFrantic	int		outer	${Ini[botINI,Heal_Points,int_point_tankFrantic,${int_def_tankFrantic}]}
+		/declare	int_point_tankHot		int		outer	${Ini[botINI,Heal_Points,int_point_tankHot,${int_def_tankHot}]}
 	
-		|-- Rest of Group
-		/declare	int_point_grpPatch		int		outer	${Ini[botINI,Heal_Points,int_point_grpPatch,75]}	
-		/declare	int_point_grpNormal		int		outer	${Ini[botINI,Heal_Points,int_point_grpNormal,60]}	
-		/declare	int_point_grpFrantic	int		outer	${Ini[botINI,Heal_Points,int_point_grpFrantic,40]}
-		/declare	int_point_grpHot		int		outer	${Ini[botINI,Heal_Points,int_point_grpHot,85]}	
+		|-- Rest of Group (Defaults)
+		/declare 	int_def_grpPatch		int     outer   ${Ini[healINI,Heal_Settings,int_point_grpPatch]}
+		/declare 	int_def_grpNormal		int     outer   ${Ini[healINI,Heal_Settings,int_point_grpNormal]}
+		/declare 	int_def_grpFrantic		int     outer   ${Ini[healINI,Heal_Settings,int_point_grpFrantic]}
+		/declare 	int_def_grpHot			int     outer   ${Ini[healINI,Heal_Settings,int_point_grpHot]}
+
+		|-- Rest of Group (Overrides)
+		/declare	int_point_grpPatch		int		outer	${Ini[botINI,Heal_Points,int_point_grpPatch,${int_def_grpPatch}]}	
+		/declare	int_point_grpNormal		int		outer	${Ini[botINI,Heal_Points,int_point_grpNormal,${int_def_grpNormal}]}	
+		/declare	int_point_grpFrantic	int		outer	${Ini[botINI,Heal_Points,int_point_grpFrantic,${int_def_grpFrantic}]}
+		/declare	int_point_grpHot		int		outer	${Ini[botINI,Heal_Points,int_point_grpHot,${int_def_grpHot}]}	
 
 		|-- Divine Arbitration && Misc
 		/declare    int_point_divineArb     int		outer	${Ini[botINI,Heal_Points,int_point_divineArb,20]}
@@ -1024,16 +1053,20 @@ Sub xbot_initialize_healing(int _healPoint)
 		/declare    int_point_interrupt		int		outer   ${Ini[botINI,Heal_Points,int_point_interrupt,50]}
 	
 	|-- Celestial Regeneration Chain
-	/declare bln_celRegenActive 			bool	outer	FALSE 
-	/declare int_celRegenTotal 				int 	outer	${Ini[${healINIFile},CelestialRegeneration,int_totalCR]}
-	/declare arr_celRegen[${int_celRegenTotal}] string outer
-    /declare timer_celregen					timer   outer	0
-	|   Parse the chain's character list to an array
-	/declare int_celRegenPosition			int		outer   1
-	/declare str_celRegenPPriest            string  outer 
-	/call setCelRegenChain
+	/declare bln_hasCelRegen 				bool    outer   ${Me.Class.ShortName.Equal[CLR]}
+	/if (${bln_hasCelRegen}) {
+		/declare bln_celRegenActive 			bool	outer	FALSE 
+		/declare int_celRegenTotal 				int 	outer	${Ini[${healINI},CelestialRegeneration,int_totalCR]}
+		/declare arr_celRegen[${int_celRegenTotal}] string outer
+		/declare timer_celregen					timer   outer	0
+		|   Parse the chain's character list to an array
+		/declare int_celRegenPosition			int		outer   1
+		/declare str_celRegenPPriest            string  outer   NONE
+		/call setCelRegenChain
 
-
+		/echo Celestial Regeneration:${bln_hasCelRegen} || Total Chars:${int_celRegenTotal} || Position:${int_celRegenPosition} || Previous::${str_celRegenPPriest}
+		/echo ---------------
+	}
 	|-- Various Flags
 	/declare	int_currentHP			int 	outer	100
 	/declare 	str_currentHeal			string	outer	${str_heal_normal}
