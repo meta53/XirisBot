@@ -148,8 +148,8 @@ Sub Main(string _channel, string _announce, bool _useDownFlags, bool _highRisk)
 		/call setRSTVars
 		/call chkZone
 		/if (${Macro.Return.Equal[LOBBY]}) {
-			/bc We seem to have gotten fucked up and are now in the lobby at ${Time.Time24}
-			/bc Resetting everything and going again
+			/dgt We seem to have gotten fucked up and are now in the lobby at ${Time.Time24}
+			/dgt Resetting everything and going again
 			/call OriginToLobby
 			/call ResetAtLobby
 			/delay 10s
@@ -454,7 +454,7 @@ Sub zoneLDON
 	:ZoneIntoLDONInstance
 	/call chkGroup
 	/echo Everyone At the ${zoneStart} and at ${ldonEntrance} ${Time.Time24}
-	/bc Everyone At the ${zoneStart} and at ${ldonEntrance} ${Time.Time24}
+	/dgt Everyone At the ${zoneStart} and at ${ldonEntrance} ${Time.Time24}
 	/echo All ready, Zone in
 	/delay 10
 	/docommand /${cmdChannel} //switch ${dtIN}
@@ -1189,14 +1189,14 @@ Sub chkBuffs
 			|-- Check for Haste
 			/if (!${Me.Buff[Hastening of Salik].ID} || (${Me.Buff[Hastening of Salik].ID} && ${Me.Buff[Hastening of Salik].Duration.Seconds} < 45)) {
 				/g Requesting Haste from ${str_groupENCname}
-				/bc ${str_groupENCname} doSpecificBuffOnChar Hastening of Salik
+				/dgt ${str_groupENCname} doSpecificBuffOnChar Hastening of Salik
 				/varset timer_buffENC 30s
 				/varset int_wait ${int_wait} + 5
 			}
 			|-- Check for Mana
 			|/if (!${Me.Buff[Voice of Clairvoyance].ID}) {
 			|	/g Requesting VOC from ${str_groupENCname}
-			|	/bc ${str_groupENCname} doSpecificBuffOnChar Voice of Clairvoyance
+			|	/dgt ${str_groupENCname} doSpecificBuffOnChar Voice of Clairvoyance
 			|	/varset timer_buffENC 30s
 			|	/varset int_wait ${int_wait} + 5
 			|}
@@ -1209,14 +1209,14 @@ Sub chkBuffs
 			|-- Check for 9
 			/if (!${Me.Buff[Blessing of Steeloak].ID} || (${Me.Buff[Blessing of Steeloak].ID} && ${Me.Buff[Blessing of Steeloak].Duration.Seconds} < 45)) {
 				/g Requesting Bo9 from ${str_groupDRUname}
-				/bc ${str_groupDRUname} doSpecificBuffOnChar Blessing of Steeloak
+				/dgt ${str_groupDRUname} doSpecificBuffOnChar Blessing of Steeloak
 				/varset int_wait ${int_wait} + 5
 				/varset timer_buffDRU 30s
 			}
 			|-- Check for DS
 			/if (!${Me.Buff[Legacy of Nettles].ID} || (${Me.Buff[Legacy of Nettles].ID} && ${Me.Buff[Legacy of Nettles].Duration.Seconds} < 45)) {
 				/g Requesting DS from ${str_groupDRUname}
-				/bc ${str_groupDRUname} doSpecificBuffOnChar Legacy of Nettles
+				/dgt ${str_groupDRUname} doSpecificBuffOnChar Legacy of Nettles
 				/varset int_wait ${int_wait} + 5
 				/varset timer_buffDRU 30s
 			}
@@ -1231,14 +1231,14 @@ Sub chkBuffs
 			/if (${int_groupDRUidx} != -1) {
 				/if (!${Me.Buff[Balikor's Mark].ID} || (${Me.Buff[Balikor's Mark].ID} && ${Me.Buff[Balikor's Mark].Duration.Seconds} < 45)) {
 					/g Requesting Symbol from ${str_groupCLRname}
-					/bc ${str_groupCLRname} doSpecificBuffOnChar Balikor's Mark
+					/dgt ${str_groupCLRname} doSpecificBuffOnChar Balikor's Mark
 					/varset int_wait ${int_wait} + 5
 					/varset timer_buffCLR 30s
 				}
 			} else {
 				/if ((!${Me.Buff[Hand of Virtue].ID} && !${Me.Buff[Blessing of Steeloak].ID}) || (${Me.Buff[Hand of Virtue].ID} && ${Me.Buff[Hand of Virtue].Duration.Seconds} < 45)) {
 					/g Requesting Aegolism from ${str_groupCLRname}
-					/bc ${str_groupCLRname} doSpecificBuffOnChar Hand of Virtue
+					/dgt ${str_groupCLRname} doSpecificBuffOnChar Hand of Virtue
 					/varset int_wait ${int_wait} + 5
 					/varset timer_buffCLR 30s
 				}
@@ -1253,28 +1253,28 @@ Sub chkBuffs
 			|-- Check for Focus
 			/if (!${Me.Buff[Talisman of Wunshi].ID} || (${Me.Buff[Talisman of Wunshi].ID} && ${Me.Buff[Talisman of Wunshi].Duration.Seconds} < 45)) {
 				/g Requesting Focus from ${str_groupSHMname}
-				/bc ${str_groupSHMname} doSpecificBuffOnChar Talisman of Wunshi
+				/dgt ${str_groupSHMname} doSpecificBuffOnChar Talisman of Wunshi
 				/varset int_wait ${int_wait} + 5
 				/varset timer_buffSHM 30s
 			}
 			|-- Check for STR
 			|/if (!${Me.Buff[Talisman of Might].ID}) {
 			|	/g Requesting Might from ${str_groupSHMname}
-			|	/bc ${str_groupSHMname} doSpecificBuffOnChar Talisman of Might
+			|	/dgt ${str_groupSHMname} doSpecificBuffOnChar Talisman of Might
 			|	/varset int_wait ${int_wait} + 5
 			|	/varset timer_buffSHM 30s
 			|}
 			|-- Check for STA
 			/if (!${Me.Buff[Talisman of Fortitude].ID} || (!${Me.Buff[Talisman of Fortitude].ID} && ${Me.Buff[Talisman of Fortitude].Duration.Seconds} < 45)) {
 				/g Requesting Fortitude from ${str_groupSHMname}
-				/bc ${str_groupSHMname} doSpecificBuffOnChar Talisman of Fortitude
+				/dgt ${str_groupSHMname} doSpecificBuffOnChar Talisman of Fortitude
 				/varset int_wait ${int_wait} + 5
 				/varset timer_buffSHM 30s
 			}
 			|-- If there is no enchanter, we want haste too
 			/if ((${int_groupENCidx} == -1 && !${Me.Buff[Hastening of Salik].ID} && !${Me.Buff[Talisman of Celerity].ID}) || (${Me.Buff[Talisman of Celerity].ID} && ${Me.Buff[Talisman of Celerity].Duration.Seconds} < 45)) {
 				/g Requesting Haste from ${str_groupSHMname}
-				/bc ${str_groupSHMname} doSpecificBuffOnChar Talisman of Celerity
+				/dgt ${str_groupSHMname} doSpecificBuffOnChar Talisman of Celerity
 				/varset int_wait ${int_wait} + 5
 				/varset timer_buffSHM 30s
 			}
@@ -1309,20 +1309,20 @@ Sub setGroupCommands
 	|   if SK is the tank we dont need offtank really.
 	/if (${Me.Class.ShortName.NotEqual[SHD]}) {
 		/if (${offtank.Equal[NULL]}) {
-			/bct ${bard} offtankOn
+			/dex ${bard} offtankOn
 		} else {
-			/bct ${offtank} offtankOn
+			/dex ${offtank} offtankOn
 		}
 		
 	}
 	|-- tell the bard to sing a song
-	/if (${bard.NotEqual[NOT_FOUND]})  /bct ${bard} //medley melee
+	/if (${bard.NotEqual[NOT_FOUND]})  /dex ${bard} /medley melee
 
 	|-- find not cleric/tank to loot
-	/if (${looter.NotEqual[NOT_FOUND]}) /bct ${looter} lootOn ALL
+	/if (${looter.NotEqual[NOT_FOUND]}) /dgt ${looter} lootOn ALL
 	
 	|-- turn on melee and aggro
-	/squelch /bcga //melee on
+	/squelch /dgga /melee on
 	/melee aggro=on
 
 	

@@ -94,7 +94,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 	/call variant_initialize
 
 	|-- report my status
-	/bc [${Me.Class.ShortName}] ${Me.Name} ${str_action} >> ${Spawn[${_tank1Name}].CleanName} <<  @ ${int_point_tankNormal} ${_assistArgs}
+	/dgt [${Me.Class.ShortName}] ${Me.Name} ${str_action} >> ${Spawn[${_tank1Name}].CleanName} <<  @ ${int_point_tankNormal} ${_assistArgs}
 
 	|-- target the MT
 	/call TrueTarget ${int_MTID}
@@ -334,7 +334,7 @@ Sub Event_AutoRezOn
 /return
 
 Sub AutoRezON
-	/bc ${Me.Name} is now auto rezzing out of combat.
+	/dgt ${Me.Name} is now auto rezzing out of combat.
 	/varset bln_autoRez TRUE
 /return 
 
@@ -343,7 +343,7 @@ Sub Event_AutoRezOff
 /return 
 
 Sub AutoRezOFF
-	/bc ${Me.Name} is no auto rezzing out of combat.
+	/dgt ${Me.Name} is no auto rezzing out of combat.
 	/varset bln_autoRez FALSE
 /return
 
@@ -353,7 +353,7 @@ Sub Event_CombatRezON
 /return
 
 Sub CombatRezON 
-	/bc ${Me.Name} is now auto rezzing during combat.
+	/dgt ${Me.Name} is now auto rezzing during combat.
 	/varset bln_autoRez TRUE
 	/varset bln_combatRez TRUE
 /return 
@@ -474,18 +474,18 @@ Sub chkYaulp
 |SUB: setMTFromEvent
 |--------------------------------------------------------------------------------
 Sub setMTFromEvent(string cmd, string param)
-	/bc setMTFromEvent:: ${cmd} ${param}
+	/dgt setMTFromEvent:: ${cmd} ${param}
 	/call setMT ${param}
 /return
 
 Sub EVENT_BattleCleric(string _line, string _sender, string _eventParams)
 	|--Toggle Battle Cleric mode!
 	/if (${_eventParams.Equal[ON]}) {
-		/bc ${Me.Name} is now a battle cleric!
+		/dgt ${Me.Name} is now a battle cleric!
 		/varset bln_battleCleric TRUE
 	}
 	/if (${_eventParamsEqual[OFF]}) {
-		/bc ${Me.Name} is no longer a battle cleric.
+		/dgt ${Me.Name} is no longer a battle cleric.
 		/varset bln_battleCleric FALSE
 	}
 /return		

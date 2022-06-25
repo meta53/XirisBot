@@ -961,7 +961,7 @@ Sub InvisOff
 |SUB: Event_EndMac
 |--------------------------------------------------------------------------------
 Sub Event_EndMac
-	/bc Someone told me to end the macro it! ${Time}
+	/dgt Someone told me to end the macro it! ${Time}
 	/delay 1s
 	/gate
 	/delay 2m
@@ -1140,7 +1140,7 @@ Sub getMT
 	/if (${int_MTID} == ${Me.ID}) {
 		/varset bln_tanking TRUE
 		/melee aggro=on
-		/bc changeMT ${Me.Name}
+		/dgt changeMT ${Me.Name}
 	}
 
 
@@ -1209,7 +1209,7 @@ Sub EVENT_ChangeMT(_line, _sender, _eventParams)
 	/varset str_tankName1 ${name} 
 
 	/echo MTID: ${int_MTID} MTName: ${name}
-	/bc [${Me.Class.ShortName}] ${Me.Name} ${str_action} >> ${Spawn[id ${int_MTID}].CleanName} <<  @ ${int_point_tankNormal}
+	/dgt [${Me.Class.ShortName}] ${Me.Name} ${str_action} >> ${Spawn[id ${int_MTID}].CleanName} <<  @ ${int_point_tankNormal}
 	/if (${Me.Class.ShortName.Equal[CLR]}) /call TrueTarget ${int_MTID}
 	/if (${Me.Name.Equal[${name}]}) {
 		/varset bln_tanking TRUE
@@ -1235,7 +1235,7 @@ Sub EVENT_ChangeAP(_line, _sender, _eventParams)
 		/echo AP (AssistPoint) Change called! Changing to: ${chatTe_eventParamsxt.Arg[1, ]}
 		/declare AP int local ${_eventParams.Arg[1, ]}
 		/varset	int_assistAt ${AP}
-		/bc [${Me.Class.ShortName}] ${Me.Name} ${str_action} >> ${Spawn[id ${int_MTID}].CleanName} <<  @ ${int_assistAt}
+		/dgt [${Me.Class.ShortName}] ${Me.Name} ${str_action} >> ${Spawn[id ${int_MTID}].CleanName} <<  @ ${int_assistAt}
 	}
 	/doevents flush ChangeAP
 /return

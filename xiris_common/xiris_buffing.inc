@@ -92,7 +92,7 @@ Sub EVENT_DORAIDBUFFS(_line, _chatSender, _eventParams)
 	/delay 10
 	/if (${bln_doRaidBuff}) 		/call doRaidBuffs
 	/if (${bln_doSingleTargetBuff}) /call doSingleTargetBuffOnRaid
-	/bc ${Me.Class.Name} RAID BUFF [${_eventParams}] COMPLETE
+	/dgt ${Me.Class.Name} RAID BUFF [${_eventParams}] COMPLETE
 	/delay 10
 	/memspellset default
 
@@ -108,7 +108,7 @@ Sub EVENT_DOCHARBUFFS(_line, _chatSender, _eventParams)
 	/delay 10
 	/call doGroupBuffOnTarget ${_eventParams}
 	/call doSingleTargetBuffOnChar ${_eventParams}
-	/bc ${Me.Class.Name} CHARBUFF [${_eventParams}] COMPLETE
+	/dgt ${Me.Class.Name} CHARBUFF [${_eventParams}] COMPLETE
 	/delay 10
 	/memspellset default
 	
@@ -122,7 +122,7 @@ Sub EVENT_DOGROUPBUFFS(_line, _chatSender, _eventParams)
 	/memspellset buff
 	/echo Doing Group Buffs [OOCBUFF]
 	/call doGroupBuffOnTarget ${Me.Name}
-	/bc ${Me.Class.Name} GROUP BUFF COMPLETE
+	/dgt ${Me.Class.Name} GROUP BUFF COMPLETE
 	/delay 10
 	/memspellset default
 	
@@ -646,7 +646,7 @@ Sub chkOOCBuffs
 |----------------------------------------------------|
 |- Attempts to remove specified buffs on NetBots.	-|
 |----------------------------------------------------|
-|- Use, /bc Remove [Name], or /bc Remove 'Name'.	-|
+|- Use, /dgt Remove [Name], or /dgt Remove 'Name'.	-|
 |----------------------------------------------------|
 
 Sub EVENT_REMOVEBUFF(_line, _chatSender, _eventParams)

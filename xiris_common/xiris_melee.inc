@@ -217,12 +217,12 @@ Sub Event_AutoAssist(string _eventParams)
 /return
 
 Sub AutoAssistON
-	/bc ${Me.Name} is now AutoAssisting!
+	/dgt ${Me.Name} is now AutoAssisting!
 	/varset bln_autoAssist TRUE
 /return
 
 Sub AutoAssistOFF
-	/bc ${Me.Name} is no longer AutoAssisting.
+	/dgt ${Me.Name} is no longer AutoAssisting.
 	/varset bln_autoAssist FALSE
 /return
 
@@ -232,12 +232,12 @@ Sub Event_Leashing(string _eventParams)
 /return 
 
 Sub LeashingON
-	/bc ${Me.Name} is now Leashing!
+	/dgt ${Me.Name} is now Leashing!
 	/varset bln_useLeash TRUE
 /return 
 
 Sub LeashingOFF
-	/bc ${Me.Name} is no longer Leashing.
+	/dgt ${Me.Name} is no longer Leashing.
 	/varset bln_useLeash FALSE
 /return
 

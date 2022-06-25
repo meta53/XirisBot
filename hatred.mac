@@ -1,38 +1,38 @@
 #Turbo 20
 Sub Main 
     | Set Xiris (MT) Healing
-    /bct Xiris //end
-    /bct Xerael changeMT Xiris
-    /bct Xarael changeMT Xiris
-    /bct Xorael changeMT Xiris
-    /bct Xunshia changeMT Xiris
-    /bct Xurael changeMT Xiris
-    /bct Xanshia changeMT Xiris
-    /bct Dogmatist changeMT Xiris
+    /dt Xiris //end
+    /dt Xerael changeMT Xiris
+    /dt Xarael changeMT Xiris
+    /dt Xorael changeMT Xiris
+    /dt Xunshia changeMT Xiris
+    /dt Xurael changeMT Xiris
+    /dt Xanshia changeMT Xiris
+    /dt Dogmatist changeMT Xiris
 
     | Set Xirin (SA) Healing
-    /bct Theist changeMT Xirin
-    /bct Tragic changeMT Xirin
-    /bct Xirael changeMT Xirin
-    /bct Xenshia changeMT Xirin
-    /bct Xinshia changeMT Xirin
+    /dt Theist changeMT Xirin
+    /dt Tragic changeMT Xirin
+    /dt Xirael changeMT Xirin
+    /dt Xenshia changeMT Xirin
+    /dt Xinshia changeMT Xirin
 
     | Set Xiria (OT) Healing
-    /bct Xonshia changeMT Xiria
-    /bct Deist changeMT Xiria
-    /bct Nihilist changeMT Xiria
-    /bct Empathic changeMT Xiria
-    /bct Pantheon changeMT Xiria
+    /dt Xonshia changeMT Xiria
+    /dt Deist changeMT Xiria
+    /dt Nihilist changeMT Xiria
+    /dt Empathic changeMT Xiria
+    /dt Pantheon changeMT Xiria
 
     | Set the mode to efficient
-    /bc healMode EFFICIENT 
-    /bct Xiris //melee aggro=on
-    /bct Xiria //melee aggro=on
-    /bct Xirin //melee aggro=on
-    /bct Xiria offtankON
-    /bct Xirea offtankON
-    /bct Sadelia offtankON
+    /dgt healMode EFFICIENT 
+    /dt Xiris //melee aggro=on
+    /dt Xiria //melee aggro=on
+    /dt Xirin //melee aggro=on
+    /dt Xiria offtankON
+    /dt Xirea offtankON
+    /dt Sadelia offtankON
 
     | Set the macro to raid commands for Xirin
-    /bct xirin //mac raidcmds
+    /dt xirin //mac raidcmds
 /return

@@ -1,33 +1,33 @@
 #Turbo 20
 Sub Main 
     | Set Xiris (MT) Healing 
-    /bct Xerael changeMT Xiris
-    /bct Xarael changeMT Xiris
-    /bct Xorael changeMT Xiris
-    /bct Xunshia changeMT Xiris
-    /bct Xurael changeMT Xiris
-    /bct Xanshia changeMT Xiris
-    /bct Dogmatist changeMT Xiris
+    /dt Xerael changeMT Xiris
+    /dt Xarael changeMT Xiris
+    /dt Xorael changeMT Xiris
+    /dt Xunshia changeMT Xiris
+    /dt Xurael changeMT Xiris
+    /dt Xanshia changeMT Xiris
+    /dt Dogmatist changeMT Xiris
 
     | Set Xirea (SA) Healing
-    /bct Xirea offtankON
-    /bct Theist changeMT Xirea
-    /bct Tragic changeMT Xirea
-    /bct Xirael changeMT Xirea
-    /bct Xenshia changeMT Xirea
-    /bct Xinshia changeMT Xirea
+    /dt Xirea offtankON
+    /dt Theist changeMT Xirea
+    /dt Tragic changeMT Xirea
+    /dt Xirael changeMT Xirea
+    /dt Xenshia changeMT Xirea
+    /dt Xinshia changeMT Xirea
 
     | Set Xiria (OT) Healing
-    /bct Xiria offtankON
-    /bct Xonshia changeMT Xiria
-    /bct Deist changeMT Xiria
-    /bct Nihilist changeMT Xiria
-    /bct Empathic changeMT Xiria
-    /bct Pantheon changeMT Xiria
+    /dt Xiria offtankON
+    /dt Xonshia changeMT Xiria
+    /dt Deist changeMT Xiria
+    /dt Nihilist changeMT Xiria
+    /dt Empathic changeMT Xiria
+    /dt Pantheon changeMT Xiria
 
     | Set the mode to efficient
-    /bc healMode EFFICIENT 
-    /bct Xiris //melee aggro=on
-    /bct Xiria //melee aggro=on
-    /bct Xirea //melee aggro=on
+    /dgt healMode EFFICIENT 
+    /dt Xiris //melee aggro=on
+    /dt Xiria //melee aggro=on
+    /dt Xirea //melee aggro=on
 /return

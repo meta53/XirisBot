@@ -97,7 +97,7 @@ Sub EVENT_ChangeHP(string chatText)
 		/echo HP (HealPoint) Change called! Changing to: ${chatText.Arg[3]}
 		/declare HP int local ${chatText.Arg[3]}
 		/varset	int_point_tankNormal ${HP}
-		/bc [${Me.Class.ShortName}] ${Me.Name} ${str_action} >> ${Spawn[id ${int_MTID}].CleanName} <<  @ ${int_point_tankNormal}
+		/dgt [${Me.Class.ShortName}] ${Me.Name} ${str_action} >> ${Spawn[id ${int_MTID}].CleanName} <<  @ ${int_point_tankNormal}
 	}
 	/doevents flush ChangeHP
 /return
@@ -468,17 +468,17 @@ Sub healCast(int _id, string _name, string _spell)
  ----------------------------
 **|
 Sub healDivineArbitration
-	/if (${bln_annouce}) /bc Incoming Divine Arbitration 
+	/if (${bln_annouce}) /dgt Incoming Divine Arbitration 
  
     /if (${Me.AltAbilityReady[divine arbitration]}) {
         /call MQ2Cast "Divine Arbitration" alt 2s chkDA
     } else /if (!${FindItem[${str_epicName}].Timer}) {
         /call MQ2Cast ${str_epicName} item 2s chkDA
     } else {
-        /if (${bln_annouce}) /bc No Saves Ready, we are boned.
+        /if (${bln_annouce}) /dgt No Saves Ready, we are boned.
     }
     /if ((${bln_healAfterArb})&&(${Me.PctMana}>40)) { 
-        /if (${bln_annouce}) /bc Incoming ${str_heal_group}
+        /if (${bln_annouce}) /dgt Incoming ${str_heal_group}
         /call MQ2Cast "${str_heal_group}" gem4 2s 
     } 
 /return
@@ -532,7 +532,7 @@ Sub chkHP
 		/for gmember 0 to ${Group.Members}
     		/if (${Group.Member[${gmember}].PctHPs}<=${int_point_divineArb}) {
     			| add a check for member in group here
-    			/bc ${Group.Member[${gmember}].Name} triggered Divine Arbitration!
+    			/dgt ${Group.Member[${gmember}].Name} triggered Divine Arbitration!
     			/call Interrupt
     			/call healDivineArbitration
     			/return
@@ -644,7 +644,7 @@ Sub heal_chStart(string _chSettings, _position)
 		/if (${bln_chPaused}) /goto :chPause
 		/call TrueTarget ${int_chTarget}
 		:chCast
-	 	/bc [${int_chChainID}]:[${pos}] CHC->${tank1} hp:${Target.PctHPs} d:${Target.Distance} m:${Me.PctMana}
+	 	/dgt [${int_chChainID}]:[${pos}] CHC->${tank1} hp:${Target.PctHPs} d:${Target.Distance} m:${Me.PctMana}
 		/call MQ2Cast "${str_heal_complete}" gem9 1s RunClassEvents
 		/echo CH Cast ${Macro.Return}, delaying: ${delay}ms
 		/if (${Macro.Return.Equal[CAST_FIZZLE]}) {
@@ -672,7 +672,7 @@ Sub heal_chStart(string _chSettings, _position)
 /return
 
 
-|-- Switch the MT of the ch chain. /bc CHStop 1
+|-- Switch the MT of the ch chain. /dgt CHStop 1
 Sub EVENT_CHPause(_line, _sender, _eventParams)
 	/cecho \awCHPause ${_eventParams}
 	/call heal_chPause ${_eventParams}
@@ -696,7 +696,7 @@ Sub heal_chResume
 	/varset timer_chPaused 0
 /return
 
-|-- Switch the MT of the ch chain. /bc CHStop 1
+|-- Switch the MT of the ch chain. /dgt CHStop 1
 Sub EVENT_CHStop(_line, _sender, _eventParams)
 	/if (!${bln_chChainMember}) /return
 	/cecho \awCHStop ${_eventParams}
@@ -712,7 +712,7 @@ Sub heal_chStop(int _chainID)
 	}
 /return
 
-|-- Switch the MT of the ch chain. /bc CHSwitch 1 Xiria
+|-- Switch the MT of the ch chain. /dgt CHSwitch 1 Xiria
 Sub EVENT_CHSwitch(_line, _sender, _eventParams)
 	/if (!${bln_chChainMember}) /return
 	

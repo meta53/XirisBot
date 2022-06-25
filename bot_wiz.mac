@@ -63,7 +63,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 	/call variant_initialize
 
 	|-- report my status
-	/bc [${Me.Class.ShortName}] ${Me.Name} ${str_action} >> ${Spawn[${_tank1Name}].CleanName} <<
+	/dgt [${Me.Class.ShortName}] ${Me.Name} ${str_action} >> ${Spawn[${_tank1Name}].CleanName} <<
 
 	|-- target the MT
 	/call TrueTarget ${int_MTID}
@@ -245,7 +245,7 @@ SUB EVENT_AEOFF
 SUB EVENT_FIRETL
 	/if (!${bln_tlUse}) /return
 	/doevents flush
-	/bc Firing TL
+	/dgt Firing TL
 	/call MQ2Cast "${str_tlSpell}" ${str_tlGem}
 	/delay 1m
 	/memspellset default

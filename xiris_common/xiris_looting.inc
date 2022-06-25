@@ -65,7 +65,7 @@ Sub EnableLooting(string _eventParams)
 	/echo _eventParams: ${_eventParams}
 	/call ParseLootINI 
 	| Announce
-	/bc ${Me.Name} is now Looting
+	/dgt ${Me.Name} is now Looting
 	/hidecorpse looted
 	/varset bln_onlyQuest FALSE
 	/if (${_eventParams.Equal[QUEST]}) /varset bln_onlyQuest TRUE
@@ -77,13 +77,13 @@ Sub EnableLooting(string _eventParams)
 Sub EVENT_LOOT_OFF
 	/call DisableLooting
 	| Announce
-	/bc ${Me.Name} is no longer Looting
+	/dgt ${Me.Name} is no longer Looting
 	/doevents flush LOOT_OFF
 /return
 
 Sub DisableLooting
 	| Annnounce
-	/bc ${Me.Name} is no longer looting
+	/dgt ${Me.Name} is no longer looting
 	/hidecorpse npc
 	/varset bln_lootAuto FALSE
 /return 
@@ -94,7 +94,7 @@ Sub EVENT_LOOT_REFRESH
 /return
 
 Sub RefreshLoot
-	/bc ${Me.Name} is refreshing the loot ini file
+	/dgt ${Me.Name} is refreshing the loot ini file
 	/call ParseLootINI xiris_common/xiris_loot.ini
 /return
 

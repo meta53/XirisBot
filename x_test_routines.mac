@@ -1,0 +1,73 @@
+
+#Turbo 10
+#include xiris_common/xiris_common.inc
+
+Sub Main
+	/call xbot_initialize_looting
+	/call ParseLootINI
+	
+/return
+
+Sub chkDivineIntervention
+	/if (${FindItemCount[Emerald]} && ${Me.SpellReady[Divine Intervention]} && !${NetBots[${Target.Name}].Buff[Divine Intervention].Name.Equal[Divine Intervention]}) {
+		/say Casting Divine Intervention on ${Target.Name}!
+		/call Cast "Divine Intervention"
+	}
+/return
+
+Sub PrepareSpellNameForCast(string _spell)
+	/declare qSpell string local
+	/echo pre: ${_spell}
+	/echo Find:${_spell.Left[1]}
+	/varset qSpell ${_spell}
+	|/if (${_spell.Left[1]})
+/return ${qSpell}
+
+Sub chkSpellMemorized(string _spell, bool _wait, _gem)
+	/echo chkSpellMemorized ${_spell} ${_wait} ${_gem}
+	:start
+	/if (${Me.Gem[${_spell}]}) /goto :return
+	/echo ${_gem.Equal[NULL]} ${_gem.Length} == 0
+	/declare intGem int local 9
+	/echo intGem ${intGem}
+	/if (${_gem.Length} == 0) {
+		/echo Gem is undefined using default
+		/varset intGem  9
+	} else {
+		/if (${_gem.Find[gem]}) {
+		/call StripGem ${_gem}
+		/varset intGem ${Macro.Return}
+		} else {
+			/echo setting intGem to ${_gem}
+			/varset intGem ${_gem}
+		}
+	}
+	
+	
+
+	:mem
+		/echo memorizing "${_spell}" ${intGem} 
+		/memorize "${_spell}" ${intGem} 
+		/if (!${_wait}) /goto :return
+		:memwait
+			/echo memwait
+			/delay 10
+			/if (${Me.SpellReady[${_spell}]}) /goto :return
+			/goto :memwait
+:return
+/g returning
+/return 
+
+Sub StripGem(string _gem) 
+	/echo stripping Gem ${_gem}
+	/declare l int local ${_gem.Length}
+	/echo ${l}
+	/declare r int local ${Math.Calc[${l} - 3]} 
+	/echo ${r}
+	/declare intGem int local ${_gem.Right[${r}]}
+	/echo intGem: ${intGem}
+/return ${intGem}
+
+Sub footest
+	/echo footest
+/return

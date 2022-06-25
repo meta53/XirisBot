@@ -264,7 +264,7 @@ Sub Event_HatchetStand
 
 Sub Event_HatchetClose
 	/if (${Zone.ShortName.NotEqual[dreadspire_raid]}) /return
-	/bc Hatchet needs me under his legs.
+	/dgt Hatchet needs me under his legs.
 	/varset hClose	TRUE
 	/waypoint update ${Me.Name}_Hatchet
 	/tar Hatchet
@@ -274,7 +274,7 @@ Sub Event_HatchetClose
 
 Sub Event_HatchetCloseEnd
 	/if (${Zone.ShortName.NotEqual[dreadspire_raid]}) /return
-	/bc Hatchet no longer needs me under his legs.
+	/dgt Hatchet no longer needs me under his legs.
 	/varset hClose	FALSE
 	/warp wp ${Me.Name}_Hatchet
 	/delay 1
@@ -282,7 +282,7 @@ Sub Event_HatchetCloseEnd
 
 Sub Event_HatchetFar
 	/if (${Zone.ShortName.NotEqual[dreadspire_raid]}) /return
-	/bc Hatchet has me runnign away
+	/dgt Hatchet has me running away
 	/varset hFar	TRUE
 	/waypoint update ${Me.Name}_Hatchet
 	/warp s
@@ -290,7 +290,7 @@ Sub Event_HatchetFar
 
 Sub Event_HatchetFarEnd
 	/if (${Zone.ShortName.NotEqual[dreadspire_raid]}) /return
-	/bc Hatchet no longer needs me a zone in
+	/dgt Hatchet no longer needs me a zone in
 	/varset hFar	FALSE
 	/warp wp ${Me.Name}_Hatchet
 /return

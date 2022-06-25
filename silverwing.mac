@@ -9,6 +9,7 @@ REVISION HISTORY
     05.19.22	xiris	INITIAL REVISION
     05.28.22    xiris   ALL DONE! All 54 toons have their Silverwing Charm
     05.28.22    xiris   Added KT for skin samples, etc. Might as well use this framework going forward to set looters
+	06.25.22	xiris 	Updated to use Dannet
 ______________________________________________
 REQUIRED PLUGINS
 
@@ -39,55 +40,55 @@ Sub Main
 /return
 
 Sub SkinSamples 
-    /bct Achlys     looton QUEST
-    /bct Achos      looton QUEST
-    /bct Adikia     looton QUEST
-    /bct Aergia     looton ALL
-    /bct Aidos      looton QUEST
-    /bct Ania       looton QUEST
-    /bct Cereborn   looton QUEST
-    /bct Deist      looton QUEST
-    /bct Dogmatist  looton QUEST
-    /bct Drexia     looton QUEST
-    /bct Empathic   looton QUEST
-    /bct Erinyas    looton QUEST
-    /bct Erinyes    looton QUEST
-    /bct Ertris     looton QUEST
-    /bct Mluian     looton QUEST
-    /bct Nihilist   looton QUEST
-    /bct Ophelia    looton QUEST
-    /bct Ophemia    looton QUEST
-    /bct Ophenia    looton QUEST
-    /bct Opheoia    looton QUEST
-    /bct Ophexia    looton QUEST
-    /bct Opheyia    looton QUEST
-    /bct Ophezia    looton QUEST
-    /bct Pantheon   looton QUEST
-    /bct Sadelia    looton QUEST
-    /bct Shinxia    looton QUEST
-    /bct Shynxia    looton QUEST
-    /bct Theist     looton QUEST
-    /bct Tragic     looton QUEST
-    /bct Xaeliea    looton QUEST
-    /bct Xaexa      looton QUEST
-    /bct Xaia       looton QUEST
-    /bct Xanshia    looton QUEST
-    /bct Xarael     looton QUEST
-    /bct Eurydice       looton QUEST
-    /bct Xeixa      looton QUEST
-    /bct Xeixi      looton QUEST
-    /bct Xenshia    looton QUEST
-    /bct Xepatia    looton QUEST
-    /bct Xeqisa     looton QUEST
-    /bct Xerael     looton QUEST
-    /bct Xiexa      looton QUEST
-    /bct Xinshia    looton QUEST
-    /bct Xirael     looton QUEST
-    /bct Xirin      looton QUEST
-    /bct Xonshia    looton QUEST
-    /bct Xorael     looton QUEST
-    /bct Xunshia    looton QUEST
-    /bct Xurael     looton QUEST
+    /dt Achlys     looton QUEST
+    /dt Achos      looton QUEST
+    /dt Adikia     looton QUEST
+    /dt Aergia     looton ALL
+    /dt Aidos      looton QUEST
+    /dt Ania       looton QUEST
+    /dt Cereborn   looton QUEST
+    /dt Deist      looton QUEST
+    /dt Dogmatist  looton QUEST
+    /dt Drexia     looton QUEST
+    /dt Empathic   looton QUEST
+    /dt Erinyas    looton QUEST
+    /dt Erinyes    looton QUEST
+    /dt Ertris     looton QUEST
+    /dt Mluian     looton QUEST
+    /dt Nihilist   looton QUEST
+    /dt Ophelia    looton QUEST
+    /dt Ophemia    looton QUEST
+    /dt Ophenia    looton QUEST
+    /dt Opheoia    looton QUEST
+    /dt Ophexia    looton QUEST
+    /dt Opheyia    looton QUEST
+    /dt Ophezia    looton QUEST
+    /dt Pantheon   looton QUEST
+    /dt Sadelia    looton QUEST
+    /dt Shinxia    looton QUEST
+    /dt Shynxia    looton QUEST
+    /dt Theist     looton QUEST
+    /dt Tragic     looton QUEST
+    /dt Xaeliea    looton QUEST
+    /dt Xaexa      looton QUEST
+    /dt Xaia       looton QUEST
+    /dt Xanshia    looton QUEST
+    /dt Xarael     looton QUEST
+    /dt Eurydice       looton QUEST
+    /dt Xeixa      looton QUEST
+    /dt Xeixi      looton QUEST
+    /dt Xenshia    looton QUEST
+    /dt Xepatia    looton QUEST
+    /dt Xeqisa     looton QUEST
+    /dt Xerael     looton QUEST
+    /dt Xiexa      looton QUEST
+    /dt Xinshia    looton QUEST
+    /dt Xirael     looton QUEST
+    /dt Xirin      looton QUEST
+    /dt Xonshia    looton QUEST
+    /dt Xorael     looton QUEST
+    /dt Xunshia    looton QUEST
+    /dt Xurael     looton QUEST
 
 /return 
 

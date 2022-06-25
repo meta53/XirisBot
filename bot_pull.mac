@@ -649,7 +649,7 @@ Sub chkBuffs
 			/varset hasBuffLine ${Macro.Return}
 			/if (!${hasBuffLine}) {
 				/g Requesting SYMBOL from ${str_groupCLRname}
-				/bct ${str_groupCLRname} requestBuffLine SYMBOL GROUP ${groupList}
+				/dt ${str_groupCLRname} requestBuffLine SYMBOL GROUP ${groupList}
 				/varcalc int_wait ${int_wait} + 10
 				/varset timer_buffCLR 10m
 			}
@@ -658,7 +658,7 @@ Sub chkBuffs
 			/call chkHasBuffLine AEGO ${Me.Name}
 			/if (!${hasBuffLine}) {
 				/g Requesting AEGO from ${str_groupCLRname}
-				/bct ${str_groupCLRname} requestBuffLine AEGO GROUP ${groupList}
+				/dt ${str_groupCLRname} requestBuffLine AEGO GROUP ${groupList}
 				/varcalc int_wait ${int_wait} + 10
 				/varset timer_buffCLR 10m
 			}
@@ -673,7 +673,7 @@ Sub chkBuffs
 		/varset hasBuffLine ${Macro.Return}
 		/if (!${hasBuffLine}) {
 			/g Requesting ENC_HASTE from ${str_groupENCname}
-			/bct ${str_groupENCname} requestBuffLine ENC_HASTE GROUP ${groupList}
+			/dt ${str_groupENCname} requestBuffLine ENC_HASTE GROUP ${groupList}
 			/varcalc int_wait ${int_wait} + 10
 			/varset timer_buffENC 10m
 		}
@@ -682,7 +682,7 @@ Sub chkBuffs
 		/varset hasBuffLine ${Macro.Return}
 		/if (!${hasBuffLine}) {
 			/g Requesting CRACK from ${str_groupENCname}
-			/bct ${str_groupENCname} requestBuffLine CRACK GROUP ${groupList}
+			/dt ${str_groupENCname} requestBuffLine CRACK GROUP ${groupList}
 			/varcalc int_wait ${int_wait} + 10
 			/varset timer_buffENC 10m
 		}
@@ -695,7 +695,7 @@ Sub chkBuffs
 		/varset hasBuffLine ${Macro.Return}
 		/if (!${hasBuffLine}) {
 			/g Requesting NINE from ${str_groupDRUname}
-			/bct ${str_groupDRUname} requestBuffLine NINE GROUP ${groupList}
+			/dt ${str_groupDRUname} requestBuffLine NINE GROUP ${groupList}
 			/varset int_wait ${int_wait} + 10
 			/varset timer_buffDRU 10m
 		}
@@ -704,7 +704,7 @@ Sub chkBuffs
 		/varset hasBuffLine ${Macro.Return}
 		/if (!${hasBuffLine}) {
 			/g Requesting DRU_DS from ${str_groupDRUname}
-			/bct ${str_groupDRUname} requestBuffLine DRU_DS GROUP ${groupList}
+			/dt ${str_groupDRUname} requestBuffLine DRU_DS GROUP ${groupList}
 			/varset int_wait ${int_wait} + 10
 			/varset timer_buffDRU 10m
 		}
@@ -718,7 +718,7 @@ Sub chkBuffs
 			/varset hasBuffLine ${Macro.Return}
 			/if (!${hasBuffLine}) {
 				/g Requesting SHM_HASTE from ${str_groupSHMname}
-				/bct ${str_groupSHMname} requestBuffLine SHM_HASTE GROUP ${groupList}
+				/dt ${str_groupSHMname} requestBuffLine SHM_HASTE GROUP ${groupList}
 				/varcalc int_wait ${int_wait} + 10
 				/varset timer_buffSHM 10m
 			}
@@ -728,7 +728,7 @@ Sub chkBuffs
 		/varset hasBuffLine ${Macro.Return}
 		/if (!${hasBuffLine}) {
 			/g Requesting STR from ${str_groupSHMname}
-			/bct ${str_groupSHMname} requestBuffLine STR GROUP ${groupList}
+			/dt ${str_groupSHMname} requestBuffLine STR GROUP ${groupList}
 			/varcalc int_wait ${int_wait} + 10
 			/varset timer_buffSHM 10m
 		}
@@ -737,7 +737,7 @@ Sub chkBuffs
 		/varset hasBuffLine ${Macro.Return}
 		/if (!${hasBuffLine}) {
 			/g Requesting STA from ${str_groupSHMname}
-			/bct ${str_groupSHMname} requestBuffLine STA GROUP ${groupList}
+			/dt ${str_groupSHMname} requestBuffLine STA GROUP ${groupList}
 			/varcalc int_wait ${int_wait} + 10
 			/varset timer_buffSHM 10m
 		}
@@ -746,7 +746,7 @@ Sub chkBuffs
 		/varset hasBuffLine ${Macro.Return}
 		/if (!${hasBuffLine}) {
 			/g Requesting AGI from ${str_groupSHMname}
-			/bct ${str_groupSHMname} requestBuffLine AGI GROUP ${groupList}
+			/dt ${str_groupSHMname} requestBuffLine AGI GROUP ${groupList}
 			/varcalc int_wait ${int_wait} + 10
 			/varset timer_buffSHM 10m
 		}

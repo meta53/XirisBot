@@ -54,13 +54,13 @@ Sub ToggleOfftanking(bool _blnOT)
 
 	|--Toggle Offtanking
 	/if (${_blnOT}) {
-		/bc ${Me.Name} is now OFF TANKING!
+		/dgt ${Me.Name} is now OFF TANKING!
 		/varset  bln_offTank TRUE
 		/melee aggro=on
 		/varset bln_aggro TRUE
 	}
 	/if (!${_blnOT}) {
-		/bc ${Me.Name} is ENDING OFF TANKING.
+		/dgt ${Me.Name} is ENDING OFF TANKING.
 		/varset  bln_offTank FALSE
 		/melee aggro=off
 		/varset bln_aggro FALSE
