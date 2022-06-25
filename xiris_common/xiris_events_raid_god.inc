@@ -404,18 +404,22 @@ SUB EVENT_BALANCE
 	|-- Melee Classes
 	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
 		|-- warrior needs to bounce around aggro on balancers
-		/if (${Me.Class.ShortName.Equal[WAR]}) /melee aggro=on
+		/if (${Me.Class.ShortName.Equal[PAL]}) /melee aggro=on
 	
 		|-- Balance of Speed	
+		/keypress esc
 		/call BalancerKillMelee "Balance of Speed" ${Spawn[npc radius 500 Speed].ID} ${bpct}
 
 		|-- Balance of Fury	
+		/keypress esc
 		/call BalancerKillMelee "Balance of Fury" ${Spawn[npc radius 500 Fury].ID} ${bpct}
 
 		|-- Balance of Rage
+		/keypress esc
 		/call BalancerKillMelee "Balance of Rage" ${Spawn[npc radius 500 Rage].ID} ${bpct}
 			
 		|-- Balance of Defense	
+		/keypress esc
 		/call BalancerKillMelee "Balance of Defense" ${Spawn[npc radius 500 Defense].ID} ${bpct}
 
 		|-- return

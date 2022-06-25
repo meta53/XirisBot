@@ -88,13 +88,13 @@ ______________________________________________
 
 
 | Burninating
-#EVENT ShortBurnOn1 
-#EVENT ShortBurnOn2 
+#EVENT ShortBurnOn1 		"#*#ShortBurn1#*#"
+#EVENT ShortBurnOn2 		"#*#ShortBurn2#*#"
 
-#EVENT FullBurnOn1
-#EVENT FullBurnOn2 
+#EVENT LongBurnOn1			"#*#LongBurn1#*#"
+#EVENT LongBurnOn2 			"#*#LongBurn2#*#"
 
-#EVENT MaxiumumBurn
+#EVENT MaxiumumBurn			"#*#MaximumBurn#*#"
 
 
 |MISC events
@@ -153,6 +153,11 @@ Sub Events_Common
 	/doevents Disengage
 	|/doevents QuitExpedition
 	|/doevents ReportBurnKey
+	/doevents ShortBurnOn1 
+	/doevents ShortBurnOn2 
+	/doevents LongBurnOn1 
+	/doevents LongBurnOn2
+	/doevents MaximumBurn
 /return
 
 

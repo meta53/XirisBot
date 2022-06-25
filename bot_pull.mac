@@ -315,6 +315,7 @@ Sub pullTarget
 	
 		| Start the pull by running to the target
 		:RunningToTarget
+		/if (${Target.LineOfSight} && ${Target.Distance} < ${int_castDistance}) /goto :AggroCheck
 		/if (${Me.TargetOfTarget.Name.Equal[${Me.Name}]}) /goto :ReturnWithPull
 		/if (${attempt} > 10) {
 			/target clear
