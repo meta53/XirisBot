@@ -1,6 +1,6 @@
 |**
 ----------------------------
-Signets.mac
+Signets.machealINI
 ----------------------------
 This macro is configured for use by the the puller for zones
 Sets the looters for Signet(s) by zone so I don't have to tell each toon to loot manually
@@ -21,69 +21,82 @@ Sub Main
     /call ${Zone.ShortName}
 /return
 
+Sub dranik 
+    /dt Xirea looton ALL
+    /dt Achos looton ALL
+    /dt Empathic looton ALL
+    /dt Nihilist looton ALL
+    /dt Dogmatist looton ALL 
+    /dt Pantheon looton ALL 
+    /dt tragic looton ALL
+    /dt Mluian looton ALL 
+    /dt Shinxia looton ALL
+    /dt Shynxia looton ALL
+/return
+
 Sub riftseekers 
     | Note: In Riftseeker we want to loot on QUEST, as signets and augments are categorized as such.
     | Leave Aergia as the master looter
-    /bct Aergia looton ALL
+    /dt Aergia looton ALL
     | Clerics Group A
-    /bct Xirael looton QUEST
-    /bct Xinshia looton QUEST
-    /bct Xanshia looton QUEST
-    /bct Xunshia looton QUEST
-    /bct Xonshia looton QUEST
-    /bct Xerael looton QUEST
-    /bct Xarael looton QUEST
-    /bct Xorael looton QUEST
-    /bct Xurael looton QUEST
+    /dt Xirael looton QUEST
+    /dt Xinshia looton QUEST
+    /dt Xanshia looton QUEST
+    /dt Xunshia looton QUEST
+    /dt Xonshia looton QUEST
+    /dt Xerael looton QUEST
+    /dt Xarael looton QUEST
+    /dt Xorael looton QUEST
+    /dt Xurael looton QUEST
     
     | Clerics Group B
     |**
-    /bct Theist looton QUEST
-    /bct Deist looton QUEST
-    /bct Empathic looton QUEST
-    /bct Nihilist looton QUEST
-    /bct Dogmatist looton QUEST
-    /bct Pantheon looton QUEST
-    /bct Tragic looton QUEST
+    /dt Theist looton QUEST
+    /dt Deist looton QUEST
+    /dt Empathic looton QUEST
+    /dt Nihilist looton QUEST
+    /dt Dogmatist looton QUEST
+    /dt Pantheon looton QUEST
+    /dt Tragic looton QUEST
     **|
 
     | Chain Classes Group A
-    /bct Xaeliea looton QUEST
-    /bct Xaexa looton QUEST
-    /bct Xaia looton QUEST
-    /bct Xepatia looton QUEST
-    /bct Ophidia looton QUEST
-    /bct Ophelia looton QUEST
-    /bct Ophemia looton QUEST
-    /bct Ophenia looton QUEST
-    /bct Opheoia looton QUEST
+    /dt Xaeliea looton QUEST
+    /dt Xaexa looton QUEST
+    |/dt Xaia looton QUEST
+    /dt Xepatia looton QUEST
+    |/dt Ophidia looton QUEST
+    /dt Ophelia looton QUEST
+    |/dt Ophemia looton QUEST
+    |/dt Ophenia looton QUEST
+    /dt Opheoia looton QUEST
 
 | Chain Classes Group B
 |**
-    /bct Ophexia looton QUEST
-    /bct Opheyia looton QUEST
-    /bct Ophezia looton QUEST
-    /bct Mluian looton QUEST
-    /bct Shinxia looton QUEST
-    /bct Shynxia looton QUEST
+    /dt Ophexia looton QUEST
+    /dt Opheyia looton QUEST
+    /dt Ophezia looton QUEST
+    /dt Mluian looton QUEST
+    /dt Shinxia looton QUEST
+    /dt Shynxia looton QUEST
 **|
 | Leather Classes
-|**   
-    /bct Ertres looton QUEST
-    /bct Erinyes looton QUEST
-    /bct Ertris looton QUEST
-    /bct Erinyas looton QUEST
-    /bct Drexia looton QUEST
-**|
+  
+    /dt Ertres looton QUEST
+    /dt Erinyes looton QUEST
+    /dt Ertris looton QUEST
+    /dt Erinyas looton QUEST
+    /dt Drexia looton QUEST
+
 
 | Silk Classes
 |**
-    /bct Xeixa looton QUEST
-    /bct Xiexa looton QUEST
-    /bct Xeixi looton QUEST
-    /bct Cereborn looton QUEST
-    /bct Eurydice looton QUEST
-    /bct Xeqisa looton QUEST
+    /dt Xeixa looton QUEST
+    /dt Xiexa looton QUEST
+    /dt Xeixi looton QUEST
+    /dt Cereborn looton QUEST
+    /dt Eurydice looton QUEST
+    /dt Xeqisa looton QUEST
 **|
 /return 
 

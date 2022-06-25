@@ -91,7 +91,7 @@ Sub Main(int _pull_dist, string _channel, int _campCount, bool _useDownFlags)
 			/call doRefreshXTarget
 			/docommand /${cmdChannel} RefreshXTarget
 			/docommand /${cmdChannel} Disengage
-			/hidecorpse npc
+			/if (!${bln_lootAuto}) /hidecorpse npc
 		}
 		
 		|-- run the pull/kill segment

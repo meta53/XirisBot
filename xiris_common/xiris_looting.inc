@@ -9,30 +9,35 @@
 #EVENT LOOT_ON 			"#1# tells you,#*#'looton #2#'"
 #EVENT LOOT_ON 			"#1# tells the group#*#'looton #2#'"
 #EVENT LOOT_ON 			"#1#tells the raid,#*#'looton #2#'"
+#EVENT LOOT_ON  		"[ #1# ]#*#looton #2#"
 
 #EVENT LOOT_OFF 		"<#1#> lootoff#*#"
 #EVENT LOOT_OFF 		"[#1#(msg)] lootoff#*#"
 #EVENT LOOT_OFF 		"#1# tells you,#*#'lootoff#*#'"
 #EVENT LOOT_OFF 		"#1# tells the group#*#'lootoff#*#'"
 #EVENT LOOT_OFF 		"#1#tells the raid,#*#'lootoff#*#'"
+#EVENT LOOT_ON  		"[ #1# ]#*#lootoff#*#"
 
 #EVENT SELL_VENDOR 		"<#1#> selltovendor#*#"
 #EVENT SELL_VENDOR 		"[#1#(msg)] selltovendor#*#"
 #EVENT SELL_VENDOR 		"#1# tells you,#*#'selltovendor#*#'"
 #EVENT SELL_VENDOR 		"#1# tells the group#*#'selltovendor#*#'"
 #EVENT SELL_VENDOR 		"#1#tells the raid,#*#'selltovendor#*#'"
+#EVENT SELL_VENDOR  	"[ #1# ]#*#looton #2#"
 
 #EVENT HIDE_CORPSES 	"<#1#> DoHideCorpses#*#"
 #EVENT HIDE_CORPSES 	"[#1#(msg)] DoHideCorpses#*#"
 #EVENT HIDE_CORPSES 	"#1# tells you,#*#'DoHideCorpses#*#'"
 #EVENT HIDE_CORPSES 	"#1# tells the group#*#'DoHideCorpses#*#'"
 #EVENT HIDE_CORPSES 	"#1#tells the raid,#*#'DoHideCorpses#*#'"
+#EVENT HIDE_CORPSES  	"[ #1# ]#*#looton #2#"
 
 #EVENT HIDE_LOOTED 		"<#1#> DoHideLooted#*#"
 #EVENT HIDE_LOOTED 		"[#1#(msg)] DoHideLooted#*#"
 #EVENT HIDE_LOOTED 		"#1# tells you,#*#'DoHideLooted#*#'"
 #EVENT HIDE_LOOTED 		"#1# tells the group#*#'DoHideLooted#*#'"
 #EVENT HIDE_LOOTED 		"#1#tells the raid,#*#'DoHideLooted#*#'"
+#EVENT HIDE_LOOTED  	"[ #1# ]#*#looton #2#"
 
 Sub InitEvents_Looting
 	/call RegisterBackgroundEvents Events_Looting 6
