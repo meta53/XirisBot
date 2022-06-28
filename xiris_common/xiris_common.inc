@@ -177,7 +177,7 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	|-- [Settings] : Communications & INI Declarations
 	/declare Debug 						bool	outer 	FALSE
 	/declare Verbosity					bool	outer	FALSE
-	/declare cmdChannel 				string	outer	${Ini[botINI,Settings,cmdChannel,bcaa]}
+	/declare cmdChannel 				string	outer	dgt
 	/declare 	mq2meleeEnabled			bool    outer   TRUE
 
 
@@ -1299,8 +1299,11 @@ Sub TrueTarget(int _targetID)
 
 Sub chkAutoAssist
 	/if (!${bln_autoAssist}) /return
-	/call TrueTarget ${NetBots[${str_tankName1}].TargetID}
-	/call EngageTarget ${NetBots[${str_tankName1}].TargetID}
+	/declare tgtID int local
+	/dannet ${str_tankName1} Target.ID
+	/varset tgtID ${Macro.Return}
+	/call TrueTarget ${tgtID}
+	/call EngageTarget ${tgtID}
 /return
 
 
@@ -1604,7 +1607,11 @@ SUB check_selectedBots(_selectedBots, _chatSender)
 
 Sub check_validBots(_selectedBots, _botName, _chatSender)
 	/declare botValidated bool local false
-	/if (${Select[priests,${_selectedBots}]} && ${Select[${NetBots[${_botName}].Class.ShortName},${PriestClasses}]} || ${Select[healers,${_selectedBots}]} && ${Select[${NetBots[${_botName}].Class.ShortName},${PriestClasses}]} || ${Select[ranged,${_selectedBots}]} && ${Select[${NetBots[${_botName}].Class.ShortName},${RangedClasses}]} || ${Select[casters,${_selectedBots}]} && ${Select[${NetBots[${_botName}].Class.ShortName},${CasterClasses}]} || ${Select[melee,${_selectedBots}]} && ${Select[${NetBots[${_botName}].Class.ShortName},${MeleeClasses}]} || ${Select[me,${_selectedBots}]} && ${_chatSender.Equal[${Me.CleanName}]} || ${Select[${Me.Class},${_selectedBots}]} || ${Select[${NetBots[${_botName}].Class.ShortName},${_selectedBots}]} || ${Select[${Me.CleanName},${_selectedBots}]} || ${Select[all,${_selectedBots}]} || ${Select[group,${_selectedBots}]} && ${Me.CleanName.Equal[${_chatSender}]} || ${Select[group,${_selectedBots}]} || ${Select[zone,${_selectedBots}]} && ${SpawnCount[pc ${_chatSender}]}) /varset botValidated TRUE
+	/declare clsShortName string local
+	/dannet ${_botName} Me.Class.ShortName
+	/varset clsShortName ${Macro.Return}
+	
+	/if (${Select[priests,${_selectedBots}]} && ${Select[${clsShortName},${PriestClasses}]} || ${Select[healers,${_selectedBots}]} && ${Select[${clsShortName},${PriestClasses}]} || ${Select[ranged,${_selectedBots}]} && ${Select[${clsShortName},${RangedClasses}]} || ${Select[casters,${_selectedBots}]} && ${Select[${clsShortName},${CasterClasses}]} || ${Select[melee,${_selectedBots}]} && ${Select[${clsShortName},${MeleeClasses}]} || ${Select[me,${_selectedBots}]} && ${_chatSender.Equal[${Me.CleanName}]} || ${Select[${Me.Class},${_selectedBots}]} || ${Select[${clsShortName},${_selectedBots}]} || ${Select[${Me.CleanName},${_selectedBots}]} || ${Select[all,${_selectedBots}]} || ${Select[group,${_selectedBots}]} && ${Me.CleanName.Equal[${_chatSender}]} || ${Select[group,${_selectedBots}]} || ${Select[zone,${_selectedBots}]} && ${SpawnCount[pc ${_chatSender}]}) /varset botValidated TRUE
 	
 
 /return ${botValidated}

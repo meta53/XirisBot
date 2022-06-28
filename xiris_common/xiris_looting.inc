@@ -16,7 +16,7 @@
 #EVENT LOOT_OFF 		"#1# tells you,#*#'lootoff#*#'"
 #EVENT LOOT_OFF 		"#1# tells the group#*#'lootoff#*#'"
 #EVENT LOOT_OFF 		"#1#tells the raid,#*#'lootoff#*#'"
-#EVENT LOOT_ON  		"[ #1# ]#*#lootoff#*#"
+#EVENT LOOT_OFF  		"[ #1# ]#*#lootoff#*#"
 
 #EVENT SELL_VENDOR 		"<#1#> selltovendor#*#"
 #EVENT SELL_VENDOR 		"[#1#(msg)] selltovendor#*#"
@@ -37,7 +37,7 @@
 #EVENT HIDE_LOOTED 		"#1# tells you,#*#'DoHideLooted#*#'"
 #EVENT HIDE_LOOTED 		"#1# tells the group#*#'DoHideLooted#*#'"
 #EVENT HIDE_LOOTED 		"#1#tells the raid,#*#'DoHideLooted#*#'"
-#EVENT HIDE_LOOTED  	"[ #1# ]#*#looton #2#"
+#EVENT HIDE_LOOTED  	"[ #1# ]#*#DoHideLooted#*#"
 
 Sub InitEvents_Looting
 	/call RegisterBackgroundEvents Events_Looting 6

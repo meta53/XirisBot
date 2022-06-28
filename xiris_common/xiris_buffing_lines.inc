@@ -163,10 +163,11 @@ Sub chkHasBuffLine(string _buffLine, string _targetName)
 	/declare 	r 				string	local
 	
 	
-	|-- Netbots returns the list of buffs as a space(Fuck) seperated list
 	/varset 	delim ${list_buffs.Delimiter[ ]}
-	
+	/dannet ${_targetName} Me.Buff[${buffSpell}].ID
+	/varset bStatus ${Macro.Return}
 	/echo Raw NetBot data on ${_targetName}: ${NetBots[${_targetName}].Buff}
+	|-- note, we replaced netbots with dannet
 	/if (${list_buffs.Append[${NetBots[${_targetName}].Buff}]}) {
 		/echo Splitting into list for [${_targetName}]'s Buffs succeeded. Count: ${list_buffs.Count}
 		/vardata li list_buffs.First

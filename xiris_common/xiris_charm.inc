@@ -11,19 +11,21 @@ REVISION HISTORY
 
 
 
-#EVENT  CharmON "#*#CharmON#*#"
-#EVENT  CharmOFF "#*#CharmOFF#*#"
-#EVENT  CharmNPC "#*#CharmNPC #1#"
+#EVENT  CharmON         "#*#CharmON#*#"
+#EVENT  CharmOFF        "#*#CharmOFF#*#"
+#EVENT  CharmNPCByID    "#*#CharmNPCID #1#"
+#EVENT  CharmNPCByName  "#*#CharmNPCName #1#"
 
 Sub InitEvents_Charm
     /if (${Me.Class.ShortName.NotEqual[BRD]} && ${Me.Class.ShortName.NotEqual[ENC]}) /return
-    /call RegisterBackgroundEvents Events_Charm 2
+    /call RegisterBackgroundEvents Events_Charm 4
 /return 
 
 Sub Events_Charm 
     /doevents CharmON 
     /doevents CharmOFF
-    /doevents CharmNPC
+    /doevents CharmNPCByID
+    /doevents CharmNPCByName
 /return
 
 Sub EVENT_CharmON 
@@ -34,11 +36,11 @@ Sub EVENT_CharmOFF
 
 /return 
 
-Sub EVENT_CharmNPCByID(_line, _sender, _eventParams)
+Sub EVENT_CharmNPCByID(_line, _eventParams)
     /echo \ayCharming NPC by ID \ag${_eventParams}
 /return
 
-Sub EVENT_CharmNPCByName(_line, _sender, _eventParams)
+Sub EVENT_CharmNPCByName(_line, _eventParams)
     /echo \ayCharming NPC by Name \ag${_eventParams}
 /return 
 

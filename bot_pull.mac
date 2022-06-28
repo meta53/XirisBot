@@ -48,14 +48,14 @@ REQUIRED INCLUDES
 #event NoLOS				"#*#you cannot see your target#*#"
 #event TooClose				"#*#your target is too close#*#"
 
-Sub Main(int _pull_dist, string _channel, int _campCount, bool _useDownFlags)
+Sub Main(int _pull_dist, string _channel, string _campName, bool _useDownFlags)
 	/delay 5
 
 	|-- initialize common xbot variables
 	/call xbot_initialize ${Me.Name}
 	
 	|-- initialize variables specific to this macro
-	/call variant_initialize ${_pull_dist} ${_channel} ${_campCount} ${_useDownFlags}
+	/call variant_initialize ${_pull_dist} ${_channel} ${_campName} ${_useDownFlags}
 
 	|-- report status
 	/echo Pulling >> ${Zone.Name} @ ${int_maxRadius} Range<<
@@ -260,10 +260,20 @@ Sub chkTarget
 	/varset bln_validTGT	TRUE
 /return 
 
+
+|**
+ ----------------------------
+ Camp Subs
+ ----------------------------
+ Before each pull session, tell everyone to go back to the current camp
+ ----------------------------
+**|
+
 Sub setCamp
-	/echo Setting camp at camp${int_currentCamp} out of ${int_campCount}
+	/cecho \awSetting to Camp \ag${str_campName}
+	/docommand /${cmdChannel} NavToWP ${str_campName}
 	/navigate RecordWaypoint bot_pull_nav
-	/if (${int_currentCamp} == 1) /docommand /${cmdChannel} CreateCamp camp1
+	|/if (${int_currentCamp} == 1) /docommand /${cmdChannel} CreateCamp camp1
 	
 	/varset D1X int outer ${Me.X}
 	/varset D1Y int outer ${Me.Y}
@@ -275,8 +285,18 @@ Sub setCamp
 	|/mqpause on
 /return
 
+Sub resetCamp
+	/cecho \awResetting to Camp \ag${str_campName}
+	/docommand /${cmdChannel} NavToWP ${str_campName}
+	| -- don't run self back to camp its not necessary run to my pull spot instead
+	/nav wp bot_pull_nav
+	/delay 20
+	/nav stop
+/return
+
+
 Sub moveCamp(int _campNumber) 
-	/echo Moving to Camp ${_campNumber}
+	/cecho \awMoving to Camp Number \ag${str_campName}
 	/docommand /${cmdChannel} NavToWP camp${_campNumber}
 	/delay 1
 	:moveCampNavLoop
@@ -832,21 +852,7 @@ Sub chkComponents
 	
 /return	
 		
-|**
- ----------------------------
- resetCamp
- ----------------------------
- Before each pull session, tell everyone to go back to the current camp
- ----------------------------
-**|
 
-Sub resetCamp
-	/docommand /${cmdChannel} NavToWP camp${int_currentCamp}
-	| -- don't run self back to camp its not necessary run to my pull spot instead
-	/nav wp bot_pull_nav
-	/delay 20
-	/nav stop
-/return
 
 |**
  ----------------------------
@@ -856,7 +862,7 @@ Sub resetCamp
  Eventually this needs to be pulled from an INI per zone and per puller!
  ----------------------------
 **|
-Sub variant_initialize(int _pull_dist, string _channel, int _campCount, bool _useDownFlags)
+Sub variant_initialize(int _pull_dist, string _channel, string _campName, bool _useDownFlags)
 	|--loot
 	/varset bln_lootAuto			FALSE
 	/if (${bln_lootAuto}) 			/call EnableLooting
@@ -879,9 +885,10 @@ Sub variant_initialize(int _pull_dist, string _channel, int _campCount, bool _us
 	|--camp counts
 	/declare int_currentCamp		int		outer	1
 	/declare int_campCount			int 	outer	1
+	/declare str_campName           string  outer   camp1
 	/declare bln_increment 			bool	outer	TRUE
-	/if (${Defined[_campCount]}) {
-		/varset int_campCount ${_campCount}
+	/if (${Defined[_campName]}) {
+		/varset str_campName ${_campName}
 	}	
 
 	|--set up the camp logic

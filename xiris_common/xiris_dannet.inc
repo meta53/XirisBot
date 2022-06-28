@@ -38,7 +38,7 @@ Sub Bind_DanNet(DName, DQuery)
             /echo Found Peer ${Name1}
         } else {
             /echo Peer ${Name1} NOT Found in List.
-            /return
+            /return FALSE
         }
     }
     
@@ -57,7 +57,7 @@ Sub Bind_DanNet(DName, DQuery)
         /echo Query (${DQuery}) to Peer ${Name1} Failed or returned NO Data.
     }
    
-/return
+/return ${Response1}
 
 Sub Bind_DTestSet(DAction, P1, P2)
     | Actions: Ping 

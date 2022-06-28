@@ -44,23 +44,17 @@ REQUIRED INCLUDES
 	xiris_common/xiris_common.inc
 **|
 
-#EVENT BattleCleric "<#1#> BattleOn #2#"
-#EVENT BattleCleric "[#1#(msg)] BattleOn #2#"
+#EVENT BattleCleric "#*#BattleOn#*#"
 
-#EVENT CelestialRegeneration "<#1#> celregen#*#"
-#EVENT CelestialRegeneration "[#1#(msg)] celregen#*#"
+#EVENT CelestialRegeneration "#*#celregen#*#"
 
-#EVENT AutoRezON "<#1#>  AutoRezON#*#"
-#EVENT AutoRezON "[#1#(msg)] AutoRezON#*#"
+#EVENT AutoRezON "#*#AutoRezON#*#"
 
-#EVENT AutoRezOFF "<#1#>  AutoRezOFF#*#"
-#EVENT AutoRezOFF "[#1#(msg)] AutoRezOFF#*#"
+#EVENT AutoRezOFF "#*#AutoRezOFF#*#"
 
-#EVENT CombatRezON "<#1#>  CombatRezON#*#"
-#EVENT CombatRezON "[#1#(msg)] CombatRezON#*#"
+#EVENT CombatRezON "#*#CombatRezON#*#"
 
-#EVENT CombatRezOFF "<#1#>  CombatRezOFF#*#"
-#EVENT CombatRezOFF "[#1#(msg)] CombatRezOFF#*#"
+#EVENT CombatRezOFF "#*#CombatRezOFF#*#"
 
 #include xiris_common/xiris_common.inc
 

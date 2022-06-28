@@ -226,6 +226,9 @@ Sub cmbtBuffGRP
 	/declare buffSpell    string	local
 	/declare buffGem	  string	local
 	/declare delay		  int       local	0
+	/declare bStatus 	  string    local 
+	/declare bDuration    string    local
+	/declare bId          string    local
 
 	| -- loop through the combat buffs
 	/for i 1 to ${int_cmbtBuffTotal}
@@ -243,11 +246,13 @@ Sub cmbtBuffGRP
 			/call check_validBots melee ${gName} ${Me.Name} 
 
 			/if (${Macro.Return}) {
-				/if (${NetBots[${gName}].Buff[${buffSpell}].ID} ) {
-					|/cecho \ag ${buffSpell} ${NetBots[${gName}].Buff[${buffSpell}].Duration} remaining on ${gName}
-					|-- Check to see what the duration is (in ticks)
-					|/echo ${buffSpell} duration on ${gName} ${NetBots[${gName}].Buff[${buffSpell}].Duration}
-					/if (${NetBots[${gName}].Buff[${buffSpell}].Duration} < 3 ) {
+				/dannet ${gName} Me.Buff[${buffSpell}].ID
+				/varset bStatus ${Macro.Return}
+				/if (!${Bool[${bStatus}]} ) {
+					/dannet ${gName} Me.Buff[${buffSpell}].Duration
+					/varset bDuration ${Macro.Return}
+					/cecho \awbDuration: \ay${bDuration}
+					/if (${bDuration} < 3 ) {
 						/goto :castCMBTBuff
 					} else {
 						/goto :nextGroupMember
@@ -258,9 +263,11 @@ Sub cmbtBuffGRP
 			} else {
 				/goto :nextGroupMember
 			}
+
 			:castCMBTBuff
 			|/cecho \ayCasting ${buffSpell} on ${gName}
-			/call TrueTarget ${NetBots[${gName}].ID}
+			/dannet ${gName} Me.Id
+			/call TrueTarget ${Macro.Return}
 			/call MQ2Cast "${buffSpell}" ${buffGem}
 			/if (${Cast.Result.Equal[CAST_SUCCESS]}) {
 				/cecho \ag ${buffSpell} ${Cast.Result} : DELAYING for \ay ${Spell[${buffSpell}].Duration}s \agrefresh
@@ -378,7 +385,9 @@ Sub doSingleTargetBuffOnRaid
 			
 			/for i 1 to ${Raid.Members} 
 				/varset charName ${Raid.Member[${i}]}
-				/varset charClass ${NetBots[${charName}].Class.ShortName}
+				/dannet ${charName} Me.Class.ShortName
+				/varset charClass ${Macro.Return}
+	
 				/echo ${charName} ${charClass} : ${buffTargets.Find[${charClass}]}
 				/if (${buffTargets.Find[*]} || ${buffTargets.Find[${charClass}]}) {
 					/cecho \ag${Raid.Member[${i}]} is a valid Single Buff Target
@@ -644,7 +653,7 @@ Sub chkOOCBuffs
 
 
 |----------------------------------------------------|
-|- Attempts to remove specified buffs on NetBots.	-|
+|- Attempts to remove specified buffs on Dannet.	-|
 |----------------------------------------------------|
 |- Use, /dgt Remove [Name], or /dgt Remove 'Name'.	-|
 |----------------------------------------------------|

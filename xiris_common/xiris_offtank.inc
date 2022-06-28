@@ -82,7 +82,7 @@ Sub chkOffTanking
 	:checkOTStart
 	/call RunRaidEvents	
 	
-	/if (${Me.XTarget} == 0) {
+	/if (${Me.XTarget} == 0 && ${SpawnCount[npc radius 100]} == 0) {
 		/if (${Melee.AggroMode}) /melee aggro=off
 		/return
 	}
@@ -90,9 +90,12 @@ Sub chkOffTanking
 	|-- There is one target, and its engaged, so make sure I am smacking it
 	/if (${Me.XTarget} == 1 && ${Me.XTarget[1].ID} && ${bln_engaged}) {
 		/call TrueTarget ${Me.XTarget[1].ID}
-		/if (${Melee.AggroMode}) /melee aggro=off
-		/killthis
-		/return
+		/if (${Me.TargetOfTarget.ID}) {
+			/if (${Melee.AggroMode}) /melee aggro=off
+			/killthis
+			/return
+		}
+		
 	} else { 
 	|-- There is more than one target, let us cycle through them and inspect buffs (make sure they aren't mezzed)
 		/varset max ${Me.XTarget}

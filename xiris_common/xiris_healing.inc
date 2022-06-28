@@ -23,6 +23,7 @@ REVISION HISTORY
 #event GroupHeal  	"#*#DoGroupHeal#*#"
 
 #EVENT HealMode 	"#*#HealMode #1#"
+
 #EVENT InterruptON 	"#*#InterruptON#*#"
 #EVENT InterruptOFF "#*#InterruptOFF#*#"
 
@@ -102,10 +103,12 @@ Sub EVENT_ChangeHP(string chatText)
 	/doevents flush ChangeHP
 /return
 
-Sub EVENT_HealMode(string chatText)
+Sub EVENT_HealMode(_line, _eventParams)
 	/if (${Me.Class.ShortName.NotEqual[CLR]}) /return
 	/echo Changing Heal Mode?
-	/call ChangeHealMode ${chatText.Arg[3]}
+	/echo line ${_line}
+	/echo eventParams ${_eventParams}
+	/call ChangeHealMode ${_eventParams}
 	/doevents flush HealMode
 /return
 
@@ -121,17 +124,21 @@ Sub EVENT_HealMode(string chatText)
  ----------------------------
 **|
 Sub ChangeHealMode(string _strMode)
-	/echo Changing healing mode to ${_strMode}
-	/varset str_healMode ${_strMode}
 	|- Mem the appropriate spell set
-	/if (${_strMode.Equal[CHCHAIN]}) {
+	/if (${_strMode.Find[CHCHAIN]}) {
+		/echo Changing healing mode to DEFAULT
 		/varset str_spellset default
-	} else /if (${_strMode.Equal[EFFICIENT]}) {
+		/varset str_healMode CHCHAIN
+	} else /if (${_strMode.Find[EFFICIENT]}) {
+		/echo Changing healing mode to EFFICIENT
 		/varset str_spellset efficient
 		/varset use_heal_HoT FALSE
+		/varset str_healMode EFFICIENT
 	} else {
+		/echo Changing healing mode to DEFAULT
 		/varset str_spellset default
 		/varset use_heal_HoT TRUE
+		/varset str_healMode DEFAULT
 	}
 	/memspellset ${str_spellset}
 /return
@@ -150,9 +157,9 @@ Sub setCelRegenChain
 	/declare pPos int local 0
 	/declare nbName string local
 	/for i 1 to ${int_celRegenTotal}
-		| get the ID from NETBots
+		| get the Name from the INI
 		/varset nbName  ${Ini[${healINI},CelestialRegeneration,cr_${i}_name]}
-		| set the array value to the bot ID, and the celregen to READY
+		| set the array value to the bot Name, and the celregen to READY
 		/varset arr_celRegen[${i}] ${nbName}
 		/if (${nbName.Equal[${Me.Name}]}) {
 			/echo setting my regen position to ${i}
@@ -207,11 +214,12 @@ Sub chkCelRegen
 	/declare pp string local ${Macro.Return}
 	/if (${pp.Equal[NONE]}) /goto :FireCelRegen
 
-	| D | Determine preview priest cast status
+	| D | Determine previous priest cast status
 	/declare pMGB string local 
 	/declare pCR string local 
 	/dquery ${pp} -q "Me.AltAbilityReady[Mass Group Buff]" -o pMGB
 	/dquery ${pp} -q "Me.AltAbilityReady[Celestial Regeneration]" -o pCR
+	/delay 20 ${DanNet[${pp}].Query["Me.AltAbilityReady[Mass Group Buff]"].Received}
 	/if (!${Bool[${pMGB}]} || !${Bool[${pMGB}]}) {
 		/cecho \ar${pp}:\arDOES NOT \awhave MGB and Celestial Regen Ready. \agFiring!
 		/goto :FireCelRegen
@@ -328,10 +336,8 @@ Sub chkHeal_MT
 	| Use the power of Greyskull and <strike>Netbots</strike> DANNET to get the MTs HP (todo)
 	
 	/call chkMTAlive ${Me.Class.ShortName.Equal[CLR]} 
-	
-	|/dquery ${str_tankName1} -q "Me.PctHPs" -o mthp 
 
-	/if ((${NetBots[${str_tankName1}].PctHPs} < ${int_point_tankNormal}) && (${NetBots[${str_tankName1}].Distance} < ${int_range_normal})) {
+	/if ((${Spawn[pc ${str_tankName1}].PctHPs} < ${int_point_tankNormal}) && (${Spawn[pc ${str_tankName1}].Distance} < ${int_range_normal})) {
 		/call healMAINTANK
 	}
 
@@ -448,8 +454,8 @@ Sub healCast(int _id, string _name, string _spell)
 		/echo HEAL NAME is NULL || ID is 0 something is fucked;
 		/return
 	}
-	/echo healCast Target:${_name}(${_id}) cHP: ${NetBots[${_name}].PctHPs} cSH: ${int_point_calcStopHeal} spell: "${_spell}"
-	/if (${NetBots[${_name}].PctHPs} < ${int_point_calcStopHeal} && (${Me.CurrentMana} > ${Spell[${_spell}].Mana})) {
+	/echo healCast Target:${_name}(${_id}) cHP: ${Spawn[pc ${_name}].PctHPs} cSH: ${int_point_calcStopHeal} spell: "${_spell}"
+	/if (${Spawn[pc ${_name}].PctHPs} < ${int_point_calcStopHeal} && (${Me.CurrentMana} > ${Spell[${_spell}].Mana})) {
 		/if (${Target.ID} != ${_id}) /call TrueTarget ${_id}
 		/call chkSpellMemorized "${_spell}" TRUE 2
 		/call MQ2Cast "${_spell}" gem2 1s chkHP
@@ -752,6 +758,7 @@ Sub AERez
 	/declare i 				int local
 	/declare x				int local
 	/declare id 			int local
+	/declare charID int local
 
 	/for i 1 to ${int_corpses}
 		/varset arr_corpses[${i}] ${NearestSpawn[${i}, pc corpse radius ${int_range_rez}].ID}
@@ -766,7 +773,10 @@ Sub AERez
 		/varset str_corpse ${Spawn[id ${id}].CleanName.Arg[1,']}
 
 		| check corpse name 
-		/if (${Spawn[id ${id}].CleanName.Find[corpse]} == NULL || !${NetBots[${str_corpse}].ID}) /varset bln_skipCorpse TRUE
+		
+		/dannet ${str_corpse} Me.ID
+		/varset charID ${Macro.Return}
+		/if (${Spawn[id ${id}].CleanName.Find[corpse]} == NULL || !${charID}) /varset bln_skipCorpse TRUE
 		/if (${bln_skipCorpse}) /goto :next_corpse
 
 

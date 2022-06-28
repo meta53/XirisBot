@@ -85,7 +85,7 @@ Sub InviteGroupsToHATRED
 |-- 3 Way split the raid
 Sub SetupGroupsTRIAD 
 	|-Raid 1
-	/dex Xiris 		/multiline ; /invite Xanshia; /invite Pantheon; /invite Deist; /invite Ania; /invite Shinxia;
+	/multiline ; /invite Xanshia; /invite Pantheon; /invite Deist; /invite Ania; /invite Shinxia;
 	/dex Xirin 		/multiline ; /invite Xepatia; /invite Ophezia; /invite Xeixa; /invite Xurael; /invite Theist;	
 	/dex Xaeliea 	/multiline ; /invite Ertres; /invite Ophidia; /invite Opheoia; /invite Aergia; /invite Xenshia;
 
@@ -101,12 +101,12 @@ Sub SetupGroupsTRIAD
 /return 
 
 Sub InviteGroupsToTRIAD 
-	/dex Xiris //raidinvite Xirin
-	/dex Xiris //raidinvite Xaeliea
+	/raidinvite Xirin
+	/raidinvite Xaeliea
 
-	/dex Xiria //raidinvite Sadelia
-	/dex Xiria //raidinvite Xaexa
+	/dex Xiria /raidinvite Sadelia
+	/dex Xiria /raidinvite Xaexa
 
-	/dex Xirea //raidinvite Mluian
-	/dex Xirea //raidinvite Xaia
+	/dex Xirea /raidinvite Mluian
+	/dex Xirea /raidinvite Xaia
 /return
