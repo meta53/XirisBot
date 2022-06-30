@@ -11,48 +11,72 @@ REVISION HISTORY
 	01.13.22	xiris	Added Rez routines
 	04.25.22	xiris 	Added healing potion routines
 	05.08.22	xiris	Integrated AERez.mac
+	06.29.22	xiris 	Updated all events to only be either generic, or [/gsay, /rsay, /tell, MQ2DanNet(dgt, dt)] only	
+						Updated the rez portion to work with new dannet handlers
 **|
 
 
+
+|-- Settings and Triggers
+#event GroupHeal  	"#*#DoGroupHeal#*#"
+#EVENT InterruptON 	"#*#InterruptON#*#"
+#EVENT InterruptOFF "#*#InterruptOFF#*#"
+
+#EVENT ChangeHP	"#1# tells you#*#'ChangeHP #2#'"
+#EVENT ChangeHP	"#1# tells the group#*#'ChangeHP #2#'"
+#EVENT ChangeHP	"#1# tells the raid#*#'ChangeHP #2#'"
+#EVENT ChangeHP "[ #1# #*#]#*#ChangeHP #2#"
+
+#EVENT HealMode	"#1# tells you#*#'HealMode #2#'"
+#EVENT HealMode	"#1# tells the group#*#'HealMode #2#'"
+#EVENT HealMode	"#1# tells the raid#*#'HealMode #2#'"
+#EVENT HealMode "[ #1# #*#]#*#HealMode #2#"
+
+|-- Rez Events
 #event CanRez     	"This corpse can be resurrected."
 #event CannotRez  	"This corpse cannot be resurrected."
 #event NotOnline  	"You told #1#, '#2# is not online at this time'"
 #event NotOnline  	"Your tell to #1# has been queued"
 
-#event ChangeHP   	"#*#ChangeHP #1#"
-#event GroupHeal  	"#*#DoGroupHeal#*#"
-
-#EVENT HealMode 	"#*#HealMode #1#"
-
-#EVENT InterruptON 	"#*#InterruptON#*#"
-#EVENT InterruptOFF "#*#InterruptOFF#*#"
-
-
 |-- CHEvents should only be listened for in the class handlers (cleric, druid)
-#EVENT CHStart "<#1#> CHStart #2#"
-#EVENT CHStart "[#1#(msg)] CHStart #2#"
+#EVENT CHStart	"#1# tells you#*#'CHStart #2#'"
+#EVENT CHStart	"#1# tells the group#*#'CHStart #2#'"
+#EVENT CHStart	"#1# tells the raid#*#'CHStart #2#'"
+#EVENT CHStart	"[ #1# #*#]#*#CHStart #2#"
 
-#EVENT CHStop "<#1#> CHStop #2#"
-#EVENT CHStop "[#1#(msg)] CHStop #2#"
+#EVENT CHStop	"#1# tells you#*#'CHStop #2#'"
+#EVENT CHStop	"#1# tells the group#*#'CHStop #2#'"
+#EVENT CHStop	"#1# tells the raid#*#'CHStop #2#'"
+#EVENT CHStop	"[ #1# #*#]#*#CHStop #2#"
 
-#EVENT CHPause "<#1#> CHPause #2#"
-#EVENT CHPause "[#1#(msg)] CHPause #2#"
+#EVENT CHPause	"#1# tells you#*#'CHPause #2#'"
+#EVENT CHPause	"#1# tells the group#*#'CHPause #2#'"
+#EVENT CHPause	"#1# tells the raid#*#'CHPause #2#'"
+#EVENT CHPause	"[ #1# #*#]#*#CHPause #2#"
 
-#EVENT CHResume "<#1#> CHResume#*#"
-#EVENT CHResume "[#1#(msg)] CHResume#*#"
+#EVENT CHResume	"#1# tells you#*#'CHResume#*#'"
+#EVENT CHResume	"#1# tells the group#*#'CHResume#*#'"
+#EVENT CHResume	"#1# tells the raid#*#'CHResume#*#'"
+#EVENT CHResume "[ #1# #*#]#*#CHResume#*#"
 
-#EVENT CHSwitch "<#1#> CHSwitch #2#"
-#EVENT CHSwitch "[#1#(msg)] CHSwitch #2#"
+#EVENT CHSwitch	"#1# tells you#*#'CHSwitch #2#'"
+#EVENT CHSwitch	"#1# tells the group#*#'CHSwitch #2#'"
+#EVENT CHSwitch	"#1# tells the raid#*#'CHSwitch #2#'"
+#EVENT CHSwitch "[ #1# #*#]#*#CHSwitch #2#"
 
 |-- Celestial Regeneration Events
 
 #EVENT RegenerateCRList "#*# RegenerateCRList#*#"
 
-#EVENT CelRegenStart "<#1#> CRStart#*#"
-#EVENT CelRegenStart "[#1#(msg)] CRStart#*#"
+#EVENT CelRegenStart	"#1# tells you#*#'CRStart#*#'"
+#EVENT CelRegenStart	"#1# tells the group#*#'CRStart#*#'"
+#EVENT CelRegenStart	"#1# tells the raid#*#'CRStart#*#'"
+#EVENT CelRegenStart	"[ #1# #*#]#*#CRStart#*#"
 
-#EVENT CelRegenStop "<#1#> CRStop#*#"
-#EVENT CelRegenStop "[#1#(msg)] CRStop#*#"
+#EVENT CelRegenStop	"#1# tells you#*#'CRStop#*#'"
+#EVENT CelRegenStop	"#1# tells the group#*#'CRStop#*#'"
+#EVENT CelRegenStop	"#1# tells the raid#*#'CRStop#*#'"
+#EVENT CelRegenStop "[ #1# #*#]#*#CRStop#*#"
 
 
 
@@ -571,7 +595,7 @@ Sub chkTargetDead
  ------------------------
 **|
 Sub EVENT_CHStart(_line, _sender, _eventParams)
-	/cecho \ayCompleteHealChain \ag${_eventParams}
+	/cecho \ayComplete Heal Start \ag${_eventParams}
 	/call GetCHPosition ${_eventParams.Arg[5]}
 	/echo 1: chainID   ${_eventParams.Arg[1]}
 	/echo 2: tank1     ${_eventParams.Arg[2]}
@@ -604,7 +628,7 @@ Sub heal_chStatus
 /return
 
 Sub heal_chStart(string _chSettings, _position)
-	/cecho \agheal_chStart id:${_chSettings.Arg[1]} tank1:${_chSettings.Arg[2]} tank2:${_chSettings.Arg[3]} delay:${_chSettings.Arg[4]} order:${_chSettings.Arg[5]}  position:${_position}
+	/cecho \agStarting CH id:${_chSettings.Arg[1]} tank1:${_chSettings.Arg[2]} tank2:${_chSettings.Arg[3]} delay:${_chSettings.Arg[4]} order:${_chSettings.Arg[5]}  position:${_position}
 	/varset str_savedHealMode ${str_healMode}
 	/call ChangeHealMode CHCHAIN
 	/varset bln_chChainMember TRUE
@@ -675,13 +699,15 @@ Sub heal_chStart(string _chSettings, _position)
 		/goto :chLoop
 	:return
 	/varset bln_chChainMember FALSE
+	/doevents flush CHStart
 /return
 
 
 |-- Switch the MT of the ch chain. /dgt CHStop 1
 Sub EVENT_CHPause(_line, _sender, _eventParams)
-	/cecho \awCHPause ${_eventParams}
+	/cecho \awPausing CH ${_eventParams}
 	/call heal_chPause ${_eventParams}
+	/doevents flush CHPause
 /return
 
 Sub heal_chPause(int _timeMS)
@@ -692,8 +718,9 @@ Sub heal_chPause(int _timeMS)
 /return
 
 Sub Event_CHResume
-	/cecho \awCHResume
+	/cecho \awResuming CH
 	/call heal_chResume
+	/doevents flush CHResume
 /return
 
 Sub heal_chResume
@@ -705,8 +732,9 @@ Sub heal_chResume
 |-- Switch the MT of the ch chain. /dgt CHStop 1
 Sub EVENT_CHStop(_line, _sender, _eventParams)
 	/if (!${bln_chChainMember}) /return
-	/cecho \awCHStop ${_eventParams}
+	/cecho \awStopping CH ${_eventParams}
 	/call heal_chStop ${_eventParams}
+	/doevents flush CHStop
 /return
 
 Sub heal_chStop(int _chainID)
@@ -716,13 +744,14 @@ Sub heal_chStop(int _chainID)
 		/varset bln_chChainMember FALSE
 		/call ChangeHealMode ${str_savedHealMode}
 	}
+	
 /return
 
 |-- Switch the MT of the ch chain. /dgt CHSwitch 1 Xiria
 Sub EVENT_CHSwitch(_line, _sender, _eventParams)
 	/if (!${bln_chChainMember}) /return
 	
-	/cecho \awCHSwitch ${_eventParams.Arg[1]} ${_eventParams.Arg[2]}
+	/cecho \awSwitching CH ${_eventParams.Arg[1]} ${_eventParams.Arg[2]}
 	/call heal_chSwitch ${_eventParams.Arg[1]} ${_eventParams.Arg[2]}
 /return
 
@@ -751,6 +780,7 @@ Sub chkRez
 /return
 
 Sub AERez
+	/squelch /hidecorpse npc
 	/declare int_corpses int local ${SpawnCount[pc corpse radius ${int_range_rez}]}
 	/declare arr_corpses[${int_corpses}] int local 
 	/declare str_corpse		string local
@@ -771,11 +801,13 @@ Sub AERez
 
 		| get the name from corpse	
 		/varset str_corpse ${Spawn[id ${id}].CleanName.Arg[1,']}
+		/if (!${Bool[${str_corpse}]}) /goto :next_corpse
 
 		| check corpse name 
-		
 		/dannet ${str_corpse} Me.ID
+		/echo contacting ${str_corpse} ${Macro.Return}
 		/varset charID ${Macro.Return}
+		| make sure the target is actually a corpse, and online
 		/if (${Spawn[id ${id}].CleanName.Find[corpse]} == NULL || !${charID}) /varset bln_skipCorpse TRUE
 		/if (${bln_skipCorpse}) /goto :next_corpse
 

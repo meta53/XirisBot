@@ -12,6 +12,7 @@ REVISION HISTORY
 	03.22.22	xiris 	Updated KillMob Event to be cleaner (ID first)
 	04.27.22	xiris 	Added chkCombatAbilities which can be called when we need to turn off
 						MQ2Melee for whatever reason (like.. MPG Specialization not working on berserkers!)
+	06.29.22	xiris 	Updated all events to only be either generic, or [/gsay, /rsay, /tell, MQ2DanNet(dgt, dt)] only
 **|
 
 |-- Manual Downshits since mq2melee was being flakey at the time
@@ -23,48 +24,49 @@ REVISION HISTORY
 |		downflagCount=1
 |		downflag1=Aura of White Petals|28953 item
 
-#EVENT RESTICK		"#*#restick#*#"
-#EVENT AERAMP		"#*#aerampON#*#"
-#EVENT GETCLOSER	"Your target is too far away, get closer!"
+#EVENT RESTICK			"#*#restick#*#"
+#EVENT AERAMP			"#*#aerampON#*#"
+#EVENT GETCLOSER		"Your target is too far away, get closer!"
 
-#EVENT NoDS "<#1#> NoDS"
-#EVENT NoDS "[#1#(msg)] NoDS#*#"
-#EVENT NoDS	"#1# tells the group#*#'NoDS#*#'"
-#EVENT NoDS	"#1# tells you#*#'NoDS#*#'"
-#EVENT NoDS	"#1# tells the raid#*#'NoDS#*#'"
+#EVENT NoDS				"#1# tells the group#*#'NoDS#*#'"
+#EVENT NoDS				"#1# tells you#*#'NoDS#*#'"
+#EVENT NoDS				"#1# tells the raid#*#'NoDS#*#'"
+#EVENT NoDS 			"[ #1# #*#]#*#NoDS#*#"
 
-#EVENT YesDS	"<#1#> YesDS#*#"
-#EVENT YesDS	"[#1#(msg)] YesDS#*#"
-#EVENT YesDS	"#1# tells the group#*#'YesDS #*#'"
-#EVENT YesDS	"#1# tells you#*#'YesDS #*#'"
-#EVENT YesDS	"#1# tells the raid#*#'YesDS #*#'"
+#EVENT YesDS			"#1# tells the group#*#'YesDS #*#'"
+#EVENT YesDS			"#1# tells you#*#'YesDS #*#'"
+#EVENT YesDS			"#1# tells the raid#*#'YesDS #*#'"
+#EVENT YesDS 			"[ #1# #*#]#*#YesDS#*#"
 
-#EVENT Sing "<#1#> Sing #2#"
-#EVENT Sing "[#1#(msg)] Sing #2#"
-#EVENT Sing	"#1# tells the group#*#'Sing #2#'"
-#EVENT Sing	"#1# tells you#*#'Sing #2#'"
-#EVENT Sing	"#1# tells the raid#*#'Sing #2#'"
+#EVENT Sing				"#1# tells the group#*#'Sing #2#'"
+#EVENT Sing				"#1# tells you#*#'Sing #2#'"
+#EVENT Sing				"#1# tells the raid#*#'Sing #2#'"
+#EVENT Sing 			"[ #1# #*#]#*#Sing #2#"
 
-#EVENT Hush	"<#1#> Hush#*#"
-#EVENT Hush "[#1#(msg)] Hush#*#"
-#EVENT Hush	"#1# tells the group#*#'Hush #*#'"
-#EVENT Hush	"#1# tells you#*#'Hush #*#'"
-#EVENT Hush	"#1# tells the raid#*#'Hush #*#'"
+#EVENT Hush				"#1# tells the group#*#'Hush#*#'"
+#EVENT Hush				"#1# tells you#*#'Hush#*#'"
+#EVENT Hush				"#1# tells the raid#*#'Hush#*#'"
+#EVENT Hush 			"[ #1# #*#]#*#Hush#*#"
 
-#EVENT RiposteDisc "<#1#> RiposteDisc#*#"
-#EVENT RiposteDisc "[#1#(msg)] RiposteDisc#*#"
+#EVENT RiposteDisc		"#1# tells the group#*#'RiposteDisc#*#'"
+#EVENT RiposteDisc		"#1# tells you#*#'RiposteDisc#*#'"
+#EVENT RiposteDisc		"#1# tells the raid#*#'RiposteDisc#*#'"
+#EVENT RiposteDisc 		"[ #1# #*#]#*#RiposteDisc#*#"
 
-#EVENT AutoAssist "<#1#> AutoAssist #2#"
-#EVENT AutoAssist "[#1#(msg)] AutoAssist #2#"
+#EVENT AutoAssist		"#1# tells the group#*#'AutoAssist #2#'"
+#EVENT AutoAssist		"#1# tells you#*#'AutoAssist #2#'"
+#EVENT AutoAssist		"#1# tells the raid#*#'AutoAssist #2#'"
+#EVENT AutoAssist 		"[ #1# #*#]#*#AutoAssist #2#"
 
-#EVENT Leashing "<#1#> Leashing #2#"
-#EVENT Leashing "[#1#(msg)] Leashing #2#"
+#EVENT Leashing			"#1# tells the group#*#'Leashing#*#'"
+#EVENT Leashing			"#1# tells you#*#'Leashing#*#'"
+#EVENT Leashing			"#1# tells the raid#*#'Leashing#*#'"
+#EVENT Leashing 		"[ #1# #*#]#*#Leashing#*#"
 
-#EVENT XTargetRefresh	"<#1#> RefreshXTarget#*#"
-#EVENT XTargetRefresh	"[#1#(msg)] RefreshXTarget#*#"
 #EVENT XTargetRefresh	"#1# tells the group#*#'RefreshXTarget#*#'"
 #EVENT XTargetRefresh	"#1# tells you#*#'RefreshXTarget#*#'"
 #EVENT XTargetRefresh	"#1# tells the raid#*#'RefreshXTarget#*#'"
+#EVENT XTargetRefresh	"[ #1# #*#]#*#RefreshXTarget#*#"
 
 
 #define dsINI xiris_common/xiris_damageshields.ini

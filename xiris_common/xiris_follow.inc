@@ -11,43 +11,35 @@ ______________________________________________
 REVISION HISTORY
 	04.05.22    xiris   INITIAL REVISION
 	06.13.22	xiris   Updated events (minor)
+	06.29.22	xiris 	Updated all events to only be either generic, or [/gsay, /rsay, /tell, MQ2DanNet(dgt, dt)] only	
 ______________________________________________
 **|	
 
-#EVENT Follow 		"[#1#] FollowMe #2#"
-#EVENT Follow 		"<#1#> FollowMe #2#"
-#EVENT Follow	 	"[#1#(msg)] FollowMe #2#"
 #EVENT Follow		"#1# tells you#*#'FollowMe #2#'"
 #EVENT Follow		"#1# tells the group#*#'FollowMe #2#'"
 #EVENT Follow		"#1# tells the raid#*#'FollowMe #2#'"
+#EVENT Follow 		"[ #1# #*#]#*#FollowMe #2#"
 
-#EVENT Stop 		"[#1#] NavStop#*#"
-#EVENT Stop			"<#1#> NavStop#*#"
-#EVENT Stop			"[#1#(msg)] NavStop#*#"
 #EVENT Stop			"#1# tells you#*#'NavStop#*#'"
 #EVENT Stop			"#1# tells the group#*#'NavStop#*#'"
 #EVENT Stop			"#1# tells the raid#*#'NavStop#*#'"
+#EVENT Stop 		"[ #1# #*#]#*#NavStop#*#"
 
-#EVENT MoveHere 	"[#1#] MoveTo #2#"
-#EVENT MoveHere 	"<#1#> MoveTo #2#"
-#EVENT MoveHere 	"[#1#(msg)] MoveTo #2#"
 #EVENT MoveHere		"#1# tells you#*#'MoveTo #2#'"
 #EVENT MoveHere		"#1# tells the group#*#'MoveTo #2#'"
 #EVENT MoveHere		"#1# tells the raid#*#'MoveTo #2#'"
+#EVENT MoveHere 	"[ #1# #*#]#*#MoveTo #2#"
 
-#EVENT NavigateWP 	"[#1#] NavToWP #2#"
-#EVENT NavigateWP 	"<#1#> NavToWP #2#"
-#EVENT NavigateWP 	"[#1#(msg)] NavToWP #2#"
 #EVENT NavigateWP	"#1# tells you#*#'NavToWP #2#'"
 #EVENT NavigateWP	"#1# tells the group#*#'NavToWP #2#'"
 #EVENT NavigateWP	"#1# tells the raid#*#'NavToWP #2#'"
+#EVENT NavigateWP 	"[ #1# #*#]#*#NavToWP #2#"
 
-#EVENT CreateCamp 	"[#1#] CreateCamp #2#"
-#EVENT CreateCamp 	"<#1#> CreateCamp #2#"
-#EVENT CreateCamp 	"[#1#(msg)] NavCreateCampToWP #2#"
 #EVENT CreateCamp	"#1# tells you#*#'CreateCamp #2#'"
 #EVENT CreateCamp	"#1# tells the group#*#'CreateCamp #2#'"
 #EVENT CreateCamp	"#1# tells the raid#*#'CreateCamp #2#'"
+#EVENT CreateCamp 	"[ #1# #*#]#*#CreateCamp #2#"
+
 
 Sub InitEvents_Following
 	/call RegisterBackgroundEvents Events_Following 5
@@ -77,28 +69,24 @@ Sub xbot_initialize_following
 SUB EVENT_Follow(_line, _chatSender, _eventParams)
 	| -Verify the event
 	/call verifyEvent "${_chatSender}" "${_eventParams}"
-	/echo MacroReturn: ${Macro.Return}
-	|    |-----------Valid User----------|    |--------Included Bot-----------|    |-----------In Zone-------------|
-	/echo  validUser: ${Bool[${Macro.Return.Arg[2,_]}]} included bot: ${Bool[${Macro.Return.Arg[3,_]}]}  inzone: ${Bool[${Macro.Return.Arg[4,_]}]}
 	/if (${Bool[${Macro.Return.Arg[2,_]}]} && ${Bool[${Macro.Return.Arg[3,_]}]} && ${Bool[${Macro.Return.Arg[4,_]}]}) {
 	
-		/declare SpawnToFollow string local ${Macro.Return.Arg[1,_]}
-		/declare FollowType string local ${If[${_eventParams.Find[/type|NAV]},NAV,STICK]}
+		/declare SpawnToFollow 	string local ${Macro.Return.Arg[1,_]}
+		/declare FollowType 	string local ${If[${_eventParams.Find[/type|NAV]},NAV,STICK]}
 		/if (!${Bool[${SpawnToFollow}]}) /varset SpawnToFollow "${_chatSender}"
 
-		/echo SpawnToFollow: ${SpawnToFollow} FollowType: ${FollowType}
 		| -Turn Following on and set the FollowTarget
 		/varset Following TRUE
 		/varset FollowTarget ${Spawn[pc ${SpawnToFollow}].CleanName}
-		
+		/echo SpawnToFollow: ${SpawnToFollow} FollowType: ${FollowType}  FollowTarget: ${Spawn[pc ${SpawnToFollow}].CleanName}
 		| -Check Range
 		/if (${Spawn[=${FollowTarget}].Distance} > ${MaxResponseDist}) {
 			/docommand /${cmdChannel} [${FollowTarget}] is too far away.
 		} else {
-		
 			| -Check LoS.
-			/echo LOS probably not needed because Type is NAV: ${FollowType.Equal[NAV]}
+			
 			/if (${FollowType.Equal[NAV]}) {
+				/echo LOS is not needed because Type is NAV: ${FollowType.Equal[NAV]}
 				| -Stop assisting so we don't try to stick to the AssistTarget.	
 				/if (${Me.Combat}) /call Event_BackOff
 				
@@ -200,6 +188,7 @@ SUB AquireFollow(string _type)
 
 	:movingLoop
 	|-- Check all Events
+	/doevents flush Follow
 	/call RunAllEvents
 	|/cecho \ay movingLoop \ag ${Following}
 	/if (${Following}) {

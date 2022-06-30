@@ -10,14 +10,13 @@ REVISION HISTORY
 	03.31.22	xiris	Updated the named checking as well as normalizing all calls to MQ2Cast
 	05.08.22	xiris	Added support for bards in Debuffs
 	05.13.22	xiris   Cleaned up events
+	06.29.22	xiris 	Updated all events to only be either generic, or [/gsay, /rsay, /tell, MQ2DanNet(dgt, dt)] only	
 **|
 
-#EVENT DebuffTarget 	"[#1#] DebuffTarget #2#"
-#EVENT DebuffTarget 	"<#1#> DebuffTarget #2#"
-#EVENT DebuffTarget 	"[#1#(msg)] DebuffTarget #2#"
-#EVENT DebuffTarget		"#1# tells the group#*#'DebuffTarget #2#'"
-#EVENT DebuffTarget		"#1# tells you#*#'DebuffTarget #2#'"
-#EVENT DebuffTarget		"#1# tells the raid#*#'DebuffTarget #2#'"
+#EVENT DebuffTarget	"#1# tells you#*#'DebuffTarget #2#'"
+#EVENT DebuffTarget	"#1# tells the group#*#'DebuffTarget #2#'"
+#EVENT DebuffTarget	"#1# tells the raid#*#'DebuffTarget #2#'"
+#EVENT DebuffTarget "[ #1# #*#]#*#DebuffTarget #2#"
 
 Sub InitEvents_Debuffing
 	/if (${int_debuffTotal} > 0 ) {

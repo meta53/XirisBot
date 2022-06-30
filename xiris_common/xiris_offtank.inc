@@ -15,21 +15,15 @@ REVISION HISTORY
 	01.09.2022	xiris	Made sure to turn aggro off when only hitting one mob
 ______________________________________________
 **|	
-#event OFFTANKON 			"[#1#] OFFTANKON#*#"
-#EVENT OFFTANKON 			"[#1#(msg)] OFFTANKON#*#"
-#event OFFTANKON 			"<#1#> OFFTANKON#*#"
-#event OFFTANKON 			"#1# tells you,#*#'OFFTANKON#*#'"
-#event OFFTANKON 			"#1# tells the group#*#'OFFTANKON#*#'"
-#event OFFTANKON 			"#1# tells you#*#'OFFTANKON#*#'"
-#event OFFTANKON 			"#1# tells the raid#*#'OFFTANKON#*#'"
+#EVENT OFFTANKON			"#1# tells the group#*#'OfftankOn#*#'"
+#EVENT OFFTANKON			"#1# tells you#*#'OfftankOn#*#'"
+#EVENT OFFTANKON			"#1# tells the raid#*#OfftankOn#*#'"
+#EVENT OFFTANKON	 		"[ #1# #*#]#*#OfftankOn#*#"
 
-#event OFFTANKOFF 			"[#1#] OFFTANKOFF #2#"
-#EVENT OFFTANKOFF 			"[#1#(msg)] OFFTANKOFF#*#"
-#event OFFTANKOFF 			"<#1#> OFFTANKOFF#*#"
-#event OFFTANKOFF 			"#1# tells you,#*#'OFFTANKOFF#*#'"
-#event OFFTANKOFF 			"#1# tells the group#*#'OFFTANKOFF#*#'"
-#event OFFTANKOFF 			"#1# tells you#*#'OFFTANKOFF#*#'"
-#event OFFTANKOFF 			"#1# tells the raid#*#'OFFTANKOFF#*#'"
+#EVENT OFFTANKOFF			"#1# tells the group#*#'OfftankOff#*#'"
+#EVENT OFFTANKOFF			"#1# tells you#*#'OfftankOff#*#'"
+#EVENT OFFTANKOFF			"#1# tells the raid#*#OfftankOff#*#'"
+#EVENT OFFTANKOFF	 		"[ #1# #*#]#*#OfftankOff#*#"
 
 Sub InitEvents_Offtanking 
 	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) /call RegisterBackgroundEvents Events_Offtanking 2
@@ -68,7 +62,7 @@ Sub ToggleOfftanking(bool _blnOT)
 	
 /return
 
-Sub chkOffTankingCorruption
+Sub chkOfftankingPriorityTargets
 
 /return
 

@@ -31,7 +31,7 @@ ______________________________________________
 	nw2 - noq wiz 2
 **|
 
-#event NoqCurse					"[#1#(msg)] NoqCurse,#2#"
+#EVENT NoqCurse 				"[ #1# #*#]#*#NoqCurse,#2#"
 #event InkCurse					"#*#The thoughts of a cursed trusik#*#"
 #event InkCurseSafe				"#*#inkstop#*#"
 #event InkCurseSafe				"#*#inksafe#*#"
@@ -350,7 +350,7 @@ SUB EVENT_BALANCE
 		/if (${bln_chChainMember}) /call heal_chPause 400
 		/return
 	}
-	
+	/keypress esc
 	|- determine percentage to run to based on Kvxe's Hitpoints
 	/varset bln_balancing TRUE
 	/if (${str_classArchetype.Equal[CASTER]}) {
@@ -403,9 +403,6 @@ SUB EVENT_BALANCE
 
 	|-- Melee Classes
 	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
-		|-- warrior needs to bounce around aggro on balancers
-		/if (${Me.Class.ShortName.Equal[PAL]}) /melee aggro=on
-	
 		|-- Balance of Speed	
 		/keypress esc
 		/call BalancerKillMelee "Balance of Speed" ${Spawn[npc radius 500 Speed].ID} ${bpct}
@@ -430,9 +427,9 @@ SUB EVENT_BALANCE
 
 Sub BalancerKillMelee(string _targetName, int _targetID, int _balanceTo)
 	|-- Balance of _targetName
+	/keypress esc
 	/g BalancerKillMelee ${_targetName}, ${_targetID} =>${_balanceTo}
 	/call TrueTarget ${_targetID}
-	/melee on
 	/nav target
 	:BalancerMeleeMove
 		/echo BalancerMeleeMove
@@ -522,7 +519,6 @@ Sub BalancerReset
 		/pet hold on
 	}
 	/doevents flush
-
 
 	|-- Kvxe
 	/if (${str_classArchetype.NotEqual[CASTER]}) {

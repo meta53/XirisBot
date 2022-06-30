@@ -23,6 +23,7 @@ REVISION HISTORY
 	08.02.18	xiris	Included xiris_spell_routines and changed engagement events
 	09.17.18    xiris   Included ALL xiris bot libraries here instead of in individual macros
 	02.27.21	xiris	Added a method to reset XTarget windows due to bug on EMU where they fill up with corpses
+	06.29.22	xiris 	Updated all events to only be either generic, or [/gsay, /rsay, /tell, MQ2DanNet(dgt, dt)] only
 ______________________________________________
 
 **|
@@ -33,8 +34,9 @@ ______________________________________________
 #include xiris_common/xiris_dannet.inc
 #include xiris_common/xiris_buffing.inc
 #include xiris_common/xiris_buffing_lines.inc
-#include xiris_common/xiris_curing.inc
 #include xiris_common/xiris_casting.inc
+#include xiris_common/xiris_charm.inc
+#include xiris_common/xiris_curing.inc
 #include xiris_common/xiris_debuffing.inc
 #include xiris_common/xiris_events.inc 
 #include xiris_common/xiris_exclude.inc
@@ -49,42 +51,43 @@ ______________________________________________
 
 |COMMON
 #EVENT KillMob 				"[#1#] KillMob #2#"
-#EVENT KillMob 				"[#1#(msg)] KillMob #2#"
 #EVENT KillMob 				"<#1#> KillMob #2#"
 #EVENT KillMob				"#1# tells the group#*#'KillMob #2#'"
 #EVENT KillMob				"#1# tells you#*#'KillMob #2#'"
 #EVENT KillMob				"#1# tells the raid#*#'KillMob #2#'"
+#EVENT KillMob 				"[ #1# #*#]#*#KillMob #2#"
 
 #EVENT Zoned				"You have entered#*#"
 #EVENT Zoned				"LOADING, PLEASE WAIT..."
 #EVENT EndMac				"#*#end macro#*#"
 
 #EVENT BackOff				"<#1#> BackOff"
-#EVENT BackOff				"[#1#(msg)] BackOff"
+#EVENT BackOff				"#1# tells the raid#*#'BackOff#*#'"
+#EVENT BackOff 				"[ #1# #*#]#*#BackOff#*#"
 
 #EVENT Disengage   			"#*#Disengage#*#"
 #EVENT QuitExpedition       "#*#DZQUIT#*#"
 
 #EVENT ChangeMT 			"[#1#] changeMT #2#"
 #EVENT ChangeMT 			"<#1#> changeMT #2#"
-#EVENT ChangeMT 			"[#1#(msg)] changeMT #2#"
 #EVENT ChangeMT				"#1# tells the group#*#'changeMT #2#'"
 #EVENT ChangeMT				"#1# tells you#*#'changeMT #2#'"
 #EVENT ChangeMT				"#1# tells the raid#*#'changeMT #2#'"
+#EVENT ChangeMT 			"[ #1# #*#]#*#ChangeMT #2#"
 
 #EVENT ChangeSA 			"[#1#] ChangeSA #2#"
 #EVENT ChangeSA 			"<#1#> changeSA #2#"
-#EVENT ChangeSA 			"[#1#(msg)] changeSA #2#"
 #EVENT ChangeSA				"#1# tells the group#*#'ChangeSA #2#'"
 #EVENT ChangeSA				"#1# tells you#*#'ChangeSA #2#'"
 #EVENT ChangeSA				"#1# tells the raid#*#'ChangeSA #2#'"
+#EVENT ChangeSA 			"[ #1# #*#]#*#ChangeSA #2#"
 
 #EVENT ChangeAP 			"[#1#] ChangeAP #2#"
-#EVENT ChangeAP 			"<#1#> changeAP #2#"
-#EVENT ChangeAP 			"[#1#(msg)] changeAP #2#"
+#EVENT ChangeAP 			"<#1#> ChangeAP #2#"
 #EVENT ChangeAP				"#1# tells the group#*#'ChangeAP #2#'"
 #EVENT ChangeAP				"#1# tells you#*#'ChangeAP #2#'"
 #EVENT ChangeAP				"#1# tells the raid#*#'ChangeAP #2#'"
+#EVENT ChangeAP 			"[ #1# #*#]#*#ChangeAP #2#"
 
 
 | Burninating
@@ -326,10 +329,12 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/call InitEvents_Common
 
 	|-- init other libraries
+	/call xbot_initialize_dannet
 	/call xbot_initialize_spellRoutines
 	/call xbot_initialize_buffing
 	/call xbot_initialize_bufflines
 	/call xbot_initialize_casting
+	/call xbot_initialize_charming
 	/call xbot_initialize_curing
 	/call xbot_initialize_debuffing
 	/call xbot_initialize_exclusions
@@ -1550,10 +1555,18 @@ SUB verifyEvent(sring _chatSender, string _eventParams)
 	/declare inRange 		bool local FALSE
 	/declare inAssistRange 	bool local FALSE
 	/declare sender         string local ${_chatSender}
-	| -Reset _chatSender.
+	| Set sender by parsing the _chatSender
 	/if (${_chatSender.Left[1].Compare[ ]}<0) /varset sender ${_chatSender.Right[-2].Left[-1]}
 	/if (${_chatSender.Equal[You]}) /varset sender ${Me.CleanName}
 	/if (${_chatSender.Equal[MQ2]}) /varset sender ${Me.CleanName}
+	| Note if this is sent by dannet as a /dgt (instead of box chat /bc)
+	| Then the sender will be like xiris (all)
+ 	/if (${_chatSender.Find[(]})  {
+		/varset sender ${_chatSender.Arg[1,(]}
+	|/varset sender ${sender.Arg[1,(]}
+	}
+
+	
 	
 	| -Validate _chatSender.
 	/varset userValidated TRUE
@@ -1563,8 +1576,8 @@ SUB verifyEvent(sring _chatSender, string _eventParams)
 	
 	| -Check inRange
 	/if (${SpawnCount[pc =${sender} radius ${MaxResponseDist}]}) /varset inRange TRUE
+	/cecho \awVerifyEvent Sender:\ag${sender} \awParams: \ag${_eventParams}
 
-	/echo verifyEvent ${sender} :: ${_eventParams}
 	| -Check for /only|
 	/if (${_eventParams.Find[/only|]}) {
 		/varset includeBot FALSE
@@ -1593,7 +1606,7 @@ SUB verifyEvent(sring _chatSender, string _eventParams)
 		/call check_selectedBots "${Macro.Return}" "${sender}"
 		/if (${Macro.Return}) /varset includeBot TRUE
 	}
-	/echo returning ${sender}_${userValidated}_${includeBot}_${inZone}_${inRange}
+	/cecho \ayReturning Sender:\ag${sender} \awValid?\ag${userValidated} \awIncluded?\ag${includeBot} \awInZone?\ag${inZone} \awInRange?\ag${inRange}
 /return ${sender}_${userValidated}_${includeBot}_${inZone}_${inRange}
 
 SUB check_selectedBots(_selectedBots, _chatSender)

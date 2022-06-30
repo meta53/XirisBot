@@ -21,6 +21,13 @@ REVISION HISTORY
 #bind DanNet /dannet
 #bind DTestSet /dantest
 
+
+Sub xbot_initialize_dannet 
+    /declare dName string outer NULL
+    /declare dDelim string outer |
+    /declare dPeers string outer ${DanNet.Peers}
+/return 
+
 Sub Bind_DanNet(DName, DQuery)
     /if (${DName.Equal[null]} || !${DName.Length}) {
         /dnet info
@@ -28,16 +35,16 @@ Sub Bind_DanNet(DName, DQuery)
     } else {
         | Check for Name in DanNet List.
         /if (${DName.Find[_]}) {
-            /varset Name1 ${DName.Lower}
+            /varset dName ${DName.Lower}
         } else {
-            /varset Name1 ${EverQuest.Server.Lower}_${DName.Lower}
+            /varset dName ${EverQuest.Server.Lower}_${DName.Lower}
         }
         | Can you find the name in the list?
-        /varset PeerList1 ${DanNet.Peers}
-        /if (${PeerList1.Find[${Name1}${DanDelim}]}) {
-            /echo Found Peer ${Name1}
+        
+        /if (${dPeers.Find[${dName}${dDelim}]}) {
+            /echo Found Peer ${dName}
         } else {
-            /echo Peer ${Name1} NOT Found in List.
+            /echo Peer ${dName} NOT Found in List.
             /return FALSE
         }
     }
@@ -46,18 +53,18 @@ Sub Bind_DanNet(DName, DQuery)
         /echo Query Information Required. Please Try Again.
         /return
     } else {
-        /varset Response1 @null@
-        /dquery ${Name1} -q "${DQuery}" -o Response1
-        /delay 20 ${DanNet[${TName}].Query["${DQuery}"].Received}
+        /varset dResponse @null@
+        /dquery ${dName} -q "${DQuery}" -o dResponse
+        /delay 20 ${DanNet[${dName}].Query["${DQuery}"].Received}
     }
     
-    /if (${Bool[${Response1}]}) {
-        /echo Query (${DQuery}) to Peer ${Name1} Returned ${Response1}
+    /if (${Bool[${dResponse}]}) {
+        /echo Query (${DQuery}) to Peer ${dName} Returned ${dResponse}
     } else {
-        /echo Query (${DQuery}) to Peer ${Name1} Failed or returned NO Data.
+        /echo Query (${DQuery}) to Peer ${dName} Failed or returned NO Data.
     }
    
-/return ${Response1}
+/return ${dResponse}
 
 Sub Bind_DTestSet(DAction, P1, P2)
     | Actions: Ping 
@@ -86,17 +93,17 @@ Sub Bind_DTestSet(DAction, P1, P2)
     } else {
         | Check for Name in DanNet List.
         /if (${P1.Find[_]}) {
-            /varset Name1 ${P1.Lower}
+            /varset dName ${P1.Lower}
         } else {
-            /varset Name1 ${EverQuest.Server.Lower}_${P1.Lower}
+            /varset dName ${EverQuest.Server.Lower}_${P1.Lower}
         }
         | Can you find the name in the list?
-        /varset PeerList1 ${DanNet.Peers}
-        /if (!${PeerList1.Find[${Name1}${DanDelim}]}) {
-            /echo Invalid ${Name1}. Valid Names are: ${PeerList1}.
+        /varset dPeers ${DanNet.Peers}
+        /if (!${dPeers.Find[${dName}${dDelim}]}) {
+            /echo Invalid ${dName}. Valid Names are: ${dPeers}.
             /return
         } else {
-            /varset TName ${Name1}
+            /varset TName ${dName}
         }
     }
     /varset DTestActive 1
@@ -112,23 +119,23 @@ Sub DTestRun
     
     /if (${DTestAction.Equal[ping]}) {
         /if (${TName.Equal[all]}) {
-            /varset PeerList1 ${DanNet.Peers}
+            /varset dPeers ${DanNet.Peers}
             /varset idx1 1
-            /while (${Bool[${PeerList1.Arg[${idx1},|]}]}) {
-                /varset TName ${PeerList1.Arg[${idx1},|]}
+            /while (${Bool[${dPeers.Arg[${idx1},|]}]}) {
+                /varset TName ${dPeers.Arg[${idx1},|]}
                 /if (${TName.NotEqual[${MyPeerName}]}) {
                     /varset idx2 1
                     /echo ---------------------------------------- ${idx1} ----------------------------------------
                     /while (${idx2} < 4) {
-                        /varset Response1 @null@
+                        /varset dResponse @null@
                         /varset BTime ${MacroQuest.Running}
-                        /dquery ${TName} -q PingData1 -o Response1
+                        /dquery ${TName} -q PingData1 -o dResponse
                         /delay 20 ${DanNet[${TName}].Query[PingData1].Received}
                         /varset ETime ${MacroQuest.Running}
-                        /if (!${Response1.Length}) {
+                        /if (!${dResponse.Length}) {
                             /echo ${idx2} - No Information Received From ${TName} Time: ${Math.Calc[${ETime}-${BTime}]} 
                         } else {
-                            /echo ${idx2} - Reply from ${TName} Received Length: ${Response1.Length} Time: ${Math.Calc[${ETime}-${BTime}]} 
+                            /echo ${idx2} - Reply from ${TName} Received Length: ${dResponse.Length} Time: ${Math.Calc[${ETime}-${BTime}]} 
                         }
                         /varcalc idx2 ${idx2}+1
                     }
@@ -139,16 +146,16 @@ Sub DTestRun
         } else {
             /varset idx1 1
             /while (${idx1} < 4) {
-                /varset Response1 @null@
+                /varset dResponse @null@
                 /varset BTime ${MacroQuest.Running}
-                /dquery ${TName} -q PingData1 -o Response1
+                /dquery ${TName} -q PingData1 -o dResponse
                 /delay 20 ${DanNet[${TName}].Query[PingData1].Received}
                 /varset ETime ${MacroQuest.Running}
-                |/echo Response: ${Response1} ${TName} 
-                /if (!${Response1.Length}) {
+                |/echo Response: ${dResponse} ${TName} 
+                /if (!${dResponse.Length}) {
                     /echo ${idx1} - No Information Received From ${TName} Time: ${Math.Calc[${ETime}-${BTime}]} 
                 } else {
-                    /echo ${idx1} - Reply from ${TName} Received Length: ${Response1.Length} Time: ${Math.Calc[${ETime}-${BTime}]} 
+                    /echo ${idx1} - Reply from ${TName} Received Length: ${dResponse.Length} Time: ${Math.Calc[${ETime}-${BTime}]} 
                 }
                 /varcalc idx1 ${idx1}+1
             }

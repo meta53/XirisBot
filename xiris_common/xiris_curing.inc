@@ -22,44 +22,37 @@ REVISION HISTORY
 	05.23.22	xiris	Reduced events to only have BC
 	06.13.22	xiris	Restored events for Group/Party/Raid due to need to split raids sometimes (multiple camp pulling, jelvan balancing etc)	
 						Added 'simple' cureMe request handler for manual entry (usually by MT)
+	06.29.22	xiris 	Updated all events to only be either generic, or [/gsay, /rsay, /tell, MQ2DanNet(dgt, dt)] only						
 **|
 
 |-- Single PC Cure Request eg: /g cureme poison
-#EVENT cureMe			"[#1#] cureMe #2#"
-#EVENT cureMe			"<#1#> cureMe #2#"
-#EVENT cureMe			"[#1#(msg)] cureMe #2#"
 #EVENT cureMe			"#1# tells the group#*#'cureMe #2#'"
 #EVENT cureMe			"#1# tells you#*#'cureMe #2#'"
 #EVENT cureMe			"#1# tells the raid#*#'cureMe #2#'"
+#EVENT cureMe  			"[ #1# #*#]#*#cureMe #2#"
 
-|-- Macro generated cure requests
-#EVENT cureRequest 		"[#1#(msg)] cureRequest #2#"
-#EVENT cureReceived     "[#1#(msg)] I cured you"
-#EVENT cureRejected		"[#1#(msg)] I cannot cure you"
+|-- Macro generated cure requests/rejections
+#EVENT cureRequest  	"[ #1# #*#]#*#cureRequest #2#"
+#EVENT cureReceived  	"[ #1# #*#]#*#I cured you#*#"
+#EVENT cureRejected  	"[ #1# #*#]#*#I cannot cure you#*#"
 
 |-- Poison
-#EVENT cureGroupPoison	"[#1#] cureGroupPoison #2#"
-#EVENT cureGroupPoison	"<#1#> cureGroupPoison #2#"
-#EVENT cureGroupPoison	"[#1#(msg)] cureGroupPoison #2#"
 #EVENT cureGroupPoison	"#1# tells the group#*#'cureGroupPoison #2#'"
 #EVENT cureGroupPoison	"#1# tells you#*#'cureGroupPoison #2#'"
 #EVENT cureGroupPoison	"#1# tells the raid#*#'cureGroupPoison #2#'"
+#EVENT cureGroupPoison 	"[ #1# #*#]#*#cureGroupPoison #2#"
 
 |-- Disease
-#EVENT cureGroupDisease	"[#1#] cureGroupDisease #2#"
-#EVENT cureGroupDisease "<#1#> cureGroupDisease #2#"
-#EVENT cureGroupDisease "[#1#(msg)] cureGroupDisease #2#"
 #EVENT cureGroupDisease	"#1# tells the group#*#'cureGroupDisease #2#'"
 #EVENT cureGroupDisease	"#1# tells you#*#'cureGroupDisease #2#'"
 #EVENT cureGroupDisease	"#1# tells the raid#*#'cureGroupDisease #2#'"
+#EVENT cureGroupDisease "[ #1# #*#]#*#cureGroupDisease #2#"
 
 |-- Curse
-#EVENT cureGroupCurse	"[#1#] cureGroupCurse #2#"
-#EVENT cureGroupCurse 	"<#1#> cureGroupCurse #2#"
-#EVENT cureGroupCurse 	"[#1#(msg)] cureGroupCurse #2#"
 #EVENT cureGroupCurse	"#1# tells the group#*#'cureGroupCurse #2#'"
 #EVENT cureGroupCurse	"#1# tells you#*#'cureGroupCurse #2#'"
 #EVENT cureGroupCurse	"#1# tells the raid#*#'cureGroupCurse #2#'"
+#EVENT cureGroupCurse 	"[ #1# #*#]#*#cureGroupCurse #2#"
 
 |-- Corruption (N/A until TSS)
 

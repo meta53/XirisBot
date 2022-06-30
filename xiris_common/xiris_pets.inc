@@ -9,7 +9,7 @@ Supported by all classes based on INI settings
 ______________________________________________
 REVISION HISTORY
     08.01.19    xiris 	INITIAL REVISION
-
+	06.29.22	xiris 	Changed the chkPet to only chkPetWeapons if its a new pet
 	
 **|
 
@@ -31,15 +31,16 @@ Sub chkPet
 	/if (${Me.Pet.ID} && ${Me.Pet.Name.Find[familiar]}) /pet get lost
 	/if (${Me.Invis} || ${Me.Moving} || ${timer_petBuffRecheck}) /return
 
+	/declare hadPetOnInitialize bool local ${Bool[${Me.Pet.ID}]}
 	|--Spawn your pet
 	/call chkPetSpawn
 	/call RunRaidEvents	
 	
 	|--Buff your pet
-	/if (${Me.Class.ShortName.NotEqual[SHM]}) 	/call chkPetBuffs
+	/if (${Me.Class.ShortName.NotEqual[SHM]} &&  ${Bool[${Me.Pet.ID}]}) /call chkPetBuffs
 
-	|--Weaponize your pet
-	/if (${Me.Class.ShortName.Equal[MAG]}) 		/call chkPetWeaps
+	|--Weaponize your pet if its a new spawn
+	/if (${Me.Class.ShortName.Equal[MAG]} && !${hadPetOnInitialize}) /call chkPetWeaps
 	
 	|--Shrink your pet
 	/if (!${bln_petShrunk}) /call ShrinkPet
