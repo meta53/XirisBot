@@ -1121,10 +1121,7 @@ Sub doRefreshAlerts
 
 |-- CONNECT TO EQBC
 Sub Event_ConnectEQBC
-	/bccmd quit
-	/delay 20
-	/bccmd connect
-	/doevents flush ConnectEQBC
+	/echo NO LONGER SUPPORTED
 /return
 
 |-- RELOAD CURRENT MACRO
@@ -1305,8 +1302,8 @@ Sub TrueTarget(int _targetID)
 Sub chkAutoAssist
 	/if (!${bln_autoAssist}) /return
 	/declare tgtID int local
-	/dannet ${str_tankName1} Target.ID
-	/varset tgtID ${Macro.Return}
+	/dquery ${str_tankName1} -q "Target.ID"
+	/varset tgtID ${DanNet.Q}
 	/call TrueTarget ${tgtID}
 	/call EngageTarget ${tgtID}
 /return
@@ -1386,7 +1383,7 @@ Sub commandAllInGroup(command)
 	/echo /noparse commandAllInGroup ${command}
 	/declare i int local 0
 	/for i 0 to ${Group}
-		/bct ${Group.Member[${i}]} //docommand ${command}
+		/dt ${Group.Member[${i}]} //docommand ${command}
 	/next i
 /return
 
@@ -1619,11 +1616,11 @@ SUB check_selectedBots(_selectedBots, _chatSender)
 /return ${botSelected}
 
 Sub check_validBots(_selectedBots, _botName, _chatSender)
+	/echo chck_validBots
 	/declare botValidated bool local false
 	/declare clsShortName string local
-	/dannet ${_botName} Me.Class.ShortName
-	/varset clsShortName ${Macro.Return}
-	
+	/dquery ${_botName} -q "Me.Class.ShortName"
+	/varset clsShortName ${DanNet.Q}
 	/if (${Select[priests,${_selectedBots}]} && ${Select[${clsShortName},${PriestClasses}]} || ${Select[healers,${_selectedBots}]} && ${Select[${clsShortName},${PriestClasses}]} || ${Select[ranged,${_selectedBots}]} && ${Select[${clsShortName},${RangedClasses}]} || ${Select[casters,${_selectedBots}]} && ${Select[${clsShortName},${CasterClasses}]} || ${Select[melee,${_selectedBots}]} && ${Select[${clsShortName},${MeleeClasses}]} || ${Select[me,${_selectedBots}]} && ${_chatSender.Equal[${Me.CleanName}]} || ${Select[${Me.Class},${_selectedBots}]} || ${Select[${clsShortName},${_selectedBots}]} || ${Select[${Me.CleanName},${_selectedBots}]} || ${Select[all,${_selectedBots}]} || ${Select[group,${_selectedBots}]} && ${Me.CleanName.Equal[${_chatSender}]} || ${Select[group,${_selectedBots}]} || ${Select[zone,${_selectedBots}]} && ${SpawnCount[pc ${_chatSender}]}) /varset botValidated TRUE
 	
 
@@ -1635,7 +1632,7 @@ Sub check_validBots(_selectedBots, _botName, _chatSender)
 |------------------------------------------------------------------------------------|
 |- @param timerName: Name of the timer you want to declare.							-|
 |- @param timerSetting: Setting of the timer you're declaring.						-|
-|------------------------------------------------------------------------------------|
+|---------------------------------BB---------------------------------------------------|
 SUB createTimer(timerName, timerSetting)
 |/if (${Debug}) /echo |- createTimer ==>
 

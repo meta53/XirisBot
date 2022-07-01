@@ -212,6 +212,7 @@ Sub cmbtBuffGRP
 	/declare i    		  int		local
 	/declare g			  int		local
 	/declare gName 	  	  string	local
+	/declare gClass       string    local
 	/declare buffSpell    string	local
 	/declare buffGem	  string	local
 	/declare delay		  int       local	0
@@ -221,10 +222,12 @@ Sub cmbtBuffGRP
 
 	| -- loop through the combat buffs
 	/for i 1 to ${int_cmbtBuffTotal}
+		/if (${CMBTBUFF_${i}_Timer}) /goto :next
 		| -- check to see if this combat buff is on group members, and if it is missing, slap it on the first appropriate member (if ready)
 		/varset		buffSpell	 ${CMBTBUFF_${i}}
 		/varset		buffGem		 ${CMBTBUFF_${i}_Gem}
 		/call chkSpellMemorized "${buffSpell}" FALSE ${buffGem}
+		
 
 		/for g 0 to ${Group}
 			|-- check group health
@@ -232,14 +235,13 @@ Sub cmbtBuffGRP
 
 			|-- Check to see if member has the buff
 			/varset gName ${Group.Member[${g}]}
-			/call check_validBots melee ${gName} ${Me.Name} 
-
-			/if (${Macro.Return}) {
-				/dannet ${gName} Me.Buff[${buffSpell}].ID
-				/varset bStatus ${Macro.Return}
-				/if (!${Bool[${bStatus}]} ) {
-					/dannet ${gName} Me.Buff[${buffSpell}].Duration
-					/varset bDuration ${Macro.Return}
+			
+			/varset gClass ${Spawn[pc =${gName}].Class.ShortName}
+			/if (${Select[${gClass},WAR,SHD,PAL,MNK,RNG,ROG,BRD,BER]}) {
+				/cecho cmbtBuffGRP: \aw${gName} -q \ag"Me.Buff[${buffSpell}].Duration"
+				/dquery ${gName} -q "Me.Buff[${buffSpell}].Duration"
+				/varset bDuration ${DanNet.Q}
+				/if (!${Bool[${bDuration}]} ) {
 					/cecho \awbDuration: \ay${bDuration}
 					/if (${bDuration} < 3 ) {
 						/goto :castCMBTBuff
@@ -255,8 +257,8 @@ Sub cmbtBuffGRP
 
 			:castCMBTBuff
 			|/cecho \ayCasting ${buffSpell} on ${gName}
-			/dannet ${gName} Me.Id
-			/call TrueTarget ${Macro.Return}
+			
+			/call TrueTarget ${Spawn[pc =${gName}].ID}
 			/call MQ2Cast "${buffSpell}" ${buffGem}
 			/if (${Cast.Result.Equal[CAST_SUCCESS]}) {
 				/cecho \ag ${buffSpell} ${Cast.Result} : DELAYING for \ay ${Spell[${buffSpell}].Duration}s \agrefresh
@@ -269,6 +271,7 @@ Sub cmbtBuffGRP
 	:nextCMBT
 	
 	/next i
+
 	/call RunRaidEvents
 	/call TrueTarget ${int_targetID}
 /return
@@ -373,11 +376,10 @@ Sub doSingleTargetBuffOnRaid
 			/call chkSpellMemorized "${buffSpell}" TRUE ${buffGem}
 			
 			/for i 1 to ${Raid.Members} 
-				/varset charName ${Raid.Member[${i}]}
-				/dannet ${charName} Me.Class.ShortName
-				/varset charClass ${Macro.Return}
+
+				/varset charClass ${Spawn[pc =${Raid.Member[${i}]}].Class.ShortName}
 	
-				/echo ${charName} ${charClass} : ${buffTargets.Find[${charClass}]}
+				/echo  ${Raid.Member[${i}]} ${charClass} : ${buffTargets.Find[${charClass}]}
 				/if (${buffTargets.Find[*]} || ${buffTargets.Find[${charClass}]}) {
 					/cecho \ag${Raid.Member[${i}]} is a valid Single Buff Target
 					/call castSingleTargetBuff ${Raid.Member[${i}]} "${buffSpell}" ${buffGem}
@@ -600,23 +602,27 @@ Sub chkOOCBuffs
 	/declare buffGem	  string	local
 
 	/for i 1 to ${int_oocBuffTotal}
+		/call RunAllEvents
+		/if (${bln_engaged}) /return
 		/varset 	buffSpell    ${OOCBUFF_${i}}
-		|/echo ${buffSpell}
-		/if (${Me.Buff["${buffSpell}"].ID}) {
+		/if (!${Bool[${${buffSpell}}]}) /goto :next
+		/if (${Me.Buff[${buffSpell}].ID}) {
 			|/echo already have buff, doing next
 			/goto :next
 		}
+
+		/echo ${buffSpell}
 		/varcalc	buffDuration ${Spell[${OOCBUFF_${i}}].Duration} * 6
 		/varset		buffGem		 ${OOCBUFF_${i}_Gem}
 
 		:spellReadyWait
+		/call RunAllEvents
+		/if (${bln_engaged}) /return
 		/memspellset buff
 		/delay 3s
 		/if (!${Me.SpellReady["${buffSpell}"]} || ${Me.CurrentMana} < ${Spell[${buffSpell}].Mana}) {
 			/echo Waiting for ${buffSpell} for SELF buff
 			/if (${Me.Standing}) /sit
-			/call RunAllEvents
-			/if (${bln_engaged}) /return
 			/goto :spellReadyWait
 		}
 

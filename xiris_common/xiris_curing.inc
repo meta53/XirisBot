@@ -274,7 +274,7 @@ Sub chkNeedCure
 			/if (${str_myCurer.Equal[${Me.Name}]}) {
 					/call handleCureRequest ${Me.Name} ${Me.ID} ${cureType} ${counters}
 			} else {
-					/bct ${str_myCurer} cureRequest ${Me.Name} ${Me.ID} ${cureType} ${counters}
+					/dt ${str_myCurer} cureRequest ${Me.Name} ${Me.ID} ${cureType} ${counters}
 			}
 		}
 		/varset timer_cure_request 30s
@@ -335,7 +335,7 @@ Sub handleCureRequest(_name, _id, _cureType, _counters)
 		/cecho \aoDISEASE CURE selected.
 		/if (!${bln_hasDiseaseCure}) {
 			/echo I cannot cure Disease
-			/bct ${_name} I cannot cure you
+			/dt ${_name} I cannot cure you
 			/return
 		}
 		/varset str_spell 	${str_cure_disease}
@@ -344,7 +344,7 @@ Sub handleCureRequest(_name, _id, _cureType, _counters)
 		/cecho \agPOISON CURE selected.
 		/if (!${bln_hasPoisonCure}) {
 			/echo I cannot cure Poison
-			/bct ${_name} I cannot cure you
+			/dt ${_name} I cannot cure you
 			/return
 		}			
 		/varset str_spell 	${str_cure_poison}
@@ -353,7 +353,7 @@ Sub handleCureRequest(_name, _id, _cureType, _counters)
 		/cecho \ayCURSE CURE selected.
 		/if (!${bln_hasCurseCure}) {
 			/echo I cannot cure Curses
-			/bct ${_name} I cannot cure you
+			/dt ${_name} I cannot cure you
 			/return
 		}	
 		/varset str_spell 	${str_cure_curse}
@@ -362,7 +362,7 @@ Sub handleCureRequest(_name, _id, _cureType, _counters)
 		/cecho \apCORRUPTION CURE selected.
 		/if (!${bln_hasCorruptionCure}) {
 			/echo I cannot cure Corruption
-			/bct ${_name} I cannot cure you
+			/dt ${_name} I cannot cure you
 			/return
 		}	
 		/varset str_spell 	${str_cure_corruption}
@@ -395,7 +395,7 @@ Sub castCure(string _name, int _id, string _spell, int _count)
 		/call MQ2Cast "${_spell}" gem7 8s
 		/delay 10
 	/next i 
-	/bct ${_name} I cured you.
+	/dt ${_name} I cured you.
 /return
 
 

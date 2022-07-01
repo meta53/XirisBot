@@ -22,8 +22,8 @@ Sub Main
     /declare Response1    string  outer 
     /declare HoldNothing  string  outer 
     /declare PingData1    string  outer 
-    /declare DTestActive  int     outer 0
-    /declare DTestAction  string  outer
+    /declare DTestActive  int     outer 1
+    /declare DTestAction  string  outer ping
     /declare TName        string  outer
     /declare MyPeerName   string  outer ${EverQuest.Server.Lower}_${Me.CleanName.Lower}
     /declare WaitForIt    string  outer 0
@@ -34,14 +34,10 @@ Sub Main
     
     /call CheckPlugin
 
-    /while (1) {
-        /call WaitForNothing
-        /if (${DTestActive}) /call DTestRun
-    }
-
+    /call DTestRun
+    
 :OnExit
     /echo Ending DanNet Test Macro. 
-    /if (${LoadedPlugin}) /plugin MQ2DanNet unload noauto
     /endmacro
 /return
 
@@ -146,8 +142,7 @@ Sub DTestRun
     /declare idx2      int    local 0
     /declare BTime     int    local 0
     /declare ETime     int    local 0
-    
-    /if (!${DTestActive}) /return
+
     
     /if (${DTestAction.Equal[ping]}) {
         /if (${TName.Equal[all]}) {

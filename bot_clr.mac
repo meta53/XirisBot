@@ -357,7 +357,7 @@ Sub Event_CombatRezOFF
 /return 
 
 Sub CombatRezOFF
-	/bc ${Me.Name} is no auto rezzing during combat.
+	/dgt ${Me.Name} is no longer auto rezzing during combat.
 	/varset bln_autoRez FALSE
 	/varset bln_combatRez FALSE
 /return

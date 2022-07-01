@@ -127,7 +127,7 @@ Sub EVENT_ChangeHP(string chatText)
 	/doevents flush ChangeHP
 /return
 
-Sub EVENT_HealMode(_line, _eventParams)
+Sub EVENT_HealMode(_line, _chatSender, _eventParams)
 	/if (${Me.Class.ShortName.NotEqual[CLR]}) /return
 	/echo Changing Heal Mode?
 	/echo line ${_line}
@@ -650,6 +650,7 @@ Sub heal_chStart(string _chSettings, _position)
 	/varset tank1 ${Spawn[pc id ${int_chTarget}].Name}
 	/echo Starting Complete Healing, delaying ${sDelay}ms
 	/delay ${sDelay}
+	/call RunAllEvents
 	:chLoop
 		/if (${Spawn[pc ${tank1}].ID} != ${int_chTarget}) {
 			/echo CHCHain must have switched! new tank! restart with proper delay!
@@ -682,6 +683,8 @@ Sub heal_chStart(string _chSettings, _position)
 		} else /if (${Macro.Return.Equal[CAST_CANCELLED]}) {
 			/goto :chLoop
 		} else {
+			/call RunAllEvents
+			/if (!${bln_chChainMember}) /goto :return
 			/delay ${delay}
 		}
 		/call RunAllEvents
@@ -804,11 +807,13 @@ Sub AERez
 		/if (!${Bool[${str_corpse}]}) /goto :next_corpse
 
 		| check corpse name 
-		/dannet ${str_corpse} Me.ID
-		/echo contacting ${str_corpse} ${Macro.Return}
-		/varset charID ${Macro.Return}
+		/echo Contacting ${str_corpse} for their ID
+		/dquery ${str_corpse} -q "Me.ID"
+		/varset charID ${DanNet.Q}
+		/echo charid? ${charID}
 		| make sure the target is actually a corpse, and online
 		/if (${Spawn[id ${id}].CleanName.Find[corpse]} == NULL || !${charID}) /varset bln_skipCorpse TRUE
+		/echo skipCorpse? ${bln_skipCorpse}
 		/if (${bln_skipCorpse}) /goto :next_corpse
 
 
@@ -843,7 +848,7 @@ Sub AERez
 
 Sub Ressurect(int _id)
 	/call TrueTarget ${_id}
-	/bct  ${Spawn[id ${_id}].CleanName.Arg[1,']} //consent ${Me.Name}
+	/dex  ${Spawn[id ${_id}].CleanName.Arg[1,']} /consent ${Me.Name}
 	/delay 10
 	/corpse 
 

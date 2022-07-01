@@ -17,7 +17,7 @@ Calls internal method -> chkBuffs | Which calls library methods:
 	/call composeGroupList |
 	Returns Xiris|Xaelia|Xaexa|Xirael
 
-	/bct ClericName requestBuffLine AEGO GROUP ${groupList}
+	/dt ClericName requestBuffLine AEGO GROUP ${groupList}
 }
 
 This will request the buffline Aegolism from a cleric.
@@ -164,8 +164,8 @@ Sub chkHasBuffLine(string _buffLine, string _targetName)
 	
 	
 	/varset 	delim ${list_buffs.Delimiter[ ]}
-	/dannet ${_targetName} Me.Buff[${buffSpell}].ID
-	/varset bStatus ${Macro.Return}
+	/dquery ${_targetName} -q "Me.Buff[${buffSpell}].ID"
+	/varset bStatus ${DanNet.Q}
 	/echo Raw NetBot data on ${_targetName}: ${NetBots[${_targetName}].Buff}
 	|-- note, we replaced netbots with dannet
 	/if (${list_buffs.Append[${NetBots[${_targetName}].Buff}]}) {

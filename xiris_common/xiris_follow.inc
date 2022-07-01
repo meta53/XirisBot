@@ -207,7 +207,7 @@ SUB AquireFollow(string _type)
 |----------------------------------------------------------------------------|
 |- Disengages follow on bots who are in the same zone as the _chatSender.	-|
 |----------------------------------------------------------------------------|
-|- Use, /stop, or, 'stop' in /tell, /goup, or /bc.							-|
+|- Use, /stop, or, 'stop' in /tell, /goup, or //dgt.							-|
 |----------------------------------------------------------------------------|
 
 SUB EVENT_Stop(_line, _chatSender, _eventParams)

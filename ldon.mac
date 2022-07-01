@@ -351,7 +351,7 @@ Sub zoneLDON
 	/echo zoneLDON: headed to ${ldonEntrance} in ${zoneStart} in 1s
 	/delay 10
 	
-	|-- loop through group and /bct them to zone (bcga doesnt work for out of zone group - its likely a bug)
+	|-- loop through group and /dt them to zone (bcga doesnt work for out of zone group - its likely a bug)
 	|-- commandAllInGroup is in xiris_common.ini
 	|-- logic change 12.13 to better handle same zone starts (everfrost, nro);
 
@@ -432,8 +432,8 @@ Sub zoneLDON
 			/echo  ${Group.Member[${i}]} ${Group.Member[${i}].Distance}
 			/if (${Group.Member[${i}].Distance}  > 25) {
 				/echo  ${Group.Member[${i}]} ${Group.Member[${i}].Distance} isn't close yet, telling them to target me and hurry their asses up.
-				/squelch /bct ${Group.Member[${i}]} //tar ${Me.Name}
-				/squelch /bct ${Group.Member[${i}]} //nav target
+				/squelch /dt ${Group.Member[${i}]} //tar ${Me.Name}
+				/squelch /dt ${Group.Member[${i}]} //nav target
 				/varcalc missingCount ${missingCount} + 1
 				/delay 1s
 			}
@@ -632,8 +632,8 @@ Sub OriginToLobby
 			/varcalc originAttempt ${originAttempt} + 1
 			|-- tell each group member that isn't a bard to cast origin, bard add origin to queue
 			/for i 0 to ${Group}
-				/if (${Group.Member[${i}].Class.ShortName.Equal[BRD]}) 	  /bct ${Group.Member[${i}]} //medley queue origin
-				/if (${Group.Member[${i}].Class.ShortName.NotEqual[BRD]}) /bct ${Group.Member[${i}]} //casting "Origin" alt
+				/if (${Group.Member[${i}].Class.ShortName.Equal[BRD]}) 	  /dt ${Group.Member[${i}]} //medley queue origin
+				/if (${Group.Member[${i}].Class.ShortName.NotEqual[BRD]}) /dt ${Group.Member[${i}]} //casting "Origin" alt
 			/next i
 
 			/delay 40s
