@@ -22,178 +22,125 @@ Sub Main
 /return
 
 Sub dranik 
-    /dt Empathic looton ALL
-    /dt Nihilist looton ALL
-    /dt Dogmatist looton ALL 
-    /dt Pantheon looton ALL 
-    /dt Tragic looton ALL
-    /dt Mluian looton ALL 
-    /dt Shinxia looton ALL
-    /dt Shynxia looton ALL
+    /dt Aidos looton ALL
+    /dt Tragic looton QUEST
+    /dt Mluian looton QUEST 
+    /dt Shinxia looton QUEST
+    /dt Shynxia looton QUEST
+    /dt Xeixa looton QUEST
+    /dt Xiexa looton QUEST
+    /dt Xeqisa looton QUEST
 /return
 
 Sub wallofslaughter
-    /dt Xunshia looton ALL
-    /dt Xonshia looton ALL
-    /dt Xerael looton ALL
-    /dt Xarael looton ALL
-    /dt Xorael looton ALL
-    /dt Xurael looton ALL
-    /dt Dogmatist looton ALL
-    /dt Xepatia looton ALL
-    /dt Ophidia looton ALL
-    /dt Ophelia looton ALL
-    /dt Ophemia looton ALL
-    /dt Ophenia looton ALL
-    /dt Opheoia looton ALL
-    /dt Shynxia looton ALL
-    /dt Erinyes  looton ALL
-    /dt Ertis  looton ALL
-    /dt Erinyas looton ALL
-    /dt Xeixi looton ALL
-    /dt Cereborn looton ALL
-    /dt Eurydice looton ALL
+    /dt Aidos looton ALL
+    /dt Xunshia looton QUEST
+    /dt Xonshia looton QUEST
+    /dt Xerael looton QUEST
+    /dt Xarael looton QUEST
+    /dt Xorael looton QUEST
+    /dt Xurael looton QUEST
+    /dt Dogmatist looton QUEST
+    /dt Xepatia looton QUEST
+    /dt Ophidia looton QUEST
+    /dt Ophelia looton QUEST
+    /dt Ophemia looton QUEST
+    /dt Ophenia looton QUEST
+    /dt Opheoia looton QUEST
+    /dt Ophexia lootn QUEST 
+    /dt Opheyia looton QUEST 
+    /dt Ophexia looton QUEST
+    /dt Mluian looton QUEST
+    /dt Shynxia looton QUEST
+    /dt Erinyes  looton QUEST
+    /dt Ertis  looton QUEST
+    /dt Erinyas looton QUEST
+    /dt Drexia looton QUEST
+    /dt Xeixi looton QUEST
+    /dt Cereborn looton QUEST
+    /dt Eurydice looton QUEST
+    /dt Xeqisa looton QUEST
 /return 
 
 Sub riftseekers 
-    | Note: In Riftseeker we want to loot on ALL, as signets and augments are categorized as such.
-    | Leave Aergia as the master looter
-    /dt Aergia looton ALL
+    | Note: In Riftseeker we want to loot on QUEST, as signets and augments are categorized as such.
+    | Leave Aidos as the master looter
+    /dt Aidos looton ALL
     | Clerics Group A
-    /dt Xirael looton ALL
-    /dt Xinshia looton ALL
-    /dt Xanshia looton ALL
-    /dt Xunshia looton ALL
-    /dt Xonshia looton ALL
-    /dt Xerael looton ALL
-    /dt Xarael looton ALL
-    /dt Xorael looton ALL
-    /dt Xurael looton ALL
+    /dt Xirael looton QUEST
+    /dt Xinshia looton QUEST
+    /dt Xanshia looton QUEST
+    /dt Xunshia looton QUEST
+    /dt Xonshia looton QUEST
+    /dt Xerael looton QUEST
+    /dt Xarael looton QUEST
+    /dt Xorael looton QUEST
+    /dt Xurael looton QUEST
     
     | Clerics Group B
     |**
-    /dt Theist looton ALL
-    /dt Deist looton ALL
-    /dt Empathic looton ALL
-    /dt Nihilist looton ALL
-    /dt Dogmatist looton ALL
-    /dt Pantheon looton ALL
-    /dt Tragic looton ALL
+    /dt Theist looton QUEST
+    /dt Deist looton QUEST
+    /dt Empathic looton QUEST
+    /dt Nihilist looton QUEST
+    /dt Dogmatist looton QUEST
+    /dt Pantheon looton QUEST
+    /dt Tragic looton QUEST
     **|
 
     | Chain Classes Group A
-    /dt Xaeliea looton ALL
-    /dt Xaexa looton ALL
-    |/dt Xaia looton ALL
-    /dt Xepatia looton ALL
-    |/dt Ophidia looton ALL
-    /dt Ophelia looton ALL
-    |/dt Ophemia looton ALL
-    |/dt Ophenia looton ALL
-    /dt Opheoia looton ALL
+    /dt Xaeliea looton QUEST
+    /dt Xaexa looton QUEST
+    |/dt Xaia looton QUEST
+    /dt Xepatia looton QUEST
+    |/dt Ophidia looton QUEST
+    /dt Ophelia looton QUEST
+    |/dt Ophemia looton QUEST
+    |/dt Ophenia looton QUEST
+    /dt Opheoia looton QUEST
 
 | Chain Classes Group B
 |**
-    /dt Ophexia looton ALL
-    /dt Opheyia looton ALL
-    /dt Ophezia looton ALL
-    /dt Mluian looton ALL
-    /dt Shinxia looton ALL
-    /dt Shynxia looton ALL
+    /dt Ophexia looton QUEST
+    /dt Opheyia looton QUEST
+    /dt Ophezia looton QUEST
+    /dt Mluian looton QUEST
+    /dt Shinxia looton QUEST
+    /dt Shynxia looton QUEST
 **|
 | Leather Classes
   
-    /dt Ertres looton ALL
-    /dt Erinyes looton ALL
-    /dt Ertris looton ALL
-    /dt Erinyas looton ALL
-    /dt Drexia looton ALL
+    /dt Ertres looton QUEST
+    /dt Erinyes looton QUEST
+    /dt Ertris looton QUEST
+    /dt Erinyas looton QUEST
+    /dt Drexia looton QUEST
 
 
 | Silk Classes
 |**
-    /dt Xeixa looton ALL
-    /dt Xiexa looton ALL
-    /dt Xeixi looton ALL
-    /dt Cereborn looton ALL
-    /dt Eurydice looton ALL
-    /dt Xeqisa looton ALL
+    /dt Xeixa looton QUEST
+    /dt Xiexa looton QUEST
+    /dt Xeixi looton QUEST
+    /dt Cereborn looton QUEST
+    /dt Eurydice looton QUEST
+    /dt Xeqisa looton QUEST
 **|
 /return 
 
 Sub provinggrounds 
-
     | Leave Aergia as the master looter
-    /dt Aergia looton ALL
-
-    | Plate Group
-    /dt Xirea looton ALL
-    /dt Sadelia looton ALL
-    /dt Achlys looton ALL
-    /dt Adikia looton ALL
     /dt Aidos looton ALL
-    /dt Achos looton ALL
 
-    | Clerics Group A
-    /dt Xirael looton ALL
-    /dt Xinshia looton ALL
-    /dt Xenshia looton ALL
-    /dt Xanshia looton ALL
-    /dt Xunshia looton ALL
-    /dt Xonshia looton ALL
-    /dt Xerael looton ALL
-    /dt Xarael looton ALL
-    /dt Xorael looton ALL
-    /dt Xurael looton ALL
- 
-    | Clerics Group B
-    |**
-    /dt Theist looton ALL
-    /dt Deist looton ALL
-    /dt Empathic looton ALL
-    /dt Nihilist looton ALL
-    /dt Dogmatist looton ALL
-    /dt Pantheon looton ALL
-    /dt Tragic looton ALL
-    **|
-
-     Chain Classes Group A
-    /dt Xaeliea looton ALL
-    /dt Xaexa looton ALL
-    /dt Xaia looton ALL
-    /dt Xepatia looton ALL
-    /dt Ophidia looton ALL
-    /dt Ophelia looton ALL
-    /dt Ophemia looton ALL
-    /dt Ophenia looton ALL
-    /dt Opheoia looton ALL
-
-    | Chain Classes Group B
-    |**
-    /dt Ophexia looton ALL
-    /dt Opheyia looton ALL
-    /dt Ophezia looton ALL
-    /dt Mluian looton ALL
-    /dt Shinxia looton ALL
-    /dt Shynxia looton ALL
-    **|
-
-    | Leather Classes
-    /dt Ertres looton ALL
-    /dt Erinyes looton ALL
-    /dt Ertris looton ALL
-    /dt Erinyas looton ALL
-    /dt Drexia looton ALL
-
-
-    | Silk Classes
-    |**
-    /dt Xeixa looton ALL
-    /dt Xiexa looton ALL
-    /dt Xeixi looton ALL
-    /dt Cereborn looton ALL
-    /dt Eurydice looton ALL
-    /dt Xeqisa looton ALL
-    **|
-
+    /dt Xirael looton QUEST
+    /dt Xonshia looton QUEST
+    /dt Xarael looton QUEST
+    /dt Theist looton QUEST
+    /dt Empathic looton QUEST
+    /dt Nihilist looton QUEST
+    /dt Tragic looton QUEST
+    /dt Ophemia looton QUEST
+    /dt Mluian looton QUEST
+    /dt Shynxia looton QUEST
+    /dt Drexia looton QUEST
 /return 

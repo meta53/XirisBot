@@ -244,6 +244,7 @@ Sub chkCelRegen
 	/dquery ${pp} -q "Me.AltAbilityReady[Mass Group Buff]" -o pMGB
 	/dquery ${pp} -q "Me.AltAbilityReady[Celestial Regeneration]" -o pCR
 	/delay 20 ${DanNet[${pp}].Query["Me.AltAbilityReady[Mass Group Buff]"].Received}
+	/delay 20 ${DanNet[${pp}].Query["Me.AltAbilityReady[Celestial Regeneration]"].Received}
 	/if (!${Bool[${pMGB}]} || !${Bool[${pMGB}]}) {
 		/cecho \ar${pp}:\arDOES NOT \awhave MGB and Celestial Regen Ready. \agFiring!
 		/goto :FireCelRegen
@@ -795,7 +796,7 @@ Sub AERez
 
 	/for i 1 to ${int_corpses}
 		/varset arr_corpses[${i}] ${NearestSpawn[${i}, pc corpse radius ${int_range_rez}].ID}
-	/next x
+	/next i
 	
 	:consider 
 	/for i 1 to ${int_corpses}

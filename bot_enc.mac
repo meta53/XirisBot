@@ -227,10 +227,10 @@ Sub variant_initialize
 
 	
 	|--Enchanter Specific Settings
-	/declare 	str_mezSingle			string	outer	${Ini[botINI,ENC_Spells,Mez_Single,Bliss]}
+	/declare 	str_mezSingle			string	outer	${Ini[botINI,ENC_Spells,Mez_Single,Euphoria]}
 	/declare	use_mezSingle			bool	outer	${Ini[botINI,ENC_Spells,Mez_Single_Use,TRUE]}
 	/declare	int_mezSingleMinLvl		int		outer	${Ini[botINI,ENC_Spells,Mez_Single_MinLevel,40]}
-	/declare	int_mezSingleMaxLvl		int		outer	${Ini[botINI,ENC_Spells,Mez_Single_MaxLevel,68]}
+	/declare	int_mezSingleMaxLvl		int		outer	${Ini[botINI,ENC_Spells,Mez_Single_MaxLevel,73]}
 	/declare	int_mezSingleGem		string	outer	${Ini[botINI,ENC_Spells,Mez_Single_Gem,gem4]}
 
 	/declare 	str_mezAE				string	outer	${Ini[botINI,ENC_Spells,Mez_AE,Bliss of the Nihil]}

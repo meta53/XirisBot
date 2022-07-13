@@ -16,9 +16,10 @@ ______________________________________________
 
 #include xiris_common/xiris_events_raid_god.inc 
 #include xiris_common/xiris_events_raid_dodh_demi.inc 
+#include xiris_common/xiris_events_raid_oow_mpg_adaptation.inc
+#include xiris_common/xiris_events_raid_oow_mpg_corruption.inc 
 #include xiris_common/xiris_events_raid_oow_mpg_foresight.inc 
 #include xiris_common/xiris_events_raid_oow_mpg_hatred.inc 
-#include xiris_common/xiris_events_raid_oow_mpg_corruption.inc 
 #include xiris_common/xiris_events_raid_oow_mpg_specialization.inc
 
 
@@ -49,7 +50,7 @@ Sub xbot_initialize_events
     /if (${Zone.ShortName.Equal[chambersb]})    /call InitEvents_OOW_MPG_Endurance
     /if (${Zone.ShortName.Equal[chambersc]})    /call InitEvents_OOW_MPG_Foresight
     /if (${Zone.ShortName.Equal[chambersd]})    /call InitEvents_OOW_MPG_Specialization
-    /if (${Zone.ShortName.Equal[chamberse]})    /call InitEvents_OOW_MPG_Adaptation
+    /if (${Zone.ShortName.Equal[chamberse]} || ${Zone.ShortName.Equal[arena]} )    /call InitEvents_OOW_MPG_Adaptation
     /if (${Zone.ShortName.Equal[chambersf]})    /call InitEvents_OOW_MPG_Corruption
     /if (${Zone.ShortName.Equal[anguish]})      /call InitEvents_OOW_Anguish
 

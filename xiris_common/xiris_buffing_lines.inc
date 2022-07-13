@@ -165,6 +165,7 @@ Sub chkHasBuffLine(string _buffLine, string _targetName)
 	
 	/varset 	delim ${list_buffs.Delimiter[ ]}
 	/dquery ${_targetName} -q "Me.Buff[${buffSpell}].ID"
+	/delay 20 ${DanNet.Query.Received}
 	/varset bStatus ${DanNet.Q}
 	/echo Raw NetBot data on ${_targetName}: ${NetBots[${_targetName}].Buff}
 	|-- note, we replaced netbots with dannet

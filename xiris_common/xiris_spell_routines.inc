@@ -71,41 +71,42 @@ ______________________________________________
 | CAST_RECOVER		   | Spell not Recovered yet!											  |
 | CAST_STUNNED		   | Stunned 															  |
 | CAST_STANDING		   | Not Standing 														  |
-| CAST_DISTRACTED      | To Distracted ( spell book open )                                    |
+| CAST_DISTRACTED      | To Distracted ( spell book open )    								  |
+| CAST_NOCHARM		   | This NPC cannot be charmed			                                  |
 +----------------------+----------------------------------------------------------------------+
 
 **|	
-#Event BeginCast	"You begin casting#*#"
-#Event Collapse		"Your gate is too unstable, and collapses.#*#"
+#Event BeginCast	"#*#You begin casting#*#"
+#Event Collapse		"#*#Your gate is too unstable, and collapses.#*#"
 #Event FDFail 		"#1# has fallen to the ground.#*#"
-#Event Fizzle 		"Your spell fizzles#*#"
-#Event Immune 		"Your target is immune to changes in its attack speed#*#"
-#Event Immune 		"Your target is immune to changes in its run speed#*#"
-#Event Immune 		"Your target cannot be mesmerized#*#"
-#Event Interrupt 	"Your casting has been interrupted#*#"
-#Event Interrupt 	"Your spell is interrupted#*#"
-#Event Invulnerable "You can't cast spells while invulnerable#*#"
-#Event Invulnerable "You cannot cast spells while invulnerable#*#"
-#Event Invulnerable "You *CANNOT* cast spells while invulnerable#*#"
-#Event NoHold 		"Your spell did not take hold#*#"
-#Event NoHold 		"Your spell would not have taken hold#*#"
-#Event NoHold 		"You must first target a group member#*#"
-#Event NoHold 		"Your spell is too powerful for your intended target#*#"
-#Event NoLOS 		"You cannot see your target.#*#"
+#Event Fizzle 		"#*#Your spell fizzles#*#"
+#Event Immune 		"#*#Your target is immune to changes in its attack speed#*#"
+#Event Immune 		"#*#Your target is immune to changes in its run speed#*#"
+#Event Immune 		"#*#Your target cannot be mesmerized#*#"
+#Event Interrupt 	"#*#Your casting has been interrupted#*#"
+#Event Interrupt 	"#*#Your spell is interrupted#*#"
+#Event Invulnerable "#*#You can't cast spells while invulnerable#*#"
+#Event Invulnerable "#*#You cannot cast spells while invulnerable#*#"
+#Event Invulnerable "#*#You *CANNOT* cast spells while invulnerable#*#"
+#Event NoHold 		"#*#Your spell did not take hold#*#"
+#Event NoHold 		"#*#Your spell would not have taken hold#*#"
+#Event NoHold 		"#*#You must first target a group member#*#"
+#Event NoHold 		"#*#Your spell is too powerful for your intended target#*#"
+#Event NoLOS 		"#*#You cannot see your target.#*#"
 #Event NoMount 		"#*#You can not summon a mount here.#*#"
-#Event NoTarget 	"You must first select a target for this spell!#*#"
-#Event NotReady 	"Spell recast time not yet met.#*#"
-#Event OutOfMana 	"Insufficient Mana to cast this spell!#*#"
-#Event OutOfRange 	"Your target is out of range, get closer!#*#"
-#Event Recover 		"You haven't recovered yet...#*#"
-#Event Recover 		"Spell recovery time not yet met#*#"
-#Event Resisted 	"Your target resisted the #1# spell#*#"
-#Event Resisted2 	"You resist the #1# spell#*#"
-#Event Standing 	"You must be standing to cast a spell#*#"
-#Event Stunned 		"You are stunned#*#"
-#Event Stunned 		"You can't cast spells while stunned!#*#"
-#Event Stunned 		"You *CANNOT* cast spells, you have been silenced!#*#"
-
+#Event NoTarget 	"#*#You must first select a target for this spell!#*#"
+#Event NotReady 	"#*#Spell recast time not yet met.#*#"
+#Event OutOfMana 	"#*#Insufficient Mana to cast this spell!#*#"
+#Event OutOfRange 	"#*#Your target is out of range, get closer!#*#"
+#Event Recover 		"#*#You haven't recovered yet...#*#"
+#Event Recover 		"#*#Spell recovery time not yet met#*#"
+#Event Resisted 	"#*#Your target resisted the #1# spell#*#"
+#Event Resisted2 	"#*#You resist the #1# spell#*#"
+#Event Standing 	"#*#You must be standing to cast a spell#*#"
+#Event Stunned 		"#*#You are stunned#*#"
+#Event Stunned 		"#*#You can't cast spells while stunned!#*#"
+#Event Stunned 		"#*#You *CANNOT* cast spells, you have been silenced!#*#"
+#Event NoCharm      "#*#This NPC Cannot be charmed#*#"
 
 
 |- note these are not registered wtih the xiris_events handler because they are only used in this include
@@ -127,6 +128,7 @@ Sub Events_SpellRoutines
 	/doevents NoTarget
 	/doevents NotReady
 	/doevents NoHold
+	/doevents NoCharm
 /return
 
 
@@ -232,6 +234,7 @@ Sub MQ2Cast(string spellName,string spellType,timer giveUpTimer,string mySub,str
 		/call Events_SpellRoutines
 	}
 :cast_spell_pending
+	
 	/if ( ${Cast.Status.Find[C]} ) {
 		/if ( !${interruptFlag} && ${mySub.Length} ) /call ${mySub}
 		/goto :cast_spell_pending
@@ -241,7 +244,7 @@ Sub MQ2Cast(string spellName,string spellType,timer giveUpTimer,string mySub,str
 		/if ( !${interruptFlag} && ( ${FindItem[${spellName}].ID} && ${giveUpTimer} && !${FindItem[${spellName}].Timer} ) || ( ${Me.AltAbility[${spellName}].ID} && ${Me.AltAbilityReady[${spellName}]} ) || ( ${Spell[${spellName}].ID} && ${giveUpTimer} > ${Spell[${spellName}].RecoveryTime} ) ) /goto :cast_spell
 	}
 	:CastEnd
-	
+	/call Events_SpellRoutines
 /return ${castReturn}
 
 
@@ -298,4 +301,8 @@ Sub Event_OutOfRange
 
 Sub Event_Recover
 	/if (${Defined[castReturn]}) /varset castReturn CAST_RECOVER
+/return
+
+Sub Event_NoCharm
+	/if (${Defined[castReturn]}) /varset castReturn CAST_NOCHARM
 /return

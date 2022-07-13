@@ -511,6 +511,7 @@ Sub EngageTarget(int _targetID)
 	/if (${Me.Class.ShortName.NotEqual[CLR]}) /call TrueTarget ${int_targetID}
 	/call ResetCastTimers
 	/if (!${Me.Standing}) /stand
+	/if (${Me.Pet.ID}) /pet attack
 	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
 		/if (!${mq2meleeEnabled}) {
 			/call StickToTarget
@@ -521,6 +522,11 @@ Sub EngageTarget(int _targetID)
 		}
 	}
 /return
+
+Sub GetAssistTarget
+
+
+/return 
 
 
 Sub EVENT_Disengage
@@ -1303,6 +1309,7 @@ Sub chkAutoAssist
 	/if (!${bln_autoAssist}) /return
 	/declare tgtID int local
 	/dquery ${str_tankName1} -q "Target.ID"
+	/delay 20 ${DanNet.Query.Received}
 	/varset tgtID ${DanNet.Q}
 	/call TrueTarget ${tgtID}
 	/call EngageTarget ${tgtID}
@@ -1620,6 +1627,7 @@ Sub check_validBots(_selectedBots, _botName, _chatSender)
 	/declare botValidated bool local false
 	/declare clsShortName string local
 	/dquery ${_botName} -q "Me.Class.ShortName"
+	/delay 20 ${DanNet.Query.Received}
 	/varset clsShortName ${DanNet.Q}
 	/if (${Select[priests,${_selectedBots}]} && ${Select[${clsShortName},${PriestClasses}]} || ${Select[healers,${_selectedBots}]} && ${Select[${clsShortName},${PriestClasses}]} || ${Select[ranged,${_selectedBots}]} && ${Select[${clsShortName},${RangedClasses}]} || ${Select[casters,${_selectedBots}]} && ${Select[${clsShortName},${CasterClasses}]} || ${Select[melee,${_selectedBots}]} && ${Select[${clsShortName},${MeleeClasses}]} || ${Select[me,${_selectedBots}]} && ${_chatSender.Equal[${Me.CleanName}]} || ${Select[${Me.Class},${_selectedBots}]} || ${Select[${clsShortName},${_selectedBots}]} || ${Select[${Me.CleanName},${_selectedBots}]} || ${Select[all,${_selectedBots}]} || ${Select[group,${_selectedBots}]} && ${Me.CleanName.Equal[${_chatSender}]} || ${Select[group,${_selectedBots}]} || ${Select[zone,${_selectedBots}]} && ${SpawnCount[pc ${_chatSender}]}) /varset botValidated TRUE
 	

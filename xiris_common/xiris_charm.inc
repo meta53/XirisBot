@@ -30,15 +30,16 @@ Sub Events_Charm
 /return
 
 Sub EVENT_CharmON 
-
+    /varset bln_activeCharming TRUE
 /return 
 
 Sub EVENT_CharmOFF 
-
+    /varset bln_activeCharming FALSE
 /return 
 
 Sub EVENT_CharmNPCByID(_line, _chatSender, _eventParams)
     /echo \ayCharming NPC by ID \ag${_eventParams}
+    /call CharmNPC ${_eventParams}
 /return
 
 Sub EVENT_CharmNPCByName(_line, _chatSender,_eventParams)
@@ -46,15 +47,43 @@ Sub EVENT_CharmNPCByName(_line, _chatSender,_eventParams)
 /return 
 
 Sub CharmNPC(int _id)
+    /if (!${bln_activeCharming}) /return
     /if (${Me.Pet.ID}) {
         /cecho \arCannot Charm ${_id}: Already have pet!
-        /return
+        /goto :Engage
     }
+    /declare castAttempt int local 1
+    /call chkSpellMemorized "${str_charm}" TRUE ${int_charmGem}
+    /echo calling TrueTarget ${_id}
     /call TrueTarget ${_id}
-
+    :castAttempt
+    /varcalc castAttempt ${castAttempt}+1
+    /call MQ2Cast "${str_charm}" ${int_charmGem}
+    /if (${Macro.Return.Equal[CAST_NOCHARM]}) {
+        /rsay ${Target.Name} CANNOT be charmed!
+        /gsay ${Target.Name} CANNOT be charmed!
+        /goto :return
+    } else /if (${Macro.Return.Equal[CAST_RESIST]} && ${castAttempt} < 4) {
+        /goto :castAttempt
+    } else /if (${Macro.Return.Equal[CAST_SUCCESS]} && ${Me.Pet.ID}) {
+        :Engage
+        /delay 10
+        /cecho \awEngaging Target(\ag${int_targetID}\aw) with Charmed Pet \ag${Me.Pet.Name}! 
+        /call EngageTarget ${int_targetID}
+    }
+    :return
 /return
 
 Sub xbot_initialize_charming
     /cecho \ao xbot_initialize_charming
     /call InitEvents_Charm
+
+    |-- Charm Spell(s)
+    /declare bln_doCharm            bool    outer   ${Ini[botINI,Charm,bln_doCharm,FALSE]}
+    /declare bln_activeCharming     bool    outer   FALSE
+
+    /declare str_charm              string  outer   ${Ini[botINI,Charm,Charm_Spell,NULL]}
+    /declare int_charmGem           int     outer   ${Ini[botINI,Charm,Charm_Gem,7]}    
+    /declare int_charmMinLevel      int     outer   ${Ini[botINI,Charm,Charm_MinLevel,46]}
+    /declare int_charmMaxLevel      int     outer   ${Ini[botINI,Charm,Charm_MaxLevel,69]}
 /return 

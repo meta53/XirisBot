@@ -14,16 +14,22 @@ Sub Main
     /dt Theist changeMT Xirea
     /dt Tragic changeMT Xirea
     /dt Xirael changeMT Xirea
-    /dt Xenshia changeMT Xirea
-    /dt Xinshia changeMT Xirea
+
+    | Set Sadelia (OT) Healing
+    /dt Sadelia offtankON
+    /dt Xenshia changeMT Sadelia
+    /dt Xinshia changeMT Sadelia
 
     | Set Xiria (OT) Healing
     /dt Xiria offtankON
     /dt Xonshia changeMT Xiria
     /dt Deist changeMT Xiria
     /dt Nihilist changeMT Xiria
-    /dt Empathic changeMT Xiria
-    /dt Pantheon changeMT Xiria
+
+    | Set Xirin (OT) Healing
+    /dt Xirin offtankON
+    /dt Empathic changeMT Xirin
+    /dt Pantheon changeMT Xirin
 
     | Set the mode to efficient
     /dgt healMode EFFICIENT 

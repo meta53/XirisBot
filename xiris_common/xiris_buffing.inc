@@ -222,7 +222,7 @@ Sub cmbtBuffGRP
 
 	| -- loop through the combat buffs
 	/for i 1 to ${int_cmbtBuffTotal}
-		/if (${CMBTBUFF_${i}_Timer}) /goto :next
+		/if (${CMBTBUFF_${i}_Timer}) /goto :nextCMBT
 		| -- check to see if this combat buff is on group members, and if it is missing, slap it on the first appropriate member (if ready)
 		/varset		buffSpell	 ${CMBTBUFF_${i}}
 		/varset		buffGem		 ${CMBTBUFF_${i}_Gem}
@@ -238,9 +238,11 @@ Sub cmbtBuffGRP
 			
 			/varset gClass ${Spawn[pc =${gName}].Class.ShortName}
 			/if (${Select[${gClass},WAR,SHD,PAL,MNK,RNG,ROG,BRD,BER]}) {
-				/cecho cmbtBuffGRP: \aw${gName} -q \ag"Me.Buff[${buffSpell}].Duration"
+				
 				/dquery ${gName} -q "Me.Buff[${buffSpell}].Duration"
+				/delay 20 ${DanNet.Query.Received}
 				/varset bDuration ${DanNet.Q}
+				/cecho cmbtBuffGRP: \aw${gName} -q \ag"Me.Buff[${buffSpell}].Duration" == \ar ${bDuration}
 				/if (!${Bool[${bDuration}]} ) {
 					/cecho \awbDuration: \ay${bDuration}
 					/if (${bDuration} < 3 ) {
