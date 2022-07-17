@@ -48,11 +48,6 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 	/echo ... apparently causes problems for the first line in the second macro
 	/echo You are now in xiris_bot_${Me.Class.ShortName}.mac [I learned this from E3!~]
 
-	|-- debug, clear exisitng log and start it
-	/logts on
-	/logmq on
-	
-
 	|-- initialize the common xbot libraries
 	/call xbot_initialize ${_tank1Name} ${_tank2Name} ${_tank3Name} ${_healPoint} ${_assistArgs}
 
@@ -82,6 +77,9 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 		|-- Check to make sure MT is still alive, if not, find another
 		/call chkMTAlive FALSE
 
+		|-- Check Offtanking Situation (xiris_offtanking.inc)
+		/call chkOffTanking
+
 		|-- Check to see if self needs to be cured (xiris_curing.inc)
 		/call chkNeedCure
 		
@@ -89,14 +87,12 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 		/call chkHeal_Group
 
 		|-- Check for out of combat buffs (xiris_buffing.inc)
-		/call RunAllEvents
 		/call chkOOCBuffs
 		
 		|-- Check Auto Assist if its on
 		/if (${bln_autoAssist}) /call chkAutoAssist
 		
 		/if (${bln_engaged}) {
-
 			|-- check engaged events
 			/call RunRaidEvents
 			/call RunClassEvents
@@ -104,17 +100,10 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 			|-- verify target status
 			/call chkTarget	
 
-			|-- debuff lib
-			|/echo Engaged: chkDebuffsOnSingleTarget ${Time.Time24}
-			|/call chkDebuffsOnSingleTarget ${int_targetID}
-
 			|-- class specific
 			/call chkConcussion
 
 			|-- dps library (caster)
-			/call RunRaidEvents
-    		/call RunClassEvents
-			/call chkDOT
 			/call chkNuke
 			
 			|-- std library (burns/aa/clicks)
@@ -148,119 +137,8 @@ Sub chkUtils
 /return
 
 
-|**
- ----------------------------
- Check Health Subroutinies
- ----------------------------
- Calls 2 subroutines, checking self and checking group.
- See bot_clr for more information
- checksRNG	(and heals)
- checksGRP	(and heals)
- ----------------------------
-**|
- 
- Sub chkHeal
-	/if (${Me.PctMana} < 15) /return
-	/call RunRaidEvents
-    /call chkRNG
-    /call chkGRP
-	/if (${int_targetID} != 0 && ${bln_engaged}) {
-		/target ${Spawn[id ${int_targetID}]}
-		/killthis
-	}
-	
-/return
- 
-
- Sub chkRNG
-	/if (${Me.PctHPs} <= ${int_point_selfNormal}) {
-		/call healRNG
-	}
-	
- /return 
- 
- Sub chkGRP
-    /call HealGRP
-/return
-
-|**
- ----------------------------
- HealSelf
- ----------------------------
- Healing Logic for the ranger
- Determines which spell to cast, then casts it.
- ----------------------------
-**|
-
-Sub healRNG
-	/varcalc 	int_point_calcStopHeal ${Math.Calc[${int_point_selfNormal}*1.1]}
-	/varset 	int_currentHP		${Me.PctHPs}
-	/keypress f1
-	/varset str_currentHeal ${str_heal_normal}
-	/echo healSELF ${int_MTID} ${Target.Name} "${str_heal_normal}"
-	/call healCast ${Me.ID} ${Me.Name} "${str_heal_normal}"
-	/varset int_point_calcStopHeal	${int_point_selfNormal}
-/return
 
 
-|**
- ----------------------------
- HealGroup
- ----------------------------
- Healing Logic for entire group.
- Determines which is the worst 'hurt' character, and heals based on what heal point to heal at.
- Called by the Cast logic on cast of a heal spell
- ----------------------------
-**|
-Sub healGRP
-	/varcalc	int_point_calcStopHeal ${Math.Calc[${int_point_grpNormal}*1.1]}
-	
-	/declare	int_numDamaged	int	local	0
-	/declare	int_worstHP		int	local	100
-	/declare	int_worstID		int local	0
-	/declare	int_minorHurt	int local	0
-	/declare	int_majorHurt	int local	0
-	/declare	gmember			int local	0
-	/declare    str_worstName	string local NULL
-	/declare	str_worstClass	string local NULL
-	
-	| -- Cycle through the group and set the worst HP
-	/for gmember 0 to ${Group}
-		/if ( (${Group.Member[${gmember}].Distance}<=${int_range_normal}) && ${Target.Type.Equal[PC]}) {
-			/if (${Group.Member[${gmember}].PctHPs} < ${int_worstHP}) { 
-				|/echo ${Group.Member[${gmember}].Name} ${Group.Member[${gmember}].Distance} :: ${int_range_normal} :: ${Group.Member[${gmember}].PctHPs}
-				/varset int_worstID     	${Group.Member[${gmember}].ID} 
-				/varset int_worstHP         ${Group.Member[${gmember}].PctHPs} 
-				/varset str_worstName		${Group.Member[${gmember}].Name}
-				/varset str_worstClass      ${Group.Member[${gmember}].Class.Name} 
-			} 
-		} 
-        /if ((${Group.Member[${gmember}].Distance}<=${int_range_normal})&&(${Group.Member[${gmember}].PctHPs}<=${int_point_calcStopHeal})) /varcalc int_numDamaged ${int_numDamaged}+1 
-        /if ((${Group.Member[${gmember}].PctHPs}<=${int_point_calcStopHeal})&&(${Group.Member[${gmember}].PctHPs}>=60))   /varcalc int_minorHurt ${int_minorHurt}+1 
-        /if ((${Group.Member[${gmember}].PctHPs}<=${int_point_calcStopHeal})&&(${Group.Member[${gmember}].PctHPs}< 60))   /varcalc int_majorHurt ${int_majorHurt}+1 
-    /next gmember
-	/if ((${int_worstHP} > ${int_point_calcStopHeal}) || ${int_worstHP} == 0 ) /return
-	
-	/varset int_currentHP ${int_worstHP}
-	
-	/echo ${str_worstName} being healed!
-	| -- Cast the set heal	
-	/varset str_currentHeal ${str_heal_normal}
-	/echo HealGroupMember ${int_MTID} ${Target.Name} "${str_currentHeal}"
-	/call healCast ${int_worstID} ${str_worstName} "${str_currentHeal}"
-	
-	/varset int_point_calcStopHeal	${int_point_grpNormal}
-/return
-
-
-|**
- ----------------------------
- Debuffing  
- ----------------------------
- Loops through the debuff list and applied
- Currently ghetto and will just cast debuff 1
- ----------------------------
-**|
 
 
 |**
@@ -274,8 +152,8 @@ Sub chkConcussion
 	/if (!${bln_engaged} || ${Me.Invis}||${Me.Moving}||!${bln_concUse}) /return 
 	
 	|/echo chkConcussion ${bln_concUse} ${timer_concDelay}
-	/if (${bln_concUse} && ${Me.Standing} && ((${timer_concDelay}==0) || ${Me.TargetOfTarget.Name.Equal[${Me.Name}]})) {
-		/call chkSpellMemorized "${str_concSpell}" ${str_concGem} TRUE
+	/if (${bln_concUse} && ${Me.Standing} && (!${timer_concDelay} || ${Me.TargetOfTarget.Name.Equal[${Me.Name}]})) {
+		/call chkSpellMemorized "${str_concSpell}" ${str_concGem} FALSE
 		/call MQ2Cast "${str_concSpell}" ${str_concGem}
 		/varset timer_concDelay ${timer_concDelay.OriginalValue}
 		/varset int_concCount 0
@@ -335,7 +213,7 @@ Sub variant_initialize
 	/declare int_concCountActive		int		outer	${Ini[botINI,Concussion,int_concCountActive,5]}
 	/declare str_concSpell				string	outer   ${Ini[botINI,Concussion,str_concSpell,Concussion]}
 	/declare str_concGem				string	outer   ${Ini[botINI,Concussion,str_concGem,alt]}
-	/declare timer_concDelay			timer	outer   ${Ini[botINI,Concussion,timer_concDelay,5s]}
+	/declare timer_concDelay			timer	outer   ${Ini[botINI,Concussion,timer_concDelay,10s]}
 	
 
 	|--Hail of Arrows

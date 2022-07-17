@@ -4,36 +4,35 @@ Sub Main
     /dt Xerael changeMT Xiris
     /dt Xarael changeMT Xiris
     /dt Xorael changeMT Xiris
-    /dt Xunshia changeMT Xiris
     /dt Xurael changeMT Xiris
+    /dt Xunshia changeMT Xiris
     /dt Xanshia changeMT Xiris
-    /dt Dogmatist changeMT Xiris
-
-    | Set Xirea (SA) Healing
-    /dt Xirea offtankON
-    /dt Theist changeMT Xirea
-    /dt Tragic changeMT Xirea
-    /dt Xirael changeMT Xirea
-
-    | Set Sadelia (OT) Healing
-    /dt Sadelia offtankON
-    /dt Xenshia changeMT Sadelia
-    /dt Xinshia changeMT Sadelia
 
     | Set Xiria (OT) Healing
-    /dt Xiria offtankON
-    /dt Xonshia changeMT Xiria
-    /dt Deist changeMT Xiria
-    /dt Nihilist changeMT Xiria
+    /dt Theist changeMT Xiria
+    /dt Tragic changeMT Xiria
+    /dt Xirael changeMT Xiria
+
+    | Set Xirea (OT) Healing
+    /dt Xenshia changeMT Xirea
+    /dt Xinshia changeMT Xirea
+    /dt Deist changeMT Xirea
 
     | Set Xirin (OT) Healing
-    /dt Xirin offtankON
-    /dt Empathic changeMT Xirin
-    /dt Pantheon changeMT Xirin
+    /dt Xonshia changeMT Xirin
+    /dt Drexia changeMT Xirin 
+    /dt Nihilist changeMT Xirin
+
+    | Set Sadelia (OT) Healing
+    /dt Empathic changeMT Sadelia
+    /dt Pantheon changeMT Sadelia
 
     | Set the mode to efficient
     /dgt healMode EFFICIENT 
-    /dt Xiris //melee aggro=on
-    /dt Xiria //melee aggro=on
-    /dt Xirea //melee aggro=on
+
+    | Turn of Offtanks
+    /dt Xiria offtankON
+    /dt Xirea offtankON
+    /dt Xirin offtankON
+    /dt Sadelia offtankON
 /return

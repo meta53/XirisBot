@@ -1,0 +1,12 @@
+#Turbo 20
+Sub Main 
+    | Set Xiria (OT) Healing
+    /dt Theist changeMT Xiria
+    /dt Tragic changeMT Xiria
+    /dt Xirael changeMT Xiria
+
+    | Set the mode to efficient
+    /dgt healMode EFFICIENT 
+    /dt Xiria offTankON
+
+/return

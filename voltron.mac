@@ -6,6 +6,9 @@ Sub Main(string _mode)
 	
 	/call SetupGroups${_mode}
 	/call InviteGroupsTo${_mode}
+
+	/delay 5s
+	/dgt SetRaidGroupMode ${_mode}
 /return
 
 
@@ -49,8 +52,8 @@ Sub InviteGroupsToRAID
 |-- Hatred, where we primarily want to heal the group you are in, and the assist tank
 Sub SetupGroupsHATRED
 	/multiline ; /invite Xanshia;  /invite Deist; /invite Pantheon; /invite Ania; /invite Shinxia;
-	/dex Xiria /multiline ; /invite Theist;  /invite Tragic; /invite Xirin; /invite Aergia; /invite Shynxia;
-	/dex Xirea /multiline ; /invite Xirael;  /invite Xerael; /invite Xarael; /invite Xorael; /invite Xurael;
+	/dex Xiria /multiline ; /invite Xirael;  /invite Tragic; /invite Xirin; /invite Aergia; /invite Shynxia;
+	/dex Xirea /multiline ; /invite Theist;  /invite Xerael; /invite Xarael; /invite Xorael; /invite Xurael;
 	/dex Cereborn /multiline ; /invite Xeixa;   /invite Xiexa; /invite Xeixi; /invite Xeqisa; /invite Dogmatist;
 	/dex Sadelia /multiline ; /invite Drexia;   /invite Nihilist; /invite Mluian; /invite Eurydice; /invite Xinshia;
 	/dex Xaeliea /multiline ; /invite Ertres;  /invite Ophidia; /invite Opheoia; /invite Achlys; /invite Xenshia;

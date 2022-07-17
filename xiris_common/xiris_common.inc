@@ -122,6 +122,14 @@ ______________________________________________
 #EVENT SkillCheck           "<#1#> SkillCheck #2#"
 #EVENT ReportBurnKey        "<#1#> ReportBurnKey #2#"
 
+#EVENT RaidGroupMode 		"[#1#] SetRaidGroupMode #2#"
+#EVENT RaidGroupMode 		"<#1#> SetRaidGroupMode #2#"
+#EVENT RaidGroupMode		"#1# tells the group#*#'SetRaidGroupMode #2#'"
+#EVENT RaidGroupMode		"#1# tells you#*#'SetRaidGroupMode #2#'"
+#EVENT RaidGroupMode		"#1# tells the raid#*#'SetRaidGroupMode #2#'"
+#EVENT RaidGroupMode 		"[ #1# #*#]#*#SetRaidGroupMode #2#"
+
+
 Sub InitEvents_Common
 	/call RegisterBackgroundEvents Events_Common 19
 	/call RegisterRaidEvents Events_Raid 9
@@ -161,7 +169,9 @@ Sub Events_Common
 	/doevents LongBurnOn1 
 	/doevents LongBurnOn2
 	/doevents MaximumBurn
+	/doevents SetRaidGroupMode
 /return
+
 
 
 |**
@@ -192,6 +202,8 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/declare 	PriestClasses 			string	outer	CLR,DRU,SHM
 	/declare 	CasterClasses 			string	outer	ENC,MAG,NEC,WIZ
 	/declare 	RangedClasses			string	outer	RNG
+	/declare 	RaidGroupLeaders[9] 	string outer 	NULL 
+	/call SetRaidGroupMode RAID
 	
 	|-- [Settings] :Tank Settings
 	/declare	bln_tanking				bool	outer	FALSE
@@ -349,6 +361,8 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/cecho \agxbot_initialize: [ MT: ${str_MTName}(${int_MTID}) @ ${int_point_tankNormal} ] STName: ${str_tankName2}(${int_STID})
 	
 /return
+
+
 
 
 
@@ -954,6 +968,48 @@ Sub Event_ReportBurnKey(_line, _sender, _eventParams)
 	
  ------------------------
 **|
+
+|-------------------------------------------------------------------------------- 
+|SUB: Event_RaidGroupMode
+|	  Sets the raid group leaders based on mode. Also, calls this on init with default settings
+|--------------------------------------------------------------------------------
+Sub Event_RaidGroupMode(_line, _sender, _eventParams)
+	/call SetRaidGroupMode ${_eventParams.Arg[1,|]}
+/return 
+
+
+Sub SetRaidGroupMode(string _mode)
+	
+	|-- Manually set an array with the standard group leaders(ugh)
+	| 	Xiris,Xiria,Xirian,Xeixa,Sadelia,Xaeliea,Xaexa,Xaia,Xepatia
+	| 	in the future maybe have an event that can set this
+	/echo setting raid group mode to ${_mode}
+	/if (${_mode.Equal[RAID]}) {
+		/varset	RaidGroupLeaders[1] Xiris
+		/varset	RaidGroupLeaders[2] Xiria
+		/varset RaidGroupLeaders[3] Theist
+		/varset RaidGroupLeaders[4] Xeixa
+		/varset RaidGroupLeaders[5] Sadelia
+		/varset RaidGroupLeaders[6] Xaeliea
+		/varset RaidGroupLeaders[7] Xaexa
+		/varset RaidGroupLeaders[8] Xaia
+		/varset RaidGroupLeaders[9] Xepatia
+	} else /if (${_mode.Equal[HATRED]}) {
+		/varset	RaidGroupLeaders[1] Xiris
+		/varset	RaidGroupLeaders[2] Xiria
+		/varset RaidGroupLeaders[3] Xirea
+		/varset RaidGroupLeaders[4] Xeixa
+		/varset RaidGroupLeaders[5] Sadelia
+		/varset RaidGroupLeaders[6] Xaeliea
+		/varset RaidGroupLeaders[7] Xaexa
+		/varset RaidGroupLeaders[8] Xaia
+		/varset RaidGroupLeaders[9] Xepatia
+	}
+	
+
+/return
+
+
 
 |-------------------------------------------------------------------------------- 
 |SUB: Event_InvisOff

@@ -22,125 +22,99 @@ Sub Main
 /return
 
 Sub dranik 
+    |-- Triad looters
     /dt Aidos looton ALL
-    /dt Tragic looton QUEST
+	/dt Aergia looton ALL
+	/dt Adikia looton ALL
+
+    |-- Weather-Worn Signet
     /dt Mluian looton QUEST 
     /dt Shinxia looton QUEST
     /dt Shynxia looton QUEST
+    /dt Tragic looton QUEST
     /dt Xeixa looton QUEST
     /dt Xiexa looton QUEST
     /dt Xeqisa looton QUEST
 /return
 
 Sub wallofslaughter
+    |-- Triad looters
     /dt Aidos looton ALL
+	/dt Aergia looton ALL
+	/dt Adikia looton ALL
+    
+    |-- Tarnished Signet
     /dt Xunshia looton QUEST
     /dt Xonshia looton QUEST
-    /dt Xerael looton QUEST
-    /dt Xarael looton QUEST
     /dt Xorael looton QUEST
-    /dt Xurael looton QUEST
-    /dt Dogmatist looton QUEST
-    /dt Xepatia looton QUEST
-    /dt Ophidia looton QUEST
-    /dt Ophelia looton QUEST
     /dt Ophemia looton QUEST
-    /dt Ophenia looton QUEST
     /dt Opheoia looton QUEST
-    /dt Ophexia lootn QUEST 
-    /dt Opheyia looton QUEST 
-    /dt Ophexia looton QUEST
+    /dt Ophezia looton QUEST
     /dt Mluian looton QUEST
-    /dt Shynxia looton QUEST
-    /dt Erinyes  looton QUEST
-    /dt Ertis  looton QUEST
-    /dt Erinyas looton QUEST
+    /dt Ertris  looton QUEST
     /dt Drexia looton QUEST
     /dt Xeixi looton QUEST
-    /dt Cereborn looton QUEST
-    /dt Eurydice looton QUEST
     /dt Xeqisa looton QUEST
 /return 
 
 Sub riftseekers 
-    | Note: In Riftseeker we want to loot on QUEST, as signets and augments are categorized as such.
-    | Leave Aidos as the master looter
+    |-- Triad looters
     /dt Aidos looton ALL
-    | Clerics Group A
-    /dt Xirael looton QUEST
-    /dt Xinshia looton QUEST
-    /dt Xanshia looton QUEST
-    /dt Xunshia looton QUEST
-    /dt Xonshia looton QUEST
-    /dt Xerael looton QUEST
-    /dt Xarael looton QUEST
-    /dt Xorael looton QUEST
-    /dt Xurael looton QUEST
-    
-    | Clerics Group B
-    |**
-    /dt Theist looton QUEST
+	/dt Aergia looton ALL
+	/dt Adikia looton ALL
+
+    |-- Crystal-Gemmed Signet
+    /dt Cereborn looton QUEST
     /dt Deist looton QUEST
-    /dt Empathic looton QUEST
-    /dt Nihilist looton QUEST
     /dt Dogmatist looton QUEST
-    /dt Pantheon looton QUEST
-    /dt Tragic looton QUEST
-    **|
-
-    | Chain Classes Group A
-    /dt Xaeliea looton QUEST
-    /dt Xaexa looton QUEST
-    |/dt Xaia looton QUEST
-    /dt Xepatia looton QUEST
-    |/dt Ophidia looton QUEST
+    /dt Drexia looton QUEST
+    /dt Empathic looton QUEST
+    /dt Erinyas looton QUEST
+    /dt Erinyes looton QUEST
+    /dt Ertres looton QUEST
+    /dt Ertris looton QUEST
+    /dt Eurydice looton QUEST
+    /dt Mluian looton QUEST
+    /dt Nihilist looton QUEST
     /dt Ophelia looton QUEST
-    |/dt Ophemia looton QUEST
-    |/dt Ophenia looton QUEST
     /dt Opheoia looton QUEST
-
-| Chain Classes Group B
-|**
     /dt Ophexia looton QUEST
     /dt Opheyia looton QUEST
     /dt Ophezia looton QUEST
-    /dt Mluian looton QUEST
+    /dt Pantheon looton QUEST
     /dt Shinxia looton QUEST
     /dt Shynxia looton QUEST
-**|
-| Leather Classes
-  
-    /dt Ertres looton QUEST
-    /dt Erinyes looton QUEST
-    /dt Ertris looton QUEST
-    /dt Erinyas looton QUEST
-    /dt Drexia looton QUEST
-
-
-| Silk Classes
-|**
+    /dt Theist looton QUEST
+    /dt Tragic looton QUEST
+    /dt Xaeliea looton QUEST
+    /dt Xaexa looton QUEST
+    /dt Xanshia looton QUEST
+    /dt Xarael looton QUEST
     /dt Xeixa looton QUEST
-    /dt Xiexa looton QUEST
     /dt Xeixi looton QUEST
-    /dt Cereborn looton QUEST
-    /dt Eurydice looton QUEST
-    /dt Xeqisa looton QUEST
-**|
+    /dt Xepatia looton QUEST
+    /dt Xiexa looton QUEST
+    /dt Xinshia looton QUEST
+    /dt Xirael looton QUEST
+    /dt Xonshia looton QUEST
+    /dt Xorael looton QUEST
+    /dt Xunshia looton QUEST
+    /dt Xurael looton QUEST
 /return 
 
 Sub provinggrounds 
-    | Leave Aergia as the master looter
+    |-- Triad looters
     /dt Aidos looton ALL
+	/dt Aergia looton ALL
+	/dt Adikia looton ALL
 
-    /dt Xirael looton QUEST
-    /dt Xonshia looton QUEST
-    /dt Xarael looton QUEST
-    /dt Theist looton QUEST
-    /dt Empathic looton QUEST
-    /dt Nihilist looton QUEST
-    /dt Tragic looton QUEST
-    /dt Ophemia looton QUEST
-    /dt Mluian looton QUEST
-    /dt Shynxia looton QUEST
+    |-- Glimmering Signet
     /dt Drexia looton QUEST
-/return 
+    /dt Empathic looton QUEST
+    /dt Mluian looton QUEST
+    /dt Nihilist looton QUEST
+    /dt Ophemia looton QUEST
+    /dt Shynxia looton QUEST
+    /dt Tragic looton QUEST
+    /dt Xonshia looton QUEST
+/return

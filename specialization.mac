@@ -1,0 +1,34 @@
+#Turbo 20
+Sub Main 
+    | Set Xiris (MT) Healing 
+    /dt Xerael changeMT Xiris
+    /dt Xarael changeMT Xiris
+    /dt Xorael changeMT Xiris
+    /dt Xunshia changeMT Xiris
+    /dt Xurael changeMT Xiris
+    /dt Xanshia changeMT Xiris
+    /dt Dogmatist changeMT Xiris
+
+    | Set Xirin (OT) Healing
+    /dt Theist changeMT Xirin
+    /dt Tragic changeMT Xirin
+    /dt Xirael changeMT Xirin
+    /dt Empathic changeMT Xirin
+    /dt Pantheon changeMT Xirin
+
+    | Set Sadelia (OT) Healing
+    /dt Xenshia changeMT Sadelia
+    /dt Xinshia changeMT Sadelia
+
+    | Set Eurydice (OT) Healing
+    /dt Xonshia changeMT Eurydice
+    /dt Deist changeMT Eurydice
+    /dt Nihilist changeMT Eurydice
+
+
+    | Set the mode to efficient
+    /dgt healMode EFFICIENT 
+    /dt Xirin //melee aggro=on
+    /dt Sadelia //melee aggro=on
+
+/return

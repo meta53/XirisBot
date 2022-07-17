@@ -694,20 +694,7 @@ Sub RemoveBuff(_badBuff)
 
 Sub xbot_initialize_buffing
 
-	
-	|-- Manually set an array with the standard group leaders(ugh)
-	| 	Xiris,Xiria,Xirian,Xeixa,Sadelia,Xaeliea,Xaexa,Xaia,Xepatia
-	| 	in the future maybe have an event that can set this
-	/declare RaidGroupLeaders[9] string outer NULL 
-	/varset	RaidGroupLeaders[1] Xiris
-	/varset	RaidGroupLeaders[2] Xiria
-	/varset RaidGroupLeaders[3] Theist
-	/varset RaidGroupLeaders[4] Xeixa
-	/varset RaidGroupLeaders[5] Sadelia
-	/varset RaidGroupLeaders[6] Xaeliea
-	/varset RaidGroupLeaders[7] Xaexa
-	/varset RaidGroupLeaders[8] Xaia
-	/varset RaidGroupLeaders[9] Xepatia
+
 
 	| |--Buff Chains - Characters can check on this list to see if they have a buff archetype
 	| /declare l_aegolism	list outer

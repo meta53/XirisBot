@@ -576,12 +576,14 @@ Sub chkUtils
 	/varset bln_wait4HP		FALSE
 
 	/echo chkUtils
+	/declare int_buffDelay int local 0
 
 	:chkUtilLoop
 		
 		|/call chkBuffs
 		|/call chkMana
 		|/call chkEndurance
+		
 		/if (${useDownFlags}) /call chkDownshits
 		/call chkHP
 		/call chkComponentsAll
@@ -593,17 +595,23 @@ Sub chkUtils
  			/docommand /${cmdChannel} Doraidbuffs ALL
 			/cecho \awBuffs Requested, setting timer to 45m, and waiting 45s!
 			/varset timer_allBuffs 45m
-			/echo ${timer_allBuffs}
-			/delay 45s
+			:buffDelay
+			/if (${int_buffDelay} < 45) {
+				/delay 1s
+				/varcalc int_buffDelay ${int_buffDelay}+1 
+				/if (${SpawnCount[npc radius ${int_campRadius}]} > 0) /goto :return
+				/goto :buffDelay
+			}
 		}
 			
 		/if (${bln_wait4Mana} || ${bln_wait4End} || ${bln_wait4HP}) {
 			/echo Waiting for : mana: ${bln_wait4Mana} endurance: ${bln_wait4End} hitpoints: ${bln_wait4HP}
-			/if (${SpawnCount[npc radius ${int_campRadius}]} > 0) /return
+			/if (${SpawnCount[npc radius ${int_campRadius}]} > 0) /goto :return
 			/if (!${Me.Sitting}) /sit on 
 			/delay 50
 			/goto :chkUtilLoop
 		}
+		:return
 		/if (${Me.Sitting}) /sit off
 /return
 
@@ -1101,8 +1109,16 @@ Sub setAlerts
 		/squelch /alert add 1 "Queen Pyrilonis"
 		/squelch /alert add 1 "Taromani"
 		/squelch /alert add 1 "portal"
-	} 
-
+	} else /if (${Zone.ShortName.Equal[wallofslaughter]}) {
+		/squelch /alert add 1 "Korshawn"
+		/squelch /alert add 1 "Jarekiv"
+		/squelch /alert add 1 "a portal crystal"
+		/squelch /alert add 1 "Girplan Guardian"
+		/squelch /alert add 1 "Dragorn Champion"
+		/squelch /alert add 1 "Trelak" 
+		/squelch /alert add 1 "Verow"
+		/squelch /alert add 1 "Sandak"
+	}
 
 
 	|=================================

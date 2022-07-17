@@ -71,7 +71,7 @@ Sub CastDebuffsOnTarget(int _targetID, bool _forced)
 		/if ((${DEBUFF_${db}_NamedOnly} && !${isNamed}) || (${DEBUFF_${db}_Timer} && !${_forced})) /goto :nextDB
 		/if (${Me.Class.ShortName.NotEqual[BRD]}) {
 			|/echo checking if the debuff is already on ${DEBUFF_${db}}:${Target.Buff[${DEBUFF_${db}}].ID} && ${Target.BuffDuration[${DEBUFF_${db}}]} and we arent forcing
-			/if (${Target.Buff[${DEBUFF_${db}}].ID} && ${Target.BuffDuration[${DEBUFF_${db}}]} > 100 && !${forced}) /goto :nextDB
+			/if (${Target.Buff[${DEBUFF_${db}}].ID} && ${Target.BuffDuration[${DEBUFF_${db}}]} > 100 && !${_forced}) /goto :nextDB
 		}
 
 		:debuffSpellCheck

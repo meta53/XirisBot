@@ -117,10 +117,10 @@ Sub EVENT_GroupHeal
 	/doevents flush GroupHeal
 /return
 
-Sub EVENT_ChangeHP(string chatText)
+Sub EVENT_ChangeHP(_line, _chatSender, _eventParams)
 	/if (${str_classArchetype.Equal[PRIEST]}) {
-		/echo HP (HealPoint) Change called! Changing to: ${chatText.Arg[3]}
-		/declare HP int local ${chatText.Arg[3]}
+		/echo HP (HealPoint) Change called! Changing to: ${_eventParams}
+		/declare HP int local ${_eventParams}
 		/varset	int_point_tankNormal ${HP}
 		/dgt [${Me.Class.ShortName}] ${Me.Name} ${str_action} >> ${Spawn[id ${int_MTID}].CleanName} <<  @ ${int_point_tankNormal}
 	}
@@ -990,8 +990,8 @@ Sub xbot_initialize_healing(int _healPoint)
 	| 	Heal Mode: 0|Self Only, 1|Self/MT 2|Self/MT/Group
 	/declare 	int_defaultHealMode			int 	outer   ${Ini[healINI,Heal_Settings,int_healMode]}
 	/declare	int_healMode    			int     outer   ${Ini[botINI,Healing_Settings,int_healMode,${int_defaultHealMode}]}
-	/declare 	use_heal_defaultDivineArb	bool	outer 	${Ini[healINI,Heal_Settings,use_heal_divineArb]}
-	/declare	use_heal_divineArb			bool	outer	${Ini[botINI,Healing_Settings,use_heal_divineArb,${use_heal_divineArb}]}
+	/declare 	use_heal_defaultDivineArb	bool	outer 	${Ini[healINI,Heal_Settings,use_heal_divineArb, FALSE]}
+	/declare	use_heal_divineArb			bool	outer	${Ini[botINI,Healing_Settings,use_heal_divineArb,${use_heal_defaultDivineArb}]}
 	
 	|-- Healing Spells
 	/declare 	str_heal_normal_efficient	string	outer	${Ini[botINI,Healing_Spells,str_heal_normal_efficient,NULL]}
