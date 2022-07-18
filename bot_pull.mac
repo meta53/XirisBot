@@ -913,14 +913,14 @@ Sub variant_initialize(int _pull_dist, string _channel, string _campName, bool _
 
 	|--radii
 	/declare int_pcCount			int 	outer   ${SpawnCount[PC]}
-	/if (!${Defined[int_campRadius]}) /declare int_campRadius	int		outer	100
-	/declare int_maxRadius			int		outer	1525
+	/if (!${Defined[int_campRadius]}) /declare int_campRadius	int		outer	55
+	/declare int_maxRadius			int		outer	75
 	/if (${Defined[_pull_dist]}) {
 		/varset int_maxRadius ${_pull_dist}
 	}
 	
 	|--how far we can go for alert 2 mobs (note, seperate from maxRadius)
-	/declare int_alert2Radius		int 	outer 	650
+	/declare int_alert2Radius		int 	outer 	100
 
 	|-- use 40 for POFire
 	/declare int_minZHeight			int		outer 	0
@@ -931,7 +931,7 @@ Sub variant_initialize(int _pull_dist, string _channel, string _campName, bool _
 	/varcalc int_zRadius ${int_maxZHeight} - ${int_minZHeight}
 
 	|--target information
-	/declare int_minPullCount		int		outer   2
+	/declare int_minPullCount		int		outer   1
 	/declare int_minTLevel			int		outer	30
 	/declare int_maxTLevel			int		outer	77
 	/declare bln_validTGT			bool	outer	FALSE

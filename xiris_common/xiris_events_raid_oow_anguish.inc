@@ -1,6 +1,6 @@
 |**
 ----------------------------
-EVENTS_OOW_MPG_CORRUPTION.INC
+EVENTS_OOW_ANGUISH.INC
 ----------------------------
 This was written ground up for usage with xiris's bots
 NOTE: this requires MQ2NAV
@@ -9,7 +9,7 @@ REQUIRED PLUGINS
 	mq2nav
 ______________________________________________
 REVISION HISTORY
-	04.25.22    xiris	INITIAL REVISION
+	07.20.22    xiris	INITIAL REVISION
 ______________________________________________
 **|	
 
@@ -23,11 +23,19 @@ ______________________________________________
 #Event GazeBurst		"#*#Mata Muram fixes his gaze#*#"
 #Event GazeDone			"#*#Mata Muram's spell has been reflected#*#"
 
-Sub InitEvents_OOW_MPG_Corruption
-	/cecho \ag Initializing MPG Corruption
+Sub InitEvents_OOW_Anguish
+	/cecho \ag Initializing Anguish
 /return
 
-Sub Events_OOW_MPG_Corruption
+Sub InitEvents_OOW_Anguish
 	|-- Killing Events
-
+	/call RegisterRaidEvents Events_OOW_Anguish 5
 /return
+
+Sub Events_OOW_Anguish 
+	/doevents TureRampOn
+	/doevents TureRampOff
+	/doevents GazeYou
+	/doevents GazeBurst
+	/doevents GazeDone
+/return 

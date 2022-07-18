@@ -1,6 +1,6 @@
 |**
 ----------------------------
-EVENT_DEMI.INC updated version 12.04.11
+EVENTS_DODH_DEMIPLANE.INC updated version 12.04.11
 ----------------------------
 This was written ground up for usage with xiris's bots
 NOTE: this requires ACTIVE HACKS.
@@ -77,7 +77,10 @@ ______________________________________________
 #event MayongSlash	 "#*#The Master raises his sword#*#"
 
 
-Sub InitEvents_Demiplane
+
+
+
+Sub InitEvents_DoDH_Demiplane
 	/declare sEventWait	bool	outer	FALSE
 	/declare hDuck		bool	outer 	FALSE
 	/declare hClose		bool	outer	FALSE
@@ -95,10 +98,12 @@ Sub InitEvents_Demiplane
     /declare Failed[54,2]		string		outer    NA	
     
     /declare mSlash		bool	outer	FALSE
+
+	/call RegisterRaidEvents Events_DODH_Demiplane 42
 /return
 
 
-Sub Events_Demiplane 
+Sub Events_DODH_Demiplane 
 	|-- Hatchet The Torturer
 	/doevents HatchetDuck		"#*#levels his axe at your upper#*#"
 	/doevents HatchetStand		"#*#passes harmlessly overhead#*#"

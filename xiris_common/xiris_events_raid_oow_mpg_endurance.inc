@@ -19,10 +19,6 @@ ______________________________________________
 
 Sub InitEvents_OOW_MPG_Endurance
 	/cecho \ag Initializing MPG Endurance
-/return
-
-Sub InitEvents_OOW_MPG_Endurance
-	|-- Killing Events
     /call RegisterRaidEvents Events_OOW_MPG_Endurance 1
 /return
 

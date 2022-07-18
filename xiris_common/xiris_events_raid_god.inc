@@ -57,20 +57,20 @@ ______________________________________________
 #event PIRIKDEAD				"#*#two heads face each other just before it falls to the floor#*#"
 
 Sub InitEvents_GoD_Ikkinz
-	/call RegisterBackgroundEvents Events_GoD_Ikkinz 18
+	/call RegisterRaidEvents Events_GoD_Ikkinz 18
 /return
 
 Sub InitEvents_GoD_Uqua
-	/call RegisterBackgroundEvents Events_GoD_Uqua 18
+	/call RegisterRaidEvents Events_GoD_Uqua 18
 /return
 
 Sub InitEvents_GoD_Inktuta
-	/call RegisterBackgroundEvents Events_GoD_Inktuta 9
+	/call RegisterRaidEvents Events_GoD_Inktuta 9
 	/declare inkRunning				bool 	outer   FALSE
 /return
 
 Sub InitEvents_GoD_Tacvi
-	/call RegisterBackgroundEvents Events_GoD_Tacvi 18
+	/call RegisterRaidEvents Events_GoD_Tacvi 18
 /return
 
 Sub Events_GoD_Ikkinz
@@ -104,7 +104,6 @@ Sub Events_GoD_Tacvi
 	/doevents BALANCERAPEOFF
 	/doevents BALANCEOFF
 	/doevents PIRIKDEAD
-
 /return
 
 
