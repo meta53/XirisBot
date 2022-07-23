@@ -19,7 +19,8 @@ ______________________________________________
 **|	
 
 #include xiris_common/xiris_events_raid_god.inc 
-#include xiris_common/xiris_events_raid_dodh_demi.inc 
+#include xiris_common/xiris_events_raid_dodh_demiplane.inc 
+#include xiris_common/xiris_events_raid_oow_anguish.inc
 #include xiris_common/xiris_events_raid_oow_mpg_adaptation.inc
 #include xiris_common/xiris_events_raid_oow_mpg_corruption.inc 
 #include xiris_common/xiris_events_raid_oow_mpg_endurance.inc
@@ -37,9 +38,9 @@ Sub xbot_initialize_events
     |--Array
     /declare BackgroundEventsRaw[100]   string outer NULL
     /declare BackgroundEvents[0]        string outer NULL
-    /declare RaidEventsRaw[25]          string outer NULL
+    /declare RaidEventsRaw[100]         string outer NULL
     /declare RaidEvents[0]              string outer NULL
-    /declare ClassEventsRaw[10]         string outer NULL
+    /declare ClassEventsRaw[50]         string outer NULL
     /declare ClassEvents[0]             string outer NULL
 
     |--Check for Special Events

@@ -169,7 +169,7 @@ Sub Events_Common
 	/doevents LongBurnOn1 
 	/doevents LongBurnOn2
 	/doevents MaximumBurn
-	/doevents SetRaidGroupMode
+	/doevents RaidGroupMode
 /return
 
 
@@ -1004,6 +1004,22 @@ Sub SetRaidGroupMode(string _mode)
 		/varset RaidGroupLeaders[7] Xaexa
 		/varset RaidGroupLeaders[8] Xaia
 		/varset RaidGroupLeaders[9] Xepatia
+	} else /if (${_mode.Equal[TRIAD]}) {
+		/deletevar RaidGroupLeaders 
+		/declare RaidGroupLeaders[3] string outer NULL
+		/if (${Raid.Leader.Equal[Xiris]}) {
+			/varset	RaidGroupLeaders[1] Xiris
+			/varset	RaidGroupLeaders[2] Xirin
+			/varset RaidGroupLeaders[3] Xaeliea
+		} else /if (${Raid.Leader.Equal[Xiria]}) {
+			/varset	RaidGroupLeaders[1] Xiria
+			/varset	RaidGroupLeaders[2] Sadelia
+			/varset RaidGroupLeaders[3] Xaexa
+		} else /if (${Raid.Leader.Equal[Xirea]}) {
+			/varset	RaidGroupLeaders[1] Xirea
+			/varset	RaidGroupLeaders[2] Xaia
+			/varset RaidGroupLeaders[3] Mluian
+		}
 	}
 	
 

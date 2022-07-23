@@ -231,6 +231,13 @@ Sub chkTarget
 		/call setTGTAlert
 		/return
 	}
+
+	|--check to see if its excluded specifically
+	/if (${ExcludeList.Find[${Target.CleanName}]}) { 
+		/echo INVALID Target is on exclusion list, next
+		/call setTGTAlert
+		/return
+	}
 	
 	|--check my target is the apropriate level
 	/if ((${Target.ID}) && (${Target.Level} < ${int_minTLevel})) {
@@ -920,18 +927,18 @@ Sub variant_initialize(int _pull_dist, string _channel, string _campName, bool _
 	}
 	
 	|--how far we can go for alert 2 mobs (note, seperate from maxRadius)
-	/declare int_alert2Radius		int 	outer 	100
+	/declare int_alert2Radius		int 	outer 	300
 
 	|-- use 40 for POFire
 	/declare int_minZHeight			int		outer 	0
 	/declare int_maxZHeight			int		outer	0
 	/declare int_zRadius			int     outer   0
-	/varcalc int_minZHeight			${Me.Z} - 205
-	/varcalc int_maxZHeight			${Me.Z} + 150
+	/varcalc int_minZHeight			${Me.Z} - 225
+	/varcalc int_maxZHeight			${Me.Z} + 250
 	/varcalc int_zRadius ${int_maxZHeight} - ${int_minZHeight}
 
 	|--target information
-	/declare int_minPullCount		int		outer   1
+	/declare int_minPullCount		int		outer   2
 	/declare int_minTLevel			int		outer	30
 	/declare int_maxTLevel			int		outer	77
 	/declare bln_validTGT			bool	outer	FALSE
@@ -1184,20 +1191,20 @@ Sub setAlerts
 		/squelch /alert add 2 "ixt"
 	|-- Anguish Signets--|
 	} else /if (${Zone.ShortName.Equal[riftseekers]}) {
-		/squelch /alert add 2 "Dragorn Battlemaster"
+		/squelch /alert add 2 "Battlemaster"
 	} else /if (${Zone.ShortName.Equal[draniksewersa]} || ${Zone.ShortName.Equal[draniksewersb]} || ${Zone.ShortName.Equal[draniksewersb]}) {
-		/squelch /alert add 2 "Cunning Dragorn"
+		/squelch /alert add 2 "Cunning"
 	} else /if (${Zone.ShortName.Equal[dranikcatacombsa]} || ${Zone.ShortName.Equal[dranikcatacombsb]} || ${Zone.ShortName.Equal[dranikcatacombsc]}) {
-		/squelch /alert add 2 "InsidiousDragorn"
+		/squelch /alert add 2 "Insidious"
 	} else /if (${Zone.ShortName.Equal[provinggrounds]}) {
-		/squelch /alert add 2 "Dragorn Tactician"
+		/squelch /alert add 2 "Tactician"
 	} else /if (${Zone.ShortName.Equal[wallofslaughter]}) {
-		/squelch /alert add 2 "Dragorn Mastermind"
+		/squelch /alert add 2 "Mastermind"
 	} else /if (${Zone.ShortName.Equal[dranikhollowsa]} || ${Zone.ShortName.Equal[dranikhollowsb]} || ${Zone.ShortName.Equal[dranikhollowsc]} || ${Zone.ShortName.Equal[dranikhollowsd]} || ${Zone.ShortName.Equal[dranikhollowse]} || ${Zone.ShortName.Equal[dranikhollowsf]} || ${Zone.ShortName.Equal[dranikhollowsg]} || ${Zone.ShortName.Equal[dranikhollowsh]} || ${Zone.ShortName.Equal[dranikhollowsi]} || ${Zone.ShortName.Equal[dranikhollowsj]}) {
-		/squelch /alert add 2 "Shrewd Dragorn"
+		/squelch /alert add 2 "Shrewd"
 		| Note, this should be dranikhollowsa "Watering Hole"
 	} else /if (${Zone.ShortName.Equal[dranik]}) {
-		/squelch /alert add 2 "Dragorn Prodigy"
+		/squelch /alert add 2 "Prodigy"
 	
 	|--Breakdown in Communication
 	} else /if (${Zone.ShortName.Equal[riwwi]}) {

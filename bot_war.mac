@@ -173,18 +173,10 @@ Sub chkUtils
  ----------------------------
 **| 
 Sub variant_initialize
-	|--Set Aggro
-	/cecho \ag setting aggro ${str_tankName1.NotEqual[${Me.Name}]} && ${str_tankName2.NotEqual[${Me.Name}]}
-	/if (${str_tankName1.NotEqual[${Me.Name}]} && ${str_tankName2.NotEqual[${Me.Name}]}) {
-		/melee aggro=0	
-	} else {
-		/melee aggro=1
-	}
-	
 	|-- set up default vars
 	/declare    str_action				string	outer	Assisting	
 
-	/cecho \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID})HealPoint:${int_point_tankNormal} SAName: ${str_tankName2}(${int_STID})
+	/cecho \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID})HealPoint:${int_point_tankNormal} ST: ${str_tankName2}(${int_STID}) Aggro? ${bln_aggro}
 	/call InitEvents_Class
 /return
 

@@ -71,19 +71,17 @@ Sub Events_Buffing
 
 
 Sub EVENT_DORAIDBUFFS(_line, _chatSender, _eventParams)
-	/echo doing raid buffs.
+	
 	/if (!${bln_doRaidBuff} && !${bln_doSingleTargetBuff}) /return
-
-	/echo doing buff
+	/echo Doing Raid Buffs on ${_eventParams}
 	/memspellset buff
 	/delay 3s
-	/echo Doing Raid Buffs on ${_eventParams}
-	/delay 10
 	/if (${bln_doRaidBuff}) 		/call doRaidBuffs
 	/if (${bln_doSingleTargetBuff}) /call doSingleTargetBuffOnRaid
 	/dgt ${Me.Class.Name} RAID BUFF [${_eventParams}] COMPLETE
 	/delay 10
-	/memspellset default
+	| Restore the previous spellset
+	/memspellset ${str_spellset}
 
 	/doevents flush DORAIDBUFFS
 /return
@@ -97,9 +95,10 @@ Sub EVENT_DOCHARBUFFS(_line, _chatSender, _eventParams)
 	/delay 10
 	/call doGroupBuffOnTarget ${_eventParams}
 	/call doSingleTargetBuffOnChar ${_eventParams}
-	/dgt ${Me.Class.Name} CHARBUFF [${_eventParams}] COMPLETE
+	/dgt ${Me.Class.Name} CHAR BUFF [${_eventParams}] COMPLETE
 	/delay 10
-	/memspellset default
+	| Restore the previous spellset
+	/memspellset ${str_spellset}
 	
 	/doevents flush DOCHARBUFFS
 /return
@@ -164,7 +163,7 @@ Sub doRaidBuffs
 	/echo Doing Raid Buffs
 	/declare i int local 1
 	
-	/for i 1 to 9
+	/for i 1 to ${RaidGroupLeaders.Size}
 		/echo Targetting group leader (${i}): ${RaidGroupLeaders[${i}]}
 		/if (${RaidGroupLeaders[${i}].NotEqual[NULL]}) {
 			/call doGroupBuffOnTarget ${RaidGroupLeaders[${i}]}

@@ -23,12 +23,9 @@ ______________________________________________
 #Event GazeBurst		"#*#Mata Muram fixes his gaze#*#"
 #Event GazeDone			"#*#Mata Muram's spell has been reflected#*#"
 
-Sub InitEvents_OOW_Anguish
-	/cecho \ag Initializing Anguish
-/return
 
 Sub InitEvents_OOW_Anguish
-	|-- Killing Events
+	/cecho \ag Initializing Anguish
 	/call RegisterRaidEvents Events_OOW_Anguish 5
 /return
 

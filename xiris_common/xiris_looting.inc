@@ -269,14 +269,16 @@ Sub ParseLootINI
 Sub LootTarget(int _corpseID)
 	/echo lootTarget
 	/call TrueTarget ${_corpseID}
+
 	
+	/declare nav_count int local 0
 	|-corpse validation
+	:corpse_validation
 	/if (${Target.Distance} > ${int_lootRadius} || ${Target.DistanceZ} > ${int_lootRadius}) {
 		/echo Corpse too far, returning
 		/goto :return
 	}
 	|-corpse movement
-	/declare nav_count int local 0
 	:corpse_nav
 		/varcalc nav_count ${nav_count}+1
 		/delay 5
@@ -286,7 +288,7 @@ Sub LootTarget(int _corpseID)
 		}
 		/if ((${Target.Distance} > 10) && !${Navigation.Active}) /navigate target
 		/if ((${Target.Distance} < 10) && !${Navigation.Active}) /goto :corpse_loot
-		/if (${Navigation.Active}) /goto :corpse_nav
+		/if (${Navigation.Active}) /goto :corpse_validation
 
 	|-corpse looting
 	:corpse_loot

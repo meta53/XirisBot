@@ -43,8 +43,8 @@ Sub InviteGroupsToRAID
 	/delay 5
 	/raidinvite Xepatia
 
-	/dga /notify LargeDialogWindow LDW_YesButton leftmouseup
-	/dga /notify LargeDialogWindow LDW_OkButton leftmouseup
+	|/dga /notify LargeDialogWindow LDW_YesButton leftmouseup
+	|/dga /notify LargeDialogWindow LDW_OkButton leftmouseup
 /return
 
 
@@ -80,8 +80,8 @@ Sub InviteGroupsToHATRED
 	/delay 5
 	/raidinvite Xepatia
 
-	/dga /notify LargeDialogWindow LDW_YesButton leftmouseup
-	/dga /notify LargeDialogWindow LDW_OkButton leftmouseup
+	|/dga /notify LargeDialogWindow LDW_YesButton leftmouseup
+	|/dga /notify LargeDialogWindow LDW_OkButton leftmouseup
 /return
 
 

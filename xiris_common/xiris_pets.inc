@@ -111,61 +111,99 @@ Sub chkPetWeaps
 	/if (${bln_engaged}) /return
 	/if (!${Me.Pet.ID}) /return
 	/if (${bln_petWeaponized}) /return
+
+	/declare i int local
+	/declare e int local 
+	/declare retryTimer timer local 
+	/declare petItem string local
+	/declare packItem string local 
+
+
 	|-- load 'petWeap' spell set
 	/delay 3s
 	/echo checking Pet weapons
 	/echo weaponized? ${bln_petWeaponized}
 	/memspellset petweap
 	/delay 5s
-	/target ${Me.Pet}
-	/face fast
-	/if (${Target.Distance} > 20 ) {
-		/stick 10
-		/delay 5s
-	}
-	/delay 10
-	/if (${Target.Distance} > 40) /goto :return
-	/stick 10
-	/delay 10
 
-	/echo trying ${str_petBelt}
-	/if (${FindItemCount[=Summoned: ${str_petBelt}]}==0) {
-		/echo Belt: ${str_petBelt}
-		/call chkSpellMemorized "${str_petBelt}" TRUE
-		/call MQ2Cast "${str_petBelt}"
-		/target ${Me.Pet}
-		/if (${Cursor.ID}) /click left target
-		/delay 10
-		/if (${Window[GiveWnd].Open}) /notify GiveWnd GVW_Give_Button leftmouseup 
-	}
-	/delay 2s
-	/echo trying ${str_petWeap1}
-	/if (${FindItemCount[=Summoned: ${str_petWeap1}]}==0) {
-		/echo Weapon 1: ${str_petWeap1}
-		/call chkSpellMemorized "${str_petWeap1}" TRUE
-		/call MQ2Cast "${str_petWeap1}"
-		/target ${Me.Pet}
-		/if (${Cursor.ID}) /click left target
-		/delay 10
-		/if (${Window[GiveWnd].Open}) /notify GiveWnd GVW_Give_Button leftmouseup 
-	}
-	/delay 2s
-	/echo trying ${str_petWeap2}
-	/if (${FindItemCount[=Summoned: ${str_petWeap2}]}==0) {
-		/echo Weapon 2: ${str_petWeap2}
-		/call chkSpellMemorized "${str_petWeap2}" TRUE
-		/call MQ2Cast "${str_petWeap2}"
-		/target ${Me.Pet}
-		/if (${Cursor.ID}) /click left target
-		/delay 10
-		/if (${Window[GiveWnd].Open}) /notify GiveWnd GVW_Give_Button leftmouseup 
-	}
+	|-- Belt
+	/call SummonItemForPet "Summoned: ${str_petBelt}" "Summon ${str_petBelt}" ${Me.Pet.ID}
+	|-- Weapon 1
+	/call SummonItemForPet "Summoned: ${str_petWeap1}" "Summon ${str_petWeap1}" ${Me.Pet.ID}
+	|-- Weapon 2
+	/call SummonItemForPet "Summoned: ${str_petWeap2}" "Summon ${str_petWeap2}" ${Me.Pet.ID}
+	
 
 	:return
-	/melee reset
 	/varset bln_petWeaponized TRUE
-	/memspellset default
+	/memspellset ${str_spellset}
 	/autoinv
+/return
+
+Sub WeaponizePet(int _petID)
+
+/return
+
+Sub SummonItemForPet(string _itemName, string _spellName, int _petID)
+	/cecho \ag Summoning Item \ay ${_itemName} \ag with \ay${_spellName}\ag for \aw${Spawn[id ${_petID}].CleanName}(${_petID})
+	/autoinv
+	:summon_item
+	/if (!${FindItemCount[=${petItem}]}) {
+		| Pet item isn't in inventory, summon it
+		/call chkSpellMemorized "${_spellName}" TRUE
+		/call MQ2Cast "${_spellName}"
+		/delay 10
+	}
+
+	/call TrueTarget ${_petID}
+
+	:moveToPet
+	/if (${Target.Distance} > 10) {
+		/if (${Target.Distance} < 100) {
+			/if (!${Navigation.Active}) /navigate target
+		} else {
+			/cecho \arPet is too far away! Abort!
+			/goto :return
+		}
+		/delay 10
+		/goto :moveToPet
+	} else {
+		/if (${Navigation.Active}) /navigate stop
+	}
+
+	:checkCursor
+	/if (!${Cursor.ID}) {
+		| nothing on cursor, we need to find in packs
+		/declare i int local
+		/declare e int local 
+		/declare retryTimer timer local 
+		/declare petItem string local
+		/declare packItem string local 
+
+		/for i 1 to 8 
+			/if (${Bool[${Me.Inventory[pack${i}]}]}) {
+				| Look at each bag slot for item
+				/for e 1 to ${Me.Inventory[pack${i}].Container}
+					/varset packItem ${Me.Inventory[pack${i}].Item[${e}]}
+					/itemnotify in pack${i} ${e} leftmouseup
+					/delay 10
+					/goto :give_itemToPet
+				:next_item_in_pack
+				/delay 5
+				/next e
+			}
+		:next_pack
+		/next i	
+	}
+
+	:give_itemToPet
+	/if (${Cursor.ID}) {
+		/echo Handing ${Cursor.Name} to Pet
+		/click left target
+		/delay 10
+		/if (${Window[GiveWnd].Open}) /notify GiveWnd GVW_Give_Button leftmouseup 
+		/delay 10
+	}
 /return
 
 
@@ -244,7 +282,7 @@ Sub xbot_initialize_pets
 	|--Pet Weapons
 	/declare str_petBelt				string	outer 	${Ini[botINI,Pet,str_petBelt,Girdle of Magi`Kot]}
 	/declare str_petWeap1				string  outer   ${Ini[botINI,Pet,str_petWeap1,Blade of the Kedge]}
-	/declare str_petWeap2				string  outer   ${Ini[botINI,Pet,str_petWeap1,Fist of Ixiblat]}
+	/declare str_petWeap2				string  outer   ${Ini[botINI,Pet,str_petWeap2,Fist of Ixiblat]}
 	/declare bln_petWeaponized			bool	outer	FALSE
 	
 	

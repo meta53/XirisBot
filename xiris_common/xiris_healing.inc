@@ -910,12 +910,12 @@ Sub Add2RezIgnore(int _id)
 		/varset Temp[${x}] ${arr_rezIgnore[${x}]}
 	/next x
 	/varset int_rezIgnore ${Math.Calc[${int_rezIgnore}+1]}
-	/varset Temp[${int_rezIgnore}] ${_id}
+	/varset arrTemp[${int_rezIgnore}] ${_id}
 	| delete old ignore list and copy temp list to new ignore list
 	/deletevar arr_rezIgnore
 	/declare arr_rezIgnore[${int_rezIgnore}] int outer
 	/for x 1 to ${int_rezIgnore}
-		/varset arr_rezIgnore[${x}] ${Temp[${x}]}
+		/varset arr_rezIgnore[${x}] ${arrTemp[${x}]}
 	/next x
 /return
 
@@ -978,7 +978,7 @@ Sub xbot_initialize_healing(int _healPoint)
 	/declare 	healINI				string  outer	xiris_common/xiris_healing.ini
 
 	|-- Set spellset to default so we can probe the properties of these
-	/memspellset default
+	/if (${str_classArchetype.Equal[PRIEST]} || ${str_classArchetype.Equal[CASTER]} || ${str_classArchetype.Equal[MELEE_MANA]}) /memspellset default
 
 	|-- Heal Settings
 	/declare    bln_defaultAutoInterrupt 	bool	outer  	${Ini[healINI,Heal_Settings,bln_autointerrupt]}

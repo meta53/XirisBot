@@ -227,7 +227,7 @@ Sub variant_initialize
 	
 	
 	/memspellset default
-	/cecho \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID})HealPoint:${int_point_tankNormal} SAName: ${str_tankName2}(${int_STID})
+	/cecho \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID})HealPoint:${int_point_tankNormal} ST: ${str_tankName2}(${int_STID})
 	/call InitEvents_Class
 /return
 
