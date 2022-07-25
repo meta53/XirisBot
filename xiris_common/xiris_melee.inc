@@ -294,7 +294,7 @@ Sub chkDownshits
 			/declare itemName	string  local
 			/declare castArg 	string 	local
 			/declare castTime	int     local
-			/declare tgtName 	string 	local
+			/declare svdTGTID 	string 	local	${Target.ID}
 			/declare tgtID 		int 	local
 			/declare isSpell	bool	local	TRUE
 			/declare wornSlot   string  local 
@@ -307,7 +307,7 @@ Sub chkDownshits
 				| downflag3=Fiery Might|28988 item
 				/varset buffName  ${downflag${df}.Token[1,|]}
 				/varset castArg   ${downflag${df}.Token[2,|]}|${downflag${df}.Token[3,|]}
-				/varset tgtName   ${downflag${df}.Token[3,|]}
+				/varset tgtID     ${downflag${df}.Token[3,|]}
 				/varset isSpell TRUE
 				/if (${castArg.Find[item]}>0) /varset isSpell FALSE
 				
@@ -321,9 +321,9 @@ Sub chkDownshits
 				}
 				/call RunAllEvents	
 				/if (${bln_engaged}) /return
-				|/echo buffName: ${buffName} castArg: ${castArg} tgtName: ${tgtName} ready: ${Me.SpellReady[${buffName}]} isSpell: ${isSpell} ?: ${castArg.Find[item]}
-				|/echo ${Spell[${buffName}].Stacks} && !${Me.Buff[${buffName}].ID}
-				/if (${Spell[${buffName}].Stacks} && !${Me.Buff[${buffName}].ID}) {
+				|/echo BuffName: ${buffName} castArg: ${castArg} tgtID: ${tgtID} ready: ${Me.SpellReady[${buffName}]} isSpell: ${isSpell} ?: ${castArg.Find[item]}
+				|/echo Stacks? ${Spell[${buffName}].Stacks} && Do I have it? !${Bool[${Me.Buff[${buffName}].ID}]}
+				/if (${Spell[${buffName}].Stacks} && !${Bool[${Me.Buff[${buffName}].ID}]}) {
 					/if (${isSpell} && !${Me.SpellReady[${buffName}]}) {
 						/cecho \ay${buffName} \awis \arNOT \awReady, Memorizing
 						| Spell is not ready, memorize it
@@ -332,7 +332,6 @@ Sub chkDownshits
 					} 
 
 					|- save existing target for buffs that take a target argument (3)
-					/if (${tgtName.NotEqual[NULL]}) 		/varset tgtID ${Spawn[pc ${tgtName}].ID}
 					/if (${SpawnCount[ID ${tgtID}]} >= 1 )  /call TrueTarget ${tgtID}
 					|/echo downflag${df}: ${downflag${df}.Token[1,|]} | ${downflag${df}.Token[2,|]}|${downflag${df}.Token[3,|]}
 					
@@ -370,14 +369,16 @@ Sub chkDownshits
 					:dfcast
 					/if (${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]}) /goto :dfcast
 			
-					|- return existing target
-					/if (${tgtName.NotEqual[NULL]}) /call TrueTarget ${tid}
+					
 					
 				}
 			:nextDF
 			/next df
 			|- reset the DownFlag timer to 30seconds
 			/varset timer_downflags 30s
+			}
+			|- return existing target
+			/if (${Bool[${svdTGTID}]}) /call TrueTarget ${svdTGTID}
 		}
 	}
 /return

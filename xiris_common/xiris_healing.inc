@@ -479,7 +479,7 @@ Sub healCast(int _id, string _name, string _spell)
 		/echo HEAL NAME is NULL || ID is 0 something is fucked;
 		/return
 	}
-	/echo healCast Target:${_name}(${_id}) cHP: ${Spawn[pc ${_name}].PctHPs} cSH: ${int_point_calcStopHeal} spell: "${_spell}"
+	/cecho \awhealCast \ayTarget:\ag${_name}(${_id}) \aydist: \ag${Target.Distance} \aycHP: \ag${Spawn[pc ${_name}].PctHPs} \aycSH: \ag${int_point_calcStopHeal} \ayspell: \ag"${_spell}"
 	/if (${Spawn[pc ${_name}].PctHPs} < ${int_point_calcStopHeal} && (${Me.CurrentMana} > ${Spell[${_spell}].Mana})) {
 		/if (${Target.ID} != ${_id}) /call TrueTarget ${_id}
 		/call chkSpellMemorized "${_spell}" TRUE 2
