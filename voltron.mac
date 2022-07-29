@@ -1,7 +1,8 @@
 #Turbo 1
 
 Sub Main(string _mode)
-	/if (!${Defined[_mode]}) /declare _mode string local RAID
+	/if (!${Defined[_mode]}) /declare _mode string local HATRED
+	/if (!${Bool[${_mode}]}) /varset _mode HATRED
 	/echo Setup up Voltron
 	
 	/call SetupGroups${_mode}

@@ -63,10 +63,6 @@ REVISION HISTORY
 #EVENT Leashing			"#1# tells the raid#*#'Leashing#*#'"
 #EVENT Leashing 		"[ #1# #*#]#*#Leashing#*#"
 
-#EVENT XTargetRefresh	"#1# tells the group#*#'RefreshXTarget#*#'"
-#EVENT XTargetRefresh	"#1# tells you#*#'RefreshXTarget#*#'"
-#EVENT XTargetRefresh	"#1# tells the raid#*#'RefreshXTarget#*#'"
-#EVENT XTargetRefresh	"[ #1# #*#]#*#RefreshXTarget#*#"
 
 
 #define dsINI xiris_common/xiris_damageshields.ini
@@ -84,7 +80,7 @@ Sub Events_Melee
 	/doevents ToggleMQ2Melee
 	/doevents Leashing
 	/doevents AutoAssist
-	/doevents XTargetRefresh
+	
 /return
 
 Sub Events_Melee_Engaged
@@ -243,9 +239,6 @@ Sub LeashingOFF
 	/varset bln_useLeash FALSE
 /return
 
-Sub Event_XTargetRefresh
-	/call doRefreshXTarget
-/return 
 
 
 Sub doBandolier(string _bando)

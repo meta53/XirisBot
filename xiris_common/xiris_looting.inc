@@ -8,6 +8,7 @@ ______________________________________________
 REVISION HISTORY
     03.24.16    xiris	INITIAL REVISION
 	06.29.22	xiris 	Updated all events to only be either generic, or [/gsay, /rsay, /tell, MQ2DanNet(dgt, dt)] only
+	07.29.22	xiris 	Updated to allow for 'beeping' if the item is lore and the looter already has it (useful for manual loots like mirrored mask)
 **|
 
 
@@ -207,10 +208,11 @@ Sub ParseLootINI
 	|	[4] Class|*
 	|   [5] CharExclusion|Xiris, etc or..
 	|   [6] CharOnly|Xiris, etc or...
-	/declare loot_ALL[${int_total},6]		string  outer
-	/declare loot_VENDOR[${int_vendor},6]	string	outer
-	/declare loot_TRADE[${int_trade},6]		string	outer
-	/declare loot_QUEST[${int_quest},6]		string	outer
+	|   [7] Beep|T,F
+	/declare loot_ALL[${int_total},7]		string  outer
+	/declare loot_VENDOR[${int_vendor},7]	string	outer
+	/declare loot_TRADE[${int_trade},7]		string	outer
+	/declare loot_QUEST[${int_quest},7]		string	outer
 	
 	/declare n int local 1
 	/declare item_loot string local
@@ -231,6 +233,7 @@ Sub ParseLootINI
 			/varset loot_VENDOR[${vc},4] ${item_loot.Arg[4,|]} 
 			/varset loot_VENDOR[${vc},5] ${item_loot.Arg[5,|]} 
 			/varset loot_VENDOR[${vc},6] ${item_loot.Arg[6,|]} 
+			/varset loot_VENDOR[${vc},7] ${item_loot.Arg[7,|]}
 		} else /if (${item_loot.Arg[2,|].Equal[TRADE]}) {
 			/varcalc tc ${tc}+1
 			/varset loot_TRADE[${tc},1] ${item_loot.Arg[1,|]} 
@@ -239,6 +242,7 @@ Sub ParseLootINI
 			/varset loot_TRADE[${tc},4] ${item_loot.Arg[4,|]} 
 			/varset loot_TRADE[${tc},5] ${item_loot.Arg[5,|]} 
 			/varset loot_TRADE[${tc},6] ${item_loot.Arg[6,|]} 
+			/varset loot_TRADE[${tc},7] ${item_loot.Arg[7,|]} 
 		} else /if (${item_loot.Arg[2,|].Equal[QUEST]} && !${item_loot.Arg[5,|].Find[${Me.Name}]}) {
 			/varcalc qc ${qc}+1
 			/varset loot_QUEST[${qc},1] ${item_loot.Arg[1,|]} 
@@ -247,6 +251,7 @@ Sub ParseLootINI
 			/varset loot_QUEST[${qc},4] ${item_loot.Arg[4,|]} 
 			/varset loot_QUEST[${qc},5] ${item_loot.Arg[5,|]} 
 			/varset loot_QUEST[${qc},6] ${item_loot.Arg[6,|]} 
+			/varset loot_QUEST[${qc},7] ${item_loot.Arg[7,|]} 
 		}
 
 		/varset loot_ALL[${n},1] ${item_loot.Arg[1,|]} 
@@ -254,7 +259,8 @@ Sub ParseLootINI
 		/varset loot_ALL[${n},3] ${item_loot.Arg[3,|]} 
 		/varset loot_ALL[${n},4] ${item_loot.Arg[4,|]} 
 		/varset loot_ALL[${n},5] ${item_loot.Arg[5,|]} 
-		/varset loot_ALL[${n},6] ${item_loot.Arg[5,|]} 
+		/varset loot_ALL[${n},6] ${item_loot.Arg[6,|]} 
+		/varset loot_ALL[${n},7] ${item_loot.Arg[7,|]} 
 	/next n
 
 	/echo loot_ALL: ${loot_ALL.Size[1]}
@@ -320,7 +326,7 @@ Sub LootTarget(int _corpseID)
 		/declare lootClass 				bool 	local 	FALSE
 		/declare lootCharExclusion   	bool    local   TRUE	| do not loot on this character [if found, dont loot]
 		/declare lootCharOnly 			bool	local	FALSE	| loot only on this character
-
+		/declare lootBeep				bool    local   FALSE 	| should I beep if I can't loot this item?
 
 		/for n 1 to ${Corpse.Items}
 			|-check to see if I want the item
@@ -360,6 +366,7 @@ Sub LootTarget(int _corpseID)
 
 					/varset lootName  ${Corpse.Item[${n}].Name}
 					/varset lootType  ${loot_QUEST[${i},2]}
+					/varset lootBeep  ${If[${Bool[${loot_QUEST[${i},7].Find[T]}]},TRUE,FALSE]}
 
 					|- count to keep
 					/if (${loot_QUEST[${i},3].NotEqual[*]}) /varset lootCount ${loot_QUEST[${i},3]}
@@ -419,9 +426,14 @@ Sub LootTarget(int _corpseID)
 					/delay 1
 					/autoinv
 				}
+			} else {
+				/if (${lootBeep}) {
+					/rs ${Target.Name}(${Target.ID}) has ${lootName} and I cannot loot it. Beep!
+					/beep
+				}
 			}
-		:nextItem
-		/next n
+			:nextItem
+			/next n
 
 	:return
 	|/target clear

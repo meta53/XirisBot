@@ -236,6 +236,7 @@ Sub MQ2Cast(string spellName,string spellType,timer giveUpTimer,string mySub,str
 :cast_spell_pending
 	
 	/if ( ${Cast.Status.Find[C]} ) {
+		/if (${Cast.Result.Equal[CAST_NOTARGET]}) /goto :CastEnd
 		/if ( !${interruptFlag} && ${mySub.Length} ) /call ${mySub}
 		/goto :cast_spell_pending
 	} else /if ( ${Cast.Result.Equal[CAST_RESIST]} ) {

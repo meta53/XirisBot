@@ -136,6 +136,8 @@ Sub chkNuke
 		
 		/for i 1 to ${int_nukeTotal}  
 			:NukeLoopStart
+			|-- skip if not ready
+			/if (!${Me.SpellReady[${Nuke_${i}}]}) /goto :NextNuke
 			|-- skip if disabled
 			/if (!${Nuke_${i}_Use}) /goto :NextNuke
 
@@ -244,6 +246,8 @@ Sub chkQNuke
 		
 		/for i 1 to ${int_QnukeTotal}  
 			:QNLoopStart
+			|-- skip if not ready
+			/if (!${Me.SpellReady[${QNuke_${i}}]}) /goto :NextQuickNuke
 			|-- skip if disabled
 			/if (!${QNuke_${i}_Use}) /goto :NextQuickNuke
 
@@ -336,6 +340,9 @@ Sub chkAENuke
 	:AENukeLoop
 	/for i 1 to ${int_AENukeTotal}
 		:AENukeStart 
+		|-- skip if not ready
+		/if (!${Me.SpellReady[${AENuke_${i}}]}) /goto :NextAENuke
+
 		/if (${AENuke_${i}_Timer} == 0) /cecho \agTimer ready for \ay${AENuke_${i}} :: \ay${AENuke_${i}_Timer}
 		/if (${AENuke_${i}_Timer} > 0 && ${AENuke_${i}_HasCastOnce}) {
 			/if (${i}<${int_AENukeTotal}) { 
@@ -368,29 +375,6 @@ Sub chkAENuke
 	:Return
 /return	
 
-|**
- ----------------------------
- Snaring  
- ----------------------------
- Snare Spell is declared in the INI
- ----------------------------
-**|
-Sub chkSnare
-	/if (!${bln_engaged} || ${Me.Invis}||${Me.Moving}|| ${Me.Song[${GoM}].ID}||${list_immuneSnare.Find[${Spawn[${Target.CleanName}]}]}||${list_ignore.Find[${Spawn[${Target.CleanName}]}]}) /return
-	/if (${Target.PctHPs}<=${int_snareHP} && ${Target.ID} && ${Target.Type.Equal[NPC]} && !${bln_snareActive} && ${bln_snareUse} && ${SpawnCount[npc radius 50 zradius 10]}<=${int_snareLocalNPC}) {
-		/call MQ2Cast "${str_snareSpell}" ${str_snareGem} 
-	}
-	
-	/if (${Cast.Result.Equal[CAST_SUCCESS]}) {
-		/varset bln_snareActive TRUE
-	}
-	
-	/if (${Cast.Result.Equal[CAST_IMMUNE]}) {
-		/ini "${IniFile}" "SnareImmunes.${Zone.ShortName}" "SnareImmune" "${list_immuneSnare}${Target.CleanName}|"
-		/varset list_immuneSnare ${Ini[${ignoreINI},"SnareImmunes.${Zone.ShortName}","SnareImmune"]}
-		/varset bln_snareActive TRUE
-	}
-/return
 
 
 |**
@@ -417,6 +401,8 @@ Sub chkStun(bool _memorize)
 		
 		/for i 1 to ${int_stunTotal}  
 			:StunLoopStart
+			|-- skip if not ready
+			/if (!${Me.SpellReady[${Stun_${i}}]}) /goto :NextStun
 			|-- skip if disabled
 			/if (!${Stun_${i}_Use}) /goto :NextStun
 
@@ -527,6 +513,8 @@ Sub chkDOT
 		
 		/for i 1 to ${int_dotTotal}  
 			:DotLoopStart
+			|-- skip if not ready
+			/if (!${Me.SpellReady[${DOT_${i}}]}) /goto :NextDot
 			|-- skip if disabled
 			/if (!${DOT_${i}_Use}) /goto :NextDot
 

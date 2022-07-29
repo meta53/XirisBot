@@ -217,6 +217,7 @@ Sub healSELF
  ----------------------------
 **|
 Sub healGRP
+	
 	/varcalc	int_point_calcStopHeal ${Math.Calc[${int_point_grpHot}*1.1]}
 
 	/declare	int_numDamaged	int	local	0
@@ -229,7 +230,8 @@ Sub healGRP
 	/declare	str_worstClass	string local NULL
 	/declare 	tmr_HoT 		string local
 	
-	| -- Cycle through the group and set the worst HP
+	:startHealGroup
+	| -- Cycle through the group and set the worst HP\
 	/for gmember 0 to ${Group}
 		/if ( (${Group.Member[${gmember}].Distance}<=${int_range_normal}) && ${Target.Type.Equal[PC]}) { 	
 			/if (${Group.Member[${gmember}].PctHPs} < ${int_worstHP} && ${Group.Member[${gmember}].PctHPs} > 0 ) { 
@@ -239,9 +241,9 @@ Sub healGRP
 				/varset str_worstClass      ${Group.Member[${gmember}].Class.Name} 
 			} 
 		} 
-        /if ((${Group.Member[${gmember}].Distance}<=${int_range_normal})&&(${Group.Member[${gmember}].PctHPs}<=${int_point_calcStopHeal})) /varcalc int_numDamaged ${int_numDamaged}+1 
-        /if ((${Group.Member[${gmember}].PctHPs}<=${int_point_calcStopHeal})&&(${Group.Member[${gmember}].PctHPs}>=${int_point_grpPatch}))   /varcalc int_minorHurt ${int_minorHurt}+1 
-        /if ((${Group.Member[${gmember}].PctHPs}<=${int_point_calcStopHeal})&&(${Group.Member[${gmember}].PctHPs}< ${int_point_grpPatch}))   /varcalc int_majorHurt ${int_majorHurt}+1 
+        /if ((${Group.Member[${gmember}].Distance}<=${int_range_normal})&&(${Group.Member[${gmember}].PctHPs}<=${int_point_calcStopHeal})) 	 /varcalc int_numDamaged ${int_numDamaged}+1 
+        /if ((${Group.Member[${gmember}].PctHPs}<=${int_point_calcStopHeal})&&(${Group.Member[${gmember}].PctHPs}>=${int_point_grpPatch}))   /varcalc int_minorHurt  ${int_minorHurt}+1 
+        /if ((${Group.Member[${gmember}].PctHPs}<=${int_point_calcStopHeal})&&(${Group.Member[${gmember}].PctHPs}< ${int_point_grpPatch}))   /varcalc int_majorHurt  ${int_majorHurt}+1 
     /next gmember
 	
 	|/echo healGRP ${int_worstHP} > ${int_point_calcStopHeal} major:${int_majorHurt} minor:${int_minorHurt}
@@ -252,18 +254,19 @@ Sub healGRP
 	/varset int_currentHP ${int_worstHP}
 	
 	| -- Single Target Light && Single Target Remedy
-	/if (${int_majorHurt} == 1) { 
+	/if (${int_majorHurt} <= 2) { 
 		/if (${int_worstHP} > ${int_point_grpPatch}) /return
 		/call setHealingSpell ${str_worstClass} ${int_worstHP}
 		/echo healGRP ${int_MTID} ${Target.Name} ${str_currentHeal}
 		/call healCast ${int_worstID} ${str_worstName} "${str_currentHeal}"
-	
+		/goto :return
 	| -- Major Group Heal
-	} else /if (${int_majorHurt} > 3) {
+	} else /if (${int_majorHurt} >= 3) {
 		/if (${int_worstHP} > ${int_point_grpPatch}) /return
 	    /varset  str_currentHeal ${str_heal_group}
 		/echo healGRP ${int_MTID} ${Target.Name} ${str_currentHeal}
 		/call healCast ${int_worstID} ${str_worstName} "${str_currentHeal}"
+		/goto :return
 
 	| -- Group HoT (timer based)
 	} else /if (${int_minorHurt} > 2 && ${timer_groupHoT} == 0 && ${str_heal_groupHoT.NotEqual[NULL]}) {
@@ -274,7 +277,7 @@ Sub healGRP
 			/varset timer_groupHoT 40s
 			/echo timer_groupHoT: ${timer_groupHoT}
 		}
-
+		/goto :return
 	| -- Minor Heals (HoTs) - and HOT enabled;
 	} else /if (${int_majorHurt} == 0 && ${use_heal_HoT}) {
 		| -- Single Target HoT
@@ -294,7 +297,9 @@ Sub healGRP
 				/varset ${tmr_HoT} 40s
 			}
 		} 
+		/goto :return
 	}
+:return
 /return
 
 Sub EVENT_CelestialRegeneration

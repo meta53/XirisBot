@@ -72,7 +72,7 @@ Sub chkOffTanking
 
 	:checkOTStart
 	/call RunRaidEvents	
-	/if (!${timer_xtargetRefresh}) {
+	/if (!${timer_xtargetRefresh} && !${SpawnCount[npc radius 100]}) {
 		/call doRefreshXTarget
 		/varset timer_xtargetRefresh ${timer_xtargetRefresh.OriginalValue}
 	}

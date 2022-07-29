@@ -130,6 +130,11 @@ ______________________________________________
 #EVENT RaidGroupMode 		"[ #1# #*#]#*#SetRaidGroupMode #2#"
 
 
+#EVENT doRefreshXTarget	"#1# tells the group#*#'RefreshXTarget#*#'"
+#EVENT doRefreshXTarget	"#1# tells you#*#'RefreshXTarget#*#'"
+#EVENT doRefreshXTarget	"#1# tells the raid#*#'RefreshXTarget#*#'"
+#EVENT doRefreshXTarget	"[ #1# #*#]#*#RefreshXTarget#*#"
+
 Sub InitEvents_Common
 	/call RegisterBackgroundEvents Events_Common 19
 	/call RegisterRaidEvents Events_Raid 9
@@ -170,6 +175,7 @@ Sub Events_Common
 	/doevents LongBurnOn2
 	/doevents MaximumBurn
 	/doevents RaidGroupMode
+	/doevents doRefreshXTarget
 /return
 
 
@@ -203,7 +209,7 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/declare 	CasterClasses 			string	outer	ENC,MAG,NEC,WIZ
 	/declare 	RangedClasses			string	outer	RNG
 	/declare 	RaidGroupLeaders[9] 	string outer 	NULL 
-	/call SetRaidGroupMode RAID
+	/call SetRaidGroupMode HATRED
 	
 	|-- [Settings] :Tank Settings
 	/declare	bln_tanking				bool	outer	FALSE
@@ -988,7 +994,7 @@ Sub SetRaidGroupMode(string _mode)
 		/varset	RaidGroupLeaders[1] Xiris
 		/varset	RaidGroupLeaders[2] Xiria
 		/varset RaidGroupLeaders[3] Theist
-		/varset RaidGroupLeaders[4] Xeixa
+		/varset RaidGroupLeaders[4] Cereborn
 		/varset RaidGroupLeaders[5] Sadelia
 		/varset RaidGroupLeaders[6] Xaeliea
 		/varset RaidGroupLeaders[7] Xaexa
@@ -998,7 +1004,7 @@ Sub SetRaidGroupMode(string _mode)
 		/varset	RaidGroupLeaders[1] Xiris
 		/varset	RaidGroupLeaders[2] Xiria
 		/varset RaidGroupLeaders[3] Xirea
-		/varset RaidGroupLeaders[4] Xeixa
+		/varset RaidGroupLeaders[4] Cereborn
 		/varset RaidGroupLeaders[5] Sadelia
 		/varset RaidGroupLeaders[6] Xaeliea
 		/varset RaidGroupLeaders[7] Xaexa
@@ -1763,9 +1769,16 @@ SUB check_macroTimers
 /if (${Debug}) /echo <== check_macroTimers -|
 /return
 
+
+
 |----------------------------------------------------|
 |- Resets Xtarget window 1-5 elements to auto		-|
 |----------------------------------------------------|
+Sub Event_RefreshXTarget
+	/call doRefreshXTarget
+/return 
+
+
 SUB doRefreshXTarget
 	/declare i int local 1
 	/for i 1 to 5
