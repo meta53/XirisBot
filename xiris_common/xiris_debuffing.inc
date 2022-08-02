@@ -11,6 +11,7 @@ REVISION HISTORY
 	05.08.22	xiris	Added support for bards in Debuffs
 	05.13.22	xiris   Cleaned up events
 	06.29.22	xiris 	Updated all events to only be either generic, or [/gsay, /rsay, /tell, MQ2DanNet(dgt, dt)] only	
+	07.29.22	xiris   Updated CastDebuff to handle some more error states (So we don't try to debuff failed targets)
 **|
 
 #EVENT DebuffTarget	"#1# tells you#*#'DebuffTarget #2#'"
@@ -49,6 +50,7 @@ Sub chkDebuffsOnSingleTarget(int _targetID)
 Sub CastDebuffsOnTarget(int _targetID, bool _forced) 	
 	/if (!${int_debuffTotal}) 		/return
 
+	| Check if named, or we are forcing this
 	/call TargetNamedCheck ${_targetID}
 	/declare isNamed	bool	local	${Macro.Return}
 	/if (${_forced}) /cecho \agCastDebuffsOnTarget \awID:\ay${_targetID}  \awisNamed:\ay${isNamed}  \awforcing?:\ay${_forced}
@@ -57,8 +59,6 @@ Sub CastDebuffsOnTarget(int _targetID, bool _forced)
 
 	/if (${isNamed} && ${int_debuffTotalIfNamed} == 0) /goto :return
 	/if (${int_debuffTotal} == 1 && ${DEBUFF_1_Timer} && !${_forced}) /goto :return
-
-
 
 	|-- things passed, lets target the NPC
 	:debuffTarget
@@ -106,17 +106,42 @@ Sub CastDebuffsOnTarget(int _targetID, bool _forced)
 Sub CastDebuff(string _debuff, string _gem,  int _maxTries, int _targetID)
 	/echo CastDebuff _spell: ${_debuff}, _gem: ${_gem}, _maxTries: ${_maxTries}
 	/declare	try		int		local	0
+	/declare    tgtID   int     local ${_targetID}
+	/declare 	rslt	string  local
 	/if (!${Target.ID} || ${Target.ID} != ${_targetID}) /call TrueTarget ${_targetID}
-	:attemptDebuff
-		/if (${Target.PctHPs} == 0 || !${Target.ID} ) /goto :return
-		/if (${try} > ${_maxTries}) /goto :return
+	/declare 	tgtName string  local ${Target.CleanName}
+	:AttemptDebuff
+		|pre-check before attempt
+		/if (${Target.PctHPs} == 0 || !${Target.ID} || (${Target.ID} != ${tgtID})) {
+			/varset rslt TARGET_ERROR
+			/goto :DebuffFailure
+		}
+		/if (${try} > ${_maxTries}) {
+			/varset rslt MAX_TRIES
+			/goto :DebuffFailure
+		}					
+		|attempt
 		/call MQ2Cast "${_debuff}" ${_gem} 5s
+		/varset rslt ${Macro.Return}
 		/varcalc try ${try}+1
-		/if (${Macro.Return.Equal["CAST_IMMUNE"]}) /goto :return
-		/if (${Macro.Return.Equal["CAST_SUCCESS"]}) /goto :return
-		/goto :attemptDebuff
-	:return
-	/if (${try} > ${_maxTries}) /rs Unable to ${_debuff} on ${Target.Name} after ${_maxTries} tries!
+		|handle result
+		/if (${rslt.Equal[CAST_OUTOFRANGE]}) 	/goto :DebuffFailure
+		/if (${rslt.Equal[CAST_OUTOFMANA]}) 	/goto :DebuffFailure
+		/if (${rslt.Equal[CAST_NOTHOLD]}) 		/goto :DebuffFailure
+		/if (${rslt.Equal[CAST_INVULNERABLE]}) 	/goto :DebuffFailure
+		/if (${rslt.Equal[CAST_NOTARGET]}) 		/goto :DebuffFailure
+		/if (${rslt.Equal[CAST_IMMUNE]}) 		/goto :DebuffFailure
+		/if (${rslt.Equal[CAST_SUCCESS]}) 		/goto :DebuffSuccess
+		|retry
+		/goto :AttemptDebuff
+	:DebuffFailure
+		/dgt DEBUFF_FAILURE::[${_debuff}] ! ${tgtName} (${rslt})
+	/goto :return
+	
+	:DebuffSuccess
+	/dgt DEBUFF_SUCCESS::[${_debuff}] -> ${tgtName} (${try})
+
+:return
 /return
 
 

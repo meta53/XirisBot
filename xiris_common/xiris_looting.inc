@@ -339,8 +339,8 @@ Sub LootTarget(int _corpseID)
 
 						/varset lootName  ${Corpse.Item[${n}].Name}
 						/varset lootType  ${loot_ALL[${i},2]}
-
-						/echo Item: ${Corpse.Item[${n}].Name} Type: ${lootType}
+						/varset lootBeep  ${If[${loot_ALL[${i},7].Find[T]}, TRUE,FALSE]}
+						/echo Item: ${lootName} Type: ${lootType} Beep: ${lootBeep}
 
 						|- count to keep
 						/if (${loot_ALL[${i},3].NotEqual[*]}) /varset lootCount ${loot_ALL[${i},3]}
@@ -349,7 +349,7 @@ Sub LootTarget(int _corpseID)
 						/if (${loot_ALL[${i},4].Find[${Me.Class.ShortName}]} || ${loot_ALL[${i},4].Equal[*]} ) /varset lootClass TRUE
 
 						|- characters that shouldn't loot
-						/if (${loot_ALL[${i},5].Find[${Me.Name}]}) /varset lootCharExclusion FALSE
+						/if (${loot_ALL[${i},5].Find[${Me.Name}]}) /varset lootCharExclusion TRUE
 
 						|- characters that should loot
 						/if (!${loot_ALL[${i},6].Find[${Me.Name}]} || ${loot_ALL[${i},6].Equal[*]}) /varset lootCharOnly TRUE
@@ -366,7 +366,8 @@ Sub LootTarget(int _corpseID)
 
 					/varset lootName  ${Corpse.Item[${n}].Name}
 					/varset lootType  ${loot_QUEST[${i},2]}
-					/varset lootBeep  ${If[${Bool[${loot_QUEST[${i},7].Find[T]}]},TRUE,FALSE]}
+					/varset lootBeep  ${If[${loot_QUEST[${i},7].Find[T]}, TRUE,FALSE]}
+					/echo Item: ${lootName} Type: ${lootType} Beep: ${lootBeep}
 
 					|- count to keep
 					/if (${loot_QUEST[${i},3].NotEqual[*]}) /varset lootCount ${loot_QUEST[${i},3]}
@@ -375,10 +376,7 @@ Sub LootTarget(int _corpseID)
 					/if (${loot_QUEST[${i},4].Find[${Me.Class.ShortName}]} ||${loot_QUEST[${i},4].Equal[*]} ) /varset lootClass TRUE
 
 					|- characters that shouldn't loot
-					/if (${loot_QUEST[${i},5].Find[${Me.Name}]}) {
-						/echo my name is found in ${loot_QUEST[${i},5]} excluding myself
-						/varset lootCharExclusion FALSE
-					} 
+					/if (${loot_QUEST[${i},5].Find[${Me.Name}]}) /varset lootCharExclusion TRUE
 
 					|- characters that should loot
 					/if (!${loot_QUEST[${i},6].Find[${Me.Name}]} || ${loot_QUEST[${i},6].Equal[*]}) /varset lootCharOnly TRUE
@@ -394,17 +392,17 @@ Sub LootTarget(int _corpseID)
 
 			|-check to see if item is lore
 			:loot_validation
-			/cecho ${lootName} \awCount in Inventory:\ay${FindItemCount[${lootName}]} \awMaximum: \ay${lootCount} \awClass Lootable?: \ay${lootClass} \awExcluded by Name: \ay${lootCharExclusion} \awLoot By Me Only? \ay${lootCharOnly}
+			/cecho ${lootName} \awCount in Inventory:\ay${FindItemCount[${lootName}]} \awMaximum: \ay${lootCount} \awClass Lootable?: \ay${lootClass} \awExcluded by Name: \ay${lootCharExclusion} \awLoot By Me Only? \ay${lootCharOnly} \awBeep? \ay${lootBeep}
 			/if (${Corpse.Item[${n}].Lore} && ${FindItemCount[${lootName}]} == 1) {
-				/cecho \arItem is lore, and we have more than 1
+				/cecho \arItem is lore, and we have more than 1 beep? ${lootBeep}
 				/varset keep FALSE
 			}
 			/if (${FindItemCount[${lootName}]} > ${lootCount}) {
-				/cecho \arWe already have more than we need of this item
+				/cecho \arWe already have more than we need of this item.
 				/varset keep FALSE
 			} 
 			/if (!${lootClass}) {
-				/cecho \arMy class cant keep this
+				/cecho \arMy Class can't keep this.
 				/varset keep FALSE
 			} 
 			/if (${lootCharExclusion}) {
@@ -415,8 +413,8 @@ Sub LootTarget(int _corpseID)
 				/cecho \arI shouldn't keep this (name - by lootCharOnly)
 				/varset keep FALSE
 			}
+
 			:loot_gank
-			
 			/if (${keep}) {
 				/cecho \agKeeping ${lootName} ${lootType} ${FindItemCount[${lootName}]} of ${lootCount}
 				/rs Keeping ${lootName} ${lootType} ${FindItemCount[${lootName}]} of ${lootCount}
