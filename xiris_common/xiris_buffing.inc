@@ -349,7 +349,6 @@ Sub doSingleTargetBuffOnRaid
 	
 	/echo Doing Single Target Buffs [TargetBuffs] on RAID
 
-	/declare arrBuffTargets[${int_strBuffTotal}]
 	/declare	i	int 	local
 	/declare    b   int     local
 	/declare buffSpell    	string	local
@@ -606,22 +605,26 @@ Sub chkOOCBuffs
 		/call RunAllEvents
 		/if (${bln_engaged}) /return
 		/varset 	buffSpell    ${OOCBUFF_${i}}
-		/if (!${Bool[${${buffSpell}}]}) /goto :next
-		/if (${Me.Buff[${buffSpell}].ID}) {
+		/if (!${Bool[${Me.Spell[${buffSpell}]}]}) {
+			|/echo I dont have this spell
+			/goto :next
+		}
+		/if (${Bool[${Me.Buff[${buffSpell}].ID}]}) {
 			|/echo already have buff, doing next
 			/goto :next
 		}
 
-		/echo ${buffSpell}
+		/memspellset buff
+		/cecho \awOOC Buff: \ag${buffSpell}
 		/varcalc	buffDuration ${Spell[${OOCBUFF_${i}}].Duration} * 6
 		/varset		buffGem		 ${OOCBUFF_${i}_Gem}
 
 		:spellReadyWait
 		/call RunAllEvents
-		/if (${bln_engaged}) /return
-		/memspellset buff
+
+		
 		/delay 3s
-		/if (!${Me.SpellReady["${buffSpell}"]} || ${Me.CurrentMana} < ${Spell[${buffSpell}].Mana}) {
+		/if (!${Me.SpellReady[${buffSpell}]} || ${Me.CurrentMana} < ${Spell[${buffSpell}].Mana}) {
 			/echo Waiting for ${buffSpell} for SELF buff
 			/if (${Me.Standing}) /sit
 			/goto :spellReadyWait

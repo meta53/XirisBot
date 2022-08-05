@@ -33,7 +33,7 @@ REVISION HISTORY
 
 |-- Macro generated cure requests/rejections
 #EVENT cureRequest  	"[ #1# #*#]#*#cureRequest #2#"
-#EVENT cureReceived  	"[ #1# #*#]#*#I cured you#*#"
+#EVENT cureReceived  	"[ #1# #*#]#*#I cured you#*#(#2#)#*#"
 #EVENT cureRejected  	"[ #1# #*#]#*#I cannot cure you#*#"
 
 |-- Poison
@@ -90,27 +90,26 @@ Sub Event_cureMe(_line, _sender, _eventParams)
 
 
 |-- Single target cure, generated syntax (for macro call)
-|   Counters determined by NetCure
-Sub Event_cureRequest(_line, _sender, _eventParams)
-	/echo EVT_CUREREQUEST: _line:${_line}
-	/doevents flush
+|   Counters determined by DanNet query
+Sub Event_cureRequest(_line, _sender, _eventParams)	
 	/declare name string local ${_eventParams.Arg[1, ]}
-	/echo name: ${name}
 	/declare id int local ${_eventParams.Arg[2, ]}
-	/echo id: ${id}
 	/declare curetype string local  ${_eventParams.Arg[3, ]}
-	/echo curetype: ${curetype}
 	/call getCureCounters ${name} ${curetype}
 	/declare counters int local  ${_eventParams.Arg[4, ]}
+	/declare forced bool local ${_eventParams.Arg[5, ]}
+
 	/if (${counters} == 0) /varset counters ${Macro.Return}
-	/echo count: ${counters}
-	/call handleCureRequest ${name} ${id} ${curetype} ${counters}
+	/cecho \awCure Request \ayname: \ag${name}(${id}) \aytype: \ag${curetype} \aycounters: \ag${counters} \ayforced: \ag${forced}
 	/doevents flush cureRequest
+
+	/call handleCureRequest ${name} ${id} ${curetype} ${counters} ${forced}
+	
 /return
 
-Sub Event_cureReceived
-	/echo cure Received
-	/call resetCureState
+Sub Event_cureReceived(_line, _sender, _eventParams)
+	/declare id int local ${Int[${_eventParams}]}
+	/if (${id} == ${Me.ID}) /call resetCureState
 	/doevents flush cureReceived
 /return
 
@@ -122,7 +121,6 @@ Sub Event_cureGroupPoison(_line, _sender, _eventParams)
 	/echo _eventParams:${_eventParams}
 	/rs Curing Group of Poisons with: ${str_cure_poison}
 	/call cureGroup poison ${_eventParams}
-	/rs Done Curing Group of Poisons
 	/doevents flush cureGroupPoison
 /return
 
@@ -132,7 +130,6 @@ Sub Event_cureGroupDisease(_line, _sender, _eventParams)
 	/doevents flush
 	/rs Curing Group of Disease with: ${str_cure_disease}
 	/call cureGroup disease ${_eventParams}
-	/rs Done  Curing Group of Diseases
 	/doevents flush cureGroupDisease
 /return
 
@@ -142,7 +139,6 @@ Sub Event_cureGroupCurse(_line, _sender, _eventParams)
 	/doevents flush
 	/rs Curing Group of Curses with: ${str_cure_curse}
 	/call cureGroup curse ${_eventParams}
-	/rs Done  Curing Group of Curses
 	/doevents flush cureGroupCurse
 /return
 
@@ -152,28 +148,18 @@ Sub Event_cureGroupCorruptiuon(_line, _sender, _eventParams)
 	/doevents flush
 	/rs Curing Group of Corruption with: ${str_cure_corruption}
 	/call cureGroup corruption ${_eventParams}
-	/rs Done  Curing Group of Corruption
 	/doevents flush Event_cureGroupCorruptiuon
 /return
 
 Sub resetCureState
-	/echo cure state reset
+	/cecho \agCure State Reset
 	/varset bln_askedForCure 	FALSE
 	/varset bln_needsCure		FALSE
+	/varset timer_cure_request  30s
 /return 
 
 
-|-- Use NetHeal/NetCure to get the counters required
-Sub getCureCounters(string _pcName, string _type) 
-	/declare c int local 1
-	/if (${_type.Equal[poison]}) {
-		/varset c ${NetCure[${_pcName}].Poisoned}
-	} else /if (${_type.Equal[curse]}) {
-		/varset c ${NetCure[${_pcName}].Cursed}
-	} else /if (${_type.Equal[disease]}) {
-		/varset c ${NetCure[${_pcName}].Diseased}
-	}
-/return ${c}
+
 
 |-- Check if I need a cure (all classes)
 Sub chkNeedCure
@@ -192,57 +178,72 @@ Sub chkNeedCure
 	
 	|-- Force the cure?
 	/declare forceCure		bool 	local	FALSE
-	/declare cureType 		string 	local 	NULL
+	/declare cureType 		string 	local 	NOTSET
 	/declare counters 		int 	local
 	/declare cureRange      int     local   100
+
+	|-- Check for Forcings
 	|-- If I am tanking, and I have under 100 counters (some debuffs are uncureable) or we aren't engaged, then force the cure request
-	/if (${bln_tanking} && (${Debuff.Counters} < 100 && ${Debuff.Count}) || !${bln_engaged}) /varset forceCure TRUE
+	/if (${bln_tanking} && (${Debuff.Counters} < 100 && ${Debuff.Count}) || !${bln_engaged}) /varset bln_needsCure TRUE
 	
+	|-- Mana Drains (casting classes)
+	/if ((${str_classArchetype.Equal[PRIEST]} || ${str_classArchetype.Equal[CASTER]} || ${Me.Class.ShortName.Equal[PAL]} || ${Me.Class.ShortName.Equal[SHD]}) && (${Debuff.ManaDrain} >= ${int_manadrain_threshold}) ) /varset bln_needsCure TRUE
+
+	|-- HP Drains
+	/if  (${Debuff.HPDrain} >= ${int_hpdrain_threshold}) /varset bln_needsCure TRUE
+
+	|-- Slows (melee)
+	/if (${Debuff.Slowed} && (${Debuff.Counters} < 100 )) /varset bln_needsCure TRUE
+
 	
 	/if (${Me.Buff[Mark of Death].ID}) {
 		|-- Mark of Death must be cured!
 		/echo I have [Mark of Death], a debuff that I must cure!
+		/varset cureType disease
+		/varset counters ${Debuff.Diseased}
 		/varset forceCure TRUE
+
+	} else /if (${Me.Buff[Gaze of Anguish].ID}) {
+		|-- Gaze of Anguish must be cured!
+		/varset cureType disease
+		/varset counters ${Debuff.Diseased}
+		/varset forceCure TRUE
+
 	} else /if (${Me.Buff[Wanton Destruction].ID}) {
 		|-- Wanton Destruction must be cured!
-		/echo I have [Wanton Destruction], a debuff that I must cure!
+		/echo I have [Wanton Destruction], a debuff that I must have cured!
+		/varset cureType curse
+		/varset counters ${Debuff.Cursed}
 		/varset forceCure TRUE
-	} else /if (${Me.Buff[Feedback Dispersion].ID} && ${str_myCurer.Equal[${Me.Name}]}) {
+
+	} else /if (${Me.Buff[Feedback Dispersion].ID} && ${str_classArchetype.Equal[PRIEST]}) {
 		|-- Feedback Dispersion must be cured!
-		/echo I have [Aura of Destruction], a debuff that I must cure!
+		/echo I have [Feedback Dispersion], a debuff that I must cure myself!
+		/varset cureType curse
+		/varset counters ${Debuff.Cursed}
 		/varset forceCure TRUE
-		/return
+
 	} else /if (${Me.Buff[Chains of Anguish].ID}) {
 		|-- Chains of Anguish cannot be cured!
-		/echo I have [Aura of Destruction], a debuff that I cannot cure!
-		/varset bln_askedForCure TRUE
-		/varset timer_cure_request 30s
-		/return
+		/echo I have [Chains of Anguish], a debuff that I cannot cure!
+		/call resetCureState
+		/goto :return
+
 	} else /if (${Me.Buff[Aura of Destruction].ID}) {
 		|-- Aura of Destruction cannot be cured!
 		/echo I have [Aura of Destruction], a debuff that I cannot cure!
-		/varset bln_askedForCure TRUE
-		/varset timer_cure_request 30s
-		/return
+		/call resetCureState
+		/goto :return
+
 	} else /if (${Me.Buff[Rigidity].ID} || ${Me.Buff[Curse of Misfortune].ID} || ${Me.Buff[Imprecision].ID} || ${Me.Buff[Impurity].ID}) {
 		|-- Specialization Trials debuffs should not be cured (wastes time/mana)!
 		/echo I have a [MPG Specialization Debuff], a debuff that I cannot cure!
-		/varset bln_askedForCure TRUE
-		/varset timer_cure_request 30s
-		/return
+		/call resetCureState
+		/goto :return
 	}
 
-	|-- Mana Drains (casting classes)
-	/if (${str_classArchetype.Equal[PRIEST]} || ${str_classArchetype.Equal[CASTER]} || ${Me.Class.ShortName.Equal[PAL]} || ${Me.Class.ShortName.Equal[SHD]}) {
-		/if (${Debuff.ManaDrain} >= ${int_manadrain_threshold}) /varset forceCure TRUE
-	} 
-
-	|-- HP Drains
-	/if  (${Debuff.HPDrain} >= ${int_hpdrain_threshold}) /varset forceCure TRUE
-
-	|-- Slows (melee)
-	/if (${Debuff.Slowed} && (${Debuff.Counters} < 100 )) /varset forceCure TRUE
-
+	
+	:cure_determine
 	/if ( ${forceCure} || ${bln_needsCure}) {
 		/varset bln_needsCure TRUE
 		
@@ -250,31 +251,28 @@ Sub chkNeedCure
 		/if (${SpawnCount[PC ${str_myCurer}]} == 0) {
 			:new_curer
 			/call getGroupCurer
+			/varset str_myCurer ${Macro.Return}
 		} 
 
 		/if (${str_myCurer.Equal[NULL]}) {
 			/cecho \ar I HAVE NO CURER!
-			/varset bln_askedForCure TRUE
-			/varset bln_needsCure FALSE
-			/return 
+			/call resetCureState
+			/goto :return
 		}
 
-		
-
-		/if (${Debuff.Diseased} > 1) {
+		/if (${Debuff.Diseased} > 1 && ${cureType.Equal[NOTSET]}) {
 			|-- Handle Disease
 			/varset cureType disease
 			/varset counters ${Debuff.Diseased}
-		} else /if (${Debuff.Poisoned} > 1) {
+		} else /if (${Debuff.Poisoned} > 1 && ${cureType.Equal[NOTSET]}) {
 			|-- Handle Posion
 			/varset cureType poison
 			/varset counters ${Debuff.Poisoned}
-		} else /if (${Debuff.Cursed} > 1) {
+		} else /if (${Debuff.Cursed} > 1 && ${cureType.Equal[NOTSET]}) {
 			|-- Handle Curse
 			/varset cureType curse
 			/varset counters ${Debuff.Cursed}
-			/varset cureRange 100
-		} else /if (${Debuff.Corrupted} > 1) {
+		} else /if (${Debuff.Corrupted} > 1 && ${cureType.Equal[NOTSET]}) {
 			|-- Handle Corruption
 			/varset cureType corruption
 			/varset counters ${Debuff.Corrupted}
@@ -283,20 +281,20 @@ Sub chkNeedCure
 		/call getCureRange ${cureType}
 		/varset cureRange ${Int${Macro.Return}}	
 		
-		/if (${cureType.NotEqual[NULL]}) {
+		/if (${cureType.NotEqual[NOTSET]}) {
 			/g Asking for cure ${Me.Name} ${Me.ID} ${cureType} ${counters}
 			/if (${str_myCurer.Equal[${Me.Name}]}) {
-				/call handleCureRequest ${Me.Name} ${Me.ID} ${cureType} ${counters}
+				/call handleCureRequest ${Me.Name} ${Me.ID} ${cureType} ${counters} ${forceCure}
 			} else {
 				/if (${Bool[${Spawn[pc ${str_myCurer}].ID}]}) {
 					/if (${Spawn[pc ${str_myCurer}].Distance3D} < ${cureRange}) {
-						/dt ${str_myCurer} cureRequest ${Me.Name} ${Me.ID} ${cureType} ${counters}
+						/call requestCure ${cureType} ${counters} ${forceCure}
 					} else /if (${Spawn[pc ${str_myCurer}].Distance3D} > ${cureRange} && ${Spawn[pc ${str_myCurer}].Distance3D} < 250) {
 						/navigate loc ${Spawn[pc ${str_myCurer}].X} ${Spawn[pc ${str_myCurer}].Y} ${Spawn[pc ${str_myCurer}].Z}
 						:nav_curer
 						/if (${Spawn[pc ${str_myCurer}].Distance3D} < ${cureRange}) /nav stop
 						/if (${Navigation.Active}) /goto :nav_curer
-						/dt ${str_myCurer} cureRequest ${Me.Name} ${Me.ID} ${cureType} ${counters}
+						/call requestCure ${cureType} ${counters} ${forceCure}
 					} else {
 						/cecho \arMy Curer is too far away
 						/goto :new_curer
@@ -310,7 +308,11 @@ Sub chkNeedCure
 			/varset bln_askedForCure TRUE
 		}
 	}
+:return
+/return
 
+Sub requestCure(string _type, int _counters, bool _force) 
+	/dt ${str_myCurer} cureRequest ${Me.Name} ${Me.ID} ${cureType} ${counters} ${forceCure}
 /return
 
 |-- Will get your curer, prefers shaman -> cleric -> druid -> paladin
@@ -321,13 +323,18 @@ Sub getGroupCurer
 	/declare 	groupCleric     string  local 	NULL
 	/declare 	groupPaladin    string  local 	NULL
 	/declare 	groupDruid    	string  local 	NULL
-	
-	/for gmember 0 to ${Group} 
+	/if (${str_classArchetype.Equal[PRIEST]} || ${Me.Class.ShortName.Equal[PAL]}) {
+		/varset myCurer ${Me.Name}
+	} else {
+		/for gmember 0 to ${Group} 
 		/if (${Group.Member[${gmember}].Class.ShortName.Equal[SHM]} && ${SpawnCount[pc ${gmember}]} > 0) /varset groupShaman  ${Group.Member[${gmember}]}
 		/if (${Group.Member[${gmember}].Class.ShortName.Equal[CLR]} && ${SpawnCount[pc ${gmember}]} > 0) /varset groupCleric  ${Group.Member[${gmember}]}
 		/if (${Group.Member[${gmember}].Class.ShortName.Equal[PAL]} && ${SpawnCount[pc ${gmember}]} > 0) /varset groupPaladin ${Group.Member[${gmember}]}
 		/if (${Group.Member[${gmember}].Class.ShortName.Equal[DRU]} && ${SpawnCount[pc ${gmember}]} > 0) /varset groupDruid   ${Group.Member[${gmember}]}
 	/next gmember
+	}
+	
+	
 
 	| curer order of precedence
 	/if (${groupDruid.NotEqual[NULL]}) 		/varset myCurer ${groupDruid}
@@ -353,6 +360,21 @@ Sub getCureRange(string _cureType)
 
 /return 
 
+|-- Use DanNet to get the counters required
+|   Query via Dannet
+Sub getCureCounters(string _pcName, string _type) 
+	/declare c int local 0
+	/if (${_type.Equal[poison]}) {
+		/dquery ${_pcName} -q "Me.Poisoned"
+	} else /if (${_type.Equal[curse]}) {
+		/dquery ${_pcName} -q "Me.Cursed"
+	} else /if (${_type.Equal[disease]}) {
+		/dquery ${_pcName} -q "Me.Diseased"
+	}
+	/delay 20 ${DanNet.Query.Received}
+	/varset c ${DanNet.Q}
+/return ${c}
+
 Sub cureGroup(string _cureType, int _counters)
 	/if (${Me.Class.ShortName.NotEqual[CLR]} && ${Me.Class.ShortName.NotEqual[DRU]} && ${Me.Class.ShortName.NotEqual[SHM]} && ${Me.Class.ShortName.NotEqual[PAL]}) /return
 	/g Curing Group ${_cureType} ${_counters}
@@ -370,10 +392,13 @@ Sub cureGroup(string _cureType, int _counters)
 	} else {
 		| Cure Group by Each
 		/declare	gmember			int local	0
+		/declare    counter         int local   0
 		/for gmember 0 to ${Group}
-				/echo handling: ${Group.Member[${gmember}].Name} ${Group.Member[${gmember}].ID} ${ct} ${cnt}
-				/call handleCureRequest ${Group.Member[${gmember}].Name} ${Group.Member[${gmember}].ID} ${ct} ${cnt}
-				/delay 10
+			/echo handling: ${Group.Member[${gmember}].Name} ${Group.Member[${gmember}].ID} ${ct} ${cnt}
+			| Check to see if the toon actually needs to be cured, else skip
+			/call getCureCounters
+			/varset counter ${Int[${Macro.Return}]}
+			/if (${counter}>0) /call handleCureRequest ${Group.Member[${gmember}].Name} ${Group.Member[${gmember}].ID} ${ct} ${cnt}
 			/call RunRaidEvents
 		/next gmember
 	}
@@ -387,12 +412,12 @@ Sub cureSelf(string _cureType, int _counters)
 /return
 
 
-Sub handleCureRequest(_name, _id, _cureType, _counters) 
+Sub handleCureRequest(string _name, int _id, string _cureType, int _counters, bool _forced) 
 	/cecho \ayhandleCureRequest: ${_name}, ${_id}, ${_cureType}, ${_counters}
 	|-- find cure spell string & counters it clears
 	/declare	str_spell	string	local	${str_cure_disease}
 	/declare    int_count   int		local   ${_counters}
-	/declare    int_castCount int   local   1
+	/declare    int_castCount float   local   1
 
 	/if (${_cureType.Equal[disease]}) {
 		/cecho \aoDISEASE CURE selected.
@@ -432,32 +457,45 @@ Sub handleCureRequest(_name, _id, _cureType, _counters)
 		/varset int_count 	${int_cure_corruption}
 	}
 	
-	|-- calculate how many times we need to cast the cure counters
-	/varcalc int_castCount (${_counters} / ${int_count})
-	/if (${int_castCount} < 1) /varset int_castCount 1
+	|-- calculate how many times we need to cast the cure counters: note MQ2 Natively does not have a round method
+	/varset int_castCount ${Math.Calc[${_counters} / ${int_count}]}
+	/if (${int_castCount} < 1) {
+		/varset int_castCount 1
+	} else /if (${int_castCount} > 1 && ${int_castCount} < 2) {
+		/varset int_castCount 2
+	} else /if (${int_castCount} > 2 && ${int_castCount} < 3) { 
+		/varset int_castCount 3
+	} else /if (${int_castCount} > 3 && ${int_castCount} < 4) { 
+		/varset int_castCount 4
+	} else /if (${int_castCount} > 4 && ${int_castCount} < 5) { 
+		/varset int_castCount 5
+	} else /if (${int_castCount} > 5 && ${int_castCount} < 6) { 
+		/varset int_castCount 5
+	}
 	/cecho \ar${str_spell} casting: ${int_castCount}x times (${_counters} / ${int_count})
+
 	| need to mem curespell if I dont have it up
 	/target id ${_id}
 	:cureReadyWait1
 	/call chkSpellMemorized "${str_spell}" TRUE
 	/if (${Me.SpellReady[${str_spell}]} && (${Target.Distance}<=200)) {
-		/call castCure ${_name} ${_id} "${str_spell}" ${int_castCount}
+		/call castCure ${_name} ${_id} "${str_spell}" ${int_castCount} ${_cureType}
 	} else {
 		/goto :cureReadyWait1
 	}
 /return
 
 |-- Casts a cure, for _count many times, on a _tgtID
-Sub castCure(string _name, int _id, string _spell, int _count) 
-	/echo \aw castCure ${_name}, ${_id}, ${_spell}, ${_count}
+Sub castCure(string _name, int _id, string _spell, int _castCount, string _cureType, int _counters) 
+	/cecho \aw CastCure ${_name}, ${_id}, ${_spell}, ${_count}
 	/call TrueTarget ${_id}
 	/declare i int local 1
-	/for i 1 to ${_count}
+	/for i 1 to ${_castCount}
 		/cecho \aw Casting ${_spell}
 		/call MQ2Cast "${_spell}" gem7 8s
 		/delay 10
 	/next i 
-	/dt ${_name} I cured you.
+	/dt ${_name} I cured you (${_id}) ${_counters} ${_cureType} counters.
 /return
 
 

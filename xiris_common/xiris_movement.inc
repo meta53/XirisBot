@@ -41,11 +41,11 @@ ______________________________________________
 #EVENT CreateCamp 	"[ #1# #*#]#*#CreateCamp #2#"
 
 
-Sub InitEvents_Following
-	/call RegisterBackgroundEvents Events_Following 5
+Sub InitEvents_Movement
+	/call RegisterBackgroundEvents Events_Movement 5
 /return
 
-Sub Events_Following
+Sub Events_Movement
 	/doevents NavigateWP
 	/doevents Follow
 	/doevents Stop
@@ -54,14 +54,14 @@ Sub Events_Following
 /return
 
 
-Sub xbot_initialize_following
+Sub xbot_initialize_movement
 
 	/declare Following 			bool 	outer FALSE
 	/declare FollowTarget 		string 	outer NULL
 	/declare MaxResponseDist	int 	outer 1000
 
-	/call InitEvents_Following
-	/cecho \aoxbot_initialize_following
+	/call InitEvents_Movement
+	/cecho \xbot_initialize_movement
 /return
 
 
@@ -126,6 +126,24 @@ SUB EVENT_CreateCamp(_line, _chatSender, _eventParams)
 	/nav recordwaypoint ${cmp}
 	/doevents flush CreateCamp
 /return
+
+Sub MoveToPosition(int _y, int _x, int _z, int _adjustment, bool _warp)
+	/cecho \ayMoveToPosition: \ag${_y},${_x},${_z} \aw@\ag${_adjustment}
+	/declare timer_movement timer local 30s
+	/declare dist int local ${Math.Distance[${Me.Y},${Me.X},${Me.Z}:${_y},${_x},${_z}]}
+	:movement 
+		/delay 10
+		/varcalc dist ${Math.Distance[${Me.Y},${Me.X},${Me.Z}:${_y},${_x},${_z}]}
+		/echo ${timer_movement} ${dist}
+		/if (${dist} < ${_adjustment}) /goto :final
+		/if (!${timer_movement}) /goto :final
+		/if (${Navigation.Active})  /goto :movement
+	:final
+	/nav stop
+	/if (${_warp}) /warp loc ${_y} ${_x} ${_z}
+	/deletevar timer_movement
+/return 
+
 
 |----------------------------------------------------------------------------------------------------|
 |- Engages follow plugins on specified follow targets.												-|

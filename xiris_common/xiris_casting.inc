@@ -45,6 +45,9 @@ REVISION HISTORY
 #event NoSnare         		"#*#is immune to changes in its#*#"
 #event NoSnareHold     		"#*#Your spell did not take hold.#*#"
 
+|SPELL Checking stuff
+#event ChkHasSpell           "#*#ChkHasSpell #2#"
+
 |RESIST TYPE stuff
 #event SetResistType     	"#*#ResistTypes #1#"
 
@@ -67,6 +70,7 @@ Sub InitEvents_Casting
 Sub Events_Casting_Background
 	/doevents SetResistType
 	/doevents SetUseFastOnly
+	/doevents ChkHasSpell
 /return
 
 Sub Events_Casting_Snare
@@ -663,6 +667,23 @@ Sub chkSpellMemorized(string _spell, bool _wait, int _gem)
 /rs There was a null error trying to memorize a spell; Check your scope!
 :return
 /return 
+
+Sub Event_ChkHasSpell(_line, _sender, _eventParams)
+	/echo line: ${_line} sender: ${_sender} params:${_eventParams}
+	/doevents flush ChkHasSpell 
+	/declare clz   string local ${_eventParams.Arg[1,|]}
+	/declare sName string local ${_eventParams.Arg[2,|]}
+	/call chkHasSpell ${clz} "${sName}"
+/return
+
+Sub chkHasSpell(string _clz, string _spell)
+	/echo checking spell _clz: ${_clz} _spell:${_spell}
+	/if (${Me.Class.ShortName.Equal[${_clz}]}) {
+		/if (${Bool[${Me.Spell[${_spell}].ID}]}) {
+			/rs ${_spell} Found.
+		}
+	}
+/return
 
 Sub StripGem(string _gem) 
 	/declare l int local ${_gem.Length}

@@ -24,10 +24,10 @@ REVISION HISTORY
 	09.17.18    xiris   Included ALL xiris bot libraries here instead of in individual macros
 	02.27.21	xiris	Added a method to reset XTarget windows due to bug on EMU where they fill up with corpses
 	06.29.22	xiris 	Updated all events to only be either generic, or [/gsay, /rsay, /tell, MQ2DanNet(dgt, dt)] only
+	08.05.22	xiris 	Added support for DI checking
 ______________________________________________
 
 **|
-
 
 #define botINI xiris_class_ini/BOT_${Me.Class.ShortName}_${Me.CleanName}.ini
 
@@ -45,7 +45,7 @@ ______________________________________________
 #include xiris_common/xiris_melee.inc
 #include xiris_common/xiris_offtank.inc
 #include xiris_common/xiris_pets.inc
-#include xiris_common/xiris_follow.inc
+#include xiris_common/xiris_movement.inc
 
 #include xiris_common/xiris_spell_routines.inc
 
@@ -73,6 +73,7 @@ ______________________________________________
 #EVENT ChangeMT				"#1# tells the group#*#'changeMT #2#'"
 #EVENT ChangeMT				"#1# tells you#*#'changeMT #2#'"
 #EVENT ChangeMT				"#1# tells the raid#*#'changeMT #2#'"
+#EVENT ChangeMT				"#1# tell your raid#*#'changeMT #2#'"
 #EVENT ChangeMT 			"[ #1# #*#]#*#ChangeMT #2#"
 
 #EVENT ChangeSA 			"[#1#] ChangeSA #2#"
@@ -121,6 +122,7 @@ ______________________________________________
 #EVENT InvisOFF				"#1#InvisOff#*#"
 #EVENT SkillCheck           "<#1#> SkillCheck #2#"
 #EVENT ReportBurnKey        "<#1#> ReportBurnKey #2#"
+#EVENT FixCorpses			"#*#fixCorpses#*#"
 
 #EVENT RaidGroupMode 		"[#1#] SetRaidGroupMode #2#"
 #EVENT RaidGroupMode 		"<#1#> SetRaidGroupMode #2#"
@@ -129,11 +131,17 @@ ______________________________________________
 #EVENT RaidGroupMode		"#1# tells the raid#*#'SetRaidGroupMode #2#'"
 #EVENT RaidGroupMode 		"[ #1# #*#]#*#SetRaidGroupMode #2#"
 
+#EVENT RaidDIClerics		"[#1#] SetRaidDIClerics #2#"
+#EVENT RaidDIClerics 		"<#1#> SetRaidDIClerics #2#"
+#EVENT RaidDIClerics		"#1# tells the group#*#'SetRaidDIClerics #2#'"
+#EVENT RaidDIClerics		"#1# tells you#*#'SetRaidDIClerics #2#'"
+#EVENT RaidDIClerics		"#1# tells the raid#*#'SetRaidDIClerics #2#'"
+#EVENT RaidDIClerics 		"[ #1# #*#]#*#SetRaidDIClerics #2#"		
 
-#EVENT doRefreshXTarget	"#1# tells the group#*#'RefreshXTarget#*#'"
-#EVENT doRefreshXTarget	"#1# tells you#*#'RefreshXTarget#*#'"
-#EVENT doRefreshXTarget	"#1# tells the raid#*#'RefreshXTarget#*#'"
-#EVENT doRefreshXTarget	"[ #1# #*#]#*#RefreshXTarget#*#"
+#EVENT doRefreshXTarget		"#1# tells the group#*#'RefreshXTarget#*#'"
+#EVENT doRefreshXTarget		"#1# tells you#*#'RefreshXTarget#*#'"
+#EVENT doRefreshXTarget		"#1# tells the raid#*#'RefreshXTarget#*#'"
+#EVENT doRefreshXTarget		"[ #1# #*#]#*#RefreshXTarget#*#"
 
 Sub InitEvents_Common
 	/call RegisterBackgroundEvents Events_Common 19
@@ -175,9 +183,10 @@ Sub Events_Common
 	/doevents LongBurnOn2
 	/doevents MaximumBurn
 	/doevents RaidGroupMode
+	/doevents RaidDIClerics
 	/doevents doRefreshXTarget
+	/doevents FixCorpses
 /return
-
 
 
 |**
@@ -209,7 +218,16 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/declare 	CasterClasses 			string	outer	ENC,MAG,NEC,WIZ
 	/declare 	RangedClasses			string	outer	RNG
 	/declare 	RaidGroupLeaders[9] 	string outer 	NULL 
+	/declare 	RaidDIClerics[6] 		string outer 	NULL
+
 	/call SetRaidGroupMode HATRED
+	/call SetRaidDIClerics HATRED
+
+	/declare timer_di_request timer outer 30s
+	/declare i int local 0
+	/for i 1 to ${RaidDIClerics.Size}
+		/declare timer_di_${i}		timer outer 0
+	/next i
 	
 	|-- [Settings] :Tank Settings
 	/declare	bln_tanking				bool	outer	FALSE
@@ -260,7 +278,7 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/declare 	aggroAnim 				string 	outer 	|5|8|12|17|18|42|44|80|106|129|144|
 	/declare    bln_naked               bool	outer   FALSE
 	/declare 	bln_ducking				bool	outer	FALSE
-	/declare	timer_naked 			timer   outer	30s
+	/declare	timer_naked 			timer   outer	0
 	/declare 	timer_hott				timer   outer   20s
 
 	|-- [Settings] : Meditation
@@ -361,7 +379,7 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/call xbot_initialize_melee
 	/call xbot_initialize_offtanking
 	/call xbot_initialize_pets
-	/call xbot_initialize_following
+	/call xbot_initialize_movement
 
 	|-- report that the common things are initialized
 	/cecho \agxbot_initialize: [ MT: ${str_MTName}(${int_MTID}) @ ${int_point_tankNormal} ] STName: ${str_tankName2}(${int_STID})
@@ -976,21 +994,24 @@ Sub Event_ReportBurnKey(_line, _sender, _eventParams)
 **|
 
 |-------------------------------------------------------------------------------- 
-|SUB: Event_RaidGroupMode
+|SUB: Event_SetRaidGroupMode
 |	  Sets the raid group leaders based on mode. Also, calls this on init with default settings
 |--------------------------------------------------------------------------------
-Sub Event_RaidGroupMode(_line, _sender, _eventParams)
+Sub Event_SetRaidGroupMode(_line, _sender, _eventParams)
+	/echo event raid group mode
 	/call SetRaidGroupMode ${_eventParams.Arg[1,|]}
+	/doevents flush SetRaidGroupMode
 /return 
 
 
 Sub SetRaidGroupMode(string _mode)
-	
 	|-- Manually set an array with the standard group leaders(ugh)
 	| 	Xiris,Xiria,Xirian,Xeixa,Sadelia,Xaeliea,Xaexa,Xaia,Xepatia
 	| 	in the future maybe have an event that can set this
-	/echo setting raid group mode to ${_mode}
+	/echo Setting raid group mode to ${_mode}
+	/deletevar RaidGroupLeaders 
 	/if (${_mode.Equal[RAID]}) {
+		/declare RaidGroupLeaders[9] string outer NULL
 		/varset	RaidGroupLeaders[1] Xiris
 		/varset	RaidGroupLeaders[2] Xiria
 		/varset RaidGroupLeaders[3] Theist
@@ -1001,6 +1022,7 @@ Sub SetRaidGroupMode(string _mode)
 		/varset RaidGroupLeaders[8] Xaia
 		/varset RaidGroupLeaders[9] Xepatia
 	} else /if (${_mode.Equal[HATRED]}) {
+		/declare RaidGroupLeaders[9] string outer NULL
 		/varset	RaidGroupLeaders[1] Xiris
 		/varset	RaidGroupLeaders[2] Xiria
 		/varset RaidGroupLeaders[3] Xirea
@@ -1011,27 +1033,100 @@ Sub SetRaidGroupMode(string _mode)
 		/varset RaidGroupLeaders[8] Xaia
 		/varset RaidGroupLeaders[9] Xepatia
 	} else /if (${_mode.Equal[TRIAD]}) {
-		/deletevar RaidGroupLeaders 
 		/declare RaidGroupLeaders[3] string outer NULL
-		/if (${Raid.Leader.Equal[Xiris]}) {
+		/if (${Raid.Leader.CleanName.Equal[Xiris]}) {
 			/varset	RaidGroupLeaders[1] Xiris
 			/varset	RaidGroupLeaders[2] Xirin
 			/varset RaidGroupLeaders[3] Xaeliea
-		} else /if (${Raid.Leader.Equal[Xiria]}) {
+		} else /if (${Raid.Leader.CleanName.Equal[Xiria]}) {
 			/varset	RaidGroupLeaders[1] Xiria
 			/varset	RaidGroupLeaders[2] Sadelia
 			/varset RaidGroupLeaders[3] Xaexa
-		} else /if (${Raid.Leader.Equal[Xirea]}) {
+		} else /if (${Raid.Leader.CleanName.Equal[Xirea]}) {
 			/varset	RaidGroupLeaders[1] Xirea
 			/varset	RaidGroupLeaders[2] Xaia
 			/varset RaidGroupLeaders[3] Mluian
 		}
+	} else /if (${_mode.Equal[JELVAN]}) {
+		/if (${Raid.Leader.CleanName.Equal[Xiris]}) {
+			/declare RaidGroupLeaders[6] string outer NULL
+			/varset	RaidGroupLeaders[1] Xiris
+			/varset	RaidGroupLeaders[2] Nihilist
+			/varset RaidGroupLeaders[3] Xonshia
+			/varset RaidGroupLeaders[4] Tragic
+			/varset RaidGroupLeaders[5] Xarael
+			/varset RaidGroupLeaders[6] Pantheon
+		} else /if (${Raid.Leader.CleanName.Equal[Xiria]}) {
+			/declare RaidGroupLeaders[2] string outer NULL
+			/varset	RaidGroupLeaders[1] Xiria
+			/varset	RaidGroupLeaders[2] Sadelia
+		} else /if (${Raid.Leader.CleanName.Equal[Xirea]}) {
+			/declare RaidGroupLeaders[2] string outer NULL
+			/varset	RaidGroupLeaders[1] Xirea
+			/varset	RaidGroupLeaders[2] Xirin
+		}
 	}
 	
-
 /return
 
+|-------------------------------------------------------------------------------- 
+|SUB: Event_RaidDIClerics
+|	  Sets the raid di clerics based on mode. Also, calls this on init with default settings
+|--------------------------------------------------------------------------------
+Sub Event_RaidDIClerics(_line, _sender, _eventParams)
+	/echo event raid di clerics mode
+	/call SetRaidDIClerics ${_eventParams.Arg[1,|]}
+	/doevents flush SetRaidDIClerics
+/return
 
+Sub SetRaidDIClerics(string _mode) 
+	|-- Manually set an array with the clerics in the raid that can DI (note, make sure everyone gets DI in future)
+	| 	Xirael,Xinshia,Xenshia,Xanshia,Theist,Deist
+	| 	in the future maybe have an event that can set this
+	/cecho \arSetting raid di members to ${_mode}
+	/deletevar RaidDIClerics
+		
+	/if (${_mode.Equal[RAID]} || ${_mode.Equal[HATRED]}) {
+		/echo DI Setting ${_mode}
+		/declare RaidDIClerics[6] string outer NULL
+		/varset	RaidDIClerics[1] Xanshia
+		/varset	RaidDIClerics[2] Xinshia
+		/varset RaidDIClerics[3] Theist
+		/varset RaidDIClerics[4] Xirael
+		/varset RaidDIClerics[5] Deist
+		/varset RaidDIClerics[6] Xenshia
+		/echo  ${RaidDIClerics[1]}
+	} else /if (${_mode.Equal[TRIAD]}) {
+		| Note if this truly needs DI to use, we need to reorganize that raid setup
+		/declare RaidDIClerics[2] string outer NULL
+		/if (${Raid.Leader.CleanName.Equal[Xiris]}) {
+			/varset	RaidDIClerics[1] Xanshia
+			/varset	RaidDIClerics[2] Xinshia
+		} else /if (${Raid.Leader.CleanName.Equal[Xiria]}) {
+			/varset	RaidDIClerics[1] Theist
+			/varset	RaidDIClerics[2] Xirael
+		} else /if (${Raid.Leader.CleanName.Equal[Xirea]}) {
+			/varset	RaidDIClerics[1] Deist
+			/varset	RaidDIClerics[2] Xenshia
+		}
+	}  else /if (${_mode.Equal[JELVAN]}) {
+		/declare RaidDIClerics[2] string outer NULL
+		/if (${Raid.Leader.CleanName.Equal[Xiris]}) {
+			/varset	RaidDIClerics[1] Xanshia
+			/varset	RaidDIClerics[2] Xinshia
+		} else /if (${Raid.Leader.CleanName.Equal[Xiria]}) {
+			/varset	RaidDIClerics[1] Theist
+			/varset	RaidDIClerics[2] Xirael
+		} else /if (${Raid.Leader.CleanName.Equal[Xirea]}) {
+			/varset	RaidDIClerics[1] Deist
+			/varset	RaidDIClerics[2] Xenshia
+		}
+	}
+	/declare i int local
+	/for i 1 to ${RaidDIClerics.Size}
+		/cecho \ag Divine Intervention \aw[\ag${i}\aw] \ay${RaidDIClerics[${i}]}
+	/next i
+/return
 
 |-------------------------------------------------------------------------------- 
 |SUB: Event_InvisOff
@@ -1441,13 +1536,11 @@ SUB EVENT_shrinkGroup
 	}
 	/doevents flush shrinkGroup
 /return
-|------------------------------------------------------------|
-|- Reliably determine if target is Named				-|
-|------------------------------------------------------------|
-|- @param TargetID: The ID of the spawn you wish to check on.	-|
-|------------------------------------------------------------|
-
-
+|-------------------------------------------------------------|
+|- Reliably determine if target is Named				     -|
+|-------------------------------------------------------------|
+|- @param TargetID: The ID of the spawn you wish to check on
+|-------------------------------------------------------------|
 Sub TargetNamedCheck(_id)
 	|/echo TargetNamedCheck ${_id}
 	/if (${Spawn[npc id ${_id}].Named} || ${Spawn[npc id ${_id}].Name.Find[#]}) /return TRUE
@@ -1457,21 +1550,6 @@ Sub TargetNamedCheck(_id)
 	/if (${Zone.ShortName.Equal[arena]}) /return TRUE
 /return FALSE
 	
-|------------------------------------------------------------|
-|- Send a box chat command to everyone in group				-|
-|------------------------------------------------------------|
-|- Includes out of zone group members
-|------------------------------------------------------------|
-
-
-Sub commandAllInGroup(command)
-	/echo /noparse commandAllInGroup ${command}
-	/declare i int local 0
-	/for i 0 to ${Group}
-		/dt ${Group.Member[${i}]} //docommand ${command}
-	/next i
-/return
-
 
 SUB argueString(WhatToFind, givenData)
 	/echo |- argueString ==> ${WhatToFind}  => ${givenData}
@@ -1589,6 +1667,7 @@ Sub Event_CheckNaked
 /return
 
 Sub chkNaked
+	/doevents flush chkNaked
 	/declare naked bool local FALSE
 	/declare haveHelm bool local FALSE
 	/varset haveHelm ${Bool[${Me.Inventory[2].Name}]}
@@ -1596,7 +1675,6 @@ Sub chkNaked
 		/rs I am NAKED. 
 		/varset timer_naked 30s
 	}
-	/doevents flush chkNaked
 /return ${naked}
 
 
@@ -1604,8 +1682,13 @@ Sub findslot(string _commandtext)
 
 /return
 
-Sub fixCorpses
-
+Sub Event_FixCorpses
+	/doevents flush FixCorpses
+	/hidecorpse all
+	/delay 2
+	/hidecorpse none
+	/delay 2
+	/hidecorpse looted
 /return
 
 

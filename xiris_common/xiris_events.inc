@@ -59,7 +59,7 @@ Sub xbot_initialize_events
     /if (${Zone.ShortName.Equal[chamberse]})    /call InitEvents_OOW_MPG_Adaptation
     /if (${Zone.ShortName.Equal[chambersf]})    /call InitEvents_OOW_MPG_Corruption
     /if (${Zone.ShortName.Equal[anguish]})      /call InitEvents_OOW_Anguish
-
+    
     |-- Dragons of Norrath
     /if (${Zone.ShortName.Equal[thenest]})      /call InitEvents_DoN_Vishimtar
 

@@ -1,0 +1,91 @@
+#Turbo 20
+Sub Main 
+    | Jelvan W-S-E  1-2-3
+    | West, 1 - clerics that aren't doing DI/HoT move here, else, move south
+    /dex Xiria      /nav wp jelvan1tank
+    /dex Xorael     /nav wp jelvan1cleric
+    /dex Xurael     /nav wp jelvan1cleric
+    /dex Xirael     /nav wp jelvan1cleric
+    /dex Sadelia    /nav wp jelvan1tank
+    /dex Shynxia    /nav wp jelvan1tank
+    /dex Drexia     /nav wp jelvan1tank
+    /dex Dogmatist  /nav wp jelvan1cleric
+    /dex Empathic   /nav wp jelvan1cleric
+    /dex Achlys     /nav wp jelvan1tank
+    /dex Cereborn   /nav wp jelvan1tank
+    /dex Xeqisa     /nav wp jelvan1tank
+
+    | South, 2 - start and most of the clerics here
+    /nav wp jelvan2tank
+    /dex Xerael     /nav wp jelvan2cleric
+    /dex Xanshia    /nav wp jelvan2cleric
+    /dex Ophidia    /nav wp jelvan2tank
+    /dex Opheoia    /nav wp jelvan2tank
+    /dex Shinxia    /nav wp jelvan2tank
+    /dex Nihilist   /nav wp jelvan2cleric
+    /dex Ophelia    /nav wp jelvan2tank
+    /dex Ophexia    /nav wp jelvan2tank
+    /dex Erinyas    /nav wp jelvan2tank
+    /dex Xaeliea    /nav wp jelvan2tank
+    /dex Aidos      /nav wp jelvan2tank
+    /dex Xonshia    /nav wp jelvan2cleric
+    /dex Ophemia    /nav wp jelvan2tank
+    /dex Opheyia    /nav wp jelvan2tank
+    /dex Erinyes    /nav wp jelvan2tank
+    /dex Xaexa      /nav wp jelvan2tank
+    /dex Achos      /nav wp jelvan2tank
+    /dex Tragic     /nav wp jelvan2cleric
+    /dex Ophenia    /nav wp jelvan2tank
+    /dex Ophezia    /nav wp jelvan2tank
+    /dex Ertres     /nav wp jelvan2tank
+    /dex Xaia       /nav wp jelvan2tank
+    /dex Aergia     /nav wp jelvan2tank
+    /dex Xarael     /nav wp jelvan2cleric
+    /dex Xeixi      /nav wp jelvan2tank
+    /dex Mluian     /nav wp jelvan2tank
+    /dex Ertris     /nav wp jelvan2tank
+    /dex Xepatia    /nav wp jelvan2tank
+    /dex Ania       /nav wp jelvan2tank
+
+    | East, 3 - clerics that aren't doing DI/HoT move here, else, move south
+    /dex Xirea      /nav wp jelvan3tank
+    /dex Xenshia    /nav wp jelvan3cleric
+    /dex Xinshia    /nav wp jelvan3cleric
+    /dex Xunshia    /nav wp jelvan3cleric
+    /dex Xirin      /nav wp jelvan3tank
+    /dex Xiexa      /nav wp jelvan3tank
+    /dex Pantheon   /nav wp jelvan3cleric
+    /dex Deist      /nav wp jelvan3cleric
+    /dex Theist     /nav wp jelvan3cleric
+    /dex Eurydice   /nav wp jelvan3tank
+    /dex Adikia     /nav wp jelvan3tank
+    /dex Xeixa      /nav wp jelvan3tank
+
+    | Have the 3 tanks change their raids to only heal them
+    /rs changeMT Xiris
+    /dex Xiria /rs changeMT Xiria
+    /dex Xirea /rs changeMT Xirea
+
+    | Have the 3 tanks turn aggro on
+    /melee aggro=on
+    /dex Xiria /melee aggro=on
+    /dex Xirea /melee aggro=on
+
+    | Change mode to efficient
+    /dgt healMode EFFICIENT
+
+    | Turn on preventspeed
+    /dga /docrack preventspeed on
+
+    | Set resists
+    | Tanthi (1)
+    /dex Xiria /rs ResistTypes cold|disease|fire
+    | Tanthu (2)
+    /rs ResistTypes fire|magic
+    | Tantho (3)
+    /dex Xirea /rs ResistTypes cold|magic
+
+
+    | Set raidcommands
+    /mac raidcmds
+/return

@@ -15,12 +15,12 @@ ______________________________________________
 |-- Muramite Proving Grounds events
 |-- Mastery of Hatred
 
-#event D1 					"#*#MD1#*#"
-#event D2					"#*#MD2#*#"
-#event D3 					"#*#MD3#*#"
-#event D4 					"#*#MD4#*#"
-#event D5 					"#*#MD5#*#"
-#event D6 					"#*#MD6#*#"
+#EVENT D1 					"#*#MD1#*#"
+#EVENT D2					"#*#MD2#*#"
+#EVENT D3 					"#*#MD3#*#"
+#EVENT D4 					"#*#MD4#*#"
+#EVENT D5 					"#*#MD5#*#"
+#EVENT D6 					"#*#MD6#*#"
 
 Sub InitEvents_OOW_MPG_Hatred
 	/cecho \ag Initializing MPG Hatred
@@ -73,103 +73,54 @@ Sub Events_OOW_MPG_Hatred
 
 Sub EVENT_D1
 	/doevents flush D1
+	/if (!${Me.Standing}) /stand on
 	/if (${Navigation.Active}) /nav stop
 	/nav wp D1
-	| moving to Destination Y,X,Z will movement loop until Distance between me, and destination < 50
-	/declare dist float local 100
-	/if (!${Me.Standing}) /stand on
-	:movement
-		/delay 20
-		/varcalc dist ${Math.Distance[${Me.Y},${Me.X},${Me.Z}:${D1Y},${D1X},${D1Z}]}
-		/if (${dist} < 50) /nav stop
-		/if (${Navigation.Active})  /goto :movement
-	:final
-	/warp loc ${D1Y} ${D1X} ${D1Z}
-	/if (${str_classArchetype.NotEqual[PRIEST]}) /call TrueTarget ${NearestSpawn[NPC Voracious].ID}
-	
+	/call MoveToPosition ${D1Y} ${D1X} ${D1Z} 30 TRUE
+	/if (${str_classArchetype.NotEqual[PRIEST]}) /call TrueTarget ${NearestSpawn[NPC Voracious].ID}	
 /return
 
 Sub EVENT_D2
 	/doevents flush D2
+	/if (!${Me.Standing}) /stand on
 	/if (${Navigation.Active}) /nav stop
 	/nav wp D2
-	| moving to Destination Y,X,Z will movement loop until Distance between me, and destination < 50
-	/declare dist float local 100
-	/if (!${Me.Standing}) /stand on
-	:movement
-		/delay 20
-		/varcalc dist ${Math.Distance[${Me.Y},${Me.X},${Me.Z}:${D2Y},${D2X},${D2Z}]}
-		/if (${dist} < 50) /nav stop
-		/if (${Navigation.Active})  /goto :movement
-	:final
-	/warp loc ${D2Y} ${D2X} ${D2Z}
-	/if (${str_classArchetype.NotEqual[PRIEST]}) /call TrueTarget ${NearestSpawn[NPC Voracious].ID}
+	/call MoveToPosition ${D2Y} ${D2X} ${D2Z} 30 TRUE
+	/if (${str_classArchetype.NotEqual[PRIEST]}) /call TrueTarget ${NearestSpawn[NPC Voracious].ID}	
 /return
 
 Sub EVENT_D3
 	/doevents flush D3
+	/if (!${Me.Standing}) /stand on
 	/if (${Navigation.Active}) /nav stop
 	/nav wp D3
-	| moving to Destination Y,X,Z will movement loop until Distance between me, and destination < 50
-	/declare dist float local 100
-	/if (!${Me.Standing}) /stand on
-	:movement
-		/delay 20
-		/varcalc dist ${Math.Distance[${Me.Y},${Me.X},${Me.Z}:${D3Y},${D3X},${D3Z}]}
-		/if (${dist} < 50) /nav stop
-		/if (${Navigation.Active})  /goto :movement
-	:final	
-	/warp loc ${D3Y} ${D3X} ${D3Z}
+	/call MoveToPosition ${D3Y} ${D3X} ${D3Z} 30 TRUE
 	/if (${str_classArchetype.NotEqual[PRIEST]}) /call TrueTarget ${NearestSpawn[NPC Voracious].ID}	
 /return
 
 Sub EVENT_D4
 	/doevents flush D4
+	/if (!${Me.Standing}) /stand on
 	/if (${Navigation.Active}) /nav stop
 	/nav wp D4
-	| moving to Destination Y,X,Z will movement loop until Distance between me, and destination < 50
-	/declare dist float local 100
-	/if (!${Me.Standing}) /stand on
-	:movement
-		/delay 20
-		/varcalc dist ${Math.Distance[${Me.Y},${Me.X},${Me.Z}:${D4Y},${D4X},${D4Z}]}
-		/if (${dist} < 50) /nav stop
-		/if (${Navigation.Active})  /goto :movement
-	
-	/warp loc ${D4Y} ${D4X} ${D4Z}
+	/call MoveToPosition ${D4Y} ${D4X} ${D4Z} 30 TRUE
 	/if (${str_classArchetype.NotEqual[PRIEST]}) /call TrueTarget ${NearestSpawn[NPC Voracious].ID}	
 /return
 
 Sub EVENT_D5
 	/doevents flush D5
+	/if (!${Me.Standing}) /stand on
 	/if (${Navigation.Active}) /nav stop
 	/nav wp D5
-	| moving to Destination Y,X,Z will movement loop until Distance between me, and destination < 50
-	/declare dist float local 100
-	/if (!${Me.Standing}) /stand on
-	:movement
-		/delay 20
-		/varcalc dist ${Math.Distance[${Me.Y},${Me.X},${Me.Z}:${D5Y},${D5X},${D5Z}]}
-		/if (${dist} < 50) /nav stop
-		/if (${Navigation.Active})  /goto :movement
-	:final
-	/warp loc ${D5Y} ${D5X} ${D5Z}
+	/call MoveToPosition ${D5Y} ${D5X} ${D5Z} 30 TRUE
 	/if (${str_classArchetype.NotEqual[PRIEST]}) /call TrueTarget ${NearestSpawn[NPC Voracious].ID}			
 /return
 
 Sub EVENT_D6
 	/doevents flush D6
+	/if (!${Me.Standing}) /stand on
 	/if (${Navigation.Active}) /nav stop
 	/nav wp D6
-	| moving to Destination Y,X,Z will movement loop until Distance between me, and destination < 50
-	/declare dist float local 100
-	/if (!${Me.Standing}) /stand on
-	:movement
-		/delay 20
-		/varcalc dist ${Math.Distance[${Me.Y},${Me.X},${Me.Z}:${D6Y},${D6X},${D6Z}]}
-		/if (${dist} < 50) /nav stop
-		/if (${Navigation.Active})  /goto :movement
-	:final
-	/warp loc ${D6Y} ${D6X} ${D6Z}
+	/call MoveToPosition ${D6Y} ${D6X} ${D6Z} 30 TRUE
 	/if (${str_classArchetype.NotEqual[PRIEST]}) /call TrueTarget ${NearestSpawn[NPC Voracious].ID}			
 /return

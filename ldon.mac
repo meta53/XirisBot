@@ -352,7 +352,6 @@ Sub zoneLDON
 	/delay 10
 	
 	|-- loop through group and /dt them to zone (bcga doesnt work for out of zone group - its likely a bug)
-	|-- commandAllInGroup is in xiris_common.ini
 	|-- logic change 12.13 to better handle same zone starts (everfrost, nro);
 
 	/if (${zoneStart.Equal[${zoneRequest}]}) {

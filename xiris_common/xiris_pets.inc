@@ -81,6 +81,7 @@ Sub chkPetSpawn
 	|--Spawn your pet
 	/if (!${Me.Pet.ID} && ${bln_petUse}) {
 		/if ((${str_petReagent.Equal[NULL]}) || (${str_petReagent.NotEqual[NULL]} && ${FindItemCount[${str_petReagent}]} > 1)) {
+			/if (!${Me.Standing}) /stand on
 			/echo spawning pet ${str_petSpell} ${str_petGem}
 			/if (${Me.AltAbility[Suspend Minion]}) /alt activate 176
 			/delay 5s !${Me.Casting.ID}

@@ -168,7 +168,8 @@ Sub chkFeignDeath
  ----------------------------
 **|
 Sub chkUtils
-	/call chkPetBuffs
+	|-- Class Methods
+	/call chkPet
 	
 	|-- Standard Methods
 	/call chkSit

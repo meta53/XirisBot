@@ -10,6 +10,7 @@ Sub Main(string _mode)
 
 	/delay 5s
 	/dgt SetRaidGroupMode ${_mode}
+	/dgt SetRaidDIClerics ${_mode}
 /return
 
 
@@ -113,4 +114,40 @@ Sub InviteGroupsToTRIAD
 
 	/dex Xirea /raidinvite Mluian
 	/dex Xirea /raidinvite Xaia
+/return
+
+
+|-- 3 Way split for Jelvan
+Sub SetupGroupsJELVAN
+	| West, 1
+	/dex Xiria /multiline ; /invite Xorael; /invite Xurael; /invite Xirael; /invite Achlys; /invite Shynxia
+	/dex Sadelia /multiline ; /invite Dogmatist; /invite Theist; /invite Drexia; /invite Xeixi; /invite Xeqisa
+
+	| South, 2 
+	/multiline ; /invite Xerael; /invite Xanshia; /invite Ophidia; /invite Opheoia; /invite Shinxia 
+	/dex Nihilist /multiline ; /invite Ophelia; /invite Ophexia; /invite Erinyas; /invite Xaeliea; /invite Aidos
+	/dex Xonshia /multiline ; /invite Ophemia; /invite Opheyia; /invite Erinyes; /invite Xaexa; /invite Achos
+	/dex Xinshia /multiline ; /invite Ophenia; /invite Ophezia; /invite Ertres; /invite Xaia; /invite Aergia
+	/dex Xarael /multiline ; /invite Cereborn; /invite Mluian; /invite Ertris; /invite Xepatia; /invite Ania
+	/dex Pantheon /muiltiline ; /invite Drexia /invite Xeixi; /invite Xeixa; /invite Xiexa; /invite Xeqisa
+
+	| East, 3
+	/dex Xirea /multiline ; /invite Xenshia; /invite Empathic; /invite Xunshia; /invite Adikia; 
+	/dex Xirin /multiline ; /invite Deist; /invite Theist; /invite Eurydice;
+
+/return
+
+Sub InviteGroupsToJELVAN
+	| West, 1
+	/dex Xiria /raidinvite Sadelia 
+
+	| South, 2
+	/raidinvite Nihilist 
+	/raidinvite Xonshia
+	/raidinvite Xinshia
+	/raidinvite Xarael 
+
+	| East, 3
+	/dex Xirea /raidinvite Xirin
+	 
 /return

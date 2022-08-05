@@ -18,54 +18,53 @@ REVISION HISTORY
 
 
 |-- Settings and Triggers
-#event GroupHeal  	"#*#DoGroupHeal#*#"
-#EVENT InterruptON 	"#*#InterruptON#*#"
-#EVENT InterruptOFF "#*#InterruptOFF#*#"
+#event GroupHeal  		"#*#DoGroupHeal#*#"
+#EVENT InterruptON 		"#*#InterruptON#*#"
+#EVENT InterruptOFF 	"#*#InterruptOFF#*#"
 
-#EVENT ChangeHP	"#1# tells you#*#'ChangeHP #2#'"
-#EVENT ChangeHP	"#1# tells the group#*#'ChangeHP #2#'"
-#EVENT ChangeHP	"#1# tells the raid#*#'ChangeHP #2#'"
-#EVENT ChangeHP "[ #1# #*#]#*#ChangeHP #2#"
+#EVENT ChangeHP			"#1# tells you#*#'ChangeHP #2#'"
+#EVENT ChangeHP			"#1# tells the group#*#'ChangeHP #2#'"
+#EVENT ChangeHP			"#1# tells the raid#*#'ChangeHP #2#'"
+#EVENT ChangeHP 		"[ #1# #*#]#*#ChangeHP #2#"
 
-#EVENT HealMode	"#1# tells you#*#'HealMode #2#'"
-#EVENT HealMode	"#1# tells the group#*#'HealMode #2#'"
-#EVENT HealMode	"#1# tells the raid#*#'HealMode #2#'"
-#EVENT HealMode "[ #1# #*#]#*#HealMode #2#"
+#EVENT HealMode			"#1# tells you#*#'HealMode #2#'"
+#EVENT HealMode			"#1# tells the group#*#'HealMode #2#'"
+#EVENT HealMode			"#1# tells the raid#*#'HealMode #2#'"
+#EVENT HealMode 		"[ #1# #*#]#*#HealMode #2#"
 
 |-- Rez Events
-#event CanRez     	"This corpse can be resurrected."
-#event CannotRez  	"This corpse cannot be resurrected."
-#event NotOnline  	"You told #1#, '#2# is not online at this time'"
-#event NotOnline  	"Your tell to #1# has been queued"
+#event CanRez     		"This corpse can be resurrected."
+#event CannotRez  		"This corpse cannot be resurrected."
+#event NotOnline  		"You told #1#, '#2# is not online at this time'"
+#event NotOnline  		"Your tell to #1# has been queued"
 
 |-- CHEvents should only be listened for in the class handlers (cleric, druid)
-#EVENT CHStart	"#1# tells you#*#'CHStart #2#'"
-#EVENT CHStart	"#1# tells the group#*#'CHStart #2#'"
-#EVENT CHStart	"#1# tells the raid#*#'CHStart #2#'"
-#EVENT CHStart	"[ #1# #*#]#*#CHStart #2#"
+#EVENT CHStart			"#1# tells you#*#'CHStart #2#'"
+#EVENT CHStart			"#1# tells the group#*#'CHStart #2#'"
+#EVENT CHStart			"#1# tells the raid#*#'CHStart #2#'"
+#EVENT CHStart			"[ #1# #*#]#*#CHStart #2#"
 
-#EVENT CHStop	"#1# tells you#*#'CHStop #2#'"
-#EVENT CHStop	"#1# tells the group#*#'CHStop #2#'"
-#EVENT CHStop	"#1# tells the raid#*#'CHStop #2#'"
-#EVENT CHStop	"[ #1# #*#]#*#CHStop #2#"
+#EVENT CHStop			"#1# tells you#*#'CHStop #2#'"
+#EVENT CHStop			"#1# tells the group#*#'CHStop #2#'"
+#EVENT CHStop			"#1# tells the raid#*#'CHStop #2#'"
+#EVENT CHStop			"[ #1# #*#]#*#CHStop #2#"
 
-#EVENT CHPause	"#1# tells you#*#'CHPause #2#'"
-#EVENT CHPause	"#1# tells the group#*#'CHPause #2#'"
-#EVENT CHPause	"#1# tells the raid#*#'CHPause #2#'"
-#EVENT CHPause	"[ #1# #*#]#*#CHPause #2#"
+#EVENT CHPause			"#1# tells you#*#'CHPause #2#'"
+#EVENT CHPause			"#1# tells the group#*#'CHPause #2#'"
+#EVENT CHPause			"#1# tells the raid#*#'CHPause #2#'"
+#EVENT CHPause			"[ #1# #*#]#*#CHPause #2#"
 
-#EVENT CHResume	"#1# tells you#*#'CHResume#*#'"
-#EVENT CHResume	"#1# tells the group#*#'CHResume#*#'"
-#EVENT CHResume	"#1# tells the raid#*#'CHResume#*#'"
-#EVENT CHResume "[ #1# #*#]#*#CHResume#*#"
+#EVENT CHResume			"#1# tells you#*#'CHResume#*#'"
+#EVENT CHResume			"#1# tells the group#*#'CHResume#*#'"
+#EVENT CHResume			"#1# tells the raid#*#'CHResume#*#'"
+#EVENT CHResume 		"[ #1# #*#]#*#CHResume#*#"
 
-#EVENT CHSwitch	"#1# tells you#*#'CHSwitch #2#'"
-#EVENT CHSwitch	"#1# tells the group#*#'CHSwitch #2#'"
-#EVENT CHSwitch	"#1# tells the raid#*#'CHSwitch #2#'"
-#EVENT CHSwitch "[ #1# #*#]#*#CHSwitch #2#"
+#EVENT CHSwitch			"#1# tells you#*#'CHSwitch #2#'"
+#EVENT CHSwitch			"#1# tells the group#*#'CHSwitch #2#'"
+#EVENT CHSwitch			"#1# tells the raid#*#'CHSwitch #2#'"
+#EVENT CHSwitch 		"[ #1# #*#]#*#CHSwitch #2#"
 
 |-- Celestial Regeneration Events
-
 #EVENT RegenerateCRList "#*# RegenerateCRList#*#"
 
 #EVENT CelRegenStart	"#1# tells you#*#'CRStart#*#'"
@@ -73,12 +72,10 @@ REVISION HISTORY
 #EVENT CelRegenStart	"#1# tells the raid#*#'CRStart#*#'"
 #EVENT CelRegenStart	"[ #1# #*#]#*#CRStart#*#"
 
-#EVENT CelRegenStop	"#1# tells you#*#'CRStop#*#'"
-#EVENT CelRegenStop	"#1# tells the group#*#'CRStop#*#'"
-#EVENT CelRegenStop	"#1# tells the raid#*#'CRStop#*#'"
-#EVENT CelRegenStop "[ #1# #*#]#*#CRStop#*#"
-
-
+#EVENT CelRegenStop		"#1# tells you#*#'CRStop#*#'"
+#EVENT CelRegenStop		"#1# tells the group#*#'CRStop#*#'"
+#EVENT CelRegenStop		"#1# tells the raid#*#'CRStop#*#'"
+#EVENT CelRegenStop 	"[ #1# #*#]#*#CRStop#*#"
 
 
 Sub InitEvents_Healing
@@ -920,7 +917,7 @@ Sub Add2RezIgnore(int _id)
 /return
 
 Sub CleanRezIgnoreList
-	/if (!${int_rezIgnore}) /return
+	/if (!${Bool[${int_rezIgnore}]}) /return
 	| remove ids from ignore list that are no longer in zone
 	/declare x int local
 	/declare found int local 0
@@ -935,7 +932,7 @@ Sub CleanRezIgnoreList
 	/next x
 	
 	| shrink ignore list
-	/if (${found} != ${int_rezIgnore}) {
+	/if (${found} != ${int_rezIgnore} && ${int_rezIgnore} != -1) {
 		/deletevar arr_rezIgnore
 		/varset int_rezIgnore ${found}
 		/declare arr_rezIgnore[${int_rezIgnore}] int outer
@@ -963,6 +960,51 @@ Sub InterruptON
 Sub InterruptOFF 
 	/varset bln_autointerrupt FALSE
 /return
+
+
+Sub chkDivineIntervention
+	/if (${Bool[${Me.Buff[Divine Intervention].ID}]} || ${timer_di_request}) /return
+	/cecho \agDivine Intervention \ar NOT found. \ayRequesting!
+	| Check your first DI cleric
+	/declare i int local 0
+	/declare avail bool local FALSE
+	/declare pcName string local
+	/for i 1 to ${DIClerics.Size}
+		/varset pcName ${DIClerics[${i}]}
+		/if (${timer_di_${i}} || !${Bool[${SpawnCount[pc ${pcName}]}]}) {
+			/cecho \ar${pcName} \awhas a DI timer or is out of zone!
+			/goto :next_cleric
+		} 
+
+		/if (${Spawn[pc ${pcName}].Distance3D} > 120) {
+			/cecho \ar${pcName} \awis out of DI Range!
+			/goto :next_cleric
+		}
+
+		/dquery ${pcName} -q "Me.SpellReady[Divine Intervention]"
+		/delay 20 ${DanNet.Query.Received}
+		/varset avail ${DanNet.Q}
+		/if (${avail}) {
+			/goto :request_di
+		} 
+	:next_cleric
+	/cecho \ar\${pcName} \awdoes not have DI ready!
+	/next i
+
+	:no_cleric	
+	/cecho \ar\NO CLERICs \aw have DI ready!
+	/varset timer_di_request 10s
+	/goto :return
+
+	:request_di
+	/cecho \awRequesting \agDivine Intervention\ay from \ag${pcName}
+	/varset timer_di_request 10s
+	/varset timer_di_${i} 30s 
+	/dt ${pcName} dime
+	
+	:return
+/return
+
 |**
 |----------------------------
 | INITIALIZATION Subs
@@ -1155,7 +1197,6 @@ Sub xbot_initialize_healing(int _healPoint)
 	
 	
 	|-- Group HOT Timers
-	/declare i int local
 	/declare timer_HoT_0	timer 	outer 	0
 	/declare timer_HoT_1	timer 	outer 	0
 	/declare timer_HoT_2	timer 	outer 	0

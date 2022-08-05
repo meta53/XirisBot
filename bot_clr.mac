@@ -31,7 +31,8 @@ REVISION HISTORY
 	04.16.22	xiris	Overhauled group heal method and variable names
 						Moved commons healing functions to the include		
 	04.19.22	xiris	Integrated the CH2 macro functionality so we don't have to switch macros
-	05.13.22	xiris	Updated Events to only listen to BC				
+	05.13.22	xiris	Updated Events to only listen to BC			
+	08.05.22	xiris	Added support for Divine Intervention begging	
 ______________________________________________
 REQUIRED PLUGINS
     mq2cast
@@ -56,12 +57,18 @@ REQUIRED INCLUDES
 
 #EVENT CombatRezOFF "#*#CombatRezOFF#*#"
 
+|-- Divine Intervention Events
+#EVENT DoDivineIntervention "#1# tells you#*#'dime#*#'"
+#EVENT DoDivineIntervention	"#1# tells the group#*#'dime#*#'"
+#EVENT DoDivineIntervention	"#1# tells the raid#*#'dime#*#'"
+#EVENT DoDivineIntervention "[ #1# #*#]#*#dime#*#"
+
 #include xiris_common/xiris_common.inc
 
 #Turbo 40
 
 Sub InitEvents_Class 
-	/call RegisterClassEvents Events_CLR 7
+	/call RegisterClassEvents Events_CLR 8
 /return
 
 Sub Events_CLR
@@ -71,6 +78,7 @@ Sub Events_CLR
 	/doevents AutoRezOFF
 	/doevents CombatRezON
 	/doevents CombatRezOFF
+	/doevents DoDivineIntervention
 /return 
 
 
@@ -325,6 +333,22 @@ Sub MGBCelestialRegeneration
 		/call MQ2Cast "Celestial Regeneration" alt
 	}
 
+/return
+
+Sub EVENT_DoDivineIntervention(_line, _sender, _eventParams) 
+	/if (${Bool[${Me.Spell[Divine Intervention].ID}]}) {
+		/if (${Me.SpellReady[Divine Intervention]}) {
+			/declare tid int local ${Spawn[pc ${_sender}].ID}
+			/if (${Target.ID} != ${tid}) {
+				/call TrueTarget ${tid}
+			}
+			/cecho \agDivine Intervention\aw on \ay${Target.Name}(${tid})
+			/call MQ2Cast "Divine Intervention" gem6 8s
+			/rs DI >> ${Target.Name}
+		} else {
+			/rs DI is NOT ready, ask someone else!
+		}
+	}
 /return
 
 
