@@ -14,6 +14,9 @@ ______________________________________________
 **|	
 
 |-- Citadel of Anguish
+|	Keldovan
+#EVENT KeldovanStart	"#*##*#"
+
 |   Ture
 #EVENT TureRampOn       "#*#roars with fury#*#"
 #EVENT TureRampOff      "#*#calms and regains#*#"
@@ -26,10 +29,11 @@ ______________________________________________
 #EVENT Jelvan3 			"#*#MD3#*#"
 
 |	Warden Hanvar
-#EVENT HanvarStart		"#*#Hail, Warden Hanvar#*#"
+#EVENT HanvarStart		"#*#hanvarStart#*#"
+#EVENT HanvarCaster		"#*#hanvarCaster#*#"
 
 |	Arch Magus Vangl
-#EVENT MarkedForDeath	"#*#You have been marked for death#*#"
+#EVENT AMVPrep			"#*#AMVPrep#*#"
 
 |   OMM
 #EVENT GazeYou			"#*#gaze of deadly power focusing on you#*#" 
@@ -41,7 +45,9 @@ ______________________________________________
 Sub InitEvents_OOW_Anguish
 	/cecho \ag Initializing Anguish
 	/declare bln_jelvanEngaged bool outer FALSE
-	/call RegisterRaidEvents Events_OOW_Anguish 5
+	/declare bln_hanvarEngaged bool outer FALSE
+	/declare bln_amvEngaged	   bool outer FALSE
+	/call RegisterRaidEvents Events_OOW_Anguish 15
 
 	|-- Waypoints
 | 	Pulled from MQ2Nav		   X	   Y	  Z
@@ -75,10 +81,17 @@ Sub InitEvents_OOW_Anguish
 	/declare J3CX int outer ${J3C.Arg[1, ]}
 	/declare J3CY int outer ${J3C.Arg[2, ]}
 	/declare J3CZ int outer ${J3C.Arg[3, ]}
+
+	| Hanvar
+	/declare H1C string outer 505.688 4307.43 206.677
+
+	/declare H1CX int outer ${H1C.Arg[1, ]}
+	/declare H1CY int outer ${H1C.Arg[2, ]} 
+	/declare H1CZ int outer ${H1C.Arg[3, ]}
 /return
 
 Sub Events_OOW_Anguish 
-	/if (${Me.Class.ShortName.Equal[WAR]} || ${Me.Class.ShortName.Equal[SHD]}) /call chkDivineIntervention
+	/if ((${Me.Class.ShortName.Equal[WAR]} || ${Me.Class.ShortName.Equal[SHD]}) && ${bln_engaged}) /call chkDivineIntervention
 
 	| Ture Events
 	/if (${Bool[${SpawnCount[npc Ture]}]} && ${Spawn[npc Ture].Distance3D} < 300) {
@@ -95,13 +108,28 @@ Sub Events_OOW_Anguish
 		/doevents Jelvan3
 	}
 	| Hanvar Events
-	/if (${Bool[${SpawnCount[npc Hanvar]}]} && ${Spawn[npc Hanvar].Distance3D} < 300) {
+	/if (${Bool[${SpawnCount[npc Hanvar]}]} && ${Spawn[npc Hanvar].Distance3D} < 500) {
 		/doevents HanvarStart
+		/doevents HanvarCaster
+		/if (${bln_hanvarEngaged} && ${Me.Class.ShortName.Equal[CLR]}) {
+			/if (${Math.Distance[${Me.Y},${Me.X},${Me.Z}:${H1CY},${H1CX},${H1CZ}]} > 30) {
+				/if (!${Navigation.Active}) /nav wp hanvarCleric
+			} else /if (${Math.Distance[${Me.Y},${Me.X},${Me.Z}:${H1CY},${H1CX},${H1CZ}]} <= 30 && (${Math.Distance[${Me.Y},${Me.X},${Me.Z}:${H1CY},${H1CX},${H1CZ}]} > 10)) {
+				/if (${Navigation.Active}) /nav stop
+				/warp wp hanvarCleric
+			}
+		}
 	}
 
 	| Vangl Events
-	/if (${Bool[${SpawnCount[npc Vangl]}]} && ${Spawn[npc Vangl].Distance3D} < 300) {
-		/doevents MarkedForDeath
+	/if (${Bool[${SpawnCount[npc Vangl]}]} && ${Spawn[npc Vangl].Distance3D} < 500) {
+		/doevents AMVPrep
+		/if (${Me.Buff[Feedback Dispersion].ID} && ${Me.AltAbilityReady[Purify Soul]} && ${Me.Class.ShortName.Equal[CLR]}) {
+			/target id ${Me.ID}
+			/casting "Purify Soul" alt
+		}
+		/if (${Me.Class.ShortName.Equal[CLR]} || ${Me.Class.ShortName.Equal[SHM]} || ${Me.Class.ShortName.Equal[PAL]}) /call chkMarkedForDeath
+		
 	} 
 
 	| OMM Events
@@ -118,6 +146,7 @@ Sub Events_OOW_Anguish
 |----------------------------
 
 Sub Event_TureRampOn
+	/if (!${bln_engaged}) /return
 	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
 		/squelch /melee reset
 		/squelch /melee reset
@@ -132,6 +161,7 @@ Sub Event_TureRampOn
 
 
 Sub Event_TureRampOff 
+	/if (!${bln_engaged}) /return
 	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
 		/target npc Ture
 		/squelch /killthis
@@ -274,9 +304,12 @@ Sub EVENT_Jelvan1
 	/if (!${Me.Standing}) /stand on
 	/if (${Navigation.Active}) /nav stop
 
-	/if (${Me.Class.ShortName.Equal[CLR]}) { 
-		/nav wp jelvan1cleric
-		/call MoveToPosition ${J1CY} ${J1CX} ${J1CZ} 30 FALSE
+	/if (${Me.Class.ShortName.Equal[CLR]}) {
+		/return 
+		|/nav wp jelvan1cleric
+		|/call MoveToPosition ${J1CY} ${J1CX} ${J1CZ} 30 FALSE
+	} else /if (${str_classArchetype.Equal[CASTER]}) {
+		/return
 	} else {
 		/nav wp jelvan1tank
 		/call MoveToPosition ${J1TY} ${J1TX} ${J1TZ} 30 FALSE
@@ -300,9 +333,12 @@ Sub EVENT_Jelvan3
 	/doevents flush Jelvan3
 	/if (${Navigation.Active}) /nav stop
 
-	/if (${Me.Class.ShortName.Equal[CLR]}) { 
-		/nav wp jelvan3cleric
-		/call MoveToPosition ${J3CY} ${J3CX} ${J3CZ} 30 FALSE
+	/if (${Me.Class.ShortName.Equal[CLR]}) {
+		/return 
+		|/nav wp jelvan3cleric
+		|/call MoveToPosition ${J3CY} ${J3CX} ${J3CZ} 30 FALSE
+	} else /if (${str_classArchetype.Equal[CASTER]}) {
+		/return
 	} else {
 		/nav wp jelvan3tank
 		/call MoveToPosition ${J3TY} ${J3TX} ${J3TZ} 30 FALSE
@@ -318,21 +354,86 @@ Sub EVENT_Jelvan3
 | Warden Hanvar
 |----------------------------
 Sub Event_HanvarStart
+	/varset bln_hanvarEngaged TRUE
 	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
 		/call TrueTarget ${Spawn[npc hanvar]}
 		/nav target
 	}
-/return 
+	/doevents flush HanvarStart
+/return
+
+Sub Event_HanvarCaster
+	/varset bln_hanvarEngaged TRUE 
+	/if (${str_classArchetype.Equal[CASTER]} || ${Me.Class.ShortName.Equal[SHM]} ||  ${Me.Class.ShortName.Equal[DRU]}) {
+		/nav wp hanvarCaster
+	}
+	/doevents flush HanvarCaster
+/return
+
 
 |----------------------------
 | Arch Magus Vangl
 |----------------------------
-Sub Event_MarkedForDeath
-	/if (${Me.Class.ShortName.Equal[SHM]}) /call cureSelf disease 14
-	/if (${Me.Class.ShortName.Equal[CLR]}) /call cureSelf disease 14
-	/if (${Me.Class.ShortName.Equal[DRU]}) /call cureSelf disease 14
-	/if (${Me.Class.ShortName.Equal[PAL]}) /call cureSelf disease 14
-/return 
+Sub Event_AMVPrep 
+	/varset bln_amvEngaged TRUE 
+	/if (${str_classArchetype.Equal[CASTER]} || ${Me.Class.ShortName.Equal[SHM]} || ${Me.Class.ShortName.Equal[DRU]}) {
+		/nav wp amvCaster
+	} else /if (${Me.Class.ShortName.Equal[CLR]}) {
+		/nav wp amvCleric
+	} else {
+		/nav wp amvDPS
+	}
+	/doevents flush AMVPrep
+/return
+
+Sub chkMarkedForDeath
+	/if (${bln_chChainMember}) /return
+ 
+	/declare i int local 1
+	/declare haveMark int local 0
+	/declare gcount[5]  int local 0
+	/declare foundMark bool local FALSE
+
+	:CheckGroup
+	/varset haveMark 	0
+	/varset foundMark 	FALSE
+	/for i 0 to ${Group}
+		/dquery ${Group.Member[${i}]} -q "Me.Buff[Mark of Death].ID"
+		/delay 20 ${DanNet.Query.Received}
+		/if (${Bool[${DanNet.Q}]}) {
+			/varset  foundMark TRUE
+			/varcalc haveMark ${haveMark}+1
+			/call getCureCounters ${Group.Member[${gmember}].Name} ${_cureType}
+			/varset gcount[${i}] ${Int[${Macro.Return}]}
+		}
+	/next i
+	
+	| No Marks found? return
+	/if (!${foundMark}) /goto :return
+
+	| If Marks are less than 3, or I am a paladin then single target cure them
+	:SingleCure
+	/if (${Me.Class.ShortName.Equal[PAL]} || ${haveMark} < 3) /goto :CureByCounters
+	
+	| If I am a cleric or shaman, cast group cure, and then recheck counters
+	:GroupCure 
+	/if (${Me.Class.ShortName.Equal[CLR]} && ${Me.SpellReady[${str_heal_group}]} && ${Me.PctMana} > 30 && ${haveMark} >= 3) {
+		/call MQ2Cast "${str_heal_group}" gem4 2s 
+		/goto :CheckGroup
+	} else /if (${Me.Class.ShortName.Equal[SHM]}) {
+		/call cureSelf disease 18 
+		/goto :CheckGroup
+	}
+
+	| All else fails so cure anyone with a disease counter singly
+	:CureByCounters
+	/for i 0 to ${Group} 
+		/if (${gcount[${i}]} > 0) {
+			/call handleCureRequest ${Group.Member[${gmember}].Name} ${Group.Member[${gmember}].ID} disease ${gcount[${i}]}
+		}
+	/next i
+:return
+/return
 
 |----------------------------
 | Overlord Mata'Muram

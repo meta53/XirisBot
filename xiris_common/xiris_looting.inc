@@ -352,7 +352,7 @@ Sub LootTarget(int _corpseID)
 						/if (${loot_ALL[${i},5].Find[${Me.Name}]}) /varset lootCharExclusion TRUE
 
 						|- characters that should loot
-						/if (!${loot_ALL[${i},6].Find[${Me.Name}]} || ${loot_ALL[${i},6].Equal[*]}) /varset lootCharOnly TRUE
+						/if (${loot_ALL[${i},6].Find[${Me.Name}]} || ${loot_ALL[${i},6].Equal[*]}) /varset lootCharOnly TRUE
 
 						/goto :loot_validation
 					} 

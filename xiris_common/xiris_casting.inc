@@ -54,6 +54,7 @@ REVISION HISTORY
 |SETTING Triggers
 #event SetUseFastOnly		"#*#UseFastOnly #1#"
 
+
 Sub InitEvents_Casting
 	/call RegisterBackgroundEvents Events_Casting_Background 2
 	
@@ -146,7 +147,7 @@ Sub chkNuke
 			/if (!${Nuke_${i}_Use}) /goto :NextNuke
 
 			|-- Check the timer on this nuke
-			/if (${Nuke_${i}_Timer} <= 0) /cecho \agTimer ready for \ay${Nuke_${i}} :: \ay${Nuke_${i}_Timer}
+			|/if (${Nuke_${i}_Timer} <= 0) 
 			/if (${Nuke_${i}_Timer} > 0 && ${Nuke_${i}_HasCastOnce}) {
 				/if (${i}<${int_nukeTotal}) { 
 					/cecho \arTimer not ready for \ay${Nuke_${i}} :: \ay${Nuke_${i}_Timer}
@@ -156,6 +157,7 @@ Sub chkNuke
 				}
 			}
 
+			
 			|-- Named Target check
 			|-- if we only cast this spell on named, and this is NOT a named target, skip
 			/if (!${isNamed} && ${Nuke_${i}_NamedOnly}) {
@@ -181,10 +183,11 @@ Sub chkNuke
 				/goto :NukeCastWait
 			}
 
+		
 			|-- All this ready, check for LOS/Distance/Mana
 			/if (${Target.PctHPs}<=${Nuke_${i}_StartHP} && ${Target.PctHPs}>=${Nuke_${i}_StopHP}) {
 				/if (${Me.CurrentMana}>=${Spell[${Nuke_${i}}].Mana} && ${Target.Distance}<=${Spell[${Nuke_${i}}].Range} && ${Target.LineOfSight}) {
-	
+					/cecho \agTimer ready for \ay${Nuke_${i}} :: \ay${Nuke_${i}_Timer} \awSpellReady?\ag${Me.SpellReady[${Nuke_${i}}]} ${Target.PctHPs}<=${Nuke_${i}_StartHP} && ${Target.PctHPs}>=${Nuke_${i}_StopHP})	
 					/if (${Me.Class.ShortName.Equal[BRD]}) {
 						/medley queue "${Nuke_${i}}"
 						/cecho \ag ${Nuke_${i}}  : DELAYING for \ay${Nuke_${i}_Timer.OriginalValue}s \agrefresh	
@@ -939,6 +942,8 @@ Sub Event_DotOff12
 	/varset  DOT_12_Timer		0
 	/doevents flush DotOff12
 /return
+
+
 
 Sub xbot_initialize_casting
 	/if (${str_classArchetype.Equal[MELEE_END]}) /return

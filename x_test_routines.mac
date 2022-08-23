@@ -3,10 +3,101 @@
 #include xiris_common/xiris_common.inc
 
 Sub Main
-	/call xbot_initialize_looting
-	/call ParseLootINI
-	
+	/call chkHeal_GroupTEST2
 /return
+
+
+
+Sub chkHeal_GroupTEST
+	/echo calling chkHealGroupTest
+	/declare 	i 			 	int local	0
+	/declare j 		 int	local 6
+	/declare s 		 int    local 0
+	/declare tmr_HoT string local NULL
+
+	
+
+
+	/declare    int_majorHurt 	int local 4
+	/declare    arr_majorHurt[6,2] int local 0
+
+	/varset     arr_majorHurt[1,1] 77
+	/varset     arr_majorHurt[1,2] 11212
+
+	/varset     arr_majorHurt[4,1] 91
+	/varset     arr_majorHurt[4,2] 880821
+
+	/varset     arr_majorHurt[3,1] 20
+	/varset     arr_majorHurt[3,2] 21231
+
+	/varset     arr_majorHurt[5,1] 90
+	/varset     arr_majorHurt[5,2] 45444
+
+
+	/declare nonNullCount int local 0
+	/declare hp1 int local 0
+	/declare hp2 int local 0
+	| Rigth size my non-nulls
+	/declare arr_culledMajorHurt[${int_majorHurt},2] int local 0
+	/declare arr_temp[1,2] int local
+	/declare x int local 0
+	/cecho \ay1. --------------Raw Major Hurt---------
+	/for i 1 to 6
+		/cecho \awRaw[${i}]: [${arr_majorHurt[${i},1]},${arr_majorHurt[${i},2]}]
+		/if (${Bool[${arr_majorHurt[${i},1]}]}) {
+			/varcalc x ${x}+1
+			/varset arr_culledMajorHurt[${x},1] ${arr_majorHurt[${i},1]}]}
+			/varset arr_culledMajorHurt[${x},2] ${arr_majorHurt[${i},2]}]}
+		}
+	/next i
+
+	/cecho \ay2. --------------Culled Major Hurt---------
+	/for i 1 to ${int_majorHurt}
+		/cecho \aw Culled[${i}]:${arr_culledMajorHurt[${i},1]} (${arr_culledMajorHurt[${i},2]})
+	/next i
+	/echo -----
+	/echo ${x}: ${int_majorHurt} slots are non-NULL
+	/echo -----
+
+| Sort Major Hurt
+	| 77, 20, 91, 90   [20,77,90,91]
+	/for i 1 to ${int_majorHurt}
+		/varcalc s ${i}+1
+		/echo s? ${s}
+		/if (${s} > ${int_majorHurt})  /goto :printOrdered
+		/for j ${s} to ${int_majorHurt}
+			/varset hp1 ${arr_culledMajorHurt[${i},1]}
+			/varset hp2 ${arr_culledMajorHurt[${j},1]}
+			/echo hp1:${hp1} >? ${hp2}
+			/if (${hp1} > ${hp2}) {
+				|temp = arr[${i}]
+				/cecho \aw 1. Temp = Culled[${i}]:${arr_culledMajorHurt[${i},1]} (${arr_culledMajorHurt[${i},2]})
+				/varset arr_temp[1,1] ${arr_culledMajorHurt[${i},1]}
+				/varset arr_temp[1,2] ${arr_culledMajorHurt[${i},2]}
+				/cecho \ao 1. arr_temp[1] = ${arr_temp[1,1]} (${arr_temp[1,2]})
+				|arr[${i}] = arr[${j}]
+				/cecho \aw 2. Culled[${i}]:${arr_culledMajorHurt[${i},1]} (${arr_culledMajorHurt[${i},2]})= Culled[${j}]:${arr_culledMajorHurt[${j},1]} (${arr_culledMajorHurt[${j},2]})
+				/varset arr_culledMajorHurt[${i},1] ${arr_culledMajorHurt[${j},1]}
+				/varset arr_culledMajorHurt[${i},2] ${arr_culledMajorHurt[${j},2]}
+				/cecho \ay 2. arr_culledMajorHurt[${i}]:${arr_culledMajorHurt[${i},1]} (${arr_culledMajorHurt[${i},2]})
+				|arr[${j}] = temp
+				/cecho \aw 3. Culled[${j}]:${arr_culledMajorHurt[${j},1]} (${arr_culledMajorHurt[${j},2]}) = ${arr_temp[1,1]} (${arr_temp[1,2]})
+				/varset arr_culledMajorHurt[${j},1] ${arr_temp[1,1]}
+				/varset arr_culledMajorHurt[${j},2] ${arr_temp[1,2]}
+				/cecho \ar 3. arr_culledMajorHurt[${j}]:${arr_culledMajorHurt[${j},1]} (${arr_culledMajorHurt[${j},2]})
+			}
+		/next j
+	/next i
+
+	:printOrdered
+	/cecho \ay3. --------------Ordered Major Hurt---------
+	/for i 1 to ${int_majorHurt}
+		/cecho \ag${i}:${arr_culledMajorHurt[${i},1]} (${arr_culledMajorHurt[${i},2]})
+	/next i
+
+
+/return
+
 
 Sub chkDivineIntervention
 	/if (${FindItemCount[Emerald]} && ${Me.SpellReady[Divine Intervention]} && !${NetBots[${Target.Name}].Buff[Divine Intervention].Name.Equal[Divine Intervention]}) {

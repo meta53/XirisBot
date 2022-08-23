@@ -27,10 +27,30 @@ REVISION HISTORY
 #EVENT ChangeHP			"#1# tells the raid#*#'ChangeHP #2#'"
 #EVENT ChangeHP 		"[ #1# #*#]#*#ChangeHP #2#"
 
+#EVENT ChangeHPTank		"#1# tells you#*#'changeHPTank #2#'"
+#EVENT ChangeHPTank		"#1# tells the group#*#'changeHPTank #2#'"
+#EVENT ChangeHPTank		"#1# tells the raid#*#'changeHPTank #2#'"
+#EVENT ChangeHPTank 	"[ #1# #*#]#*#changeHPTank #2#"
+
+#EVENT ChangeHPSelf		"#1# tells you#*#'changeHPSelf #2#'"
+#EVENT ChangeHPSelf		"#1# tells the group#*#'changeHPSelf #2#'"
+#EVENT ChangeHPSelf		"#1# tells the raid#*#'changeHPSelf #2#'"
+#EVENT ChangeHPSelf 	"[ #1# #*#]#*#changeHPSelf #2#"
+
+#EVENT ChangeHPGroup	"#1# tells you#*#'changeHPGroup #2#'"
+#EVENT ChangeHPGroup	"#1# tells the group#*#'changeHPGroup #2#'"
+#EVENT ChangeHPGroup	"#1# tells the raid#*#'changeHPGroup #2#'"
+#EVENT ChangeHPGroup 	"[ #1# #*#]#*#changeHPGroup #2#"
+
 #EVENT HealMode			"#1# tells you#*#'HealMode #2#'"
 #EVENT HealMode			"#1# tells the group#*#'HealMode #2#'"
 #EVENT HealMode			"#1# tells the raid#*#'HealMode #2#'"
 #EVENT HealMode 		"[ #1# #*#]#*#HealMode #2#"
+
+#EVENT HealType			"#1# tells you#*#'HealType #2#'"
+#EVENT HealType			"#1# tells the group#*#'HealType #2#'"
+#EVENT HealType			"#1# tells the raid#*#'HealType #2#'"
+#EVENT HealType 		"[ #1# #*#]#*#HealType #2#"
 
 |-- Rez Events
 #event CanRez     		"This corpse can be resurrected."
@@ -77,6 +97,13 @@ REVISION HISTORY
 #EVENT CelRegenStop		"#1# tells the raid#*#'CRStop#*#'"
 #EVENT CelRegenStop 	"[ #1# #*#]#*#CRStop#*#"
 
+|-- Totem Events
+#Event FireTotem		"#1# tells you#*#'FireTotem #2#'"
+#EVENT FireTotem		"#1# tells the group#*#'FireTotem #2#'"
+#EVENT FireTotem		"#1# tells the raid#*#'FireTotem #2#'"
+#EVENT FireTotem 		"[ #1# #*#]#*#FireTotem #2#"
+
+
 
 Sub InitEvents_Healing
 	/if (${str_classArchetype.Equal[PRIEST]} || ${str_classArchetype.Equal[MELEE_MANA]} ) /call RegisterBackgroundEvents Events_Healing 6
@@ -89,9 +116,14 @@ Sub Events_Healing
 	/doevents CannotRez
 	/doevents NotOnline
 	/doevents ChangeHP
+	/doevents ChangeHPTank
+	/doevents ChangeHPSelf
+	/doevents ChangeHPGroup
 	/doevents HealMode
+	/doevents HealType
 	/doevents InterruptON
 	/doevents InterruptOFF
+	/doevents FireTotem
 /return
 
 Sub Events_CH 
@@ -116,22 +148,42 @@ Sub EVENT_GroupHeal
 
 Sub EVENT_ChangeHP(_line, _chatSender, _eventParams)
 	/if (${str_classArchetype.Equal[PRIEST]}) {
-		/echo HP (HealPoint) Change called! Changing to: ${_eventParams}
+		/cecho \agHP (HealPoint) Change called! \awChanging to: \ay${_eventParams}
 		/declare HP int local ${_eventParams}
-		/varset	int_point_tankNormal ${HP}
-		/dgt [${Me.Class.ShortName}] ${Me.Name} ${str_action} >> ${Spawn[id ${int_MTID}].CleanName} <<  @ ${int_point_tankNormal}
+		/varset	int_point_tankPatch ${HP}
+		/dgt [${Me.Class.ShortName}] ${Me.Name} ${str_action} >> ${Spawn[id ${int_MTID}].CleanName} <<  @ ${int_point_tankPatch}
 	}
 	/doevents flush ChangeHP
 /return
 
-Sub EVENT_HealMode(_line, _chatSender, _eventParams)
-	/if (${Me.Class.ShortName.NotEqual[CLR]}) /return
-	/echo Changing Heal Mode?
-	/echo line ${_line}
-	/echo eventParams ${_eventParams}
-	/call ChangeHealMode ${_eventParams}
-	/doevents flush HealMode
-/return
+Sub EVENT_ChangeHPTank(_line, _chatSender, _eventParams)
+	/if (${str_classArchetype.Equal[PRIEST]}) {
+		/cecho \agTank HP (HealPoint) Change called! \awChanging to: \ay${_eventParams}
+		/declare HP int local ${_eventParams}
+		/varset	int_point_tankPatch ${HP}
+		/dgt [${Me.Class.ShortName}] ${Me.Name} ${str_action} >> ${Spawn[id ${int_MTID}].CleanName} <<  @ ${int_point_tankPatch}
+
+	}
+/return 
+
+Sub EVENT_ChangeHPSelf(_line, _chatSender, _eventParams)
+	/if (${str_classArchetype.Equal[PRIEST]}) {
+		/cecho \agSelf HP (HealPoint) Change called! \awChanging to: \ay${_eventParams}
+		/declare HP int local ${_eventParams}
+		/varset	int_point_selfPatch ${HP}
+		/dgt [${Me.Class.ShortName}] ${Me.Name} ${str_action} >> ${Me.CleanName} <<  @ ${int_point_selfPatch}
+
+	}
+/return 
+
+Sub EVENT_ChangeHPGroup(_line, _chatSender, _eventParams)
+	/if (${str_classArchetype.Equal[PRIEST]}) {
+		/cecho \agGroup HP (HealPoint) Change called! \awChanging to: \ay${_eventParams}
+		/declare HP int local ${_eventParams}
+		/varset	int_point_grpPatch ${HP}
+		/dgt [${Me.Class.ShortName}] ${Me.Name} ${str_action} >> GROUP <<  @ ${int_point_grpPatch}
+	}
+/return 
 
 |**
  ----------------------------
@@ -144,6 +196,16 @@ Sub EVENT_HealMode(_line, _chatSender, _eventParams)
  NORMAL|EFFICIENT|CHCHAIN
  ----------------------------
 **|
+Sub EVENT_HealMode(_line, _chatSender, _eventParams)
+	/if (${Me.Class.ShortName.NotEqual[CLR]}) /return
+	/echo Changing Heal Mode?
+	/echo line ${_line}
+	/echo eventParams ${_eventParams}
+	/call ChangeHealMode ${_eventParams}
+	/doevents flush HealMode
+/return
+
+
 Sub ChangeHealMode(string _strMode)
 	|- Mem the appropriate spell set
 	/if (${_strMode.Find[CHCHAIN]}) {
@@ -163,6 +225,55 @@ Sub ChangeHealMode(string _strMode)
 	}
 	/memspellset ${str_spellset}
 /return
+
+|**
+ ----------------------------
+ HealType
+ ----------------------------
+ Healing type changes the index of int_healMode
+ 0-Self (only) | 1-MT (and self) | 2-Group (and MT, includes self) | 3-GroupOnly (includes self) | 
+ ----------------------------
+**|
+Sub EVENT_HealType(_line, _chatSender, _eventParams)
+	/if (${Me.Class.ShortName.NotEqual[CLR]}) /return
+	/call ChangeHealMode ${_eventParams}
+	/doevents flush HealMode
+/return
+
+
+Sub ChangeHealMode(string _strMode)
+	|- Mem the appropriate spell set
+	/if (${_strMode.Find[CHCHAIN]}) {
+		/echo Changing healing mode to DEFAULT
+		/varset str_spellset default
+		/varset str_healMode CHCHAIN
+	} else /if (${_strMode.Find[EFFICIENT]}) {
+		/echo Changing healing mode to EFFICIENT
+		/varset str_spellset efficient
+		/varset use_heal_HoT FALSE
+		/varset str_healMode EFFICIENT
+	} else {
+		/echo Changing healing mode to DEFAULT
+		/varset str_spellset default
+		/varset use_heal_HoT TRUE
+		/varset str_healMode DEFAULT
+	}
+	/memspellset ${str_spellset}
+/return
+
+Sub EVENT_FireTotem(_line, _chatSender, _eventParams)
+	/if (!${bln_hasTotem}) /return
+	/call PlaceTotem ${Int[${_eventParams}]}
+/return
+
+Sub PlaceTotem(int _totemKey)
+	/echo PlaceTotem ${_totemKey} ? ${int_totemKey}
+	/if (${_totemKey} == ${int_totemKey} || ${_totemKey} == 0) {
+		/call MQ2Cast "${str_totemName}" alt
+		/rs Totem: ${str_totemName} Placed
+	} 
+
+/return 
 
 |**
  ----------------------------
@@ -308,16 +419,7 @@ Check|Set the current heal spell
 Note: this now checks to see what healing mode we are in.
 ----------------------------  
 **|	
-Sub setHealingSpell(string _class, int _hp)
-	| determine the target type based on _class
-	/declare archetype string local
-	/declare aType     string local grp
-	/call getClassArchetype ${_class}
-	/varset archetype ${Macro.Return}
-
-	/if (${archetype.Equal[TANK]}) 		/varset aType tank
-	/if (${archetype.Equal[PRIEST]}) 	/varset aType self
-
+Sub setHealingSpell(int _hp)
 	/if (${str_healMode.Equal[NORMAL]}) {
 		/if (${_hp} < ${int_point_stopHeal}) {
 			/if ((${_hp} <= ${int_currentFPoint}) && ${bln_FHealReady}) {
@@ -350,33 +452,25 @@ Sub setHealingSpell(string _class, int _hp)
  checksMT	(and heals)
  checksSELF	(and heals)
  checksGRP	(and heals)
+ Healing type changes the index of int_healMode
+ 0-Self (only) | 1-MT (and self) | 2-Group (and MT, includes self) | 3-GroupOnly (includes self) | 
  ----------------------------
 **|
 
 Sub chkHeal_MT
-	/if (${int_healMode}== 0) /return
-	| Use the power of Greyskull and <strike>Netbots</strike> DANNET to get the MTs HP (todo)
-	
+	/if (${int_healMode}== 0 || ${int_healMode} == 3) /return
 	/call chkMTAlive ${Me.Class.ShortName.Equal[CLR]} 
-
-	/if ((${Spawn[pc ${str_tankName1}].PctHPs} < ${int_point_tankNormal}) && (${Spawn[pc ${str_tankName1}].Distance} < ${int_range_normal})) {
-		/call healMAINTANK
-	}
-
+	/if ((${Spawn[pc ${str_tankName1}].PctHPs} < ${int_point_tankPatch}) && (${Spawn[pc ${str_tankName1}].Distance} < ${int_range_normal})) /call healMAINTANK
 /return
 
 
 Sub chkHeal_Self
-	/if (${int_healMode}>=0 && ${Me.PctHPs}<${int_point_selfNormal}) {
-		/call healSELF		
-	}
+	/if (${Me.PctHPs}<${int_point_selfPatch}) /call healSELF
 /return
 
 
 Sub chkHeal_Group
-	/if (${int_healMode}>=2) {
-        /call healGRP		
-	}
+	/if (${int_healMode}>=2) /call healGRP
 /return
 
 |**
@@ -390,11 +484,11 @@ Sub chkHeal_Group
 **|
 
 Sub healMAINTANK
-	/varcalc	int_point_calcStopHeal ${Math.Calc[${int_point_tankNormal}*1.1]}	
+	/varcalc	int_point_calcStopHeal ${Math.Calc[${int_point_tankPatch}*1.1]}	
 	/if (${Target.ID} != ${int_MTID}) /call TrueTarget ${int_MTID}
 	/echo healMAINTANK (healing.inc): ${int_MTID} ${Target.Name} "${str_heal_normal}"
 	/call healCast ${int_MTID} ${Target.Name} "${str_heal_normal}"
-	/varset int_point_calcStopHeal	${int_point_tankNormal}
+	/varset int_point_calcStopHeal	${int_point_tankPatch}
 /return
 
 |**
@@ -407,11 +501,11 @@ Sub healMAINTANK
 **|
 
 Sub healSELF
-	/varcalc 	int_point_calcStopHeal ${Math.Calc[${int_point_selfNormal}*1.1]}
+	/varcalc 	int_point_calcStopHeal ${Math.Calc[${int_point_selfPatch}*1.1]}
 	/if (${Target.ID} != ${Me.ID}) /call TrueTarget ${Me.ID}
 	/echo healSELF (healing.inc): ${Me.ID} ${Target.Name} "${str_heal_normal}"
 	/call healCast ${Me.ID} ${Me.Name} "${str_heal_normal}"
-	/varset int_point_calcStopHeal	${int_point_selfNormal}
+	/varset int_point_calcStopHeal	${int_point_selfPatch}
 /return
 
 |**
@@ -420,47 +514,159 @@ Sub healSELF
  ----------------------------
  Healing Logic for the Group
  Determines which spell to cast, then casts it.
- Note: 	There are variations between all the priest classes healGRP methods. 
- 		So this is a default method that only casts 1 heal type
+ 	int_point_grpHot=80 
+	int_point_grpPatch=65
+	int_point_grpFrantic=40
+	arr_groupHP[${j},1] ${Group.Member[${i}].PctHPs}
+	arr_groupHP[${j},2] ${Group.Member[${i}].Distance3D}
+	arr_groupHP[${j},3] ${Group.Member[${i}].ID}
  ----------------------------
 **|
 Sub healGRP
-	/varcalc	int_point_calcStopHeal ${Math.Calc[${int_point_grpNormal}*1.1]}
-	/declare	int_worstHP		int	local	100
-	/declare	int_worstID		int local	0
-	/declare	int_majorHurt	int local	0
-	/declare	gmember			int local	0
-	/declare    str_worstName	string local NULL
-	
-	| -- Cycle through the group and set the worst HP
-	/for gmember 0 to ${Group}
-		/if ( (${Group.Member[${gmember}].Distance}<=${int_range_normal})) { 	
-			/if (${Group.Member[${gmember}].PctHPs} < ${int_worstHP}) { 
-				/varset int_worstID     	${Group.Member[${gmember}].ID} 
-				/varset int_worstHP         ${Group.Member[${gmember}].PctHPs} 
-				/varset str_worstName		${Group.Member[${gmember}].Name}
-			} 
-		} 
-        /if ((${Group.Member[${gmember}].PctHPs}<=${int_point_calcStopHeal})&&(${Group.Member[${gmember}].PctHPs}< ${int_point_grpPatch}))   /varcalc int_majorHurt ${int_majorHurt}+1 
-     /next gmember
+	/declare 	i 			 	int local	0
+	/declare 	int_inRange		int local 0
+	/varcalc	int_point_calcStopHeal ${Math.Calc[${int_point_grpPatch}*1.1]}
+	:determineGroupDamage
+	| Method updates the group array, in order of HP, and counts the major/minor hurt
+	/call updateGroupHP
 
-	| -- If no one needs healing...
-	/if ((${int_worstHP} > ${int_point_calcStopHeal}) || ${int_worstHP} == 0 ) /return
+	| No one is hurt, return
+	/if (${int_majorHurt} == 0 && ${int_minorHurt} == 0) /goto :return
 
-	| -- Determine appropriate heal
-	/varset int_currentHP ${int_worstHP}
+	| Determine if we should use group heal
+	| Check the range of the majorhurt
+	/if (${int_majorHurt} >=3 && (${Me.Class.ShortName.Equal[CLR]} || ${Me.Class.ShortName.Equal[PAL]})) {
+		/call getGroupInRange ${int_range_group}
+		/varset int_inRange ${Int[${Macro.Return}]}
+		/if (${int_inRange}>=3) {
+			/cecho  \arGROUP  \ar${str_heal_group} \awon \ay${Spawn[pc id ${arr_groupHP[${i},3]}].Name}
+			/call healCast ${Me.ID} ${Me.Name} "${str_heal_group}"
+			/goto :return
+		}
+	} else /if (${int_minorHurt} >=3 && ${Me.Class.ShortName.Equal[CLR]}) {
+		/call getGroupInRange ${int_range_groupHoT}
+		/varset int_inRange ${Int[${Macro.Return}]}
+		/if (${int_inRange}>=3) {
+			/cecho  \apGROUP_HOT  \ap${str_heal_groupHoT} \awon \ay${Spawn[pc id ${arr_groupHP[${i},3]}].Name}
+			/call healCast ${Me.ID} ${Me.Name} "${str_heal_groupHoT}"
+			/if (${Macro.Return.Equal["CAST_SUCCESS"]}) /varset timer_groupHoT 40s
+			/goto :return
+		}
+	} 
 
-	| -- Single Target Heal
-	/if (${int_majorHurt} >= 1 && (${int_worstHP} < ${int_point_grpPatch})) {
-		|/echo PATCH single heal (Many have only 1 heal type, for multiple heal types the class method will override this)
-		/varset str_currentHeal ${str_heal_normal}
-		/echo HealGroupMember ${int_MTID} ${Target.Name} "${str_currentHeal}"
-		/call healCast ${int_worstID} ${str_worstName} "${str_currentHeal}"
-	}
+	:CastSingleTargetHeals
+	| Note the worst hurt will be the first in the list
+	/for i 1 to 6 
+		| No Heal? Since the lowest HP is always first, if we get to a index where there is no heal, we can skip the rest
+		/if (${arr_groupHP[${i},1]} >= ${int_point_calcStopHeal} ) {
+			/if (${Me.CleanName.Equal[Xanshia]}) /echo ${arr_groupHP[${i},1]} >= ${int_point_calcStopHeal} returning
+			/goto :return
+		}
+		| No Data? Then the toon is not in zone
+		/if (${arr_groupHP[${i},1]} == 0 || ${arr_groupHP[${i},2]} >= 250 || ${arr_groupHP[${i},3]} == 0) /goto :next_groupMember
+		| Frantic? This spell has the longest range, so if we can't reach them here, we need to goto next group member
+		/if (${arr_groupHP[${i},1]} <= ${int_point_grpFrantic}) {
+			/if (${arr_groupHP[${i},2]} >= ${int_range_frantic}) {
+				/cecho \ar${Spawn[pc id ${arr_groupHP[${i},3]}].Name} is out of FRANTIC range!
+				/goto :next_groupMember
+			} else {
+				/cecho  \aoFRANTIC  \ar${str_heal_frantic} \awon \ay${Spawn[pc id ${arr_groupHP[${i},3]}].Name}
+				/call healCast ${arr_groupHP[${i},3]} ${Spawn[pc id ${arr_groupHP[${i},3]}].Name} "${str_heal_frantic}"
+				/goto :return	
+			}
+			
+		}
+		| Normal Efficient?
+		/if (${arr_groupHP[${i},1]} <= ${int_point_grpPatch} && ${arr_groupHP[${i},2]} <= ${int_range_normal_efficient} && ${str_healMode.Equal[EFFICIENT]}) {
+			/cecho \aoEFFICIENT \ay${str_heal_normal_efficient} \awon \ay${Spawn[pc id ${arr_groupHP[${i},3]}].Name}
+			/call healCast ${arr_groupHP[${i},3]} ${Spawn[pc id ${arr_groupHP[${i},3]}].Name} "${str_heal_normal_efficient}"
+			/goto :return
+		}
+
+		| Normal?
+		/if (${arr_groupHP[${i},1]} <= ${int_point_grpPatch} && ${arr_groupHP[${i},2]} <= ${int_range_normal} && ${str_healMode.NotEqual[EFFICIENT]}) {
+			/cecho \aoNORMAL \ay${str_heal_normal} \awon \ay${Spawn[pc id ${arr_groupHP[${i},3]}].Name}
+			/call healCast ${arr_groupHP[${i},3]} ${Spawn[pc id ${arr_groupHP[${i},3]}].Name} "${str_heal_normal}"
+			/goto :return
+		}
+
+		| HoT ?
+		/if (!${use_heal_HoT}) /goto :next_groupMember
+		/if (${arr_groupHP[${i},1]} <= ${int_point_grpHot} && ${arr_groupHP[${i},2]} <= ${int_range_HoT} && !${timer_hot_${arr_groupHP[${i},3]}}) {
+			/cecho  \aoHoT \ag${str_heal_HoT} \awon \ay ${Spawn[pc id ${arr_groupHP[${i},3]}].Name}(${arr_groupHP[${i},3]})
+			/call healCast ${arr_groupHP[${i},3]} ${Spawn[pc id ${arr_groupHP[${i},3]}].Name} "${str_heal_HoT}"
+			/if (${Macro.Return.Equal["CAST_SUCCESS"]}) /varset ${timer_hot_${arr_groupHP[${i},3]}} 40s
+			/goto :return
+		}
+	:next_groupMember
+	/next i
+	:return
 /return
 
+|-- Method to update the group HP tracker ordered
+Sub updateGroupHP
+	/declare 	i 			 		int local	0
+	/declare    j                   int local   0
+	/declare    s					int local   0
+	/declare 	hp1 				int local 	0
+	/declare 	hp2 				int local 	0
+	/declare 	arr_temp[1,3]		int local	100
 
+	/varset int_minorHurt 0
+	/varset int_majorHurt 0
+	/for i 0 to 5
+		/varcalc j ${i}+1
+		/if (${Group.Member[${i}].Present} && (${Group.Member[${i}].PctHPs}<=${int_point_calcStopHeal}) && (${Group.Member[${i}].PctHPs}>=${int_point_grpPatch})) /varcalc int_minorHurt ${int_minorHurt}+1 
+		/if (${Group.Member[${i}].Present} && (${Group.Member[${i}].PctHPs}<=${int_point_calcStopHeal}) && (${Group.Member[${i}].PctHPs}< ${int_point_grpPatch})) /varcalc int_majorHurt ${int_majorHurt}+1 
+		/if (${Group.Member[${i}].Present}) {
+			/varset arr_groupHP[${j},1] ${Group.Member[${i}].PctHPs}
+			/varset arr_groupHP[${j},2] ${Group.Member[${i}].Distance3D}
+			/varset arr_groupHP[${j},3] ${Group.Member[${i}].ID}
+		} else {
+			/varset arr_groupHP[${j},1] 100
+			/varset arr_groupHP[${j},2] 1000
+			/varset arr_groupHP[${j},3] 0
+		}
+		
+	/next i
 
+	|--- sorting arr_groupHP
+	/for i 1 to 6
+		/varcalc s ${i}+1
+		/if (${s} > 6)  /return
+		/for j ${s} to 6
+			/varset hp1 ${arr_groupHP[${i},1]}
+			/varset hp2 ${arr_groupHP[${j},1]}
+			/if (${hp1} > ${hp2}) {
+				/varset arr_temp[1,1] ${arr_groupHP[${i},1]}
+				/varset arr_temp[1,2] ${arr_groupHP[${i},2]}
+				/varset arr_temp[1,3] ${arr_groupHP[${i},3]}
+				/varset arr_groupHP[${i},1] ${arr_groupHP[${j},1]}
+				/varset arr_groupHP[${i},2] ${arr_groupHP[${j},2]}
+				/varset arr_groupHP[${i},3] ${arr_groupHP[${j},3]}
+				/varset arr_groupHP[${j},1] ${arr_temp[1,1]}
+				/varset arr_groupHP[${j},2] ${arr_temp[1,2]}
+				/varset arr_groupHP[${j},3] ${arr_temp[1,3]}
+			}
+		/next j 
+	/next i
+	
+	:printOrdered
+	/cecho \ay1. --------------Ordered Major Hurt---------
+	/cecho \agint_majorHurt: \ar${int_majorHurt} \agint_minorHurt: \ay${int_minorHurt}
+	/for i 1 to 6
+		/cecho \ag${i}:${arr_groupHP[${i},1]} d:${arr_groupHP[${i},2]}  id:(${arr_groupHP[${i},3]})
+	/next i
+	:return
+/return
+
+Sub getGroupInRange(int _range) 
+	/declare inRange int local 0 
+	/declare k int local 0
+	/for k 1 to 6
+		/if (${arr_groupHP[${k},2]} <= ${_range}) /varcalc inRange ${inRange}+1
+	/next k
+/return ${inRange}
 
 |**
  ----------------------------
@@ -870,7 +1076,7 @@ Sub Ressurect(int _id)
 
 
 Sub CheckOnline(string _name)
-	/tell ${_name} ${TellMessage}
+	/tell ${_name} Checking to see if you are online for rez....
 	/doevents NotOnline
 /return
 
@@ -904,7 +1110,7 @@ Sub Add2RezIgnore(int _id)
 	/for x 1 to ${int_rezIgnore}
 		| return if new idis already in the ignore list
 		/if (${_id} == ${arr_rezIgnore[${x}]}) /return
-		/varset Temp[${x}] ${arr_rezIgnore[${x}]}
+		/varset arrTemp[${x}] ${arr_rezIgnore[${x}]}
 	/next x
 	/varset int_rezIgnore ${Math.Calc[${int_rezIgnore}+1]}
 	/varset arrTemp[${int_rezIgnore}] ${_id}
@@ -969,8 +1175,10 @@ Sub chkDivineIntervention
 	/declare i int local 0
 	/declare avail bool local FALSE
 	/declare pcName string local
-	/for i 1 to ${DIClerics.Size}
-		/varset pcName ${DIClerics[${i}]}
+	/declare requestCount int local 0
+	/for i 1 to ${RaidDIClerics.Size}
+		/varset pcName ${RaidDIClerics[${i}]}
+		/cecho \awChecking \ay${pcName} \aw for DI
 		/if (${timer_di_${i}} || !${Bool[${SpawnCount[pc ${pcName}]}]}) {
 			/cecho \ar${pcName} \awhas a DI timer or is out of zone!
 			/goto :next_cleric
@@ -981,18 +1189,26 @@ Sub chkDivineIntervention
 			/goto :next_cleric
 		}
 
-		/dquery ${pcName} -q "Me.SpellReady[Divine Intervention]"
-		/delay 20 ${DanNet.Query.Received}
-		/varset avail ${DanNet.Q}
+		/varset requestCount 0
+		:query_loop
+			/varcalc requestCount ${requestCount}+1
+			/dquery ${pcName} -q "Me.SpellReady[Divine Intervention]"
+			/delay 20 ${DanNet.Query.Received}
+			/varset avail ${DanNet.Q}
+			/delay 10
+			| give the cleric a second in case they just got done casting somehting or is casting something
+			/if (!${avail} && ${requestCount} < 2) {
+				/goto :query_loop
+			}
 		/if (${avail}) {
 			/goto :request_di
 		} 
 	:next_cleric
-	/cecho \ar\${pcName} \awdoes not have DI ready!
+	/cecho \ar${pcName} \awdoes not have DI ready!
 	/next i
 
 	:no_cleric	
-	/cecho \ar\NO CLERICs \aw have DI ready!
+	/cecho \arNO CLERICs \aw have DI ready!
 	/varset timer_di_request 10s
 	/goto :return
 
@@ -1005,6 +1221,35 @@ Sub chkDivineIntervention
 	:return
 /return
 
+Sub CreateGroupHoTTimers
+	|-- Group HOT Timers
+	/declare i int local 0
+	/declare k int local 1
+	/declare timerKey string local
+	/for i 0 to 5
+		/varset timerKey timer_HoT_${Group.Member[${i}].ID}
+		/cecho \awCreating a new timer named: \ag${timerKey}
+		/declare ${timerKey}	timer 	outer 	0
+		/varset arr_hotTimerKeys[${k}] ${timerKey}
+		/varset str_groupIDs ${str_groupIDs}|${Group.Member[${i}].ID}
+		/varcalc k ${k}+1
+	/next i
+
+	/for i 1 to 6
+		/cecho \ao TimerKey ${i} ${arr_hotTimerKeys[${i}]}
+	/next i
+/return
+
+Sub ReCreateGroupHoTTimers
+	/declare i int local 1
+	/for i 1 to 6
+		/cecho \ar Deleting \ao TimerKey ${i} ${arr_hotTimerKeys[${i}]}
+		/deletevar ${arr_hotTimerKeys[${i}]}
+	/next i
+	
+	/call CreateGroupHoTTimers
+/return
+
 |**
 |----------------------------
 | INITIALIZATION Subs
@@ -1014,11 +1259,9 @@ Sub chkDivineIntervention
 |**| 
 
 Sub xbot_initialize_healing(int _healPoint)
-	|/if (${str_classArchetype.Equal[MELEE_END]})	/return
-	|/if (${Me.Class.ShortName.Equal[WAR]}) 			/return
+	/if (${str_classArchetype.Equal[MELEE_END]} || ${Me.Class.ShortName.Equal[WAR]} || ${Me.Class.ShortName.Equal[SHD]})	/return
 
 	/declare 	healINI				string  outer	xiris_common/xiris_healing.ini
-
 	|-- Set spellset to default so we can probe the properties of these
 	/if (${str_classArchetype.Equal[PRIEST]} || ${str_classArchetype.Equal[CASTER]} || ${str_classArchetype.Equal[MELEE_MANA]}) /memspellset default
 
@@ -1030,9 +1273,14 @@ Sub xbot_initialize_healing(int _healPoint)
 	/declare    str_healMode				string  outer 	NORMAL
 	/declare	str_savedHealMode			string  outer   ${str_healMode}
 	| 	Heal Mode: 0|Self Only, 1|Self/MT 2|Self/MT/Group
-	/declare 	int_defaultHealMode			int 	outer   ${Ini[healINI,Heal_Settings,int_healMode]}
+
+	/declare 	int_defaultHealMode			int 	outer   ${Ini[${healINI},Heal_Settings,int_healMode]}
+	/echo ${int_defaultHealMode} ${botINI} 					${Ini[${healINI},CelestialRegeneration,cr_1_name]}
 	/declare	int_healMode    			int     outer   ${Ini[botINI,Healing_Settings,int_healMode,${int_defaultHealMode}]}
-	/declare 	use_heal_defaultDivineArb	bool	outer 	${Ini[healINI,Heal_Settings,use_heal_divineArb, FALSE]}
+	/cecho \arint_healMode: \ag${int_healMode} ${int_defaultHealMode}
+
+
+	/declare 	use_heal_defaultDivineArb	bool	outer 	${Ini[${healINI},Heal_Settings,use_heal_divineArb, FALSE]}
 	/declare	use_heal_divineArb			bool	outer	${Ini[botINI,Healing_Settings,use_heal_divineArb,${use_heal_defaultDivineArb}]}
 	
 	|-- Healing Spells
@@ -1083,7 +1331,7 @@ Sub xbot_initialize_healing(int _healPoint)
 	/declare	int_range_normal		int		outer	${Spell[${str_heal_normal}].MyRange}
 	/declare	int_range_frantic		int		outer	${Spell[${str_heal_frantic}].MyRange}
 	/declare	int_range_HoT			int		outer	${Spell[${str_heal_HoT}].MyRange}
-	/declare	int_range_group			int		outer	${Spell[${str_heal_group}].MyRange} |--Note this is a PBAE
+	/declare	int_range_group			int		outer	70 
 	/declare	int_range_groupHoT		int		outer	${Spell[${str_heal_groupHoT}].MyRange}
 	/declare 	int_range_complete		int		outer 	${Spell[${str_heal_complete}].MyRange}
 	/declare	int_range_rez			int		outer	100
@@ -1094,29 +1342,25 @@ Sub xbot_initialize_healing(int _healPoint)
 	/echo ---------------
 	|-- Heal Points
 		|-- SELF (Defaults)
-		/declare 	int_def_selfPatch		int     outer   ${Ini[healINI,Heal_Settings,int_point_selfPatch]}
-		/declare 	int_def_selfNormal		int     outer   ${Ini[healINI,Heal_Settings,int_point_selfNormal]}
-		/declare 	int_def_selfFrantic		int     outer   ${Ini[healINI,Heal_Settings,int_point_selfFrantic]}
-		/declare 	int_def_selfHot			int     outer   ${Ini[healINI,Heal_Settings,int_point_selfHot]}
+		/declare 	int_def_selfPatch		int     outer   ${Ini[${healINI},Heal_Settings,int_point_selfPatch]}
+		/declare 	int_def_selfFrantic		int     outer   ${Ini[${healINI},Heal_Settings,int_point_selfFrantic]}
+		/declare 	int_def_selfHot			int     outer   ${Ini[${healINI},Heal_Settings,int_point_selfHot]}
 
 		|-- SELF (Overrides)
 		/declare	int_point_selfPatch		int 	outer 	${Ini[botINI,Heal_Points,int_point_selfPatch,${int_def_selfPatch}]}
-		/declare	int_point_selfNormal	int		outer	${Ini[botINI,Heal_Points,int_point_selfNormal,${int_def_selfNormal}]}
 		/declare	int_point_selfFrantic	int		outer	${Ini[botINI,Heal_Points,int_point_selfFrantic,${int_def_selfFrantic}]}
 		/declare	int_point_selfHot		int		outer	${Ini[botINI,Heal_Points,int_point_selfHot,${int_def_selfHot}]}
 	
 		|-- TANK (Defaults)
-		/declare 	int_def_tankPatch		int     outer   ${Ini[healINI,Heal_Settings,int_point_tankPatch]}
-		/declare 	int_def_tankNormal		int     outer   ${Ini[healINI,Heal_Settings,int_point_tankNormal]}
-		/declare 	int_def_tankFrantic		int     outer   ${Ini[healINI,Heal_Settings,int_point_tankFrantic]}
-		/declare 	int_def_tankHot			int     outer   ${Ini[healINI,Heal_Settings,int_point_tankHot]}
+		/declare 	int_def_tankPatch		int     outer   ${Ini[${healINI},Heal_Settings,int_point_tankPatch]}
+		/declare 	int_def_tankFrantic		int     outer   ${Ini[${healINI},Heal_Settings,int_point_tankFrantic]}
+		/declare 	int_def_tankHot			int     outer   ${Ini[${healINI},Heal_Settings,int_point_tankHot]}
 
 		|-- TANK (Overrides)
 		/declare	int_point_tankPatch		int		outer	${Ini[botINI,Heal_Points,int_point_tankPatch,${int_def_tankPatch}]}
-		/declare	int_point_tankNormal	int		outer	${Ini[botINI,Heal_Points,int_point_tankNormal,${int_def_tankNormal}]}	
 		/if (${_healPoint} > 0) {
 			/cecho \agHealpoint setting overriding defaults: ${_healPoint}	
-			/varset	int_point_tankNormal	${_healPoint}
+			/varset	int_point_tankPatch	${_healPoint}
 		} else {
 			/echo No healpoint defined using INI values
 		}
@@ -1124,14 +1368,12 @@ Sub xbot_initialize_healing(int _healPoint)
 		/declare	int_point_tankHot		int		outer	${Ini[botINI,Heal_Points,int_point_tankHot,${int_def_tankHot}]}
 	
 		|-- Rest of Group (Defaults)
-		/declare 	int_def_grpPatch		int     outer   ${Ini[healINI,Heal_Settings,int_point_grpPatch]}
-		/declare 	int_def_grpNormal		int     outer   ${Ini[healINI,Heal_Settings,int_point_grpNormal]}
-		/declare 	int_def_grpFrantic		int     outer   ${Ini[healINI,Heal_Settings,int_point_grpFrantic]}
-		/declare 	int_def_grpHot			int     outer   ${Ini[healINI,Heal_Settings,int_point_grpHot]}
+		/declare 	int_def_grpPatch		int     outer   ${Ini[${healINI},Heal_Settings,int_point_grpPatch]}
+		/declare 	int_def_grpFrantic		int     outer   ${Ini[${healINI},Heal_Settings,int_point_grpFrantic]}
+		/declare 	int_def_grpHot			int     outer   ${Ini[${healINI},Heal_Settings,int_point_grpHot]}
 
 		|-- Rest of Group (Overrides)
 		/declare	int_point_grpPatch		int		outer	${Ini[botINI,Heal_Points,int_point_grpPatch,${int_def_grpPatch}]}	
-		/declare	int_point_grpNormal		int		outer	${Ini[botINI,Heal_Points,int_point_grpNormal,${int_def_grpNormal}]}	
 		/declare	int_point_grpFrantic	int		outer	${Ini[botINI,Heal_Points,int_point_grpFrantic,${int_def_grpFrantic}]}
 		/declare	int_point_grpHot		int		outer	${Ini[botINI,Heal_Points,int_point_grpHot,${int_def_grpHot}]}	
 
@@ -1157,6 +1399,14 @@ Sub xbot_initialize_healing(int _healPoint)
 		/echo Celestial Regeneration:${bln_hasCelRegen} || Total Chars:${int_celRegenTotal} || Position:${int_celRegenPosition} || Previous::${str_celRegenPPriest}
 		/echo ---------------
 	}
+
+	|-- Totems
+	/declare    bln_hasTotem		 	bool    outer  FALSE
+	/if (${str_classArchetype.Equal[PRIEST]}) /varset bln_hasTotem TRUE
+	/declare    str_totemName			string  outer  ${Ini[botINI,Totems,str_totemName,NULL]}	
+	/declare	int_totemKey			int 	outer  ${Ini[botINI,Totems,int_totemKey,99]}	
+
+
 	|-- Various Flags
 	/declare	int_currentHP			int 	outer	100
 	/declare 	str_currentHeal			string	outer	${str_heal_normal}
@@ -1167,8 +1417,18 @@ Sub xbot_initialize_healing(int _healPoint)
 	/declare	timer_chPaused			timer   outer   30s
 	/declare   	int_chChainID			int		outer	0
 	/declare	int_rezIgnore			int     outer   0 
-	/declare 	arr_rezIgnore[1]		int		outer
+	/declare 	arr_rezIgnore[1]		int		outer   0
 	/declare 	bln_skipCorpse			bool	outer	FALSE
+	/declare 	timer_groupHoT  		timer outer 0
+
+	|-- Group HitPoints 1: HP 2:Dist3D 3:ID 4: CleanName
+	/declare	arr_groupHP[6,4]		int     outer   100   
+	/declare	int_minorHurt			int 	outer	0
+	/declare	int_majorHurt	   		int 	outer	0
+	/declare 	str_groupIDs            string  outer   
+	/declare 	arr_hotTimerKeys[6]     string  outer   NULL
+
+	/call CreateGroupHoTTimers
 
 	|-- OLD Healing Spells
 	/declare    bln_rezzable			bool    outer   TRUE
@@ -1176,9 +1436,6 @@ Sub xbot_initialize_healing(int _healPoint)
 	/declare	bln_MTDead				bool	outer   FALSE
 	/declare	bln_TRGTDead			bool	outer	FALSE
 
-	
-	|-- OLD Heal Points
-	
 
 	|-- Hard Coded Complete Heal Spells
 	/declare 	str_completeHeal		string	 outer
@@ -1195,16 +1452,9 @@ Sub xbot_initialize_healing(int _healPoint)
     /declare CHealDelay		string 	outer
     /declare CHealNext		string	outer
 	
-	
-	|-- Group HOT Timers
-	/declare timer_HoT_0	timer 	outer 	0
-	/declare timer_HoT_1	timer 	outer 	0
-	/declare timer_HoT_2	timer 	outer 	0
-	/declare timer_HoT_3	timer 	outer 	0
-	/declare timer_HoT_4	timer 	outer 	0
-	/declare timer_HoT_5	timer 	outer 	0
 
-	/declare timer_groupHoT  timer outer 0
+
+	
 
 	/call InitEvents_Healing
 	/cecho \ao xbot_initialize_healing ${_healPoint}

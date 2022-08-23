@@ -3,7 +3,7 @@
 XIRIS_FOLLOW.INC
 ----------------------------
 This was written ground up for usage with xiris's bots
-Allows to following via stick or nav
+Allows to bln_following via stick or nav
 ______________________________________________
 REQUIRED PLUGINS
     
@@ -56,7 +56,7 @@ Sub Events_Movement
 
 Sub xbot_initialize_movement
 
-	/declare Following 			bool 	outer FALSE
+	/declare bln_following 			bool 	outer FALSE
 	/declare FollowTarget 		string 	outer NULL
 	/declare MaxResponseDist	int 	outer 1000
 
@@ -75,8 +75,8 @@ SUB EVENT_Follow(_line, _chatSender, _eventParams)
 		/declare FollowType 	string local ${If[${_eventParams.Find[/type|NAV]},NAV,STICK]}
 		/if (!${Bool[${SpawnToFollow}]}) /varset SpawnToFollow "${_chatSender}"
 
-		| -Turn Following on and set the FollowTarget
-		/varset Following TRUE
+		| -Turn bln_following on and set the FollowTarget
+		/varset bln_following TRUE
 		/varset FollowTarget ${Spawn[pc ${SpawnToFollow}].CleanName}
 		/echo SpawnToFollow: ${SpawnToFollow} FollowType: ${FollowType}  FollowTarget: ${Spawn[pc ${SpawnToFollow}].CleanName}
 		| -Check Range
@@ -90,8 +90,8 @@ SUB EVENT_Follow(_line, _chatSender, _eventParams)
 				| -Stop assisting so we don't try to stick to the AssistTarget.	
 				/if (${Me.Combat}) /call Event_BackOff
 				
-				| -Start Following.
-				/if (${Verbosity}) /docommand /${cmdChannel} Following ${FollowTarget}.
+				| -Start bln_following.
+				/if (${Verbosity}) /docommand /${cmdChannel} bln_following ${FollowTarget}.
 				/call AquireFollow ${FollowType}
 			
 			} else {
@@ -102,8 +102,8 @@ SUB EVENT_Follow(_line, _chatSender, _eventParams)
 					| -Stop assisting so we don't try to stick to the AssistTarget.	
 					/if (${Me.Combat}) /call Event_BackOff
 					
-					| -Start Following.
-					/if (${Verbosity}) /docommand /${cmdChannel} Following ${FollowTarget}.
+					| -Start bln_following.
+					/if (${Verbosity}) /docommand /${cmdChannel} bln_following ${FollowTarget}.
 					/call AquireFollow ${FollowType}
 				}
 			} 
@@ -208,8 +208,8 @@ SUB AquireFollow(string _type)
 	|-- Check all Events
 	/doevents flush Follow
 	/call RunAllEvents
-	|/cecho \ay movingLoop \ag ${Following}
-	/if (${Following}) {
+	|/cecho \ay movingLoop \ag ${bln_following}
+	/if (${bln_following}) {
 		/if (${_type.Equal[NAV]} && !${Navigation.Active} && (${Target.Distance3D} > ${distCheck} )) {
 			|/echo :movingLoop ${_type.Equal[NAV]} && !${Navigation.Active} && (${Target.Distance3D} > ${distCheck})
 			/nav target
@@ -229,12 +229,12 @@ SUB AquireFollow(string _type)
 |----------------------------------------------------------------------------|
 
 SUB EVENT_Stop(_line, _chatSender, _eventParams)
-	| -Check if I'm following.
-	/if (${Following}) {
+	| -Check if I'm bln_following.
+	/if (${bln_following}) {
 			/if (${Stick.Active}) 			/squelch /stick off
 			/if (${Navigation.Active}) 		/squelch /nav stop
 			/varset FollowTarget NULL
-			/varset Following 	 FALSE
+			/varset bln_following 	 FALSE
 	}
 	/doevents flush Stop
 /return
@@ -289,8 +289,8 @@ SUB EVENT_MoveHere(_line, _chatSender, _eventParams)
 					/echo |- EVENT_MoveHere -| Failed to move to the specified target.
 				}
 			} 
-			| -If I'm following, reaquire follow.
-			/if (${Following}) {
+			| -If I'm bln_following, reaquire follow.
+			/if (${bln_following}) {
 				/if (${moveTo_Name.Equal[${FollowTarget}]}) {
 					/call AquireFollow
 				} else {
@@ -308,7 +308,7 @@ SUB EVENT_MoveHere(_line, _chatSender, _eventParams)
 |----------------------------------------------------------------------------------------------------|
 |- Attempts to utilize MQ2MoveUtils /moveto function, to move to a given destination.				-|
 |----------------------------------------------------------------------------------------------------|
-|- @param1 destination: Destinations can be provided as an ID, or loc, using the following syntax:	-|
+|- @param1 destination: Destinations can be provided as an ID, or loc, using the bln_following syntax:	-|
 |-																									-|
 |- Move to a Spawn ID use, -SpawnID|#																-|
 |-		Ex.  /call MoveTo -SpawnID|${Target.ID}														-|

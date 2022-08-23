@@ -90,8 +90,10 @@ ______________________________________________
 #EVENT ChangeAP				"#1# tells the raid#*#'ChangeAP #2#'"
 #EVENT ChangeAP 			"[ #1# #*#]#*#ChangeAP #2#"
 
-
 | Burninating
+#EVENT BurnOn1				"#*#BurnOn1#*#"
+#EVENT BurnOn2				"#*#BurnOn2#*#"
+#EVENT BurnOff				"#*#BurnOff#*#"
 #EVENT ShortBurnOn1 		"#*#ShortBurn1#*#"
 #EVENT ShortBurnOn2 		"#*#ShortBurn2#*#"
 
@@ -100,15 +102,16 @@ ______________________________________________
 
 #EVENT MaxiumumBurn			"#*#MaximumBurn#*#"
 
+#EVENT UseStaunchRecovery   "#*#DoStaunchRecovery#*#"
+#EVENT UseIntensity			"#*#DoIntensity#*#"
+#EVENT UseServants			"#*#DoServants#*#"
+#Event UseInfusion			"#*#DoInfusion#*#"
 
 |MISC events
 #EVENT ConnectEQBC			"#*#ConnectEQBC#*#"
 #EVENT CheckNaked			"#*#CheckNaked#*#"
 #EVENT BurnOnALL			"#*#BurnOnAll#*#"
-#EVENT BurnOn1				"#*#BurnOn1#*#"
-#EVENT BurnOn2				"#*#BurnOn2#*#"
-#EVENT BurnOff				"#*#BurnOff#*#"
-#EVENT IntensityOn			"#*#IntensityOn#*#"
+
 #EVENT RageOff				"#*#is no longer enraged#*#"
 #EVENT RageOn				"#*#has become ENRAGED#*#"
 #EVENT ImDead          		"#*#You have been slain by#*#"
@@ -160,7 +163,10 @@ Sub Events_Raid
 	/doevents ChangeMT
 	/doevents ChangeSA
 	/doevents ChangeAP
-	/doevents IntensityOn
+	/doevents UseStaunchRecovery
+	/doevents UseIntensity
+	/doevents UseServants
+	/doevents UseInfusion
 /return
 
 Sub Events_Common 
@@ -382,7 +388,7 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/call xbot_initialize_movement
 
 	|-- report that the common things are initialized
-	/cecho \agxbot_initialize: [ MT: ${str_MTName}(${int_MTID}) @ ${int_point_tankNormal} ] STName: ${str_tankName2}(${int_STID})
+	/cecho \agxbot_initialize: [ MT: ${str_MTName}(${int_MTID}) @ ${int_point_tankPatch} ] STName: ${str_tankName2}(${int_STID})
 	
 /return
 
@@ -806,22 +812,20 @@ Sub chkAAs
 **|
 
 Sub chkBurn
-	/if (!${bln_engaged}) /return
+	/if (!${bln_engaged} || !${bln_BURNMode} || (${int_burnModeTotal} < 1)) /return
+	/if (!${Target.ID} || ${Target.Type.NotEqual[NPC]}) /return
 	/if (${Me.Casting.ID} || ${Me.Moving} || ${Me.Invis} || ${Me.Feigning}) /return
-	/if (!${bln_BURNMode}) /return
-	/if (${int_burnModeTotal} < 1) /return 
-	
+
 	/declare burn int local
 	|/echo BurnMode Activated! Total Burns: ${int_burnModeTotal}
 	/for burn 1 to ${int_burnModeTotal} 
 		
-		/if (${Target.ID} && (!${Me.Casting.ID} || ${Me.Class.ShortName.Equal[BRD]}) && ${Target.Type.Equal[NPC]}) {
-
+		/if (${Target.ID} && ${Target.Type.Equal[NPC]}) {
 			| ---------------
 			| Combat Ability
 			| Note: Run the DISC if it is a combat type, it is ready, and we aren't already discing
 			| ---------------
-			/if (${Burn_${burn}_Type.Equal[combat]} && ${Me.CombatAbilityReady[${Burn_${burn}}]} && ${Burn_${burn}_Use} && !${Melee.DiscID}) {
+			/if (${Burn_${burn}_Type.Equal[combat]} && ${Me.CombatAbilityReady[${Burn_${burn}}]} && ${Burn_${burn}_Use} && !${Bool[${Melee.DiscID}]}) {
 				/echo burn is combat type, trying ${Burn_${burn}}
 				| Check to see if the burn Before disc/alt (0 if not) is already run
 				/if (${Burn_${burn}_After} > 0) {
@@ -846,7 +850,7 @@ Sub chkBurn
 			| Note: We prefer Alt abilities with NUMBERS, they are quicker to fire, with less lag
 			| 		Additionally, if MGBable, (few) we have Burn_1_MGB = TRUE to look for (default FALSE)
 			| ---------------
-			} else /if ((${Burn_${burn}_Type.Equal[alt]}) && (${Me.AltAbilityReady[${Burn_${burn}}]}) && (${Burn_${burn}_Use}) && (${Spell[${Burn_${burn}}].Stacks})) {
+			} else /if (${Burn_${burn}_Type.Equal[alt]} && ${Me.AltAbilityReady[${Burn_${burn}}]} && ${Burn_${burn}_Use} && ${Spell[${Burn_${burn}}].Stacks}) {
 				| Check to see if the burn Before disc/alt (0 if not) is already run
 				/if (${Burn_${burn}_After} > 0) {
 					| Check to see if the burn Before is an alt or combatdisc  (two different ways of checking)
@@ -874,7 +878,7 @@ Sub chkBurn
 			| ---------------	
 			| Item
 			| ---------------		
-			} else /if (${Burn_${burn}_Type.Equal[item]} && ${FindItem[${Burn_${burn}}].TimerReady} && (${Burn_${burn}_Use}) ) {
+			} else /if (${Burn_${burn}_Type.Equal[item]} && ${FindItem[${Burn_${burn}}].TimerReady} && ${Burn_${burn}_Use} && (!${Me.Casting.ID} || ${Me.Class.ShortName.Equal[BRD]})) {
 				:doItemClick
 					/if (${Me.Class.ShortName.Equal[BRD]}) {
 						/medley queue "${Burn_${burn}}"
@@ -1095,7 +1099,6 @@ Sub SetRaidDIClerics(string _mode)
 		/varset RaidDIClerics[4] Xirael
 		/varset RaidDIClerics[5] Deist
 		/varset RaidDIClerics[6] Xenshia
-		/echo  ${RaidDIClerics[1]}
 	} else /if (${_mode.Equal[TRIAD]}) {
 		| Note if this truly needs DI to use, we need to reorganize that raid setup
 		/declare RaidDIClerics[2] string outer NULL
@@ -1191,12 +1194,52 @@ Sub EVENT_BurnOff
 	/doevents flush BurnOff
 /return
 
-Sub EVENT_IntensityON
-	/echo Enabling Intensity of the Resolute!
-	/call MQ2Cast "Intensity of the Resolute" alt
-	/doevents flush IntensityOn
+
+| AA Special Events
+Sub EVENT_UseStaunchRecovery
+	| Do not use if at bind point (ie: dead)
+	/if (${Zone.ID} == 340 && ${Zone.ID} == 344 && ${Zone.ID} == 345) /return
+
+	/if ((${str_classArchetype.EQUAL[MELEE_END]} || ${str_classArchetype.EQUAL[TANK]}) && ${Me.PctEndurance} < 20) {
+		/casting "Staunch Recovery" alt 
+	} else /if (${Me.Class.ShortName.Equal[PAL]} && ${Me.PctMana} < 20) {
+		/casting "Staunch Recovery" alt
+	} else /if (${Me.Class.ShortName.Equal[BRD]} && ${Me.PctMana} < 20) { 
+		/medley queue "Staunch Recovery" -interrupt
+	} else { 
+		/casting "Staunch Recovery" alt 
+	}
 /return
 
+Sub EVENT_UseIntensity
+	| Do not use if at bind point (ie: dead)
+	/if (${Zone.ID} == 340 && ${Zone.ID} == 344 && ${Zone.ID} == 345) /return
+	/if (${Me.Class.ShortName.Equal[BRD]}) {
+		/medley queue "Intensity of the Resolute" -interrupt
+	} else {
+		/casting "Intensity of the Resolute" alt
+	}
+/return
+
+Sub EVENT_UseServants
+	| Do not use if at bind point (ie: dead)
+	/if (${Zone.ID} == 340 && ${Zone.ID} == 344 && ${Zone.ID} == 345) /return
+	/if (${Me.Class.ShortName.Equal[BRD]}) {
+		/medley queue "Steadfast Servant" -interrupt
+	} else {
+		/casting "Steadfast Servant" alt
+	}
+/return
+
+Sub EVENT_UseInfusion
+	| Do not use if at bind point (ie: dead)
+	/if (${Zone.ID} == 340 && ${Zone.ID} == 344 && ${Zone.ID} == 345) /return
+	/if (${Me.Class.ShortName.Equal[BRD]}) {
+		/medley queue "Infusion of the Faithful" -interrupt
+	} else {
+		/casting "Infusion of the Faithful" alt
+	}
+/return
 
 
 |-------------------------------------------------------------------------------- 
@@ -1390,7 +1433,7 @@ Sub EVENT_ChangeMT(_line, _sender, _eventParams)
 	/varset str_tankName1 ${name} 
 
 	/echo MTID: ${int_MTID} MTName: ${name}
-	/dgt [${Me.Class.ShortName}] ${Me.Name} ${str_action} >> ${Spawn[id ${int_MTID}].CleanName} <<  @ ${int_point_tankNormal}
+	/dgt [${Me.Class.ShortName}] ${Me.Name} ${str_action} >> ${Spawn[id ${int_MTID}].CleanName} <<  @ ${int_point_tankPatch}
 	/if (${Me.Class.ShortName.Equal[CLR]}) /call TrueTarget ${int_MTID}
 	/if (${Me.Name.Equal[${name}]}) {
 		/varset bln_tanking TRUE

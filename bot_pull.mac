@@ -927,7 +927,7 @@ Sub variant_initialize(int _pull_dist, string _channel, string _campName, bool _
 	}
 	
 	|--how far we can go for alert 2 mobs (note, seperate from maxRadius)
-	/declare int_alert2Radius		int 	outer 	300
+	/declare int_alert2Radius		int 	outer 	1500
 
 	|-- use 40 for POFire
 	/declare int_minZHeight			int		outer 	0
@@ -938,8 +938,8 @@ Sub variant_initialize(int _pull_dist, string _channel, string _campName, bool _
 	/varcalc int_zRadius ${int_maxZHeight} - ${int_minZHeight}
 
 	|--target information
-	/declare int_minPullCount		int		outer   2
-	/declare int_minTLevel			int		outer	30
+	/declare int_minPullCount		int		outer   10
+	/declare int_minTLevel			int		outer	48
 	/declare int_maxTLevel			int		outer	77
 	/declare bln_validTGT			bool	outer	FALSE
 	/declare bln_TGTDead			bool	outer	FALSE

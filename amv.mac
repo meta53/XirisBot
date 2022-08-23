@@ -1,0 +1,7 @@
+#Turbo 20
+Sub Main 
+    | Set Xiris (MT) Healing 
+    /dgt changeHPTank 50 /varset int_point_tankPatch 50
+    /dgt changeHPSelf 50 /varset int_point_selfPatch 50 
+    /dgt changeHPGroup 50 /varset int_point_grpPatch 50
+/return

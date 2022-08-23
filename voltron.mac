@@ -1,4 +1,4 @@
-#Turbo 1
+#Turbo 10
 
 Sub Main(string _mode)
 	/if (!${Defined[_mode]}) /declare _mode string local HATRED
@@ -6,6 +6,7 @@ Sub Main(string _mode)
 	/echo Setup up Voltron
 	
 	/call SetupGroups${_mode}
+	/delay 5s
 	/call InviteGroupsTo${_mode}
 
 	/delay 5s
@@ -121,19 +122,19 @@ Sub InviteGroupsToTRIAD
 Sub SetupGroupsJELVAN
 	| West, 1
 	/dex Xiria /multiline ; /invite Xorael; /invite Xurael; /invite Xirael; /invite Achlys; /invite Shynxia
-	/dex Sadelia /multiline ; /invite Dogmatist; /invite Theist; /invite Drexia; /invite Xeixi; /invite Xeqisa
+	/dex Sadelia /multiline ; /invite Dogmatist; /invite Theist;
 
 	| South, 2 
-	/multiline ; /invite Xerael; /invite Xanshia; /invite Ophidia; /invite Opheoia; /invite Shinxia 
+	/multiline ; /invite Xanshia; /invite Xerael; /invite Ophidia; /invite Opheoia; /invite Shinxia 
 	/dex Nihilist /multiline ; /invite Ophelia; /invite Ophexia; /invite Erinyas; /invite Xaeliea; /invite Aidos
 	/dex Xonshia /multiline ; /invite Ophemia; /invite Opheyia; /invite Erinyes; /invite Xaexa; /invite Achos
 	/dex Xinshia /multiline ; /invite Ophenia; /invite Ophezia; /invite Ertres; /invite Xaia; /invite Aergia
 	/dex Xarael /multiline ; /invite Cereborn; /invite Mluian; /invite Ertris; /invite Xepatia; /invite Ania
-	/dex Pantheon /muiltiline ; /invite Drexia /invite Xeixi; /invite Xeixa; /invite Xiexa; /invite Xeqisa
+	/dex Pantheon /multiline ; /invite Drexia; /invite Xeixi; /invite Xeixa; /invite Xiexa; /invite Xeqisa
 
 	| East, 3
 	/dex Xirea /multiline ; /invite Xenshia; /invite Empathic; /invite Xunshia; /invite Adikia; 
-	/dex Xirin /multiline ; /invite Deist; /invite Theist; /invite Eurydice;
+	/dex Xirin /multiline ; /invite Deist; /invite Tragic; /invite Eurydice;
 
 /return
 
@@ -146,6 +147,7 @@ Sub InviteGroupsToJELVAN
 	/raidinvite Xonshia
 	/raidinvite Xinshia
 	/raidinvite Xarael 
+	/raidinvite Pantheon
 
 	| East, 3
 	/dex Xirea /raidinvite Xirin

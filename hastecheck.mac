@@ -1,0 +1,110 @@
+|**
+----------------------------
+hastecheck.mac version 08.20.22
+----------------------------
+This macro creats the an output file (hastecheck.ini) with entries for each toon
+______________________________________________
+REVISION HISTORY
+    08.20.22	xiris	INITIAL REVISION
+	
+**|
+
+#define hasteINI hastecheck.ini
+
+Sub Main
+	/declare flagcount int outer 0
+	|- check inventory
+	|/call dsIfWriter
+	/call chkInventory
+	/call chkWorn
+	/call chkBagContents
+/return
+
+Sub chkWorn
+	/echo chkInventory
+	/declare i int local
+	/declare name string local
+	/declare effect string local
+	/declare id int local
+	/for i 1 to 22
+		/if (${Me.Inventory[${i}].ID} && ${Me.Inventory[${i}].Haste} ) {
+					/varset name 	"${Me.Inventory[${i}].Name}"
+					/varset effect	"${Me.Inventory[${i}].Haste}"
+					/varset id 		${Me.Inventory[${i}].ID}
+					/echo Haste Item found : ${Me.Inventory[${i}].Name} (${Me.Inventory[${i}].ID}) 
+					/call dsWriter ${name} ${effect} ${id}
+					
+		}
+	/next i
+/return
+
+Sub chkInventory
+	/echo chkInventory
+	/declare i int local
+	/declare name string local
+	/declare effect string local
+	/declare id int local
+	/for i 1 to 8
+		/if (${InvSlot[pack${i}].Item.Container}) {
+			/call chkBagContents ${i}
+		} else {
+			/if (${InvSlot[pack${i}].Item.ID} && ${InvSlot[pack${i}].Item.Haste} ) {
+				/varset name 	"${InvSlot[pack${i}].Item.Name}"
+				/varset effect	"${InvSlot[pack${i}].Item.Haste}"
+				/varset id 		 ${InvSlot[pack${i}].Item.ID}
+				/echo Haste Item found : ${InvSlot[pack${i}].Item.Name} (${InvSlot[pack${i}].Item.ID}) 
+				/call dsWriter ${name} ${effect} ${id}
+				
+			}
+		}
+	/next i
+/return
+
+Sub chkBagContents(int PackSlot)
+	/declare i int local
+	/declare name string local
+	/declare effect string local
+	/declare id int local
+	/echo -------------------
+	/echo Pack ${PackSlot} ${InvSlot[pack${PackSlot}].Item.Name}
+	
+	/for i 1 to ${InvSlot[pack${PackSlot}].Item.Container}
+		/if (${InvSlot[pack${PackSlot}].Item.Item[${i}].ID} && ${InvSlot[pack${PackSlot}].Item.Item[${i}].Haste}) {
+			/varset name 	"${InvSlot[pack${PackSlot}].Item.Item[${i}].Name}"
+			/varset effect	"${InvSlot[pack${PackSlot}].Item.Item[${i}].Haste}"
+			/varset id 		${InvSlot[pack${PackSlot}].Item.Item[${i}].ID}
+			/call dsWriter ${name} ${effect} ${id}
+		
+		}
+	/next i
+	/echo -------------------
+/return
+
+|- Modifiy this varset if you chose to have a different downshitif;
+Sub dsIfWriter
+	/declare a string local
+	/varset a #{If[(!#{Me.Moving} && (#{SpawnCount[npc radius 50]}==0) && !#{Me.Combat} && !#{Me.Invis}),1,0]}
+	/ini "hasteINI" ${Me.CleanName} "downshitif" "${a}"
+/return
+
+Sub dsWriter(string itemName, string itemEffect, int itemID)
+	/declare a string local
+	/declare df string local Haste Item(${flagcount})
+	/declare ds string local downshit${flagcount}
+	/varset a /if (#{Spell[${itemEffect}].Stacks} && 
+	/varset a ${a}!#{Me.Buff[${itemEffect}].ID})
+	/varset a ${a} /casting ${itemID} item
+    /echo ${a}
+	/ini "hasteINI" "${Me.CleanName}" "${df}" "${itemName}(${itemID}) ${itemEffect}"
+	/varcalc flagcount (${flagcount}+1)
+/return
+
+
+
+
+
+
+
+
+
+

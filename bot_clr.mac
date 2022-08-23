@@ -65,7 +65,7 @@ REQUIRED INCLUDES
 
 #include xiris_common/xiris_common.inc
 
-#Turbo 40
+#Turbo 50
 
 Sub InitEvents_Class 
 	/call RegisterClassEvents Events_CLR 8
@@ -96,7 +96,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 	/call variant_initialize
 
 	|-- report my status
-	/dgt [${Me.Class.ShortName}] ${Me.Name} ${str_action} >> ${Spawn[${_tank1Name}].CleanName} <<  @ ${int_point_tankNormal} ${_assistArgs}
+	/dgt [${Me.Class.ShortName}] ${Me.Name} ${str_action} >> ${Spawn[${_tank1Name}].CleanName} <<  @ ${int_point_tankPatch} ${_assistArgs}
 
 	|-- target the MT
 	/call TrueTarget ${int_MTID}
@@ -183,13 +183,13 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 **|
 
 Sub healMAINTANK
-	/varcalc	int_point_calcStopHeal ${Math.Calc[${int_point_tankNormal}*1.1]}
+	/varcalc	int_point_calcStopHeal ${Math.Calc[${int_point_tankPatch}*1.1]}
 	/if (!${Target.ID}) /call TrueTarget ${int_MTID}
 	/call chkFHealReady
 	/call setHealingSpell ${Target.Class.ShortName} ${Target.PctHPs}
 	/echo healMAINTANK: ${str_currentHeal}
 	/call healCast ${int_MTID} ${Target.Name} "${str_currentHeal}"
-	/varset int_point_calcStopHeal	${int_point_tankNormal}
+	/varset int_point_calcStopHeal	${int_point_tankPatch}
 /return
 
 |**
@@ -203,112 +203,16 @@ Sub healMAINTANK
 **|
 
 Sub healSELF
-	/varcalc 	int_point_calcStopHeal ${Math.Calc[${int_point_selfNormal}*1.05]}
+	/varcalc 	int_point_calcStopHeal ${Math.Calc[${int_point_selfPatch}*1.05]}
 	/if (!${Target.ID}) /call TrueTarget ${Me.ID}
 	/call chkFHealReady
 	/call setHealingSpell ${Me.Class.ShortName}  ${Me.PctHPs}
 	/echo healSELF  (healing.inc): ${str_currentHeal}
 	/call healCast ${Me.ID} ${Me.Name} "${str_currentHeal}"
-	/varset int_point_calcStopHeal	${int_point_selfNormal}
+	/varset int_point_calcStopHeal	${int_point_selfPatch}
 	/call TrueTarget ${int_MTID}
 /return
 
-|**
- ----------------------------
- HealGroup
- ----------------------------
- Healing Logic for entire group.
- Determines which is the worst 'hurt' character, and heals based on what heal point to heal at.
- Called by the Cast logic on cast of a heal spell
- Note: There are variations between this and other PRIEST healGRP methods
- This routine is modified from the common one in xiris_healing.inc
- ----------------------------
-**|
-Sub healGRP
-	
-	/varcalc	int_point_calcStopHeal ${Math.Calc[${int_point_grpHot}*1.1]}
-
-	/declare	int_numDamaged	int	local	0
-	/declare	int_worstHP		int	local	100
-	/declare	int_worstID		int local	0
-	/declare	int_minorHurt	int local	0
-	/declare	int_majorHurt	int local	0
-	/declare	gmember			int local	0
-	/declare    str_worstName	string local NULL
-	/declare	str_worstClass	string local NULL
-	/declare 	tmr_HoT 		string local
-	
-	:startHealGroup
-	| -- Cycle through the group and set the worst HP\
-	/for gmember 0 to ${Group}
-		/if ( (${Group.Member[${gmember}].Distance}<=${int_range_normal}) && ${Target.Type.Equal[PC]}) { 	
-			/if (${Group.Member[${gmember}].PctHPs} < ${int_worstHP} && ${Group.Member[${gmember}].PctHPs} > 0 ) { 
-				/varset int_worstID     	${Group.Member[${gmember}].ID} 
-				/varset int_worstHP         ${Group.Member[${gmember}].PctHPs} 
-				/varset str_worstName		${Group.Member[${gmember}].Name}
-				/varset str_worstClass      ${Group.Member[${gmember}].Class.Name} 
-			} 
-		} 
-        /if ((${Group.Member[${gmember}].Distance}<=${int_range_normal})&&(${Group.Member[${gmember}].PctHPs}<=${int_point_calcStopHeal})) 	 /varcalc int_numDamaged ${int_numDamaged}+1 
-        /if ((${Group.Member[${gmember}].PctHPs}<=${int_point_calcStopHeal})&&(${Group.Member[${gmember}].PctHPs}>=${int_point_grpPatch}))   /varcalc int_minorHurt  ${int_minorHurt}+1 
-        /if ((${Group.Member[${gmember}].PctHPs}<=${int_point_calcStopHeal})&&(${Group.Member[${gmember}].PctHPs}< ${int_point_grpPatch}))   /varcalc int_majorHurt  ${int_majorHurt}+1 
-    /next gmember
-	
-	|/echo healGRP ${int_worstHP} > ${int_point_calcStopHeal} major:${int_majorHurt} minor:${int_minorHurt}
-	| -- If no one needs healing...
-	/if ((${int_worstHP} > ${int_point_calcStopHeal}) ) /return
-	
-	| -- Determine appropriate heal
-	/varset int_currentHP ${int_worstHP}
-	
-	| -- Single Target Light && Single Target Remedy
-	/if (${int_majorHurt} <= 2) { 
-		/if (${int_worstHP} > ${int_point_grpPatch}) /return
-		/call setHealingSpell ${str_worstClass} ${int_worstHP}
-		/echo healGRP ${int_MTID} ${Target.Name} ${str_currentHeal}
-		/call healCast ${int_worstID} ${str_worstName} "${str_currentHeal}"
-		/goto :return
-	| -- Major Group Heal
-	} else /if (${int_majorHurt} >= 3) {
-		/if (${int_worstHP} > ${int_point_grpPatch}) /return
-	    /varset  str_currentHeal ${str_heal_group}
-		/echo healGRP ${int_MTID} ${Target.Name} ${str_currentHeal}
-		/call healCast ${int_worstID} ${str_worstName} "${str_currentHeal}"
-		/goto :return
-
-	| -- Group HoT (timer based)
-	} else /if (${int_minorHurt} > 2 && ${timer_groupHoT} == 0 && ${str_heal_groupHoT.NotEqual[NULL]}) {
-		/varset	str_currentHeal		${str_heal_groupHoT}
-		/echo HealGroupMember ${int_MTID} ${Target.Name} ${str_currentHeal}
-		/call healCast ${int_worstID} ${str_worstName} "${str_currentHeal}"
-		/if (${Macro.Return.Equal["CAST_SUCCESS"]}) {
-			/varset timer_groupHoT 40s
-			/echo timer_groupHoT: ${timer_groupHoT}
-		}
-		/goto :return
-	| -- Minor Heals (HoTs) - and HOT enabled;
-	} else /if (${int_majorHurt} == 0 && ${use_heal_HoT}) {
-		| -- Single Target HoT
-		/if (${int_worstHP} > ${int_point_grpHot}) /return
-		/if (!${Defined[timer_HoT_${Group.Member[${str_worstName}]}]}) /declare timer_HoT_${Group.Member[${str_worstName}]} timer outer 40s
-		/varset tmr_HoT timer_HoT_${Group.Member[${str_worstName}]}
-		
-		/if (${int_minorHurt} <= 2 && ${${tmr_HoT}} == 0) {
-			/echo setting timer HOT for member: ${Group.Member[${str_worstName}]} , ${str_worstName}
-			/echo userHoT should be timer_HoT_${Group.Member[${str_worstName}]}
-			|--if no timer, cast, and if sucess, set timer
-			/varset	str_currentHeal		${str_heal_HoT}
-			/echo healGRP ${int_MTID} ${Target.Name} ${str_currentHeal}
-			/call healCast ${int_worstID} ${str_worstName} "${str_currentHeal}"
-			
-			/if (${Macro.Return.Equal["CAST_SUCCESS"]}) {
-				/varset ${tmr_HoT} 40s
-			}
-		} 
-		/goto :return
-	}
-:return
-/return
 
 Sub EVENT_CelestialRegeneration
 	/call MGBCelestialRegeneration
@@ -540,7 +444,6 @@ Sub variant_initialize
 	/declare 	str_gemYaulp			string	outer 	${Ini[botINI,Yaulp,str_spellYaulp,gem9]}
 	
 	|-- Heal Settings
-	/declare	bln_useGRPHeal  		bool    outer   ${Ini[botINI,Cleric_Settings,bln_useGRPHeal,TRUE]}
 	/declare	bln_annouce     		bool    outer   ${Ini[botINI,Cleric_Settings,bln_annouce,FALSE]}
 	/declare	str_buffGem     		string  outer   ${Ini[botINI,Cleric_Settings,str_buffGem,gem9]}
 	
@@ -555,6 +458,6 @@ Sub variant_initialize
 	/declare	arr_celestial[17]		string  outer
 
 	/memspellset default
-	/cecho \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID}) HealPoint:${int_point_tankNormal} ST: ${str_tankName2}(${int_STID})
+	/cecho \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID}) HealPoint:${int_point_tankPatch} ST: ${str_tankName2}(${int_STID})
 	/call InitEvents_Class
 /return

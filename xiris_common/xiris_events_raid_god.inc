@@ -70,7 +70,8 @@ Sub InitEvents_GoD_Inktuta
 /return
 
 Sub InitEvents_GoD_Tacvi
-	/call RegisterRaidEvents Events_GoD_Tacvi 18
+	/call RegisterRaidEvents Events_GoD_Tacvi 9
+	/declare balanceRapeHeal bool outer FALSE
 /return
 
 Sub Events_GoD_Ikkinz
@@ -542,6 +543,7 @@ Sub BalancerReset
 
 
 Sub EVENT_BALANCERAPE
+ 	/varset  balanceRapeHeal TRUE
 	|- rune spam
 	/if (${Me.Class.ShortName.Equal[ENC]}) /call RuneSpam ${Spawn[pc id ${int_MTID}]}
 
@@ -552,21 +554,19 @@ Sub EVENT_BALANCERAPE
 		/return
 	}
 
-	/if (!${Defined[balanceRapeHeal]}) 	   /declare balanceRapeHeal bool outer TRUE
+	/if (!${Defined[balanceRapeHeal]}) 	  
 	/echo Turning Spam Healing on.
 	:balanceRapeHeal
-		/call RunRaidEvents	
+		/doevents BALANCERAPEOFF
 		/if (!${balanceRapeHeal}) /return
 		/if (${bln_annouce}) /${cmdChannel} ${str_currentHeal} > ${Target.Name} hp:${Target.PctHPs} m:${Me.PctMana} d:${Target.Distance}
 		/call MQ2Cast "${str_heal_normal}" gem2 1s
-		|/if (${Me.Class.ShortName.Equal[CLR]}) /call chkDivineIntervention
 	/goto :balanceRapeHeal
 /return
 	
 Sub EVENT_BALANCERAPEOFF
 	/echo Turning Spam Healing off.
-	/if (${str_classArchetype.NotEqual[PRIEST]}) /return
-	/if (${Defined[balanceRapeHeal]}) /varset balanceRapeHeal FALSE
+	/varset balanceRapeHeal FALSE
 /return	
 
 

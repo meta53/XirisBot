@@ -150,8 +150,6 @@ Sub chkUtils
 **|
 Sub chkConcussion
 	/if (!${bln_engaged} || ${Me.Invis}||${Me.Moving}||!${bln_concUse}) /return 
-	
-	|/echo chkConcussion ${bln_concUse} ${timer_concDelay}
 	/if (${bln_concUse} && ${Me.Standing} && (!${timer_concDelay} || ${Me.TargetOfTarget.Name.Equal[${Me.Name}]})) {
 		/call chkSpellMemorized "${str_concSpell}" ${str_concGem} FALSE
 		/call MQ2Cast "${str_concSpell}" ${str_concGem}
@@ -236,7 +234,7 @@ Sub variant_initialize
 	
 	
 	/memspellset default
-	/cecho \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID})HealPoint:${int_point_tankNormal} ST: ${str_tankName2}(${int_STID})
+	/cecho \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID})HealPoint:${int_point_tankPatch} ST: ${str_tankName2}(${int_STID})
 	/call InitEvents_Class
 /return
 

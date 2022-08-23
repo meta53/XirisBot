@@ -176,7 +176,7 @@ Sub variant_initialize
 	|-- set up default vars
 	/declare    str_action				string	outer	Assisting	
 
-	/cecho \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID})HealPoint:${int_point_tankNormal} ST: ${str_tankName2}(${int_STID}) Aggro? ${bln_aggro}
+	/cecho \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID})HealPoint:${int_point_tankPatch} ST: ${str_tankName2}(${int_STID}) Aggro? ${bln_aggro}
 	/call InitEvents_Class
 /return
 
