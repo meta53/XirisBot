@@ -1200,7 +1200,7 @@ Sub EVENT_UseStaunchRecovery
 	| Do not use if at bind point (ie: dead)
 	/if (${Zone.ID} == 340 && ${Zone.ID} == 344 && ${Zone.ID} == 345) /return
 
-	/if ((${str_classArchetype.EQUAL[MELEE_END]} || ${str_classArchetype.EQUAL[TANK]}) && ${Me.PctEndurance} < 20) {
+	/if ((${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[TANK]}) && ${Me.PctEndurance} < 20) {
 		/casting "Staunch Recovery" alt 
 	} else /if (${Me.Class.ShortName.Equal[PAL]} && ${Me.PctMana} < 20) {
 		/casting "Staunch Recovery" alt

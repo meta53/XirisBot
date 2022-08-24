@@ -210,8 +210,8 @@ Sub FireRiposteDisc
 
 
 Sub Event_AutoAssist(string _eventParams)
-	/if (${_eventParams.EQUAL[on]}) /call AutoAssistON 
-	/if (${_eventParams.NOTEQUAL[on]}) /call AutoAssistOFF
+	/if (${_eventParams.Equal[on]}) /call AutoAssistON 
+	/if (${_eventParams.NotEqual[on]}) /call AutoAssistOFF
 /return
 
 Sub AutoAssistON
@@ -225,8 +225,8 @@ Sub AutoAssistOFF
 /return
 
 Sub Event_Leashing(string _eventParams)
-	/if (${_eventParams.EQUAL[on]}) /call LeashingON 
-	/if (${_eventParams.NOTEQUAL[on]}) /call LeashingOFF
+	/if (${_eventParams.Equal[on]}) /call LeashingON 
+	/if (${_eventParams.NotEqual[on]}) /call LeashingOFF
 /return 
 
 Sub LeashingON

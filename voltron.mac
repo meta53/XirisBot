@@ -12,6 +12,7 @@ Sub Main(string _mode)
 	/delay 5s
 	/dgt SetRaidGroupMode ${_mode}
 	/dgt SetRaidDIClerics ${_mode}
+	/dgt ResetGroupCurer
 /return
 
 

@@ -89,7 +89,7 @@ Sub Main
     /dex Xirea /echo changeMT Xirea
 
     | Change mode to efficient
-    |/dgt healMode EFFICIENT
+    /dgt healMode EFFICIENT
     /dgt autointerrupton
 
     | Turn on preventspeed
@@ -106,7 +106,9 @@ Sub Main
     | Raid type setting
     /dgt SetRaidGroupMode JELVAN
 	/dgt SetRaidDIClerics JELVAN
+    /dgt ResetGroupCurer
 
     | Set raidcommands
     /mac bot_war xiris
+    /melee aggro=on
 /return

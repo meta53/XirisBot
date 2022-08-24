@@ -58,6 +58,12 @@ REVISION HISTORY
 |-- Corruption (N/A until TSS)
 
 
+|-- Other Events
+#EVENT ResetGroupCurer	"#1# tells you#*#'ResetGroupCurer#*#'"
+#EVENT ResetGroupCurer	"#1# tells the group#*#'ResetGroupCurer#*#'"
+#EVENT ResetGroupCurer	"#1# tells the raid#*#'ResetGroupCurer#*#'"
+#EVENT ResetGroupCurer	"[ #1# #*#]#*#ResetGroupCurer#*#"
+
 Sub InitEvents_Curing
 	/if (${str_classArchetype.Equal[PRIEST]} || ${Me.Class.ShortName.Equal[PAL]}) /call RegisterClassEvents Events_Curing 5
 	/call RegisterBackgroundEvents Events_Curing_Background 2
@@ -203,11 +209,16 @@ Sub chkNeedCure
 		/call resetCureState
 		/goto :return
 
-	} else /if (${Me.Buff[Gaze of Anguish].ID}) {
+	} else /if (${Me.Buff[Gaze of Anguish].ID} && !${bln_jelvanEngaged}) {
 		|-- Gaze of Anguish must be cured!
 		/varset cureType disease
 		/varset counters ${Debuff.Diseased}
 		/varset forceCure TRUE
+	} else /if (${Me.Buff[Gaze of Anguish].ID} && ${bln_jelvanEngaged}) {
+		|-- Chains of Anguish cannot be cured!
+		/echo I have [Gaze of Anguish], and I am fighting Jelvan! I cannot cure this!
+		/call resetCureState
+		/goto :return
 
 	} else /if (${Me.Buff[Wanton Destruction].ID}) {
 		|-- Wanton Destruction must be cured!
@@ -340,6 +351,10 @@ Sub requestCure(string _type, int _counters, bool _force)
 		/nav loc ${str_navCureStart}
 	}
 /return
+
+Sub EVENT_ResetGroupCurer 
+	/call getGroupCurer
+/return 
 
 |-- Will get your curer, prefers shaman -> cleric -> druid -> paladin
 Sub getGroupCurer 
