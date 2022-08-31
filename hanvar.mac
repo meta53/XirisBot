@@ -42,6 +42,9 @@ Sub Main
     | Turn on preventspeed
     /dga /docrack preventspeed on
 
+    | Turn off bard
+    /dex adikia /end
+
     | Set Me (SK) to aggro and taunt
     /melee aggro=on 
     /melee taunt=on

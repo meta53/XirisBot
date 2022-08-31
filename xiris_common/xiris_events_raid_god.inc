@@ -553,8 +553,7 @@ Sub EVENT_BALANCERAPE
 		/echo part of a CHCHain, probably not doing this;
 		/return
 	}
-
-	/if (!${Defined[balanceRapeHeal]}) 	  
+ 
 	/echo Turning Spam Healing on.
 	:balanceRapeHeal
 		/doevents BALANCERAPEOFF

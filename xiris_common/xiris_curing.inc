@@ -66,7 +66,7 @@ REVISION HISTORY
 
 Sub InitEvents_Curing
 	/if (${str_classArchetype.Equal[PRIEST]} || ${Me.Class.ShortName.Equal[PAL]}) /call RegisterClassEvents Events_Curing 5
-	/call RegisterBackgroundEvents Events_Curing_Background 2
+	/call RegisterBackgroundEvents Events_Curing_Background 3
 /return
 
 Sub Events_Curing
@@ -80,6 +80,7 @@ Sub Events_Curing
 Sub Events_Curing_Background
 	/doevents cureReceived
 	/doevents cureRejected
+	/doevents ResetGroupCurer
 /return
 
 |-- Single target cure, simple syntax (for manual entry)
@@ -263,7 +264,7 @@ Sub chkNeedCure
 		/varset bln_needsCure TRUE
 		
 		|-- check to see if my curer is still alive
-		/if (${SpawnCount[PC ${str_myCurer}]} == 0) {
+		/if (!${Bool[${SpawnCount[PC ${str_myCurer}]}]}) {
 			:new_curer
 			/call getGroupCurer
 			/varset str_myCurer ${Macro.Return}
@@ -311,7 +312,7 @@ Sub chkNeedCure
 					/if (${Spawn[pc ${str_myCurer}].Distance3D} < ${cureRange}) {
 						/cecho \arCURE REQUESTING:\ay Counters:\ag${counters} \ayType:\ag${cureType} \ayForced:\ag${forceCure}
 						/call requestCure ${cureType} ${counters} ${forceCure}
-					} else /if (${Spawn[pc ${str_myCurer}].Distance3D} > ${cureRange} && ${Spawn[pc ${str_myCurer}].Distance3D} < 250 && !${bln_tanking}) {
+					} else /if (${Spawn[pc ${str_myCurer}].Distance3D} > ${cureRange} && ${Spawn[pc ${str_myCurer}].Distance3D} < 250 && !${bln_tanking} && !${bln_jelvanEngaged}) {
 						/varset str_navCureStart ${Me.X} ${Me.Y} ${Me.Z}
 						/cecho \awNavigating to Curer because range is too far for cure
 						/varset bln_navCure TRUE
@@ -354,6 +355,7 @@ Sub requestCure(string _type, int _counters, bool _force)
 
 Sub EVENT_ResetGroupCurer 
 	/call getGroupCurer
+	/varset str_myCurer ${Macro.Return}
 /return 
 
 |-- Will get your curer, prefers shaman -> cleric -> druid -> paladin
@@ -382,6 +384,10 @@ Sub getGroupCurer
 	/if (${groupCleric.NotEqual[NULL]}) 	/varset myCurer ${groupCleric}
 	/if (${groupPaladin.NotEqual[NULL]}) 	/varset myCurer ${groupPaladin}
 	/if (${groupShaman.NotEqual[NULL]}) 	/varset myCurer ${groupShaman}
+	/if (${myCurer.Equal[NULL]} && !${timer_cure_complain}) {
+		/varset timer_cure_complain 45s 
+		/rsay I have no curer :(
+	} 
 	/cecho \aggetGroupCurer: \ao${myCurer}
 	
 /return ${myCurer}
@@ -407,14 +413,15 @@ Sub getCureRange(string _cureType)
 Sub getCureCounters(string _pcName, string _type) 
 	/declare c int local 0
 	/if (${_type.Equal[poison]}) {
-		/dquery ${_pcName} -q "Me.Poisoned"
+		/dquery ${_pcName} -q "Debuff.Poisoned"
 	} else /if (${_type.Equal[curse]}) {
-		/dquery ${_pcName} -q "Me.Cursed"
+		/dquery ${_pcName} -q "Debuff.Cursed"
 	} else /if (${_type.Equal[disease]}) {
-		/dquery ${_pcName} -q "Me.Diseased"
+		/dquery ${_pcName} -q "Debuff.Diseased"
 	}
 	/delay 20 ${DanNet.Query.Received}
 	/varset c ${DanNet.Q}
+	/echo getCureCounters(${_pcName}, ${_type}) == ${c}
 /return ${c}
 
 Sub cureGroup(string _cureType, int _counters)
@@ -559,6 +566,7 @@ Sub xbot_initialize_curing
 	/declare 	cureRange      int     outer   100
 	/declare    bln_navCure   			bool    outer   FALSE
 	/declare    str_navCureStart  		string  outer 
+	/declare 	timer_cure_complain		timer   outer   0
 
 	/declare    str_cure_curse			string  outer   ${Ini[botINI,Curing,str_cure_curse,"Remove Greater Curse"]}
 	/declare    int_cure_curse			string  outer   ${Ini[botINI,Curing,int_cure_curse,36]}

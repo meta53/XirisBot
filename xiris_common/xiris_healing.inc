@@ -1227,7 +1227,12 @@ Sub CreateGroupHoTTimers
 	/declare k int local 1
 	/declare timerKey string local
 	/for i 0 to 5
-		/varset timerKey timer_HoT_${Group.Member[${i}].ID}
+		/if (${Bool[${Group.Member[${i}].ID}]}) {
+			/varset timerKey timer_HoT_${Group.Member[${i}].ID}
+		} else {
+			/varset timerKey timer_HoT_NULL_${i}
+		}
+		
 		/cecho \awCreating a new timer named: \ag${timerKey}
 		/declare ${timerKey}	timer 	outer 	0
 		/varset arr_hotTimerKeys[${k}] ${timerKey}

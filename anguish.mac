@@ -1,0 +1,17 @@
+#Turbo 20
+Sub Main 
+    | Set Aergia for looting
+    /dt Aergia Looton ALL
+
+    | Set the mode to efficient
+    /dgt healMode EFFICIENT 
+
+    | Set the offtanks
+    /dt Xiria offtankON
+    /dt Xirea offtankON
+    /dt Sadelia offtankON
+    /dt Xiris offtankON
+
+    | Set the aggro for Xirin
+    /melee aggro=on
+/return

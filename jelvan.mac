@@ -1,96 +1,102 @@
 #Turbo 20
 Sub Main 
     | Jelvan W-S-E  1-2-3
-    | West, 1 - clerics that aren't doing DI/HoT move here, else, move south
+    | West, 1 - Clerics that aren't doing DI/HoT move here, else, move south
     | Group 1
-    /dex Xiria      /nav wp jelvan1tank
-    /dex Xorael     /nav wp jelvan1cleric
-    /dex Xurael     /nav wp jelvan1cleric
-    /dex Xirael     /nav wp jelvan1cleric
-    /dex Achlys     /nav wp jelvan1cleric
+    /dex Xiria      /nav wp jelvan1Tank
+    /dex Xorael     /nav wp jelvan1Cleric
+    /dex Xurael     /nav wp jelvan1Cleric
+    /dex Xirael     /nav wp jelvan1Cleric
+    /dex Achlys     /nav wp jelvan1Cleric
     /dex Achlys     /end
-    /dex Shynxia    /nav wp jelvan1tank
+    /dex Shynxia    /nav wp jelvan1Tank
     | Group 2
-    /dex Sadelia    /nav wp jelvan1tank
-    /dex Dogmatist  /nav wp jelvan1cleric
-    /dex Theist     /nav wp jelvan1cleric
+    /dex Sadelia    /nav wp jelvan1Tank
+    /dex Dogmatist  /nav wp jelvan1Cleric
+    /dex Theist     /nav wp jelvan1Cleric
 
-    | South, 2 - start and most of the clerics here
+    | South, 2 - start and most of the Clerics here
     | Group 1
-    /nav wp jelvan2tank
-    /dex Xanshia    /nav wp jelvan2cleric
-    /dex Xerael     /nav wp jelvan2cleric
-    /dex Ophidia    /nav wp jelvan2tank
-    /dex Opheoia    /nav wp jelvan2tank
-    /dex Shinxia    /nav wp jelvan2tank
+    /nav wp jelvan2Tank
+    /dex Xanshia    /nav wp jelvan2Cleric
+    /dex Xerael     /nav wp jelvan2Cleric
+    /dex Ophidia    /nav wp jelvan2Tank
+    /dex Opheoia    /nav wp jelvan2Tank
+    /dex Shinxia    /nav wp jelvan2Tank
     | Group 2
-    /dex Nihilist   /nav wp jelvan2cleric
-    /dex Ophelia    /nav wp jelvan2tank
-    /dex Ophexia    /nav wp jelvan2tank
-    /dex Erinyas    /nav wp jelvan2tank
-    /dex Xaeliea    /nav wp jelvan2tank
-    /dex Aidos      /nav wp jelvan2tank
+    /dex Nihilist   /nav wp jelvan2Cleric
+    /dex Ophelia    /nav wp jelvan2Tank
+    /dex Ophexia    /nav wp jelvan2Tank
+    /dex Erinyas    /nav wp jelvan2Tank
+    /dex Xaeliea    /nav wp jelvan2Tank
+    /dex Aidos      /nav wp jelvan2Tank
     | Group 3
-    /dex Xonshia    /nav wp jelvan2cleric
-    /dex Ophemia    /nav wp jelvan2tank
-    /dex Opheyia    /nav wp jelvan2tank
-    /dex Erinyes    /nav wp jelvan2tank
-    /dex Xaexa      /nav wp jelvan2tank
-    /dex Achos      /nav wp jelvan2tank
+    /dex Xonshia    /nav wp jelvan2Cleric
+    /dex Ophemia    /nav wp jelvan2Tank
+    /dex Opheyia    /nav wp jelvan2Tank
+    /dex Erinyes    /nav wp jelvan2Tank
+    /dex Xaexa      /nav wp jelvan2Tank
+    /dex Achos      /nav wp jelvan2Tank
     | Group 4
-    /dex Xinshia    /nav wp jelvan2cleric
-    /dex Ophenia    /nav wp jelvan2tank
-    /dex Ophezia    /nav wp jelvan2tank
-    /dex Ertres     /nav wp jelvan2tank
-    /dex Xaia       /nav wp jelvan2tank
-    /dex Aergia     /nav wp jelvan2tank
+    /dex Xinshia    /nav wp jelvan2Cleric
+    /dex Ophenia    /nav wp jelvan2Tank
+    /dex Ophezia    /nav wp jelvan2Tank
+    /dex Ertres     /nav wp jelvan2Tank
+    /dex Xaia       /nav wp jelvan2Tank
+    /dex Aergia     /nav wp jelvan2Tank
     | Group 5
-    /dex Xarael     /nav wp jelvan2cleric
-    /dex Cereborn   /nav wp jelvan2tank
-    /dex Mluian     /nav wp jelvan2tank
-    /dex Ertris     /nav wp jelvan2tank
-    /dex Xepatia    /nav wp jelvan2tank
-    /dex Ania       /nav wp jelvan2cleric
+    /dex Xarael     /nav wp jelvan2Cleric
+    /dex Cereborn   /nav wp jelvan2Tank
+    /dex Mluian     /nav wp jelvan2Tank
+    /dex Ertris     /nav wp jelvan2Tank
+    /dex Xepatia    /nav wp jelvan2Tank
+    /dex Ania       /nav wp jelvan2Cleric
     | Group 6   
-    /dex Pantheon   /nav wp jelvan2cleric
-    /dex Drexia     /nav wp jelvan2tank
-    /dex Xeixi      /nav wp jelvan2tank
-    /dex Xeixa      /nav wp jelvan2tank   
-    /dex Xiexa      /nav wp jelvan2tank 
-    /dex Xeqisa     /nav wp jelvan2tank 
+    /dex Pantheon   /nav wp jelvan2Cleric
+    /dex Drexia     /nav wp jelvan2Tank
+    /dex Xeixi      /nav wp jelvan2Tank
+    /dex Xeixa      /nav wp jelvan2Tank   
+    /dex Xiexa      /nav wp jelvan2Tank 
+    /dex Xeqisa     /nav wp jelvan2Tank 
 
-    | East, 3 - clerics that aren't doing DI/HoT move here, else, move south
+    | East, 3 - Clerics that aren't doing DI/HoT move here, else, move south
     | Group 1
-    /dex Xirea      /nav wp jelvan3tank
-    /dex Xenshia    /nav wp jelvan3cleric
-    /dex Empathic   /nav wp jelvan3cleric
-    /dex Xunshia    /nav wp jelvan3cleric
-    /dex Adikia     /nav wp jelvan3cleric
+    /dex Xirea      /nav wp jelvan3Tank
+    /dex Xenshia    /nav wp jelvan3Cleric
+    /dex Empathic   /nav wp jelvan3Cleric
+    /dex Xunshia    /nav wp jelvan3Cleric
+    /dex Adikia     /nav wp jelvan3Cleric
     /dex Adikia     /end
 
     | Group 2
-    /dex Xirin      /nav wp jelvan3tank
-    /dex Deist      /nav wp jelvan3cleric
-    /dex Tragic     /nav wp jelvan3cleric
-    /dex Eurydice   /nav wp jelvan3tank
+    /dex Xirin      /nav wp jelvan3Tank
+    /dex Deist      /nav wp jelvan3Cleric
+    /dex Tragic     /nav wp jelvan3Cleric
+    /dex Eurydice   /nav wp jelvan3Tank
     
-    
-
-    | Have the 3 tanks change their raids to only heal them
+    | Have the 3 Tanks change their raids to only heal them
     /rs changeMT Xiris
     /dex Xiria /rs changeMT Xiria
+
     /dex Xirea /rs changeMT Xirea
 
-    | Have the 3 tanks turn aggro on
+    | Have the 3 Tanks turn aggro on
     /melee aggro=on
     /dex Xiria /melee aggro=on
     /dex Xirea /melee aggro=on
     /dex Xiria /echo changeMT Xiria
-    /dex Xirea /echo changeMT Xirea
+    /dex Xirea /echo changeMT Xirea0
 
     | Change mode to efficient
     /dgt healMode EFFICIENT
     /dgt autointerrupton
+
+    | Turn off any offtanking
+    /dt Xiria offtankoff
+    /dt Xirea offtankoff
+    /dt Xirin offtankoff
+    /dt Sadelia offtankoff
+    /dt Xiris offtankoff
 
     | Turn on preventspeed
     /dga /docrack preventspeed on
