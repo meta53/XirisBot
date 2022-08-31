@@ -201,7 +201,8 @@ Sub Event_TureWanton
 |----------------------------
 
 Sub Event_JelvanStart 
-	/if (${Me.Class.ShortName.NotEqual[WAR]} || ${Me.Class.ShortName.NotEqual[PAL]} || ${Me.Class.ShortName.NotEqual[SHD]}) {
+	/echo JelvanStart
+	/if (${Me.Class.ShortName.NotEqual[WAR]} && ${Me.Class.ShortName.NotEqual[PAL]} && ${Me.Class.ShortName.NotEqual[SHD]}) {
 		/varset bln_jelvanEngaged TRUE
 	} else {
 		:Tormentor_Checks

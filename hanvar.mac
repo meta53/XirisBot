@@ -38,7 +38,6 @@ Sub Main
     | Set Resist to Cold, Poison, Magic
     /dgt ResistTypes cold|poison|magic
 
-
     | Turn on preventspeed
     /dga /docrack preventspeed on
 
