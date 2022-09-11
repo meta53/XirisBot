@@ -799,6 +799,12 @@ Sub EVENT_SetResistType(_chatText, _strResists)
 	/doevents flush SetResistType
 /return 
 
+Sub GetResistTypes
+	| Lookup the resist type for this particular NPC - note only certain raid mobs are enumerated in the resistTypes INI
+
+/return
+
+
 Sub Event_DotResist1
 	/varcalc DOT_1_Resisted		${DOT_1_Resisted}+1
 	/varset  DOT_1_Active		FALSE

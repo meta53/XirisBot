@@ -179,19 +179,34 @@ Sub doRaidBuffs
  ----------------------------
  Will cast the combat buffSpell
  as defined by the ini file. Will only cast on the heal target (think tank)
- Note: this is only really for clerics to keep DI on, or Vie
+ Note: Currently only targets the MT
  ----------------------------
 **|
-Sub cmbtBuffSingle
-	/echo Doing Single Target Combat Buffs
-		|-- loop through group members that get combat buff
-	/declare gmember 	  int 		local
-	/declare i    		  int		local
-	/declare buffDuration int		local
-	/declare buffSpell    string	local
-	/declare buffGem	  string	local
-	/call healGRP
-	
+Sub cmbtBuffMT
+	/if (!${bln_engaged})     /return
+	/if (!${bln_cmbtBuffUse}) /return
+	/if (${int_cmbtBuffTotal} == 0 && ${CMBTBUFF_1_Timer}) /return
+
+	|-- check if MT has the single target buff on him (think DI/Pyrillen Skin/Panoply)
+	/declare bSpell		string	local	${CMBTBUFF_1}
+	/declare bDuration  string	local
+	/declare bGem		string	local	${CMBTBUFF_1_Gem}
+	/declare delay		int		local	0
+
+	/call chkSpellMemorized "${bSpell}" FALSE ${bGem}
+	/dquery ${str_tankName1} -q "Me.Buff[${bSpell}].Duration"
+	/delay 20 ${DanNet.Query.Received}
+	/varset bDuration ${DanNet.Q}
+
+	/if (!${Bool[${bDuration}]} ) {
+		/call TrueTarget ${Spawn[pc =${str_tankName1}].ID}
+		/call MQ2Cast "${bSpell}" ${bGem}
+		/if (${Cast.Result.Equal[CAST_SUCCESS]}) {
+			/cecho \ag ${bSpell} ${Cast.Result} : DELAYING for \ay ${Spell[${bSpell}].Duration}s \agrefresh
+			/varcalc delay	(${Spell[${bSpell}].Duration} * 6) - 10
+			/varset CMBTBUFF_1_Timer ${delay}s
+		}
+	}
 /return
 
 |**
@@ -325,6 +340,7 @@ Sub doGroupBuffOnTarget(string tgt)
 			/echo Cast "${buffSpell}" on TARGET: ${tgt}
 			/call MQ2Cast "${buffSpell}" ${buffGem} 10s
 			/delay 10
+			/if (${Cast.Result.Equal[CAST_FIZZLE]})  	/goto :spellReadyWait
 			/if (${Cast.Result.Equal[CAST_OUTOFMANA]})  	/goto :spellReadyWait
 			/if (${Cast.Result.Equal[CAST_CANNOTSEE]})  	/goto :spellReadyWait
 			/if (${Cast.Result.Equal[CAST_OUTOFRANGE]}) 	/goto :spellReadyWait
@@ -472,6 +488,7 @@ Sub castSingleTargetBuff(string tgt, string buffSpell, string buffGem)
 			/echo Cast "${buffSpell}" on TARGET: ${tgt}
 			/call MQ2Cast "${buffSpell}" ${buffGem} 10s
 			/delay 10
+			/if (${Cast.Result.Equal[CAST_FIZZLE]})  		/goto :spellReadyWait2
 			/if (${Cast.Result.Equal[CAST_OUTOFMANA]})  	/goto :spellReadyWait2
 			/if (${Cast.Result.Equal[CAST_CANNOTSEE]})  	/goto :spellReadyWait2
 			/if (${Cast.Result.Equal[CAST_OUTOFRANGE]}) 	/goto :spellReadyWait2
@@ -592,7 +609,7 @@ Sub chkBuffByType(string _key)
 |-- check OOC Buffs for myself
 Sub chkOOCBuffs
 	|- downshitif (this is essentially a downshit)
-	/if ((${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]}) || ${Me.Moving} || (${SpawnCount[npc radius 55]}>0 && (${Zone.ID} != 340 && ${Zone.ID} != 344 && ${Zone.ID} != 345)) || ${Me.Feigning} || ${Me.Invis}) { 
+	/if ((${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]}) || ${Me.Moving} || !${bln_doAutoBuff} || (${SpawnCount[npc radius 55]}>0 && (${Zone.ID} != 340 && ${Zone.ID} != 344 && ${Zone.ID} != 345)) || ${Me.Feigning} || ${Me.Invis}) { 
 		/return
 	}
 
@@ -609,8 +626,8 @@ Sub chkOOCBuffs
 			|/echo I dont have this spell
 			/goto :next
 		}
-		/if (${Bool[${Me.Buff[${buffSpell}].ID}]}) {
-			|/echo already have buff, doing next
+		/if (${Bool[${Me.Buff[${buffSpell}].ID}]} || !${Bool[${Spell[${buffSpell}].Stacks}]}) {
+			|/echo already have buff or it does not stack, doing next
 			/goto :next
 		}
 
@@ -620,6 +637,7 @@ Sub chkOOCBuffs
 		/varset		buffGem		 ${OOCBUFF_${i}_Gem}
 
 		:spellReadyWait
+		/call chkSpellMemorized "${buffSpell}" TRUE
 		/call RunAllEvents
 
 		
@@ -636,6 +654,7 @@ Sub chkOOCBuffs
 			/echo Cast "${buffSpell}" on MYSELF
 			/call MQ2Cast "${buffSpell}" ${buffGem} 10s
 			/delay 10
+			/if (${Cast.Result.Equal[CAST_FIZZLE]})  		/goto :spellReadyWait
 			/if (${Cast.Result.Equal[CAST_OUTOFMANA]})  	/goto :spellReadyWait
 			/if (${Cast.Result.Equal[CAST_CANNOTSEE]})  	/goto :spellReadyWait
 			/if (${Cast.Result.Equal[CAST_OUTOFRANGE]}) 	/goto :spellReadyWait

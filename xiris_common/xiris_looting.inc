@@ -397,7 +397,12 @@ Sub LootTarget(int _corpseID)
 				/cecho \arItem is lore, and we have more than 1 beep? ${lootBeep}
 				/varset keep FALSE
 			}
-			/if (${FindItemCount[${lootName}]} > ${lootCount}) {
+			/if (${lootCharOnly}) {
+				/cecho \arI should keep this (name - by lootCharOnly)
+				/varset keep TRUE
+			}
+
+			/if (${FindItemCount[${lootName}]} >= ${lootCount}) {
 				/cecho \arWe already have more than we need of this item.
 				/varset keep FALSE
 			} 
@@ -409,14 +414,12 @@ Sub LootTarget(int _corpseID)
 				/cecho \arI shouldn't keep this (name - by lootCharExclusion)
 				/varset keep FALSE
 			}
-			/if (!${lootCharOnly}) {
-				/cecho \arI shouldn't keep this (name - by lootCharOnly)
-				/varset keep FALSE
-			}
+			
 
 			:loot_gank
 			/if (${keep}) {
 				/cecho \agKeeping ${lootName} ${lootType} ${FindItemCount[${lootName}]} of ${lootCount}
+				/g Keeping ${lootName} ${lootType} ${FindItemCount[${lootName}]} of ${lootCount}
 				/rs Keeping ${lootName} ${lootType} ${FindItemCount[${lootName}]} of ${lootCount}
 				/itemnotify loot${n} leftmouseup
 				/delay 5 ${Cursor.ID} || ${Window[ConfirmationDialogBox].Open} || ${Window[QuantityWnd].Open}
@@ -426,6 +429,7 @@ Sub LootTarget(int _corpseID)
 				}
 			} else {
 				/if (${lootBeep}) {
+					/g ${Target.Name}(${Target.ID}) has ${lootName} and I cannot loot it. Beep!
 					/rs ${Target.Name}(${Target.ID}) has ${lootName} and I cannot loot it. Beep!
 					/beep
 				}

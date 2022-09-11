@@ -3,10 +3,10 @@
 Signets.machealINI
 ----------------------------
 This macro is configured for use by the the puller for zones
-Sets the looters for Signet(s) by zone so I don't have to tell each toon to loot manually
+Sets the looters for Bic Object(s) by zone so I don't have to tell each toon to loot manually
 ______________________________________________
 REVISION HISTORY
-    06.12.22	xiris	INITIAL REVISION
+    08.31.22	xiris	INITIAL REVISION
 ______________________________________________
 REQUIRED PLUGINS
 
@@ -49,74 +49,4 @@ Sub Barindu
     /dt Xaia looton ALL
     /dt Xaexa looton ALL
     /dt Xepatia looton ALL
-/return
-
-
-Sub wallofslaughter
-    |-- Triad looters
-    /dt Aidos looton ALL
-	/dt Aergia looton ALL
-	/dt Adikia looton ALL
-    
-    |-- Tarnished Signet
-    /dt Xunshia looton QUEST
-    /dt Xonshia looton QUEST
-    /dt Xorael looton QUEST
-    /dt Ophemia looton QUEST
-    /dt Opheoia looton QUEST
-    /dt Ophezia looton QUEST
-    /dt Mluian looton QUEST
-    /dt Ertris  looton QUEST
-    /dt Drexia looton QUEST
-    /dt Xeixi looton QUEST
-    /dt Xeqisa looton QUEST
-/return 
-
-Sub riftseekers 
-    |-- Triad looters
-    /dt Aidos looton ALL
-	/dt Aergia looton ALL
-	/dt Adikia looton ALL
-
-    |-- Crystal-Gemmed Signet
-    /dt Cereborn looton QUEST
-    /dt Deist looton QUEST
-    /dt Dogmatist looton QUEST
-    /dt Empathic looton QUEST
-    /dt Erinyas looton QUEST
-    /dt Erinyes looton QUEST
-    /dt Ertres looton QUEST
-    /dt Eurydice looton QUEST
-    /dt Mluian looton QUEST
-    /dt Nihilist looton QUEST
-    /dt Ophelia looton QUEST
-    /dt Opheoia looton QUEST
-    /dt Ophezia looton QUEST
-    /dt Pantheon looton QUEST
-    /dt Shinxia looton QUEST
-    /dt Shynxia looton QUEST
-    /dt Theist looton QUEST
-    /dt Tragic looton QUEST
-    /dt Xeixa looton QUEST
-    /dt Xeixi looton QUEST
-    /dt Xepatia looton QUEST
-    /dt Xeqisa looton QUEST
-    /dt Xiexa looton QUEST
-/return 
-
-Sub provinggrounds 
-    |-- Triad looters
-    /dt Aidos looton ALL
-	/dt Aergia looton ALL
-	/dt Adikia looton ALL
-
-    |-- Glimmering Signet
-    /dt Drexia looton QUEST
-    /dt Empathic looton QUEST
-    /dt Mluian looton QUEST
-    /dt Nihilist looton QUEST
-    /dt Ophemia looton QUEST
-    /dt Shynxia looton QUEST
-    /dt Tragic looton QUEST
-    /dt Xonshia looton QUEST
 /return

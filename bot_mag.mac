@@ -85,6 +85,10 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 		|-- Check to see if self needs to be cured (xiris_curing.inc)
 		/call chkNeedCure
 
+		|-- Check for out of combat buffs (xiris_buffing.inc)
+		/call RunAllEvents
+		/call chkOOCBuffs
+
 		|-- Check Auto Assist if its on
 		/if (${bln_autoAssist}) /call chkAutoAssist
 
@@ -101,6 +105,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 
 			|-- class specific
 			/call chkPetAttack
+			/call cmbtBuffGRP
 			
 			|-- dps library (caster)
 			/call RunRaidEvents

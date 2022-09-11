@@ -223,7 +223,7 @@ Sub RuneSpamOff
 Sub variant_initialize
 
 	|-- set up default vars
-	/declare    str_action				string	outer	Enchanteraping	
+	/declare    str_action				string	outer	Enchanting
 
 	
 	|--Enchanter Specific Settings

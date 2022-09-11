@@ -92,10 +92,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 		|-- Check for out of combat buffs (xiris_buffing.inc)
 		/call RunAllEvents
 		/call chkOOCBuffs
-		
-		|-- Get all local targets
-		|   Need to rework this to only be called if engage, and then debuff all targets that have tanks
-
+	
 		|-- Check Auto Assist if its on
 		/if (${bln_autoAssist}) /call chkAutoAssist
 		

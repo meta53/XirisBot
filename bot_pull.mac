@@ -1076,6 +1076,8 @@ Sub setAlerts
 		/squelch /alert add 1 "Diru"
 		/squelch /alert add 1 "Abena"
 		/squelch /alert add 1 "Amari"
+	} else /if (${Zone.ShortName.Equal[ferubi]}) {
+		/squelch /alert add 1 "Rondo"
 	} else /if (${Zone.ShortName.Equal[pofire]}) {
 		/squelch /alert add 1 "Guardian of Doomfire"
 		/squelch /alert add 1 "General Reparm"
