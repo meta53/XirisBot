@@ -45,9 +45,9 @@ Sub Events_DRU
 /return 
 
 Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint, string _assistArgs)
-	/echo This line and the next here because calling a macro from a macro ...
-	/echo ... apparently causes problems for the first line in the second macro
-	/echo You are now in xiris_bot_${Me.Class.ShortName}.mac [I learned this from E3!~]
+	
+	
+	/echo You are now in xiris_bot_${Me.Class.ShortName}.mac
 
 	|-- initialize the common xbot libraries
 	/call xbot_initialize ${_tank1Name} ${_tank2Name} ${_tank3Name} ${_healPoint} ${_assistArgs}

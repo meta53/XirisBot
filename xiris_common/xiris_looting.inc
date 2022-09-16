@@ -18,6 +18,7 @@ REVISION HISTORY
 
 #EVENT LOOT_REFRESH		"#*#lootrefresh#*#"
 
+
 #EVENT LOOT_ON			"#1# tells the group#*#'looton #2#'"
 #EVENT LOOT_ON			"#1# tells you#*#'looton #2#'"
 #EVENT LOOT_ON			"#1# tells the raid#*#looton #2#'"
@@ -61,33 +62,38 @@ Sub Events_Looting
 /return
 
 Sub EVENT_LOOT_ON(_line, _chatSender, _eventParams)
-	/call EnableLooting ${_eventParams}
+	/call EnableLooting "${_eventParams}"
 	/doevents flush LOOT_ON
 /return 
 
 Sub EnableLooting(string _eventParams)
-	/echo _eventParams: ${_eventParams}
-	/call ParseLootINI 
 	| Announce
-	/dgt ${Me.Name} is now Looting
 	/hidecorpse looted
 	/varset bln_onlyQuest FALSE
-	/if (${_eventParams.Equal[QUEST]}) /varset bln_onlyQuest TRUE
+	/if (${_eventParams.Arg[1, ].Equal[QUEST]}) /varset bln_onlyQuest TRUE
+	/if (${_eventParams.Arg[2, ].Equal[RS]}) 	/varset str_lootChannel rs
+	/if (${_eventParams.Arg[2, ].Equal[DGT]}) 	/varset str_lootChannel dgt
+	/if (${_eventParams.Arg[2, ].Equal[G]}) 	/varset str_lootChannel gsay
 	/varset bln_lootAuto TRUE
-	
+	/if (${bln_onlyQuest}) {
+		/docommand /${str_lootChannel} ${Me.Name} is now Looting QUEST items
+	} else {
+		/docommand /${str_lootChannel} ${Me.Name} is now Looting ALL items
+	}
+	/call ParseLootINI 
 	/if (!${Plugin[MQ2Nav].Name.Length}) /plugin mq2nav
 /return
 
 Sub EVENT_LOOT_OFF
 	/call DisableLooting
 	| Announce
-	/dgt ${Me.Name} is no longer Looting
+	/docommand /${str_lootChannel} ${Me.Name} is no longer Looting
 	/doevents flush LOOT_OFF
 /return
 
 Sub DisableLooting
 	| Annnounce
-	/dgt ${Me.Name} is no longer looting
+	/docommand /${str_lootChannel} ${Me.Name} is no longer looting
 	/hidecorpse npc
 	/varset bln_lootAuto FALSE
 /return 
@@ -98,7 +104,7 @@ Sub EVENT_LOOT_REFRESH
 /return
 
 Sub RefreshLoot
-	/dgt ${Me.Name} is refreshing the loot ini file
+	/docommand /${str_lootChannel} ${Me.Name} is refreshing the loot ini file
 	/call ParseLootINI xiris_common/xiris_loot.ini
 /return
 
@@ -123,8 +129,7 @@ Sub chkLoot
 	 /if (${bln_lootAuto} && ${SpawnCount[npc radius ${int_sitRadius} zradius 15]} == 0 && ${SpawnCount[npc corpse radius 85 noalert 5]} > 0 ) {
 		|-- check to see if I even have room to loot
 		/if (${Me.FreeInventory} <= 2) {
-			/g out of bagspace
-			/rs out of bagspace
+			/docommand /${str_lootChannel} out of bagspace
 			/call DisableLooting
 			/return
 		}
@@ -159,27 +164,6 @@ Sub EVENT_LootTooFar
 
 
 
-Sub xbot_initialize_looting
-
-	/declare bln_lootAuto			bool	outer 	${Ini[botINI,Settings,lootUse,FALSE]}
-	/declare bln_onlyQuest			bool 	outer	FALSE
-	/declare bln_lootAttuneable		bool	outer 	TRUE
-	/declare int_lootRadius			int 	outer 	100
-
-	/declare list_lootedCorpses		string	outer
-	/declare list_lootItemsForClass string  outer
-
-	/declare lootINIFile			string  outer	xiris_common/xiris_loot.ini
-
-
-	|-- turn on looting by default if the Bot's INI is set to true (unlikely)
-	|/if (${bln_lootAuto}) /call EnableLooting
-
-	/cecho \aoxbot_initialize_looting
-	/call InitEvents_Looting 
-/return
-	
-
 
 |-------------------------------------------------------------------------------- 
 |SUB: Parsing the loot ini file (xiris_common/xiris_loot.ini)
@@ -199,7 +183,7 @@ Sub ParseLootINI
 	/if (${Defined[loot_TRADE]}) 	/deletevar loot_TRADE
 	/if (${Defined[loot_QUEST]}) 	/deletevar loot_QUEST
 	
-	/echo total: ${int_total} vendor: ${int_vendor} trade: ${int_trade} quest: ${int_quest}
+	/cecho \awTotal Loot: \ag${int_total} \ayvendor: \ag${int_vendor} \aotrade: \ag${int_trade} \arquest: \ag${int_quest}
 
 	|-- create new 2D arrays 
 	|	[1] item
@@ -262,8 +246,6 @@ Sub ParseLootINI
 		/varset loot_ALL[${n},6] ${item_loot.Arg[6,|]} 
 		/varset loot_ALL[${n},7] ${item_loot.Arg[7,|]} 
 	/next n
-
-	/echo loot_ALL: ${loot_ALL.Size[1]}
 
 /return
 
@@ -393,34 +375,62 @@ Sub LootTarget(int _corpseID)
 			|-check to see if item is lore
 			:loot_validation
 			/cecho ${lootName} \awCount in Inventory:\ay${FindItemCount[${lootName}]} \awMaximum: \ay${lootCount} \awClass Lootable?: \ay${lootClass} \awExcluded by Name: \ay${lootCharExclusion} \awLoot By Me Only? \ay${lootCharOnly} \awBeep? \ay${lootBeep}
-			/if (${Corpse.Item[${n}].Lore} && ${FindItemCount[${lootName}]} == 1) {
-				/cecho \arItem is lore, and we have more than 1 beep? ${lootBeep}
-				/varset keep FALSE
-			}
-			/if (${lootCharOnly}) {
-				/cecho \arI should keep this (name - by lootCharOnly)
-				/varset keep TRUE
-			}
-
-			/if (${FindItemCount[${lootName}]} >= ${lootCount}) {
-				/cecho \arWe already have more than we need of this item.
-				/varset keep FALSE
-			} 
-			/if (!${lootClass}) {
-				/cecho \arMy Class can't keep this.
-				/varset keep FALSE
-			} 
+			
+			|-- I shouldn't loot this
 			/if (${lootCharExclusion}) {
 				/cecho \arI shouldn't keep this (name - by lootCharExclusion)
 				/varset keep FALSE
+				/varset reason EXCLUDED CHARACTER
+				/goto :loot_gank
 			}
+
+			|-- Its lore, and I have more than one
+			/if (${Corpse.Item[${n}].Lore} && ${FindItemCount[${lootName}]} == 1) {
+				/cecho \arItem is lore, and we have 1
+				/varset keep FALSE
+				/varset reason LORE
+				/goto :loot_gank
+			}
+
+			|-- Only this char should loot
+			/if (${lootCharOnly}) {
+				/if (${FindItemCount[${lootName}]} >= ${lootCount}) {
+					/cecho \arI should keep this (name - by lootCharOnly) 
+					/cecho \arBut I already have more than we need of this item.
+					/varset keep FALSE
+					/varset reason INCLUDED CHAR, BUT LORE
+					/goto :loot_gank
+				} else {
+					/cecho \agI should keep this (name - by lootCharOnly)
+					/varset keep TRUE
+					/goto :loot_gank
+				}
+				
+			}
+
+			|-- I have more than I need
+			/if (${FindItemCount[${lootName}]} >= ${lootCount}) {
+				/cecho \arWe already have more than we need of this item.
+				/varset keep FALSE
+				/varset reason LOOTCOUNT >= ${lootCount}
+				/goto :loot_gank
+			} 
+
+			|-- My class can't keep this
+			/if (!${lootClass}) {
+				/cecho \arMy Class can't keep this.
+				/varset keep FALSE
+				/varset reason EXCLUDED CLASS
+				/goto :loot_gank
+			} 
+
+			
 			
 
 			:loot_gank
 			/if (${keep}) {
 				/cecho \agKeeping ${lootName} ${lootType} ${FindItemCount[${lootName}]} of ${lootCount}
-				/g Keeping ${lootName} ${lootType} ${FindItemCount[${lootName}]} of ${lootCount}
-				/rs Keeping ${lootName} ${lootType} ${FindItemCount[${lootName}]} of ${lootCount}
+				/docommand /${str_lootChannel} Keeping ${lootName} ${lootType} ${FindItemCount[${lootName}]} of ${lootCount}
 				/itemnotify loot${n} leftmouseup
 				/delay 5 ${Cursor.ID} || ${Window[ConfirmationDialogBox].Open} || ${Window[QuantityWnd].Open}
 				/if (${Cursor.ID}) {
@@ -428,9 +438,8 @@ Sub LootTarget(int _corpseID)
 					/autoinv
 				}
 			} else {
+				/docommand /${str_lootChannel} ${Target.Name}(${Target.ID}) has ${lootName} and I cannot loot it  ${reason}.
 				/if (${lootBeep}) {
-					/g ${Target.Name}(${Target.ID}) has ${lootName} and I cannot loot it. Beep!
-					/rs ${Target.Name}(${Target.ID}) has ${lootName} and I cannot loot it. Beep!
 					/beep
 				}
 			}
@@ -587,3 +596,28 @@ SUB openBags
 	
 /if (${Debug} || ${Debug_Sell}) /echo <== openBags -|
 /RETURN
+
+
+
+
+Sub xbot_initialize_looting
+
+	/declare bln_lootAuto			bool	outer 	${Ini[botINI,Settings,lootUse,FALSE]}
+	/declare str_lootChannel		string  outer   rs
+	/declare bln_onlyQuest			bool 	outer	FALSE
+	/declare bln_lootAttuneable		bool	outer 	TRUE
+	/declare int_lootRadius			int 	outer 	100
+
+	/declare list_lootedCorpses		string	outer
+	/declare list_lootItemsForClass string  outer
+
+	/declare lootINIFile			string  outer	xiris_common/xiris_loot.ini
+
+
+	|-- turn on looting by default if the Bot's INI is set to true (unlikely)
+	|/if (${bln_lootAuto}) /call EnableLooting
+
+	/cecho \aoxbot_initialize_looting
+	/call InitEvents_Looting 
+/return
+	

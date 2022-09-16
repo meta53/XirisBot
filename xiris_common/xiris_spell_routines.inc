@@ -134,6 +134,7 @@ Sub Events_SpellRoutines
 
 
 Sub xbot_initialize_spellRoutines
+	/cecho \aoxbot_initialize_spellRoutines
 	|-- Default values for xiris_spell_routines.inc
 	/declare noInvis 			bool 	outer 	TRUE
 	/declare noFeigning 		bool 	outer 	TRUE
@@ -159,6 +160,7 @@ Sub xbot_initialize_spellRoutines
 			/endmacro
 		}
 	}
+	
 /return
 
 

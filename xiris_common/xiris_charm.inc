@@ -18,7 +18,7 @@ REVISION HISTORY
 #EVENT  CharmNPCByName  "[ #1# #*#]#*#CharmNPCByName #2#"
 
 Sub InitEvents_Charm
-    /if (${Me.Class.ShortName.NotEqual[BRD]} && ${Me.Class.ShortName.NotEqual[ENC]}) /return
+    /if (${Me.Class.ShortName.NotEqual[BRD]} && ${Me.Class.ShortName.NotEqual[ENC]} && ${Me.Class.ShortName.NotEqual[NEC]}) /return
     /call RegisterBackgroundEvents Events_Charm 4
 /return 
 

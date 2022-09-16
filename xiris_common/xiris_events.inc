@@ -66,44 +66,35 @@ Sub xbot_initialize_events
     |-- Depths of Darkhollow
     /if (${Zone.ShortName.Equal[dreadspire]})   /call InitEvents_DoDH_Demiplane
 
+    /cecho \aoxbot_initialize_events
+
 /return
 
 
 Sub RegisterBackgroundEvents(string _EventSet, int _EventCount)
-    |/cecho \agRegisterBackgroundEvents(\ay${_EventSet}:${_EventCount})
-    | find the first index in BackgroundEvents thats empty
     /declare i int local -1
     /declare bound int local 0
     /for i 1 to ${BackgroundEventsRaw.Size}
         /if (${BackgroundEventsRaw[${i}].Equal[NULL]}) {
-            /echo inserting ${_EventSet} @ index: ${i}
             /varset BackgroundEventsRaw[${i}] ${_EventSet}
-            |/cecho \agBackgroundEvents[${i}]: ${BackgroundEventsRaw[${i}]} 
             /call ${_EventSet}
             /goto :postInsert
         }
     /next i
-
     :postInsert
      /for i 1 to ${BackgroundEventsRaw.Size}
         /if (${BackgroundEventsRaw[${i}].NotEqual[NULL]}) {
             /varcalc bound ${bound} + 1
         }
     /next i
-
     :return
     /call TrimBackgroundEvents ${bound}
 /return
 
 Sub TrimBackgroundEvents(int _count)
-   | /cecho \ayTrimBackgroundEvents ${_count}
-    
     /declare i int local -1
-
-
     /if (${Defined[BackgroundEvents]}) /deletevar BackgroundEvents
     /declare BackgroundEvents[${_count}] string outer
-
     /declare incr int local 1
     /for i 1 to ${BackgroundEventsRaw.Size}
         /if (${BackgroundEventsRaw[${i}].NotEqual[NULL]}) {
@@ -111,48 +102,32 @@ Sub TrimBackgroundEvents(int _count)
             /varcalc incr ${incr} + 1
         }
     /next i
-
-   | /for i 1 to ${BackgroundEvents.Size}
-   |     /cecho  \agBackgroundEvents[${i}] ${BackgroundEvents[${i}]}
-   | /next i
-
 /return
 
 
 Sub RegisterRaidEvents(string _EventSet, int _EventCount)
-    |/cecho \agRegisterRaidEvents(\ay${_EventSet}:${_EventCount})
-    | find the first index in RaidEventsRaw thats empty
     /declare i int local -1
     /declare bound int local 0
     /for i 1 to ${RaidEventsRaw.Size}
         /if (${RaidEventsRaw[${i}].Equal[NULL]}) {
-            /echo inserting ${_EventSet} @ index: ${i}
             /varset RaidEventsRaw[${i}] ${_EventSet}
-            |/cecho \agRaidEventsRaw[${i}]: ${RaidEventsRaw[${i}]} 
             /goto :postInsert
         }
     /next i
-
     :postInsert
      /for i 1 to ${RaidEventsRaw.Size}
         /if (${RaidEventsRaw[${i}].NotEqual[NULL]}) {
             /varcalc bound ${bound} + 1
         }
     /next i
-
     :return
     /call TrimRaidEvents ${bound}
 /return
 
 Sub TrimRaidEvents(int _count)
-    |/cecho \ayTrimRaidEvents ${_count}
-    
     /declare i int local -1
-
-
     /if (${Defined[ClassEvents]}) /deletevar RaidEvents
     /declare RaidEvents[${_count}] string outer
-
     /declare incr int local 1
     /for i 1 to ${RaidEventsRaw.Size}
         /if (${RaidEventsRaw[${i}].NotEqual[NULL]}) {
@@ -160,24 +135,15 @@ Sub TrimRaidEvents(int _count)
             /varcalc incr ${incr} + 1
         }
     /next i
-
-    |/for i 1 to ${RaidEvents.Size}
-    |  /cecho  \agRaidEvents[${i}] ${RaidEvents[${i}]}
-    |/next i
-
 /return
 
 Sub RegisterClassEvents(string _EventSet, int _EventCount)
     /if (${_EventCount} == 0) /return
-    |/cecho \agRegisterClassEvents(\ay${_EventSet}:${_EventCount})
-    | find the first index in ClassEventsRaw thats empty
     /declare i int local -1
     /declare bound int local 0
     /for i 1 to ${ClassEventsRaw.Size}
         /if (${ClassEventsRaw[${i}].Equal[NULL]}) {
-            /echo inserting ${_EventSet} @ index: ${i}
             /varset ClassEventsRaw[${i}] ${_EventSet}
-           | /cecho \agClassEvents[${i}]: ${ClassEventsRaw[${i}]} 
             /goto :postInsert
         }
     /next i
@@ -194,11 +160,7 @@ Sub RegisterClassEvents(string _EventSet, int _EventCount)
 /return
 
 Sub TrimClassEvents(int _count)
-    |/cecho \ayTrimClassEvents ${_count}
-    
     /declare i int local -1
-
-
     /if (${Defined[ClassEvents]}) /deletevar ClassEvents
     /declare ClassEvents[${_count}] string outer
 
@@ -209,45 +171,34 @@ Sub TrimClassEvents(int _count)
             /varcalc incr ${incr} + 1
         }
     /next i
-
-    |/for i 1 to ${ClassEvents.Size}
-    |   /cecho  \agClassEvents[${i}] ${ClassEvents[${i}]}
-    |/next i
-
 /return
 
 
 Sub RunBackgroundEvents
-    |/echo RunBackgroundEvents
     /if (${BackgroundEvents.Size} == 0) /return
     /declare i int local 1
     /for i 1 to ${BackgroundEvents.Size}
         /if (${BackgroundEvents[${i}].Equal[NULL]})  /goto :nextBGEvent
-        |/echo bg: calling ${BackgroundEvents[${i}]}
         /call ${BackgroundEvents[${i}]}
     :nextBGEvent
     /next i
 /return
 
 Sub RunRaidEvents
-    |/echo RunRaidEvents
     /if (${RaidEvents.Size} == 0) /return
     /declare j int local 1
     /for j 1 to ${RaidEvents.Size}
         /if (${RaidEvents[${j}].Equal[NULL]})  /goto :nextRaidEvent
-        |/echo rd: calling ${RaidEvents[${i}]}
         /call ${RaidEvents[${j}]}
     :nextRaidEvent    
     /next j
 /return
 
 Sub RunClassEvents
-    |/echo RunClassEvents
     /if (${ClassEvents.Size} == 0) /return
     /declare k int local 1
     /for k 1 to ${ClassEvents.Size}
         /if (${ClassEvents[${k}].Equal[NULL]})  /goto :nextClassEvent
-        |/echo cls: calling ${ClassEvents[${i}]}
         /call ${ClassEvents[${k}]}
     :nextClassEvent
     /next k

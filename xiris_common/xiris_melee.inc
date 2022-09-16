@@ -675,6 +675,7 @@ Sub chk_warProvoke(string _provokeDisc)
 
 
 Sub xbot_initialize_melee
+	/cecho \ao xbot_initialize_melee
 
 	|-- [Settings] : Melee Defaults
 	/declare 	MinStrikeEndurance 		int		outer	200
@@ -712,7 +713,6 @@ Sub xbot_initialize_melee
 	|- [Settings] : Components
 	/declare	int_componentTotal		int		outer	${Ini[botINI,Components,int_componentTotal,0]}
 	/declare 	bln_componentCheck		bool	outer   ${If[${int_componentTotal}>0,TRUE,FALSE]}
-	/echo bln_componentCheck ${bln_componentCheck}
 		/declare comp int local
 			/for comp 1 to ${int_componentTotal} 
 				/declare COMPONENT_${comp} 			string 	outer ${Ini[botINI,Components,COMPONENT_${comp}]}
@@ -755,6 +755,5 @@ Sub xbot_initialize_melee
 	/declare dsSongsTotal	int		outer   ${Ini[dsListINI,Settings,SongCount,0]}
 	/declare dsSongs[${dsSongsTotal}]	string outer
 
-	/cecho \ao xbot_initialize_melee
 	/call InitEvents_Melee
 /return

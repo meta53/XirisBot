@@ -24,8 +24,8 @@ REVISION HISTORY
 |SUB: Main
 |--------------------------------------------------------------------------------
 Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint, string _assistArgs)
-	/echo This line and the next here because calling a macro from a macro ...
-	/echo ... apparently causes problems for the first line in the second macro
+	
+	
 	/echo You are now in BOT_LOADER.mac
 
 	| set default values here in case we just started the loader with no args

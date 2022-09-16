@@ -55,13 +55,11 @@ Sub Events_Movement
 
 
 Sub xbot_initialize_movement
-
+	/cecho \aoxbot_initialize_movement
 	/declare bln_following 			bool 	outer FALSE
 	/declare FollowTarget 		string 	outer NULL
 	/declare MaxResponseDist	int 	outer 1000
-
 	/call InitEvents_Movement
-	/cecho \xbot_initialize_movement
 /return
 
 

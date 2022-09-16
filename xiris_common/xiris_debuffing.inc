@@ -160,7 +160,7 @@ Sub ListTargets
  ----------------------------
  Target Acquisition
  ----------------------------
- Cleans Array and Then Acquires Targets
+ Cleans Array and Then Acquires Targets Note, this is deprecated now.
  ----------------------------
 **|
 Sub getTargets
@@ -356,13 +356,13 @@ Sub ResetDebuffsOnIndex(int _targetIndex)
 /return 
 
 Sub xbot_initialize_debuffing
+	/cecho \ao xbot_initialize_debuffing
 
 	|--Debuff(s)
 	/declare bln_debuffUse				bool	outer	${Ini[botINI,Debuff,bln_debuffUse,TRUE]}
 	/declare bln_debuffActive			bool	outer	FALSE
 	/declare int_debuffResist			int		outer	0
 	/declare int_tmpIndex				int		outer   0
-	/alert clear 4
 	
 	/declare int_debuffTotal			int		outer	${Ini[botINI,Debuff,int_debuffTotal,0]}
 	/declare int_debuffTotalIfNamed		int		outer	${Ini[botINI,Debuff,int_debuffTotalIfNamed,${int_debuffTotal}]}
@@ -381,11 +381,11 @@ Sub xbot_initialize_debuffing
 		/declare DEBUFF_${db}_Timer			timer   outer   0
 	/next db
 	
-	/declare dbidx						int 	local
+	/declare dbidx							int 	local
 	/varcalc dbidx	${int_debuffTotalIfNamed}+1
-	/declare targetArray[12,6] 	int		outer 0
+	/declare targetArray[12,6] 				int		outer 0
 
-	/cecho \ao xbot_initialize_debuffing
+
 	/call InitEvents_Debuffing
 
 /return

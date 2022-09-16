@@ -714,79 +714,8 @@ Sub RemoveBuff(_badBuff)
 
 
 Sub xbot_initialize_buffing
-
-
-
-	| |--Buff Chains - Characters can check on this list to see if they have a buff archetype
-	| /declare l_aegolism	list outer
-	| /declare str_aegolism_request	string	outer 	aego
-	| /if (${l_aegolism.Append[Blessing of Aegolism,Hand of Virtue,Hand of Conviction]}) {
-	| 	|/echo 'l_aegolism Append succeeded. Count: ${l_aegolism.Count}.'
-	| } else {
-	| 	/echo 'l_aegolism List insertion failed.'
-	| }
-
-	| /declare l_symbol list	outer
-	| /declare str_symbol_request		string	outer	symbol
-	| /if (${l_symbol.Append[Marzin's Mark,Kazad's Mark,Balikor's Mark]}) {
-	| 	|/echo 'l_symbol Append succeeded. Count: ${l_symbol.Count}.'
-	| } else {
-	| 	/echo 'l_symbol List insertion failed.'
-	| }
-
-	| /declare l_clrAC list outer
-	| /declare str_ac_request			string	outer	acbuff
-	| /if (${l_clrAC.Append[Bulwark of Faith,Ward of Gallantry,Ward of Valiance]}) {
-	| 	|/echo 'l_clrAC Append succeeded. Count: ${l_clrAC.Count}.'
-	| } else {
-	| 	/echo 'l_clrAC List insertion failed.'
-	| }
-
-	| /declare l_nine	list outer	
-	| /declare str_nine_request		string	outer	nine
-	| /if (${l_nine.Append[Blessing of the Nine,Blessing of Steeloak]}) {
-	| 	|/echo 'l_nine Append succeeded. Count: ${l_nine.Count}.'
-	| } else {
-	| 	/echo 'l_nine List insertion failed.'
-	| }
-	
-	| /declare l_encHaste	list outer
-	| /declare str_encHaste_request	string	outer	encHaste
-	| /if (${l_encHaste.Append[Speed of the Brood,Vallon's Quickening,Hastening of Salik]}) {
-	| 	|/echo 'l_encHaste Append succeeded. Count: ${l_encHaste.Count}.'
-	| } else {
-	| 	/echo 'l_encHaste List insertion failed.'
-	| }
-	
-	| /declare l_shmHaste list outer
-	| /declare str_shmHaste_request	string	outer	shmHaste
-	| /if (${l_shmHaste.Append[Talisman of Celerity]}) {
-	| 	|/echo 'l_shmHaste Append succeeded. Count: ${l_shmHaste.Count}.'
-	| } else {
-	| 	/echo 'l_shmHaste List insertion failed.'
-	| }
-
-	
-	| /declare l_focus list outer
-	| /declare str_focus_request		string	outer	focus
-	| /if (${l_focus.Append[Focus of the Seventh, Talisman of Wunshi]}) {
-	| 	|/echo 'l_focus Append succeeded. Count: ${l_focus.Count}.'
-	| } else {
-	| 	/echo 'l_focus List insertion failed.'
-	| }
-
-	
-	| /declare l_brells list outer
-	| /declare str_brells_request		string	outer	brells
-	| /if (${l_brells.Append[Brell's Mountainous Barrier,Brell's Stalwart Shield,Brell's Brawny Bulwark]}) {
-	| 	|/echo 'l_brells Append succeeded. Count: ${l_brells.Count}.'
-	| } else {
-	| 	/echo 'l_brells List insertion failed.'
-	| }
-
-	
-	|/call chkBuffByType nine
-	|/echo checking if we have nine ${Macro.Return}
+	/if (${str_classArchetype.Equal[MELEE_END]} || ${Me.Class.ShortName.Equal[WAR]}) /return
+	/cecho \aoxbot_initialize_buffing
 
 	|--OOC Buff(s)
 	/declare bln_doRaidBuff				bool	outer	${Ini[botINI,OOCBuffs,bln_doRaidBuff,FALSE]}
@@ -810,7 +739,6 @@ Sub xbot_initialize_buffing
 	/declare bln_doSingleTargetBuff		bool	outer	${Ini[botINI,TargetBuffs,bln_doSingleTargetBuff,FALSE]}
 	/declare int_stBuffTotal			int		outer	${Ini[botINI,TargetBuffs,int_stBuffTotal,0]}
 	
-	/echo ${int_stBuffTotal}
 	/if (${int_stBuffTotal} > 0) {
 		/declare stbuff						int		local
 		/for stbuff 1 to ${int_stBuffTotal} 
@@ -818,12 +746,10 @@ Sub xbot_initialize_buffing
 			/declare STBUFF_${stbuff}_Use 			bool	outer	${Ini[botINI,TargetBuffs,STBUFF_${stbuff}_Use]}
 			/declare STBUFF_${stbuff}_Gem 			string	outer	${Ini[botINI,TargetBuffs,STBUFF_${stbuff}_Gem]}
 			/declare STBUFF_${stbuff}_Targets		string	outer	${Ini[botINI,TargetBuffs,STBUFF_${stbuff}_Targets]}
-			/echo ${STBUFF_${stbuff}_Targets}
 			/declare STBUFF_${stbuff}_Active		bool	outer 	FALSE
 			/declare STBUFF_${stbuff}_Timer	timer   outer   0
 		/next stbuff
 	}
-	
 	
 	|--Combat Buff(s)
 	|--eg: Spirit of the Jaguar
@@ -831,8 +757,6 @@ Sub xbot_initialize_buffing
 	/declare int_cmbtBuffTotal			int		outer	${Ini[botINI,CombatBuffs,int_cmbtBuffTotal,0]}
 	/declare cmbt						int		local
 	/declare cmbtG						int		local
-
-
 
 	/for cmbt 1 to ${int_cmbtBuffTotal} 
 		/declare CMBTBUFF_${cmbt} 				string	outer	${Ini[botINI,CombatBuffs,CMBTBUFF_${cmbt}]}
@@ -846,8 +770,6 @@ Sub xbot_initialize_buffing
 	
 	/next cmbt
 
-
-	/cecho \aoxbot_initialize_buffing
 	/call InitEvents_Buffing
 	
 /return

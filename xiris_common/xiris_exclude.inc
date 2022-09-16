@@ -8,20 +8,20 @@
 Sub setExclusions
 	| Load Global Exclusions
 	/declare ExcludeGlobal string  local ${Ini[${ExcludeINI},"Excludes.global","Exclude"]}
-	/echo Global Exclusions: ${ExcludeGlobal}
+	/cecho \ayGlobal Exclusions: \ag${ExcludeGlobal}
 
+	
+	
 	| Add zone specific Exclusions
-	/declare ExcludeZone string  local ${Ini[${ExcludeINI},"Excludes.${Zone.ShortName}","Exclude"]}
-	/echo Zone Exclusions: ${ExcludeZone}
-
 	| Not found by zone so add it.
+	/declare ExcludeZone string  local ${Ini[${ExcludeINI},"Excludes.${Zone.ShortName}","Exclude"]}
 	/if (${ExcludeZone.Equal[NULL]}) {
 		/ini "${ExcludeZone}" "Excludes.${Zone.ShortName}" "Exclude" "|"
 		/varset ExcludeZone ${Ini[${ExcludeINI},"Excludes.${Zone.ShortName}","Exclude"]}
-		/echo Zone Exclusions: ${ExcludeZone}
+		/cecho \ayZone Exclusions: ${ExcludeZone}
 	} else {
 		/varset ExcludeZone ${Ini[${ExcludeINI},"Excludes.${Zone.ShortName}","Exclude"]}
-		/echo Zone Exclusions: ${ExcludeZone}
+		/cecho \ayZone Exclusions: ${ExcludeZone}
 	}
 
 	/varset ExcludeList ${ExcludeGlobal}|${ExcludeZone}

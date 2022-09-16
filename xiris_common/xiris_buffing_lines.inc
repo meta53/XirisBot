@@ -278,10 +278,12 @@ Sub composeGroupList(string _delim)
 
 
 Sub xbot_initialize_bufflines
+	/cecho \aoxbot_initialize_bufflines
+	/goto :return
 	/declare delim string local
 	/declare result string local
 	/declare li	listiterator local
-	/return
+	
 	
 	|-- Aegolism Spell IDs
 	|	Virtue|Hand of Virtue|Conviction|Hand of Conviction
@@ -400,5 +402,5 @@ Sub xbot_initialize_bufflines
 		|/echo Splitting into list for Ranger AC Line suceeded. Count: ${list_rngAC.Count}
 	}	
 	
-	
+	:Return
 /return

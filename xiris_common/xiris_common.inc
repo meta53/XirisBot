@@ -209,9 +209,9 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/cecho \aoxbot_initialize 1:${_tank1Name} 2:${_tank2Name} 3:${_tank3Name} 4:${_healPoint} 5:${_assistArgs}
 
 	|-- [Settings] : Communications & INI Declarations
-	/declare Debug 						bool	outer 	FALSE
-	/declare Verbosity					bool	outer	FALSE
-	/declare cmdChannel 				string	outer	dgt
+	/declare 	Debug 					bool	outer 	FALSE
+	/declare 	Verbosity				bool	outer	FALSE
+	/declare 	cmdChannel 				string	outer	dgt
 	/declare 	mq2meleeEnabled			bool    outer   TRUE
 
 
@@ -268,7 +268,7 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/declare	int_defAssistAt			int		outer   ${Ini[botINI,Settings,assistAt,98]}
 	/declare 	int_assistAt			int		outer   ${int_defAssistAt}
 	/if (${_assistArgs.Length}) {
-		/cecho \agAutoAssist settings: ${_assistArgs}
+		/cecho \ayAutoAssist settings: \ag${_assistArgs}
 		/varset bln_autoAssist ${_assistArgs.Token[1,|]}
 		/varset int_assistAt ${_assistArgs.Token[2,|]}
 	} else {
@@ -286,6 +286,7 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/declare 	bln_ducking				bool	outer	FALSE
 	/declare	timer_naked 			timer   outer	0
 	/declare 	timer_hott				timer   outer   20s
+	/declare 	timer_xtargetRefresh	timer	outer 	30s
 
 	|-- [Settings] : Meditation
 	/declare int_sitRadius   		int     outer ${Ini[botINI,Settings,sitRadius,50]}
@@ -365,7 +366,6 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/declare int_slowResisted		int		outer	0
 	/declare int_slowMaxTries		int		outer	3
 	
-
 	|-- init common events
 	/call xbot_initialize_events
 	/call InitEvents_Common
@@ -388,7 +388,9 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/call xbot_initialize_movement
 
 	|-- report that the common things are initialized
-	/cecho \agxbot_initialize: [ MT: ${str_MTName}(${int_MTID}) @ ${int_point_tankPatch} ] STName: ${str_tankName2}(${int_STID})
+	
+	/cecho \agXBOT INIT COMPLETE: [ MT: ${str_MTName}(${int_MTID}) @ ${int_point_tankPatch} ] STName: ${str_tankName2}(${int_STID})
+
 	
 /return
 
@@ -1002,7 +1004,6 @@ Sub Event_ReportBurnKey(_line, _sender, _eventParams)
 |	  Sets the raid group leaders based on mode. Also, calls this on init with default settings
 |--------------------------------------------------------------------------------
 Sub Event_SetRaidGroupMode(_line, _sender, _eventParams)
-	/echo event raid group mode
 	/call SetRaidGroupMode ${_eventParams.Arg[1,|]}
 	/doevents flush SetRaidGroupMode
 /return 
@@ -1012,8 +1013,9 @@ Sub SetRaidGroupMode(string _mode)
 	|-- Manually set an array with the standard group leaders(ugh)
 	| 	Xiris,Xiria,Xirian,Xeixa,Sadelia,Xaeliea,Xaexa,Xaia,Xepatia
 	| 	in the future maybe have an event that can set this
-	/echo Setting raid group mode to ${_mode}
+	|/echo Setting raid group mode to ${_mode}
 	/deletevar RaidGroupLeaders 
+	/cecho \aySetting raid group mode to ${_mode}
 	/if (${_mode.Equal[RAID]}) {
 		/declare RaidGroupLeaders[9] string outer NULL
 		/varset	RaidGroupLeaders[1] Xiris
@@ -1078,7 +1080,6 @@ Sub SetRaidGroupMode(string _mode)
 |	  Sets the raid di clerics based on mode. Also, calls this on init with default settings
 |--------------------------------------------------------------------------------
 Sub Event_RaidDIClerics(_line, _sender, _eventParams)
-	/echo event raid di clerics mode
 	/call SetRaidDIClerics ${_eventParams.Arg[1,|]}
 	/doevents flush SetRaidDIClerics
 /return
@@ -1087,11 +1088,10 @@ Sub SetRaidDIClerics(string _mode)
 	|-- Manually set an array with the clerics in the raid that can DI (note, make sure everyone gets DI in future)
 	| 	Xirael,Xinshia,Xenshia,Xanshia,Theist,Deist
 	| 	in the future maybe have an event that can set this
-	/cecho \arSetting raid di members to ${_mode}
+	/cecho \aySetting raid di members to ${_mode}
 	/deletevar RaidDIClerics
 		
 	/if (${_mode.Equal[RAID]} || ${_mode.Equal[HATRED]}) {
-		/echo DI Setting ${_mode}
 		/declare RaidDIClerics[6] string outer NULL
 		/varset	RaidDIClerics[1] Xanshia
 		/varset	RaidDIClerics[2] Xinshia
@@ -1912,6 +1912,7 @@ SUB doRefreshXTarget
 		/delay 1
 		/xtarget set ${i} autohater
 	/next i
+	/varset timer_xtargetRefresh ${timer_xtargetRefresh.OriginalValue}
 /return
 
 |--------------------------------------------------------|

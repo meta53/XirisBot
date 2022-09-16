@@ -253,7 +253,8 @@ Sub chkPetAttack
 Sub xbot_initialize_pets
 	/if (${str_classArchetype.Equal[MELEE_END]}) /return
 	/if (${Me.Class.ShortName.Equal[WAR]}) /return
-	/echo xbot_initialize_pets
+	
+	/cecho \ao xbot_initialize_pets
 	
 	|--Pet Information
 	/declare str_petReagent				string  outer	${Ini[botINI,Pet,str_petReagent,NULL]}

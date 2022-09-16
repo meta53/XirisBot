@@ -554,7 +554,7 @@ Sub castCure(string _name, int _id, string _spell, int _castCount, string _cureT
 
 
 Sub xbot_initialize_curing
-
+	/cecho \ao xbot_initialize_curing
 	/declare 	int_manadrain_threshold int		outer 	150
 	/declare	int_hpdrain_threshold	int		outer	300
 	/declare 	bln_needsCure 			bool	outer	FALSE
@@ -597,7 +597,7 @@ Sub xbot_initialize_curing
 	/if (${str_cure_poison.Equal[NULL]}) 	/varset bln_hasPoisonCure 	FALSE
 	/if (${str_cure_disease.Equal[NULL]}) 	/varset bln_hasDiseaseCure 	FALSE
 	
-	/cecho \ao xbot_initialize_curing
+	
 	/call InitEvents_Curing
 	
 /return

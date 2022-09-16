@@ -43,7 +43,7 @@ REQUIRED INCLUDES
 
 #include xiris_common/xiris_common.inc
 
-#Turbo 40
+#Turbo 60
 
 #define INI_ldonInfo xiris_common/xiris_ldon_definitions.ini
 

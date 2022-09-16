@@ -39,7 +39,7 @@ REQUIRED INCLUDES
 
 #include xiris_common/xiris_common.inc
 
-#Turbo 40
+#Turbo 60
 
 #define INI_zoneInfo xiris_common/xiris_pull_zoneinfo.ini
 

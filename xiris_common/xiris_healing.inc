@@ -1232,16 +1232,10 @@ Sub CreateGroupHoTTimers
 		} else {
 			/varset timerKey timer_HoT_NULL_${i}
 		}
-		
-		/cecho \awCreating a new timer named: \ag${timerKey}
 		/declare ${timerKey}	timer 	outer 	0
 		/varset arr_hotTimerKeys[${k}] ${timerKey}
 		/varset str_groupIDs ${str_groupIDs}|${Group.Member[${i}].ID}
 		/varcalc k ${k}+1
-	/next i
-
-	/for i 1 to 6
-		/cecho \ao TimerKey ${i} ${arr_hotTimerKeys[${i}]}
 	/next i
 /return
 
@@ -1264,7 +1258,7 @@ Sub ReCreateGroupHoTTimers
 |**| 
 
 Sub xbot_initialize_healing(int _healPoint)
-	/if (${str_classArchetype.Equal[MELEE_END]} || ${Me.Class.ShortName.Equal[WAR]} || ${Me.Class.ShortName.Equal[SHD]})	/return
+	/if (${str_classArchetype.Equal[MELEE_END]} || ${Me.Class.ShortName.Equal[WAR]} || ${Me.Class.ShortName.Equal[SHD]} || ${str_classArchetype.Equal[CASTER]})	/return
 
 	/declare 	healINI				string  outer	xiris_common/xiris_healing.ini
 	|-- Set spellset to default so we can probe the properties of these

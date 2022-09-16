@@ -21,7 +21,7 @@ REQUIRED INCLUDES
 #Event burn2b "#*#b2b#*#"
 
 
-#Turbo 5
+#Turbo 40
 
 Sub Main
     |switch by zone shortname

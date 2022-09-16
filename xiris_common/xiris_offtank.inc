@@ -13,6 +13,7 @@ REVISION HISTORY
 	10.12.2017	xiris	Cleaned up nulls
 	11.24.2021	xiris	Changed target looping to use XTarget since that is now supported on EMU
 	01.09.2022	xiris	Made sure to turn aggro off when only hitting one mob
+	09.15.2022	xiris	Slight re-write of the offtank logic to definitively fix the 'stuck on corpse' issue
 ______________________________________________
 **|	
 #EVENT OFFTANKON			"#1# tells the group#*#'OfftankOn#*#'"
@@ -59,98 +60,43 @@ Sub ToggleOfftanking(bool _blnOT)
 	
 /return
 
-Sub chkOfftankingPriorityTargets
-
-/return
-
-Sub chkOffTanking	
+Sub chkOffTanking
 	/if (!${bln_offTank}) 	 /return
-	
+
+	| If there are no spawns within OT Distance, return
+	/if (!${SpawnCount[npc radius ${int_offtankRadius} range 46 80]}) {
+		| Refresh XTarget if we haven't done it in the last 30s
+		/if (!${timer_xtargetRefresh}) /call doRefreshXTarget
+		/return
+	}
+	:OffTankCheck
+	| Check Raid Events
+	/call RunRaidEvents
+
+	| Check all NPCs within offtankRadius
 	/declare i int local
-	/declare victimType string local
-	/declare max int local
-
-	:checkOTStart
-	/call RunRaidEvents	
-	/if (!${timer_xtargetRefresh} && !${SpawnCount[npc radius 100]}) {
-		/call doRefreshXTarget
-		/varset timer_xtargetRefresh ${timer_xtargetRefresh.OriginalValue}
-	}
-	/if (${SpawnCount[npc radius 100]} == 0) /goto :return
-	/if (${Me.XTarget} == 0)  /goto :return
-		
-	
-	|-- There is one target, and its engaged, so make sure I am smacking it
-	/if (${Me.XTarget} == 1 && ${Me.XTarget[1].ID} && ${bln_engaged} ) {
-		/call TrueTarget ${Me.XTarget[1].ID}
-		/if (${Me.TargetOfTarget.ID} && (${Me.TargetOfTarget.Class.ShortName.NotEqual[PAL]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[SHD]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[WAR]})) {
-			/squelch /killthis
-			/goto :return
+	/for i 1 to ${SpawnCount[npc radius ${int_offtankRadius} range 46 80]}
+		/call TrueTarget ${NearestSpawn[${i}, npc radius ${int_offtankRadius} range 46 80].ID}
+		:CheckAggro
+		/if ((!${ExcludeList.Find[${Target.CleanName}]}) && (${Me.TargetOfTarget.ID} != ${Me.ID}) && (${Me.TargetOfTarget.Class.ShortName.NotEqual[WAR]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[PAL]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[SHD]}) && ${Target.Distance3D} < ${int_offtankRadius}) {
+			/call aggroByID ${Target.ID}
+		} else {
+			/target clear
 		}
-		
-	} else { 
-	|-- There is more than one target, let us cycle through them and inspect buffs (make sure they aren't mezzed)
-		/varset max ${Me.XTarget}
-		/varset i 1
-		/echo OffTanking ${max} Adds (${Me.XTarget} > 1) && (${Me.XTarget[1].ID}) && (${bln_engaged})
-		
-		|--- Loop through the targets
-		/for i 1 to ${max} 
-			:checkOTTarget
-			/call RunRaidEvents	
-			/delay 5
-	
+	/next i
 
-			|-- Is this NPC in the Exclude List? If so, skip it
-			/if (${ExcludeList.Find[${Spawn[id ${Me.XTarget[${i}].ID}].CleanName}]}) { 
-				/echo XTarget is on exclusion list, next
-				/goto :next
-			}
-			
-			|-- Is this NPC within Offtanking Range? If not, skip it
-			/if (${Me.XTarget[${i}].Distance} >  ${int_OT_dist}) { 
-				/echo XTarget is too far away to OT, next
-				/goto :next
-			}
-			
-			|-- Next step: Target the NPC so we can get ToT
-			/echo Targetting: ${i}:  ${Me.XTarget[${i}].Name} :: ${Target.Name}
-			/call TrueTarget ${Me.XTarget[${i}].ID}
-			/delay 10
-
-			|-- Is this NPC actually targetting anything?
-			/if (!${Me.TargetOfTarget.ID}) { 
-				/echo XTarget has no target, continue
-				/goto :next
-			}
-			
-			|-- Is this NPC banging on ME or the MT already?
-			/if ((${Me.TargetOfTarget.ID} == ${Me.ID}) || (${Me.TargetOfTarget.ID} == ${int_MTID})) { 
-				/echo Victim is me or tank, next
-				/goto :next
-			}
-				 
-			|-- Is this NPC banging on a PLATE class already?
-			/if (${Me.TargetOfTarget.ID} && (${Me.TargetOfTarget.Class.ShortName.Equal[PAL]} || ${Me.TargetOfTarget.Class.ShortName.Equal[SHD]} || ${Me.TargetOfTarget.Class.ShortName.Equal[WAR]})) {
-				/echo victim is tank, next
-				/goto :next
-			}
-			
-			|-- Exhausted the options, let's get the mobs attention
-			/call aggroByID ${Me.XTarget[1].ID}
-		/delay 30
-	
-		
-		:next
-		/next i
-		
+	:NormalKillCheck
+	| Check to see if there is only one NPC, and if we are engaged, turn aggro off and attack it
+	/if (${SpawnCount[npc radius ${int_offtankRadius} range 46 80]} == 1 && ${bln_engaged}) {
+		/if (${NearestSpawn[npc radius ${int_offtankRadius} range 46 80].ID} == ${int_targetID}) {
+			/call TrueTarget ${int_targetID}
+			/squelch /melee aggro=off
+			/squelch /melee taunt=off
+			/killthis
+		}
 	}
-	
-	/goto :checkOTStart
-	
-	:return
-	/if (${Melee.AggroMode}) /melee aggro=off
 /return
+
 
 Sub aggroByID(int _targetID)	
 	/if (!${Me.Standing}) /stand on
@@ -167,7 +113,8 @@ Sub aggroByID(int _targetID)
 		/call chkHate
 	} else {
 		/if (!${Melee.Attack}) {
-			/if (!${Melee.AggroMode}) /squelch /melee aggro=on
+			/squelch /melee aggro=on
+			/squelch /melee taunt=on
 			/squelch /stick off
 			/squelch /stick id ${_targetID}
 			/if (${Me.AbilityReady[Taunt]}) /taunt
@@ -203,22 +150,16 @@ Sub chkHate
 		/echo chkHate: Hating with ${spell_hate}
 		/call MQ2Cast "${spell_hate}" ${spell_hateGem} 2s
 	}
-
 /return
 
 
-
-
 Sub xbot_initialize_offtanking
-
+	/cecho \ao xbot_initialize_offtanking
 	|-- [Settings] : Off Tanking
 	/declare bln_offTank		 	bool 	outer FALSE
 	/declare int_OT_dist 			int 	outer 65
-	/declare timer_xtargetRefresh	timer	outer 30s
-	
-	/cecho \ao xbot_initialize_offtanking
-	/call InitEvents_Offtanking
-	
+	/declare int_offtankRadius		int     outer 100
 
+	/call InitEvents_Offtanking
 /return
  

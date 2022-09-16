@@ -952,9 +952,10 @@ Sub Event_DotOff12
 
 
 Sub xbot_initialize_casting
-	/if (${str_classArchetype.Equal[MELEE_END]}) /return
-	/if (${Me.Class.ShortName.Equal[WAR]}) /return
-	
+	/if (${str_classArchetype.Equal[MELEE_END]} || ${Me.Class.ShortName.Equal[WAR]}) /return
+
+	/cecho \aoxbot_initialize_casting
+
 	|-- Misc (resist types, fast only, etc
 	/declare str_useResistTypes	string	outer 	Fire,Magic,Cold,Poison,Disease
 	/if (${Zone.ShortName.Equal[pofire]}) /varset str_useResistTypes Cold,Magic,Poison,Disease
@@ -972,8 +973,7 @@ Sub xbot_initialize_casting
 	/declare int_nukeStopHP				int		outer	${Ini[botINI,DirectDamage,int_nukeStopHP,5]}
 	/declare int_namedNukeStartHP		int 	outer 	${Ini[botINI,DirectDamage,int_namedNukeStartHP,100]}
 	/declare int_namedNukeStopHP		int 	outer 	${Ini[botINI,DirectDamage,int_namedNukeStopHP,0]}
-	
-	/echo int_nukeTotal: ${int_nukeTotal}
+
 	/declare nc 						int		local
 	/for nc 1 to ${int_nukeTotal} 
 		/declare Nuke_${nc} 			string	outer	${Ini[botINI,DirectDamage,Nuke_${nc}]}
@@ -986,18 +986,14 @@ Sub xbot_initialize_casting
 		/declare Nuke_${nc}_Timer		timer   outer   ${timer_nukeDelay}
 		/declare Nuke_${nc}_HasCastOnce	bool	outer   FALSE
 		/declare Nuke_${nc}_Delay   	int     outer   ${Ini[botINI,DirectDamage,Nuke_${nc}_Delay,0]}
-		
-		/echo Nuke_${nc} Use:  ${Nuke_${nc}_Use} || Gem: ${Nuke_${nc}_Gem} || Start: ${Nuke_${nc}_StartHP}
-		/echo Stop: ${Nuke_${nc}_StopHP} || Resist: ${Nuke_${nc}_Resist} || Named: ${Nuke_${nc}_NamedOnly} || Timer: ${Nuke_${nc}_Timer}
 	/next nc
 
 	|--AE Nuke
-	/declare int_AENuke_Total 			int		outer	${Ini[botINI,AENuke,int_AENuke_Total,0]}	
+	/declare int_AEnukeTotal 			int		outer	${Ini[botINI,AENuke,int_AENuke_Total,0]}	
 	/declare timer_AENuke_Delay			timer	outer	${Ini[botINI,AENuke,timer_AENuke_Delay,0]}
 
-	/echo int_AENuke_Total: ${int_AENuke_Total}
 	/declare ae 						int		local
-	/for ae 1 to ${int_AENuke_Total} 
+	/for ae 1 to ${int_AEnukeTotal} 
 		/declare AENuke_${ae} 				string	outer	${Ini[botINI,AENuke,AENuke_${ae}]}
 		/declare AENuke_${ae}_Use 			bool	outer	${Ini[botINI,AENuke,AENuke_${ae}_Use]}
 		/declare AENuke_${ae}_Gem 			string	outer	${Ini[botINI,AENuke,AENuke_${ae}_Gem]}
@@ -1008,9 +1004,6 @@ Sub xbot_initialize_casting
 		/declare AENuke_${ae}_Timer			timer   outer   ${timer_AENuke_Delay}
 		/declare AENuke_${ae}_HasCastOnce	bool	outer   FALSE
 		/declare AENuke_${ae}_Delay   		int     outer   ${Ini[botINI,AENuke,AENuke_${ae}_Delay,0]}
-		
-		/echo AENuke_${ae} Use:  ${AENuke_${ae}_Use} || Gem: ${AENuke_${ae}_Gem} || Start: ${AENuke_${ae}_StartHP}
-		/echo Stop: ${AENuke_${ae}_StopHP} || Resist: ${AENuke_${ae}_Resist} || Named: ${AENuke_${ae}_NamedOnly} || Timer: ${AENuke_${ae}_Timer}
 	/next ae
 
 
@@ -1117,8 +1110,9 @@ Sub xbot_initialize_casting
 		/declare DOT_${dc}_HasCastOnce	bool	outer   FALSE
 	/next dc
 
-	/cecho \aoxbot_initialize_casting
+	
 	/call InitEvents_Casting
+	/cecho \awNukes: \ag${int_nukeTotal} \awAENukes: \ag${int_AEnukeTotal} \awQNuke: \ag${int_QnukeTotal} \awStun: \ag${int_stunTotal} \awDOT: \ag${int_dotTotal} 
 
 /return
 	
