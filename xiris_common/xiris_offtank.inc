@@ -75,24 +75,26 @@ Sub chkOffTanking
 
 	| Check all NPCs within offtankRadius
 	/declare i int local
-	/for i 1 to ${SpawnCount[npc radius ${int_offtankRadius} range 46 80]}
-		/call TrueTarget ${NearestSpawn[${i}, npc radius ${int_offtankRadius} range 46 80].ID}
+	/for i 1 to ${SpawnCount[npc radius ${int_offtankRadius} range 46 80 noalert 5]}
+		/call TrueTarget ${NearestSpawn[${i}, npc radius ${int_offtankRadius} range 46 80 noalert 5].ID}
 		:CheckAggro
-		/if ((!${ExcludeList.Find[${Target.CleanName}]}) && (${Me.TargetOfTarget.ID} != ${Me.ID}) && (${Me.TargetOfTarget.Class.ShortName.NotEqual[WAR]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[PAL]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[SHD]}) && ${Target.Distance3D} < ${int_offtankRadius}) {
+		/if (!${Bool[${Me.TargetOfTarget.ID}]} || (${ExcludeList.Find[${Target.CleanName}]})) /goto :nextTarget
+		/if ((${Me.TargetOfTarget.ID} != ${Me.ID}) && (${Me.TargetOfTarget.Class.ShortName.NotEqual[WAR]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[PAL]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[SHD]}) && ${Target.Distance3D} < ${int_offtankRadius}) {
 			/call aggroByID ${Target.ID}
 		} else {
 			/target clear
 		}
+	:nextTarget
 	/next i
 
 	:NormalKillCheck
 	| Check to see if there is only one NPC, and if we are engaged, turn aggro off and attack it
-	/if (${SpawnCount[npc radius ${int_offtankRadius} range 46 80]} == 1 && ${bln_engaged}) {
-		/if (${NearestSpawn[npc radius ${int_offtankRadius} range 46 80].ID} == ${int_targetID}) {
+	/if (${SpawnCount[npc radius ${int_offtankRadius} range 46 80  noalert 5]} == 1 && ${bln_engaged}) {
+		/if (${NearestSpawn[npc radius ${int_offtankRadius} range 46 80 noalert 5].ID} == ${int_targetID}) {
 			/call TrueTarget ${int_targetID}
 			/squelch /melee aggro=off
 			/squelch /melee taunt=off
-			/killthis
+			/if (${Target.PctHPs} <=99) /killthis
 		}
 	}
 /return
@@ -158,8 +160,15 @@ Sub xbot_initialize_offtanking
 	|-- [Settings] : Off Tanking
 	/declare bln_offTank		 	bool 	outer FALSE
 	/declare int_OT_dist 			int 	outer 65
-	/declare int_offtankRadius		int     outer 100
+	/declare int_offtankRadius		int     outer 85
+
+	
 
 	/call InitEvents_Offtanking
+
+	| Specific NPCs to never offtank
+	/alert add 5 "Huhn-Abram"
+	/alert add 5 "Voracious Feran"
+
 /return
  

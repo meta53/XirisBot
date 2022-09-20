@@ -677,22 +677,14 @@ Sub chk_warProvoke(string _provokeDisc)
 Sub xbot_initialize_melee
 	/cecho \ao xbot_initialize_melee
 
-	|-- [Settings] : Melee Defaults
-	/declare 	MinStrikeEndurance 		int		outer	200
-	/declare 	MinBellowEndurance		int		outer	200
-	/declare    provokeTimer            timer   outer   0
-	/declare 	stickCmd				string	outer   ${Ini[botINI,Sticking,stickCmd,behindonce 35]}
-	/declare 	bln_chkComponents		bool	outer	TRUE
-	/declare 	bln_tgtDeadSoon			bool	outer	FALSE
-	/declare	timer_reAssist			timer	outer	5s
-	/declare    bln_riposting			bool    outer   FALSE
 
 	/declare 	int_currentStickDistance		int		outer   25
-	/declare	int_maxStickDistance 	int 	outer 	70
+	/declare	int_maxStickDistance 	int 	outer 	30
 	/declare 	int_minStickDistance	int		outer 	10
 	/declare    int_maxNavDistance		int		outer   300
 	/declare	timer_getCloser			timer	outer	30
 
+	|-- ALL CLASSES COMMON
 	|-- [Settings] : Downflags
 	/declare 	timer_downflags			timer	outer 	0
 	/declare	downflagCount			int		outer	${Ini[botINI,Downflags,downflagCount,0]}
@@ -700,7 +692,6 @@ Sub xbot_initialize_melee
 		/for df 1 to ${downflagCount} 
 			/declare downflag${df} 		string 	outer	${Ini[botINI,Downflags,downflag${df}]}
 		/next df
-
 	
 	|-- [Settings] : Holyflags
 	/declare	holyflagCount			int		outer	${Ini[botINI,Holyflags,holyflagCount,0]}
@@ -710,6 +701,7 @@ Sub xbot_initialize_melee
 		/next hf
 
 
+	|-- MELEE AND HYBRID CLASSES ONLY
 	|- [Settings] : Components
 	/declare	int_componentTotal		int		outer	${Ini[botINI,Components,int_componentTotal,0]}
 	/declare 	bln_componentCheck		bool	outer   ${If[${int_componentTotal}>0,TRUE,FALSE]}
@@ -722,6 +714,7 @@ Sub xbot_initialize_melee
 				/declare COMPONENT_${comp}_Summoner string	outer ${Ini[botINI,Components,COMPONENT_${comp}_Summoner]}
 				/declare COMPONENT_${comp}_Reagent 	string	outer ${Ini[botINI,Components,COMPONENT_${comp}_Reagent]}
 			/next comp
+	
 	
 
 	|--[Settings] : Spell & Support Definitions
@@ -740,6 +733,17 @@ Sub xbot_initialize_melee
 	/declare war_ca_hate_1			string	outer	${Ini[botINI,Puller,war_ca_hate_1,Bazu Bellow]}
 	/declare war_ca_hate_2			string	outer 	${Ini[botINI,Puller,war_ca_hate_2,Bellow of the Mastruq]}
 	/declare int_castDistance		int		outer	${Ini[botINI,Puller,int_castDistance,120]}
+
+	|-- [Settings] : Melee Defaults
+	/declare 	MinStrikeEndurance 		int		outer	200
+	/declare 	MinBellowEndurance		int		outer	200
+	/declare    provokeTimer            timer   outer   0
+	/declare 	stickCmd				string	outer   ${Ini[botINI,Sticking,stickCmd,behindonce 35]}
+	/declare 	bln_chkComponents		bool	outer	TRUE
+	/declare 	bln_tgtDeadSoon			bool	outer	FALSE
+	/declare	timer_reAssist			timer	outer	5s
+	/declare    bln_riposting			bool    outer   FALSE
+
 	
 	|-- [Settings] Damage shield/ no damage shield (specifically for events like pixxt riel tavas)
 	/declare bln_useDS				bool	outer	TRUE	

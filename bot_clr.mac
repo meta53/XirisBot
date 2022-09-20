@@ -65,7 +65,7 @@ REQUIRED INCLUDES
 
 #include xiris_common/xiris_common.inc
 
-#Turbo 60
+#Turbo 40
 
 Sub InitEvents_Class 
 	/call RegisterClassEvents Events_CLR 8
@@ -139,7 +139,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 			/call RunRaidEvents
 			/call RunClassEvents
 
-			|-- verify engagement status (Acts like chkTarget, but for non meleeing)
+			|-- verify engagement status (Acts like chkTargetStatus, but for non meleeing)
 			/call chkMobDead
 
 			|-- class specific
@@ -153,7 +153,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 				/call chkNuke
 
 				|-- verify target status
-				/call chkTarget
+				/call chkTargetStatus
 				
 				|-- std library (burns/aa/clicks)
 				/call RunRaidEvents

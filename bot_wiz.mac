@@ -32,7 +32,7 @@ REQUIRED INCLUDES
 
 #include xiris_common/xiris_common.inc
 
-#Turbo 60
+#Turbo 40
 
 #EVENT MANABURN	"#*#manaburnON"
 #EVENT AEON 	"#*#aeNukeON"
@@ -97,7 +97,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 			/call RunClassEvents
 
 			|-- verify target status
-			/call chkTarget
+			/call chkTargetStatus
 
 			|-- debuff lib
 			/call chkDebuffsOnSingleTarget ${int_targetID}
@@ -129,24 +129,6 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 /return
 
 
-|**
- ----------------------------
- Target Engage
- ----------------------------
- Engage the target, note usually triggered by EVENT_KILLMOB (see xiris_common.inc)
- ----------------------------
-**|
-
-Sub EngageTarget(_targetID)
-	/echo EngageTarget ${Spawn[id ${_targetID}].CleanName} (${_targetID})
-	/if (${_targetID} == 0) /return
-	/varset int_targetID ${_targetID}
-	/varset bln_engaged TRUE
-	/call TrueTarget ${int_targetID}
-	/call ResetCastTimers
-	|- Wizard specific things
-	/varset bln_snareActive		FALSE
-/return
 
 
 |**

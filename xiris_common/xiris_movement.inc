@@ -57,58 +57,28 @@ Sub Events_Movement
 Sub xbot_initialize_movement
 	/cecho \aoxbot_initialize_movement
 	/declare bln_following 			bool 	outer FALSE
-	/declare FollowTarget 		string 	outer NULL
-	/declare MaxResponseDist	int 	outer 1000
+	/declare int_maxFollowDistance	int 	outer 1000
 	/call InitEvents_Movement
 /return
 
 
 
 SUB EVENT_Follow(_line, _chatSender, _eventParams)
-	| -Verify the event
-	/call verifyEvent "${_chatSender}" "${_eventParams}"
-	/if (${Bool[${Macro.Return.Arg[2,_]}]} && ${Bool[${Macro.Return.Arg[3,_]}]} && ${Bool[${Macro.Return.Arg[4,_]}]}) {
-	
-		/declare SpawnToFollow 	string local ${Macro.Return.Arg[1,_]}
-		/declare FollowType 	string local ${If[${_eventParams.Find[/type|NAV]},NAV,STICK]}
-		/if (!${Bool[${SpawnToFollow}]}) /varset SpawnToFollow "${_chatSender}"
-
-		| -Turn bln_following on and set the FollowTarget
-		/varset bln_following TRUE
-		/varset FollowTarget ${Spawn[pc ${SpawnToFollow}].CleanName}
-		/echo SpawnToFollow: ${SpawnToFollow} FollowType: ${FollowType}  FollowTarget: ${Spawn[pc ${SpawnToFollow}].CleanName}
-		| -Check Range
-		/if (${Spawn[=${FollowTarget}].Distance} > ${MaxResponseDist}) {
-			/docommand /${cmdChannel} [${FollowTarget}] is too far away.
-		} else {
-			| -Check LoS.
-			
-			/if (${FollowType.Equal[NAV]}) {
-				/echo LOS is not needed because Type is NAV: ${FollowType.Equal[NAV]}
-				| -Stop assisting so we don't try to stick to the AssistTarget.	
-				/if (${Me.Combat}) /call Event_BackOff
-				
-				| -Start bln_following.
-				/if (${Verbosity}) /docommand /${cmdChannel} bln_following ${FollowTarget}.
-				/call AquireFollow ${FollowType}
-			
-			} else {
-			
-				/if (!${Spawn[=${FollowTarget}].LineOfSight} ) {
-					/docommand /${cmdChannel} I cannot see [${FollowTarget}].
-				} else {
-					| -Stop assisting so we don't try to stick to the AssistTarget.	
-					/if (${Me.Combat}) /call Event_BackOff
-					
-					| -Start bln_following.
-					/if (${Verbosity}) /docommand /${cmdChannel} bln_following ${FollowTarget}.
-					/call AquireFollow ${FollowType}
-				}
-			} 
-		}
-	}
+	/echo Event follow ${_chatSender}
+	/echo Parameters   ${_eventParams}
+	/if (${_chatSender.Equal[${Me.CleanName}]}) /return
+	/declare followType 	string local ${If[${_eventParams.Find[/type|NAV]},NAV,STICK]}
+	/call StartFollowing ${_chatSender} ${followType}
 	/doevents flush Follow
 /return
+
+
+SUB EVENT_Stop(_line, _chatSender, _eventParams)
+	| -Check if I'm bln_following.
+	/if (${bln_following}) /call StopFollowing
+	/doevents flush Stop
+/return
+
 
 SUB EVENT_NavigateWP(_line, _chatSender, _eventParams)
 	/cecho \ayNavigate to waypoint: \ag${_eventParams}
@@ -125,117 +95,71 @@ SUB EVENT_CreateCamp(_line, _chatSender, _eventParams)
 	/doevents flush CreateCamp
 /return
 
-Sub MoveToPosition(int _y, int _x, int _z, int _adjustment, bool _warp)
-	/cecho \ayMoveToPosition: \ag${_y},${_x},${_z} \aw@\ag${_adjustment}
-	/declare timer_movement timer local 30s
-	/declare dist int local ${Math.Distance[${Me.Y},${Me.X},${Me.Z}:${_y},${_x},${_z}]}
-	:movement 
-		/delay 10
-		/varcalc dist ${Math.Distance[${Me.Y},${Me.X},${Me.Z}:${_y},${_x},${_z}]}
-		/echo ${timer_movement} ${dist}
-		/if (${dist} < ${_adjustment}) /goto :final
-		/if (!${timer_movement}) /goto :final
-		/if (${Navigation.Active})  /goto :movement
-	:final
-	/nav stop
-	/if (${_warp}) /warp loc ${_y} ${_x} ${_z}
-	/deletevar timer_movement
-/return 
+
+Sub StartFollowing(string _leader, string _followType)
+	/varset bln_following TRUE
+	/echo Leader: ${_leader} FollowType: ${_followType}  FollowTarget: ${Spawn[pc ${_leader}].CleanName}
+	
+	| -Check Range
+	/if (${Spawn[=${_leader}].Distance} > ${int_maxFollowDistance}) {
+		/docommand /${cmdChannel} [${FollowTarget}] is too far away.
+	} else {
+		/call Disengage
+		| -Check LoS.
+		/if (${_followType.Equal[NAV]} || (${_followType.NotEqual[NAV]} && ${Spawn[=${_leader}].LineOfSight})) {
+			/call AquireFollow ${_followType} ${_leader}
+		} else {
+			/docommand /${cmdChannel} _followType != NAV || STICK cannot see [${_leader}]
+		}
+	} 
+/return
+
+Sub StopFollowing
+	/varset bln_following 	 FALSE
+	/squelch /stick off
+	/if (${Navigation.Active}) 		/squelch /nav stop
+/return
 
 
-|----------------------------------------------------------------------------------------------------|
-|- Engages follow plugins on specified follow targets.												-|
-|----------------------------------------------------------------------------------------------------|
-|- Uses NetAdvPath if the follow target is one of your bots, or MoveUtils, if its someone elses.	-|		
-|----------------------------------------------------------------------------------------------------|
-SUB AquireFollow(string _type)
-
+SUB AquireFollow(string _type, string _leader)
+	/cecho \agAcquireFollow \aw${_type} \ao${_leader}
 	|------------------------------------------------------------------------------------Check for FollowTarget in zone.
-	/if (${SpawnCount[=${FollowTarget}]}) {
+	/if (${SpawnCount[=${_leader}]} && ${SpawnCount[=${_leader} radius ${int_maxFollowDistance}]} && ${_leader.NotEqual[${Me.CleanName}]}) {
+	
+		/if (${Stick.Active}) 			/squelch /stick off
+		/if (${Navigation.Active}) 		/squelch /nav stop
 
-		|--------------------------------------------------------------------------------Check range to the FollowTarget
-		/if (${SpawnCount[=${FollowTarget} radius ${MaxResponseDist}]}) {
-
-			|----------------------------------------------------------------------------Check that I'm not the follow target.
-			/if (${FollowTarget.NotEqual[${Me.CleanName}]}) {
-
-				|------------------------------------------------------------------------Turn off any previous follow plugins.
-				/if (${Stick.Active}) 			/squelch /stick off
-				|/if (${NetAdvPath.State}==1) 	/squelch /netfollow off
-				/if (${Navigation.Active}) 		/squelch /nav stop
-				
-				/declare followTargetID int local
-				
-				|--------------------------------------------------------------------Check Target ID
-				/if (${SpawnCount[pc =${FollowTarget}]}) {
-					/varset followTargetID ${Spawn[pc =${FollowTarget}].ID}
-				} else /if (${SpawnCount[npc ${FollowTarget}]}) {
-					/varset followTargetID ${Spawn[npc =${FollowTarget}].ID}
-				} else /if (${SpawnCount[pet ${FollowTarget}]}) {
-					/varset followTargetID ${Spawn[pet =${FollowTarget}].ID}
-				}
-				| If the FollowTarget declares that you need to use MQ2Nav...
-				/if (${_type.Equal[NAV]}) {
-					/echo Using MQ2Nav ${followTargetID}
-					|-- We do not need to use LOS for MQ2Nav
-					/call TrueTarget ${followTargetID}
-					/delay 5s ${Target.ID} == ${followTargetID}
-					/squelch /nav target		
+		| If the FollowTarget declares that you need to use MQ2Nav...
+		|-- We do not need to use LOS for MQ2Nav nor do we need to use target
+		/if (${_type.Equal[NAV]}) {
+			/squelch /nav spawn ${Spawn[pc =${_leader}]}
+		} else {
+			/if (${Spawn[id ${followTargetID}].LineOfSight}) {
+				/call TrueTarget ${followTargetID}
+				/if (${Me.Underwater}) {
+					/squelch /stick hold behind 0 uw
 				} else {
-					/echo Using MQ2MoveUtils (Stick)
-					| If MQ2NetAdvPath was not detected, or the FollowTarget was not a NetBot, engage MQ2MoveUtils.
-				
-					|---------------------------------------------------Check LoS
-					/if (${Spawn[id ${followTargetID}].LineOfSight}) {
-						/call TrueTarget ${followTargetID}
-						/if (${Me.Underwater}) {
-							/squelch /stick hold behind 0 uw
-						} else {
-							/squelch /stick hold behind 10 uw
-						}
-						
-					}
+					/squelch /stick hold behind 10 uw
 				}
 			}
 		}
 	}
-
-	/if (!${Defined[distCheck]}) /declare distCheck int local 10
-
+	
+	/declare distCheck int local 20
 	:movingLoop
 	|-- Check all Events
-	/doevents flush Follow
 	/call RunAllEvents
-	|/cecho \ay movingLoop \ag ${bln_following}
 	/if (${bln_following}) {
-		/if (${_type.Equal[NAV]} && !${Navigation.Active} && (${Target.Distance3D} > ${distCheck} )) {
-			|/echo :movingLoop ${_type.Equal[NAV]} && !${Navigation.Active} && (${Target.Distance3D} > ${distCheck})
-			/nav target
+		/if (${_type.Equal[NAV]} && !${Navigation.Active} && (${Spawn[pc =${_leader}].Distance3D} > ${distCheck} )) {
+			/squelch /nav spawn ${Spawn[pc =${_leader}]}
 			/delay 10
 		}
 		/goto :movingLoop
 	}
-
 /return
 
 
 
-|----------------------------------------------------------------------------|
-|- Disengages follow on bots who are in the same zone as the _chatSender.	-|
-|----------------------------------------------------------------------------|
-|- Use, /stop, or, 'stop' in /tell, /goup, or //dgt.							-|
-|----------------------------------------------------------------------------|
-
-SUB EVENT_Stop(_line, _chatSender, _eventParams)
-	| -Check if I'm bln_following.
-	/if (${bln_following}) {
-			/if (${Stick.Active}) 			/squelch /stick off
-			/if (${Navigation.Active}) 		/squelch /nav stop
-			/varset FollowTarget NULL
-			/varset bln_following 	 FALSE
-	}
-	/doevents flush Stop
-/return
 
 
 SUB EVENT_MoveHere(_line, _chatSender, _eventParams)
@@ -300,6 +224,24 @@ SUB EVENT_MoveHere(_line, _chatSender, _eventParams)
 	/doevents flush MoveHere
 /return
 
+Sub MoveToPosition(int _y, int _x, int _z, int _adjustment, bool _warp)
+	/cecho \ayMoveToPosition: \ag${_y},${_x},${_z} \aw@\ag${_adjustment}
+	/declare timer_movement timer local 30s
+	/declare dist int local ${Math.Distance[${Me.Y},${Me.X},${Me.Z}:${_y},${_x},${_z}]}
+	:movement 
+		/delay 10
+		/varcalc dist ${Math.Distance[${Me.Y},${Me.X},${Me.Z}:${_y},${_x},${_z}]}
+		/echo ${timer_movement} ${dist}
+		/if (${dist} < ${_adjustment}) /goto :final
+		/if (!${timer_movement}) /goto :final
+		/if (${Navigation.Active})  /goto :movement
+	:final
+	/nav stop
+	/if (${_warp}) /warp loc ${_y} ${_x} ${_z}
+	/deletevar timer_movement
+/return 
+
+
 
 |----------------------------------------------------------------------------------------------------|
 |- MoveTo																							-|
@@ -354,7 +296,7 @@ SUB MoveTo(destinationInfo, int distCheck)
 	/echo dist start: 2D:${dist2D} 3D:${dist3D} Required: ${distCheck}
 	|-- Check if target is too far.
 	
-	/if (${Int[${dist3D}]} > ${MaxResponseDist}) {
+	/if (${Int[${dist3D}]} > ${int_maxFollowDistance}) {
 		/echo [${Spawn[id ${destination}].CleanName}] is too far away.
 	} else {
 

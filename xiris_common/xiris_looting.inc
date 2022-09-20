@@ -126,24 +126,23 @@ Sub EVENT_HIDE_LOOTED
 |SUB: Checking available corpses 
 |-------------------------------------------------------------------------------- 
 Sub chkLoot
-	 /if (${bln_lootAuto} && ${SpawnCount[npc radius ${int_sitRadius} zradius 15]} == 0 && ${SpawnCount[npc corpse radius 85 noalert 5]} > 0 ) {
+	 /if (${bln_lootAuto} && ${SpawnCount[npc radius ${int_sitRadius} zradius 15]} == 0 && ${SpawnCount[npc corpse radius 85]} > 0 ) {
 		|-- check to see if I even have room to loot
 		/if (${Me.FreeInventory} <= 2) {
 			/docommand /${str_lootChannel} out of bagspace
 			/call DisableLooting
 			/return
 		}
-		|/echo count: ${SpawnCount[npc corpse radius ${int_lootRadius} noalert 5]}
+		|/echo count: ${SpawnCount[npc corpse radius ${int_lootRadius}]}
 		/declare i int local
 		:lootCheck
-		/for i 1 to ${SpawnCount[npc corpse radius ${int_lootRadius} noalert 5]}
+		/for i 1 to ${SpawnCount[npc corpse radius ${int_lootRadius}]}
 			/if (${SpawnCount[npc radius ${int_sitRadius} zradius 15]} > 0) /return
-			/call LootTarget ${NearestSpawn[${i},corpse radius ${int_lootRadius} noalert 5].ID}
+			/call LootTarget ${NearestSpawn[${i},corpse radius ${int_lootRadius}].ID}
 			/delay 5
 		/next i
 		
-		/if (${SpawnCount[npc corpse radius 85 noalert 5]} > 0 ) /goto :lootCheck
-		/squelch /alert clear 5
+		/if (${SpawnCount[npc corpse radius 85]} > 0 ) /goto :lootCheck
     }
 	
 /return
@@ -153,7 +152,6 @@ Sub EVENT_NotYourKill
 	/echo NotYourKill: skipping loot;
 	/declare corpseName string 	local ${Spawn[id ${Target.ID}]}
 	/echo ${corpseName} ${Target.ID}
-	|/alert add 5 "${corpseName}" 
 /return LOOT_NO_RIGHTS
 
 
@@ -304,11 +302,12 @@ Sub LootTarget(int _corpseID)
 		/declare keep  					bool 	local 	TRUE
 		/declare lootName 				string 	local 
 		/declare lootType 				string 	local
-		/declare lootCount				int		local	1000
-		/declare lootClass 				bool 	local 	FALSE
-		/declare lootCharExclusion   	bool    local   TRUE	| do not loot on this character [if found, dont loot]
-		/declare lootCharOnly 			bool	local	FALSE	| loot only on this character
-		/declare lootBeep				bool    local   FALSE 	| should I beep if I can't loot this item?
+		/declare int_numberToLoot		int		local	1000
+		/declare bln_includedByClass	bool 	local 	FALSE
+		/declare bln_excludedByCharName	bool    local   TRUE	| do not loot on this character [if found, dont loot]
+		/declare bln_includedByCharName	bool	local	FALSE	| loot only on this character
+		/declare bln_useBeep			bool    local   FALSE 	| should I beep if I can't loot this item?
+		/declare reason					string  local   <no reason>
 
 		/for n 1 to ${Corpse.Items}
 			|-check to see if I want the item
@@ -321,20 +320,20 @@ Sub LootTarget(int _corpseID)
 
 						/varset lootName  ${Corpse.Item[${n}].Name}
 						/varset lootType  ${loot_ALL[${i},2]}
-						/varset lootBeep  ${If[${loot_ALL[${i},7].Find[T]}, TRUE,FALSE]}
+						/varset bln_useBeep  ${If[${loot_ALL[${i},7].Find[T]}, TRUE,FALSE]}
 						/echo Item: ${lootName} Type: ${lootType} Beep: ${lootBeep}
 
 						|- count to keep
-						/if (${loot_ALL[${i},3].NotEqual[*]}) /varset lootCount ${loot_ALL[${i},3]}
+						/if (${loot_ALL[${i},3].NotEqual[*]}) /varset int_numberToLoot ${loot_ALL[${i},3]}
 
 						|- classes to loot
-						/if (${loot_ALL[${i},4].Find[${Me.Class.ShortName}]} || ${loot_ALL[${i},4].Equal[*]} ) /varset lootClass TRUE
+						/if (${loot_ALL[${i},4].Find[${Me.Class.ShortName}]} || ${loot_ALL[${i},4].Equal[*]} ) /varset bln_includedByClass TRUE
 
 						|- characters that shouldn't loot
-						/if (${loot_ALL[${i},5].Find[${Me.Name}]}) /varset lootCharExclusion TRUE
+						/if (${loot_ALL[${i},5].Find[${Me.Name}]}) /varset bln_excludedByCharName TRUE
 
 						|- characters that should loot
-						/if (${loot_ALL[${i},6].Find[${Me.Name}]} || ${loot_ALL[${i},6].Equal[*]}) /varset lootCharOnly TRUE
+						/if (${loot_ALL[${i},6].Find[${Me.Name}]} || ${loot_ALL[${i},6].Equal[*]}) /varset bln_includedByCharName TRUE
 
 						/goto :loot_validation
 					} 
@@ -348,20 +347,23 @@ Sub LootTarget(int _corpseID)
 
 					/varset lootName  ${Corpse.Item[${n}].Name}
 					/varset lootType  ${loot_QUEST[${i},2]}
-					/varset lootBeep  ${If[${loot_QUEST[${i},7].Find[T]}, TRUE,FALSE]}
+					/varset bln_useBeep  ${If[${loot_QUEST[${i},7].Find[T]}, TRUE,FALSE]}
 					/echo Item: ${lootName} Type: ${lootType} Beep: ${lootBeep}
 
 					|- count to keep
-					/if (${loot_QUEST[${i},3].NotEqual[*]}) /varset lootCount ${loot_QUEST[${i},3]}
+					/if (${loot_QUEST[${i},3].NotEqual[*]}) /varset int_numberToLoot ${loot_QUEST[${i},3]}
 
 					|- classes to loot
-					/if (${loot_QUEST[${i},4].Find[${Me.Class.ShortName}]} ||${loot_QUEST[${i},4].Equal[*]} ) /varset lootClass TRUE
+					/if (${loot_QUEST[${i},4].Find[${Me.Class.ShortName}]} ||${loot_QUEST[${i},4].Equal[*]} ) /varset bln_includedByClass TRUE
 
 					|- characters that shouldn't loot
-					/if (${loot_QUEST[${i},5].Find[${Me.Name}]}) /varset lootCharExclusion TRUE
+					/if (${loot_QUEST[${i},5].Find[${Me.Name}]}) /varset bln_excludedByCharName TRUE
 
 					|- characters that should loot
-					/if (!${loot_QUEST[${i},6].Find[${Me.Name}]} || ${loot_QUEST[${i},6].Equal[*]}) /varset lootCharOnly TRUE
+					/if (!${loot_QUEST[${i},6].Find[${Me.Name}]} || ${loot_QUEST[${i},6].Equal[*]}) /varset bln_includedByCharName TRUE
+
+					|- valid count
+
 
 
 					/goto :loot_validation
@@ -374,63 +376,45 @@ Sub LootTarget(int _corpseID)
 
 			|-check to see if item is lore
 			:loot_validation
-			/cecho ${lootName} \awCount in Inventory:\ay${FindItemCount[${lootName}]} \awMaximum: \ay${lootCount} \awClass Lootable?: \ay${lootClass} \awExcluded by Name: \ay${lootCharExclusion} \awLoot By Me Only? \ay${lootCharOnly} \awBeep? \ay${lootBeep}
+			/cecho ${lootName} \awCount in Inventory:\ay${FindItemCount[${lootName}]} \awMaximum: \ay${int_numberToLoot} \awClass Lootable?: \ay${bln_includedByClass} \awExcluded by Name: \ay${bln_excludedByCharName} \awLoot By Me Only? \ay${bln_includedByCharName} \awBeep? \ay${bln_useBeep}
 			
-			|-- I shouldn't loot this
-			/if (${lootCharExclusion}) {
-				/cecho \arI shouldn't keep this (name - by lootCharExclusion)
+			|- My character name is in the exclusion list
+			/if (${bln_excludedByCharName}) {
+				/cecho \arI shouldn't keep this (name - by bln_excludedByCharName)
 				/varset keep FALSE
 				/varset reason EXCLUDED CHARACTER
 				/goto :loot_gank
 			}
 
-			|-- Its lore, and I have more than one
-			/if (${Corpse.Item[${n}].Lore} && ${FindItemCount[${lootName}]} == 1) {
-				/cecho \arItem is lore, and we have 1
-				/varset keep FALSE
-				/varset reason LORE
-				/goto :loot_gank
-			}
+			/if (${bln_includedByClass} && ${bln_includedByCharName}) {
+				| My character can loot this provisionally. More checks to follow
+				/cecho \awI may be able to keep this item
 
-			|-- Only this char should loot
-			/if (${lootCharOnly}) {
-				/if (${FindItemCount[${lootName}]} >= ${lootCount}) {
-					/cecho \arI should keep this (name - by lootCharOnly) 
-					/cecho \arBut I already have more than we need of this item.
+				| Check to see if its lore and I already have one
+				/if (${Corpse.Item[${n}].Lore} && ${FindItemCount[${lootName}]} == 1) {
+					/cecho \arItem is lore, and we have 1
 					/varset keep FALSE
-					/varset reason INCLUDED CHAR, BUT LORE
+					/varset reason LORE
+					/goto :loot_gank
+				} else /if (${FindItemCount[${lootName}]} >= ${int_numberToLoot}) {
+					/cecho \arI already have more than what I need of this item. (${FindItemCount[${lootName}]} >= ${int_numberToLoot})
+					/varset keep FALSE
+					/varset reason LOOTCOUNT >= ${int_numberToLoot}
 					/goto :loot_gank
 				} else {
-					/cecho \agI should keep this (name - by lootCharOnly)
+					/cecho \agI should keep this. All checks passed.
 					/varset keep TRUE
 					/goto :loot_gank
 				}
-				
 			}
 
-			|-- I have more than I need
-			/if (${FindItemCount[${lootName}]} >= ${lootCount}) {
-				/cecho \arWe already have more than we need of this item.
-				/varset keep FALSE
-				/varset reason LOOTCOUNT >= ${lootCount}
-				/goto :loot_gank
-			} 
 
-			|-- My class can't keep this
-			/if (!${lootClass}) {
-				/cecho \arMy Class can't keep this.
-				/varset keep FALSE
-				/varset reason EXCLUDED CLASS
-				/goto :loot_gank
-			} 
-
-			
-			
+		
 
 			:loot_gank
 			/if (${keep}) {
-				/cecho \agKeeping ${lootName} ${lootType} ${FindItemCount[${lootName}]} of ${lootCount}
-				/docommand /${str_lootChannel} Keeping ${lootName} ${lootType} ${FindItemCount[${lootName}]} of ${lootCount}
+				/cecho \agKeeping ${lootName} ${lootType} ${FindItemCount[${lootName}]} of ${int_numberToLoot}
+				/docommand /${str_lootChannel} Keeping ${lootName} ${lootType} ${FindItemCount[${lootName}]} of ${int_numberToLoot}
 				/itemnotify loot${n} leftmouseup
 				/delay 5 ${Cursor.ID} || ${Window[ConfirmationDialogBox].Open} || ${Window[QuantityWnd].Open}
 				/if (${Cursor.ID}) {
@@ -448,7 +432,7 @@ Sub LootTarget(int _corpseID)
 
 	:return
 	|/target clear
-	/if (${Corpse.Open}) /notify LootWnd DoneButton leftmouseup 
+	|/if (${Corpse.Open}) /notify LootWnd DoneButton leftmouseup 
 	/keypress esc
 	/if (${Cursor.ID}) {
 		/delay 1
@@ -612,7 +596,6 @@ Sub xbot_initialize_looting
 	/declare list_lootItemsForClass string  outer
 
 	/declare lootINIFile			string  outer	xiris_common/xiris_loot.ini
-
 
 	|-- turn on looting by default if the Bot's INI is set to true (unlikely)
 	|/if (${bln_lootAuto}) /call EnableLooting

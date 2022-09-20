@@ -35,7 +35,7 @@ REQUIRED INCLUDES
 
 #include xiris_common/xiris_common.inc
 
-#Turbo 60
+#Turbo 40
 
 #EVENT STUNMOB "<#1#> stunThis #2#"
 #EVENT STUNMOB "[#1#(msg)] stunThis #2#"
@@ -121,7 +121,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 			/call RunClassEvents
 
 			|-- verify target status
-			/call chkTarget
+			/call chkTargetStatus
 
 			|-- dps library (caster)
 			/call RunRaidEvents

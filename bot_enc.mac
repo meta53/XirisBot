@@ -116,7 +116,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 			/call RunClassEvents
 
 			|-- verify target status
-			/call chkTarget	
+			/call chkTargetStatus	
 
 			|-- debuff lib
 			/call chkDebuffsOnSingleTarget ${int_targetID}

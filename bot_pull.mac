@@ -39,7 +39,7 @@ REQUIRED INCLUDES
 
 #include xiris_common/xiris_common.inc
 
-#Turbo 60
+#Turbo 40
 
 #define INI_zoneInfo xiris_common/xiris_pull_zoneinfo.ini
 
@@ -60,9 +60,7 @@ Sub Main(int _pull_dist, string _channel, string _campName, bool _useDownFlags)
 	|-- report status
 	/echo Pulling >> ${Zone.Name} @ ${int_maxRadius} Range<<
 
-	|-- set base alerts for this camp
-	/call setAlerts
-	
+
 	/melee aggro=on
 	
 	|**
@@ -137,7 +135,7 @@ Sub setTGTAlert
  ----------------------------
  Checks to see if there are any mobs within camp, if so, it targets them indiscriminately
  otherwise, it attempts to target a NPC that does not fall in the alert list
- Calls chkTarget once a target has been found, if that returns as valid, it continues
+ Calls chkTargetValid once a target has been found, if that returns as valid, it continues
  ----------------------------
 **|
 Sub getTarget
@@ -151,12 +149,12 @@ Sub getTarget
 		
 		|----------USE THIS FOR SPECIFIC HUNTER (ALERT 2) --------
 		/if (${SpawnCount[npc radius ${int_campRadius} zradius 15]} > 0) {
-			/echo NPC in camp, killing
 			/call TrueTarget ${NearestSpawn[npc radius ${int_campRadius} zradius 15].ID} 
+			/echo NPC in camp (R:${int_campRadius}), killing: Distance: ${Target.Distance3D}
 			/delay 5
-		} else /if (${SpawnCount[npc alert 2 radius ${int_alert2Radius} range ${int_minTLevel} ${int_maxTLevel} zradius ${int_zRadius}]} > 0) {
-			/echo NPC on alert 2 is up, killing
-			/call TrueTarget ${NearestSpawn[npc alert 2 radius ${int_alert2Radius} range ${int_minTLevel} ${int_maxTLevel} zradius ${int_zRadius}].ID}
+		} else /if (${SpawnCount[npc alert 2 radius ${int_alert2Radius} range ${int_minTLevel} ${int_maxTLevel} zradius ${int_zRadius} noalert 1]} > 0) {
+			/call TrueTarget ${NearestSpawn[npc alert 2 radius ${int_alert2Radius} range ${int_minTLevel} ${int_maxTLevel} zradius ${int_zRadius}  noalert 1].ID}
+			/echo NPC on alert 2 is up, killing: Distance: ${Target.Distance3D}
 			/delay 5
 		} else /if (${SpawnCount[npc noalert 1 radius ${int_maxRadius} range ${int_minTLevel} ${int_maxTLevel} zradius ${int_zRadius}]} > 0) {
 			/echo No NPCs on the alert 2 list are up, trying random NPC
@@ -169,7 +167,7 @@ Sub getTarget
 			/varset bln_validTGT	TRUE
 		} else {
 			|--check the target
-			/if (${Target.ID}) /call chkTarget
+			/if (${Target.ID}) /call chkTargetValid
 		}
 		
 		
@@ -214,15 +212,15 @@ Sub getTarget
 
 |**
  ----------------------------
- chkTarget
+ chkTargetValid
  ----------------------------
  Checks to see if the current target passes the criteria
  If it is a valid target, bln_validTGT is assigned TRUE
  Returns to getTarget
  ----------------------------
 **|
-Sub chkTarget
-	/echo chkTarget ${Target.Name}
+Sub chkTargetValid
+	/echo chkTargetValid ${Target.Name}
 	/if (${Target.Type.NotEqual[NPC]}) /return
 	
 	|--check if there is a path to the target
@@ -544,8 +542,6 @@ Sub killTarget
 		}
 /return
 
-Sub EngageTarget(_targetID) 
-/return
 
 
 |**
@@ -920,25 +916,26 @@ Sub variant_initialize(int _pull_dist, string _channel, string _campName, bool _
 
 	|--radii
 	/declare int_pcCount			int 	outer   ${SpawnCount[PC]}
-	/if (!${Defined[int_campRadius]}) /declare int_campRadius	int		outer	55
+	/if (!${Defined[int_campRadius]}) /declare int_campRadius			int		outer	35
+	/varset int_campRadius 40
 	/declare int_maxRadius			int		outer	75
 	/if (${Defined[_pull_dist]}) {
 		/varset int_maxRadius ${_pull_dist}
 	}
 	
 	|--how far we can go for alert 2 mobs (note, seperate from maxRadius)
-	/declare int_alert2Radius		int 	outer 	1500
+	/declare int_alert2Radius		int 	outer 	450
 
 	|-- use 40 for POFire
 	/declare int_minZHeight			int		outer 	0
 	/declare int_maxZHeight			int		outer	0
 	/declare int_zRadius			int     outer   0
-	/varcalc int_minZHeight			${Me.Z} - 225
-	/varcalc int_maxZHeight			${Me.Z} + 250
+	/varcalc int_minZHeight			${Me.Z} - 20
+	/varcalc int_maxZHeight			${Me.Z} + 65
 	/varcalc int_zRadius ${int_maxZHeight} - ${int_minZHeight}
 
 	|--target information
-	/declare int_minPullCount		int		outer   10
+	/declare int_minPullCount		int		outer   5
 	/declare int_minTLevel			int		outer	48
 	/declare int_maxTLevel			int		outer	77
 	/declare bln_validTGT			bool	outer	FALSE
@@ -1017,41 +1014,41 @@ Sub variant_initialize(int _pull_dist, string _channel, string _campName, bool _
 	/declare timer_buffSHM timer	outer 1s
 		
 	/call setSupportIDs
-	
+	/call setAlerts
 /return
 
 
 Sub setAlerts
+	/cecho \awAdding Alerts (1: ignore, 2:hunt)
 	|=================================
 	|--- specific zone mobs to avoid;
 	|    06/12 ordered by zone for performance
 	|=================================
-	/squelch /alert clear 1
-
 	|-- Global Ignores
-	
+	/squelch /alert add 2 "abadacadvra"
+
 	|-- LDON Ignores
-		/squelch /alert add 1 "a bitten victim"
-		/squelch /alert add 1 "a petrified colossal tree"
-		/squelch /alert add 1 "a hollow tree"
-		/squelch /alert add 1 "a trap"
-		/squelch /alert add 1 "flavor text"
-		/squelch /alert add 1 "ten"
-		/squelch /alert add 1 "six"
-		/squelch /alert add 1 "two"
-		/squelch /alert add 1 "a hissing"
-		/squelch /alert add 1 "four"
-		/squelch /alert add 1 "eight"
-		/squelch /alert add 1 "three"
-		/squelch /alert add 1 "ten"
-		/squelch /alert add 1 "TerrorSpawner"
-		/squelch /alert add 1 "a shimmering orb"
-		/squelch /alert add 1 "aedispellph"
-		/squelch /alert add 1 "aerainph"
-		/squelch /alert add 1 "from no where"
-		/squelch /alert add 1 "mini named controller"
-		/squelch /alert add 1 "the hair"
-		/squelch /alert add 1 "a young dire wolf"
+	/squelch /alert add 1 "a bitten victim"
+	/squelch /alert add 1 "a petrified colossal tree"
+	/squelch /alert add 1 "a hollow tree"
+	/squelch /alert add 1 "a trap"
+	/squelch /alert add 1 "flavor text"
+	/squelch /alert add 1 "ten"
+	/squelch /alert add 1 "six"
+	/squelch /alert add 1 "two"
+	/squelch /alert add 1 "a hissing"
+	/squelch /alert add 1 "four"
+	/squelch /alert add 1 "eight"
+	/squelch /alert add 1 "three"
+	/squelch /alert add 1 "ten"
+	/squelch /alert add 1 "TerrorSpawner"
+	/squelch /alert add 1 "a shimmering orb"
+	/squelch /alert add 1 "aedispellph"
+	/squelch /alert add 1 "aerainph"
+	/squelch /alert add 1 "from no where"
+	/squelch /alert add 1 "mini named controller"
+	/squelch /alert add 1 "the hair"
+	/squelch /alert add 1 "a young dire wolf"
 
 	|-- Zone Specific Ignores
 	/if (${Zone.ShortName.Equal[dranik]}) {
@@ -1133,8 +1130,7 @@ Sub setAlerts
 	|=================================
 	|--- specific zone mobs to hunt;
 	|=================================
-	/squelch /alert clear 2
-	
+	/squelch /alert add 2 "foobarbaza"
 	/if (${Zone.ShortName.Equal[trakanon]}) {
 		|--Hunter Cycle--|
 		/squelch /alert add 2 "froglok hunter"
@@ -1212,6 +1208,8 @@ Sub setAlerts
 	} else /if (${Zone.ShortName.Equal[riwwi]}) {
 		/squelch /alert add 2 "night watchman"
 		/squelch /alert add 2 "officiator"
+	} else /if (${Zone.ShortName.Equal[barindu]}) {
+		/squelch /alert add 2 "aneuk"
 	}
 /return
 

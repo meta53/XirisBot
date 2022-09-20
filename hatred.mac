@@ -34,5 +34,5 @@ Sub Main
     /dt Sadelia offtankON
 
     | Set the macro to raid commands for Xirin
-    /dt xirin /mac raidcmds
+    /dex xirin /mac raidcmds
 /return

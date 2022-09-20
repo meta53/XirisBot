@@ -536,6 +536,7 @@ Sub healGRP
 	| Determine if we should use group heal
 	| Check the range of the majorhurt
 	/if (${int_majorHurt} >=3 && (${Me.Class.ShortName.Equal[CLR]} || ${Me.Class.ShortName.Equal[PAL]})) {
+		/if (${Me.CurrentMana} < ${Spell[${str_heal_groupl}].Mana})  /goto :return
 		/call getGroupInRange ${int_range_group}
 		/varset int_inRange ${Int[${Macro.Return}]}
 		/if (${int_inRange}>=3) {
@@ -546,7 +547,7 @@ Sub healGRP
 	} else /if (${int_minorHurt} >=3 && ${Me.Class.ShortName.Equal[CLR]}) {
 		/call getGroupInRange ${int_range_groupHoT}
 		/varset int_inRange ${Int[${Macro.Return}]}
-		/if (${int_inRange}>=3) {
+		/if (${int_inRange}>=3 && (${Me.CurrentMana} > ${Spell[${str_heal_groupHoT}].Mana})) {
 			/cecho  \apGROUP_HOT  \ap${str_heal_groupHoT} \awon \ay${Spawn[pc id ${arr_groupHP[${i},3]}].Name}
 			/call healCast ${Me.ID} ${Me.Name} "${str_heal_groupHoT}"
 			/if (${Macro.Return.Equal["CAST_SUCCESS"]}) /varset timer_groupHoT 40s
@@ -555,38 +556,40 @@ Sub healGRP
 	} 
 
 	:CastSingleTargetHeals
-	| Note the worst hurt will be the first in the list
+	| Note the worst hurt will be the first in the list, and then run the heal checks again
+	| This is so we heal 1 person, check tank, self, heal 1 person, check tank, self.
+	| The only time we skip to another person in group is if they are out of frantic range.
 	/for i 1 to 6 
 		| No Heal? Since the lowest HP is always first, if we get to a index where there is no heal, we can skip the rest
-		/if (${arr_groupHP[${i},1]} >= ${int_point_calcStopHeal} ) {
-			/if (${Me.CleanName.Equal[Xanshia]}) /echo ${arr_groupHP[${i},1]} >= ${int_point_calcStopHeal} returning
-			/goto :return
-		}
+		/if (${arr_groupHP[${i},1]} >= ${int_point_calcStopHeal} ) /goto :return
+
 		| No Data? Then the toon is not in zone
 		/if (${arr_groupHP[${i},1]} == 0 || ${arr_groupHP[${i},2]} >= 250 || ${arr_groupHP[${i},3]} == 0) /goto :next_groupMember
-		| Frantic? This spell has the longest range, so if we can't reach them here, we need to goto next group member
+
+		| Frantic? 
+		| This spell has the longest range, so if we can't reach them here, we need to goto next group member
 		/if (${arr_groupHP[${i},1]} <= ${int_point_grpFrantic}) {
 			/if (${arr_groupHP[${i},2]} >= ${int_range_frantic}) {
 				/cecho \ar${Spawn[pc id ${arr_groupHP[${i},3]}].Name} is out of FRANTIC range!
 				/goto :next_groupMember
 			} else {
-				/cecho  \aoFRANTIC  \ar${str_heal_frantic} \awon \ay${Spawn[pc id ${arr_groupHP[${i},3]}].Name}
-				/call healCast ${arr_groupHP[${i},3]} ${Spawn[pc id ${arr_groupHP[${i},3]}].Name} "${str_heal_frantic}"
+				/cecho  \aoFRANTIC (${str_healMode})  \ar${str_heal_frantic} \awon \ay${Spawn[pc id ${arr_groupHP[${i},3]}].Name}
+				/varset str_currentHeal ${str_heal_frantic}
+				/if (${str_healMode.Equal[EFFICIENT]}) /varset str_currentHeal ${str_heal_frantic_efficient}
+				/if ((${Me.CurrentMana} < ${Spell[${str_currentHeal}].Mana})) /goto :return
+				/call healCast ${arr_groupHP[${i},3]} ${Spawn[pc id ${arr_groupHP[${i},3]}].Name} "${str_currentHeal}"
 				/goto :return	
 			}
 			
 		}
-		| Normal Efficient?
-		/if (${arr_groupHP[${i},1]} <= ${int_point_grpPatch} && ${arr_groupHP[${i},2]} <= ${int_range_normal_efficient} && ${str_healMode.Equal[EFFICIENT]}) {
-			/cecho \aoEFFICIENT \ay${str_heal_normal_efficient} \awon \ay${Spawn[pc id ${arr_groupHP[${i},3]}].Name}
-			/call healCast ${arr_groupHP[${i},3]} ${Spawn[pc id ${arr_groupHP[${i},3]}].Name} "${str_heal_normal_efficient}"
-			/goto :return
-		}
 
 		| Normal?
-		/if (${arr_groupHP[${i},1]} <= ${int_point_grpPatch} && ${arr_groupHP[${i},2]} <= ${int_range_normal} && ${str_healMode.NotEqual[EFFICIENT]}) {
-			/cecho \aoNORMAL \ay${str_heal_normal} \awon \ay${Spawn[pc id ${arr_groupHP[${i},3]}].Name}
-			/call healCast ${arr_groupHP[${i},3]} ${Spawn[pc id ${arr_groupHP[${i},3]}].Name} "${str_heal_normal}"
+		/if (${arr_groupHP[${i},1]} <= ${int_point_grpPatch} && ${arr_groupHP[${i},2]} <= ${int_range_normal_efficient} && ${str_healMode.Equal[EFFICIENT]}) {
+			/cecho \aoNORMAL (${str_healMode})  \ay${str_heal_normal_efficient} \awon \ay${Spawn[pc id ${arr_groupHP[${i},3]}].Name}
+			/varset str_currentHeal ${str_heal_normal}
+			/if (${str_healMode.Equal[EFFICIENT]}) /varset str_currentHeal ${str_heal_normal_efficient}
+			/if ((${Me.CurrentMana} < ${Spell[${str_currentHeal}].Mana})) /goto :return
+			/call healCast ${arr_groupHP[${i},3]} ${Spawn[pc id ${arr_groupHP[${i},3]}].Name} "${str_currentHeal}"
 			/goto :return
 		}
 
@@ -594,6 +597,7 @@ Sub healGRP
 		/if (!${use_heal_HoT}) /goto :next_groupMember
 		/if (${arr_groupHP[${i},1]} <= ${int_point_grpHot} && ${arr_groupHP[${i},2]} <= ${int_range_HoT} && !${timer_hot_${arr_groupHP[${i},3]}}) {
 			/cecho  \aoHoT \ag${str_heal_HoT} \awon \ay ${Spawn[pc id ${arr_groupHP[${i},3]}].Name}(${arr_groupHP[${i},3]})
+			/if ((${Me.CurrentMana} < ${Spell[${str_heal_HoT}].Mana})) /goto :return
 			/call healCast ${arr_groupHP[${i},3]} ${Spawn[pc id ${arr_groupHP[${i},3]}].Name} "${str_heal_HoT}"
 			/if (${Macro.Return.Equal["CAST_SUCCESS"]}) /varset ${timer_hot_${arr_groupHP[${i},3]}} 40s
 			/goto :return
@@ -724,12 +728,12 @@ Sub healDivineArbitration
  Check Healing Subroutines
  ----------------------------
  This is called (looping) while a spell is being cast
- This will then call several check subs which initiates the chain chkHP -> , chkDARB, chkTargetDead [chkMTDead {getMT <setMT>}] ,
+ This will then call several check subs which initiates the chain chkHP -> , chkDARB, chkHealTargetDead [chkMTDead {getMT <setMT>}] ,
  ----------------------------
 **|
 Sub chkHP
 	| Status Checks
-	/call chkTargetDead
+	/call chkHealTargetDead
 
 	| Return Checks
    	| -------------------------
@@ -780,7 +784,7 @@ Sub chkHP
 Check|Set to see if the target is dead
 ----------------------------  
 **|
-Sub chkTargetDead
+Sub chkHealTargetDead
 	/varset bln_TRGTDead	FALSE
 	/varset bln_MTDead		FALSE
 	/if (!${Target.Type.Equal[PC]} ) {
@@ -1258,7 +1262,7 @@ Sub ReCreateGroupHoTTimers
 |**| 
 
 Sub xbot_initialize_healing(int _healPoint)
-	/if (${str_classArchetype.Equal[MELEE_END]} || ${Me.Class.ShortName.Equal[WAR]} || ${Me.Class.ShortName.Equal[SHD]} || ${str_classArchetype.Equal[CASTER]})	/return
+	/if (${str_classArchetype.Equal[MELEE_END]} || ${Me.Class.ShortName.Equal[BRD]} || ${Me.Class.ShortName.Equal[WAR]} || ${Me.Class.ShortName.Equal[SHD]} || ${str_classArchetype.Equal[CASTER]})	/return
 
 	/declare 	healINI				string  outer	xiris_common/xiris_healing.ini
 	|-- Set spellset to default so we can probe the properties of these

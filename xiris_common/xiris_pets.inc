@@ -238,11 +238,9 @@ Sub ShrinkPet
 **|
 
 Sub chkPetAttack
-	/if (!${bln_engaged}) /return
-	/if (${bln_petAttacking}) /return
-	/if (${Target.PctHPs} == 0) /return
+	/if (!${bln_engaged} || ${bln_petAttacking} || !${Bool[${Target.PctHPs}]} ) /return
 	/if (${Me.Pet.ID} && !${Me.Pet.Combat} && ${Target.ID}==${int_targetID} && ${Target.PctHPs}<${int_petAttackHP} && ${Target.Distance}<=100) {
-		/echo chkPetAttack: Siccing Pet
+		/cecho \agSiccing Pet on \ay${Target.Name}
 		/varset bln_petAttacking TRUE
 		/pet attack
 	}
@@ -260,7 +258,7 @@ Sub xbot_initialize_pets
 	/declare str_petReagent				string  outer	${Ini[botINI,Pet,str_petReagent,NULL]}
 	/declare bln_petUse					bool	outer	${Ini[botINI,Pet,bln_petUse,TRUE]}
 	/declare bln_petAttacking			bool	outer 	${Me.Pet.Combat}
-	/declare int_petAttackHP			int		outer	${Ini[botINI,Pet,int_petAttackHP,95]}
+	/declare int_petAttackHP			int		outer	${Ini[botINI,Pet,int_petAttackHP,99]}
 	/declare bln_petDiscipline			bool	outer	${Ini[botINI,Pet,bln_petDiscipline,TRUE]}
 	
 	/declare str_petSpell				string	outer	${Ini[botINI,Pet,str_petSpell,Child Of Bertoxxulous]}

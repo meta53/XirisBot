@@ -43,7 +43,7 @@ REQUIRED INCLUDES
 
 #include xiris_common/xiris_common.inc
 
-#Turbo 60
+#Turbo 40
 
 #define INI_ldonInfo xiris_common/xiris_ldon_definitions.ini
 
@@ -722,7 +722,7 @@ Sub setTGTAlert
  ----------------------------
  Checks to see if there are any mobs within camp, if so, it targets them indiscriminately
  otherwise, it attempts to target a NPC that does not fall in the alert list
- Calls chkTarget once a target has been found, if that returns as valid, it continues
+ Calls chkTargetValid once a target has been found, if that returns as valid, it continues
  ----------------------------
 **|
 Sub getTarget
@@ -757,7 +757,7 @@ Sub getTarget
 			/varset bln_validTGT	TRUE
 		} else {
 			|--check the target
-			/if (${Target.ID}) /call chkTarget
+			/if (${Target.ID}) /call chkTargetValid
 		}
 		
 		
@@ -792,15 +792,15 @@ Sub getTarget
 
 |**
  ----------------------------
- chkTarget
+ chkTargetValid
  ----------------------------
  Checks to see if the current target passes the criteria
  If it is a valid target, bln_validTGT is assigned TRUE
  Returns to getTarget
  ----------------------------
 **|
-Sub chkTarget
-	/echo chkTarget ${Target.Name}
+Sub chkTargetValid
+	/echo chkTargetValid ${Target.Name}
 	/if (${Target.Type.NotEqual[NPC]}) /return
 	
 	|--check if there is a path to the target
@@ -1082,9 +1082,6 @@ Sub chkLDONCompletion
 		
 /return
 
-
-Sub EngageTarget(_targetID) 
-/return
 
 |**
  ----------------------------

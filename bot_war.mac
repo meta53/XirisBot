@@ -41,7 +41,7 @@ REQUIRED INCLUDES
 
 #include xiris_common/xiris_common.inc
 
-#Turbo 60
+#Turbo 40
 
 Sub InitEvents_Class
 	|/call RegisterClassEvents Events_WAR 0
@@ -99,7 +99,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 			/call RunClassEvents
 
 			|-- verify target status
-			/call chkTarget
+			/call chkTargetStatus
 
 			|-- std library (burns/aa/clicks)
 			/call RunRaidEvents
@@ -117,34 +117,6 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
     /goto :MainLoop
 /return
 
-|**
- ----------------------------
- Target Engage
- ----------------------------
- Engage the target
- ----------------------------
-**|
-
-
-Sub EngageTarget(_targetID)
-	/echo EngageTarget ${Spawn[id ${_targetID}].CleanName} (${_targetID})
-	/if (${_targetID} == 0 || ${_targetID} == NULL) /return
-	/if (${Me.Feigning} && (${Me.PctHPs} > 75)) /stand
-	/varset int_targetID ${_targetID}
-	/call TrueTarget ${int_targetID}
-	/varset bln_engaged TRUE
-	/if (!${mq2meleeEnabled}) {
-		/face fast
-		/attack on
-	} else {
-		/killthis
-	}
-	/if (${Me.ID} != ${int_MTID} || !${bln_tanking}) {
-		/call StickToTarget
-	} else {
-		/stick off
-	}
-/return
 
 |**
  ----------------------------

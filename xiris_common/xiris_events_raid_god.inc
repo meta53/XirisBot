@@ -132,7 +132,6 @@ Sub Event_InkCurseSafe
 	/varset inkRunning FALSE
 	/maxfps bg 25
 	/play off
-	/alert clear 2
 /return
 
 Sub InkCurseDead
@@ -356,7 +355,7 @@ SUB EVENT_BALANCE
 	/if (${str_classArchetype.Equal[CASTER]}) {
 		/echo CASTER CLASS checking
 		/varset bln_engaged FALSE
-		/call ResetTarget
+		/call Disengage
 		/pet back off
 		/if (${Me.Class.ShortName.Equal[ENC]}) /call RuneSpamOff
 
@@ -442,7 +441,7 @@ Sub BalancerKillMelee(string _targetName, int _targetID, int _balanceTo)
 		/nav stop
 		/call EngageTarget ${Target.ID}
 	:BalancerMeleeLoop
-		|/echo BalancerMeleeLoop
+		/if (${Target.PctHPs} < ${_balanceTo}) /goto :return
 		/doevents GETCLOSER
 		/doevents RESTICK
 		/doevents BALANCEOFF
@@ -457,7 +456,9 @@ Sub BalancerKillMelee(string _targetName, int _targetID, int _balanceTo)
 	:return
 	/echo BalancerKillMelee return
 	/melee reset
-	/call ResetTarget
+	/melee reset
+	/melee reset
+	/call Disengage
 	/varset bln_engaged FALSE
 /return 
 
@@ -478,6 +479,7 @@ Sub BalancerKillCaster(string _targetName, int _targetID, int _balanceTo)
 		/if (${Me.Class.ShortName.Equal[MAG]}) /twist 4
 		/if (${Me.Class.ShortName.Equal[ENC]}) /twist 4
 	:BalancerCasterLoop
+		/if (${Target.PctHPs} < ${_balanceTo}) /goto :return
 		|/echo BalancerCasterLoop
 		/doevents BALANCEOFF
 		/doevents BurnOn
@@ -491,7 +493,9 @@ Sub BalancerKillCaster(string _targetName, int _targetID, int _balanceTo)
 	:return
 	/echo BalancerKillCaster return
 	/twist off
-	/call ResetTarget
+	/pet hold on
+	/pet back off
+	/call Disengage
 	/varset bln_engaged FALSE
 /return
 

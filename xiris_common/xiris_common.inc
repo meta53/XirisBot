@@ -55,6 +55,7 @@ ______________________________________________
 #EVENT KillMob				"#1# tells the group#*#'KillMob #2#'"
 #EVENT KillMob				"#1# tells you#*#'KillMob #2#'"
 #EVENT KillMob				"#1# tells the raid#*#'KillMob #2#'"
+#EVENT KillMob				"#1# tell your party, #*#'KillMob #2#'"
 #EVENT KillMob 				"[ #1# #*#]#*#KillMob #2#"
 
 #EVENT Zoned				"You have entered#*#"
@@ -459,6 +460,45 @@ Sub chkSit
 /return
 
 
+|--Engage Target EVENT, calls EngageTarget
+Sub EVENT_KillMob(_line, _sender, _eventParams)
+	/cecho \ayKMCalled ${_sender} ${_eventParams}
+	/if (${_eventParams.Arg[1, ].Equal[NULL]}) {
+		/cecho \aoNULL Target, exiting!
+		/return
+	}
+	|-> #EVENT KillMob "<#1#> KillMob #2#"
+	|-> Sender> == #1
+	|->_eventParams> == #2
+	|-> _eventParams: ${Target.ID} "${Target.Name}" ${Time.Time24}
+	/call EngageTarget ${_eventParams.Arg[1, ]}
+	/doevents flush KillMob
+/return
+
+|-- Engage Target Sub, handles class specific modifications (minor)
+Sub EngageTarget(int _targetID)
+	/if (!${Bool[${_targetID}]}) /return
+	/cecho \awEngageTarget \ag${Spawn[id ${_targetID}].CleanName} \ay(${_targetID})
+	/varset int_targetID ${_targetID}
+	/varset bln_engaged TRUE
+
+	| Target the NPC
+	/if (${Me.Class.ShortName.NotEqual[CLR]}) /call TrueTarget ${int_targetID}
+	| Stand Up
+	/if ((${Me.Feigning} && (${Me.PctHPs} > 75)) || !${Me.Standing}) /stand
+	| Reset recast timers (nukes, dots, etc)
+	/if (${str_classArchetype.NotEqual[MELEE_END]} || ${Me.Class.ShortName.NotEqual[WAR]}) /call ResetCastTimers
+	| Sicc Pet
+	/if (${Me.Pet.ID}) /call chkPetAttack
+	| Start Swinging
+	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]} || (${Me.Class.ShortName.Equal[CLR]} && ${bln_battleCleric})) {
+		/squelch /face fast
+		/squelch /killthis
+		/call StickToTarget
+	}
+	| Stop Sticking if you are MT, cause it's annoying
+	/if (${Me.ID} == ${int_MTID} || ${bln_tanking}) /squelch /stick off
+/return
 
 |**
  ----------------------------
@@ -468,18 +508,31 @@ Sub chkSit
  ----------------------------
 **|
 
-Sub chkTarget
+Sub chkTargetStatus
 	:chkTargetValid
-	/if ((${Target.ID} != ${int_targetID}) && (${Spawn[id ${int_targetID}].PctHPs} > 0 && !${Spawn[id ${int_targetID}].Name.Find[corpse]})) {
+	
+	/if ((!${Bool[${Target.PctHPs}]} || !${Bool[${Target.ID}]} || ${Spawn[id ${int_targetID}].Name.Find['s corpse]}) && ${bln_engaged}) {
+		| Target is dead?
+		/call Disengage
+	} else /if ((${Me.XTarget}==0 && ${SpawnCount[npc id ${int_targetID} radius 400]} == 0) && ${bln_engaged}) {
+		| Target is over 400 distance away, that will blur it
+		/call Disengage	
+	} else /if ((${Target.ID} != ${int_targetID}) && (${Spawn[id ${int_targetID}].PctHPs} > 0 && !${Spawn[id ${int_targetID}].Name.Find['s corpse]})) {
+		| I am not targetting the correct NPC
 		/call TrueTarget ${int_targetID}
-	}
+	} 
 
-	:chkTargetDead
-	/if ((${Me.XTarget}==0 && ${SpawnCount[npc id ${int_targetID} radius 250]} == 0) && ${bln_engaged}) {
-		/echo chkMobDead triggered Xtarget:!${Me.XTarget[1].ID} || SpawnCount:!${SpawnCount[npc id ${int_targetID} radius 250]}  && engaged:${bln_engaged}
-		/call ResetTarget
+	
+	
+
+	
+	/if (() {
+		/echo chkMobDead triggered Xtarget:${Me.XTarget} == 0 || SpawnCount:!${SpawnCount[npc id ${int_targetID} radius 200]}  && engaged:${bln_engaged}
+		/call Disengage
 		/goto :return
 	}
+	
+
 	
 	:chkTargetTarget
 	/if (${Me.TargetOfTarget.CleanName.Equal[${Me.CleanName}]} && !${bln_aggro} && !${timer_hott}) {
@@ -506,8 +559,6 @@ Sub chkTarget
 		} else /if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
 			/declare use_riposte bool local FALSE
 			/if (${Target.Name.Find[Pirik]} || ${Target.Name.Find[Yihst]} || ${Target.Name.Find[Tunat]} || ${Target.Name.Find[Master]}) /varset use_riposte TRUE
-
-
 			/if (${Me.Class.ShortName.Equal[SHD]}) {
 				/if (${Me.AltAbilityReady[Death Peace]})   	/call MQ2Cast "Death Peace" alt
 				/if (!${Me.Standing}) /stand
@@ -529,73 +580,78 @@ Sub chkTarget
 		}
 		/varset timer_hott ${timer_hott.OriginalValue}
 	}
-	:chkTargetDistance
-	| Note this is unlikely needed as the EVENT_GETCLOSER (xiris_melee.inc) will have fired.
-	|/call StickToTarget
+
+	:disengage
+	
+
+	:retarget
+	
+
 	:return
 /return
 
 
-|--Engage Target EVENT, calls EngageTarget
-Sub EVENT_KillMob(_line, _sender, _eventParams)
-	/cecho \ayKMCalled ${_sender} ${_eventParams}
-	/if (${_eventParams.Equal[NULL]}) /return
-	|-> #EVENT KillMob "<#1#> KillMob #2#"
-	|-> Sender> == #1
-	|->_eventParams> == #2
-	|-> _eventParams: ${Target.ID} "${Target.Name}" ${Time.Time24}
-	/call EngageTarget ${_eventParams.Arg[1, ]}
-	/doevents flush KillMob
+|-------------------------------------------------------------------------------- 
+|SUB: Event_BackOff!
+|--------------------------------------------------------------------------------
+
+Sub Event_BackOff
+	/doevents flush BackOff
+	/call Disengage
 /return
-
-|-- Engage Target Sub, handles class specific modifications (minor)
-Sub EngageTarget(int _targetID)
-	/echo EngageTarget ${Spawn[id ${_targetID}].CleanName} (${_targetID})
-	/if (${_targetID} == 0) /return
-	/varset int_targetID ${_targetID}
-	/varset bln_engaged TRUE
-	/if (${Me.Class.ShortName.NotEqual[CLR]}) /call TrueTarget ${int_targetID}
-	/call ResetCastTimers
-	/if (!${Me.Standing}) /stand
-	/if (${Me.Pet.ID}) /pet attack
-	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
-		/if (!${mq2meleeEnabled}) {
-			/call StickToTarget
-			/face fast
-			/attack on
-		} else {
-			/killthis
-		}
-	}
-/return
-
-Sub GetAssistTarget
-
-
-/return 
-
 
 Sub EVENT_Disengage
-	/call ResetTarget
+	/doevents flush Disengage
+	/call Disengage
 /return 
 
-|-- Resets targetting and engagmenent, handles class specicic modifications (very minor)
-Sub ResetTarget
+Sub Disengage 
+	/cecho \aoDisengaging
 	|-- global reset
 	/varset bln_engaged 		FALSE
 
 	|-- class archetype resets
 	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
-		/stick off
-		/melee reset
+		/squelch /stick off
+		/squelch /melee reset
+		/squelch /target clear
+	} else /if (${str_classArchetype.Equal[CASTER]}) {
+		/if (${Me.Pet.ID}) {
+			/if (${Defined[bln_petAttacking]}) /varset bln_petAttacking FALSE
+			/squelch /pet back off
+			/squelch /pet hold on
+		}
+		/squelch /target clear
 	} 
+/return
 
-	|-- pet resets
-	/if (${Me.Pet.ID} && ${Defined[bln_petAttacking]}) {
-		/varset bln_petAttacking 	FALSE
-		/pet hold on
+
+Sub chkMobDead
+	/if ((${Me.XTarget}==0 && ${SpawnCount[npc id ${int_targetID} radius 200]} == 0) && ${bln_engaged}) {
+		/echo chkMobDead triggered Xtarget:!${Me.XTarget[1].ID} || SpawnCount:!${SpawnCount[npc id ${int_targetID} radius 250]}  && engaged:${bln_engaged}
+		/call Disengage
 	}
+/return
 
+Sub TrueTarget(int _targetID)
+	|/echo TrueTarget(${_targetID})
+	| Check if the target is in zone.
+	/if (${Target.ID} == ${_targetID}) /return
+	/if (${SpawnCount[id ${_targetID}]}) {
+		/declare retryTimer timer local 30
+		:Target_Loop
+		|/echo targetting ${_targetID}
+		/squelch /target id ${_targetID}
+		/delay 2 ${Target.ID} == ${_targetID}
+		
+		/if (${Target.ID} != ${_targetID} && ${SpawnCount[id ${_targetID}]}) {
+			/if (${retryTimer}) {
+				/goto :Target_Loop
+			} else {
+				/echo Failed to target [${Spawn[id ${_targetID}].CleanName} - ${_targetID}]
+			}
+		}
+	}
 /return
 
 
@@ -1269,19 +1325,7 @@ Sub Event_RageOn(string line)
 	/doevents flush RageOn
 /return
 
-|-------------------------------------------------------------------------------- 
-|SUB: Event_BackOff!
-|--------------------------------------------------------------------------------
 
-Sub Event_BackOff
-	/echo Told to back off
-	/varset bln_engaged FALSE
-	/pet back off
-	/pet hold
-	/call ResetTarget
-	/doevents clear
-	/doevents flush BackOff
-/return
 
 |-------------------------------------------------------------------------------- 
 |-- DUCKING EVENT
@@ -1466,20 +1510,7 @@ Sub EVENT_ChangeAP(_line, _sender, _eventParams)
 
 
 
-Sub EVENT_MOBDEAD
-	/echo EVENT_MOBDEAD triggered
-	/varset bln_engaged FALSE
-	/varset int_targetID 0
-	/call ResetTarget
-	/doevents flush MOBDEAD
-/return
 
-Sub chkMobDead
-	/if ((${Me.XTarget}==0 && ${SpawnCount[npc id ${int_targetID} radius 250]} == 0) && ${bln_engaged}) {
-		/echo chkMobDead triggered Xtarget:!${Me.XTarget[1].ID} || SpawnCount:!${SpawnCount[npc id ${int_targetID} radius 250]}  && engaged:${bln_engaged}
-		/call ResetTarget
-	}
-/return
 
 Sub LoadPlugin(string _pluginName, bool _load) 
 	/if (${_load}) {
@@ -1495,31 +1526,6 @@ Sub LoadPlugin(string _pluginName, bool _load)
 /return
 
 
-|------------------------------------------------------------|
-|- Reliably targets specified Target.IDs. Ripped from E3    -|
-|------------------------------------------------------------|
-|- @param TargetID: The ID of the spawn you wish to target.	-|
-|------------------------------------------------------------|
-Sub TrueTarget(int _targetID)
-	|/echo TrueTarget(${_targetID})
-	| Check if the target is in zone.
-	/if (${Target.ID} == ${_targetID}) /return
-	/if (${SpawnCount[id ${_targetID}]}) {
-		/declare retryTimer timer local 30
-		:Target_Loop
-		|/echo targetting ${_targetID}
-		/squelch /target id ${_targetID}
-		/delay 2 ${Target.ID} == ${_targetID}
-		
-		/if (${Target.ID} != ${_targetID} && ${SpawnCount[id ${_targetID}]}) {
-			/if (${retryTimer}) {
-				/goto :Target_Loop
-			} else {
-				/echo Failed to target [${Spawn[id ${_targetID}].CleanName} - ${_targetID}]
-			}
-		}
-	}
-/return
 
 Sub chkAutoAssist
 	/if (!${bln_autoAssist}) /return

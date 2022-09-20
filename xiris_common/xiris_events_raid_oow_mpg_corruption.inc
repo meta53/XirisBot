@@ -11,6 +11,7 @@ ______________________________________________
 REVISION HISTORY
 	04.25.22    xiris	INITIAL REVISION
 	08.14.22	xiris 	Added OT routines that prioritize ROG/ENC/MNK/WAR
+    09.18.22    xiris   Commented out Mez because you... can't
 ______________________________________________
 **|	
 |-- Muramite Proving Grounds events
@@ -24,7 +25,7 @@ Sub InitEvents_OOW_MPG_Corruption
 /return
 
 Sub Events_OOW_MPG_Corruption
-	/if (${Me.Class.ShortName.Equal[ENC]}) /call chkCorruptionMez
+	|/if (${Me.Class.ShortName.Equal[ENC]}) /call chkCorruptionMez
 	/if (${Me.Class.ShortName.Equal[WAR]}) /call chkCorruptionAdds
     /if (${Me.Class.ShortName.Equal[PAL]}) /call chkCorruptionAdds
 	/if (${Me.Class.ShortName.Equal[SHD]}) /call chkCorruptionAdds
