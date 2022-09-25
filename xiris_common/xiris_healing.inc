@@ -595,15 +595,22 @@ Sub healGRP
 
 		| HoT ?
 		/if (!${use_heal_HoT}) /goto :next_groupMember
-		/if (${arr_groupHP[${i},1]} <= ${int_point_grpHot} && ${arr_groupHP[${i},2]} <= ${int_range_HoT} && !${timer_hot_${arr_groupHP[${i},3]}}) {
+		/if (${arr_groupHP[${i},1]} <= ${int_point_grpHot} && ${arr_groupHP[${i},2]} <= ${int_range_HoT} && !${timer_HoT_${arr_groupHP[${i},3]}}) {
 			/cecho  \aoHoT \ag${str_heal_HoT} \awon \ay ${Spawn[pc id ${arr_groupHP[${i},3]}].Name}(${arr_groupHP[${i},3]})
 			/if ((${Me.CurrentMana} < ${Spell[${str_heal_HoT}].Mana})) /goto :return
 			/call healCast ${arr_groupHP[${i},3]} ${Spawn[pc id ${arr_groupHP[${i},3]}].Name} "${str_heal_HoT}"
-			/if (${Macro.Return.Equal["CAST_SUCCESS"]}) /varset ${timer_hot_${arr_groupHP[${i},3]}} 40s
+			/if (${Macro.Return.Equal["CAST_SUCCESS"]}) /varset timer_HoT_${arr_groupHP[${i},3]} 40s
 			/goto :return
 		}
 	:next_groupMember
 	/next i
+
+	:debug_group_hp
+	/for i 1 to 6
+		/cecho \ag${arr_hotTimerKeys[${i}]} hp:${arr_groupHP[${i},1]} range: ${arr_groupHP[${i},2]} id:${arr_groupHP[${i},3]} 
+		/cecho \ao  timer?${timer_HoT_${arr_groupHP[${i},3]}}   ==> ${${arr_hotTimerKeys[${i}]}}
+	/next i
+	
 	:return
 /return
 
@@ -637,7 +644,7 @@ Sub updateGroupHP
 	|--- sorting arr_groupHP
 	/for i 1 to 6
 		/varcalc s ${i}+1
-		/if (${s} > 6)  /return
+		/if (${s} > 6)  /goto :return
 		/for j ${s} to 6
 			/varset hp1 ${arr_groupHP[${i},1]}
 			/varset hp2 ${arr_groupHP[${j},1]}
@@ -1236,11 +1243,16 @@ Sub CreateGroupHoTTimers
 		} else {
 			/varset timerKey timer_HoT_NULL_${i}
 		}
-		/declare ${timerKey}	timer 	outer 	0
+		/declare ${timerKey}	timer 	outer 	1m
 		/varset arr_hotTimerKeys[${k}] ${timerKey}
 		/varset str_groupIDs ${str_groupIDs}|${Group.Member[${i}].ID}
 		/varcalc k ${k}+1
 	/next i
+
+	/for i 1 to 6
+		/cecho \ag${i}: ${arr_hotTimerKeys[${i}]} ${${arr_hotTimerKeys[${i}]}}
+	/next i
+
 /return
 
 Sub ReCreateGroupHoTTimers

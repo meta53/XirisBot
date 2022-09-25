@@ -100,8 +100,8 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 			|-- verify target status
 			/call chkTargetStatus	
 
-			|-- class specific
-			/call chkConcussion
+			|-- class specific Jolt is handled by mq2melee
+			|/call chkConcussion
 
 			|-- dps library (caster)
 			/call chkNuke

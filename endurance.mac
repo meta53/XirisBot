@@ -30,7 +30,7 @@ Sub Main
     /dgt healMode EFFICIENT 
 
     | Turn of Offtanks
-    /dex Xiria /melee aggro=on 
+    /dex Xiria /melee aggro=1 
     /dex Xiria /mac stand 
     /dex Xiris /mac stand
 
@@ -38,7 +38,7 @@ Sub Main
     /docrack preventspeed on
 
     | Set Me (SK) to aggro and taunt and set the autostander mac
-    /melee aggro=on 
-    /melee taunt=on
+    /melee aggro=1 
+    /melee taunt=1
     /mac stand
 /return

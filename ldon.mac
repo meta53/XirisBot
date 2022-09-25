@@ -1319,7 +1319,7 @@ Sub setGroupCommands
 	
 	|-- turn on melee and aggro
 	/squelch /dgga /melee on
-	/melee aggro=on
+	/melee aggro=1
 
 	
 /return
@@ -1469,7 +1469,7 @@ Sub variant_initialize(string _channel, string _announce, bool _useDownFlags, bo
 	/if (${Defined[_highRisk]} || ${_highRisk} != FALSE) /varset bln_highRisk ${_highRisk}
 	
 	|--melee plugin/aggro for the requester
-	/melee aggro=on
+	/melee aggro=1
 	
 	|--command channel setup
 	/if (!${Defined[cmdChannel]}) /declare cmdChannel string	outer	bcga

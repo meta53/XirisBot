@@ -61,7 +61,7 @@ Sub Main(int _pull_dist, string _channel, string _campName, bool _useDownFlags)
 	/echo Pulling >> ${Zone.Name} @ ${int_maxRadius} Range<<
 
 
-	/melee aggro=on
+	/melee aggro=1
 	
 	|**
 	 ----------------------------
@@ -883,7 +883,7 @@ Sub variant_initialize(int _pull_dist, string _channel, string _campName, bool _
 	/if (${Defined[_useDownFlags]} && !${_useDownFlags}) /varset useDownFlags FALSE
 	
 	|--melee plugin/aggro for the requester
-	/melee aggro=on
+	/melee aggro=1
 	/speed 1.25
 	/declare useGroup	bool	outer	FALSE
 	
@@ -1073,6 +1073,9 @@ Sub setAlerts
 		/squelch /alert add 1 "Diru"
 		/squelch /alert add 1 "Abena"
 		/squelch /alert add 1 "Amari"
+		/squelch /alert add 1 "Scribe"
+		/squelch /alert add 1 "Gurru"
+		/squelch /alert add 1 "Udranda"
 	} else /if (${Zone.ShortName.Equal[ferubi]}) {
 		/squelch /alert add 1 "Rondo"
 	} else /if (${Zone.ShortName.Equal[pofire]}) {

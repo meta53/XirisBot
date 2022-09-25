@@ -86,14 +86,12 @@ Sub EnableLooting(string _eventParams)
 
 Sub EVENT_LOOT_OFF
 	/call DisableLooting
-	| Announce
-	/docommand /${str_lootChannel} ${Me.Name} is no longer Looting
 	/doevents flush LOOT_OFF
 /return
 
 Sub DisableLooting
 	| Annnounce
-	/docommand /${str_lootChannel} ${Me.Name} is no longer looting
+	/docommand /${str_lootChannel} ${Me.Name} is no longer Looting
 	/hidecorpse npc
 	/varset bln_lootAuto FALSE
 /return 
@@ -104,6 +102,7 @@ Sub EVENT_LOOT_REFRESH
 /return
 
 Sub RefreshLoot
+	| Announce
 	/docommand /${str_lootChannel} ${Me.Name} is refreshing the loot ini file
 	/call ParseLootINI xiris_common/xiris_loot.ini
 /return
@@ -253,7 +252,7 @@ Sub ParseLootINI
 |	- Loots if count < max, my class is a looter on the list
 |-------------------------------------------------------------------------------- 
 Sub LootTarget(int _corpseID)
-	/echo lootTarget
+	/cecho \awLootTarget: \ag${_corpseID}
 	/call TrueTarget ${_corpseID}
 
 	
@@ -312,8 +311,8 @@ Sub LootTarget(int _corpseID)
 		/for n 1 to ${Corpse.Items}
 			|-check to see if I want the item
 			| [item][1] Name [2] type|* [3] count|* [4] class|*
+			/echo Slot ${n}: ${Corpse.Item[${n}].Name}
 			/if (!${bln_onlyQuest}) {
-				/echo Slot ${n}: ${Corpse.Item[${n}].Name}
 				/for i 1 to ${loot_ALL.Size[1]}
 					|/echo ${i} ${loot_ALL[${i},1]}
 					/if (${loot_ALL[${i},1].Equal[${Corpse.Item[${n}].Name}]}) {
@@ -321,7 +320,7 @@ Sub LootTarget(int _corpseID)
 						/varset lootName  ${Corpse.Item[${n}].Name}
 						/varset lootType  ${loot_ALL[${i},2]}
 						/varset bln_useBeep  ${If[${loot_ALL[${i},7].Find[T]}, TRUE,FALSE]}
-						/echo Item: ${lootName} Type: ${lootType} Beep: ${lootBeep}
+						/echo Item: ${lootName} Type: ${lootType} Beep: ${bln_useBeep}
 
 						|- count to keep
 						/if (${loot_ALL[${i},3].NotEqual[*]}) /varset int_numberToLoot ${loot_ALL[${i},3]}
@@ -333,7 +332,7 @@ Sub LootTarget(int _corpseID)
 						/if (${loot_ALL[${i},5].Find[${Me.Name}]}) /varset bln_excludedByCharName TRUE
 
 						|- characters that should loot
-						/if (${loot_ALL[${i},6].Find[${Me.Name}]} || ${loot_ALL[${i},6].Equal[*]}) /varset bln_includedByCharName TRUE
+						/if (!${bln_excludedByCharName} && (${loot_ALL[${i},6].Find[${Me.Name}]} || ${loot_ALL[${i},6].Equal[*]})) /varset bln_includedByCharName TRUE
 
 						/goto :loot_validation
 					} 
@@ -343,31 +342,27 @@ Sub LootTarget(int _corpseID)
 				|  Only items flagged QUEST in the INI will be validated as loot
  				|----------------------
 				/for i 1 to ${loot_QUEST.Size}
-				/if (${loot_QUEST[${i},1].Equal[${Corpse.Item[${n}].Name}]}) {
+					/if (${loot_QUEST[${i},1].Equal[${Corpse.Item[${n}].Name}]}) {
 
-					/varset lootName  ${Corpse.Item[${n}].Name}
-					/varset lootType  ${loot_QUEST[${i},2]}
-					/varset bln_useBeep  ${If[${loot_QUEST[${i},7].Find[T]}, TRUE,FALSE]}
-					/echo Item: ${lootName} Type: ${lootType} Beep: ${lootBeep}
+						/varset lootName  ${Corpse.Item[${n}].Name}
+						/varset lootType  ${loot_QUEST[${i},2]}
+						/varset bln_useBeep  ${If[${loot_QUEST[${i},7].Find[T]}, TRUE,FALSE]}
+						/echo Item: ${lootName} Type: ${lootType} Beep: ${bln_useBeep}
 
-					|- count to keep
-					/if (${loot_QUEST[${i},3].NotEqual[*]}) /varset int_numberToLoot ${loot_QUEST[${i},3]}
+						|- count to keep
+						/if (${loot_QUEST[${i},3].NotEqual[*]}) /varset int_numberToLoot ${loot_QUEST[${i},3]}
 
-					|- classes to loot
-					/if (${loot_QUEST[${i},4].Find[${Me.Class.ShortName}]} ||${loot_QUEST[${i},4].Equal[*]} ) /varset bln_includedByClass TRUE
+						|- classes to loot
+						/if (${loot_QUEST[${i},4].Find[${Me.Class.ShortName}]} ||${loot_QUEST[${i},4].Equal[*]} ) /varset bln_includedByClass TRUE
 
-					|- characters that shouldn't loot
-					/if (${loot_QUEST[${i},5].Find[${Me.Name}]}) /varset bln_excludedByCharName TRUE
+						|- characters that shouldn't loot
+						/if (${loot_QUEST[${i},5].Find[${Me.Name}]}) /varset bln_excludedByCharName TRUE
 
-					|- characters that should loot
-					/if (!${loot_QUEST[${i},6].Find[${Me.Name}]} || ${loot_QUEST[${i},6].Equal[*]}) /varset bln_includedByCharName TRUE
-
-					|- valid count
-
-
-
-					/goto :loot_validation
-				} 
+						|- characters that should loot
+						/if (!${bln_excludedByCharName} && (${loot_QUEST[${i},6].Find[${Me.Name}]} || ${loot_QUEST[${i},6].Equal[*]})) /varset bln_includedByCharName TRUE
+						
+						/goto :loot_validation
+					} 
 				/next i
 			}
 			/goto :nextItem
@@ -376,13 +371,13 @@ Sub LootTarget(int _corpseID)
 
 			|-check to see if item is lore
 			:loot_validation
-			/cecho ${lootName} \awCount in Inventory:\ay${FindItemCount[${lootName}]} \awMaximum: \ay${int_numberToLoot} \awClass Lootable?: \ay${bln_includedByClass} \awExcluded by Name: \ay${bln_excludedByCharName} \awLoot By Me Only? \ay${bln_includedByCharName} \awBeep? \ay${bln_useBeep}
+			/cecho ${lootName} \awCount in Inventory: \ay${FindItemCount[${lootName}]} \awMaximum: \ay${int_numberToLoot} \awClass Lootable?: \ay${bln_includedByClass} \awExcluded by Name: \ay${bln_excludedByCharName} \awLoot By Me Only? \ay${bln_includedByCharName} \awBeep? \ay${bln_useBeep}
 			
 			|- My character name is in the exclusion list
-			/if (${bln_excludedByCharName}) {
-				/cecho \arI shouldn't keep this (name - by bln_excludedByCharName)
+			/if (${bln_excludedByCharName} || !${bln_includedByClass}) {
+				/cecho \arI shouldn't keep this (ex name: ${bln_excludedByCharName}, class: !${bln_includedByClass})
 				/varset keep FALSE
-				/varset reason EXCLUDED CHARACTER
+				/varset reason EXCLUDED CHARACTER||CLASS
 				/goto :loot_gank
 			}
 
@@ -423,10 +418,8 @@ Sub LootTarget(int _corpseID)
 				}
 			} else {
 				/docommand /${str_lootChannel} ${Target.Name}(${Target.ID}) has ${lootName} and I cannot loot it  ${reason}.
-				/if (${lootBeep}) {
-					/beep
-				}
 			}
+			/if (${lootBeep}) /beep
 			:nextItem
 			/next n
 
@@ -513,7 +506,6 @@ Sub Sell(string _item)
 					/echo Selling [${Me.Inventory[pack${i}].Item[${e}]}].
 					
 					:SellItem_Pack
-					/if (${Debug} || ${Debug_Sell}) /echo |- sellItems -| :SellItem_Pack
 					/notify MerchantWnd MW_Sell_Button leftmouseup
 					/delay 5
 					/delay ${retryTimer} ${Window[QuantityWnd].Open} || !${Bool[${Me.Inventory[pack${i}].Item[${e}]}]}
@@ -545,8 +537,6 @@ Sub Sell(string _item)
 |- Opens all containers in inventory.	-|
 |----------------------------------------|
 SUB openBags
-/if (${Debug} || ${Debug_Sell}) /echo |- openBags ==>
-
 	| Open all bags in inventory.
 	/declare i int local
 	/declare retryTimer timer local
@@ -558,8 +548,6 @@ SUB openBags
 		/if (${Me.Inventory[pack${i}].Container}) {
 			
 			:openBag
-			/if (${Debug} || ${Debug_Sell}) /echo |- openBags -| :openBag
-		
 			| Open container
 			/if (!${Window[pack${i}].Open}) {
 				/itemnotify pack${i} rightmouseup
@@ -575,10 +563,7 @@ SUB openBags
 				}
 			}
 		}
-	
 	/next i
-	
-/if (${Debug} || ${Debug_Sell}) /echo <== openBags -|
 /RETURN
 
 

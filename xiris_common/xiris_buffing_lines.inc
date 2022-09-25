@@ -278,7 +278,7 @@ Sub composeGroupList(string _delim)
 
 
 Sub xbot_initialize_bufflines
-	/cecho \aoxbot_initialize_bufflines
+	/cecho \aoxbot_initialize_bufflines - note: bypassed, unused for now.
 	/goto :return
 	/declare delim string local
 	/declare result string local
@@ -402,5 +402,5 @@ Sub xbot_initialize_bufflines
 		|/echo Splitting into list for Ranger AC Line suceeded. Count: ${list_rngAC.Count}
 	}	
 	
-	:Return
+	:return
 /return

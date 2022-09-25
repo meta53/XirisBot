@@ -2,10 +2,32 @@
 #Turbo 10
 #include xiris_common/xiris_common.inc
 
+#Event brewval "Brewing:#1##2#"
+#Event brewcheck "#*#brewcheck#*#"
+
 Sub Main
-	/call chkHeal_GroupTEST2
+	:loop
+	/doevents
+	/delay 10
+	/goto :loop
 /return
 
+Sub EVENT_brewcheck(_line,_sender,_eventParams)
+	/doevents flush  brewcheck
+	/skill brewing
+/return 
+
+Sub EVENT_brewval(_line,_sender,_eventParams)
+	/doevents flush  brewval
+	/cecho brewVal \awLine:\ag${_line} \awSender:\ag${_sender} \aw_eventParams:\ag${_eventParams}
+	/declare sval string local ${_eventParams}
+	/rs Brewing: ${_eventParams}
+
+
+/return
+Sub getTradeskill(string _skill)
+	/rs /skill ${_skill}
+/return
 
 
 Sub chkHeal_GroupTEST

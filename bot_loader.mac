@@ -60,7 +60,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 
 	/if (${_tank1Name.Equal[${Me.Name}]}) {	
 		/echo I am tanking, turning aggro on
-		/melee aggro=on
+		/melee aggro=1
 	}
 	
  /return

@@ -413,13 +413,6 @@ Sub chkStun(bool _memorize)
 			|-- skip if disabled
 			/if (!${Stun_${i}_Use}) /goto :NextStun
 
-			|-- Check to see if this stun fits current criteria (allowable Resist type}
-			/if (${Bool[${str_useResistTypes.Find[${Stun_${i}_Resist}]}]}) {
-				|/echo Stun ${Stun_${i}_Resist} matches resist
-			} else {
-				/echo Skipping Stun ${Stun_${i}_Resist} doesnt match resist
-				/goto :NextStun
-			}
 			
 			/call RunAllEvents	
 			/call chkSpellMemorized "${Stun_${i}}" ${_memorize} ${Stun_${i}_Gem}
@@ -455,10 +448,10 @@ Sub chkStun(bool _memorize)
 Sub chkStunLock
 	/if (!${bln_engaged} || ${Me.Invis}) /return 
 	/varset bln_stunLocking TRUE
-	/call chkStun TRUE
 	:stunLock
-		/call chkStun FALSE
+		/call chkStun TRUE
 		/call RunAllEvents
+		/delay 10
 		/if (${bln_stunLocking}) /goto :stunLock
 :return
 /return

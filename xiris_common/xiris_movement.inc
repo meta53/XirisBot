@@ -118,6 +118,10 @@ Sub StopFollowing
 	/varset bln_following 	 FALSE
 	/squelch /stick off
 	/if (${Navigation.Active}) 		/squelch /nav stop
+	/if (${Me.Class.ShortName.Equal[ROG]}) {
+			/squelch /melee hide=1
+			/squelch /melee sneak=1
+	}
 /return
 
 
@@ -128,6 +132,16 @@ SUB AquireFollow(string _type, string _leader)
 	
 		/if (${Stick.Active}) 			/squelch /stick off
 		/if (${Navigation.Active}) 		/squelch /nav stop
+		/if (${Me.Class.ShortName.Equal[ROG]}) {
+			/if (${Melee.Silent}) {
+				/melee sneak=0
+				/doability sneak
+			}
+			/if (${Melee.Hidden}) {
+				/melee hide=0
+				/doability hide
+			}
+		}
 
 		| If the FollowTarget declares that you need to use MQ2Nav...
 		|-- We do not need to use LOS for MQ2Nav nor do we need to use target
@@ -192,8 +206,7 @@ SUB EVENT_MoveHere(_line, _chatSender, _eventParams)
 			/declare x int local ${Spawn[id ${WhereTo}].X}
 			/declare z int local ${Spawn[id ${WhereTo}].Z}
 			/varset WhereTo ${y},${x},${z}
-			/echo WhereTo ${WhereTo}
-			
+
 			| -Stop assisting so I don't try to stick to the AssistTarget.	
 			/if (${Me.Combat}) /call Event_BackOff
 			
@@ -207,8 +220,6 @@ SUB EVENT_MoveHere(_line, _chatSender, _eventParams)
 			/if (${Macro.Return} > 10) {
 				/if  (${retryTimer}) {
 					/goto :retry_MoveTo
-				} else {
-					/echo |- EVENT_MoveHere -| Failed to move to the specified target.
 				}
 			} 
 			| -If I'm bln_following, reaquire follow.
@@ -257,8 +268,6 @@ Sub MoveToPosition(int _y, int _x, int _z, int _adjustment, bool _warp)
 |-		Ex.  /call MoveTo -Loc|${Target.Y},${Target.X}												-|
 |----------------------------------------------------------------------------------------------------|
 SUB MoveTo(destinationInfo, int distCheck)
-/if (${Debug}) /echo |- MoveTo ==>
-
 	/declare X_Loc  float local
 	/declare Y_Loc  float local
 	/declare Z_Loc  float local
@@ -273,14 +282,12 @@ SUB MoveTo(destinationInfo, int distCheck)
 
 |---------------------------------------------------------Set MoveTo variables per destinationType.
 	/if (${destinationInfo.Find[-SpawnID]}) {
-		/echo ~~~setting to spawn target
 		/call TrueTarget ${destinationInfo.Arg[2,|]}
 		/varset Y_Loc ${Target.Y}
 		/varset X_Loc ${Target.X}
 		/varset Z_Loc ${Target.Z}
 		
 	} else /if (${destinationInfo.Find[-Loc]}) {
-		/echo ~~~setting to dest info
 		/varset Y_Loc ${destinationInfo.Arg[2,|].Arg[1,,]}
 		/varset X_Loc ${destinationInfo.Arg[2,|].Arg[2,,]}
 		/varset Z_Loc ${destinationInfo.Arg[2,|].Arg[3,,]}
@@ -292,8 +299,6 @@ SUB MoveTo(destinationInfo, int distCheck)
 	|-- Calculate the start distance
 	/varcalc dist2D ${Math.Distance[${Me.Y},${Me.X}:${Y_Loc},${X_Loc}]}
 	/varcalc dist3D ${Math.Distance[${Me.Y},${Me.X},${Me.Z}:${Y_Loc},${X_Loc},${Z_Loc}]}
-
-	/echo dist start: 2D:${dist2D} 3D:${dist3D} Required: ${distCheck}
 	|-- Check if target is too far.
 	
 	/if (${Int[${dist3D}]} > ${int_maxFollowDistance}) {
@@ -301,10 +306,8 @@ SUB MoveTo(destinationInfo, int distCheck)
 	} else {
 
 	|-- Check if target is already close enough
-		/if (${Int[${dist3D}]} < 10) {
-			/if (${Debug}) /echo I am already at the destination.
-		} else {
-
+		/if (${Int[${dist3D}]} > 10) {
+	
 		| Declare a timer based on how far you have to move (1s for every 50 units + 3).
 			/declare retryTimer timer local ${Math.Calc[${Macro.Return} / 50 + 3].Int}s
 			
@@ -315,13 +318,6 @@ SUB MoveTo(destinationInfo, int distCheck)
 			/delay 10 ${Me.Moving} || ${MoveTo.Moving}
 			
 			:movingTo_Loop
-			
-			| Debug Echo
-			/if (${Debug} && !${spamTimer_MTLoop}) {
-				/echo |- MoveToSpawn -| :MoveTo_Loop
-				/call createTimer spamTimer_MTLoop 50
-			}
-
 			/call RunRaidEvents	
 			|-- Calculate the current distance
 			/varcalc dist2D ${Math.Distance[${Me.Y},${Me.X}:${Y_Loc},${X_Loc}]}
@@ -340,10 +336,6 @@ SUB MoveTo(destinationInfo, int distCheck)
 					}
 				} else {
 					/squelch /stick off
-					/if (${Debug} && !${spamTimer_MTFAIL}) {
-						|/echo I have failed to move to the intended target.
-						/call createTimer spamTimer_MTFAIL 30
-					}
 				}
 			} else {
 				|/echo not moving ${dist3D} > ${Math.Calc[${distCheck} + ${Math.Calc[${distCheck} / 4].Int}].Int}
@@ -360,40 +352,26 @@ SUB MoveTo(destinationInfo, int distCheck)
 							|/echo going to retry_MoveToLoc
 							/goto :retry_MoveToLoc
 						}
-					} else {
-						/if (${Debug} && !${spamTimer_MTFAIL}) {
-							/echo I have failed to move to the intended target.
-							/call createTimer spamTimer_MTFAIL 30
-						}
 					}
 				} else {
 					/squelch /stick off
-					/if (${Debug}) /echo I have arrived at my intended destination.
 					/delay 30 !${Me.Moving}
 				}
 			}
 		}
 	}
-:zwarp	
+	:zwarp	
 	/squelch  /stick off
 	/squelch  /moveto off
-	|-- determine the direction (pos, neg to zwarp) Note this is verbose right now for debugging
-
-	/declare tz float local ${Z_Loc}
-	/declare mz float local ${Me.Z}
 	/declare amt float local 
-	/if (${tz}> ${mz}) {
+	/if (${Z_Loc}> ${Me.Z}) {
 		/varcalc amt ${dist3D}
 	} else {
 		/varcalc amt ${dist3D}*-1
 	}
 	/zwarp ${amt}
-	
-	/if (${Debug}) /echo I have arrived at my intended destination.
 	/delay 30 !${Me.Moving}
-	
-:return
-/if (${Debug}) /echo <== MoveTo -|
+	:return
 /return
 
 
@@ -413,8 +391,6 @@ SUB Triangulate_Distance_3D(string loc#1, string loc#2)
 
 /return
 SUB argueString(WhatToFind, givenData)
-/if (${Debug}) /echo |- argueString ==>
-
 	/declare i int local 1
 	/declare foundData string local NULL
 	
@@ -422,26 +398,18 @@ SUB argueString(WhatToFind, givenData)
 	/if (${givenData.Find[/]}) {
 		
 		/if (${givenData.Arg[${i},/].Find[${WhatToFind}]}) {
-		
 			/varset foundData ${givenData.Arg[${i},/].Arg[2,|]}
-			/if (${Debug}) /echo |- argueString -| Found [${WhatToFind}] - [${foundData}]
-		
 		} else {
 			/varcalc i ${i} + 1
 			/if (${givenData.Arg[${i},/].Length}) /goto :nextArg
 		}
 	} else {
 		/if (${givenData.Arg[${i}, ].Find[${WhatToFind}]}) {
-		
 			/varset foundData ${givenData.Arg[${i}, ].Arg[2,|]}
-			/if (${Debug}) /echo |- argueString -| Found [${WhatToFind}] - [${foundData}]
-		
 		} else {
 			/varcalc i ${i} + 1
 			/if (${givenData.Arg[${i}, ].Length}) /goto :nextArg
 		}
 	}
-
-/if (${Debug}) /echo <== argueString -|
 /return ${foundData}
 

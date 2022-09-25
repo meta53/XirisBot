@@ -83,8 +83,8 @@ Sub chkCorruptionMez
 Sub chkCorruptionAdds
     /if (!${bln_engaged}) /return
 	/if (${SpawnCount[npc]} > 2) {
-		/squelch /melee aggro=on
-        /squelch /melee taunt=on
+		/squelch /melee aggro=1
+        /squelch /melee taunt=1
         /declare i int local 1
 
 		| ROG
@@ -132,8 +132,8 @@ Sub chkCorruptionAdds
         }
 
 	} else {
-        /squelch /melee aggro=off
-        /squelch /melee taunt=off
+        /squelch /melee aggro=0
+        /squelch /melee taunt=0
     }
 
 /return

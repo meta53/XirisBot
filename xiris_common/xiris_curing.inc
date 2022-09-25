@@ -310,11 +310,11 @@ Sub chkNeedCure
 				/if (${Bool[${Spawn[pc ${str_myCurer}].ID}]}) {
 					/cecho \aoCurer:\ag${str_myCurer} \aoDist:\ag${Spawn[pc ${str_myCurer}].Distance3D} \aoRange:\ag${cureRange}
 					/if (${Spawn[pc ${str_myCurer}].Distance3D} < ${cureRange}) {
-						/cecho \arCURE REQUESTING:\ay Counters:\ag${counters} \ayType:\ag${cureType} \ayForced:\ag${forceCure}
+						/cecho \aoCURE REQUESTED:\ay Counters:\ag${counters} \ayType:\ag${cureType} \ayForced:\ag${forceCure}
 						/call requestCure ${cureType} ${counters} ${forceCure}
 					} else /if (${Spawn[pc ${str_myCurer}].Distance3D} > ${cureRange} && ${Spawn[pc ${str_myCurer}].Distance3D} < 250 && !${bln_tanking} && !${bln_jelvanEngaged}) {
 						/varset str_navCureStart ${Me.X} ${Me.Y} ${Me.Z}
-						/cecho \awNavigating to Curer because range is too far for cure
+						/cecho \ayNavigating to Curer because range is too far for cure
 						/varset bln_navCure TRUE
 						/navigate spawn ${str_myCurer}
 						:nav_curer

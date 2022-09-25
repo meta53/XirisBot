@@ -56,6 +56,8 @@ Sub ToggleOfftanking(bool _blnOT)
 		/dgt ${Me.Name} is ENDING OFF TANKING.
 		/varset  bln_offTank FALSE
 		/varset bln_aggro FALSE
+		/squelch /melee aggro=0
+		/squelch /melee taunt=0
 	}
 	
 /return
@@ -79,10 +81,12 @@ Sub chkOffTanking
 		/call TrueTarget ${NearestSpawn[${i}, npc radius ${int_offtankRadius} range 46 80 noalert 5].ID}
 		:CheckAggro
 		/if (!${Bool[${Me.TargetOfTarget.ID}]} || (${ExcludeList.Find[${Target.CleanName}]})) /goto :nextTarget
-		/if ((${Me.TargetOfTarget.ID} != ${Me.ID}) && (${Me.TargetOfTarget.Class.ShortName.NotEqual[WAR]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[PAL]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[SHD]}) && ${Target.Distance3D} < ${int_offtankRadius}) {
+		/if (${Me.TargetOfTarget.Class.ShortName.Equal[WAR]} || ${Me.TargetOfTarget.Class.ShortName.Equal[PAL]} || ${Me.TargetOfTarget.Class.ShortName.Equal[SHD]}) /goto :nextTarget
+
+		/if ((${Target.Distance3D} < ${int_offtankRadius})) {
 			/call aggroByID ${Target.ID}
 		} else {
-			/target clear
+			/squelch /target clear
 		}
 	:nextTarget
 	/next i
@@ -92,8 +96,8 @@ Sub chkOffTanking
 	/if (${SpawnCount[npc radius ${int_offtankRadius} range 46 80  noalert 5]} == 1 && ${bln_engaged}) {
 		/if (${NearestSpawn[npc radius ${int_offtankRadius} range 46 80 noalert 5].ID} == ${int_targetID}) {
 			/call TrueTarget ${int_targetID}
-			/squelch /melee aggro=off
-			/squelch /melee taunt=off
+			/squelch /melee aggro=0
+			/squelch /melee taunt=0
 			/if (${Target.PctHPs} <=99) /killthis
 		}
 	}
@@ -103,36 +107,39 @@ Sub chkOffTanking
 Sub aggroByID(int _targetID)	
 	/if (!${Me.Standing}) /stand on
 	/if (!${bln_engaged}) /varset bln_engaged TRUE
-	/echo aggroByID ${_targetID}
-
+	/cecho \ao Aggroing \ay${Target.Name}\aw(\ag${_targetID}\aw)
+	/cecho \aw Class being Targetted: \ar${Me.TargetOfTarget.Class.ShortName}
 	:aggroLoop
 	|-- if SK/PAL try casting on it, if not, smack it;
 	/if (${Me.Class.ShortName.Equal[PAL]}) {
 		| Paladin should try to stun the NPC
-		/call chkStun FALSE
+		/call chkStun TRUE
+		/goto :aggroSmack
 	} else /if (${Me.Class.ShortName.Equal[SHD]}) {
 		| SK should try hate spell
 		/call chkHate
-	} else {
-		/if (!${Melee.Attack}) {
-			/squelch /melee aggro=on
-			/squelch /melee taunt=on
-			/squelch /stick off
-			/squelch /stick id ${_targetID}
-			/if (${Me.AbilityReady[Taunt]}) /taunt
-			/squelch /face fast
-			/squelch /killthis
-		}
-	}
-		
-	/if ((${Me.TargetOfTarget.ID} == ${Me.ID}) || (${Me.TargetOfTarget.ID} == ${int_MTID}) || !${Target.ID}) {
-		/goto :return
-	}
+		/goto :aggroSmack
+	} 
+	
+	:aggroSmack
 
+	/if (!${Melee.Attack}) {
+		/squelch /melee aggro=1
+		/squelch /melee taunt=1
+		/squelch /stick off
+		/squelch /stick id ${_targetID}
+		/if (${Me.AbilityReady[Taunt]}) /taunt
+		/squelch /face fast
+		/squelch /killthis
+	}
+	
+	/if (${Me.TargetOfTarget.Class.ShortName.Equal[WAR]} || ${Me.TargetOfTarget.Class.ShortName.Equal[PAL]} || ${Me.TargetOfTarget.Class.ShortName.Equal[SHD]}) /goto :return		
+	/if ((${Me.TargetOfTarget.ID} == ${Me.ID}) || (${Me.TargetOfTarget.ID} == ${int_MTID}) || !${Target.ID}) /goto :return
+	
 	/goto :aggroLoop
 
 	:return
-	/melee reset
+	/squelch /melee reset
 /return
 
 
@@ -165,10 +172,10 @@ Sub xbot_initialize_offtanking
 	
 
 	/call InitEvents_Offtanking
-
+	/squelch /alert clear 5
 	| Specific NPCs to never offtank
-	/alert add 5 "Huhn-Abram"
-	/alert add 5 "Voracious Feran"
+	/squelch /alert add 5 "Huhn-Abram"
+	/squelch /alert add 5 "Voracious Feran"
 
 /return
  

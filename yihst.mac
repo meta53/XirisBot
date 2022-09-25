@@ -10,8 +10,8 @@ Sub Main
     | Set the mode to efficient
     /dgt healMode EFFICIENT 
     /dex xiria /mac stand 
-    /dex xiria /melee aggro=on
-    /melee aggro=on
+    /dex xiria /melee aggro=1
+    /melee aggro=1
     /mac stand
 
 /return

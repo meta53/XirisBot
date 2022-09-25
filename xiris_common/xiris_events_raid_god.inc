@@ -539,7 +539,7 @@ Sub BalancerReset
 		/stick 25 behind
 		/stick off
 		/melee reset
-		/if (${Me.Class.ShortName.Equal[WAR]} && ${int_MTID} != ${Me.ID}) /melee aggro=off
+		/if (${Me.Class.ShortName.Equal[WAR]} && ${int_MTID} != ${Me.ID}) /melee aggro=0
 	}
 	/call RunRaidEvents	
 /return

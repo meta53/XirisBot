@@ -21,9 +21,9 @@ Sub Main
 
     | Turn of Offtanks
     /dex Xiria /mac stand
-    /dex Xiria /melee aggro=on
+    /dex Xiria /melee aggro=1
 
-    /melee aggro=on
+    /melee aggro=1
     /mac stand
 
     /dgt nods

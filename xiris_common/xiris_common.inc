@@ -124,8 +124,8 @@ ______________________________________________
 #EVENT SaveWeaponset  		"#1#SaveWeaponset #2#"
 #EVENT SaveCurrentWeaponset "#1#SaveCurrentWeaponset #2#"
 #EVENT InvisOFF				"#1#InvisOff#*#"
-#EVENT SkillCheck           "<#1#> SkillCheck #2#"
-#EVENT ReportBurnKey        "<#1#> ReportBurnKey #2#"
+#EVENT SkillCheck           "#1#SkillCheck #2##3#'#*#"
+#EVENT ReportBurnKey        "#1#ReportBurnKey #2#"
 #EVENT FixCorpses			"#*#fixCorpses#*#"
 
 #EVENT RaidGroupMode 		"[#1#] SetRaidGroupMode #2#"
@@ -210,8 +210,6 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/cecho \aoxbot_initialize 1:${_tank1Name} 2:${_tank2Name} 3:${_tank3Name} 4:${_healPoint} 5:${_assistArgs}
 
 	|-- [Settings] : Communications & INI Declarations
-	/declare 	Debug 					bool	outer 	FALSE
-	/declare 	Verbosity				bool	outer	FALSE
 	/declare 	cmdChannel 				string	outer	dgt
 	/declare 	mq2meleeEnabled			bool    outer   TRUE
 
@@ -241,8 +239,8 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/declare	bln_aggro				bool	outer	FALSE
 	/if (${_tank1Name.Equal[${Me.Name}]}) 	/varset bln_tanking TRUE
 	/if (${_tank1Name.Equal[${Me.Name}]}) 	/varset bln_aggro TRUE
-	/if (${bln_tanking} || ${bln_aggro}) 	/squelch /melee aggro=on 
-	/if (!${bln_tanking} || !${bln_aggro}) 	/squelch /melee aggro=off
+	/if (${bln_tanking} || ${bln_aggro}) 	/squelch /melee aggro=1 
+	/if (!${bln_tanking} || !${bln_aggro}) 	/squelch /melee aggro=0
 	/declare	str_defTank1			string	outer	${Ini[botINI,Settings,defaultTank1,Xiris]}
 	/declare	str_defTank2			string	outer	${Ini[botINI,Settings,defaultTank2,Xiria]}
 	/declare	str_defTank3			string	outer	${Ini[botINI,Settings,defaultTank3,Xirea]}
@@ -511,28 +509,17 @@ Sub EngageTarget(int _targetID)
 Sub chkTargetStatus
 	:chkTargetValid
 	
-	/if ((!${Bool[${Target.PctHPs}]} || !${Bool[${Target.ID}]} || ${Spawn[id ${int_targetID}].Name.Find['s corpse]}) && ${bln_engaged}) {
+	/if ((!${Bool[${Target.PctHPs}]} || !${Bool[${Target.ID}]} || ${Spawn[id ${int_targetID}].Name.Find[_corpse]}) && ${bln_engaged}) {
 		| Target is dead?
+		/cecho \awTarget is dead: \ayPctHP \ag!${Bool[${Target.PctHPs}]} \ao|| \ay!TargetID \ag!${Bool[${Target.ID}]} \ao|| \ayCorpseFound \ag${Spawn[id ${int_targetID}].Name.Find[_corpse]}
 		/call Disengage
 	} else /if ((${Me.XTarget}==0 && ${SpawnCount[npc id ${int_targetID} radius 400]} == 0) && ${bln_engaged}) {
 		| Target is over 400 distance away, that will blur it
 		/call Disengage	
-	} else /if ((${Target.ID} != ${int_targetID}) && (${Spawn[id ${int_targetID}].PctHPs} > 0 && !${Spawn[id ${int_targetID}].Name.Find['s corpse]})) {
+	} else /if ((${Target.ID} != ${int_targetID}) && (${Spawn[id ${int_targetID}].PctHPs} >= 0 && !${Spawn[id ${int_targetID}].Name.Find[_corpse]})) {
 		| I am not targetting the correct NPC
 		/call TrueTarget ${int_targetID}
 	} 
-
-	
-	
-
-	
-	/if (() {
-		/echo chkMobDead triggered Xtarget:${Me.XTarget} == 0 || SpawnCount:!${SpawnCount[npc id ${int_targetID} radius 200]}  && engaged:${bln_engaged}
-		/call Disengage
-		/goto :return
-	}
-	
-
 	
 	:chkTargetTarget
 	/if (${Me.TargetOfTarget.CleanName.Equal[${Me.CleanName}]} && !${bln_aggro} && !${timer_hott}) {
@@ -609,7 +596,7 @@ Sub Disengage
 	/cecho \aoDisengaging
 	|-- global reset
 	/varset bln_engaged 		FALSE
-
+	/varset int_targetID		0
 	|-- class archetype resets
 	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
 		/squelch /stick off
@@ -628,7 +615,7 @@ Sub Disengage
 
 Sub chkMobDead
 	/if ((${Me.XTarget}==0 && ${SpawnCount[npc id ${int_targetID} radius 200]} == 0) && ${bln_engaged}) {
-		/echo chkMobDead triggered Xtarget:!${Me.XTarget[1].ID} || SpawnCount:!${SpawnCount[npc id ${int_targetID} radius 250]}  && engaged:${bln_engaged}
+		/echo chkMobDead triggered Xtarget:${Me.XTarget} || SpawnCount:!${SpawnCount[npc id ${int_targetID} radius 250]}  && engaged:${bln_engaged}
 		/call Disengage
 	}
 /return
@@ -1031,14 +1018,13 @@ Sub EVENT_LEASHOFF
 Sub Event_SKILLCHECK(_line, _sender, _eventParams) 	
 	/echo ${_sender} checking skill archetype:${_eventParams.Arg[1,|]} | skill:${_eventParams.Arg[2,|]}
 	/echo str_classArchetype: ${str_classArchetype}
-	/if (${str_classArchetype.Equal[${_eventParams.Arg[1,|]}]})  {
-		/echo found ${Me.Skill[${_eventParams.Arg[2,|]}]}
-		/rsay ${_eventParams.Arg[1,|]}:${Me.Skill[${_eventParams.Arg[2,|]}]}
-	}
+	|/if (${str_classArchetype.Equal[${_eventParams.Arg[1,|]}]})  {
+		/echo found ${Me.Skill[${_eventParams.Arg[1,|]}]}
+		/rsay ${_eventParams.Arg[1,|]}:${Me.Skill[${_eventParams.Arg[1,|]}]}
+	|}
 /return
 
 Sub Event_ReportBurnKey(_line, _sender, _eventParams)
-	
 	/declare _burnKey int local ${_eventParams.Arg[1,|]}
 	/echo ${_sender} checking burnKey:${_burnKey}
 	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} && ${int_burnKey} == ${_burnKey}) {
@@ -1301,21 +1287,11 @@ Sub EVENT_UseInfusion
 |-------------------------------------------------------------------------------- 
 |SUB: Event_ENRAGE HANDLERS for pets (and melee if they aren't usign mq2melee, ala specialization)
 |--------------------------------------------------------------------------------
-Sub Event_RageOff(string line)
-	/if (!${mq2meleeEnabled} && (${line.Find[${Spawn[${int_targetID}].DisplayName}]} || ${line.Find[${Target.DisplayName}]})) {
-		/attack on
-	}
-	/if ((${line.Find[${Spawn[${int_targetID}].DisplayName}]} || ${line.Find[${Target.DisplayName}]}) && ${Me.Pet.ID}) {
-		/target id ${int_targetID}
-		/pet attack
-		/varset bln_enraged FALSE
-	}
-	/doevents flush RageOff
-/return
+
 
 Sub Event_RageOn(string line)
-	/if (!${mq2meleeEnabled} && (${line.Find[${Spawn[${int_targetID}].DisplayName}]} || ${line.Find[${Target.DisplayName}]})) {
-		/attack off
+	/if (!${mq2meleeEnabled} && (${line.Find[${Spawn[${int_targetID}].DisplayName}]} || ${line.Find[${Target.DisplayName}]}) && (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]})) {
+		|/attack off
 	}
 	/if (((${line.Find[${Spawn[${int_targetID}].DisplayName}]} || ${line.Find[${Target.DisplayName}]}) && ${Me.Pet.ID}) && !${Me.PetBuff[Master's Aura Effect]}) {
 		/echo Enrage detected! Backing pet off.
@@ -1325,6 +1301,16 @@ Sub Event_RageOn(string line)
 	/doevents flush RageOn
 /return
 
+Sub Event_RageOff(string line)
+	/if (!${mq2meleeEnabled} && (${line.Find[${Spawn[${int_targetID}].DisplayName}]} || ${line.Find[${Target.DisplayName}]}) && (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]})) {
+		/attack on
+	}
+	/if ((${line.Find[${Spawn[${int_targetID}].DisplayName}]} || ${line.Find[${Target.DisplayName}]}) && ${Me.Pet.ID}) {
+		/pet attack
+		/varset bln_enraged FALSE
+	}
+	/doevents flush RageOff
+/return
 
 
 |-------------------------------------------------------------------------------- 
@@ -1407,7 +1393,7 @@ Sub getMT
 
 	/if (${int_MTID} == ${Me.ID}) {
 		/varset bln_tanking TRUE
-		/melee aggro=on
+		/melee aggro=1
 		/dgt changeMT ${Me.Name}
 	}
 
@@ -1481,7 +1467,7 @@ Sub EVENT_ChangeMT(_line, _sender, _eventParams)
 	/if (${Me.Class.ShortName.Equal[CLR]}) /call TrueTarget ${int_MTID}
 	/if (${Me.Name.Equal[${name}]}) {
 		/varset bln_tanking TRUE
-		/melee aggro=on
+		/melee aggro=1
 	}
 	/doevents flush ChangeMT
 /return
@@ -1610,20 +1596,14 @@ SUB argueString(WhatToFind, givenData)
 	/if (${givenData.Find[/]}) {
 		
 		/if (${givenData.Arg[${i},/].Find[${WhatToFind}]}) {
-		
-			/varset foundData ${givenData.Arg[${i},/].Arg[2,|]}
-			/if (${Debug}) /echo |- argueString -| Found [${WhatToFind}] - [${foundData}]
-		
+			/varset foundData ${givenData.Arg[${i},/].Arg[2,|]}		
 		} else {
 			/varcalc i ${i} + 1
 			/if (${givenData.Arg[${i},/].Length}) /goto :nextArg
 		}
 	} else {
 		/if (${givenData.Arg[${i}, ].Find[${WhatToFind}]}) {
-		
 			/varset foundData ${givenData.Arg[${i}, ].Arg[2,|]}
-			/if (${Debug}) /echo |- argueString -| Found [${WhatToFind}] - [${foundData}]
-		
 		} else {
 			/varcalc i ${i} + 1
 			/if (${givenData.Arg[${i}, ].Length}) /goto :nextArg
@@ -1646,11 +1626,9 @@ SUB argueString(WhatToFind, givenData)
 |-		/call IniToVar Bot_Killians.ini,Buffs,SelfBuffs MySelfBuffs local
 |-----------------------
 Sub IniToArray(Ini_Key, ArrayName, ArrayScope)
-	/if (${Debug}) /echo |- IniToArray [${Ini_Key}] ==>
-
 	| Check for the specified ini key.
 	/if (!${Ini[${Ini_Key}1].Length}) {
-		/if (${Debug}) /echo [${Ini_Key}] not found.
+		/echo [${Ini_Key}] not found.
 	} else {
 	
 		| Count ini entries
@@ -1672,15 +1650,6 @@ Sub IniToArray(Ini_Key, ArrayName, ArrayScope)
 			/varset ${ArrayName}[${i}] ${Ini[${Ini_Key}${i}]}
 		/next i
 	}
-
-/if (${Debug}) {
-	/if (${${ArrayName}.Size}) {
-		/echo Declared: ${ArrayName}[${${ArrayName}.Size}]
-		/for i 1 to ${${ArrayName}.Size}
-			/echo ${ArrayName}[${i}] - ${${ArrayName}[${i}]}
-		/next i
-	}
-	/echo <== IniToArray -|
 }
 /return ${ArrayName}
 | --------------------------------------------------------------------------------------------------------|
@@ -1852,8 +1821,6 @@ Sub check_validBots(_selectedBots, _botName, _chatSender)
 |- @param timerSetting: Setting of the timer you're declaring.						-|
 |---------------------------------BB---------------------------------------------------|
 SUB createTimer(timerName, timerSetting)
-|/if (${Debug}) /echo |- createTimer ==>
-
 	| Delete old timer.
 	/if (${Defined[${timerName}]}) /deletevar ${timerName}
 
@@ -1862,11 +1829,6 @@ SUB createTimer(timerName, timerSetting)
 	
 	| Add the timer's name to the timerArray.
 	/call BuildArray timerArray ${timerName} global
-
-|/if (${Debug}) {
-|	/echo created ${timerName} [${${timerName}}]
-|	/echo <== createTimer -|
-|}
 /return
 
 
@@ -1875,18 +1837,14 @@ SUB createTimer(timerName, timerSetting)
 |- Deletes spent timers made by 'SUB createTimer'.	-|
 |----------------------------------------------------|
 SUB check_macroTimers
-/if (${Debug}) /echo |- check_macroTimers ==>
-
 	/declare i int local
 	/declare SpentTimerCounter int local
 
 	| Check each entry of the timer array, count spent timers.	
 	/for i 1 to ${timerArray.Size}
-		/if (${Debug}) /echo Checking timer [${timerArray[${i}]} -- ${${timerArray[${i}]}}]
 		/if (!${${timerArray[${i}]}}) {
 			/varcalc SpentTimerCounter ${SpentTimerCounter} + 1
 			/if (${Defined[${timerArray[${i}]}]}) {
-				/if (${Debug}) /echo Deleting timer: ${timerArray[${i}]}
 				/deletevar ${timerArray[${i}]}
 			}
 		}
@@ -1894,11 +1852,8 @@ SUB check_macroTimers
 	
 	| If all the timers listed on timerArray are spent, delete timerArray.
 	/if (${SpentTimerCounter}==${timerArray.Size}) {
-		/if (${Debug}) /echo All timers have been cleared.
 		/deletevar timerArray
 	}
-	
-/if (${Debug}) /echo <== check_macroTimers -|
 /return
 
 
@@ -1931,8 +1886,6 @@ SUB doRefreshXTarget
 |- @param Data: Data you wish to add to the array.		-|
 |--------------------------------------------------------|
 SUB BuildArray(ArrayName, Data, varScope)
-/if (${Debug}) /echo |- BuildArray Adding [${ArrayName}-${Data}-${varScope}] ==>
-
 	/if (!${Defined[varScope]}) /declare varScope string local outer
 
 	| If the array is not defined, declare it.
@@ -1962,8 +1915,6 @@ SUB BuildArray(ArrayName, Data, varScope)
 		| Insert new data into the array
 		/varset ${ArrayName}[${${ArrayName}.Size}] ${Data}
 	}
-
-/if (${Debug}) /echo <== BuildArray -|
 /return ${ArrayName}
 
 
@@ -1975,11 +1926,6 @@ SUB BuildArray(ArrayName, Data, varScope)
 |- @param Data: Data you wish to remove.			-|
 |----------------------------------------------------|
 SUB RemoveArrayElement(ArrayName, Data)
-/if (${Debug}) {
-	/echo |- RemoveArrayElement ==>
-	/echo |- RemoveArrayElement -| Removing [${Data}] from [${ArrayName}]
-}
-
 	/declare remainingElements string local
 	/declare newArraySize int local
 
@@ -2021,24 +1967,23 @@ SUB RemoveArrayElement(ArrayName, Data)
 		
 		/next i
 	}
-	
-/if (${Debug}) /echo <== RemoveArrayElement -|
 /return
 
 Sub EVENT_SaveRingset
 	/call SaveRingset
 /return
+
 Sub SaveRingset
-	/echo Saving Rings
+	
 	/declare leftfinger string local ${Me.Inventory[leftfinger].Name}
 	/declare rightfinger string local ${Me.Inventory[rightfinger].Name}
 
+	/cecho \aoSaving Ringset \awleft: \ag${leftfinger} \awright: \ag${rightfinger}
 	/ini botINI "SavedInventory" "leftfinger" "${leftfinger}"
 	/ini botINI "SavedInventory" "rightfinger" "${rightfinger}"
 /return
 
 Sub EVENT_RemoveRingset
-	/cecho \ayRemoving Ringset ${_eventParams}
 	/call RemoveRingset
 /return
 
@@ -2052,10 +1997,10 @@ Sub RemoveRingset
 	/if (${notemptyCount} > 10) /return
 	/if (${Cursor.ID}) /goto :notempty
 
-	/cecho \ayRemoving \ar${Ring_1_Name} \ayfrom leftfinger
+	/cecho \aoRemoving \ar${Ring_1_Name} \ayfrom leftfinger
 	/unequip leftfinger
 	/delay 10
-	/cecho \ayRemoving \ar${Ring_2_Name} \ayfrom rightfinger
+	/cecho \aoRemoving \ar${Ring_2_Name} \ayfrom rightfinger
 	/unequip rightfinger
 	/delay 10
 	/autoinventory

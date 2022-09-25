@@ -47,7 +47,7 @@ Sub Main
     /dex adikia /end
 
     | Set Me (SK) to aggro and taunt
-    /melee aggro=on 
-    /melee taunt=on
+    /melee aggro=1 
+    /melee taunt=1
     /mac raidcmds
 /return

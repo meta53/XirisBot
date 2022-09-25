@@ -9,9 +9,9 @@ Sub Main
     | Set the offtanks
     /dt Xiria offtankON
     /dt Xirea offtankON
-    /dt Sadelia offtankON
     /dt Xiris offtankON
 
     | Set the aggro for Xirin
-    /melee aggro=on
+    /melee aggro=1
+    /melee taunt=1
 /return
