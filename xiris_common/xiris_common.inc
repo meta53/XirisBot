@@ -509,7 +509,7 @@ Sub EngageTarget(int _targetID)
 Sub chkTargetStatus
 	:chkTargetValid
 	
-	/if ((!${Bool[${Target.PctHPs}]} || !${Bool[${Target.ID}]} || ${Spawn[id ${int_targetID}].Name.Find[_corpse]}) && ${bln_engaged}) {
+	/if ((!${Bool[${Target.ID}]} || ${Spawn[id ${int_targetID}].Name.Find[_corpse]}) && ${bln_engaged}) {
 		| Target is dead?
 		/cecho \awTarget is dead: \ayPctHP \ag!${Bool[${Target.PctHPs}]} \ao|| \ay!TargetID \ag!${Bool[${Target.ID}]} \ao|| \ayCorpseFound \ag${Spawn[id ${int_targetID}].Name.Find[_corpse]}
 		/call Disengage
