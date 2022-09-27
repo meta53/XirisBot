@@ -125,7 +125,7 @@ Sub EVENT_HIDE_LOOTED
 |SUB: Checking available corpses 
 |-------------------------------------------------------------------------------- 
 Sub chkLoot
-	 /if (${bln_lootAuto} && ${SpawnCount[npc radius ${int_sitRadius} zradius 15]} == 0 && ${SpawnCount[npc corpse radius 85]} > 0 ) {
+	 /if (${bln_lootAuto} && !${timer_check_loot} && ${SpawnCount[npc radius ${int_sitRadius} zradius 15]} == 0 && ${SpawnCount[npc corpse radius 85]} > 0 ) {
 		|-- check to see if I even have room to loot
 		/if (${Me.FreeInventory} <= 2) {
 			/docommand /${str_lootChannel} out of bagspace
@@ -142,6 +142,7 @@ Sub chkLoot
 		/next i
 		
 		/if (${SpawnCount[npc corpse radius 85]} > 0 ) /goto :lootCheck
+		/varset timer_check_loot 10s
     }
 	
 /return
@@ -579,6 +580,7 @@ Sub xbot_initialize_looting
 
 	/declare list_lootedCorpses		string	outer
 	/declare list_lootItemsForClass string  outer
+	/declare timer_check_loot		timer   outer   0
 
 	/declare lootINIFile			string  outer	xiris_common/xiris_loot.ini
 

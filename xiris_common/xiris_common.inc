@@ -237,6 +237,7 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	|-- [Settings] :Tank Settings
 	/declare	bln_tanking				bool	outer	FALSE
 	/declare	bln_aggro				bool	outer	FALSE
+	/declare    bln_battleCleric		bool    outer   FALSE
 	/if (${_tank1Name.Equal[${Me.Name}]}) 	/varset bln_tanking TRUE
 	/if (${_tank1Name.Equal[${Me.Name}]}) 	/varset bln_aggro TRUE
 	/if (${bln_tanking} || ${bln_aggro}) 	/squelch /melee aggro=1 
@@ -287,28 +288,18 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/declare 	timer_hott				timer   outer   20s
 	/declare 	timer_xtargetRefresh	timer	outer 	30s
 
-	|-- [Settings] : Meditation
+	|-- [Settings] : Meditation & Utilities
 	/declare int_sitRadius   		int     outer ${Ini[botINI,Settings,sitRadius,50]}
 	/declare int_medPercent       	int     outer ${Ini[botINI,Settings,medPercent,100]}
 	/declare timer_medDelay			timer	outer ${Ini[botINI,Settings,medDelay,45s]}
 	/declare timer_sitDelay			timer	outer ${Ini[botINI,Settings,sitDelay,10s]}
+	/declare timer_check_utilities	timer   outer 0
 	
 	|-- [Settings] : Camp
 	/declare bln_useCAMP			bool	outer 	FALSE
 	/declare int_campX 				int 	outer 	${Me.X}
 	/declare int_campY 				int 	outer 	${Me.Y}
 	/declare int_campZ 				int 	outer 	${Me.Z}
-	
-	|-- [Settings] : Leashing
-	/declare bln_useLeash			bool	outer ${Ini[botINI,Settings,leashUse,FALSE]}
-	/declare int_leashLen			int		outer ${Ini[botINI,Settings,leashLength,100]}
-	/declare int_leashX				int		outer ${Me.X} 
-	/declare int_leashY				int		outer ${Me.Y}
-	/declare int_leashZ				int		outer ${Me.Z}
-	/declare int_leashHeading		int		outer ${Me.Heading.DegreesCCW}
-	/declare int_leashZoneID		int		outer ${Zone.ID}
-	/declare bln_leashCamp			bool	outer ${Ini[botINI,Settings,leashCamp,FALSE]}
-	/declare bln_leashAutoSit		bool	outer ${Ini[botINI,Settings,leashAutoSit,TRUE]}
 	/declare int_campRadius			int		outer	85			
 	/declare SZ_shortName			string	outer ${Zone.ShortName}
 	
@@ -387,10 +378,7 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/call xbot_initialize_movement
 
 	|-- report that the common things are initialized
-	
-	/cecho \agXBOT INIT COMPLETE: [ MT: ${str_MTName}(${int_MTID}) @ ${int_point_tankPatch} ] STName: ${str_tankName2}(${int_STID})
-
-	
+	/cecho \agXBOT_INITIALIZE COMPLETE
 /return
 
 
@@ -432,13 +420,6 @@ Sub chkGM
 Sub chkSit
 	|-- Mana Check
 	/if (${str_classArchetype.Equal[CASTER]} ||  ${str_classArchetype.Equal[PRIEST]}) {
-		| Check Mod Rods Rod of Spectral Transvergence
-		/if (!${Me.Invis} && ${Me.PctMana}<=${int_medPercent} && ${FindItem[Wand of Spectral Transvergance].InvSlot} && !${FindItem[Wand of Spectral Transvergance].TimerReady}) /call MQ2Cast "Wand of Spectral Transvergance" item
-		/if (!${Me.Invis} && ${Me.PctMana}<=${int_medPercent} && ${FindItem[Wand of Ethereal Transvergance].InvSlot} && !${FindItem[Wand of Ethereal Transvergance].TimerReady}) /call MQ2Cast "Wand of Ethereal Transvergance" item
-		/if (!${Me.Invis} && ${Me.PctMana}<=${int_medPercent} && ${FindItem[Wand of Elemental Transvergance].InvSlot} && !${FindItem[Wand of Elemental Transvergance].TimerReady}) /call MQ2Cast "Wand of Elemental Transvergance" item
-		/if (!${Me.Invis} && ${Me.PctMana}<=${int_medPercent} && ${FindItem[Rod of Mystical Transvergance].InvSlot} && !${FindItem[Rod of Mystical Transvergance].TimerReady}) /call MQ2Cast "Rod of Mystical Transvergance" item
-		/if (!${Me.Invis} && ${Me.PctMana}<=${int_medPercent} && ${FindItem[Summoned: Modulating Rod].InvSlot} && !${FindItem[Summoned: Modulating Rod].TimerReady}) /call MQ2Cast "Summoned: Modulating Rod" item
-	
 		| Sit my ass down
 		/if ( ${Me.PctMana}<=${int_medPercent} && !${bln_engaged} && (${SpawnCount[npc radius ${int_sitRadius} zradius 55]} == 0) && (${Melee.Casted} > 3000) ) {
 			|/echo I should be sitting my ass down for MANA Am I sitting? ${Me.Sitting}
@@ -974,47 +955,6 @@ Sub chkClicks
 /return
 
 
-
-|**
- ----------------------------
- Leashing
- ----------------------------
- This is defaulted to off for all toons, controlled via INI
- ----------------------------
-**|
-Sub chkLeash
-    /if (${bln_useLeash} && (!${Target.ID} || (${Target.ID} == ${int_MTID})) ) {
-        /if ((${Math.Distance[${Me.Y},${Me.X}:${int_leashY},${int_leashX}]}>${int_leashLen})) {
-            /echo I should move
-            /navigate loc ${int_leashX}  ${int_leashY} ${int_leashZ}
-            /goto :LeashChecks
-        } else {
-            /return
-        }
-        
-        :LeashChecks
-            /if (${Math.Distance[${Me.Y},${Me.X}:${int_leashY},${int_leashX}]}> 400) /navigate loc ${int_leashX}  ${int_leashY} ${int_leashZ}
-            /if (${Math.Distance[${Me.Y},${Me.X}:${int_leashY},${int_leashX}]}<${int_leashLen}) {
-                /echo Arrived close enough!
-				/nav stop
-                /return
-            } else {
-                /goto :LeashChecks   
-            }       
-        
-        }
-/return
-
-Sub EVENT_LEASHON
-	/varset bln_useLeash TRUE
-	/doevents flush LEASHON
-/return
-
-Sub EVENT_LEASHOFF
-	/varset bln_useLeash FALSE
-	/doevents flush LEASHOFF
-/return
-
 Sub Event_SKILLCHECK(_line, _sender, _eventParams) 	
 	/echo ${_sender} checking skill archetype:${_eventParams.Arg[1,|]} | skill:${_eventParams.Arg[2,|]}
 	/echo str_classArchetype: ${str_classArchetype}
@@ -1030,7 +970,6 @@ Sub Event_ReportBurnKey(_line, _sender, _eventParams)
 	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} && ${int_burnKey} == ${_burnKey}) {
 		/rs ${_burnKey} ${Me.CleanName} ${Me.Class.ShortName}
 	}
-
 /return
 
 |**

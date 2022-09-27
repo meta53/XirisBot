@@ -114,9 +114,10 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 			/call chkBurn
 			/call chkClicks
 		} else {
-			|-- check utilities, includes: sit,loot,leash (out of combat only)
-			/call chkUtils
-			/call chkDownshits
+			|-- check utilities, includes: sit,loot,leash (out of combat only) and only once every 10 seconds
+			/if (!${timer_check_utilities}) /call chkUtils
+			/if (!${timer_check_downshits}) /call chkDownshits
+			/if (!${timer_check_loot} && ${bln_lootAuto}) /call chkLoot
 		}
 
 	|-- start again	
@@ -132,13 +133,16 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
  ----------------------------
 **|
 Sub chkUtils
-	/call chkSit
-	/call chkLoot
-	/call chkLeash
+	|-- Class Methods
 	/if (${Me.Class.ShortName.Equal[BER]}) {
 		|string _component, int _count, string _type, string _summonItem, string _reagent)
 		/call chkComponentsAll
 	}
+
+	|-- Standard Methods
+	/call chkSit
+	/varset timer_check_utilities 20s
+	
 /return
 
 
@@ -170,6 +174,6 @@ Sub variant_initialize
 	|-- set up default vars
 	/declare    str_action				string	outer	Assisting	
 
-	/cecho \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID})HealPoint:${int_point_tankPatch} ST: ${str_tankName2}(${int_STID})
+	/cecho \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID}) HealPoint:${healPoint} ST: ${str_tankName2}(${int_STID})
 	/call InitEvents_Class
 /return

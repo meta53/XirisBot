@@ -561,8 +561,7 @@ Sub xbot_initialize_curing
 	/declare    bln_askedForCure        bool    outer   FALSE
 	/declare    str_myCurer				string	outer 	NULL
 	/declare	timer_cure_request		timer   outer
-	/call 		getGroupCurer
-	/varset 	str_myCurer ${Macro.Return}
+	
 	/declare 	cureRange      int     outer   100
 	/declare    bln_navCure   			bool    outer   FALSE
 	/declare    str_navCureStart  		string  outer 
@@ -597,6 +596,8 @@ Sub xbot_initialize_curing
 	/if (${str_cure_poison.Equal[NULL]}) 	/varset bln_hasPoisonCure 	FALSE
 	/if (${str_cure_disease.Equal[NULL]}) 	/varset bln_hasDiseaseCure 	FALSE
 	
+	/call 		getGroupCurer
+	/varset 	str_myCurer ${Macro.Return}
 	
 	/call InitEvents_Curing
 	

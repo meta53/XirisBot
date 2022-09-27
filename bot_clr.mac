@@ -163,9 +163,10 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 				/call chkClicks
 			}
 		} else {
-			|-- check utilities, includes: sit,loot,leash (out of combat only)
-			/call chkUtils
-			/call chkDownshits
+			|-- check utilities, includes: sit,loot,leash (out of combat only) and only once every 10 seconds
+			/if (!${timer_check_utilities}) /call chkUtils
+			/if (!${timer_check_downshits}) /call chkDownshits
+			/if (!${timer_check_loot} && ${bln_lootAuto}) /call chkLoot
 		}
 	|-- start again	
     /goto :MainLoop
@@ -297,25 +298,6 @@ Sub CombatRezOFF
 
 
 |**
-------------------------- 
-
-END HEALING
-
-------------------------- 
-**|
-
-
-
-
-|**
- ----------------------------
- UTILITY Functions
- ----------------------------
- Various utilities here to get/set values
- Such as Current Target Target, Main Tank, Divine Arb Status, etc
- ----------------------------
-**|
-|**
 ----------------------------
 Check|Set to see if your frantic heal is ready
 Note: This will always be ready since we don't really get frantic heals till SOF.
@@ -385,8 +367,7 @@ Sub setCTGT
 Sub chkUtils
 	|-- Standard Methods
 	/call chkSit
-	/call chkLoot
-	/call chkLeash
+	/varset timer_check_utilities 20s
 /return
 
 Sub chkYaulp
@@ -435,9 +416,6 @@ Sub variant_initialize
 	/declare    str_action				string	outer	Healing
 	/declare	str_currHeal			string	outer	NULL
 
-	|-- Miscellaneous
-	/declare 	bln_battleCleric 		bool 	outer	FALSE
-
 	|-- Yaulp Settings
 	/declare	bln_useYaulp			bool	outer	${Ini[botINI,Yaulp,bln_useYaulp,FALSE]}
 	/declare	str_spellYaulp			string	outer 	${Ini[botINI,Yaulp,str_spellYaulp,Yaulp VII]}
@@ -458,6 +436,6 @@ Sub variant_initialize
 	/declare	arr_celestial[17]		string  outer
 
 	/memspellset default
-	/cecho \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID}) HealPoint:${int_point_tankPatch} ST: ${str_tankName2}(${int_STID})
+	/cecho \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID})  HealPoint:${healPoint} ST: ${str_tankName2}(${int_STID})
 	/call InitEvents_Class
 /return

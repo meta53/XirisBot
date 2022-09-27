@@ -38,7 +38,7 @@ REQUIRED INCLUDES
 	xiris_common/xiris_common.inc
 **|
 
-
+#warning
 #include xiris_common/xiris_common.inc
 
 #Turbo 40
@@ -94,6 +94,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 		/if (${bln_autoAssist}) /call chkAutoAssist
 		
 		/if (${bln_engaged}) {
+			/echo engagement loops
 			|-- check engaged events
 			/call RunRaidEvents
 			/call RunClassEvents
@@ -108,9 +109,10 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 			/call chkBurn
 			/call chkClicks
 		} else {
-			|-- check utilities, includes: sit,loot,leash (out of combat only)
-			/call chkUtils
-			/call chkDownshits
+			|-- check utilities, includes: sit,loot,leash (out of combat only) and only once every 10 seconds
+			/if (!${timer_check_utilities}) /call chkUtils
+			/if (!${timer_check_downshits}) /call chkDownshits
+			/if (!${timer_check_loot} && ${bln_lootAuto}) /call chkLoot
 		}
 
 	|-- start again	
@@ -130,8 +132,7 @@ Sub chkUtils
 	/if (!${Me.Combat}) {
 		/if (${Me.ID} != ${int_MTID} || !${bln_tanking}) {
 			/call chkSit
-			/call chkLoot
-			/call chkLeash
+			/varset timer_check_utilities 20s
 		}
 	}
 /return
@@ -148,7 +149,7 @@ Sub variant_initialize
 	|-- set up default vars
 	/declare    str_action				string	outer	Assisting	
 
-	/cecho \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID})HealPoint:${int_point_tankPatch} ST: ${str_tankName2}(${int_STID}) Aggro? ${bln_aggro}
+	/cecho \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID}) HealPoint:${healPoint} ST: ${str_tankName2}(${int_STID}) Aggro? ${bln_aggro}
 	/call InitEvents_Class
 /return
 

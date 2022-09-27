@@ -1022,13 +1022,10 @@ Sub AERez
 		/if (!${Bool[${str_corpse}]}) /goto :next_corpse
 
 		| check corpse name 
-		/echo Contacting ${str_corpse} for their ID
 		/dquery ${str_corpse} -q "Me.ID"
 		/varset charID ${DanNet.Q}
-		/echo charid? ${charID}
 		| make sure the target is actually a corpse, and online
 		/if (${Spawn[id ${id}].CleanName.Find[corpse]} == NULL || !${charID}) /varset bln_skipCorpse TRUE
-		/echo skipCorpse? ${bln_skipCorpse}
 		/if (${bln_skipCorpse}) /goto :next_corpse
 
 
@@ -1274,7 +1271,13 @@ Sub ReCreateGroupHoTTimers
 |**| 
 
 Sub xbot_initialize_healing(int _healPoint)
+	| Set some global default variables for all classes
+	/declare healPoint int outer ${_healPoint}
+
+	|---------------------
+	| Return out for classes that can't heal
 	/if (${str_classArchetype.Equal[MELEE_END]} || ${Me.Class.ShortName.Equal[BRD]} || ${Me.Class.ShortName.Equal[WAR]} || ${Me.Class.ShortName.Equal[SHD]} || ${str_classArchetype.Equal[CASTER]})	/return
+	|---------------------
 
 	/declare 	healINI				string  outer	xiris_common/xiris_healing.ini
 	|-- Set spellset to default so we can probe the properties of these
@@ -1293,7 +1296,6 @@ Sub xbot_initialize_healing(int _healPoint)
 	/echo ${int_defaultHealMode} ${botINI} 					${Ini[${healINI},CelestialRegeneration,cr_1_name]}
 	/declare	int_healMode    			int     outer   ${Ini[botINI,Healing_Settings,int_healMode,${int_defaultHealMode}]}
 	/cecho \arint_healMode: \ag${int_healMode} ${int_defaultHealMode}
-
 
 	/declare 	use_heal_defaultDivineArb	bool	outer 	${Ini[${healINI},Heal_Settings,use_heal_divineArb, FALSE]}
 	/declare	use_heal_divineArb			bool	outer	${Ini[botINI,Healing_Settings,use_heal_divineArb,${use_heal_defaultDivineArb}]}

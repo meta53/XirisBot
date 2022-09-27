@@ -58,13 +58,6 @@ REVISION HISTORY
 #EVENT AutoAssist		"#1# tells the raid#*#'AutoAssist #2#'"
 #EVENT AutoAssist 		"[ #1# #*#]#*#AutoAssist #2#"
 
-#EVENT Leashing			"#1# tells the group#*#'Leashing#*#'"
-#EVENT Leashing			"#1# tells you#*#'Leashing#*#'"
-#EVENT Leashing			"#1# tells the raid#*#'Leashing#*#'"
-#EVENT Leashing 		"[ #1# #*#]#*#Leashing#*#"
-
-
-
 #define dsINI xiris_common/xiris_damageshields.ini
 
 Sub InitEvents_Melee
@@ -224,22 +217,6 @@ Sub AutoAssistOFF
 	/varset bln_autoAssist FALSE
 /return
 
-Sub Event_Leashing(string _eventParams)
-	/if (${_eventParams.Equal[on]}) /call LeashingON 
-	/if (${_eventParams.NotEqual[on]}) /call LeashingOFF
-/return 
-
-Sub LeashingON
-	/dgt ${Me.Name} is now Leashing!
-	/varset bln_useLeash TRUE
-/return 
-
-Sub LeashingOFF
-	/dgt ${Me.Name} is no longer Leashing.
-	/varset bln_useLeash FALSE
-/return
-
-
 
 Sub doBandolier(string _bando)
 	/cecho \ay Equipping set ${_bando}
@@ -261,9 +238,7 @@ Sub doBandolier(string _bando)
 /return
 
 Sub chkDownshits
-	/if (${timer_downflags}) /return
-	/if (${Target.ID} && ${Target.Type.Equal[NPC]}) /return
-	/if (${bln_engaged}) /return
+	/if ((${Target.ID} && ${Target.Type.Equal[NPC]}) || ${bln_engaged} || ${timer_check_downshits}) /return
 	|-- we don't buff at bind point because we might be naked.
 	/call chkNaked
 	/varset bln_naked ${Macro.Return}
@@ -367,12 +342,11 @@ Sub chkDownshits
 				}
 			:nextDF
 			/next df
-			|- reset the DownFlag timer to 30seconds
-			/varset timer_downflags 30s
 			}
 			|- return existing target
 			/if (${Bool[${svdTGTID}]}) /call TrueTarget ${svdTGTID}
 		}
+		/varset timer_check_downshits 45s
 	}
 /return
 
@@ -676,17 +650,16 @@ Sub chk_warProvoke(string _provokeDisc)
 
 Sub xbot_initialize_melee
 	/cecho \ao xbot_initialize_melee
-
-
+	
 	/declare 	int_currentStickDistance		int		outer   25
 	/declare	int_maxStickDistance 	int 	outer 	30
 	/declare 	int_minStickDistance	int		outer 	10
 	/declare    int_maxNavDistance		int		outer   300
 	/declare	timer_getCloser			timer	outer	30
+	/declare 	timer_check_downshits	timer	outer 	0
 
 	|-- ALL CLASSES COMMON
 	|-- [Settings] : Downflags
-	/declare 	timer_downflags			timer	outer 	0
 	/declare	downflagCount			int		outer	${Ini[botINI,Downflags,downflagCount,0]}
 	/declare df int local
 		/for df 1 to ${downflagCount} 
