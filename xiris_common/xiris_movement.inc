@@ -58,17 +58,19 @@ Sub xbot_initialize_movement
 	/cecho \aoxbot_initialize_movement
 	/declare bln_following 			bool 	outer FALSE
 	/declare int_maxFollowDistance	int 	outer 1000
+	/declare str_followTarget		string  outer 
 	/call InitEvents_Movement
 /return
 
 
 
 SUB EVENT_Follow(_line, _chatSender, _eventParams)
-	/echo Event follow ${_chatSender}
-	/echo Parameters   ${_eventParams}
 	/if (${_chatSender.Equal[${Me.CleanName}]}) /return
 	/declare followType 	string local ${If[${_eventParams.Find[/type|NAV]},NAV,STICK]}
-	/call StartFollowing ${_chatSender} ${followType}
+	/call verifyEvent "${_chatSender}" "${_eventParams}"
+	/if (${Bool[${Macro.Return.Arg[2,_]}]} && ${Bool[${Macro.Return.Arg[3,_]}]} && ${Bool[${Macro.Return.Arg[4,_]}]}) {
+		/call StartFollowing ${_chatSender} ${followType}
+	}
 	/doevents flush Follow
 /return
 
@@ -92,17 +94,20 @@ SUB EVENT_CreateCamp(_line, _chatSender, _eventParams)
 	/cecho \ayCreating Camp: \ag${_eventParams}
 	/declare cmp string local ${_eventParams.Arg[1]}
 	/nav recordwaypoint ${cmp}
+	/varset int_campY ${Me.Y}
+	/varset int_campX ${Me.X}
+	/varset int_campZ ${Me.Z}
 	/doevents flush CreateCamp
 /return
 
 
 Sub StartFollowing(string _leader, string _followType)
 	/varset bln_following TRUE
-	/echo Leader: ${_leader} FollowType: ${_followType}  FollowTarget: ${Spawn[pc ${_leader}].CleanName}
+	/cecho \ao Following \awLeader: \ag${_leader} \awFollowType: \ag${_followType}
 	
 	| -Check Range
 	/if (${Spawn[=${_leader}].Distance} > ${int_maxFollowDistance}) {
-		/docommand /${cmdChannel} [${FollowTarget}] is too far away.
+		/docommand /${cmdChannel} [${str_followTarget}] is too far away.
 	} else {
 		/call Disengage
 		| -Check LoS.
@@ -126,10 +131,10 @@ Sub StopFollowing
 
 
 SUB AquireFollow(string _type, string _leader)
-	/cecho \agAcquireFollow \aw${_type} \ao${_leader}
-	|------------------------------------------------------------------------------------Check for FollowTarget in zone.
 	/if (${SpawnCount[=${_leader}]} && ${SpawnCount[=${_leader} radius ${int_maxFollowDistance}]} && ${_leader.NotEqual[${Me.CleanName}]}) {
-	
+		
+		| store the follow target in case we need it in another sub (unlikely)
+		/varset str_followTarget		${_leader}
 		/if (${Stick.Active}) 			/squelch /stick off
 		/if (${Navigation.Active}) 		/squelch /nav stop
 		/if (${Me.Class.ShortName.Equal[ROG]}) {
@@ -143,13 +148,13 @@ SUB AquireFollow(string _type, string _leader)
 			}
 		}
 
-		| If the FollowTarget declares that you need to use MQ2Nav...
+		| If the str_followTarget declares that you need to use MQ2Nav...
 		|-- We do not need to use LOS for MQ2Nav nor do we need to use target
 		/if (${_type.Equal[NAV]}) {
 			/squelch /nav spawn ${Spawn[pc =${_leader}]}
 		} else {
-			/if (${Spawn[id ${followTargetID}].LineOfSight}) {
-				/call TrueTarget ${followTargetID}
+			/if (${Spawn[pc ${_leader}].LineOfSight}) {
+				/call TrueTarget ${Spawn[pc ${_leader}].ID}
 				/if (${Me.Underwater}) {
 					/squelch /stick hold behind 0 uw
 				} else {
@@ -185,27 +190,27 @@ SUB EVENT_MoveHere(_line, _chatSender, _eventParams)
 	
 		| -Check if the _chatSender is me.
 		/if (${_chatSender.NotEqual[${Me}]}) {
-			| -Set WhereTo.
+			| -Set move_destination.
 			/declare moveTo_Name string local
-			/declare WhereTo string local ${If[${_eventParams.Arg[1, ].Find[/]} || ${_eventParams.Arg[1, ].Equal[me]} || ${_eventParams.Arg[1, ].Equal[here]},${_chatSender},${_eventParams.Arg[1, ]}]}
+			/declare move_destination string local ${If[${_eventParams.Arg[1, ].Find[/]} || ${_eventParams.Arg[1, ].Equal[me]} || ${_eventParams.Arg[1, ].Equal[here]},${_chatSender},${_eventParams.Arg[1, ]}]}
 			
-			| -Change WhereTo to a spawnID
-			/if (!${Int[${WhereTo}]}) {
-				/if (${SpawnCount[pc =${WhereTo}]}) {
-					/varset WhereTo ${Spawn[pc =${WhereTo}].ID}
-				} else /if (${SpawnCount[pet =${WhereTo}]}) {
-					/varset WhereTo ${Spawn[pet =${WhereTo}].ID}
-				} else /if (${SpawnCount[npc =${WhereTo}]}) {
-					/varset WhereTo ${Spawn[npc =${WhereTo}].ID}
+			| -Change move_destination to a spawnID
+			/if (!${Int[${move_destination}]}) {
+				/if (${SpawnCount[pc =${move_destination}]}) {
+					/varset move_destination ${Spawn[pc =${move_destination}].ID}
+				} else /if (${SpawnCount[pet =${move_destination}]}) {
+					/varset move_destination ${Spawn[pet =${move_destination}].ID}
+				} else /if (${SpawnCount[npc =${move_destination}]}) {
+					/varset move_destination ${Spawn[npc =${move_destination}].ID}
 				}
 			}
 			
 			| Convert SpawnID to Loc
-			/varset moveTo_Name ${Spawn[id ${WhereTo}].CleanName}
-			/declare y int local ${Spawn[id ${WhereTo}].Y}
-			/declare x int local ${Spawn[id ${WhereTo}].X}
-			/declare z int local ${Spawn[id ${WhereTo}].Z}
-			/varset WhereTo ${y},${x},${z}
+			/varset moveTo_Name ${Spawn[id ${move_destination}].CleanName}
+			/declare y int local ${Spawn[id ${move_destination}].Y}
+			/declare x int local ${Spawn[id ${move_destination}].X}
+			/declare z int local ${Spawn[id ${move_destination}].Z}
+			/varset move_destination ${y},${x},${z}
 
 			| -Stop assisting so I don't try to stick to the AssistTarget.	
 			/if (${Me.Combat}) /call Event_BackOff
@@ -213,10 +218,10 @@ SUB EVENT_MoveHere(_line, _chatSender, _eventParams)
 			/declare retryTimer timer local 150
 			
 			:retry_MoveTo
-			/call MoveTo -Loc|${WhereTo} uw
+			/call MoveTo -Loc|${move_destination} uw
 			
 			| -Check if I have moved to the Target.
-			/call Triangulate_Distance ${WhereTo} ${Me.Loc.Replace[ ,]}
+			/call Triangulate_Distance ${move_destination} ${Me.Loc.Replace[ ,]}
 			/if (${Macro.Return} > 10) {
 				/if  (${retryTimer}) {
 					/goto :retry_MoveTo
@@ -224,7 +229,7 @@ SUB EVENT_MoveHere(_line, _chatSender, _eventParams)
 			} 
 			| -If I'm bln_following, reaquire follow.
 			/if (${bln_following}) {
-				/if (${moveTo_Name.Equal[${FollowTarget}]}) {
+				/if (${moveTo_Name.Equal[${str_followTarget}]}) {
 					/call AquireFollow
 				} else {
 					/call EVENT_Stop "<${Me.CleanName}> Stop" ${Me.CleanName}
@@ -387,29 +392,4 @@ SUB Triangulate_Distance(string loc#1, string loc#2)
 |-- Determine the distance X,Y,Z instead of a single planar X,Y
 |-- Formula is AB = SQRT((x2-x1)^2+(y2-y1)^2+(z2-z1)^2)
 SUB Triangulate_Distance_3D(string loc#1, string loc#2)
-	
-
 /return
-SUB argueString(WhatToFind, givenData)
-	/declare i int local 1
-	/declare foundData string local NULL
-	
-	:nextArg
-	/if (${givenData.Find[/]}) {
-		
-		/if (${givenData.Arg[${i},/].Find[${WhatToFind}]}) {
-			/varset foundData ${givenData.Arg[${i},/].Arg[2,|]}
-		} else {
-			/varcalc i ${i} + 1
-			/if (${givenData.Arg[${i},/].Length}) /goto :nextArg
-		}
-	} else {
-		/if (${givenData.Arg[${i}, ].Find[${WhatToFind}]}) {
-			/varset foundData ${givenData.Arg[${i}, ].Arg[2,|]}
-		} else {
-			/varcalc i ${i} + 1
-			/if (${givenData.Arg[${i}, ].Length}) /goto :nextArg
-		}
-	}
-/return ${foundData}
-

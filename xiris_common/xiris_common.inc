@@ -212,7 +212,7 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	|-- [Settings] : Communications & INI Declarations
 	/declare 	cmdChannel 				string	outer	dgt
 	/declare 	mq2meleeEnabled			bool    outer   TRUE
-
+	/declare 	int_macroMaximumResponseDist	int outer 1000
 
 	|-- [Settings] : Class Archetype (used in case switching)
 	/declare 	str_classArchetype		string	outer	UNKNOWN
@@ -253,7 +253,6 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/if (${_tank1Name.Length} && ${_tank1Name.NotEqual[NULL]}) /varset str_tankName1 ${_tank1Name}
 	/if (${_tank2Name.Length} && ${_tank2Name.NotEqual[NULL]}) /varset str_tankName2 ${_tank2Name}
 	/if (${_tank3Name.Length} && ${_tank3Name.NotEqual[NULL]}) /varset str_tankName3 ${_tank3Name}
-
 
 	|-- ID and Name here keep track of *current* tank/second tank. They are swapped as needed.
 	/declare	int_MTID           		int		outer	${Spawn[${str_tankName1}].ID}
@@ -489,8 +488,8 @@ Sub EngageTarget(int _targetID)
 
 Sub chkTargetStatus
 	:chkTargetValid
-	
-	/if ((!${Bool[${Target.ID}]} || ${Spawn[id ${int_targetID}].Name.Find[_corpse]}) && ${bln_engaged}) {
+	/if (!${Bool[${Target.ID}]}) /return 
+	/if ((${Spawn[id ${int_targetID}].Name.Find[_corpse]}) && ${bln_engaged}) {
 		| Target is dead?
 		/cecho \awTarget is dead: \ayPctHP \ag!${Bool[${Target.PctHPs}]} \ao|| \ay!TargetID \ag!${Bool[${Target.ID}]} \ao|| \ayCorpseFound \ag${Spawn[id ${int_targetID}].Name.Find[_corpse]}
 		/call Disengage
@@ -595,7 +594,7 @@ Sub Disengage
 
 
 Sub chkMobDead
-	/if ((${Me.XTarget}==0 && ${SpawnCount[npc id ${int_targetID} radius 200]} == 0) && ${bln_engaged}) {
+	/if (${SpawnCount[npc radius 200]} == 0 && ${bln_engaged}) {
 		/echo chkMobDead triggered Xtarget:${Me.XTarget} || SpawnCount:!${SpawnCount[npc id ${int_targetID} radius 250]}  && engaged:${bln_engaged}
 		/call Disengage
 	}
@@ -635,20 +634,20 @@ Sub chkMTAlive(bool _setAsTarget)
 
 	|--MT is a live and ID is correct
 	/if (${Spawn[PC ${str_tankName1}].ID} && (${int_MTID} == ${Spawn[PC ${str_tankName1}].ID})) {
-		|/echo MT ${str_tankName1} is alive, and my MTID ${int_MTID} is correct
+		|/cecho \agMT ${str_tankName1} is alive, and my MTID ${int_MTID} is correct
 		/goto :return
 	}
 
 	|--MT is alive but ID is wrong; 
 	/if (${Spawn[PC ${str_tankName1}].ID} && (${int_MTID} != ${Spawn[PC ${str_tankName1}].ID})) {
-		|/cecho \ag MT ${str_tankName1} is alive, and my MTID ${int_MTID} is wrong
+		/cecho \ay MT ${str_tankName1} is alive, and my MTID ${int_MTID} is wrong
 		/varset int_MTID ${Spawn[${str_tankName1}].ID}
 		/goto :return
 	}
 
 	|--ST is still alive; 
 	/if (${Spawn[PC ${str_tankName2}].ID} && (${int_MTID} != ${Spawn[PC ${str_tankName2}].ID})) {
-		/cecho \ag ST  is still alive, switching!
+		/cecho \ao ST  is still alive, switching!
 		/varset str_tankName1 ${str_tankName2}
 		/varset str_tankName2 ${str_tankName3}
 		/varset int_MTID ${Spawn[${str_tankName2}].ID}
@@ -657,7 +656,7 @@ Sub chkMTAlive(bool _setAsTarget)
 	
 	|--TT is still alive; 
 	/if (${Spawn[PC ${str_tankName3}].ID} && (${int_MTID} != ${Spawn[PC ${str_tankName3}].ID})) {
-		/cecho \ag TT is still alive, switching!
+		/cecho \ao TT is still alive, switching!
 		/varset str_tankName1 ${str_tankName3}
 		/varset int_MTID ${Spawn[${str_tankName3}].ID}
 		/goto :return
@@ -1402,7 +1401,7 @@ Sub EVENT_ChangeMT(_line, _sender, _eventParams)
 	/varset str_tankName1 ${name} 
 
 	/echo MTID: ${int_MTID} MTName: ${name}
-	/dgt [${Me.Class.ShortName}] ${Me.Name} ${str_action} >> ${Spawn[id ${int_MTID}].CleanName} <<  @ ${int_point_tankPatch}
+	/dgt [${Me.Class.ShortName}] ${Me.Name} ${str_action} >> ${Spawn[id ${int_MTID}].CleanName} <<  @ ${healPoint}
 	/if (${Me.Class.ShortName.Equal[CLR]}) /call TrueTarget ${int_MTID}
 	/if (${Me.Name.Equal[${name}]}) {
 		/varset bln_tanking TRUE
@@ -1525,32 +1524,6 @@ Sub TargetNamedCheck(_id)
 /return FALSE
 	
 
-SUB argueString(WhatToFind, givenData)
-	/echo |- argueString ==> ${WhatToFind}  => ${givenData}
- 
-	/declare i int local 1
-	/declare foundData string local NULL
-	
-	:nextArg
-	/if (${givenData.Find[/]}) {
-		
-		/if (${givenData.Arg[${i},/].Find[${WhatToFind}]}) {
-			/varset foundData ${givenData.Arg[${i},/].Arg[2,|]}		
-		} else {
-			/varcalc i ${i} + 1
-			/if (${givenData.Arg[${i},/].Length}) /goto :nextArg
-		}
-	} else {
-		/if (${givenData.Arg[${i}, ].Find[${WhatToFind}]}) {
-			/varset foundData ${givenData.Arg[${i}, ].Arg[2,|]}
-		} else {
-			/varcalc i ${i} + 1
-			/if (${givenData.Arg[${i}, ].Length}) /goto :nextArg
-		}
-	}
-
-	/echo foundData? ${foundData}
-/return ${foundData}
 
 
 |-----------------------
@@ -1677,19 +1650,18 @@ SUB verifyEvent(sring _chatSender, string _eventParams)
 	/declare inRange 		bool local FALSE
 	/declare inAssistRange 	bool local FALSE
 	/declare sender         string local ${_chatSender}
+
 	| Set sender by parsing the _chatSender
 	/if (${_chatSender.Left[1].Compare[ ]}<0) /varset sender ${_chatSender.Right[-2].Left[-1]}
 	/if (${_chatSender.Equal[You]}) /varset sender ${Me.CleanName}
 	/if (${_chatSender.Equal[MQ2]}) /varset sender ${Me.CleanName}
+
 	| Note if this is sent by dannet as a /dgt (instead of box chat /bc)
 	| Then the sender will be like xiris (all)
  	/if (${_chatSender.Find[(]})  {
 		/varset sender ${_chatSender.Arg[1,(]}
-	|/varset sender ${sender.Arg[1,(]}
 	}
 
-	
-	
 	| -Validate _chatSender.
 	/varset userValidated TRUE
 	
@@ -1697,8 +1669,8 @@ SUB verifyEvent(sring _chatSender, string _eventParams)
 	/if (${SpawnCount[pc =${sender}]}) /varset inZone TRUE
 	
 	| -Check inRange
-	/if (${SpawnCount[pc =${sender} radius ${MaxResponseDist}]}) /varset inRange TRUE
-	/cecho \awVerifyEvent Sender:\ag${sender} \awParams: \ag${_eventParams}
+	/if (${SpawnCount[pc =${sender} radius ${int_macroMaximumResponseDist}]}) /varset inRange TRUE
+	|/cecho \awVerifyEvent Sender:\ag${sender} \awParams: \ag${_eventParams}
 
 	| -Check for /only|
 	/if (${_eventParams.Find[/only|]}) {
@@ -1731,27 +1703,39 @@ SUB verifyEvent(sring _chatSender, string _eventParams)
 	/cecho \ayReturning Sender:\ag${sender} \awValid?\ag${userValidated} \awIncluded?\ag${includeBot} \awInZone?\ag${inZone} \awInRange?\ag${inRange}
 /return ${sender}_${userValidated}_${includeBot}_${inZone}_${inRange}
 
+| See if the bot is in the return from the arguestring parser
 SUB check_selectedBots(_selectedBots, _chatSender)
-
 	/declare botSelected bool local FALSE
 	/if (${_selectedBots.Find[ ]}) /varset _selectedBots ${_selectedBots.Replace[ ,,]}
-
 	/if (${Select[priests,${_selectedBots}]} && ${Select[${Me.Class.ShortName},${PriestClasses}]} || ${Select[healers,${_selectedBots}]} && ${Select[${Me.Class.ShortName},${PriestClasses}]} || ${Select[ranged,${_selectedBots}]} && ${Select[${Me.Class.ShortName},${RangedClasses}]} || ${Select[casters,${_selectedBots}]} && ${Select[${Me.Class.ShortName},${CasterClasses}]} || ${Select[melee,${_selectedBots}]} && ${Select[${Me.Class.ShortName},${MeleeClasses}]} || ${Select[me,${_selectedBots}]} && ${_chatSender.Equal[${Me.CleanName}]} || ${Select[${Me.Class},${_selectedBots}]} || ${Select[${Me.Class.ShortName},${_selectedBots}]} || ${Select[${Me.CleanName},${_selectedBots}]} || ${Select[all,${_selectedBots}]} || ${Select[group,${_selectedBots}]} && ${Me.CleanName.Equal[${_chatSender}]} || ${Select[group,${_selectedBots}]} || ${Select[zone,${_selectedBots}]} && ${SpawnCount[pc ${_chatSender}]}) /varset botSelected TRUE
 	
 /return ${botSelected}
 
-Sub check_validBots(_selectedBots, _botName, _chatSender)
-	/echo chck_validBots
-	/declare botValidated bool local false
-	/declare clsShortName string local
-	/dquery ${_botName} -q "Me.Class.ShortName"
-	/delay 20 ${DanNet.Query.Received}
-	/varset clsShortName ${DanNet.Q}
-	/if (${Select[priests,${_selectedBots}]} && ${Select[${clsShortName},${PriestClasses}]} || ${Select[healers,${_selectedBots}]} && ${Select[${clsShortName},${PriestClasses}]} || ${Select[ranged,${_selectedBots}]} && ${Select[${clsShortName},${RangedClasses}]} || ${Select[casters,${_selectedBots}]} && ${Select[${clsShortName},${CasterClasses}]} || ${Select[melee,${_selectedBots}]} && ${Select[${clsShortName},${MeleeClasses}]} || ${Select[me,${_selectedBots}]} && ${_chatSender.Equal[${Me.CleanName}]} || ${Select[${Me.Class},${_selectedBots}]} || ${Select[${clsShortName},${_selectedBots}]} || ${Select[${Me.CleanName},${_selectedBots}]} || ${Select[all,${_selectedBots}]} || ${Select[group,${_selectedBots}]} && ${Me.CleanName.Equal[${_chatSender}]} || ${Select[group,${_selectedBots}]} || ${Select[zone,${_selectedBots}]} && ${SpawnCount[pc ${_chatSender}]}) /varset botValidated TRUE
+
+| Evaluate and Argument string in E3 Format eg: \only|CLR,DRU,SHM
+SUB argueString(WhatToFind, givenData)
+	|/cecho \aoEvaluating Arguments \aw==> \ag${WhatToFind}  \aw=> \ay${givenData}
+	/declare i 			int 	local 1
+	/declare foundData 	string 	local NULL
 	
+	:nextArg
+	/if (${givenData.Find[/]}) {
+		/if (${givenData.Arg[${i},/].Find[${WhatToFind}]}) {
+			/varset foundData ${givenData.Arg[${i},/].Arg[2,|]}		
+		} else {
+			/varcalc i ${i} + 1
+			/if (${givenData.Arg[${i},/].Length}) /goto :nextArg
+		}
+	} else {
+		/if (${givenData.Arg[${i}, ].Find[${WhatToFind}]}) {
+			/varset foundData ${givenData.Arg[${i}, ].Arg[2,|]}
+		} else {
+			/varcalc i ${i} + 1
+			/if (${givenData.Arg[${i}, ].Length}) /goto :nextArg
+		}
+	}
 
-/return ${botValidated}
-
+/return ${foundData}
 
 |------------------------------------------------------------------------------------|
 |- Creates timers, at the specified duration, and adds their names to timerArray.	-|

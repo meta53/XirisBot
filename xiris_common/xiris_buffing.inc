@@ -247,12 +247,12 @@ Sub cmbtBuffGRP
 			|-- check group health
 			/if (${Me.Class.ShortName.Equal[SHM]}) /call healGRP
 
-			|-- Check to see if member has the buff
+			|-- Check to see if member has the buff - if not in zone, skip
 			/varset gName ${Group.Member[${g}]}
-			
+			/if (!${SpawnCount[pc =${gName}]}) /goto :nextGroupMember
 			/varset gClass ${Spawn[pc =${gName}].Class.ShortName}
+
 			/if (${Select[${gClass},WAR,SHD,PAL,MNK,RNG,ROG,BRD,BER]}) {
-				
 				/dquery ${gName} -q "Me.Buff[${buffSpell}].Duration"
 				/delay 20 ${DanNet.Query.Received}
 				/varset bDuration ${DanNet.Q}

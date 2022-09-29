@@ -420,6 +420,7 @@ Note: this now checks to see what healing mode we are in.
 ----------------------------  
 **|	
 Sub setHealingSpell(int _hp)
+	/if (!${_hp}) /return
 	/if (${str_healMode.Equal[NORMAL]}) {
 		/if (${_hp} < ${int_point_stopHeal}) {
 			/if ((${_hp} <= ${int_currentFPoint}) && ${bln_FHealReady}) {
@@ -459,7 +460,7 @@ Sub setHealingSpell(int _hp)
 
 Sub chkHeal_MT
 	/if (${int_healMode}== 0 || ${int_healMode} == 3) /return
-	/call chkMTAlive ${Me.Class.ShortName.Equal[CLR]} 
+	/call chkMTAlive TRUE
 	/if ((${Spawn[pc ${str_tankName1}].PctHPs} < ${int_point_tankPatch}) && (${Spawn[pc ${str_tankName1}].Distance} < ${int_range_normal})) /call healMAINTANK
 /return
 
@@ -520,12 +521,14 @@ Sub healSELF
 	arr_groupHP[${j},1] ${Group.Member[${i}].PctHPs}
 	arr_groupHP[${j},2] ${Group.Member[${i}].Distance3D}
 	arr_groupHP[${j},3] ${Group.Member[${i}].ID}
+	arr_groupHP[${j},4] ${i}  - The index in the group of the member, so we can quickly set the name even for out of zone chars
  ----------------------------
 **|
 Sub healGRP
 	/declare 	i 			 	int local	0
-	/declare 	int_inRange		int local 0
+	/declare 	int_inRange		int local 	0
 	/varcalc	int_point_calcStopHeal ${Math.Calc[${int_point_grpPatch}*1.1]}
+	/declare 	memName 		string local 
 	:determineGroupDamage
 	| Method updates the group array, in order of HP, and counts the major/minor hurt
 	/call updateGroupHP
@@ -540,18 +543,22 @@ Sub healGRP
 		/call getGroupInRange ${int_range_group}
 		/varset int_inRange ${Int[${Macro.Return}]}
 		/if (${int_inRange}>=3) {
-			/cecho  \arGROUP  \ar${str_heal_group} \awon \ay${Spawn[pc id ${arr_groupHP[${i},3]}].Name}
+			/cecho  \arGROUP  \ar${str_heal_group} \awon \ay${Me.Name}
 			/call healCast ${Me.ID} ${Me.Name} "${str_heal_group}"
 			/goto :return
+		} else {
+			/cecho \arGROUP not fired not enough in range \aw(\ay${int_inRange} < 3\aw)
 		}
 	} else /if (${int_minorHurt} >=3 && ${Me.Class.ShortName.Equal[CLR]}) {
 		/call getGroupInRange ${int_range_groupHoT}
 		/varset int_inRange ${Int[${Macro.Return}]}
 		/if (${int_inRange}>=3 && (${Me.CurrentMana} > ${Spell[${str_heal_groupHoT}].Mana})) {
-			/cecho  \apGROUP_HOT  \ap${str_heal_groupHoT} \awon \ay${Spawn[pc id ${arr_groupHP[${i},3]}].Name}
+			/cecho  \apGROUP_HOT \ap${str_heal_groupHoT} \awon \ay${Me.Name}
 			/call healCast ${Me.ID} ${Me.Name} "${str_heal_groupHoT}"
 			/if (${Macro.Return.Equal["CAST_SUCCESS"]}) /varset timer_groupHoT 40s
 			/goto :return
+		} else {
+			/cecho \apGROUP_HOT not fired not enough in range \aw(\ay${int_inRange} < 3\aw)
 		}
 	} 
 
@@ -560,22 +567,25 @@ Sub healGRP
 	| This is so we heal 1 person, check tank, self, heal 1 person, check tank, self.
 	| The only time we skip to another person in group is if they are out of frantic range.
 	/for i 1 to 6 
+		| Not present or No Data? Then the toon is not in zone!
+		/varset memName ${Group.Member[${arr_groupHP[${i},4]}]}
+		/if (!${SpawnCount[pc ${memName}]} || ${arr_groupHP[${i},1]} == 0 || ${arr_groupHP[${i},2]} >= 250 || ${arr_groupHP[${i},3]} == 0) /goto :next_groupMember
+
 		| No Heal? Since the lowest HP is always first, if we get to a index where there is no heal, we can skip the rest
 		/if (${arr_groupHP[${i},1]} >= ${int_point_calcStopHeal} ) /goto :return
 
-		| No Data? Then the toon is not in zone
 		/if (${arr_groupHP[${i},1]} == 0 || ${arr_groupHP[${i},2]} >= 250 || ${arr_groupHP[${i},3]} == 0) /goto :next_groupMember
 
 		| Frantic? 
 		| This spell has the longest range, so if we can't reach them here, we need to goto next group member
 		/if (${arr_groupHP[${i},1]} <= ${int_point_grpFrantic}) {
 			/if (${arr_groupHP[${i},2]} >= ${int_range_frantic}) {
-				/cecho \ar${Spawn[pc id ${arr_groupHP[${i},3]}].Name} is out of FRANTIC range!
+				/cecho \ar${memName} is out of FRANTIC range or DEAD
 				/goto :next_groupMember
 			} else {
-				/cecho  \aoFRANTIC (${str_healMode})  \ar${str_heal_frantic} \awon \ay${Spawn[pc id ${arr_groupHP[${i},3]}].Name}
 				/varset str_currentHeal ${str_heal_frantic}
 				/if (${str_healMode.Equal[EFFICIENT]}) /varset str_currentHeal ${str_heal_frantic_efficient}
+				/cecho  \aoFRANTIC \ag(${str_healMode})  \ar${str_currentHeal} \awon \ag ${memName}\aw(\ay${arr_groupHP[${i},3]}\aw)
 				/if ((${Me.CurrentMana} < ${Spell[${str_currentHeal}].Mana})) /goto :return
 				/call healCast ${arr_groupHP[${i},3]} ${Spawn[pc id ${arr_groupHP[${i},3]}].Name} "${str_currentHeal}"
 				/goto :return	
@@ -584,10 +594,10 @@ Sub healGRP
 		}
 
 		| Normal?
-		/if (${arr_groupHP[${i},1]} <= ${int_point_grpPatch} && ${arr_groupHP[${i},2]} <= ${int_range_normal_efficient} && ${str_healMode.Equal[EFFICIENT]}) {
-			/cecho \aoNORMAL (${str_healMode})  \ay${str_heal_normal_efficient} \awon \ay${Spawn[pc id ${arr_groupHP[${i},3]}].Name}
+		/if (${arr_groupHP[${i},1]} <= ${int_point_grpPatch} && ${arr_groupHP[${i},2]} <= ${int_range_normal_efficient}) {
 			/varset str_currentHeal ${str_heal_normal}
 			/if (${str_healMode.Equal[EFFICIENT]}) /varset str_currentHeal ${str_heal_normal_efficient}
+			/cecho \aoNORMAL \ag(${str_healMode})   \ay${str_currentHeal} \awon \ag ${memName}\aw(\ay${arr_groupHP[${i},3]}\aw)
 			/if ((${Me.CurrentMana} < ${Spell[${str_currentHeal}].Mana})) /goto :return
 			/call healCast ${arr_groupHP[${i},3]} ${Spawn[pc id ${arr_groupHP[${i},3]}].Name} "${str_currentHeal}"
 			/goto :return
@@ -596,7 +606,7 @@ Sub healGRP
 		| HoT ?
 		/if (!${use_heal_HoT}) /goto :next_groupMember
 		/if (${arr_groupHP[${i},1]} <= ${int_point_grpHot} && ${arr_groupHP[${i},2]} <= ${int_range_HoT} && !${timer_HoT_${arr_groupHP[${i},3]}}) {
-			/cecho  \aoHoT \ag${str_heal_HoT} \awon \ay ${Spawn[pc id ${arr_groupHP[${i},3]}].Name}(${arr_groupHP[${i},3]})
+			/cecho  \aoHoT \ag(${str_healMode})   \ay${str_currentHeal} \awon \ag ${memName}\aw(\ay${arr_groupHP[${i},3]}\aw)
 			/if ((${Me.CurrentMana} < ${Spell[${str_heal_HoT}].Mana})) /goto :return
 			/call healCast ${arr_groupHP[${i},3]} ${Spawn[pc id ${arr_groupHP[${i},3]}].Name} "${str_heal_HoT}"
 			/if (${Macro.Return.Equal["CAST_SUCCESS"]}) /varset timer_HoT_${arr_groupHP[${i},3]} 40s
@@ -621,7 +631,7 @@ Sub updateGroupHP
 	/declare    s					int local   0
 	/declare 	hp1 				int local 	0
 	/declare 	hp2 				int local 	0
-	/declare 	arr_temp[1,3]		int local	100
+	/declare 	arr_temp[1,4]		int local	100
 
 	/varset int_minorHurt 0
 	/varset int_majorHurt 0
@@ -633,10 +643,12 @@ Sub updateGroupHP
 			/varset arr_groupHP[${j},1] ${Group.Member[${i}].PctHPs}
 			/varset arr_groupHP[${j},2] ${Group.Member[${i}].Distance3D}
 			/varset arr_groupHP[${j},3] ${Group.Member[${i}].ID}
+			/varset arr_groupHP[${j},4] ${i}
 		} else {
 			/varset arr_groupHP[${j},1] 100
 			/varset arr_groupHP[${j},2] 1000
 			/varset arr_groupHP[${j},3] 0
+			/varset arr_groupHP[${j},4] ${i}
 		}
 		
 	/next i
@@ -652,12 +664,15 @@ Sub updateGroupHP
 				/varset arr_temp[1,1] ${arr_groupHP[${i},1]}
 				/varset arr_temp[1,2] ${arr_groupHP[${i},2]}
 				/varset arr_temp[1,3] ${arr_groupHP[${i},3]}
+				/varset arr_temp[1,4] ${arr_groupHP[${i},4]}
 				/varset arr_groupHP[${i},1] ${arr_groupHP[${j},1]}
 				/varset arr_groupHP[${i},2] ${arr_groupHP[${j},2]}
 				/varset arr_groupHP[${i},3] ${arr_groupHP[${j},3]}
+				/varset arr_groupHP[${i},4] ${arr_groupHP[${j},4]}
 				/varset arr_groupHP[${j},1] ${arr_temp[1,1]}
 				/varset arr_groupHP[${j},2] ${arr_temp[1,2]}
 				/varset arr_groupHP[${j},3] ${arr_temp[1,3]}
+				/varset arr_groupHP[${i},4] ${arr_groupHP[${j},4]}
 			}
 		/next j 
 	/next i
@@ -665,8 +680,10 @@ Sub updateGroupHP
 	:printOrdered
 	/cecho \ay1. --------------Ordered Major Hurt---------
 	/cecho \agint_majorHurt: \ar${int_majorHurt} \agint_minorHurt: \ay${int_minorHurt}
+	/declare memName string local
 	/for i 1 to 6
-		/cecho \ag${i}:${arr_groupHP[${i},1]} d:${arr_groupHP[${i},2]}  id:(${arr_groupHP[${i},3]})
+		/varset memName ${Group.Member[${arr_groupHP[${i},4]}]}
+		/cecho \ag${i}:${arr_groupHP[${i},1]} d:${arr_groupHP[${i},2]}  \ao${memName} \aw(\ag${arr_groupHP[${i},3]}\aw)
 	/next i
 	:return
 /return
@@ -674,8 +691,10 @@ Sub updateGroupHP
 Sub getGroupInRange(int _range) 
 	/declare inRange int local 0 
 	/declare k int local 0
+	/declare memNameIR string local
 	/for k 1 to 6
-		/if (${arr_groupHP[${k},2]} <= ${_range}) /varcalc inRange ${inRange}+1
+		/varset memNameIR ${Group.Member[${arr_groupHP[${k},4]}]}
+		/if (${arr_groupHP[${k},2]} <= ${_range} && ${SpawnCount[pc ${memNameIR}]}) /varcalc inRange ${inRange}+1
 	/next k
 /return ${inRange}
 
@@ -1278,6 +1297,18 @@ Sub xbot_initialize_healing(int _healPoint)
 	| Return out for classes that can't heal
 	/if (${str_classArchetype.Equal[MELEE_END]} || ${Me.Class.ShortName.Equal[BRD]} || ${Me.Class.ShortName.Equal[WAR]} || ${Me.Class.ShortName.Equal[SHD]} || ${str_classArchetype.Equal[CASTER]})	/return
 	|---------------------
+
+	/declare 	bln_useHealRandomization 	bool	outer  	TRUE
+	/declare 	int_healRandomRange			int		outer 	5
+	/declare	int_healRandomMin			int     0
+	/declare	int_healRandomMax			int     0
+	/if (${bln_useHealRandomization}) {
+		/varcalc int_healRandomMin	${_healPoint}-${int_healRandomRange}
+		/varcalc int_healRandomMax	${_healPoint}+${int_healRandomRange}
+		/varset  _healPoint ${Math.Rand[${int_healRandomMin},${int_healRandomMax}]}
+		/cecho \aoRandomized Healing \ag${int_healRandomMin} \ay- \ag${int_healRandomMax} \ayPoint: \ag${_healPoint}
+	}
+
 
 	/declare 	healINI				string  outer	xiris_common/xiris_healing.ini
 	|-- Set spellset to default so we can probe the properties of these

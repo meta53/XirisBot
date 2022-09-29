@@ -13,7 +13,6 @@
     "bot_loader_noq.mac": true,
     "bot_loader_pyril.mac": true,
     "bot_loader_xxeric.mac": true,
-    "bot_raid_noq_nuke.mac": true,
     "bot_raid_pyril_nuke.mac": true,
     "ce.mac": true,
     "coh.mac": true,
@@ -44,6 +43,8 @@
     "xadds.mac": true,
     "xbomb.mac": true,
     "yafm2.ini": true,
-    "yafm2.mac": true
+    "yafm2.mac": true,
+    "common": true,
+    "archived": true
   }
 }

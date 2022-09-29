@@ -185,11 +185,13 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 
 Sub healMAINTANK
 	/varcalc	int_point_calcStopHeal ${Math.Calc[${int_point_tankPatch}*1.1]}
-	/if (!${Target.ID}) /call TrueTarget ${int_MTID}
+	/call chkMTAlive TRUE
+	/if (${Target.ID} != ${int_MTID}) /call TrueTarget ${int_MTID}
+	/if (${Target.PctHPs}<=0) /return
 	/call chkFHealReady
 	/call setHealingSpell ${Target.Class.ShortName} ${Target.PctHPs}
-	/echo healMAINTANK: ${str_currentHeal}
 	/call healCast ${int_MTID} ${Target.Name} "${str_currentHeal}"
+	/echo healMAINTANK: ${str_currentHeal}
 	/varset int_point_calcStopHeal	${int_point_tankPatch}
 /return
 
@@ -208,8 +210,9 @@ Sub healSELF
 	/if (!${Target.ID}) /call TrueTarget ${Me.ID}
 	/call chkFHealReady
 	/call setHealingSpell ${Me.Class.ShortName}  ${Me.PctHPs}
-	/echo healSELF  (healing.inc): ${str_currentHeal}
+	
 	/call healCast ${Me.ID} ${Me.Name} "${str_currentHeal}"
+	/echo healSELF  (healing.inc): ${str_currentHeal}
 	/varset int_point_calcStopHeal	${int_point_selfPatch}
 	/call TrueTarget ${int_MTID}
 /return

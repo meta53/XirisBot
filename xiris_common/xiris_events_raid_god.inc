@@ -16,10 +16,10 @@ ______________________________________________
 |-- Gates of Discord events
 
 | UQUA
-#event UquaKey                  "The #1# Key must unlock the door to the next room."
+#EVENT UquaKey                  "The #1# Key must unlock the door to the next room."
 
 | IKK4
-#event KeeperPosition			"#*#KeeperPosition#*#"
+#EVENT KeeperPosition			"#*#KeeperPosition#*#"
 
 | INKTUTA
 |** Positions For Noqufiel:
@@ -32,29 +32,29 @@ ______________________________________________
 **|
 
 #EVENT NoqCurse 				"[ #1# #*#]#*#NoqCurse,#2#"
-#event InkCurse					"#*#The thoughts of a cursed trusik#*#"
-#event InkCurseSafe				"#*#inkstop#*#"
-#event InkCurseSafe				"#*#inksafe#*#"
-#event CC1						"#*#inkcc1#*#"
-#event CC2						"#*#inkcc2#*#"
-#event CC3						"#*#inkcc3#*#"
-#event CC4						"#*#inkcc4#*#"
-#event CC5						"#*#inkcc5#*#"
-#event CC6						"#*#inkcc6#*#"
+#EVENT InkCurse					"#*#The thoughts of a cursed trusik#*#"
+#EVENT InkCurseSafe				"#*#inkstop#*#"
+#EVENT InkCurseSafe				"#*#inksafe#*#"
+#EVENT CC1						"#*#inkcc1#*#"
+#EVENT CC2						"#*#inkcc2#*#"
+#EVENT CC3						"#*#inkcc3#*#"
+#EVENT CC4						"#*#inkcc4#*#"
+#EVENT CC5						"#*#inkcc5#*#"
+#EVENT CC6						"#*#inkcc6#*#"
 
 | TACVI
-#event VORRAMP					"#*#body bulges with strength as he enters a blind rage#*#"
-#event VORBLUR					"#*#Vor mem-blurs#*#"
-#event PIRIKACTIVE              "#*#Come you fools!#*#"
-#event BALANCE					"#*#Kvxe enters a state of battle#*#"
-#event BALANCERAPE				"#*#RapeHealOn#*#"
-#event BALANCERAPE				"#*#FullHeal#*#"
-#event BALANCERAPE				"#*#Kvxe enters a state of seething rage#*#"
-#event BALANCERAPEOFF			"#*#RapeHealOff#*#"
-#event BALANCEOFF			 	"#*#your failure to balance the scales#*#"
-#event BALANCEOFF			 	"#*#body trembles as he fails to gather power#*#"
-#event BALANCEOFF			 	"#*#BalanceOFF#*#"
-#event PIRIKDEAD				"#*#two heads face each other just before it falls to the floor#*#"
+#EVENT VORRAMP					"#*#body bulges with strength as he enters a blind rage#*#"
+#EVENT VORBLUR					"#*#Vor mem-blurs#*#"
+#EVENT PIRIKACTIVE              "#*#Come you fools!#*#"
+#EVENT BALANCE					"#*#Kvxe enters a state of battle#*#"
+#EVENT BALANCERAPE				"#*#RapeHealOn#*#"
+#EVENT BALANCERAPE				"#*#FullHeal#*#"
+#EVENT BALANCERAPE				"#*#Kvxe enters a state of seething rage#*#"
+#EVENT BALANCERAPEOFF			"#*#RapeHealOff#*#"
+#EVENT BALANCEOFF			 	"#*#your failure to balance the scales#*#"
+#EVENT BALANCEOFF			 	"#*#body trembles as he fails to gather power#*#"
+#EVENT BALANCEOFF			 	"#*#BalanceOFF#*#"
+#EVENT PIRIKDEAD				"#*#two heads face each other just before it falls to the floor#*#"
 
 Sub InitEvents_GoD_Ikkinz
 	/call RegisterRaidEvents Events_GoD_Ikkinz 18
@@ -83,15 +83,25 @@ Sub Events_GoD_Uqua
 /return
 
 Sub Events_GoD_Inktuta
-	/doevents NoqCurse
-	/doevents InkCurse
-	/doevents InkCurseSafe
-	/doevents CC1
-	/doevents CC2
-	/doevents CC3
-	/doevents CC4
-	/doevents CC5
-	/doevents CC6
+	
+	| Cursebearers
+	/if (${Bool[${SpawnCount[npc Cursecaller]}]}) {
+		/doevents InkCurse
+		/doevents InkCurseSafe
+		/doevents CC1
+		/doevents CC2
+		/doevents CC3
+		/doevents CC4
+		/doevents CC5
+		/doevents CC6
+	}
+
+	| Noqufiel
+	/if (${Bool[${SpawnCount[npc Noqufiel]}]} && !${Bool[${SpawnCount[npc Cursecaller]}]}) {
+		/doevents NoqCurse
+		/if (${Me.Class.ShortName.Equal[WIZ]} || ${Me.Class.ShortName.Equal[MAG]}) /call chkNoqCursebearers
+	}
+	
 /return
 
 
@@ -119,8 +129,10 @@ Sub Event_UquaKey(string line,string key)
 
 
 Sub Event_InkCurse
-	/if (${SpawnCount[npc cursecaller]}==0) /return
+	/echo event InkCurse!
+	|/if (${SpawnCount[npc cursecaller]}==0) /return
 	|/melee reset
+	/maxfps bg 30
 	/call meleeReset
 	/varset inkRunning TRUE
 	/call InkCurseRun
@@ -130,7 +142,7 @@ Sub Event_InkCurseSafe
 	/if (!${inkRunning}) /return
 	/rs ${Me.Name} is safe, returning.
 	/varset inkRunning FALSE
-	/maxfps bg 25
+	/maxfps bg 20
 	/play off
 /return
 
@@ -138,34 +150,46 @@ Sub InkCurseDead
 	/rs ${Me.Name} is dead, resetting.
 	/varset inkRunning FALSE
 	/play off
+	/maxfps bg 20
 	/delay 30
     /keypress back
 /return
 
-Sub Event_NoqCurse(ChatType,Sender,ChatText,_curseID)
-	/echo Event_NoqCurse ${ChatText}
-	/declare curseID int local ${ChatText.Arg[1]} 
+|----------------------------
+| Noqufiel
+|----------------------------
+
+Sub Event_NoqCurse(_line, _chatSender, _eventParams)
+	
+	/if (${bln_tanking}) {
+		/rs I NEED TO RUN BUT TANKING!
+		/return
+	} 
+	/echo Event_NoqCurse ${_eventParams}
+	/declare curseID int local ${_eventParams.Arg[1]} 
 	/echo curseID: ${curseID}
-	/melee reset
-	|/call meleeReset
-	/varset inkRunning TRUE
+	/squelch /melee reset
 	/call InkNoqRun ${curseID}
 /return
 
-Sub InkNoqRun(int curseID)
-	/rs Running Noqufiel ${curseID}
+Sub InkNoqRun(int _curseID)
+	/if (${bln_tanking}) {
+		/rs I NEED TO RUN BUT TANKING!
+		/return
+	} 
+	/rs Running Noqufiel ${_curseID}
 	/doevents flush
 	/declare startX int local ${Me.X}
 	/declare startY int local ${Me.Y}
 	/declare startZ int local ${Me.Z}
 	
 	|-- find which cursebearer has you on aggro;
-	/target id ${curseID}
+	/call TrueTarget ${_curseID}
 	/delay 10
 	:checkCurseTarget
 	/if (${Me.TargetOfTarget.Name.Equal[NULL]}) /goto :checkCurseTarget
 	
-	/echo Target ${curseID} is targetting ${Me.TargetOfTarget.Name} ? ${Me.TargetOfTarget.Name.Equal[${Me.Name}]}
+	/echo Target ${_curseID} is targetting ${Me.TargetOfTarget.Name} ? ${Me.TargetOfTarget.Name.Equal[${Me.Name}]}
 	
 	|-- start run logic
 	/varset inkRunning TRUE
@@ -174,15 +198,18 @@ Sub InkNoqRun(int curseID)
 	|   if not, end this and continue what you were doing
 	
 	/if (${Me.TargetOfTarget.Name.Equal[${Me.Name}]}) {
-		/say Target ${curseID} is targetting me
+		/say Target ${_curseID} is targetting me
 	}
 	
+	| DOUBLE CHECK THIS RUN LOOP  TODO MAKE IT WORK LIKE CURSECALLERS
 	:startLoop
 	/if (${Zone.ShortName.Equal[GuildLobby]}) /call InkDeath
 	/if (${Me.TargetOfTarget.Name.Equal[${Me.Name}]}) {
 		/if (${Target.Distance} < 50) {
 			/nav wp noqRun
+			:startLoopRun 
 			/delay 10
+			/if (${Navigation.Active}) /goto :startLoopRun
 			/goto :farLoop
 		}
 		/goto :startLoop
@@ -192,8 +219,10 @@ Sub InkNoqRun(int curseID)
 	/if (${Zone.ShortName.Equal[GuildLobby]}) /call InkDeath
 	/if (${Me.TargetOfTarget.Name.Equal[${Me.Name}]}) {
 		/if (${Target.Distance} < 50) {
-			/nav loc ${startY} ${startX} ${startZ}
+			/nav loc ${startX} ${startY} ${startZ}
+			:farLoopRun
 			/delay 10
+			/if (${Navigation.Active}) /goto :farLoopRun
 			/goto :startLoop
 		}
 		/goto :farLoop
@@ -203,12 +232,66 @@ Sub InkNoqRun(int curseID)
 	/if (${Zone.ShortName.Equal[GuildLobby]}) /call InkDeath
 	|-- insert some return logic here	
 	/varset inkRunning FALSE
-	/nav loc ${startY} ${startX} ${startZ}
+	/nav loc ${startX} ${startY} ${startZ}
 	|-- clear events queue so we dont get into an echo chamber
 	/doevents flush
-	/return
 /return
 
+| Method for the nukers to check for Cursebearers during the Noqufiel events
+Sub chkNoqCursebearers
+	/declare i 		int 	local 
+	/declare victim string 	local 
+
+	:curseBearerCheck
+	/if (${SpawnCount[npc cursebearer]}) {
+		/varset bln_engaged TRUE
+		/varset timer_QnukeDelay 0
+		/varset int_namedQNukeStopHP 0
+		/varset int_namedQNukeStartHP 100
+		/varset int_QnukeStopHP 0
+		/varset int_QnukeStartHP 100
+		/varset int_namedQNukeMinMana 0
+		/varset int_QnukeMinMana 0
+
+		/for i 1 to ${SpawnCount[npc cursebearer]}
+			/call TrueTarget ${NearestSpawn[${i},npc cursebearer].ID}
+			| get the victim
+			:getVictim
+			/if (${Target.ID} && ${Target.Type.Equal[NPC]}) {
+				/varset victim ${Me.TargetOfTarget.Name}
+				/if (${victim.Equal[${Me.Name}]}) {
+					/call InkNoqRun ${Target.ID}
+				} else /if (${victim.NotEqual[NULL]}) {
+					/squelch /dt ${victim} NoqCurse, ${Target.ID}
+				} else {
+					/delay 1
+					/goto :getVictim
+				}
+			}
+		/next i
+	}
+
+	/doevents NoqCurse
+
+	/call TrueTarget ${NearestSpawn[1,npc cursebearer].ID}
+	:curseBearerNuke 
+		/if (${Target.ID} && ${Target.Type.Equal[NPC]}) {
+			/call chkQNuke
+			/goto :curseBearerNuke
+		}
+
+
+	:curseBearerPosition
+	/if (${inkRunning}) /return 
+	/declare campDist int local
+	/varcalc campDist ${Math.Distance[${Me.Y},${Me.X}:${int_campY},${int_campX}]}
+	/if (${campDist}>10) {
+		/nav loc ${int_campX} ${int_campY} ${int_campZ}
+	}
+/return
+|----------------------------
+| Cursebearers
+|----------------------------
 Sub InkCurseRun
     /rs Running Cursecallers
 	/nav wp cursedentrance

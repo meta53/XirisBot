@@ -44,7 +44,7 @@ ______________________________________________
 
 Sub InitEvents_OOW_Anguish
 	/cecho \ag Initializing Anguish
-	/declare bln_jelvanEngaged bool outer FALSE
+	/if (!${Defined[bln_jelvanEngaged]}) /declare bln_jelvanEngaged bool outer FALSE
 	/declare bln_hanvarEngaged bool outer FALSE
 	/declare bln_amvEngaged	   bool outer FALSE
 	/call RegisterRaidEvents Events_OOW_Anguish 15
@@ -57,7 +57,9 @@ Sub InitEvents_OOW_Anguish
 	/declare J2C string outer -253.437 1970.36 -152.672
 	/declare J3T string outer -351.176 2117.72 -152.972
 	/declare J3C string outer -390.152 2100.88 -152.939
+	
 	/declare J4T string outer -257.657 2071.92 -152.877
+	/declare J4C string outer -253.437 1970.36 -152.672
 
 	/declare J1TX int outer ${J1T.Arg[1, ]}
 	/declare J1TY int outer ${J1T.Arg[2, ]}
@@ -169,6 +171,7 @@ Sub Event_TureRampOn
 		/squelch /melee reset
 		/squelch /melee reset
 		/squelch /attack off
+		/stand on
 		/stick off
 		/nav wp tureSafe
 	} else /if (${Me.Class.ShortName.Equal[NEC]} || ${Me.Class.ShortName.Equal[MAG]}) {
@@ -181,12 +184,13 @@ Sub Event_TureRampOn
 Sub Event_TureRampOff 
 	/if (!${bln_engaged}) /return
 	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
-		/target npc Ture
-		/squelch /killthis
+		/call TrueTarget ${int_targetID}
 		/nav wp tureDPS
 		:ture_run 
 		/if (${Target.Distance} < 50) /nav stop
 		/if (${Navigation.Active}) /goto :ture_run
+		/squelch /killthis
+		/squelch /attack on
 	} else /if (${Me.Class.ShortName.Equal[NEC]} || ${Me.Class.ShortName.Equal[MAG]}) {
 		/pet attack
 	}
@@ -194,6 +198,7 @@ Sub Event_TureRampOff
 
 Sub Event_TureWanton 
 	/cecho \aw Warning! \arWanton Destruction \awon me!
+	/call chkNeedCure
 /return
 
 |----------------------------
@@ -408,7 +413,7 @@ Sub Event_AMVStart
 Sub chkMarkedForDeathCureDist
 	:markLoop
 	/if (!${Bool[${SpawnCount[pc ${str_myCurer}]}]}) {
-		/call 		getGroupCurer
+		/call 		getGroupCurer disease
 		/varset 	str_myCurer ${Macro.Return}
 	}
 

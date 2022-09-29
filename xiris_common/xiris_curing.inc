@@ -262,20 +262,8 @@ Sub chkNeedCure
 	:cure_determine
 	/if ( ${forceCure} || ${bln_needsCure}) {
 		/varset bln_needsCure TRUE
-		
-		|-- check to see if my curer is still alive
-		/if (!${Bool[${SpawnCount[PC ${str_myCurer}]}]}) {
-			:new_curer
-			/call getGroupCurer
-			/varset str_myCurer ${Macro.Return}
-		} 
 
-		/if (${str_myCurer.Equal[NULL]}) {
-			/cecho \ar I HAVE NO CURER!
-			/call resetCureState
-			/goto :return
-		}
-
+		| Get the required cureType
 		/if (${Debuff.Diseased} >= 1 && ${cureType.Equal[NOTSET]}) {
 			|-- Handle Disease
 			/varset cureType disease
@@ -293,7 +281,21 @@ Sub chkNeedCure
 			/varset cureType corruption
 			/varset counters ${Debuff.Corrupted}
 		}
+		
+		|-- check to see if my curer is still alive
+		/if (!${Bool[${SpawnCount[PC ${str_myCurer}]}]}) {
+			:new_curer
+			/call getGroupCurer ${cureType}
+			/varset str_myCurer ${Macro.Return}
+		} 
 
+		/if (${str_myCurer.Equal[NULL]}) {
+			/cecho \ar I HAVE NO CURER!
+			/call resetCureState
+			/goto :return
+		}
+
+		
 		| Return if we can't figure out what cure type
 		/if (${cureType.Equal[NOTSET]}) /return
 
@@ -331,6 +333,7 @@ Sub chkNeedCure
 					/goto :new_curer
 				}
 			}
+			
 			/varset timer_cure_request 30s
 			/varset bln_askedForCure TRUE
 		}
@@ -354,13 +357,13 @@ Sub requestCure(string _type, int _counters, bool _force)
 /return
 
 Sub EVENT_ResetGroupCurer 
-	/call getGroupCurer
+	/call getGroupCurer NULL
 	/varset str_myCurer ${Macro.Return}
 /return 
 
 |-- Will get your curer, prefers shaman -> cleric -> druid -> paladin
-Sub getGroupCurer 
-	/declare 	myCurer			string	local	NULL
+Sub getGroupCurer(string _cureType)
+	/declare 	myCurer		string	local	NULL
 	/declare	gmember			int 	local	0
 	/declare 	groupShaman		string 	local 	NULL
 	/declare 	groupCleric     string  local 	NULL
@@ -379,16 +382,37 @@ Sub getGroupCurer
 	
 	/cecho \awSHM:\ag${groupShaman} \awCLR:\ag${groupCleric} \awPAL:\ag${groupPaladin} \awDRU:\ag${groupDruid}
 
+	/if (${_cureType.Equal[NULL]}) {
+		/varset myCurer ${groupCleric}
+	}
 	| curer order of precedence
-	/if (${groupDruid.NotEqual[NULL]}) 		/varset myCurer ${groupDruid}
-	/if (${groupCleric.NotEqual[NULL]}) 	/varset myCurer ${groupCleric}
-	/if (${groupPaladin.NotEqual[NULL]}) 	/varset myCurer ${groupPaladin}
-	/if (${groupShaman.NotEqual[NULL]}) 	/varset myCurer ${groupShaman}
+	| Poison
+	/if (${groupCleric.NotEqual[NULL]} 	&& ${_cureType.Equal[poison]})	/varset myCurer ${groupShaman}
+	/if (${groupShaman.NotEqual[NULL]} 	&& ${_cureType.Equal[poison]})	/varset myCurer ${groupCleric}
+	
+	| Disease
+	/if (${groupShaman.NotEqual[NULL]} 	&& ${_cureType.Equal[disease]}) /varset myCurer ${groupShaman}
+	/if (${groupCleric.NotEqual[NULL]} 	&& ${_cureType.Equal[disease]}) /varset myCurer ${groupCleric}
+
+	| Curse
+	/if (${groupShaman.NotEqual[NULL]} 	&& ${_cureType.Equal[curse]})	/varset myCurer ${groupShaman}
+	/if (${groupDruid.NotEqual[NULL]} 	&& ${_cureType.Equal[curse]})	/varset myCurer ${groupDruid}
+	/if (${groupPaladin.NotEqual[NULL]} && ${_cureType.Equal[curse]})	/varset myCurer ${groupPaladin}
+
+	| Catch the curse curer reference if no paladin, shaman, or druid in group and set to cleric since they can cure all
+	/if (${myCurer.Equal[NULL]}			&& ${_cureType.Equal[curse]})	/varset myCurer ${groupCleric}
+
+	| Catch when we don't actually have a curetype
+	/if (${_cureType.Equal[NULL]} 		&& ${groupCleric.NotEqual[NULL]}) 	/varset myCurer ${groupCleric}
+	/if (${_cureType.Equal[NULL]} 		&& ${groupDruid.NotEqual[NULL]}) 	/varset myCurer ${groupDruid}
+	/if (${_cureType.Equal[NULL]} 		&& ${groupShaman.NotEqual[NULL]}) 	/varset myCurer ${groupShaman}
+	
+
 	/if (${myCurer.Equal[NULL]} && !${timer_cure_complain}) {
 		/varset timer_cure_complain 45s 
 		/rsay I have no curer :(
 	} 
-	/cecho \aggetGroupCurer: \ao${myCurer}
+	/cecho \aggetGroupCurer: \aw(\ag${_cureType}\aw): \ao${myCurer} 
 	
 /return ${myCurer}
 
@@ -541,7 +565,7 @@ Sub handleCureRequest(string _name, int _id, string _cureType, int _counters, bo
 
 |-- Casts a cure, for _count many times, on a _tgtID
 Sub castCure(string _name, int _id, string _spell, int _castCount, string _cureType, int _counters) 
-	/cecho \aw CastCure ${_name}, ${_id}, ${_spell}, ${_count}
+	/cecho \aw CastCure ${_name}, ${_id}, ${_spell}, ${_counters}
 	/call TrueTarget ${_id}
 	/declare i int local 1
 	/for i 1 to ${_castCount}
@@ -549,7 +573,7 @@ Sub castCure(string _name, int _id, string _spell, int _castCount, string _cureT
 		/call MQ2Cast "${_spell}" gem7 8s
 		/delay 10
 	/next i 
-	/dt ${_name} I cured you ${_name}(${_id}) of ${_count} ${_cureType} counters.
+	/dt ${_name} I cured you ${_name}(${_id}) of ${_counters} ${_cureType} counters.
 /return
 
 
@@ -561,6 +585,9 @@ Sub xbot_initialize_curing
 	/declare    bln_askedForCure        bool    outer   FALSE
 	/declare    str_myCurer				string	outer 	NULL
 	/declare	timer_cure_request		timer   outer
+
+	| Temporary work around
+	/if (!${Defined[bln_jelvanEngaged]}) /declare bln_jelvanEngaged bool outer FALSE
 	
 	/declare 	cureRange      int     outer   100
 	/declare    bln_navCure   			bool    outer   FALSE

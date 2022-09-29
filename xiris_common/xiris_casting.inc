@@ -218,7 +218,6 @@ Sub chkNuke
 
 Sub chkQNuke
 	/if (!${bln_engaged}) 		 /return
-	|/if (!${bln_useFastOnly}) 	 /return
 	/if (${int_QnukeTotal} == 0) /return 
 	/if (${AENuke_Active}) 		 /return
 	/if (${timer_QnukeDelay} && ${qnuke_hasCastOnce})	 	/return 
