@@ -112,7 +112,7 @@ Sub EVENT_DOGROUPBUFFS(_line, _chatSender, _eventParams)
 	/call doGroupBuffOnTarget ${Me.Name}
 	/dgt ${Me.Class.Name} GROUP BUFF COMPLETE
 	/delay 10
-	/memspellset default
+	/memspellset ${str_spellset}
 	
 	/doevents flush DOGROUPBUFFS
 /return
@@ -126,7 +126,7 @@ Sub EVENT_DOSINGLETARGETBUFFS(_line, _chatSender, _eventParams)
 	} else {
 		/call doSingleTargetBuffOnChar ${_eventParams}
 	}
-	/memspellset default
+	/memspellset ${str_spellset}
 	
 	/doevents flush DOSINGLETARGETBUFFS
 /return
@@ -143,7 +143,7 @@ Sub EVENT_DOSPECIFICBUFFONCHAR(string _text, string _sender, string _buffer, str
 	
 	/memspellset buff
 	/call doSpecificBuffOnChar ${_sender} "${_spell}"
-	/memspellset default
+	/memspellset ${str_spellset}
 	/doevents flush DOSPECIFICBUFFONCHAR
 /return
 
@@ -664,7 +664,7 @@ Sub chkOOCBuffs
 		
 	:next
 		/next i
-		/memspellset default
+		/memspellset ${str_spellset}
 		/call TrueTarget ${int_targetID}
 /return
 

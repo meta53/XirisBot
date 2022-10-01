@@ -378,6 +378,7 @@ Sub xbot_initialize_debuffing
 		/declare DEBUFF_${db}_NamedOnly		bool	outer	${Ini[botINI,Debuff,DEBUFF_${db}_NamedOnly]}
 		/declare DEBUFF_${db}_Resisted		int		outer 	0
 		/declare DEBUFF_${db}_Active		bool	outer 	FALSE
+		/declare DEBUFF_${db}_Resist 		string  outer   ${Spell[${DEBUFF_${db}}].ResistType} 		
 		/declare DEBUFF_${db}_Timer			timer   outer   0
 	/next db
 	

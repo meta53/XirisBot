@@ -1317,7 +1317,7 @@ Sub xbot_initialize_healing(int _healPoint)
 	|-- Heal Settings
 	/declare    bln_defaultAutoInterrupt 	bool	outer  	${Ini[healINI,Heal_Settings,bln_autointerrupt]}
 	/declare 	bln_autointerrupt			bool	outer	${Ini[botINI,Healing_Settings,bln_autointerrupt,${bln_defaultAutoInterrupt}]}
-	/declare	str_spellset				string  outer 	default
+	
 	| 	Heal Mode: NORMAL|EFFICIENT|CHCHAIN
 	/declare    str_healMode				string  outer 	NORMAL
 	/declare	str_savedHealMode			string  outer   ${str_healMode}

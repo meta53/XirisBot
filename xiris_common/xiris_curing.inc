@@ -281,63 +281,58 @@ Sub chkNeedCure
 			/varset cureType corruption
 			/varset counters ${Debuff.Corrupted}
 		}
-		
-		|-- check to see if my curer is still alive
-		/if (!${Bool[${SpawnCount[PC ${str_myCurer}]}]}) {
-			:new_curer
-			/call getGroupCurer ${cureType}
-			/varset str_myCurer ${Macro.Return}
-		} 
 
+		| Return if we can't figure out what cure type
+		/if (${cureType.Equal[NOTSET]}) /return
+
+		| Get my curer for this type
+		:new_curer
+		/call getGroupCurer ${cureType}
+		/varset str_myCurer ${Macro.Return}
 		/if (${str_myCurer.Equal[NULL]}) {
 			/cecho \ar I HAVE NO CURER!
 			/call resetCureState
 			/goto :return
 		}
 
-		
-		| Return if we can't figure out what cure type
-		/if (${cureType.Equal[NOTSET]}) /return
-
-		/cecho \arCURE REQUIRED:\ay Counters:\ag${counters} \ayType:\ag${cureType}
-
-		/call getCureRange curse
+		| Get the range of this cure
+		/call getCureRange ${cureType}
 		/varset cureRange ${Int[${Macro.Return}]}	
-		/echo cureRange: ${Macro.Return} ${cureRange}
-		
-		/if (${cureType.NotEqual[NOTSET]}) {
-			/if (${str_myCurer.Equal[${Me.Name}]}) {
-				/call handleCureRequest ${Me.Name} ${Me.ID} ${cureType} ${counters} ${forceCure}
-			} else {
-				/if (${Bool[${Spawn[pc ${str_myCurer}].ID}]}) {
-					/cecho \aoCurer:\ag${str_myCurer} \aoDist:\ag${Spawn[pc ${str_myCurer}].Distance3D} \aoRange:\ag${cureRange}
-					/if (${Spawn[pc ${str_myCurer}].Distance3D} < ${cureRange}) {
-						/cecho \aoCURE REQUESTED:\ay Counters:\ag${counters} \ayType:\ag${cureType} \ayForced:\ag${forceCure}
-						/call requestCure ${cureType} ${counters} ${forceCure}
-					} else /if (${Spawn[pc ${str_myCurer}].Distance3D} > ${cureRange} && ${Spawn[pc ${str_myCurer}].Distance3D} < 250 && !${bln_tanking} && !${bln_jelvanEngaged}) {
-						/varset str_navCureStart ${Me.X} ${Me.Y} ${Me.Z}
-						/cecho \ayNavigating to Curer because range is too far for cure
-						/varset bln_navCure TRUE
-						/navigate spawn ${str_myCurer}
-						:nav_curer
-						/if (${Spawn[pc ${str_myCurer}].Distance3D} < ${cureRange}) /nav stop
-						/if (${Navigation.Active}) /goto :nav_curer
-						/cecho \arCURE REQUESTING:\ay Counters:\ag${counters} \ayType:\ag${cureType} \ayForced:\ag${forceCure}
-						/call requestCure ${cureType} ${counters} ${forceCure}
-					} else {
-						/cecho \arMy Curer is too far away
-						/goto :new_curer
-					}
+
+		| Start asking for cure
+		/cecho \arCURE REQUIRED:\ay Counters:\ag${counters} \ayType:\ag${cureType} \ayRange:\ag${cureRange}
+
+		/if (${str_myCurer.Equal[${Me.Name}]}) {
+			/call handleCureRequest ${Me.Name} ${Me.ID} ${cureType} ${counters} ${forceCure}
+		} else {
+			/if (${Bool[${Spawn[pc ${str_myCurer}].ID}]}) {
+				/cecho \aoCurer:\ag${str_myCurer} \aoDist:\ag${Spawn[pc ${str_myCurer}].Distance3D} \aoRange:\ag${cureRange}
+				/if (${Spawn[pc ${str_myCurer}].Distance3D} < ${cureRange}) {
+					/cecho \aoCURE REQUESTED:\ay Counters:\ag${counters} \ayType:\ag${cureType} \ayForced:\ag${forceCure}
+					/call requestCure ${cureType} ${counters} ${forceCure}
+				} else /if (${Spawn[pc ${str_myCurer}].Distance3D} > ${cureRange} && ${Spawn[pc ${str_myCurer}].Distance3D} < 250 && !${bln_tanking} && !${bln_jelvanEngaged}) {
+					/varset str_navCureStart ${Me.X} ${Me.Y} ${Me.Z}
+					/cecho \ayNavigating to Curer because range is too far for cure
+					/varset bln_navCure TRUE
+					/navigate spawn ${str_myCurer}
+					:nav_curer
+					/if (${Spawn[pc ${str_myCurer}].Distance3D} < ${cureRange}) /nav stop
+					/if (${Navigation.Active}) /goto :nav_curer
+					/cecho \arCURE REQUESTING:\ay Counters:\ag${counters} \ayType:\ag${cureType} \ayForced:\ag${forceCure}
+					/call requestCure ${cureType} ${counters} ${forceCure}
 				} else {
-					/cecho \arMy Curer is dead or not in zone
+					/cecho \arMy Curer is too far away
 					/goto :new_curer
 				}
+			} else {
+				/cecho \arMy Curer is dead or not in zone
+				/goto :new_curer
 			}
-			
-			/varset timer_cure_request 30s
-			/varset bln_askedForCure TRUE
 		}
+		/varset timer_cure_request 30s
+		/varset bln_askedForCure TRUE
 	}
+	
 :return
 /return
 
@@ -357,18 +352,23 @@ Sub requestCure(string _type, int _counters, bool _force)
 /return
 
 Sub EVENT_ResetGroupCurer 
-	/call getGroupCurer NULL
+	/call getGroupCurer DEFAULT
 	/varset str_myCurer ${Macro.Return}
 /return 
 
 |-- Will get your curer, prefers shaman -> cleric -> druid -> paladin
-Sub getGroupCurer(string _cureType)
-	/declare 	myCurer		string	local	NULL
+Sub getGroupCurer(string _curerType)
+
+
+
+	/if (!${Defined[_cureType]}) /declare _cureType string local NOTSET
+	/if (${_cureType.Equal[NULL]}) /varset _cureType NOTSET
+	/declare 	myCurer			string	local	NOTFOUND
 	/declare	gmember			int 	local	0
-	/declare 	groupShaman		string 	local 	NULL
-	/declare 	groupCleric     string  local 	NULL
-	/declare 	groupPaladin    string  local 	NULL
-	/declare 	groupDruid    	string  local 	NULL
+	/declare 	groupShaman		string 	local 	NOTFOUND
+	/declare 	groupCleric     string  local 	NOTFOUND
+	/declare 	groupPaladin    string  local 	NOTFOUND
+	/declare 	groupDruid    	string  local 	NOTFOUND
 	/if (${str_classArchetype.Equal[PRIEST]} || ${Me.Class.ShortName.Equal[PAL]}) {
 		/varset myCurer ${Me.Name}
 	} else {
@@ -377,42 +377,81 @@ Sub getGroupCurer(string _cureType)
 		/if (${Group.Member[${gmember}].Class.ShortName.Equal[CLR]} && ${SpawnCount[pc ${Group.Member[${gmember}]}]} > 0) /varset groupCleric  ${Group.Member[${gmember}]}
 		/if (${Group.Member[${gmember}].Class.ShortName.Equal[PAL]} && ${SpawnCount[pc ${Group.Member[${gmember}]}]} > 0) /varset groupPaladin ${Group.Member[${gmember}]}
 		/if (${Group.Member[${gmember}].Class.ShortName.Equal[DRU]} && ${SpawnCount[pc ${Group.Member[${gmember}]}]} > 0) /varset groupDruid   ${Group.Member[${gmember}]}
-	/next gmember
+		/next gmember
 	}
 	
 	/cecho \awSHM:\ag${groupShaman} \awCLR:\ag${groupCleric} \awPAL:\ag${groupPaladin} \awDRU:\ag${groupDruid}
 
-	/if (${_cureType.Equal[NULL]}) {
-		/varset myCurer ${groupCleric}
+	/if (${_curerType.Equal[DEFAULT]}) {
+		/if (${Me.Class.ShortName.Equal[CLR]} || ${Me.Class.ShortName.Equal[DRU]} || ${Me.Class.ShortName.Equal[SHM]} || ${Me.Class.ShortName.Equal[PAL]}) {
+			/varset myCurer ${Me.Name}
+		} else {
+			| Order of precedence for default curing SHM,DRU,PAL,CLR
+			/if (${groupShaman.NotEqual[NOTFOUND]}) {
+				/varset myCurer ${groupShaman}
+			} else /if (${groupDruid.NotEqual[NOTFOUND]}) {
+				/varset myCurer ${groupDruid}
+			} else /if (${groupPaladin.NotEqual[NOTFOUND]}) {
+				/varset myCurer ${groupPaladin}
+			} else /if (${groupCleric.NotEqual[NOTFOUND]}) {
+				/varset myCurer ${groupCleric}
+			}
+		}
+
+	} else /if (${_curerType.Equal[poison]}) {
+		/if (${Me.Class.ShortName.Equal[CLR]} || ${Me.Class.ShortName.Equal[DRU]} || ${Me.Class.ShortName.Equal[SHM]} || ${Me.Class.ShortName.Equal[PAL]}) {
+			/varset myCurer ${Me.Name}
+		} else {
+			| Order of precedence for default curing CLR,PAL,DRU,SHM
+			/if (${groupCleric.NotEqual[NOTFOUND]}) {
+				/varset myCurer ${groupCleric}
+			} else /if (${groupPaladin.NotEqual[NOTFOUND]}) {
+				/varset myCurer ${groupPaladin}
+			} else /if (${groupDruid.NotEqual[NOTFOUND]}) {
+				/varset myCurer ${groupDruid}
+			} else /if (${groupShaman.NotEqual[NOTFOUND]}) {
+				/varset myCurer ${groupShaman}
+			}
+		}
+	} else /if (${_curerType.Equal[disease]}) {
+		/if (${Me.Class.ShortName.Equal[CLR]} || ${Me.Class.ShortName.Equal[DRU]} || ${Me.Class.ShortName.Equal[SHM]} || ${Me.Class.ShortName.Equal[PAL]}) {
+			/varset myCurer ${Me.Name}
+		} else {
+			| Order of precedence for default curing SHM,PAL,DRU,CLR
+			/if (${groupShaman.NotEqual[NOTFOUND]}) {
+				/varset myCurer ${groupShaman}
+			} else /if (${groupPaladin.NotEqual[NOTFOUND]}) {
+				/varset myCurer ${groupPaladin}
+			} else /if (${groupDruid.NotEqual[NOTFOUND]}) {
+				/varset myCurer ${groupDruid}
+			} else /if (${groupCleric.NotEqual[NOTFOUND]}) {
+				/varset myCurer ${groupCleric}
+			}
+		}
+	} else /if (${_curerType.Equal[curse]}) {
+		/if (${Me.Class.ShortName.Equal[CLR]} || ${Me.Class.ShortName.Equal[DRU]} || ${Me.Class.ShortName.Equal[SHM]} || ${Me.Class.ShortName.Equal[PAL]}) {
+			/varset myCurer ${Me.Name}
+		} else {
+			| Order of precedence for default curing NO precedence since everyon has RGC, make the druid do it though!
+			/if (${groupDruid.NotEqual[NOTFOUND]}) {
+				/varset myCurer ${groupDruid}
+			} else /if (${groupPaladin.NotEqual[NOTFOUND]}) {
+				/varset myCurer ${groupPaladin}
+			} else /if (${groupDruid.NotEqual[NOTFOUND]}) {
+				/varset myCurer ${groupDruid}
+			} else /if (${groupCleric.NotEqual[NOTFOUND]}) {
+				/varset myCurer ${groupCleric}
+			}
+		}
 	}
-	| curer order of precedence
-	| Poison
-	/if (${groupCleric.NotEqual[NULL]} 	&& ${_cureType.Equal[poison]})	/varset myCurer ${groupShaman}
-	/if (${groupShaman.NotEqual[NULL]} 	&& ${_cureType.Equal[poison]})	/varset myCurer ${groupCleric}
+	/if (${myCurer.Equal[NOTFOUND]} && !${timer_cure_complain}) {
+		/rs No curer found!
+		/varset timer_cure_complain 30s
+	} else {
+		/cecho \aggetGroupCurer: \ao${myCurer}  \aw(Cure Type: \ag${_cureType}\aw)
+	}
+
 	
-	| Disease
-	/if (${groupShaman.NotEqual[NULL]} 	&& ${_cureType.Equal[disease]}) /varset myCurer ${groupShaman}
-	/if (${groupCleric.NotEqual[NULL]} 	&& ${_cureType.Equal[disease]}) /varset myCurer ${groupCleric}
-
-	| Curse
-	/if (${groupShaman.NotEqual[NULL]} 	&& ${_cureType.Equal[curse]})	/varset myCurer ${groupShaman}
-	/if (${groupDruid.NotEqual[NULL]} 	&& ${_cureType.Equal[curse]})	/varset myCurer ${groupDruid}
-	/if (${groupPaladin.NotEqual[NULL]} && ${_cureType.Equal[curse]})	/varset myCurer ${groupPaladin}
-
-	| Catch the curse curer reference if no paladin, shaman, or druid in group and set to cleric since they can cure all
-	/if (${myCurer.Equal[NULL]}			&& ${_cureType.Equal[curse]})	/varset myCurer ${groupCleric}
-
-	| Catch when we don't actually have a curetype
-	/if (${_cureType.Equal[NULL]} 		&& ${groupCleric.NotEqual[NULL]}) 	/varset myCurer ${groupCleric}
-	/if (${_cureType.Equal[NULL]} 		&& ${groupDruid.NotEqual[NULL]}) 	/varset myCurer ${groupDruid}
-	/if (${_cureType.Equal[NULL]} 		&& ${groupShaman.NotEqual[NULL]}) 	/varset myCurer ${groupShaman}
-	
-
-	/if (${myCurer.Equal[NULL]} && !${timer_cure_complain}) {
-		/varset timer_cure_complain 45s 
-		/rsay I have no curer :(
-	} 
-	/cecho \aggetGroupCurer: \aw(\ag${_cureType}\aw): \ao${myCurer} 
 	
 /return ${myCurer}
 
@@ -623,7 +662,7 @@ Sub xbot_initialize_curing
 	/if (${str_cure_poison.Equal[NULL]}) 	/varset bln_hasPoisonCure 	FALSE
 	/if (${str_cure_disease.Equal[NULL]}) 	/varset bln_hasDiseaseCure 	FALSE
 	
-	/call 		getGroupCurer
+	/call 		getGroupCurer DEFAULT
 	/varset 	str_myCurer ${Macro.Return}
 	
 	/call InitEvents_Curing

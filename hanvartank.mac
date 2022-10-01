@@ -1,0 +1,58 @@
+#Turbo 20
+#EVENT HanvarStart		"#*#HanvarStart#*#"
+#EVENT HanvarAEd		"#*#You are twisted by organic chains#*#"
+#EVENT HanvarStun       "#*#Your eardrums begin to bleed#*#"
+
+Sub Main(string _type, string _tankPoint)
+	/delay 10s
+	/melee aggro=on
+    /melee taunt=on
+	/declare timer_hanvar_stun timer 	outer 0
+	/declare timer_hanvar_ae 	timer 	outer 0
+
+	/declare bln_hanvarEngaged bool outer FALSE
+	/echo calling HanvarPrep
+	/dgt HanvarPrep
+
+	:wait_loop
+	/doevents
+	/delay 10
+	/if (!${bln_hanvarEngaged}) /goto :wait_loop
+
+	:ActiveLoop
+	    /if (!${Target.ID}) /squelch /tar Hanvar
+		/doevents
+		/call getAggro
+	/goto :ActiveLoop
+/return
+
+Sub Event_HanvarStart
+	/varset bln_hanvarEngaged TRUE
+/return
+
+Sub Event_HanvarStun
+	/varset timer_hanvar_stun 10s
+	/rs HanvarAEonMT
+	/doevents flush HanvarStun
+/return
+
+Sub Event_HanvarAEd
+	/varset timer_hanvar_ae 45s
+	/rs HanvarStunonMT
+	/doevents flush HanvarAEd
+/return
+
+Sub getAggro
+
+	:aggroLoop
+		/delay 10
+		/if (${Target.Distance} > 20) /warp f 10
+		/if (${Me.TargetOfTarget.ID} != ${Me.ID}) {
+			/echo Hanvar NOT TARGETTING ME
+            /if (${Me.CombatAbilityReady["Bellow of the Mastruq"]}) /doability "Bellow of the Mastruq"
+			/if (${Me.CombatAbilityReady["Bazu Bellow"]}) /doability "Bazu Bellow"
+			/delay 10
+			/goto :aggroLoop
+		} 
+/return
+

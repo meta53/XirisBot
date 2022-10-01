@@ -27,7 +27,7 @@ REVISION HISTORY
 Sub chkPet
 	
 	|--Destroy your familiar if it is up. Hate them
-	/if (${bln_engaged}) /return
+	/if (${bln_engaged} && !${bln_hanvarEngaged}) /return
 	/if (${Me.Pet.ID} && ${Me.Pet.Name.Find[familiar]}) /pet get lost
 	/if (${Me.Invis} || ${Me.Moving} || ${timer_petBuffRecheck}) /return
 
@@ -60,7 +60,8 @@ Sub chkPetBuffs
 	}
 	/if (${Target.ID}==${Me.Pet.ID}) /squelch /target clear
 	/if (!${timer_petBuffRecheck})	 /varset timer_petBuffRecheck 30s
-	/memspellset default
+
+	/memspellset ${str_spellset}
 /return
 
 |**
@@ -226,6 +227,10 @@ Sub ShrinkPet
 		/goto :shrink
 :return
 	/varset bln_petShrunk TRUE
+
+/return
+
+Sub chkPetHeal
 
 /return
 

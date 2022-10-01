@@ -244,7 +244,7 @@ Sub variant_initialize
 	/declare	str_runeGem				string	outer	${Ini[botINI,ENC_Spells,Rune_Gem,gem6]}
 	/declare 	bln_runeActive			bool	outer	FALSE
 
-	/memspellset default
+	/memspellset ${str_spellset}
 	/cecho \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID}) HealPoint:${healPoint} ST: ${str_tankName2}(${int_STID})
 	/call InitEvents_Class
 /return

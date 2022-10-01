@@ -30,7 +30,13 @@ ______________________________________________
 #EVENT Jelvan4 			"#*#MD4#*#"
 
 |	Warden Hanvar
-#EVENT HanvarStart		"#*#hanvarStart#*#"
+#EVENT HanvarPrep  	 	"#*#HanvarPrep#*#"
+#EVENT HanvarStart		"#*#HanvarStart#*#"
+#EVENT HanvarAEd 		"#*#HanvarAEonMT#*#"
+#EVENT HanvarAEd		"#*#You are twisted by organic chains#*#"
+#EVENT HanvarAEd		"#*#is entwined in chains#*#"
+#EVENT HanvarStun       "#*#Your eardrums begin to bleed#*#"
+#EVENT HanvarStun       "#*#HanvarStunonMT#*#"
 
 |	Arch Magus Vangl
 #EVENT AMVStart			"#*#AMVStart#*#"
@@ -47,6 +53,8 @@ Sub InitEvents_OOW_Anguish
 	/if (!${Defined[bln_jelvanEngaged]}) /declare bln_jelvanEngaged bool outer FALSE
 	/declare bln_hanvarEngaged bool outer FALSE
 	/declare bln_amvEngaged	   bool outer FALSE
+	/declare timer_hanvar_ae   timer outer 0
+	/declare timer_hanvar_stun timer outer 0
 	/call RegisterRaidEvents Events_OOW_Anguish 15
 
 	|-- Waypoints
@@ -117,24 +125,29 @@ Sub Events_OOW_Anguish
 			/call chkJelvanCures
 		}
 	}
+
 	| Hanvar Events
-	/if (${Bool[${SpawnCount[npc Hanvar]}]} && ${Spawn[npc Hanvar].Distance3D} < 400) {
+	|/if (${Bool[${SpawnCount[npc Hanvar]}]} && ${Spawn[npc Hanvar].Distance3D} < 400) {
+		/doevents HanvarPrep
 		/if (!${bln_hanvarEngaged})  /doevents HanvarStart
-		/if (${bln_hanvarEngaged} && ${Me.Class.ShortName.Equal[CLR]}) {
-			| Out of Position Test
-			/if (${Math.Distance[${Me.Y},${Me.X},${Me.Z}:${H1CY},${H1CX},${H1CZ}]} > 30) {
-				/if (!${Navigation.Active}) /nav wp hanvarCleric
-			} else /if (${Math.Distance[${Me.Y},${Me.X},${Me.Z}:${H1CY},${H1CX},${H1CZ}]} <= 30 && (${Math.Distance[${Me.Y},${Me.X},${Me.Z}:${H1CY},${H1CX},${H1CZ}]} > 10)) {
-				/if (${Navigation.Active}) /nav stop
-				/warp wp hanvarCleric
-			}
-			| Feedback Dispersion Test
-			/if (${Me.Buff[Feedback Dispersion].ID} && ${Me.AltAbilityReady[Purify Soul]}) {
-				/target id ${Me.ID}
-				/casting "Purify Soul" alt
-			}
+		/if (${bln_hanvarEngaged}) {
+			/if (${PriestClasses.Find[${Me.Class.ShortName}]}) /call chkHanvarPriest
+			/if (${MeleeClasses.Find[${Me.Class.ShortName}]})  /call chkHanvarMelee
+			/if (${CasterClasses.Find[${Me.Class.ShortName}]}) /call chkHanvarCaster
 		}
-	}
+
+		/doevents HanvarAEd
+		/doevents HanvarStun
+
+		/if (${Me.Buff[Chains of Anguish].ID}) {
+			| echo duration is in ticks (6s). timers are in 1/10ths
+			/declare chains int local 
+			/varcalc chains ${Me.Buff[Chains of Anguish].Duration}*10
+			/cecho \ar Chains of Anguish: \ao${Me.Buff[Chains of Anguish].Duration}\aw:ticks, \ay${chains}\aw:cs
+			/varset timer_hanvar_ae ${chains}
+		}
+
+	|}
 
 	| Vangl Events
 	/if (${Bool[${SpawnCount[npc Vangl]}]} && ${Spawn[npc Vangl].Distance3D} < 400) {
@@ -384,15 +397,255 @@ Sub EVENT_Jelvan4
 |----------------------------
 | Warden Hanvar
 |----------------------------
-Sub Event_HanvarStart
-	/varset bln_hanvarEngaged TRUE
+Sub Event_HanvarPrep
+	/echo hanvar prep
+	/call SetResistTypes Cold,Poison,Magic
 	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
 		/nav wp hanvarDPS
 	} else /if (${str_classArchetype.Equal[CASTER]} || ${Me.Class.ShortName.Equal[SHM]} ||  ${Me.Class.ShortName.Equal[DRU]}) {
 		/nav wp hanvarCaster
+	} else /if (${Me.Class.ShortName.Equal[CLR]}) {
+		/nav wp hanvarCleric
 	}
+	| We need to light up the fucker with DOTs and Cold Nukes
+	/if (${Me.Class.ShortName.Equal[SHM]} || ${Me.Class.ShortName.Equal[WIZ]} || ${Me.Class.ShortName.Equal[NEC]} || ${Me.Class.ShortName.Equal[DRU]}) /call setupForHanvar${Me.Class.ShortName}
+	/doevents flush HanvarPrep
+/return
+Sub Event_HanvarStart
+	/cecho \ag HANVAR EVENT STARTED \aw@ \ao${Time.Time24}
+	/varset bln_hanvarEngaged TRUE
 	/doevents flush HanvarStart
 /return
+
+Sub setupForHanvarSHM
+	/echo setupForHanvarSHM
+	/varset str_spellset hanvar
+	/memspellset ${str_spellset}
+	| Reset my DOT types
+	/varset DOT_Total 2
+	/varset DOT_1 Blood of Yoppa
+	/varset DOT_1_Use TRUE
+	/varset DOT_1_Resist ${Spell[${DOT_1}].ResistType} 
+	/varset DOT_2 Blood of Saryrn
+	/varset DOT_2_Use TRUE
+	/varset DOT_2_Resist ${Spell[${DOT_2}].ResistType} 
+
+	| Reset my NUKE types
+	/varset NUKE_Total 1
+	/varset NUKE_1 "Ice Age"
+	/varset NUKE_1_Use TRUE 
+	/varset NUKE_1_Resist ${Spell[${NUKE_1}].ResistType}
+
+	| Reset my DEBUFF types
+	/varset int_debuffTotal 2
+	/varset DEBUFF_1 "Malos"
+	/varset DEBUFF_1_Use TRUE 
+	/varset DEBUFF_1_Resist ${Spell[${DEBUFF_1}].ResistType}
+	/varset DEBUFF_2 "Balance of Discord"
+	/varset DEBUFF_2_Use TRUE 
+	/varset DEBUFF_2_Resist ${Spell[${DEBUFF_2}].ResistType}
+/return
+
+Sub setupForHanvarWIZ 
+	/echo setupForHanvarWIZ
+	| Reset my NUKE types
+	/varset NUKE_Total 4
+	/varset NUKE_1 Spark of Ice
+	/varset NUKE_1_Use TRUE
+	/varset NUKE_1_StartHP 100
+	/varset NUKE_1_StopHP 1
+	/varset NUKE_1_NamedOnly FALSE
+	/varset NUKE_1_Resist ${Spell[${NUKE_1}].ResistType}
+
+	/varset NUKE_Total 3
+	/varset NUKE_2 Gelidin Comet
+	/varset NUKE_2_Use TRUE
+	/varset NUKE_2_StartHP 100
+	/varset NUKE_2_StopHP 1
+	/varset NUKE_2_NamedOnly FALSE
+	/varset NUKE_2_Resist ${Spell[${NUKE_2}].ResistType}
+
+	/varset NUKE_3 Solist's Frozen Sword
+	/varset NUKE_3_Use TRUE
+	/varset NUKE_3_StartHP 100
+	/varset NUKE_3_StopHP 1
+	/varset NUKE_3_NamedOnly FALSE
+	/varset NUKE_3_Delay 60s
+	/varset NUKE_1_Resist Cold
+
+	/varset NUKE_4 Ancient: Spear of Gelaqua
+	/varset NUKE_4_Use TRUE
+	/varset NUKE_4_Gem 4
+	/varset NUKE_4_StartHP 100
+	/varset NUKE_4_StopHP 1
+	/varset NUKE_4_NamedOnly FALSE
+	/varset NUKE_4_Delay 0
+	/varset NUKE_4_Resist ${Spell[${NUKE_4}].ResistType}
+/return
+
+Sub setupForHanvarNEC
+	/varset str_spellset hanvar
+	/memspellset ${str_spellset}
+	| Reset my DOT types
+	/varset DOT_Total 2
+	/varset DOT_1 Chaos Venom
+	/varset DOT_1_Use TRUE
+	/varset DOT_1_StartHP 100
+	/varset DOT_1_Resist ${Spell[${DOT_1}].ResistType}
+
+	/varset DOT_1 Blood of Thule
+	/varset DOT_1_Use TRUE
+	/varset DOT_1_StartHP 100
+	/varset DOT_1_Resist ${Spell[${DOT_2}].ResistType}
+
+	|Reset my NUKE types
+	/varset NUKE_Total 1
+	/varset NUKE_1 Acikin
+	/varset NUKE_1_Use TRUE
+	/varset NUKE_1_StartHP 100
+	/varset NUKE_1_StopHP 1
+	/varset NUKE_1_NamedOnly FALSE
+	/varset NUKE_1_Resist ${Spell[${NUKE_1}].ResistType}
+/return
+
+Sub setupForHanvarDRU
+	/varset str_spellset hanvar
+	/memspellset ${str_spellset}
+	| Reset my DEBUFF types
+	/varset int_debuffTotal 1
+	/varset DEBUFF_1 "Glacier Breath"
+	/varset DEBUFF_1_Use TRUE 
+	/varset DEBUFF_1_Resist Cold
+
+	| Reset my DOT types
+	/varset DOT_Total 0
+
+	|Reset my NUKE types
+	/varset NUKE_Total 1
+	/varset NUKE_1 Glitterfrost
+	/varset NUKE_1_Use TRUE
+	/varset NUKE_1_StartHP 100
+	/varset NUKE_1_StopHP 1
+	/varset NUKE_1_NamedOnly FALSE
+	/varset NUKE_1_Resist ${Spell[${NUKE_1}].ResistType}
+
+/return
+
+Sub Event_HanvarStun
+	/cecho \arHanvarStun Triggered \agStarting 10s Timer 
+	/varset timer_hanvar_stun 10s
+	/doevents flush HanvarStun
+/return
+
+Sub Event_HanvarAEd
+	/cecho \arHanvarAE Triggered \agStarting 45 Timer 
+	/varset timer_hanvar_ae 45s
+	/doevents flush HanvarAEd
+/return
+
+Sub chkHanvarPriest
+	| Out of Position Test
+	/if (${Math.Distance[${Me.Y},${Me.X},${Me.Z}:${H1CY},${H1CX},${H1CZ}]} > 30) {
+		/if (!${Navigation.Active}) /nav wp hanvarCleric
+	} else /if (${Math.Distance[${Me.Y},${Me.X},${Me.Z}:${H1CY},${H1CX},${H1CZ}]} <= 30 && (${Math.Distance[${Me.Y},${Me.X},${Me.Z}:${H1CY},${H1CX},${H1CZ}]} > 10)) {
+		/if (${Navigation.Active}) /nav stop
+		/warp wp hanvarCleric
+	}
+	| Feedback Dispersion Test
+	/if (${Me.Class.ShortName.Equal[CLR]} && ${Me.Buff[Feedback Dispersion].ID} && ${Me.AltAbilityReady[Purify Soul]}) {
+		/call TrueTarget ${Me.ID}
+		/casting "Purify Soul" alt
+	}
+
+	/if (${Me.Class.ShortName.Equal[SHM]}) {
+		| Check to make sure it's slowed
+		/call chkDebuffsOnSingleTarget ${Spawn[npc Hanvar].ID}
+	}
+/return
+
+Sub chkHanvarCaster
+	/if (${Me.Class.ShortName.Equal[NEC]}) {
+		/call chkPet
+		/call chkPetAttack
+	}
+	| Check to makes sure it's DOTted
+	/call chkDOT
+	/call chkNuke
+
+
+/return
+
+Sub chkHanvarMelee
+	/echo chkHanvarMelee
+	| This is only for the melee DPS
+	/if (${PriestClasses.Find[${Me.Class.ShortName}]} || ${CasterClasses.Find[${Me.Class.ShortName}]}) /return
+
+	/doevents HanvarAEd
+	/doevents HanvarStun
+	/doevents RunRaidEvents
+	| Dragorns are up, do whatever the MA tells me to do (exit this)
+	/if (${SpawnCount[npc dragorn radius 300]}) 		/goto :return
+	
+	| Timers are in 1/10 of a second, so we want to move when we have 5 seconds left and we are close.
+	/declare hanvarDist float local ${Spawn[npc hanvar].Distance}
+
+	/echo ${hanvarDist}
+
+	:hanvarWait
+	/varset hanvarDist ${Spawn[npc hanvar].Distance}
+
+	/if (${timer_hanvar_ae} <= 50) {
+		/echo hanvar AE run
+		:hanvarDistCheck
+		/if (${hanvarDist} < 105) {
+			:moveToSafety
+			/squelch /melee reset
+			/squelch /stick off
+			/if (${Me.Stunned} || ${timer_hanvar_stun}) {
+				/warp wp hanvarCleric
+			} else {
+				/nav wp hanvarCleric
+				/delay 10
+				/if (${Navigation.Active}) {
+					/goto :hanvarWait
+				}
+			}
+		} else {
+			| out of AE range, check
+			/if (${SpawnCount[npc dragorn radius 300]}) /goto :return
+			/goto :hanvarWait
+		}
+		
+	} else /if (${timer_hanvar_ae} > 50) {
+		:dragornCheck
+		/if (${SpawnCount[npc dragorn radius 300]}) /goto :return
+	}
+
+	/call RunRaidEvents
+
+	:hanvarKill
+		/echo hanvarKill
+		/if (${bln_engaged}) {
+			/call TrueTarget ${Spawn[npc hanvar].ID}
+			/if (${Target.Distance} > 100) {
+				/nav target
+				:hanvarKillDistCheck
+				/call RunRaidEvents
+				/delay 1
+				/if (${Target.Distance} < 50 && ${Navigation.Active}) {
+					/nav stop
+					/goto :hanvarAttack
+				}
+				/goto :hanvarKillDistCheck
+			}
+			:hanvarAttack
+			/attack on
+			/killthis
+		} 
+
+	:return
+
+/return 
 
 
 |----------------------------

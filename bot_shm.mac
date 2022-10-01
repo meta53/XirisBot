@@ -220,7 +220,7 @@ Sub variant_initialize
 	
 	|-- set up default vars
 	/declare    str_action				string	outer	Shamanizing	
-	/memspellset default
+	/memspellset ${str_spellset}
 
 	|-- Champion
 	/declare 	champ_groups 				string  outer   ${Ini[botINI,Champion,champ_groups]}

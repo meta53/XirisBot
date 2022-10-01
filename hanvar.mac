@@ -29,7 +29,6 @@ Sub Main
     /dgt healMode EFFICIENT 
 
     | Turn of Offtanks
-    /dex Xiris /mac stand
     /dt Xiria offtankOn
     /dt Xirin offtankOn
     /dt Xirea offtankOn
@@ -49,5 +48,5 @@ Sub Main
     | Set Me (SK) to aggro and taunt
     /melee aggro=1 
     /melee taunt=1
-    /mac raidcmds
+    /mac hanvartank
 /return

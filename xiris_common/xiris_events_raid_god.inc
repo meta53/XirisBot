@@ -548,7 +548,7 @@ Sub BalancerKillMelee(string _targetName, int _targetID, int _balanceTo)
 Sub BalancerKillCaster(string _targetName, int _targetID, int _balanceTo)
 	|-- Balance of _targetName
 	/call TrueTarget ${_targetID}
-	/if (${int_QnukeTotal} > 0 && ${Me.Class.ShortName.Equal[WIZ]}) {
+	/if (${QNUKE_Total} > 0 && ${Me.Class.ShortName.Equal[WIZ]}) {
 		/echo setting fast only
 		/varset bln_useFastOnly TRUE
 	}

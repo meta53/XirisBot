@@ -137,7 +137,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 Sub chkLifetap
 	/if (!${bln_engaged}) /return
 	/if (!${Target.ID}) /return
-	/if (${Target.PctHPs}<=${int_dotStartHP} && ${bln_lifetapUse} && ${Target.ID}==${int_targetID} && (${Me.PctHPs} <= ${int_lifetapHP})) {
+	/if (${Target.PctHPs}<=${DOT_StartHP} && ${bln_lifetapUse} && ${Target.ID}==${int_targetID} && (${Me.PctHPs} <= ${int_lifetapHP})) {
 		/echo chkLifetap: Lifetapping
 		/call MQ2Cast "${str_lifetapSpell}" ${str_lifetapGem} 2s
 	}
@@ -230,7 +230,7 @@ Sub variant_initialize
 	
 
 	
-	/memspellset default
+	/memspellset ${str_spellset}
 	/cecho \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID}) HealPoint:${healPoint} ST: ${str_tankName2}(${int_STID})
 	/call InitEvents_Class
 /return
