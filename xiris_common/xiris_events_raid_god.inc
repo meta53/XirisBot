@@ -245,13 +245,13 @@ Sub chkNoqCursebearers
 	:curseBearerCheck
 	/if (${SpawnCount[npc cursebearer]}) {
 		/varset bln_engaged TRUE
-		/varset timer_QnukeDelay 0
-		/varset int_namedQNukeStopHP 0
-		/varset int_namedQNukeStartHP 100
-		/varset int_QnukeStopHP 0
-		/varset int_QnukeStartHP 100
-		/varset int_namedQNukeMinMana 0
-		/varset int_QnukeMinMana 0
+		/varset QNUKE_DelayTimer 0
+		/varset QNUKE_StopHPIfNamed 0
+		/varset QNUKE_StartHPIfNamed 100
+		/varset QNUKE_StopHP 0
+		/varset QNUKE_StartHP 100
+		/varset QNUKE_Mana_NamedMinimum 0
+		/varset QNUKE_Mana_Minimum 0
 
 		/for i 1 to ${SpawnCount[npc cursebearer]}
 			/call TrueTarget ${NearestSpawn[${i},npc cursebearer].ID}
