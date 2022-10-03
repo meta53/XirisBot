@@ -83,6 +83,14 @@ Sub Events_Curing_Background
 	/doevents ResetGroupCurer
 /return
 
+Sub Event_AutoCureMTOn
+	/varset bln_autoCureMT TRUE
+/return 
+
+Sub Event_AutoCureMTOff
+	/varset bln_autoCureMT FALSE
+/return
+
 |-- Single target cure, simple syntax (for manual entry)
 |   Counters determined by NetCure
 Sub Event_cureMe(_line, _sender, _eventParams)
@@ -622,6 +630,7 @@ Sub xbot_initialize_curing
 	/declare	int_hpdrain_threshold	int		outer	300
 	/declare 	bln_needsCure 			bool	outer	FALSE
 	/declare    bln_askedForCure        bool    outer   FALSE
+	/declare 	bln_autoCureMT			bool    outer   FALSE
 	/declare    str_myCurer				string	outer 	NULL
 	/declare	timer_cure_request		timer   outer
 

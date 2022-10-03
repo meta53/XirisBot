@@ -146,7 +146,7 @@ ______________________________________________
 #EVENT doRefreshXTarget		"#1# tells the group#*#'RefreshXTarget#*#'"
 #EVENT doRefreshXTarget		"#1# tells you#*#'RefreshXTarget#*#'"
 #EVENT doRefreshXTarget		"#1# tells the raid#*#'RefreshXTarget#*#'"
-#EVENT doRefreshXTarget		"[ #1# #*#]#*#RefreshXTarget#*#"
+#EVENT doRefreshXTarget		"#*#RefreshXTarget#*#"
 
 Sub InitEvents_Common
 	/call RegisterBackgroundEvents Events_Common 19
@@ -489,17 +489,27 @@ Sub EngageTarget(int _targetID)
 
 Sub chkTargetStatus
 	:chkTargetValid
-	/if (!${Bool[${Target.ID}]}) /return 
-	/if ((${Spawn[id ${int_targetID}].Name.Find[_corpse]}) && ${bln_engaged}) {
+	/if (${Bool[${Target.ID}]} && ${Target.ID} == ${int_MTID} && (${Me.XTarget}==0 || ${SpawnCount[npc id ${int_targetID} radius 200]}) &&  ${bln_engaged}) {
+		/echo target is MT and I have nothing else around me
+		/goto :disengage
+	}
+ 	/if (!${Bool[${Target.ID}]} && !${bln_engaged}) /goto :return
+	/if (!${Bool[${Target.ID}]} && ${bln_engaged}) {
+		/echo no target and engaged
+		/goto :disengage
+	} else /if ((${Spawn[id ${int_targetID}].Name.Find[_corpse]}) && ${bln_engaged}) {
 		| Target is dead?
 		/cecho \awTarget is dead: \ayPctHP \ag!${Bool[${Target.PctHPs}]} \ao|| \ay!TargetID \ag!${Bool[${Target.ID}]} \ao|| \ayCorpseFound \ag${Spawn[id ${int_targetID}].Name.Find[_corpse]}
-		/call Disengage
-	} else /if ((${Me.XTarget}==0 && ${SpawnCount[npc id ${int_targetID} radius 400]} == 0) && ${bln_engaged}) {
+		/goto :disengage
+	} else /if ((${Me.XTarget}==0 && !${SpawnCount[npc radius 100]}) && ${bln_engaged}) {
 		| Target is over 400 distance away, that will blur it
-		/call Disengage	
+		/echo xt: ${Me.XTarget} count:${SpawnCount[npc radius 300]}  target is over 400 dist
+		/goto :disengage
 	} else /if ((${Target.ID} != ${int_targetID}) && (${Spawn[id ${int_targetID}].PctHPs} >= 0 && !${Spawn[id ${int_targetID}].Name.Find[_corpse]})) {
 		| I am not targetting the correct NPC
+		/echo not targetting ccorrect
 		/call TrueTarget ${int_targetID}
+		/goto :chkTargetTarget
 	} 
 	
 	:chkTargetTarget
@@ -548,9 +558,10 @@ Sub chkTargetStatus
 		}
 		/varset timer_hott ${timer_hott.OriginalValue}
 	}
+	/goto :return
 
 	:disengage
-	
+		/call Disengage
 
 	:retarget
 	
@@ -578,11 +589,16 @@ Sub Disengage
 	|-- global reset
 	/varset bln_engaged 		FALSE
 	/varset int_targetID		0
+	|-- clean up potential XTarget issues
+	/if (!${SpawnCount[npc radius 300]} || (${Me.XTarget[0].Name.Find[s_corpse]} || (!${Bool[${Me.XTarget[0]}]} && ${Bool[${Me.XTarget[1]}]}) || (!${Bool[${Me.XTarget[0]}]} && !${Bool[${Me.XTarget[1]}]} && ${Bool[${Me.XTarget[2]}]}))) /call doRefreshXTarget
 	|-- class archetype resets
-	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
+	/if (${str_classArchetype.Equal[PRIEST]}) {
+
+	} else /if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
 		/squelch /stick off
 		/squelch /melee reset
 		/squelch /target clear
+		
 	} else /if (${str_classArchetype.Equal[CASTER]}) {
 		/if (${Me.Pet.ID}) {
 			/if (${Defined[bln_petAttacking]}) /varset bln_petAttacking FALSE
@@ -1757,6 +1773,7 @@ SUB check_macroTimers
 |- Resets Xtarget window 1-5 elements to auto		-|
 |----------------------------------------------------|
 Sub Event_RefreshXTarget
+	/echo refreshing XTarget
 	/call doRefreshXTarget
 /return 
 

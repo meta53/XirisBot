@@ -637,6 +637,8 @@ Sub healGRP
 			/cecho  \aoHoT \ag(${str_healMode})   \ay${str_currentHeal} \awon \ag ${memName}\aw(\ay${arr_groupHP[${i},3]}\aw)
 			/if ((${Me.CurrentMana} < ${Spell[${str_heal_HoT}].Mana})) /goto :return
 			/call healCast ${arr_groupHP[${i},3]} ${Spawn[pc id ${arr_groupHP[${i},3]}].Name} "${str_heal_HoT}"
+			| If someone died, and came back their ID will be different. We need to recreate the timers
+			/if (!${Defined[${timer_HoT_${arr_groupHP[${i},3]}}]}) /call ReCreateGroupHoTTimers
 			/if (${Macro.Return.Equal["CAST_SUCCESS"]}) /varset timer_HoT_${arr_groupHP[${i},3]} 40s
 			/goto :return
 		}
@@ -760,8 +762,8 @@ Sub healCast(int _id, string _name, string _spell)
  ----------------------------
 **|
 Sub chkHP
-	| Status Checks
-	/call chkMTAlive TRUE
+	| If the Target is Dead... stop
+	/if (${Target.Name.Find[s_corpse]}) /call Interrupt
 
 	| Check to see if I should interrupt because target is healed
 	/if ((${bln_autointerrupt}) && (${Target.PctHPs} > ${int_point_calcStopHeal})) /call Interrupt 
@@ -1001,17 +1003,17 @@ Sub chkRez
 	/if (!${bln_combatRez} && ${bln_engaged}) /return
 
 	| find all corpses in range	
-	/squelch /hidecorpse npc
-	/declare int_corpses int local ${SpawnCount[pc corpse radius ${int_range_rez}]}
+	/if (${SpawnCount[corpse]}) /squelch /hidecorpse npc
+	/declare int_corpses int local ${SpawnCount[corpse radius ${int_range_rez}]}
 	/if (!${int_corpses}) /return
 
 	| if corpses, then aerez
 	/call AERez ${int_corpses}
 /return
 
-Sub AERez
-	/squelch /hidecorpse npc
-	/declare int_corpses int local ${SpawnCount[pc corpse radius ${int_range_rez}]}
+Sub AERez(int _corpseCount)
+
+	
 	/declare arr_corpses[${int_corpses}] int local 
 	/declare str_corpse		string local
 
@@ -1020,17 +1022,17 @@ Sub AERez
 	/declare id 			int local
 	/declare charID int local
 
-	/for i 1 to ${int_corpses}
-		/varset arr_corpses[${i}] ${NearestSpawn[${i}, pc corpse radius ${int_range_rez}].ID}
+	/for i 1 to ${_corpseCount}
+		/varset arr_corpses[${i}] ${NearestSpawn[${i},corpse radius ${int_range_rez}].ID}
 	/next i
 	
 	:consider 
-	/for i 1 to ${int_corpses}
+	/for i 1 to ${_corpseCount}
 		/varset id ${arr_corpses[${i}]}
 		/varset bln_skipCorpse FALSE
 
 		| get the name from corpse	
-		/varset str_corpse ${Spawn[id ${id}].CleanName.Arg[1,']}
+		/varset str_corpse ${Spawn[id ${id}].CleanName.Token[1,']}
 		/if (!${Bool[${str_corpse}]}) /goto :next_corpse
 
 		| check corpse name 

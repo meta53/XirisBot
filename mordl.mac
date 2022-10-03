@@ -31,6 +31,6 @@ Sub Main
     /dex Xiria /melee aggro=1
     /dex Xirea /end
     /dex Xirea /melee aggro=1
-    /dex Xirin end
+    /dex Xirin/ end
     /dex Xirin /melee aggro=1
 /return
