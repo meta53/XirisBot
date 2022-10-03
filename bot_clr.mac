@@ -16,7 +16,7 @@ REVISION HISTORY
     10.21.10	xiris	Renamed some of the methods
 	11.01.10	xiris	Reverted to using spell_routines.inc
 						Modified the cast calls to use this.    
-	11.09.10	xiris	Modified getMT to check to see if the real MT is 
+	11.09.10	xiris	Modified healMAINTANK to check to see if the real MT is 
 						available again.
 	11.15.10	xiris	Modified some of the variable names	
 						Removed the redundant chkMana (it is now in chkSit in mbot)
@@ -172,50 +172,8 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
     /goto :MainLoop
 /return
 
-|**
- ----------------------------
- HealMainTank
- ----------------------------
- Healing Logic for the Main Tank
- Determines which spell to cast, then casts it.
- Note MT may be changed to be a non-plate class due to deaths, etc
- This routine is modified from the common one in xiris_healing.inc
- ----------------------------
-**|
 
-Sub healMAINTANK
-	/varcalc	int_point_calcStopHeal ${Math.Calc[${int_point_tankPatch}*1.1]}
-	/call chkMTAlive TRUE
-	/if (${Target.ID} != ${int_MTID}) /call TrueTarget ${int_MTID}
-	/if (${Target.PctHPs}<=0) /return
-	/call chkFHealReady
-	/call setHealingSpell ${Target.Class.ShortName} ${Target.PctHPs}
-	/call healCast ${int_MTID} ${Target.Name} "${str_currentHeal}"
-	/echo healMAINTANK: ${str_currentHeal}
-	/varset int_point_calcStopHeal	${int_point_tankPatch}
-/return
 
-|**
- ----------------------------
- HealSelf
- ----------------------------
- Healing Logic for the cleric
- Determines which spell to cast, then casts it.
- This routine is modified from the common one in xiris_healing.inc
- ----------------------------
-**|
-
-Sub healSELF
-	/varcalc 	int_point_calcStopHeal ${Math.Calc[${int_point_selfPatch}*1.05]}
-	/if (!${Target.ID}) /call TrueTarget ${Me.ID}
-	/call chkFHealReady
-	/call setHealingSpell ${Me.Class.ShortName}  ${Me.PctHPs}
-	
-	/call healCast ${Me.ID} ${Me.Name} "${str_currentHeal}"
-	/echo healSELF  (healing.inc): ${str_currentHeal}
-	/varset int_point_calcStopHeal	${int_point_selfPatch}
-	/call TrueTarget ${int_MTID}
-/return
 
 
 Sub EVENT_CelestialRegeneration
@@ -302,19 +260,6 @@ Sub CombatRezOFF
 
 |**
 ----------------------------
-Check|Set to see if your frantic heal is ready
-Note: This will always be ready since we don't really get frantic heals till SOF.
-Pre-SoF we use the Remedy line for fast heals
-----------------------------  
-**|
-Sub chkFHealReady
-	/varset bln_FHealReady	FALSE
-	/if (${Me.SpellReady[${str_heal_frantic}]})	/varset bln_FHealReady	TRUE
-/return
-
-
-|**
-----------------------------
 Check|Set to see if Divine Arbitration is Ready
 Note: Not currently in use.
 ----------------------------  
@@ -342,20 +287,6 @@ Sub setRMode
 	/if (${Raid.Members} > 6) { 
 		/varset bln_RAID	TRUE
 		/varset str_RMode	RAID
-	}
-/return
-
-|**
-
-----------------------------
-Get the current target's ID (mob)
-----------------------------  
-**|
-Sub setCTGT
-	/if (${bln_RAID}) {
-		/varset int_CTGTID ${Me.XTarget.Type[Raid Assist 1 Target].ID}
-	} else {
-		/varset int_CTGTID	${Me.TargetOfTarget.ID}
 	}
 /return
 
@@ -439,6 +370,6 @@ Sub variant_initialize
 	/declare	arr_celestial[17]		string  outer
 
 	/memspellset default
-	/cecho \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID})  HealPoint:${healPoint} ST: ${str_tankName2}(${int_STID})
+	/cecho \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID})  HealPoint:${healPoint} ST: ${str_STName}(${int_STID})
 	/call InitEvents_Class
 /return

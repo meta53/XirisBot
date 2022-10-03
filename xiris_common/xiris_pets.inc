@@ -270,7 +270,7 @@ Sub xbot_initialize_pets
 	/declare str_petGem					string	outer	${Ini[botINI,Pet,str_petGem,gem11]}
 	
 	/declare bln_petUseBuffs			bool	outer	${Ini[botINI,Pet,bln_petUseBuffs,FALSE]}
-	/declare int_petBuffTotal			int		outer   ${Ini[botINI,DamageOverTime,int_petBuffTotal,0]}
+	/declare int_petBuffTotal			int		outer   ${Ini[botINI,DOT,int_petBuffTotal,0]}
 	/declare timer_petBuffRecheck		timer	outer	0
 
 	/declare pb							int		local

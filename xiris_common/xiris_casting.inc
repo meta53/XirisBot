@@ -93,6 +93,7 @@ Sub Events_Casting_DOT
 **|
 
 Sub chkNuke
+
 	/if (!${bln_engaged}) 		/return
 	/if (${bln_useFastOnly})	/return
 	/if (${NUKE_Total} == 0) /return 
@@ -130,16 +131,17 @@ Sub chkNuke
 		
 		/for i 1 to ${NUKE_Total}  
 			:NukeLoopStart
+			/if ((${Spawn[id ${int_targetID}].Name.Find[_corpse]}) && ${bln_engaged})  /return
 			|-- skip if not ready
 			/if (!${Me.SpellReady[${NUKE_${i}_Spell}]}) /goto :NextNuke
 			|-- skip if disabled
 			/if (!${NUKE_${i}_Use}) /goto :NextNuke
 
 			|-- Check the timer on this nuke
-			|/if (${NUKE_${i}_Timer} <= 0) 
-			/if (${NUKE_${i}_Timer} > 0 && ${NUKE_${i}_HasCastOnce}) {
+			|/if (${NUKE_${i}_RecastTimer} <= 0) 
+			/if (${NUKE_${i}_RecastTimer} > 0 && ${NUKE_${i}_HasCastOnce}) {
 				/if (${i}<${NUKE_Total}) { 
-					/cecho \arTimer not ready for \ay${NUKE_${i}_Spell} :: \ay${NUKE_${i}_Timer}
+					/cecho \arTimer not ready for \ay${NUKE_${i}_Spell} :: \ay${NUKE_${i}_RecastTimer}
 					/goto :NextNuke
 				} else {
 					/return
@@ -176,33 +178,27 @@ Sub chkNuke
 			|-- All this ready, check for LOS/Distance/Mana
 			/if (${Target.PctHPs}<=${NUKE_${i}_StartHP} && ${Target.PctHPs}>=${NUKE_${i}_StopHP}) {
 				/if (${Me.CurrentMana}>=${Spell[${NUKE_${i}_Spell}].Mana} && ${Target.Distance}<=${Spell[${NUKE_${i}_Spell}].Range} && ${Target.LineOfSight}) {
-					/cecho \agTimer ready for \ay${NUKE_${i}_Spell} :: \ay${NUKE_${i}_Timer} \awSpellReady?\ag${Me.SpellReady[${NUKE_${i}_Spell}]} ${Target.PctHPs}<=${NUKE_${i}_StartHP} && ${Target.PctHPs}>=${NUKE_${i}_StopHP})	
+					/cecho \agTimer ready for \ay${NUKE_${i}_Spell} :: \ay${NUKE_${i}_DelayTimer} \awSpellReady?\ag${Me.SpellReady[${NUKE_${i}_Spell}]} ${Target.PctHPs}<=${NUKE_${i}_StartHP} && ${Target.PctHPs}>=${NUKE_${i}_StopHP})	
 					/if (${Me.Class.ShortName.Equal[BRD]}) {
 						/medley queue "${NUKE_${i}_Spell}"
-						/cecho \ag ${NUKE_${i}_Spell}  : DELAYING for \ay${NUKE_${i}_Timer.OriginalValue}s \agrefresh	
+						/cecho \ag ${NUKE_${i}_Spell}  : DELAYING for \ay${NUKE_${i}_DelayTimer.OriginalValue}s \agrefresh	
 					} else {
 						/call MQ2Cast "${NUKE_${i}_Spell}"	
 						/if (${Macro.Return.Equal[CAST_SUCCESS]}) {
-							/cecho \ag ${NUKE_${i}_Spell} ${Macro.Return} : DELAYING for \ay${NUKE_${i}_Timer.OriginalValue}s \agrefresh	
+							/cecho \ag ${NUKE_${i}_Spell} ${Macro.Return} : DELAYING for \ay${NUKE_${i}_DelayTimer.OriginalValue}s \agrefresh	
 						}
 					}
-
-					/if (${NUKE_${i}_Delay} > 0) {
-						/varset NUKE_${i}_Timer	${NUKE_${i}_Delay}
-					} else {
-						/varset NUKE_${i}_Timer	${NUKE_${i}_Timer.OriginalValue}
-					}
-					
+					/varset NUKE_DelayTimer	${NUKE_DelayTimer.OriginalValue}
+					/varset NUKE_${i}_RecastTimer	${NUKE_${i}_RecastTimer.OriginalValue}
 					/varset NUKE_${i}_HasCastOnce TRUE
 					/varcalc int_concCount ${int_concCount}+1
 				}
 			}
 		:NextNuke
-			
+		/call RunAllEvents	
 		/next i
 	}
 	/varset NUKE_HasCastOnce TRUE
-	/varset NUKE_DelayTimer ${NUKE_DelayTimer.OriginalValue}
 /return
 
 Sub chkQNuke
@@ -241,16 +237,16 @@ Sub chkQNuke
 		
 		/for i 1 to ${QNUKE_Total}  
 			:QNLoopStart
+			/if ((${Spawn[id ${int_targetID}].Name.Find[_corpse]}) && ${bln_engaged})  /return
 			|-- skip if not ready
 			/if (!${Me.SpellReady[${QNUKE_${i}_Spell}]}) /goto :NextQuickNuke
 			|-- skip if disabled
 			/if (!${QNUKE_${i}_Use}) /goto :NextQuickNuke
 
 			|-- Check the timer on this nuke
-			/if (${QNUKE_${i}_Timer} == 0) /cecho \agTimer ready for \ay${QNUKE_${i}_Spell} :: \ay${QNUKE_${i}_Timer}
-			/if (${QNUKE_${i}_Timer} > 0 && ${QNUKE_${i}_HasCastOnce}) {
+			/if (${QNUKE_${i}_RecastTimer} > 0 && ${QNUKE_${i}_HasCastOnce}) {
 				/if (${i}<${QNUKE_Total}) { 
-					/cecho \arTimer not ready for \ay${QNUKE_${i}_Spell} :: \ay${QNUKE_${i}_Timer}
+					/cecho \arTimer not ready for \ay${QNUKE_${i}_Spell} :: \ay${QNUKE_${i}_RecastTimer}
 					/goto :NextQuickNuke
 				} else {
 					/return
@@ -260,15 +256,15 @@ Sub chkQNuke
 			|-- if we only cast this spell on named, and this is NOT a named target, skip
 	
 			/if (!${isNamed} && ${QNUKE_${i}_NamedOnly}) {
-				/echo Skipping QuickNuke ${QNUKE_${i}_Spell} is named only
+				/echo Skipping QNUKE ${QNUKE_${i}_Spell} is named only
 				/goto :NextQuickNuke
 			}
 
 			|-- Check to see if this nuke fits current criteria (allowable Resist type}
 			/if (${Bool[${str_useResistTypes.Find[${QNUKE_${i}_Resist}]}]} || ${QNUKE_${i}_Resist.Equal[Unresistable]}) {
-				|/echo QuickNuke ${QNUKE_${i}_Resist} matches resist
+				|/echo QNUKE ${QNUKE_${i}_Resist} matches resist
 			} else {
-				/echo Skipping QuickNuke ${QNUKE_${i}_Resist} doesnt match resist
+				/echo Skipping QNUKE ${QNUKE_${i}_Resist} doesnt match resist
 				/goto :NextQuickNuke
 			}
 			
@@ -291,31 +287,25 @@ Sub chkQNuke
 					
 					/if (${Me.Class.ShortName.Equal[BRD]}) {
 						/medley queue "${QNUKE_${i}_Spell}"
-						/cecho \ag ${QNUKE_${i}_Spell}  : DELAYING for \ay${QNUKE_${i}_Timer.OriginalValue}s \agrefresh	
+						/cecho \ag ${QNUKE_${i}_Spell}  : DELAYING for \ay${QNUKE_${i}_DelayTimer.OriginalValue}s \agrefresh	
 					} else {
 						/call MQ2Cast "${QNUKE_${i}_Spell}"	
 						/if (${Macro.Return.Equal[CAST_SUCCESS]}) {
-							/cecho \ag ${QNUKE_${i}_Spell} ${Macro.Return} : DELAYING for \ay${QNUKE_${i}_Timer.OriginalValue}s \agrefresh	
+							/cecho \ag ${QNUKE_${i}_Spell} ${Macro.Return} : DELAYING for \ay${QNUKE_${i}_DelayTimer.OriginalValue}s \agrefresh	
 						}
 					}
-
-					/if (${QNUKE_${i}_Delay} > 0) {
-						/varset QNUKE_${i}_Timer	${QNUKE_${i}_Delay}
-					} else {
-						/varset QNUKE_${i}_Timer	${QNUKE_${i}_Timer.OriginalValue}
-					}
-
+					/varset QNUKE_DelayTimer		${QNUKE_DelayTimer.OriginalValue}
+					/varset QNUKE_${i}_RecastTimer	${QNUKE_${i}_RecastTimer.OriginalValue}
+					/varset QNUKE_${i}_HasCastOnce TRUE
 					/varset QNUKE_${i}_HasCastOnce TRUE
 					/varcalc int_concCount ${int_concCount}+1
 				}
 			}
 		:NextQuickNuke
 		/call RunAllEvents
-			
 		/next i
 	}
 	/varset QNUKE_HasCastOnce TRUE
-	/varset QNUKE_DelayTimer ${QNUKE_DelayTimer.OriginalValue}
 /return
 
 |**
@@ -328,6 +318,7 @@ Sub chkQNuke
 **|
 Sub chkAENuke
 	/if (!${AENUKE_Active}) /return
+	/if (${AENUKE_DelayTimer} && ${AENUKE_HasCastOnce})	 	/return 
 	|-- AE Nuke is active, let's light them up!
 	/rs Lighting them up with ${int_AENukeTotal} AE Nukes!
 
@@ -338,10 +329,9 @@ Sub chkAENuke
 		|-- skip if not ready
 		/if (!${Me.SpellReady[${AENUKE_${i}_Spell}]}) /goto :NextAENuke
 
-		/if (${AENUKE_${i}_Timer} == 0) /cecho \agTimer ready for \ay${AENUKE_${i}_Spell} :: \ay${AENUKE_${i}_Timer}
-		/if (${AENUKE_${i}_Timer} > 0 && ${AENUKE_${i}_HasCastOnce}) {
+		/if (${AENUKE_${i}_RecastTimer} > 0 && ${AENUKE_${i}_HasCastOnce}) {
 			/if (${i}<${int_AENukeTotal}) { 
-				/cecho \arTimer not ready for \ay${AENUKE_${i}_Spell} :: \ay${AENUKE_${i}_Timer}
+				/cecho \arTimer not ready for \ay${AENUKE_${i}_Spell} :: \ay${AENUKE_${i}_DelayTimer}
 				/goto :NextAENuke
 			}
 		}
@@ -354,14 +344,10 @@ Sub chkAENuke
 
 		/call MQ2Cast "${AENUKE_${i}_Spell}"	
 		/if (${Macro.Return.Equal[CAST_SUCCESS]}) {
-			/cecho \ag ${AENUKE_${i}_Spell} ${Macro.Return} : DELAYING for \ay${AENUKE_${i}_Timer.OriginalValue}s \agrefresh	
+			/cecho \ag ${AENUKE_${i}_Spell} ${Macro.Return} : DELAYING for \ay${AENUKE_${i}_DelayTimer.OriginalValue}s \agrefresh	
 		}
-
-		/if (${AENUKE_${i}_Delay} > 0) {
-			/varset AENUKE_${i}_Timer	${AENUKE_${i}_Delay}
-		} else {
-			/varset AENUKE_${i}_Timer	${AENUKE_${i}_Timer.OriginalValue}
-		}
+		/varset AENUKE_DelayTimer	${AENUKE_DelayTimer.OriginalValue}
+		/varset AENUKE_${i}_RecastTimer	${AENUKE_${i}_RecastTimer.OriginalValue}
 		/varset AENUKE_${i}_HasCastOnce TRUE
 	:NextAENuke
 	/call RunAllEvents
@@ -396,6 +382,7 @@ Sub chkStun(bool _memorize)
 		
 		/for i 1 to ${STUN_Total}  
 			:StunLoopStart
+			/if ((${Spawn[id ${int_targetID}].Name.Find[_corpse]}) && ${bln_engaged})  /return
 			|-- skip if not ready
 			/if (!${Me.SpellReady[${STUN_${i}_Spell}]}) /goto :NextStun
 			|-- skip if disabled
@@ -462,11 +449,10 @@ Sub chkStunLockStop
 **|
 
 Sub chkDOT
-
-	/if (${bln_useFastOnly}) 	/return
-	/if (${AENUKE_Active}) 		/return
 	/if (!${bln_engaged}) 		/return
+	/if (${bln_useFastOnly}) 	/return
 	/if (${DOT_Total} == 0)	/return 
+	/if (${AENUKE_Active}) 		/return
 	/if (${DOT_DelayTimer} && ${DOT_HasCastOnce})	 	/return 
 
 	/if ((${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]}) || ${Me.Moving} || ${Me.Invis} || ${ExcludeList.Find[${Spawn[${Target.CleanName}]}]}) /return
@@ -501,6 +487,7 @@ Sub chkDOT
 		
 		/for i 1 to ${DOT_Total}  
 			:DotLoopStart
+			/if ((${Spawn[id ${int_targetID}].Name.Find[_corpse]}) && ${bln_engaged})  /return
 			|-- skip if not ready
 			/if (!${Me.SpellReady[${DOT_${i}_Spell}]}) /goto :NextDot
 			|-- skip if disabled
@@ -559,6 +546,7 @@ Sub chkDOT
 							/cecho \ag ${DOT_${i}_Spell} ${Macro.Return} : DELAYING for \ay${dotDuration}s \agrefresh	
 						}
 					}
+					/varset DOT_DelayTimer ${DOT_DelayTimer.OriginalValue}
 					/varset DOT_${i}_RecastTimer	${dotDuration}s
 					/varset DOT_${i}_HasCastOnce TRUE
 					/varcalc int_concCount ${int_concCount}+1
@@ -566,11 +554,10 @@ Sub chkDOT
 			}
 		:NextDot
 		/call RunAllEvents
-			
 		/next i
 	}
 	/varset DOT_HasCastOnce TRUE
-	/varset DOT_DelayTimer ${DOT_DelayTimer.OriginalValue}
+	
 /return
 
 
@@ -702,7 +689,7 @@ Sub ResetCastTimers
 		/varset STUN_${i}_HasCastOnce FALSE
 	/next i
 
-	:fastDoT
+	:QDOT
 	/if (!${Bool[${QDOT_Total}]}) /goto :return 
 	/varset QDOT_HasCastOnce  FALSE
 	/for i 1 to ${QDOT_Total}
@@ -812,52 +799,144 @@ Sub addSpellToLineup(string _type, int _index, string _line)
 	/cecho \awAdding Spell to Lineup: \aoType:\ag${_type} \aoIndex:\ag${_index} \aoArgs:\ag${_line}
 	/declare propertyList string local ${${_type}_Template}
 	/declare propertyCount int local ${propertyList.Count[|]}
+	/varcalc propertyCount ${propertyCount}+1
 	/declare property string local
 	/declare i int local 1
 	/declare j int local 1
 
 	| Add the new spells by type 
-
+	|_Spell|_Use|_Gem|_MaxTries|_NamedOnly|_StartHP|_StopHP|_Resist|_HasCastOnce|_RecastTimer
 	/cecho \awCreating New \ag ${_type} \awset: ${_type}_${_index}  == ${_line.Token[1,|]}
-	
+	/declare ${_type}_${_index}_Spell string outer  ${_line.Token[1,|]}
 	/for j 2 to ${propertyCount}
 		/varset property ${propertyList.Token[${j},|]} 
-		|/echo prop: ${property} line: ${_line.Arg[${j},|]}
-		/declare ${_type}_${_index}${property} string outer ${_line.Token[${j},|]}
-		/echo ${_type}_${_index}${property}=${_line.Arg[${j},|]}
+		|/echo ${property}
+		/if (${property.Find[Timer]}) {
+			/declare ${_type}_${_index}${property} timer outer ${_line.Token[${j},|]}s
+		|	/cecho \ao${_type}_${_index}${property} \awis a timer \ar${${_type}_${_index}${property}}
+		} else {
+			/declare ${_type}_${_index}${property} string outer ${_line.Token[${j},|]}
+		}
+		
 	/next j
-
-
 /return
 
 
 Sub clearSpellLineUp(string _prefix){
 	/declare i int local 
 	/declare j int local
-	
-	/cecho \aoClearSpellLineup \ay${_prefix}
-	/cecho \awTemplate: ${${_prefix}_Template}
-	
+
 	/declare propertyList string local ${${_prefix}_Template}
 	/declare propertyCount int local ${propertyList.Count[|]}
 	/declare property string local 
 	/declare TypeTotal int local ${${_prefix}_Total}
-
-	/echo ${_prefix}_Total: ${TypeTotal}
-
 	/for i 1 to ${TypeTotal}
-		/echo Deleting set: [${_prefix}_${i}=${${_prefix}_${i}_Spell}]
-		
 		/for j 1 to ${propertyCount}
-			| property of type, eg: DOT_1_Use
-			|                        prefix_index_property
 			/varset property ${propertyList.Token[${j},|]}
-			/echo prop "${property}" Deleting key: ${_prefix}_${i}${property} value: ${${_prefix}_${i}${property}}
 			/deletevar ${_prefix}_${i}${property}
 		/next j
 	/next i
 /return
 
+
+| Reloads entire spell lineup from INI
+Sub resetSpellLineup {
+
+	/declare i 							int		local
+
+	|-- Nukes
+	/declare NUKE_Total					int		outer	${Ini[botINI,NUKE,NUKE_Total,0]}	
+	/declare NUKE_DelayTimer			timer	outer	${Ini[botINI,NUKE,NUKE_DelayTimer,1s]}
+	/declare NUKE_HasCastOnce			bool	outer   FALSE
+	/declare NUKE_Mana_Minimum			int		outer	${Ini[botINI,NUKE,NUKE_Mana_Minimum,10]}
+	/declare NUKE_Mana_NamedMinimum		int		outer	${Ini[botINI,DOT,NUKE_Mana_NamedMinimum,10]} 
+	/declare NUKE_StartHP				int		outer	${Ini[botINI,NUKE,NUKE_StartHP,98]}
+	/declare NUKE_StopHP				int		outer	${Ini[botINI,NUKE,NUKE_StopHP,5]}
+	/declare NUKE_StartHPIfNamed		int 	outer 	${Ini[botINI,NUKE,NUKE_StartHPIfNamed,100]}
+	/declare NUKE_StopHPIfNamed			int 	outer 	${Ini[botINI,NUKE,NUKE_StopHPIfNamed,0]}
+	/if (${Bool[${NUKE_Total}]}) {
+		/for i 1 to ${NUKE_Total} 
+			/call addSpellToLineup NUKE ${i} ${Ini[botINI,NUKE,NUKE_${i}]}
+		/next i
+	}
+
+		|--AE Nuke
+	/declare AENUKE_Total 				int		outer	${Ini[botINI,AENUKE,AENUKE_Total,0]}	
+	/declare AENUKE_DelayTimer			timer	outer	${Ini[botINI,AENUKE,AENUKE_DelayTimer,0]}
+	/declare AENUKE_Mana_Minimum		int		outer	${Ini[botINI,AENUKE,AENUKE_Mana_Minimum,10]}
+	/declare AENUKE_StartHP				int		outer	${Ini[botINI,AENUKE,AENUKE_StartHP,98]}
+	/declare AENUKE_StopHP				int		outer	${Ini[botINI,AENUKE,AENUKE_StopHP,0]}
+	/if (${Bool[${AENUKE_Total}]}) {
+		/for i 1 to ${AENUKE_Total} 
+			/call addSpellToLineup AENUKE ${i} ${Ini[botINI,AENUKE,AENUKE_${i}]}
+		/next i
+	}
+
+		|--Quick Nuke
+	/declare QNUKE_Total				int		outer	${Ini[botINI,QNUKE,QNUKE_Total,0]}	
+	/declare QNUKE_TotalIfNamed			int 	outer   ${Ini[botINI,QNUKE,QNUKE_Total,${QNUKE_Total}]}	
+	/declare QNUKE_DelayTimer			timer	outer	${Ini[botINI,QNUKE,QNUKE_DelayTimer,1s]}
+	/declare QNUKE_HasCastOnce			bool	outer   FALSE
+	/declare QNUKE_Mana_Minimum			int		outer	${Ini[botINI,QNUKE,QNUKE_Mana_Minimum,10]}
+	/declare QNUKE_Mana_NamedMinimum	int		outer	${Ini[botINI,QNUKE,QNUKE_Mana_NamedMinimum,10]} 
+	/declare QNUKE_StartHP				int		outer	${Ini[botINI,QNUKE,QNUKE_StartHP,98]}
+	/declare QNUKE_StopHP				int		outer	${Ini[botINI,QNUKE,QNUKE_StopHP,0]}
+	/declare QNUKE_StartHPIfNamed		int 	outer 	${Ini[botINI,QNUKE,QNUKE_StartHPIfNamed,100]}
+	/declare QNUKE_StopHPIfNamed		int 	outer 	${Ini[botINI,QNUKE,QNUKE_StopHPIfNamed,0]}
+	/if (${Bool[${QNUKE_Total}]}) {
+		/for i 1 to ${QNUKE_Total} 
+			/call addSpellToLineup QNUKE ${i} ${Ini[botINI,QNUKE,QNUKE_${i}]}
+		/next i	
+	}
+
+	|--Stuns
+	/declare STUN_Total					int		outer	${Ini[botINI,STUN,STUN_Total,0]}	
+	/declare STUN_DelayTimer			timer	outer	${Ini[botINI,STUN,STUN_DelayTimer,1s]}
+	/declare STUN_HasCastOnce			bool	outer   FALSE
+	/declare STUN_Mana_Minimum			int		outer	${Ini[botINI,STUN,STUN_Mana_Minimum,0]}
+	/declare STUN_UseLocking			bool	outer	FALSE
+	/if (${Bool[${STUN_Total}]}) {
+		/for i 1 to ${STUN_Total} 
+			/call addSpellToLineup STUN ${i} ${Ini[botINI,STUN,STUN_${i}]}
+		/next i	
+	}
+
+	|-- DOTs MOAR DOTS!
+	|--FAST Damage Over Time
+	/declare QDOT_Total					int		outer	${Ini[botINI,QDOT,QDOT_Total,0]}
+	/declare QDOT_TotalIfNamed			int		outer	${Ini[botINI,QDOT,QDOT_TotalIfNamed,${QDOT_Total}]}
+	/declare QDOT_DelayTimer			timer	outer	${Ini[botINI,QDOT,QDOT_DelayTimer,1s]}
+	/declare QDOT_HasCastOnce			bool	outer   FALSE
+	/declare QDOT_Mana_Minimum			int		outer	${Ini[botINI,QDOT,QDOT_Mana_Minimum,10]} 
+	/declare QDOT_Mana_NamedMinimum		int		outer	${Ini[botINI,QDOT,QDOT_Mana_NamedMinimum,1]}
+	/declare QDOT_StartHP				int		outer	${Ini[botINI,QDOT,QDOT_StartHP,94]}
+	/declare QDOT_StopHP				int		outer	${Ini[botINI,QDOT,QDOT_StopHP,10]}
+	/declare QDOT_StartHPIfNamed		int 	outer 	${Ini[botINI,QDOT,QDOT_StartHPIfNamed,100]}
+	/declare QDOT_StopHPIfNamed			int 	outer 	${Ini[botINI,QDOT,QDOT_StopHPIfNamed,5]}
+	/if (${Bool[${QDOT_Total}]}) {
+		/for i 1 to ${QDOT_Total} 
+			/call addSpellToLineup QDOT ${i} ${Ini[botINI,QDOT,QDOT_${i}]}
+		/next i	
+	}
+
+
+	|--Damage Over Time
+	/declare DOT_Total					int		outer	${Ini[botINI,DOT,DOT_Total,0]}
+	/declare DOT_TotalIfNamed			int		outer	${Ini[botINI,DOT,DOT_TotalIfNamed,${DOT_Total}]}
+	/declare DOT_DelayTimer				timer	outer	${Ini[botINI,DOT,DOT_DelayTimer,0]}
+	/declare DOT_HasCastOnce			bool	outer   FALSE
+	/declare DOT_Mana_Minimum			int		outer	${Ini[botINI,DOT,DOT_Mana_Minimum,10]} 
+	/declare DOT_Mana_NamedMinimum		int		outer	${Ini[botINI,DOT,DOT_Mana_NamedMinimum,1]}
+	/declare DOT_StartHP				int		outer	${Ini[botINI,DOT,DOT_StartHP,98]}
+	/declare DOT_StopHP					int		outer	${Ini[botINI,DOT,DOT_StopHP,10]}
+	/declare DOT_StartHPIfNamed			int 	outer 	${Ini[botINI,DOT,DOT_StartHPIfNamed,100]}
+	/declare DOT_StopHPIfNamed			int 	outer 	${Ini[botINI,DOT,DOT_StopHPIfNamed,0]}
+	/if (${Bool[${DOT_Total}]}) {	
+		/for i 1 to ${DOT_Total} 
+			/call addSpellToLineup DOT ${i} ${Ini[botINI,DOT,DOT_${i}]}
+		/next i
+	}
+/return
 
 
 Sub xbot_initialize_casting
@@ -871,160 +950,24 @@ Sub xbot_initialize_casting
 	/declare str_useResistTypes		string	outer	${str_defaultResistTypes}
 	/if (${Zone.ShortName.Equal[pofire]}) /varset str_useResistTypes Cold,Magic,Poison,Disease
 	
-	/declare bln_useFastOnly	bool	outer	FALSE
-	/declare int_concCount		int     outer 	0
+	/declare bln_useFastOnly			bool	outer	FALSE
+	/declare int_concCount				int     outer 	0
 
 	|-- Templates
 	/declare DOT_Template				string outer  	_Spell|_Use|_Gem|_MaxTries|_NamedOnly|_StartHP|_StopHP|_Resist|_HasCastOnce|_RecastTimer
+	/declare QDOT_Template				string outer  	_Spell|_Use|_Gem|_MaxTries|_NamedOnly|_StartHP|_StopHP|_Resist|_HasCastOnce|_RecastTimer
 	/declare NUKE_Template 				string outer  	_Spell|_Use|_Gem|_MaxTries|_NamedOnly|_StartHP|_StopHP|_Resist|_HasCastOnce|_RecastTimer
 	/declare QNUKE_Template 			string outer  	_Spell|_Use|_Gem|_MaxTries|_NamedOnly|_StartHP|_StopHP|_Resist|_HasCastOnce|_RecastTimer
 	/declare AENUKE_Template	 		string outer  	_Spell|_Use|_Gem|_MaxTries|_NamedOnly|_StartHP|_StopHP|_Resist|_HasCastOnce|_RecastTimer
-	
-	|-- Nukes
-	/declare NUKE_Total					int		outer	${Ini[botINI,DirectDamage,NUKE_Total,0]}	
-	/declare NUKE_DelayTimer			timer	outer	${Ini[botINI,DirectDamage,NUKE_DelayTimer,1s]}
-	/declare NUKE_HasCastOnce			bool	outer   FALSE
-	/declare NUKE_Mana_Minimum			int		outer	${Ini[botINI,DirectDamage,NUKE_Mana_Minimum,10]}
-	/declare NUKE_Mana_NamedMinimum		int		outer	${Ini[botINI,DamageOverTime,NUKE_Mana_NamedMinimum,10]} 
-	/declare NUKE_StartHP				int		outer	${Ini[botINI,DirectDamage,NUKE_StartHP,98]}
-	/declare NUKE_StopHP				int		outer	${Ini[botINI,DirectDamage,NUKE_StopHP,5]}
-	/declare NUKE_StartHPIfNamed		int 	outer 	${Ini[botINI,DirectDamage,NUKE_StartHPIfNamed,100]}
-	/declare NUKE_StopHPIfNamed			int 	outer 	${Ini[botINI,DirectDamage,NUKE_StopHPIfNamed,0]}
-
-	/declare nc 						int		local
-	/for nc 1 to ${NUKE_Total} 
-		/declare NUKE_${nc}_Spell			string	outer	${Ini[botINI,DirectDamage,NUKE_${nc}]}
-		/declare NUKE_${nc}_Use 			bool	outer	${Ini[botINI,DirectDamage,NUKE_${nc}_Use]}
-		/declare NUKE_${nc}_Gem 			string	outer	${Ini[botINI,DirectDamage,NUKE_${nc}_Gem]}
-		/declare NUKE_${nc}_StartHP			int		outer	${Ini[botINI,DirectDamage,NUKE_${nc}_StartHP]}
-		/declare NUKE_${nc}_StopHP			int		outer	${Ini[botINI,DirectDamage,NUKE_${nc}_StopHP]}
-		/declare NUKE_${nc}_Resist      	string  outer   ${Spell[${NUKE_${nc}_Spell}].ResistType} 
-		/declare NUKE_${nc}_NamedOnly		string  outer   ${Ini[botINI,DirectDamage,NUKE_${nc}_NamedOnly]}
-		/declare NUKE_${nc}_Timer			timer   outer   ${NUKE_DelayTimer}
-		/declare NUKE_${nc}_HasCastOnce		bool	outer   FALSE
-		/declare NUKE_${nc}_Delay   		int     outer   ${Ini[botINI,DirectDamage,NUKE_${nc}_Delay,0]}
-	/next nc
-
-	|--AE Nuke
-	/declare AENUKE_Total 				int		outer	${Ini[botINI,AENuke,int_AENUKE_Total,0]}	
-	/declare AENUKE_DelayTimer			timer	outer	${Ini[botINI,AENuke,AENUKE_DelayTimer,0]}
-
-	/declare ae 						int		local
-	/for ae 1 to ${AENUKE_Total} 
-		/declare AENUKE_${ae}_Spell			string	outer	${Ini[botINI,AENuke,AENUKE_${ae}]}
-		/declare AENUKE_${ae}_Use 			bool	outer	${Ini[botINI,AENuke,AENUKE_${ae}_Use]}
-		/declare AENUKE_${ae}_Gem 			string	outer	${Ini[botINI,AENuke,AENUKE_${ae}_Gem]}
-		/declare AENUKE_${ae}_StartHP		int		outer	${Ini[botINI,AENuke,AENUKE_${ae}_StartHP,0]}
-		/declare AENUKE_${ae}_StopHP		int		outer	${Ini[botINI,AENuke,AENUKE_${ae}_StopHP,0]}
-		/declare AENUKE_${ae}_Resist    	string  outer   ${Spell[${AENUKE_${ae}_Spell}].ResistType} 
-		/declare AENUKE_${ae}_NamedOnly 	string  outer   ${Ini[botINI,AENuke,AENUKE_${ae}_NamedOnly,FALSE]}
-		/declare AENUKE_${ae}_Timer			timer   outer   ${AENUKE_DelayTimer}
-		/declare AENUKE_${ae}_HasCastOnce	bool	outer   FALSE
-		/declare AENUKE_${ae}_Delay   		int     outer   ${Ini[botINI,AENuke,AENUKE_${ae}_Delay,0]}
-	/next ae
+	/declare STUN_Template				string outer	_Spell|_Use|_Gem|_MaxTries|_NamedOnly|_StartHP|_StopHP|_Resist|_HasCastOnce|_RecastTimer
 
 
-	|--Quick Nuke
-	/declare QNUKE_Total				int		outer	${Ini[botINI,QuickNuke,QNUKE_Total,0]}	
-	/declare QNUKE_TotalIfNamed			int 	outer   ${Ini[botINI,QuickNuke,QNUKE_Total,${QNUKE_Total}]}	
-	/declare QNUKE_DelayTimer			timer	outer	${Ini[botINI,QuickNuke,QNUKE_DelayTimer,1s]}
-	/declare QNUKE_HasCastOnce			bool	outer   FALSE
-	/declare QNUKE_Mana_Minimum			int		outer	${Ini[botINI,QuickNuke,QNUKE_Mana_Minimum,10]}
-	/declare QNUKE_Mana_NamedMinimum	int		outer	${Ini[botINI,QuickNuke,QNUKE_Mana_NamedMinimum,10]} 
-	/declare QNUKE_StartHP				int		outer	${Ini[botINI,QuickNuke,QNUKE_StartHP,98]}
-	/declare QNUKE_StopHP				int		outer	${Ini[botINI,QuickNuke,QNUKE_StopHP,0]}
-	/declare QNUKE_StartHPIfNamed		int 	outer 	${Ini[botINI,QuickNuke,QNUKE_StartHPIfNamed,100]}
-	/declare QNUKE_StopHPIfNamed		int 	outer 	${Ini[botINI,QuickNuke,QNUKE_StopHPIfNamed,0]}
+	|-- Load the spell sets from the INI file
+	/call resetSpellLineup
 
-	/declare qn 						int		local
-	/for qn 1 to ${QNUKE_Total} 
-		/declare QNUKE_${qn}_Spell 			string	outer	${Ini[botINI,QuickNuke,QNUKE_${qn}]}
-		/declare QNUKE_${qn}_Use 			bool	outer	${Ini[botNI,QuickNuke,QNUKE_${qn}_Use,TRUE]}
-		/declare QNUKE_${qn}_Gem 			string	outer	${Ini[botINI,QuickNuke,QNUKE_${qn}_Gem]}
-		/declare QNUKE_${qn}_StartHP		int		outer	${Ini[botINI,QuickNuke,QNUKE_${qn}_StartHP]}
-		/declare QNUKE_${qn}_StopHP			int		outer	${Ini[botINI,QuickNuke,QNUKE_${qn}_StopHP]}
-		/declare QNUKE_${qn}_Resist     	string  outer   ${Spell[${QNUKE_${qn}_Spell}].ResistType} 
-		/declare QNUKE_${qn}_NamedOnly 		string	outer	${Ini[botINI,QuickNuke,QNUKE_${qn}_NamedOnly]}
-		/declare QNUKE_${qn}_Timer			timer   outer   ${QNUKE_DelayTimer}
-		/declare QNUKE_${qn}_HasCastOnce	bool	outer   FALSE
-		/declare QNUKE_${qn}_Delay   		int     outer   ${Ini[botINI,QuickNuke,QNUKE_${qn}_Delay,0]}
-	/next qn	
 
-	|--Stuns
-	/declare STUN_Total					int		outer	${Ini[botINI,Stun,STUN_Total,0]}	
-	/declare STUN_DelayTimer			timer	outer	${Ini[botINI,Stun,STUN_DelayTimer,1s]}
-	/declare STUN_HasCastOnce			bool	outer   FALSE
-	/declare STUN_Mana_Minimum			int		outer	${Ini[botINI,Stun,STUN_Mana_Minimum,0]}
-	/declare STUN_UseLocking			bool	outer	FALSE
 
-	/declare st 						int		local
-	/for st 1 to ${STUN_Total} 
-		/declare STUN_${st}_Spell 			string	outer	${Ini[botINI,Stun,STUN_${st}]}
-		/declare STUN_${st}_Use 			bool	outer	${Ini[botNI,Stun,STUN_${st}_Use,TRUE]}
-		/declare STUN_${st}_Gem 			string	outer	${Ini[botINI,Stun,STUN_${st}_Gem]}
-		/declare STUN_${st}_StartHP			int		outer	${Ini[botINI,Stun,STUN_${st}_StartHP]}
-		/declare STUN_${st}_StopHP			int		outer	${Ini[botINI,Stun,STUN_${st}_StopHP]}
-		/declare STUN_${st}_Resist 			string  outer   ${Spell[${STUN_${st}_Spell}].ResistType} 
-		/declare STUN_${st}_Timer			timer   outer   ${STUN_DelayTimer}
-		/declare STUN_${st}_HasCastOnce		bool	outer   FALSE
-	/next st	
-	
-	|-- DOTs MOAR DOTS!
-	|--FAST Damage Over Time
-	/declare QDOT_Total					int		outer	${Ini[botINI,FastDOT,QDOT_Total,0]}
-	/declare QDOT_TotalIfNamed			int		outer	${Ini[botINI,FastDOT,QDOT_TotalIfNamed,${QDOT_Total}]}
-	/declare QDOT_DelayTimer			timer	outer	${Ini[botINI,FastDOT,QDOT_DelayTimer,1s]}
-	/declare QDOT_HasCastOnce			bool	outer   FALSE
-	/declare QDOT_Mana_Minimum			int		outer	${Ini[botINI,FastDOT,QDOT_Mana_Minimum,10]} 
-	/declare QDOT_Mana_NamedMinimum		int		outer	${Ini[botINI,FastDOT,QDOT_Mana_NamedMinimum,1]}
-	/declare QDOT_StartHP				int		outer	${Ini[botINI,FastDOT,QDOT_StartHP,94]}
-	/declare QDOT_StopHP				int		outer	${Ini[botINI,FastDOT,QDOT_StopHP,10]}
-	/declare QDOT_StartHPIfNamed		int 	outer 	${Ini[botINI,FastDOT,QDOT_StartHPIfNamed,100]}
-	/declare QDOT_StopHPIfNamed			int 	outer 	${Ini[botINI,FastDOT,QDOT_StopHPIfNamed,5]}
 
-	/declare fa							int		local
-	/for fa 1 to ${QDOT_Total} 
-		/declare QDOT_${fa}_Spell 			string	outer	${Ini[botINI,FastDOT,QDOT_${fa}]}
-		/declare QDOT_${fa}_Use 			bool	outer	${Ini[botINI,FastDOT,QDOT_${fa}_Use]}
-		/declare QDOT_${fa}_Gem 			string	outer	${Ini[botINI,FastDOT,QDOT_${fa}_Gem]}
-		/declare QDOT_${fa}_MaxTries 		int		outer	${Ini[botINI,FastDOT,QDOT_${fa}_MaxTries]}
-		/declare QDOT_${fa}_NamedOnly 		int		outer	${Ini[botINI,FastDOT,QDOT_${fa}_NamedOnly]}
-		/declare QDOT_${fa}_StartHP			int		outer	${Ini[botINI,FastDOT,QDOT_${fa}_StartHP,${QDOT_StartHP}]}
-		/declare QDOT_${fa}_StopHP			int		outer	${Ini[botINI,FastDOT,QDOT_${fa}_StopHP,${QDOT_StopHP}]}
-		/declare QDOT_${fa}_Resist      	string  outer   ${Spell[${QDOT_${fa}_Spell}].ResistType} 
-		/declare QDOT_${fa}_HasCastOnce		bool	outer   FALSE
-		/declare QDOT_${fa}_RecastTimer		timer   outer   0
-	/next fa	
-	
-	|--Damage Over Time
-	/declare DOT_Total					int		outer	${Ini[botINI,DamageOverTime,DOT_Total,0]}
-	/declare DOT_TotalIfNamed			int		outer	${Ini[botINI,DamageOverTime,DOT_TotalIfNamed,${DOT_Total}]}
-	/declare DOT_DelayTimer				timer	outer	${Ini[botINI,DamageOverTime,DOT_DelayTimer,0]}
-	/declare DOT_HasCastOnce			bool	outer   FALSE
-	/declare DOT_Mana_Minimum			int		outer	${Ini[botINI,DamageOverTime,DOT_Mana_Minimum,10]} 
-	/declare DOT_Mana_NamedMinimum		int		outer	${Ini[botINI,DamageOverTime,DOT_Mana_NamedMinimum,1]}
-	/declare DOT_StartHP				int		outer	${Ini[botINI,DamageOverTime,DOT_StartHP,98]}
-	/declare DOT_StopHP					int		outer	${Ini[botINI,DamageOverTime,DOT_StopHP,10]}
-	/declare DOT_StartHPIfNamed			int 	outer 	${Ini[botINI,DamageOverTime,DOT_StartHPIfNamed,100]}
-	/declare DOT_StopHPIfNamed			int 	outer 	${Ini[botINI,DamageOverTime,DOT_StopHPIfNamed,0]}
-
-	/declare dc							int		local
-	/for dc 1 to ${DOT_Total} 
-		/declare DOT_${dc}_Spell 			string	outer	${Ini[botINI,DamageOverTime,DOT_${dc}]}
-		/declare DOT_${dc}_Use 				bool	outer	${Ini[botINI,DamageOverTime,DOT_${dc}_Use]}
-		/declare DOT_${dc}_Gem 				string	outer	${Ini[botINI,DamageOverTime,DOT_${dc}_Gem]}
-		/declare DOT_${dc}_MaxTries 		int		outer	${Ini[botINI,DamageOverTime,DOT_${dc}_MaxTries]}
-		/declare DOT_${dc}_NamedOnly 		int		outer	${Ini[botINI,DamageOverTime,DOT_${dc}_NamedOnly]}
-		/declare DOT_${dc}_StartHP			int		outer	${Ini[botINI,DamageOverTime,DOT_${dc}_StartHP,${DOT_StartHP}]}
-		/declare DOT_${dc}_StopHP			int		outer	${Ini[botINI,DamageOverTime,DOT_${dc}_StopHP,${DOT_StopHP}]}
-		/declare DOT_${dc}_Resist     		string  outer   ${Spell[${DOT_${dc}_Spell}].ResistType} 
-		/declare DOT_${dc}_HasCastOnce		bool	outer   FALSE
-		/declare DOT_${dc}_RecastTimer		timer   outer   0
-		
-	/next dc
-
-	/echo dot_1 defined? ${Defined[DOT_1]}
-	
 	/call InitEvents_Casting
 	/cecho \awNukes: \ag${NUKE_Total} \awAENukes: \ag${AENUKE_Total} \awQNuke: \ag${QNUKE_Total} \awStun: \ag${STUN_Total} \awDOT: \ag${DOT_Total} 
 

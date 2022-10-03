@@ -85,7 +85,7 @@ Sub Events_GoD_Uqua
 Sub Events_GoD_Inktuta
 	
 	| Cursebearers
-	/if (${Bool[${SpawnCount[npc Cursecaller]}]}) {
+	/if (!${Bool[${SpawnCount[npc Noqufiel]}]}) {
 		/doevents InkCurse
 		/doevents InkCurseSafe
 		/doevents CC1

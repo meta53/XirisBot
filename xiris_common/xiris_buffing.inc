@@ -194,12 +194,12 @@ Sub cmbtBuffMT
 	/declare delay		int		local	0
 
 	/call chkSpellMemorized "${bSpell}" FALSE ${bGem}
-	/dquery ${str_tankName1} -q "Me.Buff[${bSpell}].Duration"
+	/dquery ${str_MTName} -q "Me.Buff[${bSpell}].Duration"
 	/delay 20 ${DanNet.Query.Received}
 	/varset bDuration ${DanNet.Q}
 
 	/if (!${Bool[${bDuration}]} ) {
-		/call TrueTarget ${Spawn[pc =${str_tankName1}].ID}
+		/call TrueTarget ${Spawn[pc =${str_MTName}].ID}
 		/call MQ2Cast "${bSpell}" ${bGem}
 		/if (${Cast.Result.Equal[CAST_SUCCESS]}) {
 			/cecho \ag ${bSpell} ${Cast.Result} : DELAYING for \ay ${Spell[${bSpell}].Duration}s \agrefresh

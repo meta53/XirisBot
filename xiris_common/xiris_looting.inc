@@ -420,7 +420,7 @@ Sub LootTarget(int _corpseID)
 			} else {
 				/docommand /${str_lootChannel} ${Target.Name}(${Target.ID}) has ${lootName} and I cannot loot it  ${reason}.
 			}
-			/if (${lootBeep}) /beep
+			/if (${bln_useBeep}) /beep
 			:nextItem
 			/next n
 

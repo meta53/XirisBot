@@ -189,7 +189,7 @@ Sub EVENT_STUNSTOP(_line, _chatSender, _eventParams)
 **| 
 Sub variant_initialize	
 	|--Set Aggro
-	/if (${str_tankName1.NotEqual[${Me.Name}]} && ${str_tankName2.NotEqual[${Me.Name}]}) {
+	/if (${str_MTName.NotEqual[${Me.Name}]} && ${str_STName.NotEqual[${Me.Name}]}) {
 		/melee aggro=0	
 	} else {
 		/melee aggro=1
@@ -199,7 +199,7 @@ Sub variant_initialize
 	/declare    str_action				string	outer	Assisting	
 	/memspellset ${str_spellset}
 
-	/cecho \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID}) HealPoint:${healPoint} ST: ${str_tankName2}(${int_STID})
+	/cecho \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID}) HealPoint:${healPoint} ST: ${str_STName}(${int_STID})
 	/call InitEvents_Class
 /return
 

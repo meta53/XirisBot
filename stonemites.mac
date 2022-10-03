@@ -22,8 +22,8 @@ Sub Main
     /delay 10
 
     |--------------
-    /rsay delaying 30s
-    /delay 30s
+    /rsay delaying 3s
+    /delay 3s
     |--------------
 
     | Group 1
@@ -36,7 +36,7 @@ Sub Main
     /dex ertres /tar exile
 
     |--------------
-    /rsay delaying 10s
+    /rsay delaying 1s
     /delay 10
     |--------------
 

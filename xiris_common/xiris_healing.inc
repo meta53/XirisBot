@@ -198,9 +198,6 @@ Sub EVENT_ChangeHPGroup(_line, _chatSender, _eventParams)
 **|
 Sub EVENT_HealMode(_line, _chatSender, _eventParams)
 	/if (${Me.Class.ShortName.NotEqual[CLR]}) /return
-	/echo Changing Heal Mode?
-	/echo line ${_line}
-	/echo eventParams ${_eventParams}
 	/call ChangeHealMode ${_eventParams}
 	/doevents flush HealMode
 /return
@@ -420,10 +417,10 @@ Note: this now checks to see what healing mode we are in.
 ----------------------------  
 **|	
 Sub setHealingSpell(int _hp)
-	/if (!${_hp}) /return
+	/if (!${Bool[${_hp}]}) /return
 	/if (${str_healMode.Equal[NORMAL]}) {
 		/if (${_hp} < ${int_point_stopHeal}) {
-			/if ((${_hp} <= ${int_currentFPoint}) && ${bln_FHealReady}) {
+			/if (${_hp} <= ${int_currentFPoint}) {
 				/varset str_currentHeal	${str_heal_frantic}
 			} else {
 				/varset str_currentHeal ${str_heal_normal}
@@ -431,7 +428,7 @@ Sub setHealingSpell(int _hp)
 		}	
 	} else /if (${str_healMode.Equal[EFFICIENT]}) {
 		/if (${_hp} < ${int_point_calcStopHeal}) {
-			/if ((${_hp} <= ${int_currentFPoint}) && ${bln_FHealReady}) {
+			/if (${_hp} <= ${int_currentFPoint}) {
 				/varset str_currentHeal	${str_heal_frantic_efficient}
 			} else {
 				/varset str_currentHeal ${str_heal_normal_efficient}
@@ -461,7 +458,7 @@ Sub setHealingSpell(int _hp)
 Sub chkHeal_MT
 	/if (${int_healMode}== 0 || ${int_healMode} == 3) /return
 	/call chkMTAlive TRUE
-	/if ((${Spawn[pc ${str_tankName1}].PctHPs} < ${int_point_tankPatch}) && (${Spawn[pc ${str_tankName1}].Distance} < ${int_range_normal})) /call healMAINTANK
+	/if ((${Spawn[id ${int_MTID}].PctHPs} < ${int_point_tankPatch}) && (${Spawn[id ${int_MTID}].Distance} < ${int_range_normal})) /call healMAINTANK
 /return
 
 
@@ -485,6 +482,17 @@ Sub chkHeal_Group
 **|
 
 Sub healMAINTANK
+	/varcalc int_point_calcStopHeal ${Math.Calc[${int_point_tankPatch}*1.1]}
+	/call chkMTAlive TRUE
+	/if (${Spawn[id ${int_MTID}].PctHPs} <= 0) /return
+	/call setHealingSpell ${Target.PctHPs}
+	/cecho \aghealMAINTANK:\ao${str_MTName}\aw(\ay${int_MTID}\aw) \aw=>\ag${Target.Name}  \ao${str_currentHeal}
+	/call healCast ${int_MTID} ${Target.Name} "${str_currentHeal}"
+	/if (${Me.Class.ShortName.NotEqual[CLR]}) /call TrueTarget ${int_targetID}
+/return
+
+
+Sub healMAINTANKOLD
 	/varcalc	int_point_calcStopHeal ${Math.Calc[${int_point_tankPatch}*1.1]}	
 	/if (${Target.ID} != ${int_MTID}) /call TrueTarget ${int_MTID}
 	/echo healMAINTANK (healing.inc): ${int_MTID} ${Target.Name} "${str_heal_normal}"
@@ -501,7 +509,27 @@ Sub healMAINTANK
  ----------------------------
 **|
 
+|**
+ ----------------------------
+ HealSelf
+ ----------------------------
+ Healing Logic for the cleric
+ Determines which spell to cast, then casts it.
+ This routine is modified from the common one in xiris_healing.inc
+ ----------------------------
+**|
+
 Sub healSELF
+	/varcalc 	int_point_calcStopHeal ${Math.Calc[${int_point_selfPatch}*1.05]}
+	/if (${Target.ID} != ${Me.ID}) /call TrueTarget ${Me.ID}
+	/call setHealingSpell ${Me.PctHPs}
+	/cecho \aghealSELF:\ao${str_Me.Me.Name}\aw(\ay${Me.ID}\aw) \aw=>\ag${Target.Name}  \ao${str_currentHeal}
+	/call healCast ${Me.ID} ${Me.Name} "${str_currentHeal}"
+	/if (${Me.Class.ShortName.Equal[CLR]}) /call TrueTarget ${int_MTID}
+	/if (${Me.Class.ShortName.NotEqual[CLR]}) /call TrueTarget ${int_targetID}
+/return
+
+Sub healSELFOLD
 	/varcalc 	int_point_calcStopHeal ${Math.Calc[${int_point_selfPatch}*1.1]}
 	/if (${Target.ID} != ${Me.ID}) /call TrueTarget ${Me.ID}
 	/echo healSELF (healing.inc): ${Me.ID} ${Target.Name} "${str_heal_normal}"
@@ -709,7 +737,7 @@ Sub getGroupInRange(int _range)
 **|
 Sub healCast(int _id, string _name, string _spell)
 	/if (${_name.Equal[NULL]} || ${_id} == 0) {
-		/echo HEAL NAME is NULL || ID is 0 something is fucked;
+		/cecho \arHEAL NAME is NULL || ID is \ao${_id}\ar something is fucked;
 		/return
 	}
 	/cecho \awhealCast \ayTarget:\ag${_name}(${_id}) \aydist: \ag${Target.Distance} \aycHP: \ag${Spawn[pc ${_name}].PctHPs} \aycSH: \ag${int_point_calcStopHeal} \ayspell: \ag"${_spell}"
@@ -720,6 +748,44 @@ Sub healCast(int _id, string _name, string _spell)
 		/if (${Macro.Return.Equal[CAST_SUCCESS]} && ${bln_annouce}) /${cmdChannel} ${_spell} > ${Target.Name} hp:${Target.PctHPs} m:${Me.PctMana} d:${Target.Distance}
 		/return ${Macro.Return}
 	}
+/return
+
+
+|**
+ ----------------------------
+ Check Healing Subroutines
+ ----------------------------
+ This is called (looping) while a spell is being cast
+ This will then call several check subs which initiate from the chain chkHP
+ ----------------------------
+**|
+Sub chkHP
+	| Status Checks
+	/call chkMTAlive TRUE
+
+	| Check to see if I should interrupt because target is healed
+	/if ((${bln_autointerrupt}) && (${Target.PctHPs} > ${int_point_calcStopHeal})) /call Interrupt 
+
+	| I'm no longer casting, or no longer need to stop it ie, target is MT
+	/if (!${Bool[${Me.Casting.ID}]}) /goto :return
+
+	| Divine Arbitration Checks
+   	| -------------------------
+ 	| Check to see if I should cast Divine Arbitration
+	| Loop through group members to check to see if anyone needs Divine Arbitration
+	/if (${Me.Class.ShortName.NotEqual[CLR]} || !${use_heal_divineArb} || !${bln_DARBReady}) /goto :return
+
+	/declare gmember int local 0
+	/for gmember 0 to ${Group.Members}
+		/if (${Group.Member[${gmember}].PctHPs}<=${int_point_divineArb}) {
+			| add a check for member in group here
+			/dgt ${Group.Member[${gmember}].Name} triggered Divine Arbitration!
+			/call Interrupt
+			/call healDivineArbitration
+			/return
+		}
+	/next gmember
+    :return
 /return
 
 |**
@@ -747,79 +813,6 @@ Sub healDivineArbitration
     } 
 /return
 
-
-
-|**
- ----------------------------
- Check Healing Subroutines
- ----------------------------
- This is called (looping) while a spell is being cast
- This will then call several check subs which initiates the chain chkHP -> , chkDARB, chkHealTargetDead [chkMTDead {getMT <setMT>}] ,
- ----------------------------
-**|
-Sub chkHP
-	| Status Checks
-	/call chkHealTargetDead
-
-	| Return Checks
-   	| -------------------------
-	| Target Dead, Not Casting, need to heal self, or healing tank
-	
-	/if (${bln_TRGTDead}) {
-		/if (${bln_MTDead}) {
-			/call Interrupt
-			/call chkMTAlive TRUE
-			/return
-		}
-		/call Interrupt
-		/return
-	}
-
-
-	| I'm no longer casting, or no longer need to stop it ie, target is MT
-	/if (!${Window[CastingWindow].Open}) /return 
-
-	| Check to see if I should interrupt because target is healed
-	/if ((${bln_autointerrupt}) && (${Target.PctHPs} > ${int_point_calcStopHeal})) { 
-		/call Interrupt 
-		/return
-	}
-
-	/if (${Me.Class.ShortName.NotEqual[CLR]}) /return
-	/if (!${use_heal_divineArb}) /return
-	| Divine Arbitration Checks
-   	| -------------------------
- 	| Check to see if I should cast Divine Arbitration
-	| Loop through group members to check to see if anyone needs Divine Arbitration
-    /if (${bln_DARBReady}) {
-		/declare gmember int local 0
-		/for gmember 0 to ${Group.Members}
-    		/if (${Group.Member[${gmember}].PctHPs}<=${int_point_divineArb}) {
-    			| add a check for member in group here
-    			/dgt ${Group.Member[${gmember}].Name} triggered Divine Arbitration!
-    			/call Interrupt
-    			/call healDivineArbitration
-    			/return
-    		}
-		/next gmember
-    }
-/return
-
-|**
-----------------------------
-Check|Set to see if the target is dead
-----------------------------  
-**|
-Sub chkHealTargetDead
-	/varset bln_TRGTDead	FALSE
-	/varset bln_MTDead		FALSE
-	/if (!${Target.Type.Equal[PC]} ) {
-		/varset bln_TRGTDead TRUE
-		/if (${Target.ID} == ${int_MTID}) {
-			/varset bln_MTDead TRUE
-		}
-	}
-/return
 
 
 |**
@@ -1332,10 +1325,10 @@ Sub xbot_initialize_healing(int _healPoint)
 	/declare	use_heal_divineArb			bool	outer	${Ini[botINI,Healing_Settings,use_heal_divineArb,${use_heal_defaultDivineArb}]}
 	
 	|-- Healing Spells
-	/declare 	str_heal_normal_efficient	string	outer	${Ini[botINI,Healing_Spells,str_heal_normal_efficient,NULL]}
 	/declare 	str_heal_normal				string	outer	${Ini[botINI,Healing_Spells,str_heal_normal,NULL]}
-	/declare 	str_heal_frantic			string	outer	${Ini[botINI,Healing_Spells,str_heal_frantic,NULL]}
-	/declare 	str_heal_frantic_efficient 	string	outer	${Ini[botINI,Healing_Spells,str_heal_frantic_efficient,NULL]}
+	/declare 	str_heal_normal_efficient	string	outer	${Ini[botINI,Healing_Spells,str_heal_normal_efficient,${str_heal_normal}]}
+	/declare 	str_heal_frantic			string	outer	${Ini[botINI,Healing_Spells,str_heal_frantic,${str_heal_normal}]}
+	/declare 	str_heal_frantic_efficient 	string	outer	${Ini[botINI,Healing_Spells,str_heal_frantic_efficient,${str_heal_frantic}]}
 	/declare 	str_heal_HoT				string	outer	${Ini[botINI,Healing_Spells,str_heal_HoT,NULL]}
 	/declare 	str_heal_group				string	outer	${Ini[botINI,Healing_Spells,str_heal_group,NULL]}
 	/declare 	str_heal_groupHoT			string	outer	${Ini[botINI,Healing_Spells,str_heal_groupHoT,NULL]}

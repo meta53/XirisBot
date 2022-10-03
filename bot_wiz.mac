@@ -203,7 +203,7 @@ Sub variant_initialize(string _strTankName, int _intAssistAt, int _intTankHealPo
 	
 
 	/memspellset ${str_spellset}
-	/cecho \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID}) HealPoint:${healPoint} ST: ${str_tankName2}(${int_STID})
+	/cecho \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID}) HealPoint:${healPoint} ST: ${str_STName}(${int_STID})
 	/call InitEvents_Class
 /return
 

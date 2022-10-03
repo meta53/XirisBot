@@ -25,6 +25,7 @@ REVISION HISTORY
 	02.27.21	xiris	Added a method to reset XTarget windows due to bug on EMU where they fill up with corpses
 	06.29.22	xiris 	Updated all events to only be either generic, or [/gsay, /rsay, /tell, MQ2DanNet(dgt, dt)] only
 	08.05.22	xiris 	Added support for DI checking
+	10.01.22	xiris	Fixed the default tank settings on no param passing
 ______________________________________________
 
 **|
@@ -205,7 +206,6 @@ Sub Events_Common
  ----------------------------
 **|   
 
-|Sub xbot_initialize(string _strTankName, int _intAssistAt, int _intTankHealPoint, string _strTankName2)
 Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint, string _assistArgs) 
 	/cecho \aoxbot_initialize 1:${_tank1Name} 2:${_tank2Name} 3:${_tank3Name} 4:${_healPoint} 5:${_assistArgs}
 
@@ -240,8 +240,10 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/declare    bln_battleCleric		bool    outer   FALSE
 	/if (${_tank1Name.Equal[${Me.Name}]}) 	/varset bln_tanking TRUE
 	/if (${_tank1Name.Equal[${Me.Name}]}) 	/varset bln_aggro TRUE
-	/if (${bln_tanking} || ${bln_aggro}) 	/squelch /melee aggro=1 
+	/if (${bln_tanking}  || ${bln_aggro}) 	/squelch /melee aggro=1 
 	/if (!${bln_tanking} || !${bln_aggro}) 	/squelch /melee aggro=0
+
+	|-- Set the default tanks
 	/declare	str_defTank1			string	outer	${Ini[botINI,Settings,defaultTank1,Xiris]}
 	/declare	str_defTank2			string	outer	${Ini[botINI,Settings,defaultTank2,Xiria]}
 	/declare	str_defTank3			string	outer	${Ini[botINI,Settings,defaultTank3,Xirea]}
@@ -249,10 +251,10 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/declare	str_tankName2			string	outer 	${str_defTank2}
 	/declare 	str_tankName3			string  outer	${str_defTank3}
 
-	|-- [Settings] :Insert default values for downstream methods if we arent getting all the params
-	/if (${_tank1Name.Length} && ${_tank1Name.NotEqual[NULL]}) /varset str_tankName1 ${_tank1Name}
-	/if (${_tank2Name.Length} && ${_tank2Name.NotEqual[NULL]}) /varset str_tankName2 ${_tank2Name}
-	/if (${_tank3Name.Length} && ${_tank3Name.NotEqual[NULL]}) /varset str_tankName3 ${_tank3Name}
+	|-- Insert passed in values for tanks if we have the parameters passed in
+	/if (${_tank1Name.Length} > 3 )  /varset str_tankName1 ${_tank1Name}
+	/if (${_tank2Name.Length} > 3 )  /varset str_tankName2 ${_tank2Name}
+	/if (${_tank3Name.Length} > 3 )  /varset str_tankName3 ${_tank3Name}
 
 	|-- ID and Name here keep track of *current* tank/second tank. They are swapped as needed.
 	/declare	int_MTID           		int		outer	${Spawn[${str_tankName1}].ID}
@@ -262,6 +264,8 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/declare	int_TTID				int	 	outer 	${Spawn[${str_tankName3}].ID}
 	/declare 	str_TTName				string	outer 	${str_tankName3}
 
+	/cecho \aw Tanks \ayMT:\ag${str_MTName} \ayST:\ag${str_STName} \ayTT:\ag${str_TTName}
+
 	|-- [Settings] :Auto Assist Settings
 	/declare 	bln_autoAssist			bool	outer 	FALSE
 	/declare	int_defAssistAt			int		outer   ${Ini[botINI,Settings,assistAt,98]}
@@ -270,10 +274,7 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 		/cecho \ayAutoAssist settings: \ag${_assistArgs}
 		/varset bln_autoAssist ${_assistArgs.Token[1,|]}
 		/varset int_assistAt ${_assistArgs.Token[2,|]}
-	} else {
-		/echo No autoassist settings defined.
-	}
-	
+	} 
 	
 	|-- [Settings] : Miscellaneous Defaults
 	/declare	str_spellSet			string	outer	${Ini[botINI,Settings,str_spellSet,default]}
@@ -630,51 +631,51 @@ Sub TrueTarget(int _targetID)
  ----------------------------
 **|
 Sub chkMTAlive(bool _setAsTarget)
-	|/echo chkMTAlive ${str_tankName1}(${int_MTID})(${_setAsTarget})
-
 	|--MT is a live and ID is correct
-	/if (${Spawn[PC ${str_tankName1}].ID} && (${int_MTID} == ${Spawn[PC ${str_tankName1}].ID})) {
-		|/cecho \agMT ${str_tankName1} is alive, and my MTID ${int_MTID} is correct
+	/if (${Bool[${SpawnCount[PC ${str_MTName}]}]} && (${int_MTID} == ${Spawn[PC ${str_MTName}].ID})) /goto :return 
+
+	|--MT, ST, and TT are not in zone or dead!
+	/if (${Bool[${SpawnCount[PC ${str_MTName}]}]} && ${Bool[${SpawnCount[PC ${str_STName}]}]} && ${Bool[${SpawnCount[PC ${str_TTName}]}]}) {
+		/if (${Bool[${Me.Casting.ID}]}) /call Interrupt
+		/cecho \arALL TANKS ARE DEAD!
+		/call getMTbyPrecedence
+		/varset int_MTID ${Spawn[PC ${Macro.Return}].ID}
+		/varset str_MTName ${Spawn[PC ${Macro.Return}].Name}
 		/goto :return
 	}
 
+
+
 	|--MT is alive but ID is wrong; 
-	/if (${Spawn[PC ${str_tankName1}].ID} && (${int_MTID} != ${Spawn[PC ${str_tankName1}].ID})) {
-		/cecho \ay MT ${str_tankName1} is alive, and my MTID ${int_MTID} is wrong
-		/varset int_MTID ${Spawn[${str_tankName1}].ID}
+	/if (${Bool[${SpawnCount[PC ${str_MTName}]}]} && (${int_MTID} != ${Spawn[PC ${str_MTName}].ID})) {
+		/cecho \ay MT ${str_MTName} is alive, and my MTID ${int_MTID} is wrong
+		/varset int_MTID ${Spawn[${str_MTName}].ID}
 		/goto :return
 	}
 
 	|--ST is still alive; 
-	/if (${Spawn[PC ${str_tankName2}].ID} && (${int_MTID} != ${Spawn[PC ${str_tankName2}].ID})) {
+	/if (${Bool[${SpawnCount[PC ${str_STName}]}]} && (${int_MTID} != ${Spawn[PC ${str_STName}].ID})) {
+		/if (${Bool[${Me.Casting.ID}]}) /call Interrupt
 		/cecho \ao ST  is still alive, switching!
-		/varset str_tankName1 ${str_tankName2}
-		/varset str_tankName2 ${str_tankName3}
-		/varset int_MTID ${Spawn[${str_tankName2}].ID}
+		/varset str_MTName ${str_STName}
+		/varset str_STName ${str_TTName}
+		/varset int_MTID ${Spawn[${str_STName}].ID}
 		/goto :return
 	}
 	
 	|--TT is still alive; 
-	/if (${Spawn[PC ${str_tankName3}].ID} && (${int_MTID} != ${Spawn[PC ${str_tankName3}].ID})) {
+	/if (${Bool[${SpawnCount[PC ${str_TTName}]}]} && (${int_MTID} != ${Spawn[PC ${str_TTName}].ID})) {
+		/if (${Bool[${Me.Casting.ID}]}) /call Interrupt
 		/cecho \ao TT is still alive, switching!
-		/varset str_tankName1 ${str_tankName3}
-		/varset int_MTID ${Spawn[${str_tankName3}].ID}
+		/varset str_MTName ${str_TTName}
+		/varset int_MTID ${Spawn[${str_TTName}].ID}
 		/goto :return
 	}
 
-	|--Check if any tanks are alive
-	/if (!${Spawn[PC ${str_tankName1}].ID} && !${Spawn[PC ${str_tankName2}].ID} && !${Spawn[PC ${str_tankName3}].ID}) {
-		/cecho \arALL TANKS ARE DEAD!
-		/call getMTbyPrecedence
-		/varset int_MTID ${Spawn[PC ${Macro.Return}].ID}
-		/varset str_tankName1 ${Spawn[PC ${Macro.Return}].Name}
-		/goto :return
-	}
-	
 	:return
 	|-- If set as target, target the new MT immediately
 	/if (${_setAsTarget} && (${Target.ID} != ${int_MTID})) {
-		|/echo ${_setAsTarget} ${int_MTID}
+		/if (${Bool[${Me.Casting.ID}]}) /call Interrupt
 		/call TrueTarget ${int_MTID}
 	}
 
@@ -1309,35 +1310,6 @@ Sub doRefreshAlerts
 |       to the channel, so all bots can pick it up.
 |--------------------------------------------------------------------------------
 
-|-- CONNECT TO EQBC
-Sub Event_ConnectEQBC
-	/echo NO LONGER SUPPORTED
-/return
-
-|-- RELOAD CURRENT MACRO
-
-
-
-|**
-----------------------------
-Check|Set the target's target as the new MT
-Check to see if the int_MTID of default is alive
-| note not setting HoTT as target cause... no.
-----------------------------  
-**|
-Sub getMT
-	/echo attempting to get new MT currentMT: ${int_MTID} SecondaryTank: ${str_tankName2} does tank = tank2? ${str_tankName1.Equal[${str_tankName2}]}
-	/call getMTbyPrecedence
-
-	/if (${int_MTID} == ${Me.ID}) {
-		/varset bln_tanking TRUE
-		/melee aggro=1
-		/dgt changeMT ${Me.Name}
-	}
-
-
-/return
-
 |**
 ----------------------------
 Set the MT to a specific NAME
@@ -1355,15 +1327,15 @@ Sub getMTbyPrecedence
 	/declare newTank	string	local
 	/declare newID 		int 	local
 
-	|-- Start with the defined str_tankName1,...3
-	/if (${SpawnCount[pc ${str_tankName1}]} == 1) {
-		/varset newTank ${str_tankName1}
+	|-- Start with the defined str_MTName,...3
+	/if (${SpawnCount[pc ${str_MTName}]} == 1) {
+		/varset newTank ${str_MTName}
 		/goto :return
-	} else /if (${SpawnCount[pc ${str_tankName2}]} == 1) {
-		/varset newTank ${str_tankName2}
+	} else /if (${SpawnCount[pc ${str_STName}]} == 1) {
+		/varset newTank ${str_STName}
 		/goto :return
-	}  else /if (${SpawnCount[pc ${str_tankName3}]} == 1) {
-		/varset newTank ${str_tankName3}
+	}  else /if (${SpawnCount[pc ${str_TTName}]} == 1) {
+		/varset newTank ${str_TTName}
 		/goto :return
 	}
 
@@ -1398,7 +1370,7 @@ Sub EVENT_ChangeMT(_line, _sender, _eventParams)
 	/echo _eventParams:${_eventParams}
 	/declare name string local ${_eventParams.Arg[1, ]}
 	/varset	int_MTID ${Spawn[pc ${name}].ID}
-	/varset str_tankName1 ${name} 
+	/varset str_MTName ${name} 
 
 	/echo MTID: ${int_MTID} MTName: ${name}
 	/dgt [${Me.Class.ShortName}] ${Me.Name} ${str_action} >> ${Spawn[id ${int_MTID}].CleanName} <<  @ ${healPoint}
@@ -1454,7 +1426,7 @@ Sub LoadPlugin(string _pluginName, bool _load)
 Sub chkAutoAssist
 	/if (!${bln_autoAssist}) /return
 	/declare tgtID int local
-	/dquery ${str_tankName1} -q "Target.ID"
+	/dquery ${str_MTName} -q "Target.ID"
 	/delay 20 ${DanNet.Query.Received}
 	/varset tgtID ${DanNet.Q}
 	/call TrueTarget ${tgtID}
