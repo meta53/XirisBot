@@ -1035,6 +1035,17 @@ Sub SetRaidGroupMode(string _mode)
 		/varset RaidGroupLeaders[7] Xaexa
 		/varset RaidGroupLeaders[8] Xaia
 		/varset RaidGroupLeaders[9] Xepatia
+	} else /if (${_mode.Equal[DEFAULT]}) {
+		/declare RaidGroupLeaders[9] string outer NULL
+		/varset	RaidGroupLeaders[1] Xiris
+		/varset	RaidGroupLeaders[2] Xiria
+		/varset RaidGroupLeaders[3] Xirea
+		/varset RaidGroupLeaders[4] Xirin
+		/varset RaidGroupLeaders[5] Xeqisa
+		/varset RaidGroupLeaders[6] Xaeliea
+		/varset RaidGroupLeaders[7] Xaexa
+		/varset RaidGroupLeaders[8] Xaia
+		/varset RaidGroupLeaders[9] Xepatia
 	} else /if (${_mode.Equal[TRIAD]}) {
 		/declare RaidGroupLeaders[3] string outer NULL
 		/if (${Raid.Leader.CleanName.Equal[Xiris]}) {

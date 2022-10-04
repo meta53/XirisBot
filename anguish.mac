@@ -11,6 +11,9 @@ Sub Main
     /dt Xirea offtankON
     /dt Xiris offtankON
 
+    | Set auto curing the MT
+    /dt Xanshia AutoCureMTOn
+
     | Set the aggro for Xirin
     /melee aggro=1
     /melee taunt=1

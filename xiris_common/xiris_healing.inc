@@ -1011,10 +1011,11 @@ Sub chkRez
 	/call AERez ${int_corpses}
 /return
 
+|-- TODO: Rework this. It's buggy
 Sub AERez(int _corpseCount)
 
 	
-	/declare arr_corpses[${int_corpses}] int local 
+	/declare arr_corpses[${_corpseCount}] int local 
 	/declare str_corpse		string local
 
 	/declare i 				int local
@@ -1046,9 +1047,13 @@ Sub AERez(int _corpseCount)
 		| check ignore list
 		/if (${int_rezIgnore}) {
 			/for x 1 to ${int_rezIgnore}
-				/if (${arr_corpses[${x}]} == ${arr_rezIgnore[${x}]}) /varset bln_skipCorpse TRUE
+				/if (${arr_corpses[${x}]} == ${arr_rezIgnore[${x}]}) {
+					/echo corpse #{x} ${arr_corpses[${x}]} == ${arr_rezIgnore[${x}]}
+					/varset bln_skipCorpse TRUE
+				}
 			/next x
 		}
+		/echo bln_skipCorrpse? ${bln_skipCorpse}
 		/if (${bln_skipCorpse}) /goto :next_corpse
 
 		| check online

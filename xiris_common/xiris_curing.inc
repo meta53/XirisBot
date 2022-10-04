@@ -64,6 +64,9 @@ REVISION HISTORY
 #EVENT ResetGroupCurer	"#1# tells the raid#*#'ResetGroupCurer#*#'"
 #EVENT ResetGroupCurer	"[ #1# #*#]#*#ResetGroupCurer#*#"
 
+#EVENT AutoCureMTOn		"#*#AutoCureMTOn#*#"
+#EVENT AutoCureMTOn		"#*#AutoCureMTOff#*#"
+
 Sub InitEvents_Curing
 	/if (${str_classArchetype.Equal[PRIEST]} || ${Me.Class.ShortName.Equal[PAL]}) /call RegisterClassEvents Events_Curing 5
 	/call RegisterBackgroundEvents Events_Curing_Background 3
@@ -180,6 +183,8 @@ Sub resetCureState
 
 |-- Check if I need a cure (all classes)
 Sub chkNeedCure
+	|-- If I have bln_autoCureMT Set to TRUE, always check if the MT needs cure and do it proactively
+	/if (${bln_autoCureMT}) /call cureMTAuto
 	|-- Verify that I actually have debuffs even if it says i need to cure, reset that
 	/if (!${Debuff} && ${bln_needsCure}) /call resetCureState
 	|-- Verify need if I havent asked and recently
@@ -366,9 +371,6 @@ Sub EVENT_ResetGroupCurer
 
 |-- Will get your curer, prefers shaman -> cleric -> druid -> paladin
 Sub getGroupCurer(string _curerType)
-
-
-
 	/if (!${Defined[_cureType]}) /declare _cureType string local NOTSET
 	/if (${_cureType.Equal[NULL]}) /varset _cureType NOTSET
 	/declare 	myCurer			string	local	NOTFOUND
@@ -524,6 +526,37 @@ Sub cureGroup(string _cureType, int _counters)
 	}
 /return 
 
+Sub cureMTAuto
+	| Specifically for a cleric or other curer to constantly watch the MT and auto cure them
+	/declare c int local 0
+	| Check Poison
+	/dquery ${str_MTName} -q "Debuff.Poisoned"
+	/delay 20 ${DanNet.Query.Received}
+	/varset c ${DanNet.Q}
+	/if (${c}) {
+		/call handleCureRequest ${str_MTName} ${int_MTID} poison ${c}
+		/goto :return
+	}
+
+	| Check Curse
+	/dquery ${str_MTName} -q "Debuff.Cursed"
+	/delay 20 ${DanNet.Query.Received}
+	/varset c ${DanNet.Q}
+	/if (${c}) {
+		/call handleCureRequest ${str_MTName} ${int_MTID} curse ${c}
+		/goto :return
+	}
+
+	| Check Disease
+	/dquery ${str_MTName} -q "Debuff.Diseased"
+	/delay 20 ${DanNet.Query.Received}
+	/varset c ${DanNet.Q}
+	/if (${c}) {
+		/call handleCureRequest ${str_MTName} ${int_MTID} disease ${c}
+		/goto :return
+	}
+	:return
+/return
 
 Sub cureSelf(string _cureType, int _counters)
 	/g Curing Self ${_cureType} ${_counters}

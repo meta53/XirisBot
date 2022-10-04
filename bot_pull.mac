@@ -924,20 +924,20 @@ Sub variant_initialize(int _pull_dist, string _channel, string _campName, bool _
 	}
 	
 	|--how far we can go for alert 2 mobs (note, seperate from maxRadius)
-	/declare int_alert2Radius		int 	outer 	450
+	/declare int_alert2Radius		int 	outer 	1450
 
 	|-- use 40 for POFire
 	/declare int_minZHeight			int		outer 	0
 	/declare int_maxZHeight			int		outer	0
 	/declare int_zRadius			int     outer   0
-	/varcalc int_minZHeight			${Me.Z} - 20
-	/varcalc int_maxZHeight			${Me.Z} + 65
+	/varcalc int_minZHeight			${Me.Z} - 50
+	/varcalc int_maxZHeight			${Me.Z} + 165
 	/varcalc int_zRadius ${int_maxZHeight} - ${int_minZHeight}
 
 	|--target information
-	/declare int_minPullCount		int		outer   5
-	/declare int_minTLevel			int		outer	48
-	/declare int_maxTLevel			int		outer	77
+	/declare int_minPullCount		int		outer   10
+	/declare int_minTLevel			int		outer	46
+	/declare int_maxTLevel			int		outer	75
 	/declare bln_validTGT			bool	outer	FALSE
 	/declare bln_TGTDead			bool	outer	FALSE
 	/declare bln_TGTLocal			bool	outer	FALSE
@@ -1078,6 +1078,15 @@ Sub setAlerts
 		/squelch /alert add 1 "Udranda"
 	} else /if (${Zone.ShortName.Equal[ferubi]}) {
 		/squelch /alert add 1 "Rondo"
+	}  else /if (${Zone.ShortName.Equal[qinimi]}) {
+		/squelch /alert add 1 "Krvne"
+		/squelch /alert add 1 "Mass of Stone"
+		/squelch /alert add 1 "Councilman"
+		/squelch /alert add 1 "a broken"
+		/squelch /alert add 1 "Rarundel"
+		/squelch /alert add 1 "a disgruntled" 
+		/squelch /alert add 1 "a melancholy"
+		/squelch /alert add 1 "Besana"
 	} else /if (${Zone.ShortName.Equal[pofire]}) {
 		/squelch /alert add 1 "Guardian of Doomfire"
 		/squelch /alert add 1 "General Reparm"
@@ -1213,6 +1222,10 @@ Sub setAlerts
 		/squelch /alert add 2 "officiator"
 	} else /if (${Zone.ShortName.Equal[barindu]}) {
 		/squelch /alert add 2 "aneuk"
+	} else /if (${Zone.ShortName.Equal[qinimi]}) {
+		/squelch /alert add 2 "Ticov"
+		/squelch /alert add 2 "Rexi"
+		/squelch /alert add 2 "Vket"
 	}
 /return
 

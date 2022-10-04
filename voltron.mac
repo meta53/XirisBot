@@ -1,8 +1,8 @@
 #Turbo 10
 
 Sub Main(string _mode)
-	/if (!${Defined[_mode]}) /declare _mode string local HATRED
-	/if (!${Bool[${_mode}]}) /varset _mode HATRED
+	/if (!${Defined[_mode]}) /declare _mode string local DEFAULT
+	/if (!${Bool[${_mode}]}) /varset _mode DEFAULT
 	/echo Setup up Voltron
 	
 	/call SetupGroups${_mode}
@@ -153,4 +153,39 @@ Sub InviteGroupsToJELVAN
 	| East, 3
 	/dex Xirea /raidinvite Xirin
 	 
+/return
+
+|-- Hatred, where we primarily want to heal the group you are in, and the assist tank
+Sub SetupGroupsDEFAULT
+	/multiline ; /invite Xanshia;  /invite Pantheon; /invite Deist; /invite Ania; /invite Ophidia;
+	/dex Xiria /multiline ; /invite Xirael;  /invite Tragic; /invite Nihilist; /invite Aergia; /invite Xorael;
+	/dex Xirea /multiline ; /invite Xinshia; /invite Xerael; /invite Sadelia; /invite Eurydice; /invite Drexia;
+	/dex Xirin /multiline ; /invite Theist;  /invite Xarael; /invite Cereborn; /invite Achlys; /invite Dogmatist;
+	/dex Xeqisa /multiline ; /invite Xiexa;   /invite Xeixi; /invite Xeixa; /invite Adikia; /invite Xurael;
+	/dex Xaeliea /multiline ; /invite Ertres;  /invite Shinxia; /invite Opheoia; /invite Ophenia; /invite Xenshia;
+	/dex Xaexa /multiline ; /invite Erinyes;  /invite Shynxia; /invite Ophexia; /invite Ophelia; /invite Xunshia;
+	/dex Xaia /multiline ; /invite Ertris;  /invite Ophemia; /invite Opheyia; /invite Aidos; /invite Xonshia;
+	/dex Xepatia /multiline ; /invite Erinyas;  /invite Mluian; /invite Ophezia; /invite Achos; /invite Empathic;
+/return
+
+Sub InviteGroupsToDEFAULT
+	/echo Inviting Groups to Raid
+	/raidinvite Xiria
+	/delay 5
+	/raidinvite Xirea
+	/delay 5
+	/raidinvite Xirin
+	/delay 5
+	/raidinvite Xeqisa
+	/delay 5
+	/raidinvite Xaeliea
+	/delay 5
+	/raidinvite Xaexa
+	/delay 5
+	/raidinvite Xaia
+	/delay 5
+	/raidinvite Xepatia
+
+	|/dga /notify LargeDialogWindow LDW_YesButton leftmouseup
+	|/dga /notify LargeDialogWindow LDW_OkButton leftmouseup
 /return
