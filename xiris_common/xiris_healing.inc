@@ -557,6 +557,15 @@ Sub healGRP
 	/declare 	int_inRange		int local 	0
 	/varcalc	int_point_calcStopHeal ${Math.Calc[${int_point_grpPatch}*1.1]}
 	/declare 	memName 		string local 
+
+	/declare    franticRange    int local ${int_range_frantic}
+	/declare    normalRange  	int local ${int_range_normal}
+
+	/if (${str_healMode.Equal[EFFICIENT]}) {
+		/varset franticRange	${int_range_frantic_efficient}
+		/varset normalRange 	${int_range_normal_efficient}
+	}
+
 	:determineGroupDamage
 	| Method updates the group array, in order of HP, and counts the major/minor hurt
 	/call updateGroupHP
@@ -576,6 +585,7 @@ Sub healGRP
 			/goto :return
 		} else {
 			/cecho \arGROUP not fired not enough in range \aw(\ay${int_inRange} < 3\aw)
+			/goto :CastSingleTargetHeals
 		}
 	} else /if (${int_minorHurt} >=3 && ${Me.Class.ShortName.Equal[CLR]}) {
 		/call getGroupInRange ${int_range_groupHoT}
@@ -587,6 +597,7 @@ Sub healGRP
 			/goto :return
 		} else {
 			/cecho \apGROUP_HOT not fired not enough in range \aw(\ay${int_inRange} < 3\aw)
+			/goto :CastSingleTargetHeals
 		}
 	} 
 
@@ -594,20 +605,20 @@ Sub healGRP
 	| Note the worst hurt will be the first in the list, and then run the heal checks again
 	| This is so we heal 1 person, check tank, self, heal 1 person, check tank, self.
 	| The only time we skip to another person in group is if they are out of frantic range.
+	/call updateGroupHP
 	/for i 1 to 6 
 		| Not present or No Data? Then the toon is not in zone!
 		/varset memName ${Group.Member[${arr_groupHP[${i},4]}]}
+		|----------Not Found------------------No HP Left----------------------------Out of Range---------------------No ID-----------------------------
 		/if (!${SpawnCount[pc ${memName}]} || ${arr_groupHP[${i},1]} == 0 || ${arr_groupHP[${i},2]} >= 250 || ${arr_groupHP[${i},3]} == 0) /goto :next_groupMember
 
 		| No Heal? Since the lowest HP is always first, if we get to a index where there is no heal, we can skip the rest
 		/if (${arr_groupHP[${i},1]} >= ${int_point_calcStopHeal} ) /goto :return
 
-		/if (${arr_groupHP[${i},1]} == 0 || ${arr_groupHP[${i},2]} >= 250 || ${arr_groupHP[${i},3]} == 0) /goto :next_groupMember
-
 		| Frantic? 
 		| This spell has the longest range, so if we can't reach them here, we need to goto next group member
 		/if (${arr_groupHP[${i},1]} <= ${int_point_grpFrantic}) {
-			/if (${arr_groupHP[${i},2]} >= ${int_range_frantic}) {
+			/if (${arr_groupHP[${i},2]} >= ${franticRange}) {
 				/cecho \ar${memName} is out of FRANTIC range or DEAD
 				/goto :next_groupMember
 			} else {
@@ -618,29 +629,24 @@ Sub healGRP
 				/call healCast ${arr_groupHP[${i},3]} ${Spawn[pc id ${arr_groupHP[${i},3]}].Name} "${str_currentHeal}"
 				/goto :return	
 			}
-			
-		}
-
-		| Normal?
-		/if (${arr_groupHP[${i},1]} <= ${int_point_grpPatch} && ${arr_groupHP[${i},2]} <= ${int_range_normal_efficient}) {
+		} else /if (${arr_groupHP[${i},1]} <= ${int_point_grpPatch} && ${arr_groupHP[${i},2]} <= ${int_range_normal}) {
 			/varset str_currentHeal ${str_heal_normal}
 			/if (${str_healMode.Equal[EFFICIENT]}) /varset str_currentHeal ${str_heal_normal_efficient}
 			/cecho \aoNORMAL \ag(${str_healMode})   \ay${str_currentHeal} \awon \ag ${memName}\aw(\ay${arr_groupHP[${i},3]}\aw)
 			/if ((${Me.CurrentMana} < ${Spell[${str_currentHeal}].Mana})) /goto :return
 			/call healCast ${arr_groupHP[${i},3]} ${Spawn[pc id ${arr_groupHP[${i},3]}].Name} "${str_currentHeal}"
 			/goto :return
-		}
-
-		| HoT ?
-		/if (!${use_heal_HoT}) /goto :next_groupMember
-		/if (${arr_groupHP[${i},1]} <= ${int_point_grpHot} && ${arr_groupHP[${i},2]} <= ${int_range_HoT} && !${timer_HoT_${arr_groupHP[${i},3]}}) {
-			/cecho  \aoHoT \ag(${str_healMode})   \ay${str_currentHeal} \awon \ag ${memName}\aw(\ay${arr_groupHP[${i},3]}\aw)
-			/if ((${Me.CurrentMana} < ${Spell[${str_heal_HoT}].Mana})) /goto :return
-			/call healCast ${arr_groupHP[${i},3]} ${Spawn[pc id ${arr_groupHP[${i},3]}].Name} "${str_heal_HoT}"
-			| If someone died, and came back their ID will be different. We need to recreate the timers
-			/if (!${Defined[${timer_HoT_${arr_groupHP[${i},3]}}]}) /call ReCreateGroupHoTTimers
-			/if (${Macro.Return.Equal["CAST_SUCCESS"]}) /varset timer_HoT_${arr_groupHP[${i},3]} 40s
-			/goto :return
+		} else {
+			/if (!${use_heal_HoT}) /goto :next_groupMember
+			/if (${arr_groupHP[${i},1]} <= ${int_point_grpHot} && ${arr_groupHP[${i},2]} <= ${int_range_HoT} && !${timer_HoT_${arr_groupHP[${i},3]}}) {
+				/cecho  \aoHoT \ag(${str_healMode})   \ay${str_currentHeal} \awon \ag ${memName}\aw(\ay${arr_groupHP[${i},3]}\aw)
+				/if ((${Me.CurrentMana} < ${Spell[${str_heal_HoT}].Mana})) /goto :return
+				/call healCast ${arr_groupHP[${i},3]} ${Spawn[pc id ${arr_groupHP[${i},3]}].Name} "${str_heal_HoT}"
+				| If someone died, and came back their ID will be different. We need to recreate the timers
+				/if (!${Defined[${timer_HoT_${arr_groupHP[${i},3]}}]}) /call ReCreateGroupHoTTimers
+				/if (${Macro.Return.Equal["CAST_SUCCESS"]}) /varset timer_HoT_${arr_groupHP[${i},3]} 40s
+				/goto :return
+			}
 		}
 	:next_groupMember
 	/next i
@@ -1348,9 +1354,9 @@ Sub xbot_initialize_healing(int _healPoint)
 	/declare  	str_rezGem					string	outer	${Ini[botINI,Healing_Spells,str_rezGem,gem7]}
 
 	/echo ---------------
-	/echo Heal Spells:  Normal:${str_heal_normal}  || Efficient:${str_heal_frantic_efficient} || CH:${str_heal_complete}
-	/echo				Frantic:${str_heal_frantic} || Frantic Efficient:${str_heal_frantic_efficient} || HOT: ${str_heal_HoT}
-	/echo               Group:${str_heal_group} || GroupHoT:${str_heal_groupHoT} || Rez:${str_rezSpell}
+	/cecho \ayHeal Spells: \awNormal:\ag${str_heal_normal}\aw  || Efficient:\ag${str_heal_frantic_efficient}\aw || CH:\ag${str_heal_complete}
+	/cecho				 \awFrantic:\ag${str_heal_frantic}\aw || Frantic Efficient:\ag${str_heal_frantic_efficient}\aw || HOT:\ag${str_heal_HoT}
+	/cecho               \awGroup:\ag${str_heal_group}\aw || GroupHoT:\ag${str_heal_groupHoT}\aw || Rez:\ag${str_rezSpell}
 	/echo ---------------
 	|-- Heal Use (note, if null, or cannot find, we cannot use (gotta figure out how to tell if I have that spell...)
 	/declare 	use_heal_patch			bool	outer	FALSE
@@ -1371,13 +1377,14 @@ Sub xbot_initialize_healing(int _healPoint)
 	/declare 	use_heal_groupHoT		bool	outer	FALSE
 		/if (${str_heal_groupHoT.NotEqual[NULL]}) 	/varset use_heal_groupHoT 	TRUE
 
-	/echo Heal Usage:  Normal:${use_heal_normal} || Frantic:${use_heal_frantic} || HoT::${use_heal_HoT} || Group:${use_heal_group} || GroupHoT:${use_heal_groupHoT} || AutoRez:${bln_autoRez}
+	/cecho \ayHeal Usages:  \awNormal:\ag${use_heal_normal}\aw || Frantic:\ag${use_heal_frantic}\aw || HoT:\ag${use_heal_HoT}\aw || Group:\ag${use_heal_group}\aw || GroupHoT:\ag${use_heal_groupHoT}\aw || AutoRez:\ag${bln_autoRez}\aw
 	/echo ---------------
 
 	|-- Heal Ranges
 	/declare	int_range_normal_efficient int	outer	${Spell[${str_heal_normal_efficient}].MyRange}
 	/declare	int_range_normal		int		outer	${Spell[${str_heal_normal}].MyRange}
 	/declare	int_range_frantic		int		outer	${Spell[${str_heal_frantic}].MyRange}
+	/declare	int_range_frantic_efficient		int		outer	${Spell[${str_heal_frantic_efficient}].MyRange}
 	/declare	int_range_HoT			int		outer	${Spell[${str_heal_HoT}].MyRange}
 	/declare	int_range_group			int		outer	70 
 	/declare	int_range_groupHoT		int		outer	${Spell[${str_heal_groupHoT}].MyRange}
@@ -1386,7 +1393,9 @@ Sub xbot_initialize_healing(int _healPoint)
 	/declare 	int_range_divineArb		int		outer	100
 
 	
-	/echo Heal Range: Patch:${int_range_normal_efficient} || Normal:${int_range_normal} || Frantic:${int_range_frantic} || HoT::${int_range_HoT} || Group:${int_range_group} || GroupHoT:${int_range_groupHoT} || Rez:${int_range_rez}
+	/cecho \ayHeal Ranges: \awPatch:\ag${int_range_normal_efficient}\aw || Normal:\ag${int_range_normal}\aw || Group:\ag${int_range_group}\aw
+	/cecho  			Frantic:\ag${int_range_frantic}\aw || FranticEfficient:\ag${int_range_frantic_efficient} 
+	/cecho 				HoT:\ag${int_range_HoT}\aw || GroupHoT:\ag${int_range_groupHoT}\aw || Rez:\ag${int_range_rez}
 	/echo ---------------
 	|-- Heal Points
 		|-- SELF (Defaults)

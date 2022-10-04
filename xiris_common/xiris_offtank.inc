@@ -139,6 +139,8 @@ Sub aggroByID(int _targetID)
 	/goto :aggroLoop
 
 	:return
+	/squelch /melee aggro=0
+	/squelch /melee taunt=0
 	/squelch /melee reset
 /return
 

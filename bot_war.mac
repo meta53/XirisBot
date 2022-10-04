@@ -147,15 +147,6 @@ Sub chkUtils
 Sub variant_initialize
 	|-- set up default vars
 	/declare    str_action				string	outer	Assisting	
-
-	/if (${str_MTName.NotEqual[${Me.CleanName}]}) {
-		/melee taunt=0
-		/melee aggro=0
-	} else {
-		/melee taunt=1
-		/melee aggro=1
-	}
-
 	/cecho \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID}) HealPoint:${healPoint} ST: ${str_STName}(${int_STID}) Aggro? ${bln_aggro}
 	/call InitEvents_Class
 /return

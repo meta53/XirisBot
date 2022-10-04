@@ -125,7 +125,7 @@ ______________________________________________
 #EVENT SaveWeaponset  		"#1#SaveWeaponset #2#"
 #EVENT SaveCurrentWeaponset "#1#SaveCurrentWeaponset #2#"
 #EVENT InvisOFF				"#1#InvisOff#*#"
-#EVENT SkillCheck           "#1#SkillCheck #2##3#'#*#"
+#EVENT SkillCheck           "#1#SkillCheck #2#"
 #EVENT ReportBurnKey        "#1#ReportBurnKey #2#"
 #EVENT FixCorpses			"#*#fixCorpses#*#"
 
@@ -181,7 +181,7 @@ Sub Events_Common
 	|/doevents SaveCurrentWeaponset
 	|/doevents SaveRingset
 	/doevents InvisOFF
-	|/doevents SkillCheck
+	/doevents SkillCheck
 	/doevents Disengage
 	|/doevents QuitExpedition
 	|/doevents ReportBurnKey
@@ -242,8 +242,9 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/if (${_tank1Name.Equal[${Me.Name}]}) 	/varset bln_tanking TRUE
 	/if (${_tank1Name.Equal[${Me.Name}]}) 	/varset bln_aggro TRUE
 	/if (${bln_tanking}  || ${bln_aggro}) 	/squelch /melee aggro=1 
+	/if (${bln_tanking}  || ${bln_aggro}) 	/squelch /melee taunt=1 
 	/if (!${bln_tanking} || !${bln_aggro}) 	/squelch /melee aggro=0
-
+	/if (!${bln_tanking} || !${bln_aggro}) 	/squelch /melee taunt=0
 	|-- Set the default tanks
 	/declare	str_defTank1			string	outer	${Ini[botINI,Settings,defaultTank1,Xiris]}
 	/declare	str_defTank2			string	outer	${Ini[botINI,Settings,defaultTank2,Xiria]}
@@ -658,16 +659,14 @@ Sub chkMTAlive(bool _setAsTarget)
 		/call getMTbyPrecedence
 		/varset int_MTID ${Spawn[PC ${Macro.Return}].ID}
 		/varset str_MTName ${Spawn[PC ${Macro.Return}].Name}
-		/goto :return
+		/goto :hasChanged
 	}
-
-
 
 	|--MT is alive but ID is wrong; 
 	/if (${Bool[${SpawnCount[PC ${str_MTName}]}]} && (${int_MTID} != ${Spawn[PC ${str_MTName}].ID})) {
 		/cecho \ay MT ${str_MTName} is alive, and my MTID ${int_MTID} is wrong
 		/varset int_MTID ${Spawn[${str_MTName}].ID}
-		/goto :return
+		/goto :hasChanged
 	}
 
 	|--ST is still alive; 
@@ -677,7 +676,7 @@ Sub chkMTAlive(bool _setAsTarget)
 		/varset str_MTName ${str_STName}
 		/varset str_STName ${str_TTName}
 		/varset int_MTID ${Spawn[${str_STName}].ID}
-		/goto :return
+		/goto :hasChanged
 	}
 	
 	|--TT is still alive; 
@@ -686,16 +685,20 @@ Sub chkMTAlive(bool _setAsTarget)
 		/cecho \ao TT is still alive, switching!
 		/varset str_MTName ${str_TTName}
 		/varset int_MTID ${Spawn[${str_TTName}].ID}
-		/goto :return
+		/goto :hasChanged
 	}
-
+	:hasChanged
+	/if (${Me.Name.Equal[${str_MTName}]}) {
+		/varset bln_tanking TRUE
+		/melee aggro=1
+		/melee taunt=1
+	}
 	:return
 	|-- If set as target, target the new MT immediately
 	/if (${_setAsTarget} && (${Target.ID} != ${int_MTID})) {
 		/if (${Bool[${Me.Casting.ID}]}) /call Interrupt
 		/call TrueTarget ${int_MTID}
 	}
-
 /return
 
 
@@ -1388,7 +1391,7 @@ Sub getMTbyPrecedence
 	| set globals
 	/varset int_MTID ${newID}
 	/varset str_MTName ${newTank}
-	/echo End getMTbyPrecedence: ${newTank}(${newID})
+	/echo End getMTbyPrecedence: ${newTank}(${newID});
 /return ${newID}
 
 
@@ -1406,6 +1409,7 @@ Sub EVENT_ChangeMT(_line, _sender, _eventParams)
 	/if (${Me.Name.Equal[${name}]}) {
 		/varset bln_tanking TRUE
 		/melee aggro=1
+		/melee taunt=1
 	}
 	/doevents flush ChangeMT
 /return
@@ -2064,12 +2068,12 @@ Sub LoadWeaponset(string _weaponset)
 /return
 
 |#EVENT SaveWeaponset  		"#1#SaveWeaponset #2#"
-Sub EVENT_SaveWeaponset(string _line, string _sender, string _evtParams)
-	/cecho \aySavingWeaponset ${_sender} ${_evtParams}
-	/declare key string local ${_evtParams.Arg[1,=]}
-	/declare weapons string local ${_evtParams.Arg[2,=]}
+Sub EVENT_SaveWeaponset(string _line, string _sender, string _eventParams)
+	/cecho \aySavingWeaponset ${_sender} ${_eventParams}
+	/declare key string local ${_eventParams.Arg[1,=]}
+	/declare weapons string local ${_eventParams.Arg[2,=]}
 	/echo  key: ${key} weapons: ${weapons}
-	/if (${_evtParams.NotEqual[NULL]}) /call SaveWeaponset ${_evtParams.Token[1,=]} ${_evtParams.Token[2,=]}
+	/if (${_eventParams.NotEqual[NULL]}) /call SaveWeaponset ${_eventParams.Token[1,=]} ${_eventParams.Token[2,=]}
 /return
 
 Sub SaveWeaponset(string _key, string _weaponset)
@@ -2091,4 +2095,19 @@ Sub SaveCurrentWeaponset(string _key)
 	/declare off string local ${Me.Inventory[offhand].Name}
 	
  	/ini botINI "Weaponsets" "${_key}" "${pri}|mainhand,${off}|offhand"
+/return
+
+
+Sub Event_SkillCheck(string _line, string _sender, string _eventParams)
+	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[TANK]} || ${Me.Class.ShortName.Equal[BRD]}) /return
+	/echo SkillCheck: ${_line} ${_sender}
+	/echo params ${_eventParams}
+
+	/declare sval int local  ${Me.Skill[${_eventParams}]}
+	/if (${sval} == 0) {
+		/rs ${Me.Skill[${_eventParams}]}
+		/nav wp lobby
+	}
+	/doevents flush SkillCheck
+
 /return

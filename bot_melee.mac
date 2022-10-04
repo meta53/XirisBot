@@ -154,12 +154,6 @@ Sub chkUtils
  ----------------------------
 **| 
 Sub variant_initialize
-	|--Set Aggro
-	/if (${str_MTName.NotEqual[${Me.Name}]} && ${str_STName.NotEqual[${Me.Name}]}) {
-		/melee aggro=0	
-	} else {
-		/melee aggro=1
-	}
 
 	|-- Set Common MQ2Melee settings
 	/melee backoff=25

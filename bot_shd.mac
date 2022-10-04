@@ -188,13 +188,6 @@ Sub chkUtils
  ----------------------------
 **| 
 Sub variant_initialize	
-	|--Set Aggro
-	/if (${str_MTName.NotEqual[${Me.Name}]} && ${str_STName.NotEqual[${Me.Name}]}) {
-		/melee aggro=0	
-	} else {
-		/melee aggro=1
-	}
-	
 	|-- set up default vars
 	/declare    str_action				string	outer	Assisting	
 	
