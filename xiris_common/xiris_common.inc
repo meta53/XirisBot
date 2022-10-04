@@ -222,11 +222,12 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/declare 	PriestClasses 			string	outer	CLR,DRU,SHM
 	/declare 	CasterClasses 			string	outer	ENC,MAG,NEC,WIZ
 	/declare 	RangedClasses			string	outer	RNG
-	/declare 	RaidGroupLeaders[9] 	string outer 	NULL 
-	/declare 	RaidDIClerics[6] 		string outer 	NULL
+	/declare 	str_raidGroupMode		string  outer   DEFAULT
+	/declare 	RaidGroupLeaders[9] 	string  outer 	NULL 
+	/declare 	RaidDIClerics[6] 		string  outer 	NULL
 
-	/call SetRaidGroupMode HATRED
-	/call SetRaidDIClerics HATRED
+	/call SetRaidGroupMode ${str_raidGroupMode}
+	/call SetRaidDIClerics ${str_raidGroupMode}
 
 	/declare timer_di_request timer outer 30s
 	/declare i int local 0
@@ -1011,6 +1012,7 @@ Sub SetRaidGroupMode(string _mode)
 	| 	Xiris,Xiria,Xirian,Xeixa,Sadelia,Xaeliea,Xaexa,Xaia,Xepatia
 	| 	in the future maybe have an event that can set this
 	|/echo Setting raid group mode to ${_mode}
+	/varset str_raidGroupMode ${_mode}
 	/deletevar RaidGroupLeaders 
 	/cecho \aySetting raid group mode to ${_mode}
 	/if (${_mode.Equal[RAID]}) {
@@ -1080,7 +1082,6 @@ Sub SetRaidGroupMode(string _mode)
 			/varset	RaidGroupLeaders[2] Xirin
 		}
 	}
-	
 /return
 
 |-------------------------------------------------------------------------------- 

@@ -78,6 +78,8 @@ Sub Events_Curing
 	/doevents cureGroupPoison
 	/doevents cureGroupDisease
 	/doevents cureGroupCurse
+	/doevents AutoCureMTOn
+	/doevents AutoCureMTOff
 /return
 
 Sub Events_Curing_Background

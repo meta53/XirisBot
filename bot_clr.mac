@@ -142,8 +142,8 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 			|-- verify engagement status (Acts like chkTargetStatus, but for non meleeing)
 			/call chkMobDead
 
-			|-- class specific
-			/call chkDebuffsOnSingleTarget ${int_targetID}
+			|-- class specific - removed debuff check since we only really do this on command
+			|/call chkDebuffsOnSingleTarget ${int_targetID}
 			/call chkYaulp
 
 			/if (${bln_battleCleric}) {

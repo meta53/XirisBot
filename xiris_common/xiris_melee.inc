@@ -38,16 +38,6 @@ REVISION HISTORY
 #EVENT YesDS			"#1# tells the raid#*#'YesDS #*#'"
 #EVENT YesDS 			"[ #1# #*#]#*#YesDS#*#"
 
-#EVENT Sing				"#1# tells the group#*#'Sing #2#'"
-#EVENT Sing				"#1# tells you#*#'Sing #2#'"
-#EVENT Sing				"#1# tells the raid#*#'Sing #2#'"
-#EVENT Sing 			"[ #1# #*#]#*#Sing #2#"
-
-#EVENT Hush				"#1# tells the group#*#'Hush#*#'"
-#EVENT Hush				"#1# tells you#*#'Hush#*#'"
-#EVENT Hush				"#1# tells the raid#*#'Hush#*#'"
-#EVENT Hush 			"[ #1# #*#]#*#Hush#*#"
-
 #EVENT RiposteDisc		"#1# tells the group#*#'RiposteDisc#*#'"
 #EVENT RiposteDisc		"#1# tells you#*#'RiposteDisc#*#'"
 #EVENT RiposteDisc		"#1# tells the raid#*#'RiposteDisc#*#'"
@@ -68,8 +58,6 @@ Sub InitEvents_Melee
 Sub Events_Melee
 	/doevents NoDS
 	/doevents YesDS
-	/doevents Sing
-	/doevents Hush
 	/doevents ToggleMQ2Melee
 	/doevents Leashing
 	/doevents AutoAssist
@@ -128,18 +116,6 @@ Sub EVENT_YesDS(_line, _sender, _eventParams)
 	/if (${Me.Class.ShortName.Equal[BRD]} && !${Medley.Active}) /medley melee
 	/if (${Me.Class.ShortName.Equal[BRD]}) /varset str_currentMedley melee
 	/doevents flush YesDS
-/return
-
-Sub EVENT_Sing(_line, _sender, _eventParams)	
-	/if (${Me.Class.ShortName.Equal[BRD]} && ${Medley.Active}) /medley stop
-	/if (${Me.Class.ShortName.Equal[BRD]} && !${Medley.Active}) /medley ${_eventParams}
-	/if (${Me.Class.ShortName.Equal[BRD]}) /varset str_currentMedley ${_eventParams}
-	/doevents flush Sing
-/return
-
-Sub EVENT_Hush(_line, _sender, _eventParams)
-	/if (${Me.Class.ShortName.Equal[BRD]} && ${Medley.Active}) /medley stop
-	/doevents flush Hush
 /return
 
 Sub EVENT_RiposteDisc(_line, _sender, _eventParams)
