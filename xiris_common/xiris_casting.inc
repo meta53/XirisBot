@@ -96,7 +96,7 @@ Sub chkNuke
 
 	/if (!${bln_engaged}) 		/return
 	/if (${bln_useFastOnly})	/return
-	/if (${NUKE_Total} == 0) /return 
+	/if (${NUKE_Total} == 0)    /return 
 	/if (${AENUKE_Active}) 		/return
 	/if (${NUKE_DelayTimer} && ${NUKE_HasCastOnce})	 	/return 
 
@@ -465,6 +465,7 @@ Sub chkDOT
 	/declare isNamed bool local FALSE
 	/call TargetNamedCheck ${Target.ID}
 	/varset isNamed ${Macro.Return}
+	/echo chkDOT ${isNamed}
 
 	|-- target HP and my mana check
 	/if (${isNamed}  && (${Target.PctHPs} < ${DOT_StopHPIfNamed}))		/return
@@ -536,7 +537,7 @@ Sub chkDOT
 			|-- Think about adding the named stop point here at some point in future
 			/if (${Target.PctHPs}<=${DOT_${i}_StartHP} && ${Target.PctHPs}>=${DOT_${i}_StopHP}) {
 				/if (${Me.CurrentMana}>=${Spell[${DOT_${i}_Spell}].Mana} && (${Me.SpellReady[${DOT_${i}_Spell}]} || ${Me.Class.ShortName.Equal[BRD]}) && ${Target.Distance}<=${Spell[${DOT_${i}_Spell}].Range} && ${Target.LineOfSight} && (${DOT_${i}_RecastTimer} <= 0)) {
-					/varcalc dotDuration ${Spell[${DOT_${i}_Spell}].Duration} * 6
+					/varset dotDuration ${Spell[${DOT_${i}_Spell}].Duration.TotalSeconds}
 					/if (${Me.Class.ShortName.Equal[BRD]}) {
 						/medley queue "${DOT_${i}_Spell}"
 						/cecho \ag ${DOT_${i}_Spell}  : DELAYING for \ay${dotDuration}s \agrefresh	
@@ -765,13 +766,16 @@ Sub EVENT_SetUseFastOnly(_chatText, _use)
 |--------------------------------------------------------------------------------
 
 Sub EVENT_SetResistType(_chatText, _strResists) 
+	/if (${str_classArchetype.Equal[MELEE_END]} || ${Me.Class.ShortName.Equal[WAR]}) /return
 	/cecho \awSetting resist types: \ag${_strResists}
+	
 	/if (${_strResists.Equal[ALL]}) /varset _strResists ${str_defaultResistTypes}
 	/call SetResistTypes ${_strResists}
 	/doevents flush SetResistType
 /return 
 
 Sub SetResistTypes(string _typesCSV)
+	/if (${str_classArchetype.Equal[MELEE_END]} || ${Me.Class.ShortName.Equal[WAR]}) /return
 	/varset str_useResistTypes ${_typesCSV}
 /return
 
@@ -830,6 +834,7 @@ Sub clearSpellLineUp(string _prefix){
 	/declare propertyCount int local ${propertyList.Count[|]}
 	/declare property string local 
 	/declare TypeTotal int local ${${_prefix}_Total}
+	/if (!${TypeTotal}) /return
 	/for i 1 to ${TypeTotal}
 		/for j 1 to ${propertyCount}
 			/varset property ${propertyList.Token[${j},|]}
@@ -861,6 +866,7 @@ Sub resetSpellLineup {
 	}
 
 		|--AE Nuke
+	/declare AENUKE_Active				bool	outer   FALSE
 	/declare AENUKE_Total 				int		outer	${Ini[botINI,AENUKE,AENUKE_Total,0]}	
 	/declare AENUKE_DelayTimer			timer	outer	${Ini[botINI,AENUKE,AENUKE_DelayTimer,0]}
 	/declare AENUKE_Mana_Minimum		int		outer	${Ini[botINI,AENUKE,AENUKE_Mana_Minimum,10]}

@@ -491,8 +491,8 @@ Sub EngageTarget(int _targetID)
 
 Sub chkTargetStatus
 	:chkTargetValid
-	/if (${Bool[${Target.ID}]} && ${Target.ID} == ${int_MTID} && (${Me.XTarget}==0 || ${SpawnCount[npc id ${int_targetID} radius 200]}) &&  ${bln_engaged}) {
-		/echo target is MT and I have nothing else around me
+	/if (${Bool[${Target.ID}]} && ${Target.ID} == ${int_MTID} && !${SpawnCount[npc id ${int_targetID} radius 200]} &&  ${bln_engaged}) {
+		/cecho \agTarget Status \awXT:\ag${Me.XTarget} \aw|| no \ag${int_targetID}\aw within radius 200 (\ag!${SpawnCount[npc id ${int_targetID} radius 200]}\aw)
 		/goto :disengage
 	}
  	/if (!${Bool[${Target.ID}]} && !${bln_engaged}) /goto :return
@@ -503,9 +503,9 @@ Sub chkTargetStatus
 		| Target is dead?
 		/cecho \awTarget is dead: \ayPctHP \ag!${Bool[${Target.PctHPs}]} \ao|| \ay!TargetID \ag!${Bool[${Target.ID}]} \ao|| \ayCorpseFound \ag${Spawn[id ${int_targetID}].Name.Find[_corpse]}
 		/goto :disengage
-	} else /if ((${Me.XTarget}==0 && !${SpawnCount[npc radius 100]}) && ${bln_engaged}) {
+	} else /if ((${Me.XTarget}==0 && !${SpawnCount[npc radius 200]}) && ${bln_engaged}) {
 		| Target is over 400 distance away, that will blur it
-		/echo xt: ${Me.XTarget} count:${SpawnCount[npc radius 300]}  target is over 400 dist
+		/cecho \agTarget Status \awXT:\ag${Me.XTarget} \aw|| no \ag${int_targetID}\aw within radius 200 (\ag!${SpawnCount[npc id ${int_targetID} radius 200]}\aw)
 		/goto :disengage
 	} else /if ((${Target.ID} != ${int_targetID}) && (${Spawn[id ${int_targetID}].PctHPs} >= 0 && !${Spawn[id ${int_targetID}].Name.Find[_corpse]})) {
 		| I am not targetting the correct NPC
@@ -1519,12 +1519,12 @@ SUB EVENT_shrinkGroup
 |- @param TargetID: The ID of the spawn you wish to check on
 |-------------------------------------------------------------|
 Sub TargetNamedCheck(_id)
-	|/echo TargetNamedCheck ${_id}
 	/if (${Spawn[npc id ${_id}].Named} || ${Spawn[npc id ${_id}].Name.Find[#]}) /return TRUE
 	/if (${Zone.ShortName.Equal[tacvi]} || ${Zone.ShortName.Equal[txevu]}) /return TRUE
 	/if (${Zone.ShortName.Equal[chambersa]} ||${Zone.ShortName.Equal[chambersb]} ||${Zone.ShortName.Equal[chambersc]} ||${Zone.ShortName.Equal[chambersd]}||${Zone.ShortName.Equal[chamberse]}) /return TRUE
 	/if (${Zone.ShortName.Equal[anguish]}) /return TRUE
 	/if (${Zone.ShortName.Equal[arena]}) /return TRUE
+	/if (${Zone.ShortName.Equal[thundercrest]}) /return TRUE
 /return FALSE
 	
 

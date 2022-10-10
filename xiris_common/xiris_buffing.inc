@@ -202,8 +202,8 @@ Sub cmbtBuffMT
 		/call TrueTarget ${Spawn[pc =${str_MTName}].ID}
 		/call MQ2Cast "${bSpell}" ${bGem}
 		/if (${Cast.Result.Equal[CAST_SUCCESS]}) {
-			/cecho \ag ${bSpell} ${Cast.Result} : DELAYING for \ay ${Spell[${bSpell}].Duration}s \agrefresh
-			/varcalc delay	(${Spell[${bSpell}].Duration} * 6) - 10
+			/cecho \ag ${bSpell} ${Cast.Result} : DELAYING for \ay ${Spell[${bSpell}].Duration.TotalSeconds}s \agrefresh
+			/varset delay	${Spell[${bSpell}].Duration.TotalSeconds}
 			/varset CMBTBUFF_1_Timer ${delay}s
 		}
 	}
@@ -231,7 +231,7 @@ Sub cmbtBuffGRP
 	/declare buffGem	  string	local
 	/declare delay		  int       local	0
 	/declare bStatus 	  string    local 
-	/declare bDuration    string    local
+	/declare bDuration    int       local
 	/declare bId          string    local
 
 	| -- loop through the combat buffs
@@ -253,15 +253,17 @@ Sub cmbtBuffGRP
 			/varset gClass ${Spawn[pc =${gName}].Class.ShortName}
 
 			/if (${Select[${gClass},WAR,SHD,PAL,MNK,RNG,ROG,BRD,BER]}) {
-				/dquery ${gName} -q "Me.Buff[${buffSpell}].Duration"
+				/dquery ${gName} -q "Me.Buff[${buffSpell}].Duration.TotalSeconds"
 				/delay 20 ${DanNet.Query.Received}
-				/varset bDuration ${DanNet.Q}
-				/cecho cmbtBuffGRP: \aw${gName} -q \ag"Me.Buff[${buffSpell}].Duration" == \ar ${bDuration}
-				/if (!${Bool[${bDuration}]} ) {
-					/cecho \awbDuration: \ay${bDuration}
+				/varcalc bDuration ${DanNet.Q}
+				/cecho cmbtBuffGRP: \aw${gName} -q \ag"Me.Buff[${buffSpell}].Duration" == \ar ${bDuration} \awbool \ag${Bool[${bDuration}]}
+				/if (${Bool[${bDuration}]} ) {
+					
 					/if (${bDuration} < 3 ) {
+						/cecho \awbDuration: \ay${bDuration} \aw<3s, \agrecasting
 						/goto :castCMBTBuff
 					} else {
+						/cecho \awDuration: \ay${bDuration} \aw>= 3s, \aoskipping 
 						/goto :nextGroupMember
 					}
 				} else {
@@ -277,8 +279,8 @@ Sub cmbtBuffGRP
 			/call TrueTarget ${Spawn[pc =${gName}].ID}
 			/call MQ2Cast "${buffSpell}" ${buffGem}
 			/if (${Cast.Result.Equal[CAST_SUCCESS]}) {
-				/cecho \ag ${buffSpell} ${Cast.Result} : DELAYING for \ay ${Spell[${buffSpell}].Duration}s \agrefresh
-				/varcalc delay	(${Spell[${buffSpell}].Duration} * 6) - 10
+				/cecho \ag ${buffSpell} ${Cast.Result} : DELAYING for \ay ${Spell[${buffSpell}].Duration.TotalSeconds}s \agrefresh
+				/varset delay	${Spell[${buffSpell}].Duration.TotalSeconds}
 				/varset CMBTBUFF_${i}_Timer ${delay}s
 			}
 		:nextGroupMember
@@ -314,10 +316,10 @@ Sub doGroupBuffOnTarget(string tgt)
 
 	/for i 1 to ${int_oocBuffTotal}
 		/varset 	buffSpell    ${OOCBUFF_${i}}
-		/varcalc	buffDuration ${Spell[${OOCBUFF_${i}}].Duration} * 6
+		/varcalc	buffDuration ${Spell[${OOCBUFF_${i}}].Duration.TotalSeconds}
 		/varset		buffGem		 ${OOCBUFF_${i}_Gem}
 
-		|/echo spell:${buffSpell} duration: ${buffDuration} gem: ${buffGem}
+		|/echo spell:${buffSpell} duration: ${buffDuration}s gem: ${buffGem}
 		:spellReadyWait
 		/varcalc spellReadyCount ${spellReadyCount}+1
 		/if (${spellReadyCount} > 50) {
@@ -614,7 +616,6 @@ Sub chkOOCBuffs
 	}
 
 	/declare i    		  int		local
-	/declare buffDuration int		local
 	/declare buffSpell    string	local
 	/declare buffGem	  string	local
 
@@ -633,7 +634,6 @@ Sub chkOOCBuffs
 
 		/memspellset buff
 		/cecho \awOOC Buff: \ag${buffSpell}
-		/varcalc	buffDuration ${Spell[${OOCBUFF_${i}}].Duration} * 6
 		/varset		buffGem		 ${OOCBUFF_${i}_Gem}
 
 		:spellReadyWait
@@ -763,7 +763,7 @@ Sub xbot_initialize_buffing
 		/declare CMBTBUFF_${cmbt}_Use 			bool	outer	${Ini[botINI,CombatBuffs,CMBTBUFF_${cmbt}_Use]}
 		/declare CMBTBUFF_${cmbt}_Gem 			string	outer	${Ini[botINI,CombatBuffs,CMBTBUFF_${cmbt}_Gem]}
 		/declare CMBTBUFF_${cmbt}_Active		bool	outer 	FALSE
-		/declare CMBTBUFF_${cmbt}_Timer			timer   outer   ${Spell[CMBTBUFF_${cmbt}].Duration} * 6
+		/declare CMBTBUFF_${cmbt}_Timer			timer   outer   ${Spell[CMBTBUFF_${cmbt}].Duration.TotalSeconds}
 		/for cmbtG 0 to ${Group}
 			/declare CMBTBUFF_${cmbt}_${cmbtG}_Timer	timer   outer   0
 		/next cmbtG

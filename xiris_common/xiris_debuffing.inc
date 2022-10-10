@@ -84,7 +84,7 @@ Sub CastDebuffsOnTarget(int _targetID, bool _forced)
 
 		:debuffCast
 			|/echo CastDebuffsOnTarget ${db}:: "${DEBUFF_${db}}" ${DEBUFF_${db}_Gem} ${DEBUFF_${db}_MaxTries} ${Target.ID}
-			/varcalc debuffDuration ${Spell[${DEBUFF_${db}}].Duration} * 6
+			/varset debuffDuration ${Spell[${DEBUFF_${db}}].Duration.TotalSeconds}
 			/if (${Me.Class.ShortName.Equal[BRD]}) {
 				/medley queue "${DEBUFF_${db}}"
 				/docommand /${cmdChannel} << ${Target.Name} >> ${DEBUFF_${db}}

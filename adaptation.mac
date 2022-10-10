@@ -7,8 +7,7 @@ Sub Main
     /dt Xinshia changeMT Xirin
     /dt Xenshia changeMT xirin
 
-    | Set the mode to efficient
-    /dgt healMode EFFICIENT 
+    | Set the mode to normal
     /dt Xiria offtankOn
     /dt Xirin offtankOn
 

@@ -124,8 +124,15 @@ Sub StopFollowing
 	/squelch /stick off
 	/if (${Navigation.Active}) 		/squelch /nav stop
 	/if (${Me.Class.ShortName.Equal[ROG]}) {
+		/if (${Me.AbilityReady["Hide"]}) {
 			/squelch /melee hide=1
+			/doability hide
+		}
+		/if (!${Me.Sneaking}) {
 			/squelch /melee sneak=1
+			/doability sneak
+		}
+		
 	}
 /return
 
@@ -138,12 +145,12 @@ SUB AquireFollow(string _type, string _leader)
 		/if (${Stick.Active}) 			/squelch /stick off
 		/if (${Navigation.Active}) 		/squelch /nav stop
 		/if (${Me.Class.ShortName.Equal[ROG]}) {
-			/if (${Melee.Silent}) {
-				/melee sneak=0
+			/if (${Me.Sneaking}) {
+				/squelch /melee sneak=0
 				/doability sneak
 			}
-			/if (${Melee.Hidden}) {
-				/melee hide=0
+			/if (!${Me.AbilityReady["Hide"]}) {
+				/squelch /melee hide=0
 				/doability hide
 			}
 		}

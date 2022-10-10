@@ -311,8 +311,7 @@ Sub chkNeedCure
 		}
 
 		| Get the range of this cure
-		/call getCureRange ${cureType}
-		/varset cureRange ${Int[${Macro.Return}]}	
+		/call setCureRange ${cureType}
 
 		| Start asking for cure
 		/cecho \arCURE REQUIRED:\ay Counters:\ag${counters} \ayType:\ag${cureType} \ayRange:\ag${cureRange}
@@ -467,18 +466,18 @@ Sub getGroupCurer(string _curerType)
 	
 /return ${myCurer}
 
-Sub getCureRange(string _cureType) 
+Sub setCureRange(string _cureType) 
 	/if (${_cureType.Equal[poison]}) {
-		/if (${Spawn[${str_myCurer}].Class.ShortName.Equal[SHM]}) /return 100 
-		/if (${Spawn[${str_myCurer}].Class.ShortName.Equal[PAL]}) /return 100 
-		/if (${Spawn[${str_myCurer}].Class.ShortName.Equal[DRU]}) /return 100 
-		/return 200
+		/varset cureRange 200
+		/if (${Spawn[${str_myCurer}].Class.ShortName.Equal[SHM]}) /varset cureRange 100
+		/if (${Spawn[${str_myCurer}].Class.ShortName.Equal[PAL]}) /varset cureRange 100
+		/if (${Spawn[${str_myCurer}].Class.ShortName.Equal[DRU]}) /varset cureRange 100
 	} else /if (${_cureType.Equal[curse]}) { 
-		/return 100
+		/varset cureRange 100
 	} else /if (${_cureType.Equal[disease]}) { 
-		/return 100
+		/varset cureRange 100
 	} else /if (${_cureType.Equal[corruption]}) { 
-		/return 100
+		/varset cureRange 100
 	}
 
 /return 
@@ -574,13 +573,21 @@ Sub handleCureRequest(string _name, int _id, string _cureType, int _counters, bo
 	/declare    int_count     int		local   ${_counters}
 	/declare    int_castCount float     local   1
 
+
 	/if (!${Bool[${_counters}]}) {
 		/dt ${_name} I cannot cure you, you sent no counters!
 		/return
 	}
 
+	| Get the range of this cure
+	/call setCureRange ${_cureType}
+
+	/if (${Spawn[pc ${_name}].Distance} > ${cureRange}) /return
+
+
 	/if (${_cureType.Equal[disease]}) {
 		/cecho \aoDISEASE CURE selected.
+		
 		/if (!${bln_hasDiseaseCure}) {
 			/echo I cannot cure Disease
 			/dt ${_name} I cannot cure you
@@ -672,7 +679,7 @@ Sub xbot_initialize_curing
 	| Temporary work around
 	/if (!${Defined[bln_jelvanEngaged]}) /declare bln_jelvanEngaged bool outer FALSE
 	
-	/declare 	cureRange      int     outer   100
+	/declare 	cureRange     			int   	outer   100
 	/declare    bln_navCure   			bool    outer   FALSE
 	/declare    str_navCureStart  		string  outer 
 	/declare 	timer_cure_complain		timer   outer   0

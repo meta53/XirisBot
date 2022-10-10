@@ -31,7 +31,7 @@ REQUIRED INCLUDES
 #include xiris_common/xiris_common.inc
 
 #Turbo 40
-#Warning
+
 #EVENT Sing				"#1# tells the group#*#'Sing #2#'"
 #EVENT Sing				"#1# tells you#*#'Sing #2#'"
 #EVENT Sing				"#1# tells the raid#*#'Sing #2#'"

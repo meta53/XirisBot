@@ -102,9 +102,6 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 			|-- debuff lib
 			/call chkDebuffsOnSingleTarget ${int_targetID}
 
-			|-- class specific
-			/call chkConcussion
-			
 			|-- dps library (caster)
 			/call RunRaidEvents
     		/call RunClassEvents

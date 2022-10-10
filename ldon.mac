@@ -1183,7 +1183,7 @@ Sub chkBuffs
 	/if (${int_groupENCidx} != -1) {
 		/if (${timer_buffENC} == 0) {
 			|-- Check for Haste
-			/if (!${Me.Buff[Hastening of Salik].ID} || (${Me.Buff[Hastening of Salik].ID} && ${Me.Buff[Hastening of Salik].Duration.Seconds} < 45)) {
+			/if (!${Me.Buff[Hastening of Salik].ID} || (${Me.Buff[Hastening of Salik].ID} && ${Me.Buff[Hastening of Salik].Duration.TotalSeconds} < 45)) {
 				/g Requesting Haste from ${str_groupENCname}
 				/dgt ${str_groupENCname} doSpecificBuffOnChar Hastening of Salik
 				/varset timer_buffENC 30s
@@ -1203,14 +1203,14 @@ Sub chkBuffs
 	/if (${int_groupDRUidx} != -1) {
 		/if (${timer_buffDRU} == 0) {
 			|-- Check for 9
-			/if (!${Me.Buff[Blessing of Steeloak].ID} || (${Me.Buff[Blessing of Steeloak].ID} && ${Me.Buff[Blessing of Steeloak].Duration.Seconds} < 45)) {
+			/if (!${Me.Buff[Blessing of Steeloak].ID} || (${Me.Buff[Blessing of Steeloak].ID} && ${Me.Buff[Blessing of Steeloak].Duration.TotalSeconds} < 45)) {
 				/g Requesting Bo9 from ${str_groupDRUname}
 				/dgt ${str_groupDRUname} doSpecificBuffOnChar Blessing of Steeloak
 				/varset int_wait ${int_wait} + 5
 				/varset timer_buffDRU 30s
 			}
 			|-- Check for DS
-			/if (!${Me.Buff[Legacy of Nettles].ID} || (${Me.Buff[Legacy of Nettles].ID} && ${Me.Buff[Legacy of Nettles].Duration.Seconds} < 45)) {
+			/if (!${Me.Buff[Legacy of Nettles].ID} || (${Me.Buff[Legacy of Nettles].ID} && ${Me.Buff[Legacy of Nettles].Duration.TotalSeconds} < 45)) {
 				/g Requesting DS from ${str_groupDRUname}
 				/dgt ${str_groupDRUname} doSpecificBuffOnChar Legacy of Nettles
 				/varset int_wait ${int_wait} + 5
@@ -1225,14 +1225,14 @@ Sub chkBuffs
 		/if (${timer_buffCLR} == 0) {
 			|-- if there is a druid, then we want the mark, else, virtue (well, whatever it should be)
 			/if (${int_groupDRUidx} != -1) {
-				/if (!${Me.Buff[Balikor's Mark].ID} || (${Me.Buff[Balikor's Mark].ID} && ${Me.Buff[Balikor's Mark].Duration.Seconds} < 45)) {
+				/if (!${Me.Buff[Balikor's Mark].ID} || (${Me.Buff[Balikor's Mark].ID} && ${Me.Buff[Balikor's Mark].Duration.TotalSeconds} < 45)) {
 					/g Requesting Symbol from ${str_groupCLRname}
 					/dgt ${str_groupCLRname} doSpecificBuffOnChar Balikor's Mark
 					/varset int_wait ${int_wait} + 5
 					/varset timer_buffCLR 30s
 				}
 			} else {
-				/if ((!${Me.Buff[Hand of Virtue].ID} && !${Me.Buff[Blessing of Steeloak].ID}) || (${Me.Buff[Hand of Virtue].ID} && ${Me.Buff[Hand of Virtue].Duration.Seconds} < 45)) {
+				/if ((!${Me.Buff[Hand of Virtue].ID} && !${Me.Buff[Blessing of Steeloak].ID}) || (${Me.Buff[Hand of Virtue].ID} && ${Me.Buff[Hand of Virtue].Duration.TotalSeconds} < 45)) {
 					/g Requesting Aegolism from ${str_groupCLRname}
 					/dgt ${str_groupCLRname} doSpecificBuffOnChar Hand of Virtue
 					/varset int_wait ${int_wait} + 5
@@ -1247,7 +1247,7 @@ Sub chkBuffs
 	/if (${int_groupSHMidx} != -1) {
 		/if (${timer_buffSHM} == 0) {
 			|-- Check for Focus
-			/if (!${Me.Buff[Talisman of Wunshi].ID} || (${Me.Buff[Talisman of Wunshi].ID} && ${Me.Buff[Talisman of Wunshi].Duration.Seconds} < 45)) {
+			/if (!${Me.Buff[Talisman of Wunshi].ID} || (${Me.Buff[Talisman of Wunshi].ID} && ${Me.Buff[Talisman of Wunshi].Duration.TotalSeconds} < 45)) {
 				/g Requesting Focus from ${str_groupSHMname}
 				/dgt ${str_groupSHMname} doSpecificBuffOnChar Talisman of Wunshi
 				/varset int_wait ${int_wait} + 5
@@ -1261,14 +1261,14 @@ Sub chkBuffs
 			|	/varset timer_buffSHM 30s
 			|}
 			|-- Check for STA
-			/if (!${Me.Buff[Talisman of Fortitude].ID} || (!${Me.Buff[Talisman of Fortitude].ID} && ${Me.Buff[Talisman of Fortitude].Duration.Seconds} < 45)) {
+			/if (!${Me.Buff[Talisman of Fortitude].ID} || (!${Me.Buff[Talisman of Fortitude].ID} && ${Me.Buff[Talisman of Fortitude].Duration.TotalSeconds} < 45)) {
 				/g Requesting Fortitude from ${str_groupSHMname}
 				/dgt ${str_groupSHMname} doSpecificBuffOnChar Talisman of Fortitude
 				/varset int_wait ${int_wait} + 5
 				/varset timer_buffSHM 30s
 			}
 			|-- If there is no enchanter, we want haste too
-			/if ((${int_groupENCidx} == -1 && !${Me.Buff[Hastening of Salik].ID} && !${Me.Buff[Talisman of Celerity].ID}) || (${Me.Buff[Talisman of Celerity].ID} && ${Me.Buff[Talisman of Celerity].Duration.Seconds} < 45)) {
+			/if ((${int_groupENCidx} == -1 && !${Me.Buff[Hastening of Salik].ID} && !${Me.Buff[Talisman of Celerity].ID}) || (${Me.Buff[Talisman of Celerity].ID} && ${Me.Buff[Talisman of Celerity].Duration.TotalSeconds} < 45)) {
 				/g Requesting Haste from ${str_groupSHMname}
 				/dgt ${str_groupSHMname} doSpecificBuffOnChar Talisman of Celerity
 				/varset int_wait ${int_wait} + 5
