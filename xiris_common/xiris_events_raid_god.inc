@@ -557,10 +557,6 @@ Sub BalancerKillCaster(string _targetName, int _targetID, int _balanceTo)
 		/echo BalancerKillCaster ${_targetName}, ${_targetID} =>${_balanceTo}
 		/varset bln_balancing TRUE
 		/call EngageTarget ${_targetID}
-		/if (${Me.Class.ShortName.Equal[WIZ]}) /twist 3 4
-		/if (${Me.Class.ShortName.Equal[NEC]}) /twist 7
-		/if (${Me.Class.ShortName.Equal[MAG]}) /twist 4
-		/if (${Me.Class.ShortName.Equal[ENC]}) /twist 4
 	:BalancerCasterLoop
 		/if (${Target.PctHPs} < ${_balanceTo}) /goto :return
 		|/echo BalancerCasterLoop
@@ -575,7 +571,6 @@ Sub BalancerKillCaster(string _targetName, int _targetID, int _balanceTo)
 		/if (${Target.PctHPs} > ${_balanceTo}) /goto :BalancerCasterLoop
 	:return
 	/echo BalancerKillCaster return
-	/twist off
 	/pet hold on
 	/pet back off
 	/call Disengage
@@ -588,7 +583,6 @@ Sub EVENT_BALANCEOFF
 
 Sub BalancerReset
 	/echo BALANCE OFF ${Target.Name}
-	/twist off
 	/varset bln_balancing FALSE
 	
 	/if (${str_classArchetype.Equal[PRIEST]}) /return
@@ -606,6 +600,7 @@ Sub BalancerReset
 		/pet hold on
 	}
 	/doevents flush
+	/call Disengage
 
 	|-- Kvxe
 	/if (${str_classArchetype.NotEqual[CASTER]}) {
@@ -647,6 +642,7 @@ Sub EVENT_BALANCERAPE
 		/if (!${balanceRapeHeal}) /return
 		/if (${bln_annouce}) /${cmdChannel} ${str_currentHeal} > ${Target.Name} hp:${Target.PctHPs} m:${Me.PctMana} d:${Target.Distance}
 		/call MQ2Cast "${str_heal_normal}" gem2 1s
+		/if (!${SpawnCount[npc kvxe]}) /return
 	/goto :balanceRapeHeal
 /return
 	

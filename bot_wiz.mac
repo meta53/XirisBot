@@ -126,9 +126,6 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
     /goto :MainLoop
 /return
 
-
-
-
 |**
  ----------------------------
  Concussion  
@@ -138,7 +135,6 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 **|
 Sub chkConcussion
 	/if (!${bln_engaged} || ${Me.Invis}||${Me.Moving}||!${bln_concUse}) /return 
-	
 	|/echo chkConcussion: ${bln_concUse} && ${Me.Standing} && (${int_concCount}>=${int_concCountActive})
 	/if (${bln_concUse} && ${Me.Standing} && (${int_concCount}>=${int_concCountActive})) {
 		/call chkSpellMemorized "${str_concSpell}" ${str_concGem} TRUE

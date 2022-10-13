@@ -13,6 +13,7 @@ REVISION HISTORY
 	05.08.22	xiris	Integrated AERez.mac
 	06.29.22	xiris 	Updated all events to only be either generic, or [/gsay, /rsay, /tell, MQ2DanNet(dgt, dt)] only	
 						Updated the rez portion to work with new dannet handlers
+	10.13.22	xiris 	Update sub healCast to ignore hp checks on group heals					
 **|
 
 
@@ -487,7 +488,7 @@ Sub healMAINTANK
 	/if (${Spawn[id ${int_MTID}].PctHPs} <= 0) /return
 	/call setHealingSpell ${Target.PctHPs}
 	/cecho \aghealMAINTANK:\ao${str_MTName}\aw(\ay${int_MTID}\aw) \aw=>\ag${Target.Name}  \ao${str_currentHeal}
-	/call healCast ${int_MTID} ${Target.Name} "${str_currentHeal}"
+	/call healCast ${int_MTID} ${Target.Name} "${str_currentHeal}" FALSE
 	/if (${Me.Class.ShortName.NotEqual[CLR]}) /call TrueTarget ${int_targetID}
 /return
 
@@ -496,7 +497,7 @@ Sub healMAINTANKOLD
 	/varcalc	int_point_calcStopHeal ${Math.Calc[${int_point_tankPatch}*1.1]}	
 	/if (${Target.ID} != ${int_MTID}) /call TrueTarget ${int_MTID}
 	/echo healMAINTANK (healing.inc): ${int_MTID} ${Target.Name} "${str_heal_normal}"
-	/call healCast ${int_MTID} ${Target.Name} "${str_heal_normal}"
+	/call healCast ${int_MTID} ${Target.Name} "${str_heal_normal}" FALSE
 	/varset int_point_calcStopHeal	${int_point_tankPatch}
 /return
 
@@ -524,7 +525,7 @@ Sub healSELF
 	/if (${Target.ID} != ${Me.ID}) /call TrueTarget ${Me.ID}
 	/call setHealingSpell ${Me.PctHPs}
 	/cecho \aghealSELF:\ao${str_Me.Me.Name}\aw(\ay${Me.ID}\aw) \aw=>\ag${Target.Name}  \ao${str_currentHeal}
-	/call healCast ${Me.ID} ${Me.Name} "${str_currentHeal}"
+	/call healCast ${Me.ID} ${Me.Name} "${str_currentHeal}" FALSE
 	/if (${Me.Class.ShortName.Equal[CLR]}) /call TrueTarget ${int_MTID}
 	/if (${Me.Class.ShortName.NotEqual[CLR]}) /call TrueTarget ${int_targetID}
 /return
@@ -533,7 +534,7 @@ Sub healSELFOLD
 	/varcalc 	int_point_calcStopHeal ${Math.Calc[${int_point_selfPatch}*1.1]}
 	/if (${Target.ID} != ${Me.ID}) /call TrueTarget ${Me.ID}
 	/echo healSELF (healing.inc): ${Me.ID} ${Target.Name} "${str_heal_normal}"
-	/call healCast ${Me.ID} ${Me.Name} "${str_heal_normal}"
+	/call healCast ${Me.ID} ${Me.Name} "${str_heal_normal}" FALSE
 	/varset int_point_calcStopHeal	${int_point_selfPatch}
 /return
 
@@ -581,7 +582,7 @@ Sub healGRP
 		/varset int_inRange ${Int[${Macro.Return}]}
 		/if (${int_inRange}>=3) {
 			/cecho  \arGROUP  \ar${str_heal_group} \awon \ay${Me.Name}
-			/call healCast ${Me.ID} ${Me.Name} "${str_heal_group}"
+			/call healCast ${Me.ID} ${Me.Name} "${str_heal_group}" TRUE
 			/goto :return
 		} else {
 			/cecho \arGROUP not fired not enough in range \aw(\ay${int_inRange} < 3\aw)
@@ -592,7 +593,7 @@ Sub healGRP
 		/varset int_inRange ${Int[${Macro.Return}]}
 		/if (${int_inRange}>=3 && (${Me.CurrentMana} > ${Spell[${str_heal_groupHoT}].Mana})) {
 			/cecho  \apGROUP_HOT \ap${str_heal_groupHoT} \awon \ay${Me.Name}
-			/call healCast ${Me.ID} ${Me.Name} "${str_heal_groupHoT}"
+			/call healCast ${Me.ID} ${Me.Name} "${str_heal_groupHoT}" TRUE
 			/if (${Macro.Return.Equal["CAST_SUCCESS"]}) /varset timer_groupHoT 40s
 			/goto :return
 		} else {
@@ -626,7 +627,7 @@ Sub healGRP
 				/if (${str_healMode.Equal[EFFICIENT]}) /varset str_currentHeal ${str_heal_frantic_efficient}
 				/cecho  \aoFRANTIC \ag(${str_healMode})  \ar${str_currentHeal} \awon \ag ${memName}\aw(\ay${arr_groupHP[${i},3]}\aw)
 				/if ((${Me.CurrentMana} < ${Spell[${str_currentHeal}].Mana})) /goto :return
-				/call healCast ${arr_groupHP[${i},3]} ${Spawn[pc id ${arr_groupHP[${i},3]}].Name} "${str_currentHeal}"
+				/call healCast ${arr_groupHP[${i},3]} ${Spawn[pc id ${arr_groupHP[${i},3]}].Name} "${str_currentHeal}" FALSE
 				/goto :return	
 			}
 		} else /if (${arr_groupHP[${i},1]} <= ${int_point_grpPatch} && ${arr_groupHP[${i},2]} <= ${int_range_normal}) {
@@ -634,14 +635,14 @@ Sub healGRP
 			/if (${str_healMode.Equal[EFFICIENT]}) /varset str_currentHeal ${str_heal_normal_efficient}
 			/cecho \aoNORMAL \ag(${str_healMode})   \ay${str_currentHeal} \awon \ag ${memName}\aw(\ay${arr_groupHP[${i},3]}\aw)
 			/if ((${Me.CurrentMana} < ${Spell[${str_currentHeal}].Mana})) /goto :return
-			/call healCast ${arr_groupHP[${i},3]} ${Spawn[pc id ${arr_groupHP[${i},3]}].Name} "${str_currentHeal}"
+			/call healCast ${arr_groupHP[${i},3]} ${Spawn[pc id ${arr_groupHP[${i},3]}].Name} "${str_currentHeal}" FALSE
 			/goto :return
 		} else {
 			/if (!${use_heal_HoT}) /goto :next_groupMember
 			/if (${arr_groupHP[${i},1]} <= ${int_point_grpHot} && ${arr_groupHP[${i},2]} <= ${int_range_HoT} && !${timer_HoT_${arr_groupHP[${i},3]}}) {
 				/cecho  \aoHoT \ag(${str_healMode})   \ay${str_currentHeal} \awon \ag ${memName}\aw(\ay${arr_groupHP[${i},3]}\aw)
 				/if ((${Me.CurrentMana} < ${Spell[${str_heal_HoT}].Mana})) /goto :return
-				/call healCast ${arr_groupHP[${i},3]} ${Spawn[pc id ${arr_groupHP[${i},3]}].Name} "${str_heal_HoT}"
+				/call healCast ${arr_groupHP[${i},3]} ${Spawn[pc id ${arr_groupHP[${i},3]}].Name} "${str_heal_HoT}" TRUE
 				| If someone died, and came back their ID will be different. We need to recreate the timers
 				/if (!${Defined[${timer_HoT_${arr_groupHP[${i},3]}}]}) /call ReCreateGroupHoTTimers
 				/if (${Macro.Return.Equal["CAST_SUCCESS"]}) /varset timer_HoT_${arr_groupHP[${i},3]} 40s
@@ -743,13 +744,13 @@ Sub getGroupInRange(int _range)
  Calls chkHP while being cast in case we need to change
  ----------------------------
 **|
-Sub healCast(int _id, string _name, string _spell)
+Sub healCast(int _id, string _name, string _spell, bool _isGroup)
 	/if (${_name.Equal[NULL]} || ${_id} == 0) {
 		/cecho \arHEAL NAME is NULL || ID is \ao${_id}\ar something is fucked;
 		/return
 	}
 	/cecho \awhealCast \ayTarget:\ag${_name}(${_id}) \aydist: \ag${Target.Distance} \aycHP: \ag${Spawn[pc ${_name}].PctHPs} \aycSH: \ag${int_point_calcStopHeal} \ayspell: \ag"${_spell}"
-	/if (${Spawn[pc ${_name}].PctHPs} < ${int_point_calcStopHeal} && (${Me.CurrentMana} > ${Spell[${_spell}].Mana})) {
+	/if (${_isGroup} || (${Spawn[pc ${_name}].PctHPs} < ${int_point_calcStopHeal} && (${Me.CurrentMana} > ${Spell[${_spell}].Mana}))) {
 		/if (${Target.ID} != ${_id}) /call TrueTarget ${_id}
 		/call chkSpellMemorized "${_spell}" TRUE 2
 		/call MQ2Cast "${_spell}" gem2 1s chkHP
