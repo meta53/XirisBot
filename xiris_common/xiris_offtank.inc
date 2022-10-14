@@ -171,13 +171,13 @@ Sub xbot_initialize_offtanking
 	/declare int_OT_dist 			int 	outer 65
 	/declare int_offtankRadius		int     outer 85
 
-	
-
 	/call InitEvents_Offtanking
 	/squelch /alert clear 5
 	| Specific NPCs to never offtank
+	| Note in future pull from exclude list
 	/squelch /alert add 5 "Huhn-Abram"
 	/squelch /alert add 5 "Voracious Feran"
+	/squelch /alert add 5 "Uchti"
 
 /return
  

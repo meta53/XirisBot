@@ -322,16 +322,13 @@ Sub EVENT_Jelvan1
 	/if (!${Me.Standing}) /stand on
 	/if (${Navigation.Active}) /nav stop
 
-	/if (${Me.Class.ShortName.Equal[CLR]}) {
-		/return 
-		|/nav wp jelvan1Cleric
-		|/call MoveToPosition ${J1CY} ${J1CX} ${J1CZ} 30 FALSE
-	} else /if (${str_classArchetype.Equal[CASTER]}) {
-		/return
+	/if (${Me.Class.ShortName.Equal[CLR]} || ${str_classArchetype.Equal[CASTER]}) {
+		/goto :return 
 	} else {
 		/nav wp jelvan1Tank
 		/call MoveToPosition ${J1TY} ${J1TX} ${J1TZ} 30 FALSE
 	}
+	:return 
 /return 
 
 Sub EVENT_Jelvan2
@@ -345,34 +342,32 @@ Sub EVENT_Jelvan2
 		/nav wp jelvan2Tank
 		/call MoveToPosition ${J2TY} ${J2TX} ${J2TZ} 30 FALSE
 	}
+	:return 
 /return 
 
 Sub EVENT_Jelvan3
 	/doevents flush Jelvan3
 	/if (${Navigation.Active}) /nav stop
-
-	/if (${Me.Class.ShortName.Equal[CLR]}) {
-		/return 
-	} else /if (${str_classArchetype.Equal[CASTER]}) {
-		/return
+	/if (${Me.Class.ShortName.Equal[CLR]} || ${str_classArchetype.Equal[CASTER]}) {
+		/goto :return 
 	} else {
 		/nav wp jelvan3Tank
 		/call MoveToPosition ${J3TY} ${J3TX} ${J3TZ} 30 FALSE
 	}
+	:return 
 /return
 
 Sub EVENT_Jelvan4
 	/doevents flush Jelvan4
 	/if (${Navigation.Active}) /nav stop
 
-	/if (${Me.Class.ShortName.Equal[CLR]}) {
-		/return 
-	} else /if (${str_classArchetype.Equal[CASTER]}) {
-		/return
+	/if (${Me.Class.ShortName.Equal[CLR]} || ${str_classArchetype.Equal[CASTER]}) {
+		/goto :return 
 	} else {
 		/nav wp jelvan4Tank
 		/call MoveToPosition ${J4TY} ${J4TX} ${J4TZ} 30 FALSE
 	}
+	:return 
 /return
 
 
@@ -442,9 +437,9 @@ Sub Event_HanvarRetreat(string _sender, string _line, string _eventParams)
 			/squelch /target clear
 			/melee reset
 			/melee reset
-			
-		} else /if (${Me.Class.ShortName.NotEqual[CLR]}) {
 			/warp wp hanvarSafe
+		} else /if (${Me.Class.ShortName.NotEqual[CLR]}) {
+			|/warp wp hanvarSafe
 		}
 		
 	}
