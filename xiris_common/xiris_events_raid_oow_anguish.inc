@@ -400,16 +400,7 @@ Sub chkHanvarEvents
 	/doevents HanvarKill
 
 	/if (${bln_hanvarEngaged}) /call chkHanvarCaster
-	|**
-	/if (${Me.Buff[Chains of Anguish].ID}) {
-		| echo duration is in ticks (6s). timers are in 1/10ths
-		/declare chains int local 
-		/varset chains ${Me.Buff[Chains of Anguish].Duration.TotalSeconds}
-		/cecho \ar Chains of Anguish: \ao${Me.Buff[Chains of Anguish].Duration.TotalSeconds}\aws
-		/varset timer_hanvar_ae ${Me.Buff[Chains of Anguish].Duration.TotalSeconds}s
-	}
-	**|
-
+	
 /return
 
 Sub Event_HanvarStart
@@ -424,12 +415,6 @@ Sub Event_HanvarStun(string _sender, string _line, string _eventParams)
 	/doevents flush HanvarStun
 /return
 
-Sub Event_HanvarAEd(string _sender, string _line, string _eventParams)
-	/cecho \arHanvar AE Triggered \agStarting \aw${_eventParams}s \ag Timer  
-	/varset timer_hanvar_ae ${Int[${_eventParams}]}s
-	/doevents flush HanvarAEd
-/return
-
 Sub Event_HanvarRetreat(string _sender, string _line, string _eventParams)
 	/cecho \arHanvar Retreat Triggered \agStarting \aw${_eventParams}s \ag Timer
 	/if (${Target.Name.Find[Hanvar]} || ${Spawn[npc Hanvar].Distance} < 100) {
@@ -438,10 +423,7 @@ Sub Event_HanvarRetreat(string _sender, string _line, string _eventParams)
 			/melee reset
 			/melee reset
 			/warp wp hanvarSafe
-		} else /if (${Me.Class.ShortName.NotEqual[CLR]}) {
-			|/warp wp hanvarSafe
-		}
-		
+		} 
 	}
 	/doevents flush HanvarRetreat
 /return
@@ -469,7 +451,6 @@ Sub setupForHanvarSHM
 	/varset str_spellset hanvar
 	/memspellset ${str_spellset}
 	
-
 	| Reset my DOT types
 	| |_Spell|_Use|_Gem|_MaxTries|_NamedOnly|_StartHP|_StopHP|_Resist|_HasCastOnce|_RecastTimer
 

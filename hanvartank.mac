@@ -6,11 +6,9 @@
 
 #EVENT HanvarChainsOff		"#*#You break free of the chains#*#"
 
-
-
-#EVENT HanvarStun       "#*#Your eardrums begin to bleed#*#"
-#EVENT HanvarStun		"#*#You resist the Wail of Anguish#*#"
-#EVENT EngageHanvar		"#*#EngageHanvar#*#"
+#EVENT HanvarStun       	"#*#Your eardrums begin to bleed#*#"
+#EVENT HanvarStun			"#*#You resist the Wail of Anguish#*#"
+#EVENT EngageHanvar			"#*#EngageHanvar#*#"
 
 Sub Main(string _type, string _tankPoint)
 	/melee aggro=on
@@ -18,11 +16,13 @@ Sub Main(string _type, string _tankPoint)
 	/declare bln_hanvarEngaged 		bool 	outer FALSE
 	/declare bln_rootTank			bool	outer FALSE
 
-	/declare timer_hanvar_stun 		timer 	outer 0
-	/declare timer_hanvar_ae 		timer 	outer 0
+	/declare timer_hanvar_stun 		timer 	outer 85
+	/declare timer_hanvar_ae 		timer 	outer 180s
 	/declare chainSeconds			int 	outer 0
 	/declare stunSeconds			int   	outer 0	
 
+
+	/declare bln_announcedRetreat   bool    outer FALSE
 	/declare timer_announce_retreat	timer   outer 0
 	/declare timer_announce_chains	timer  	outer 0
 	/declare timer_announce_guards	timer  	outer 0
@@ -33,10 +33,10 @@ Sub Main(string _type, string _tankPoint)
 
 	:wait_loop
 	/if (${Me.Buff[Chains of Anguish].ID}) {
-		/varcalc chainSeconds (${Me.Buff[Chains of Anguish].Duration.TotalSeconds}) + 18
+		/varcalc chainSeconds (${Me.Buff[Chains of Anguish].Duration.TotalSeconds}) + 20
 		/varset timer_hanvar_ae ${chainSeconds}s 
 	}
-	/call announceHanvarAE
+	/if (!${timer_announce_chains}) /call announceHanvarAE
 	/doevents
 	/delay 5
 	/if (!${bln_hanvarEngaged}) /goto :wait_loop
@@ -47,16 +47,18 @@ Sub Main(string _type, string _tankPoint)
 
 	:ActiveLoop
 		/doevents
-		/varcalc chainSeconds (${timer_hanvar_ae.Value} / 10) +18
+		
 		| Announce AE every 5s
 		/if (!${timer_announce_chains}) {
 			/if (${Me.Buff[Chains of Anguish].ID}) {
-				/varcalc chainSeconds (${Me.Buff[Chains of Anguish].Duration.TotalSeconds}) + 18
+				/varcalc chainSeconds (${Me.Buff[Chains of Anguish].Duration.TotalSeconds}) + 20
 				/varset timer_hanvar_ae ${chainSeconds}s  
+			} else {
+				/varcalc chainSeconds (${timer_hanvar_ae.Value} / 10)
 			}
 			/call announceHanvarAE
 		}
-		
+
 		|------
 		| NPC/Hanvar Kills
 		|------
@@ -66,7 +68,7 @@ Sub Main(string _type, string _tankPoint)
 		} 
 		
 		| Run away!
-		/if (${timer_hanvar_ae} <= 50) {
+		/if (${timer_hanvar_ae} <= 50 && !${bln_announcedRetreat}) {
 			/if (!${timer_announce_retreat}) /call commandRetreat
 		} 
 		
@@ -74,9 +76,6 @@ Sub Main(string _type, string _tankPoint)
 		/if (!${SpawnCount[npc guard radius 150]} && ${timer_hanvar_ae} > 50) {
 			/if (!${timer_announce_kill}) /call commandAttackHanvar
 		}
-
-		
-		
 
 		/doevents
 		/call getAggro
@@ -96,19 +95,22 @@ Sub commandAttackGuards
 	/cecho \ar${SpawnCount[npc guard radius 150]} \aware spawned, \ayKILLGUARDS
 	/dex Xirin /target ${NearestSpawn[npc guard]}
 	/dex Xirin /casting "Terror of Discord"
+	/varset bln_announcedRetreat  FALSE
 	/varset timer_announce_guards 10s
 /return
 
 Sub commandRetreat
 	/cecho \ar${timer_hanvar_ae} ${chainSeconds}s \awuntil Hanvar AE, \aoRETREAT
 	/rs HanvarRetreat ${chainSeconds}
-	/varset timer_announce_retreat 2s
+	/varset bln_announcedRetreat TRUE
+	/varset timer_announce_retreat 35s
 /return 
 
 
 Sub commandAttackHanvar
 	/if (!${SpawnCount[npc guard]}) /rs HanvarKill ${chainSeconds}
 	/cecho \ar${timer_hanvar_ae} ${chainSeconds}s \awuntil Hanvar AE  (no guards), \agKILLHANVAR
+	/varset bln_announcedRetreat  FALSE
 	/varset timer_announce_kill 10s
 /return
 
@@ -120,8 +122,8 @@ Sub Event_HanvarChainsOn
 /return
 
 | Hanvar's chains wore off'
-Sub Event_HanvarChainsOn
-	/varset timer_hanvar_ae 18s
+Sub Event_HanvarChainsOff
+	/varset timer_hanvar_ae 20s
 	/call commandAttackHanvar
 	/doevents flush HanvarChainsOff
 /return
@@ -152,21 +154,9 @@ Sub Event_HanvarStun
 	/doevents flush HanvarStun
 /return
 
-
-
-Sub HanvarUpdateAETimer
-
-/return 
-
-Sub HanvarKill
-	/rs HanvarKill ${chainSeconds}
-/return
-
-
 Sub getAggro
 	:aggroLoop
-		/delay 20
-		/if (${Target.Distance} > 20 && ${bln_rootTank}) /warp f 10
+		/if (${Target.Distance} > 20 && ${bln_rootTank}) /warp f 15
 		/if (${Me.TargetOfTarget.ID} != ${Me.ID}) {
 			/echo Hanvar NOT TARGETTING ME
             /if (${Me.CombatAbilityReady["Bellow of the Mastruq"]}) /doability "Bellow of the Mastruq"

@@ -1,6 +1,6 @@
 |**
 ----------------------------
-xiris_common.inc version 09.17.18
+xiris_common.inc version 10.14.22
 ----------------------------
 Common subs used in the majority of xiris's bots.
 Looting, Leashing, AA Purchasing are common threads.
@@ -26,6 +26,7 @@ REVISION HISTORY
 	06.29.22	xiris 	Updated all events to only be either generic, or [/gsay, /rsay, /tell, MQ2DanNet(dgt, dt)] only
 	08.05.22	xiris 	Added support for DI checking
 	10.01.22	xiris	Fixed the default tank settings on no param passing
+	10.14.22	xiris	Fixed Burn with item. Had logic error, would never click item.
 ______________________________________________
 
 **|
@@ -923,8 +924,9 @@ Sub chkBurn
 				}
 			| ---------------	
 			| Item
-			| ---------------		
-			} else /if (${Burn_${burn}_Type.Equal[item]} && ${FindItem[${Burn_${burn}}].TimerReady} && ${Burn_${burn}_Use} && (!${Me.Casting.ID} || ${Me.Class.ShortName.Equal[BRD]})) {
+			| Check to see if  burn == item &&  useable && (item in inventory && there is no timer) && (I am not Casting || I am a bard)
+			| ---------------
+			} else /if (${Burn_${burn}_Type.Equal[item]} && ${Burn_${burn}_Use} &&  (${Bool[${FindItem[${Burn_${burn}}].ID}]} && !${Bool[${FindItem[${Burn_${burn}}].TimerReady}]}) && (!${Me.Casting.ID} || ${Me.Class.ShortName.Equal[BRD]})) {
 				:doItemClick
 					/if (${Me.Class.ShortName.Equal[BRD]}) {
 						/medley queue "${Burn_${burn}}"
@@ -934,7 +936,6 @@ Sub chkBurn
 					/rs ${burn}:ITEM  "${Burn_${burn}}" Clicked!
 					/cecho \agItem \ayBurn_${burn} \agclicked!
 					/goto :nextBurn	
-					
 			}
 		}
 	:nextBurn

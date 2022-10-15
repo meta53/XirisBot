@@ -266,7 +266,7 @@ Sub xbot_initialize_pets
 	/declare int_petAttackHP			int		outer	${Ini[botINI,Pet,int_petAttackHP,99]}
 	/declare bln_petDiscipline			bool	outer	${Ini[botINI,Pet,bln_petDiscipline,TRUE]}
 	
-	/declare str_petSpell				string	outer	${Ini[botINI,Pet,str_petSpell,Child Of Bertoxxulous]}
+	/declare str_petSpell				string	outer	${Ini[botINI,Pet,str_petSpell,Dark Assassin]}
 	/declare str_petGem					string	outer	${Ini[botINI,Pet,str_petGem,gem11]}
 	
 	/declare bln_petUseBuffs			bool	outer	${Ini[botINI,Pet,bln_petUseBuffs,FALSE]}

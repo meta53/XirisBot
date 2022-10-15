@@ -89,10 +89,12 @@ Sub Events_Curing_Background
 /return
 
 Sub Event_AutoCureMTOn
+	/cecho \agNow Automatically Curing MT
 	/varset bln_autoCureMT TRUE
 /return 
 
 Sub Event_AutoCureMTOff
+	/cecho \awNo Longer Automatically Curing MT
 	/varset bln_autoCureMT FALSE
 /return
 
