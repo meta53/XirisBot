@@ -150,10 +150,10 @@ Sub SetupSongs
 		/if (${str_raidGroupMode.Equal[DEFAULT]}) {
 			/if (${Me.CleanName.Equal[Ania]}) 	/varset str_currentMedley TANK
 			/if (${Me.CleanName.Equal[Aergia]}) /varset str_currentMedley TANK
-			/if (${Me.CleanName.Equal[Achlys]}) /varset str_currentMedley TANK
-			/if (${Me.CleanName.Equal[Adikia]}) /varset str_currentMedley CASTER
-			/if (${Me.CleanName.Equal[Aidos]}) 	/varset str_currentMedley MELEE
-			/if (${Me.CleanName.Equal[Achos]}) 	/varset str_currentMedley MELEE
+			/if (${Me.CleanName.Equal[Achlys]}) /varset str_currentMedley MELEE
+			/if (${Me.CleanName.Equal[Adikia]}) /varset str_currentMedley MELEE
+			/if (${Me.CleanName.Equal[Aidos]}) 	/varset str_currentMedley CASTER
+			/if (${Me.CleanName.Equal[Achos]}) 	/varset str_currentMedley TANK
 		} else /if (${str_raidGroupMode.Equal[HATRED]}) {
 			/if (${Me.CleanName.Equal[Ania]}) 	/varset str_currentMedley TANK
 			/if (${Me.CleanName.Equal[Aergia]}) /varset str_currentMedley TANK

@@ -178,6 +178,7 @@ Sub xbot_initialize_offtanking
 	/squelch /alert add 5 "Huhn-Abram"
 	/squelch /alert add 5 "Voracious Feran"
 	/squelch /alert add 5 "Uchti"
+	/squelch /alert add 5 "Keldovan"
 
 /return
  

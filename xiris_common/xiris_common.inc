@@ -181,16 +181,16 @@ Sub Events_Common
 	|/doevents SaveWeaponset
 	|/doevents SaveCurrentWeaponset
 	|/doevents SaveRingset
-	/doevents InvisOFF
-	/doevents SkillCheck
+	|/doevents InvisOFF
+	|/doevents SkillCheck
 	/doevents Disengage
 	|/doevents QuitExpedition
 	|/doevents ReportBurnKey
-	/doevents ShortBurnOn1 
-	/doevents ShortBurnOn2 
-	/doevents LongBurnOn1 
-	/doevents LongBurnOn2
-	/doevents MaximumBurn
+	|/doevents ShortBurnOn1 
+	|/doevents ShortBurnOn2 
+	|/doevents LongBurnOn1 
+	|/doevents LongBurnOn2
+	|/doevents MaximumBurn
 	/doevents RaidGroupMode
 	/doevents RaidDIClerics
 	/doevents doRefreshXTarget

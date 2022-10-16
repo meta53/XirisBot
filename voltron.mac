@@ -23,10 +23,10 @@ Sub SetupGroupsRAID
 	/dex Theist /multiline ; /invite Xurael;  /invite Xerael; /invite Xarael; /invite Xorael; /invite Xunshia;
 	/dex Cereborn /multiline ; /invite Xeixa;   /invite Xiexa; /invite Xeixi; /invite Xeqisa; /invite Dogmatist;
 	/dex Sadelia /multiline ; /invite Drexia;   /invite Mluian; /invite Xonshia; /invite Eurydice; /invite Tragic;
-	/dex Xaeliea /multiline ; /invite Ertres;  /invite Pantheon; /invite Opheoia; /invite Achlys; /invite Xenshia;
-	/dex Xaexa /multiline ; /invite Erinyes;  /invite Deist; /invite Ophexia; /invite Adikia; /invite Xinshia;
-	/dex Xaia /multiline ; /invite Ertris;  /invite Ophemia; /invite Opheyia; /invite Aidos; /invite Nihilist;
-	/dex Xepatia /multiline ; /invite Erinyas;  /invite Ophenia; /invite Ophezia; /invite Achos; /invite Empathic;
+	/dex Xaeliea /multiline ; /invite Ertres;  /invite Pantheon; /invite Opheoia; /invite Aidos; /invite Xenshia;
+	/dex Xaexa /multiline ; /invite Erinyes;  /invite Deist; /invite Ophexia; /invite Achos; /invite Xinshia;
+	/dex Xaia /multiline ; /invite Ertris;  /invite Ophemia; /invite Opheyia; /invite Achlys; /invite Nihilist;
+	/dex Xepatia /multiline ; /invite Erinyas;  /invite Ophenia; /invite Ophezia; /invite Adikia; /invite Empathic;
 /return
 
 Sub InviteGroupsToRAID
@@ -160,12 +160,12 @@ Sub SetupGroupsDEFAULT
 	/multiline ; /invite Xanshia;  /invite Pantheon; /invite Deist; /invite Ania; /invite Ophidia;
 	/dex Xiria /multiline ; /invite Xirael;  /invite Tragic; /invite Nihilist; /invite Aergia; /invite Xorael;
 	/dex Xirea /multiline ; /invite Xinshia; /invite Xerael; /invite Sadelia; /invite Eurydice; /invite Drexia;
-	/dex Xirin /multiline ; /invite Theist;  /invite Xarael; /invite Cereborn; /invite Achlys; /invite Dogmatist;
-	/dex Xeqisa /multiline ; /invite Xiexa;   /invite Xeixi; /invite Xeixa; /invite Adikia; /invite Xurael;
+	/dex Xirin /multiline ; /invite Theist;  /invite Xarael; /invite Cereborn; /invite Achos; /invite Dogmatist;
+	/dex Xeqisa /multiline ; /invite Xiexa;   /invite Xeixi; /invite Xeixa; /invite Aidos; /invite Xurael;
 	/dex Xaeliea /multiline ; /invite Ertres;  /invite Shinxia; /invite Opheoia; /invite Ophenia; /invite Xenshia;
 	/dex Xaexa /multiline ; /invite Erinyes;  /invite Shynxia; /invite Ophexia; /invite Ophelia; /invite Xunshia;
-	/dex Xaia /multiline ; /invite Ertris;  /invite Ophemia; /invite Opheyia; /invite Aidos; /invite Xonshia;
-	/dex Xepatia /multiline ; /invite Erinyas;  /invite Mluian; /invite Ophezia; /invite Achos; /invite Empathic;
+	/dex Xaia /multiline ; /invite Ertris;  /invite Ophemia; /invite Opheyia; /invite Adikia; /invite Xonshia;
+	/dex Xepatia /multiline ; /invite Erinyas;  /invite Mluian; /invite Ophezia; /invite Achlys; /invite Empathic;
 /return
 
 Sub InviteGroupsToDEFAULT
