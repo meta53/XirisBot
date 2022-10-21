@@ -232,14 +232,14 @@ Sub chkNeedCure
 		/goto :get_curer
 
 	|-- Debuffs that MUST be removed (CURSE)	
-	} else /if (${Me.Buff[Wanton Destruction].ID} || (${Me.Buff[Feedback Dispersion].ID} && (${str_classArchetype.Equal[PRIEST]} || ${str_classArchetype.EQUAL[CASTER]}))) {
+	} else /if (${Me.Buff[Wanton Destruction].ID} || (${Me.Buff[Feedback Dispersion].ID} && (${str_classArchetype.Equal[PRIEST]} || ${str_classArchetype.Equal[CASTER]}))) {
 		/varset cureType curse
 		/varset counters ${Debuff.Cursed}
 		/varset forceCure TRUE
 		/goto :get_curer
 		
 	|-- Debuffs that MUST be removed (POISON)
-	} else /if (${Me.Buff[Fulmination].ID} && (${str_classArchetype.Equal[PRIEST]} || ${str_classArchetype.EQUAL[CASTER]})) {
+	} else /if (${Me.Buff[Fulmination].ID} && (${str_classArchetype.Equal[PRIEST]} || ${str_classArchetype.Equal[CASTER]})) {
 		/varset cureType poison
 		/varset counters ${Debuff.Poisoned}
 		/varset forceCure TRUE

@@ -337,7 +337,6 @@ Sub chkDownshits
 /return
 
 Sub chkComponentsAll
-	/echo chkComponentsAll ${bln_componentCheck} ${int_componentTotal}
 	/if (${bln_componentCheck}) {
 		/declare i 			int 	local	1
 		/declare component	string 	local   NULL
@@ -346,7 +345,6 @@ Sub chkComponentsAll
 		/declare summoner	string	local	NULL
 		/declare reagent	string  local   NULL
 		/for i 1 to ${int_componentTotal} 
-			/echo checking: ${COMPONENT_${i}_Check} "${COMPONENT_${i}}"
 			/if (${COMPONENT_${i}_Check}) {
 				/varset component 	"${COMPONENT_${i}}"
 				/varset compType	${COMPONENT_${i}_Type}
@@ -367,6 +365,7 @@ Sub chkComponentsAll
 				}
 				
 			}
+			/autoinv
 		/next i
 	}
 /return
@@ -379,23 +378,22 @@ Sub EVENT_DISC_NOTAVAILABLE(string line)
 
 
 Sub chkComponents(string _component, int _count, string _type, string _summoner, string _reagent)
-	/echo chkComponents ${_component}, ${_count}, ${_type}, ${_summoner}, ${_reagent}
-	/echo (${FindItemCount[=${_component}]}>=${_count})
+	|/echo chkComponents ${_component}, ${_count}, ${_type}, ${_summoner}, ${_reagent}
+	|/echo (${FindItemCount[=${_component}]}>=${_count})
 	/if (${SpawnCount[npc radius ${int_campRadius}]} > 0 && ${Zone.ShortName.NotEqual[thundercrest]}) {
-		/echo returning due to spawn
+		|/echo returning due to spawn
 		/return
 	} 
 	/if (${FindItemCount[=${_component}]}>=${_count}) {
-		/echo returning due to count
+		|/echo returning due to count
 		/return
 	} 
 	/if (${strPullType.Equal[SPELL]}) {
-		/echo returning due to pulltype as spell
+		|/echo returning due to pulltype as spell
 		/return
 	} 
 	/if (!${Defined[_reagent]}) /declare _reagent string local NULL
 	/if (!${Defined[message]}) /declare message string local SUCCCESS
-	/echo chkComponent ${_reagent} {_count}
 	:chkComponent
 		/echo checking components: desired:${_count} have: ${FindItemCount[=${_component}]}
 		/autoinv
