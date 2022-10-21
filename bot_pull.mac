@@ -502,13 +502,11 @@ Sub killTarget
 		/echo ${Me.SpellReady[${spell_aehate}]} Cast ${spell_aehate} ${spell_aehateGem} 5s
 		/call MQ2Cast "${spell_aehate}" ${spell_aehateGem}
 	}
-	
 	/if ((${SpawnCount[npc radius ${int_campRadius}]} > 1) && ${Me.Class.ShortName.Equal[WAR]} && ${Me.CombatAbilityReady[Area Taunt]}) {
 		/doability "Area Taunt"
 	} else /if ((${SpawnCount[npc radius ${int_campRadius}]} > 1) && ${Me.Class.ShortName.Equal[WAR]} && ${Me.AltAbilityReady[Rampage]}) {
 		/call MQ2Cast "Rampage" alt
 	}
-	
 	
 	/if (!${Me.Combat}) {
 		/killthis
@@ -917,14 +915,14 @@ Sub variant_initialize(int _pull_dist, string _channel, string _campName, bool _
 	|--radii
 	/declare int_pcCount			int 	outer   ${SpawnCount[PC]}
 	/if (!${Defined[int_campRadius]}) /declare int_campRadius			int		outer	35
-	/varset int_campRadius 40
+	/varset int_campRadius 80
 	/declare int_maxRadius			int		outer	75
 	/if (${Defined[_pull_dist]}) {
 		/varset int_maxRadius ${_pull_dist}
 	}
 	
 	|--how far we can go for alert 2 mobs (note, seperate from maxRadius)
-	/declare int_alert2Radius		int 	outer 	1450
+	/declare int_alert2Radius		int 	outer 	1250
 
 	|-- use 40 for POFire
 	/declare int_minZHeight			int		outer 	0
@@ -935,7 +933,7 @@ Sub variant_initialize(int _pull_dist, string _channel, string _campName, bool _
 	/varcalc int_zRadius ${int_maxZHeight} - ${int_minZHeight}
 
 	|--target information
-	/declare int_minPullCount		int		outer   10
+	/declare int_minPullCount		int		outer   4
 	/declare int_minTLevel			int		outer	46
 	/declare int_maxTLevel			int		outer	75
 	/declare bln_validTGT			bool	outer	FALSE
@@ -1207,7 +1205,8 @@ Sub setAlerts
 	} else /if (${Zone.ShortName.Equal[dranikcatacombsa]} || ${Zone.ShortName.Equal[dranikcatacombsb]} || ${Zone.ShortName.Equal[dranikcatacombsc]}) {
 		/squelch /alert add 2 "Insidious"
 	} else /if (${Zone.ShortName.Equal[provinggrounds]}) {
-		/squelch /alert add 2 "Tactician"
+		|/squelch /alert add 2 "Tactician"
+		/squelch /alert add 2 "noc"
 	} else /if (${Zone.ShortName.Equal[wallofslaughter]}) {
 		/squelch /alert add 2 "Mastermind"
 	} else /if (${Zone.ShortName.Equal[dranikhollowsa]} || ${Zone.ShortName.Equal[dranikhollowsb]} || ${Zone.ShortName.Equal[dranikhollowsc]} || ${Zone.ShortName.Equal[dranikhollowsd]} || ${Zone.ShortName.Equal[dranikhollowse]} || ${Zone.ShortName.Equal[dranikhollowsf]} || ${Zone.ShortName.Equal[dranikhollowsg]} || ${Zone.ShortName.Equal[dranikhollowsh]} || ${Zone.ShortName.Equal[dranikhollowsi]} || ${Zone.ShortName.Equal[dranikhollowsj]}) {
@@ -1226,6 +1225,26 @@ Sub setAlerts
 		/squelch /alert add 2 "Ticov"
 		/squelch /alert add 2 "Rexi"
 		/squelch /alert add 2 "Vket"
+	
+
+	|--Epic Stuff
+	} else /if (${Zone.ShortName.Equal[povalor]}) {
+		/squelch /alert add 2 "a valorian guard"
+		/squelch /alert add 2 "Grenic Drere"
+		/squelch /alert add 2 "Popoah"
+		/squelch /alert add 2 "Cupperhide"
+		/squelch /alert add 2 "Aiden Finn"
+		/squelch /alert add 2 "Sikfaun"
+		/squelch /alert add 2 "A Squad Leader"
+		/squelch /alert add 2 "A Valorian Guardsman"
+		/squelch /alert add 2 "Tillan"
+		/squelch /alert add 2 "Gregek"
+		/squelch /alert add 2 "Kriead"
+		/squelch /alert add 2 "Tead"
+		/squelch /alert add 2 "Yelios"
+		/squelch /alert add 2 "Bakeside"
+		/squelch /alert add 2 "Matthers"
+		/squelch /alert add 2 "Daryin"
 	}
 /return
 

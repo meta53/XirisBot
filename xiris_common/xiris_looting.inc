@@ -426,7 +426,7 @@ Sub LootTarget(int _corpseID)
 
 	:return
 	|/target clear
-	|/if (${Corpse.Open}) /notify LootWnd DoneButton leftmouseup 
+	/if (${Corpse.Open}) /notify LootWnd DoneButton leftmouseup 
 	/keypress esc
 	/if (${Cursor.ID}) {
 		/delay 1

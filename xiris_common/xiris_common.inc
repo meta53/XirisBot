@@ -593,7 +593,9 @@ Sub Disengage
 	/varset bln_engaged 		FALSE
 	/varset int_targetID		0
 	|-- clean up potential XTarget issues
-	/if (!${SpawnCount[npc radius 300]} || (${Me.XTarget[0].Name.Find[s_corpse]} || (!${Bool[${Me.XTarget[0]}]} && ${Bool[${Me.XTarget[1]}]}) || (!${Bool[${Me.XTarget[0]}]} && !${Bool[${Me.XTarget[1]}]} && ${Bool[${Me.XTarget[2]}]}))) /call doRefreshXTarget
+	/if (!${SpawnCount[npc radius 300]} || (${Me.XTarget[0].Name.Find[s_corpse]} || (!${Bool[${Me.XTarget[0]}]} && ${Bool[${Me.XTarget[1]}]}) || (!${Bool[${Me.XTarget[0]}]} && !${Bool[${Me.XTarget[1]}]} && ${Bool[${Me.XTarget[2]}]})) && (!${timer_xtargetRefresh})) {
+		/call doRefreshXTarget
+	}
 	|-- class archetype resets
 	/if (${str_classArchetype.Equal[PRIEST]}) {
 

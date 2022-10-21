@@ -211,70 +211,45 @@ Sub chkNeedCure
 	/if (${bln_tanking} && (${Debuff.Counters} < 100 && ${Debuff.Count}) || !${bln_engaged}) /varset bln_needsCure TRUE
 	
 	|-- Mana Drains (casting classes)
-	/if ((${str_classArchetype.Equal[PRIEST]} || ${str_classArchetype.Equal[CASTER]} || ${Me.Class.ShortName.Equal[PAL]} || ${Me.Class.ShortName.Equal[SHD]}) && (${Debuff.ManaDrain} >= ${int_manadrain_threshold}) ) /varset bln_needsCure TRUE
+	/if ((${str_classArchetype.Equal[PRIEST]} || ${str_classArchetype.Equal[CASTER]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${Me.Class.ShortName.Equal[PAL]} || ${Me.Class.ShortName.Equal[SHD]}) && (${Debuff.ManaDrain} >= ${int_manadrain_threshold}) ) /varset bln_needsCure TRUE
 
 	|-- HP Drains
 	/if  (${Debuff.HPDrain} >= ${int_hpdrain_threshold}) /varset bln_needsCure TRUE
 
 	|-- Slows (melee)
-	/if (${Debuff.Slowed} && (${Debuff.Counters} < 100 )) /varset bln_needsCure TRUE
+	/if ((${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[MELEE_END]}) && ${Debuff.Slowed} && (${Debuff.Counters} < 100 )) /varset bln_needsCure TRUE
 
-	
-	/if (${Me.Buff[Mark of Death].ID}) {
-		|-- Mark of Death must be cured!
-		/echo I have [Mark of Death], a debuff that my ${str_myCurer} will already be handling~
-		/cecho \ar Mark of Death \ay(${Debuff.Diseased})
-		/call resetCureState
-		/goto :return
+	|-- Slows (caster)
+	/if ((${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[PRIEST]} || ${str_classArchetype.Equal[CASTER]}) && ${Debuff.SpellSlowed} && (${Debuff.Counters} < 100 )) /varset bln_needsCure TRUE
 
-	} else /if (${Me.Buff[Gaze of Anguish].ID} && !${bln_jelvanEngaged}) {
+
+	|-- Debuffs that MUST be removed (DISEASE)
+	/if ((${Me.Buff[Gaze of Anguish].ID} && !${bln_jelvanEngaged}) || ${Me.Buff[Mark of Death].ID}) {
 		|-- Gaze of Anguish must be cured!
 		/varset cureType disease
 		/varset counters ${Debuff.Diseased}
 		/varset forceCure TRUE
-	} else /if (${Me.Buff[Gaze of Anguish].ID} && ${bln_jelvanEngaged}) {
-		|-- Chains of Anguish cannot be cured!
-		/echo I have [Gaze of Anguish], and I am fighting Jelvan! I cannot cure this!
-		/call resetCureState
-		/goto :return
+		/goto :get_curer
 
-	} else /if (${Me.Buff[Wanton Destruction].ID}) {
-		|-- Wanton Destruction must be cured!
-		/echo I have [Wanton Destruction], a debuff that I must have cured!
+	|-- Debuffs that MUST be removed (CURSE)	
+	} else /if (${Me.Buff[Wanton Destruction].ID} || (${Me.Buff[Feedback Dispersion].ID} && (${str_classArchetype.Equal[PRIEST]} || ${str_classArchetype.EQUAL[CASTER]}))) {
 		/varset cureType curse
 		/varset counters ${Debuff.Cursed}
 		/varset forceCure TRUE
-
-	} else /if (${Me.Buff[Feedback Dispersion].ID} && ${str_classArchetype.Equal[PRIEST]}) {
-		|-- Feedback Dispersion must be cured!
-		/echo I have [Feedback Dispersion], a debuff that I must cure myself!
-		/varset cureType curse
-		/varset counters ${Debuff.Cursed}
+		/goto :get_curer
+		
+	|-- Debuffs that MUST be removed (POISON)
+	} else /if (${Me.Buff[Fulmination].ID} && (${str_classArchetype.Equal[PRIEST]} || ${str_classArchetype.EQUAL[CASTER]})) {
+		/varset cureType poison
+		/varset counters ${Debuff.Poisoned}
 		/varset forceCure TRUE
-
-	} else /if (${Me.Buff[Chains of Anguish].ID}) {
-		|-- Chains of Anguish cannot be cured!
-		/echo I have [Chains of Anguish], a debuff that I cannot cure!
+		/goto :get_curer
+		
+	|-- Debuffs that CANNOT be removed	
+	} else /if ((${Me.Buff[Gaze of Anguish].ID} && ${bln_jelvanEngaged}) || ${Me.Buff[Chains of Anguish].ID} || ${Me.Buff[Aura of Destruction].ID} || ${Me.Buff[Rigidity].ID} || ${Me.Buff[Curse of Misfortune].ID} || ${Me.Buff[Imprecision].ID} || ${Me.Buff[Impurity].ID} || ${Me.Buff[Ressurection Sickness].ID}) {
 		/call resetCureState
 		/goto :return
 
-	} else /if (${Me.Buff[Aura of Destruction].ID}) {
-		|-- Aura of Destruction cannot be cured!
-		/echo I have [Aura of Destruction], a debuff that I cannot cure!
-		/call resetCureState
-		/goto :return
-
-	} else /if (${Me.Buff[Rigidity].ID} || ${Me.Buff[Curse of Misfortune].ID} || ${Me.Buff[Imprecision].ID} || ${Me.Buff[Impurity].ID}) {
-		|-- Specialization Trials debuffs should not be cured (wastes time/mana)!
-		/echo I have a [MPG Specialization Debuff], a debuff that I cannot cure!
-		/call resetCureState
-		/goto :return
-	} else /if (${Me.Buff[Ressurection Sickness].ID}) {
-		|-- Aura of Destruction cannot be cured!
-		/echo I have [Resurrection Sickness], a debuff that I cannot cure!
-		/call resetCureState
-		/goto :return
-	}
 	
 	:cure_determine
 	/if ( ${forceCure} || ${bln_needsCure}) {
@@ -303,7 +278,7 @@ Sub chkNeedCure
 		/if (${cureType.Equal[NOTSET]}) /return
 
 		| Get my curer for this type
-		:new_curer
+		:get_curer
 		/call getGroupCurer ${cureType}
 		/varset str_myCurer ${Macro.Return}
 		/if (${str_myCurer.Equal[NULL]}) {
@@ -312,12 +287,14 @@ Sub chkNeedCure
 			/goto :return
 		}
 
+		:get_cureRange
 		| Get the range of this cure
 		/call setCureRange ${cureType}
 
 		| Start asking for cure
 		/cecho \arCURE REQUIRED:\ay Counters:\ag${counters} \ayType:\ag${cureType} \ayRange:\ag${cureRange}
 
+		:request_cure
 		/if (${str_myCurer.Equal[${Me.Name}]}) {
 			/call handleCureRequest ${Me.Name} ${Me.ID} ${cureType} ${counters} ${forceCure}
 		} else {
@@ -338,11 +315,11 @@ Sub chkNeedCure
 					/call requestCure ${cureType} ${counters} ${forceCure}
 				} else {
 					/cecho \arMy Curer is too far away
-					/goto :new_curer
+					/goto :get_curer
 				}
 			} else {
 				/cecho \arMy Curer is dead or not in zone
-				/goto :new_curer
+				/goto :get_curer
 			}
 		}
 		/varset timer_cure_request 30s
@@ -670,7 +647,7 @@ Sub castCure(string _name, int _id, string _spell, int _castCount, string _cureT
 
 Sub xbot_initialize_curing
 	/cecho \ao xbot_initialize_curing
-	/declare 	int_manadrain_threshold int		outer 	150
+	/declare 	int_manadrain_threshold int		outer 	100
 	/declare	int_hpdrain_threshold	int		outer	300
 	/declare 	bln_needsCure 			bool	outer	FALSE
 	/declare    bln_askedForCure        bool    outer   FALSE

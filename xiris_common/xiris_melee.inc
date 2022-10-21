@@ -287,13 +287,20 @@ Sub chkDownshits
 						/varset itemName ${FindItem[${itemID}]}
 						/varcalc castTime ${FindItem[${itemID}].CastTime} / 1000
 						/echo bard downshit : ${itemID} ${itemName} ${castTime}
-						
+						/autoinv
 						|-- check if the item is worn or in a bag. If its in a bag, we need to exchange it
-						|   to at least our open inventory slot (8)
+						|   to at least our open inventory slot 30
+
 						| Slot the item is supposed to be worn in
-						/varset wornSlot ${InvSlot[${FindItem[=${itemName}].WornSlot[1]}].Name}
+						| Note, instead out it in the the empty inventory slot 8 InvSlot[30]
+						|/varset wornSlot ${InvSlot[${FindItem[=${itemName}].WornSlot[1]}].Name}
 						| Item that is currently in that slot
-						/varset itemInSlot ${InvSlot[${wornSlot}].Item.Name}
+						|/varset itemInSlot ${InvSlot[${wornSlot}].Item.Name}
+						/varset itemInSlot ${InvSlot[30].Item.Name}
+						/varset wornSlot 30
+						/if (${itemInSlot.Equal[NULL]}) {
+							| Nothing is in, so move the item to the slot
+						}
 						| exchange itemName with itemInSlot
 						/cecho \ay Exchanging \ag${itemName} \ayin \ag${wornSlot} \ar(${itemInSlot})
 						/exchange "${itemName}" ${wornSlot}
@@ -301,10 +308,13 @@ Sub chkDownshits
 						/if (!${Medley}) /medley ${str_currentMedley}
 						/medley queue "${itemName}" -interrupt
 						/delay ${castTime}s
-						/delay 2s 
+		
 						| exchange itemInSlot with itemName (back to the way it was)
-						/cecho \ag Returning \ay${itemInSlot}\ag to \ay${wornSlot}
-						/exchange "${itemInSlot}" ${wornSlot}
+						/if (${itemInSlot.NotEqual[NULL]}) {
+							/delay 2s
+							/cecho \ag Returning \ay${itemInSlot}\ag to \ay${wornSlot}
+							/exchange "${itemInSlot}" ${wornSlot}
+						}
 					} else {
 						/cecho \ayDownflag (\ag${df}\ay) Casting \ay${buffName} \ag${downflag${df}.Token[2,|]}
 						/call MQ2Cast ${castArg}

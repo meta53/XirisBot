@@ -52,7 +52,7 @@ Sub Events_BRD
 /return 
 
 Sub EVENT_Sing(_line, _sender, _eventParams)	
-	/if (${Me.Class.ShortName.Equal[BRD]}) /varset str_currentMedley ${_type}
+	|/if (${Me.Class.ShortName.Equal[BRD]}) /varset str_currentMedley ${_type}
 	/call SongSongs ${str_currentMedley}
 	/doevents flush Sing
 /return
