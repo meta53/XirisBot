@@ -337,7 +337,7 @@ Sub chkDownshits
 /return
 
 Sub chkComponentsAll
-	|/echo chkComponentsAll ${bln_componentCheck}
+	/echo chkComponentsAll ${bln_componentCheck} ${int_componentTotal}
 	/if (${bln_componentCheck}) {
 		/declare i 			int 	local	1
 		/declare component	string 	local   NULL
@@ -346,21 +346,23 @@ Sub chkComponentsAll
 		/declare summoner	string	local	NULL
 		/declare reagent	string  local   NULL
 		/for i 1 to ${int_componentTotal} 
+			/echo checking: ${COMPONENT_${i}_Check} "${COMPONENT_${i}}"
 			/if (${COMPONENT_${i}_Check}) {
 				/varset component 	"${COMPONENT_${i}}"
 				/varset compType	${COMPONENT_${i}_Type}
 				/varset count		${COMPONENT_${i}_Count}
 				/varset summoner	"${COMPONENT_${i}_Summoner}"
 				/varset reagent		"${COMPONENT_${i}_Reagent}"
-				
 				/call chkComponents ${component} ${count} ${compType} ${summoner} ${reagent}
 				/delay 10
 				/if (${Macro.Return.Equal[SUMMON_ITEM_NOT_FOUND]}) {
 					/echo SUMMON_ITEM_NOT_FOUND turning  this component OFF.
+					/rs SUMMON_ITEM_NOT_FOUND  ${summoner} turning  this component OFF.
 					/varset COMPONENT_${i}_Check FALSE
 				}
 				/if (${Macro.Return.Equal[OUT_OF_REAGENTS]}) {
 					/echo OUT_OF_REAGENTS turning  this component OFF.
+					/rs OUT_OF_REAGENTS  ${component} turning  this component OFF.
 					/varset COMPONENT_${i}_Check FALSE
 				}
 				
@@ -377,16 +379,26 @@ Sub EVENT_DISC_NOTAVAILABLE(string line)
 
 
 Sub chkComponents(string _component, int _count, string _type, string _summoner, string _reagent)
-	/if (${SpawnCount[npc radius ${int_campRadius}]} > 0) /return
-	/if (${FindItemCount[=${_component}]}>=${_count}) /return
-	/if (${strPullType.Equal[SPELL]}) /return
+	/echo chkComponents ${_component}, ${_count}, ${_type}, ${_summoner}, ${_reagent}
+	/echo (${FindItemCount[=${_component}]}>=${_count})
+	/if (${SpawnCount[npc radius ${int_campRadius}]} > 0 && ${Zone.ShortName.NotEqual[thundercrest]}) {
+		/echo returning due to spawn
+		/return
+	} 
+	/if (${FindItemCount[=${_component}]}>=${_count}) {
+		/echo returning due to count
+		/return
+	} 
+	/if (${strPullType.Equal[SPELL]}) {
+		/echo returning due to pulltype as spell
+		/return
+	} 
 	/if (!${Defined[_reagent]}) /declare _reagent string local NULL
 	/if (!${Defined[message]}) /declare message string local SUCCCESS
+	/echo chkComponent ${_reagent} {_count}
 	:chkComponent
 		/echo checking components: desired:${_count} have: ${FindItemCount[=${_component}]}
 		/autoinv
-		/if (${FindItemCount[=${_component}]}>=${_count}) /return
-		/if (${SpawnCount[npc radius ${int_campRadius}]} > 0) /return
 
 		/if (${_type.Equal[ITEM]}) {
 			/echo ${_type}: ${_summoner} summoning ${_component} with ${_reagent} 
@@ -397,7 +409,7 @@ Sub chkComponents(string _component, int _count, string _type, string _summoner,
 						/echo ${FindItemCount[=${_summoner}]}
 						/echo ${_summoner} summoning ${_component}	
 						/call MQ2Cast "${_summoner}" item
-						/delay 50
+						/delay 10
 						/autoinv
 						/goto :chkComponent
 				} else {
@@ -405,7 +417,7 @@ Sub chkComponents(string _component, int _count, string _type, string _summoner,
 						/echo ${FindItemCount[=${_summoner}]}
 						/echo ${_summoner} summoning ${_component}	
 						/call MQ2Cast "${_summoner}" item
-						/delay 50
+						/delay 10
 						/autoinv
 						/goto :chkComponent
 					} else {
@@ -423,7 +435,7 @@ Sub chkComponents(string _component, int _count, string _type, string _summoner,
 			/echo ${_type}: ${_summoner} summoning ${_component} with ${_reagent}
 			/if (${FindItemCount[=${_reagent}]}>=20) {
 				/doability "${_summoner}"
-				/delay 50
+				/delay 10
 				/autoinv
 			} else {
 				/varset message OUT_OF_REAGENTS
@@ -434,7 +446,7 @@ Sub chkComponents(string _component, int _count, string _type, string _summoner,
 			/echo ${_type}: ${_summoner} summoning ${_component} with ${_reagent}
 			/if (${FindItemCount[=${_reagent}]}>=20) {
 					/call MQ2Cast "${_summoner}" alt
-					/delay 50
+					/delay 10
 					/autoinv
 				} else {
 					/varset message OUT_OF_REAGENTS
