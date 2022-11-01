@@ -1,29 +1,12 @@
 #Turbo 20
 Sub Main 
     | Move Clerics to Heal point
-    /dex Xirael /nav wp hanvarCleric
-    /dex Xinshia /nav wp hanvarCleric
-    /dex Xenshia /nav wp hanvarCleric
-    /dex Xanshia /nav wp hanvarCleric
-    /dex Xunshia /nav wp hanvarCleric
-    /dex Xonshia /nav wp hanvarCleric
-    /dex Xerael /nav wp hanvarCleric
-    /dex Xarael /nav wp hanvarCleric
-    /dex Xorael /nav wp hanvarCleric
-    /dex Xurael /nav wp hanvarCleric
-    /dex Theist /nav wp hanvarCleric
-    /dex Deist /nav wp hanvarCleric
-    /dex Empathic /nav wp hanvarCleric
-    /dex Nihilist /nav wp hanvarCleric
-    /dex Dogmatist /nav wp hanvarCleric
-    /dex Pantheon /nav wp hanvarCleric
-    /dex Tragic /nav wp hanvarCleric
+    /dge clr /warp wp hanvarcleric
 
     | Set Xirin (OT-1) Healing
+    /dt Xorael changeMT Xirin
+    /dt Deist changeMT Xirin 
     /dt Xenshia changeMT Xirin
-    /dt Xinshia changeMT Xirin 
-    /dt Xunshia changeMT Xirin
-    /dt Pantheon changeMT Xirin
 
     | Set the mode to efficient
     /dgt healMode EFFICIENT 
@@ -40,6 +23,7 @@ Sub Main
 
     | Turn on preventspeed
     /dga /docrack preventspeed on
+    /dga /docrack nostun on
 
     | Turn off bard and SK
     /dex adikia /end

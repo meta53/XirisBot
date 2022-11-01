@@ -106,7 +106,7 @@ Sub Main(int _pull_dist, string _channel, string _campName, bool _useDownFlags)
 
 Sub chkZone
 	/if (${Zone.ShortName.NotEqual[${SZ_shortName}]}) {
-		/if (${Zone.ShortName.Equal[GuildLobby]}) {
+		/if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) {
 			/docommand /${cmdChannel}  I died! GTFO! ${Time}
 			/docommand /${cmdChannel}  offtankon
 			/end

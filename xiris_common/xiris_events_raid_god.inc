@@ -85,9 +85,7 @@ Sub Events_GoD_Uqua
 Sub Events_GoD_Inktuta
 	
 	| Cursebearers
-	/if (!${Bool[${SpawnCount[npc Noqufiel]}]}) {
-		/doevents InkCurse
-		/doevents InkCurseSafe
+	/if (${SpawnCount[npc Cursecaller]} || (${SpawnCount[npc Noqufiel]}) ) {
 		/doevents CC1
 		/doevents CC2
 		/doevents CC3
@@ -96,8 +94,14 @@ Sub Events_GoD_Inktuta
 		/doevents CC6
 	}
 
+	/if (${SpawnCount[npc Cursecaller]}) {
+		/doevents InkCurse
+		/doevents InkCurseSafe
+		
+	}
+
 	| Noqufiel
-	/if (${Bool[${SpawnCount[npc Noqufiel]}]} && !${Bool[${SpawnCount[npc Cursecaller]}]}) {
+	/if (${Bool[${SpawnCount[npc Noqufiel]}]} && !${Bool[${SpawnCount[npc Cursecaller]}]} && ${SpawnCount[npc cursebearer]}) {
 		/doevents NoqCurse
 		/if (${Me.Class.ShortName.Equal[WIZ]} || ${Me.Class.ShortName.Equal[MAG]}) /call chkNoqCursebearers
 	}
@@ -129,10 +133,7 @@ Sub Event_UquaKey(string line,string key)
 
 
 Sub Event_InkCurse
-	/echo event InkCurse!
-	|/if (${SpawnCount[npc cursecaller]}==0) /return
-	|/melee reset
-	/maxfps bg 30
+	/rs ${Me.Name} is Running.
 	/call meleeReset
 	/varset inkRunning TRUE
 	/call InkCurseRun
@@ -179,10 +180,7 @@ Sub InkNoqRun(int _curseID)
 	} 
 	/rs Running Noqufiel ${_curseID}
 	/doevents flush
-	/declare startX int local ${Me.X}
-	/declare startY int local ${Me.Y}
-	/declare startZ int local ${Me.Z}
-	
+
 	|-- find which cursebearer has you on aggro;
 	/call TrueTarget ${_curseID}
 	/delay 10
@@ -203,7 +201,7 @@ Sub InkNoqRun(int _curseID)
 	
 	| DOUBLE CHECK THIS RUN LOOP  TODO MAKE IT WORK LIKE CURSECALLERS
 	:startLoop
-	/if (${Zone.ShortName.Equal[GuildLobby]}) /call InkDeath
+	/if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /call InkDeath
 	/if (${Me.TargetOfTarget.Name.Equal[${Me.Name}]}) {
 		/if (${Target.Distance} < 50) {
 			/nav wp noqRun
@@ -216,23 +214,19 @@ Sub InkNoqRun(int _curseID)
 	} 	
 	
 	:farLoop
-	/if (${Zone.ShortName.Equal[GuildLobby]}) /call InkDeath
+	/if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /call InkDeath
 	/if (${Me.TargetOfTarget.Name.Equal[${Me.Name}]}) {
 		/if (${Target.Distance} < 50) {
-			/nav loc ${startX} ${startY} ${startZ}
-			:farLoopRun
-			/delay 10
-			/if (${Navigation.Active}) /goto :farLoopRun
-			/goto :startLoop
+			/varset inkRunning TRUE
+			/call InkCurseRun
 		}
-		/goto :farLoop
 	}
 	|-- no longer targeted or you dont have a target. safe now
 	/rs ${Me.Name} is safe, returning.
-	/if (${Zone.ShortName.Equal[GuildLobby]}) /call InkDeath
+	/if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /call InkDeath
 	|-- insert some return logic here	
 	/varset inkRunning FALSE
-	/nav loc ${startX} ${startY} ${startZ}
+	/nav wp noqstart
 	|-- clear events queue so we dont get into an echo chamber
 	/doevents flush
 /return
@@ -298,20 +292,13 @@ Sub InkCurseRun
     /delay 3s
 	/maxfps bg 30
 	:start
-		/if (${Zone.ShortName.Equal[GuildLobby]}) {
-			/varset inkRunning FALSE
-			/play off
-			/doevents flush
-			/return
-		}
-		/if (${AdvPath.State} == 0) {
-			/play cursecallers
-		}
+		/if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /call InkDeath
+		/if (${AdvPath.State} == 0) /play cursecallers
 	:movement
 		/if (!${Me.Inventory[17].ID} && !${Me.Inventory[18].ID}) /call InkDeath
-		/if (${Zone.ShortName.Equal[GuildLobby]}) /call InkDeath
+		/if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /call InkDeath
 		/if (${AdvPath.State} == 2) {
-			/delay 1s
+			/delay 10
 			/doevents InkCurseSafe
 			/if (!${inkRunning}) {
 				/play off
@@ -392,9 +379,10 @@ Sub EVENT_VORRAMP
 
 Sub EVENT_VORBLUR
 	/if (!${bln_engaged}) /return
+	/if (${str_classArchetype.Equal[CASTER]} && ${Me.Casting.ID}) /call Interrupt
 	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]} && ${bln_engaged}) {
 		/if (!${bln_riposting}) {
-			/melee reset
+			/squelch /melee reset
 			/attack off
 			/delay 30
 			/killthis
@@ -538,9 +526,6 @@ Sub BalancerKillMelee(string _targetName, int _targetID, int _balanceTo)
 		/if (${Target.PctHPs} > ${_balanceTo}) /goto :BalancerMeleeLoop
 	:return
 	/echo BalancerKillMelee return
-	/melee reset
-	/melee reset
-	/melee reset
 	/call Disengage
 	/varset bln_engaged FALSE
 /return 
@@ -586,19 +571,7 @@ Sub BalancerReset
 	/varset bln_balancing FALSE
 	
 	/if (${str_classArchetype.Equal[PRIEST]}) /return
-	
-	|-- reset various flags
-	|-- class archetype resets
-	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
-		/stick off
-		/melee reset
-	} 
 
-	|-- pet resets
-	/if (${Me.Pet.ID} && ${Defined[bln_petAttacking]}) {
-		/varset bln_petAttacking 	FALSE
-		/pet hold on
-	}
 	/doevents flush
 	/call Disengage
 
@@ -614,10 +587,11 @@ Sub BalancerReset
 			/if (${Navigation.Active}) /goto :moveKvxe
 
 		:returnBalance
+		/if (${Navigation.Active}) /nav stop
 		/stick 25 behind
-		/stick off
-		/melee reset
-		/if (${Me.Class.ShortName.Equal[WAR]} && ${int_MTID} != ${Me.ID}) /melee aggro=0
+		/call Disengage
+		
+		/if ((${Me.Class.ShortName.Equal[WAR]} || ${Me.Class.ShortName.Equal[SHD]} || ${Me.Class.ShortName.Equal[PAL]}) && ${int_MTID} != ${Me.ID}) /melee aggro=0
 	}
 	/call RunRaidEvents	
 /return

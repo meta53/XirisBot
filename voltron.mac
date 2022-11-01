@@ -157,15 +157,15 @@ Sub InviteGroupsToJELVAN
 
 |-- Hatred, where we primarily want to heal the group you are in, and the assist tank
 Sub SetupGroupsDEFAULT
-	/multiline ; /invite Xanshia;  /invite Pantheon; /invite Deist; /invite Ania; /invite Ophidia;
-	/dex Xiria /multiline ; /invite Xirael;  /invite Tragic; /invite Nihilist; /invite Aergia; /invite Xorael;
-	/dex Xirea /multiline ; /invite Xinshia; /invite Xerael; /invite Sadelia; /invite Eurydice; /invite Drexia;
-	/dex Xirin /multiline ; /invite Theist;  /invite Xarael; /invite Cereborn; /invite Achos; /invite Dogmatist;
-	/dex Xeqisa /multiline ; /invite Xiexa;   /invite Xeixi; /invite Xeixa; /invite Aidos; /invite Xurael;
-	/dex Xaeliea /multiline ; /invite Ertres;  /invite Shinxia; /invite Opheoia; /invite Ophenia; /invite Xenshia;
-	/dex Xaexa /multiline ; /invite Erinyes;  /invite Shynxia; /invite Ophexia; /invite Ophelia; /invite Xunshia;
+	/multiline ; /invite Xanshia;  /invite Tragic; /invite Empathic; /invite Ania; /invite Ophidia;
+	/dex Xiria /multiline ; /invite Xirael;  /invite Xerael; /invite Dogmatist; /invite Aergia; /invite Pantheon;
+	/dex Xirea /multiline ; /invite Xinshia; /invite Xurael; /invite Sadelia; /invite Eurydice; /invite Drexia;
+	/dex Xirin /multiline ; /invite Xenshia;  /invite Deist; /invite Cereborn; /invite Achos; /invite Xorael;
+	/dex Xeqisa /multiline ; /invite Xiexa;   /invite Xeixi; /invite Xeixa; /invite Aidos; /invite Nihilist;
+	/dex Xaeliea /multiline ; /invite Ertres;  /invite Shinxia; /invite Opheoia; /invite Ophenia; /invite Theist;
+	/dex Xaexa /multiline ; /invite Erinyes;  /invite Shynxia; /invite Ophexia; /invite Ophelia; /invite Xarael;
 	/dex Xaia /multiline ; /invite Ertris;  /invite Ophemia; /invite Opheyia; /invite Adikia; /invite Xonshia;
-	/dex Xepatia /multiline ; /invite Erinyas;  /invite Mluian; /invite Ophezia; /invite Achlys; /invite Empathic;
+	/dex Xepatia /multiline ; /invite Erinyas;  /invite Mluian; /invite Ophezia; /invite Achlys; /invite Xunshia;
 /return
 
 Sub InviteGroupsToDEFAULT

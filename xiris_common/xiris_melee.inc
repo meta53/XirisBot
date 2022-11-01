@@ -329,6 +329,9 @@ Sub chkDownshits
 			:nextDF
 			/next df
 			}
+
+			|- return existing spellset
+			/if (${str_classArchetype.Equal[CASTER]} || ${str_classArchetype.Equal[PRIEST]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${Me.Class.ShortName.Equal[PAL]} || ${Me.Class.ShortName.Equal[SHD]}) /memspellset ${str_spellset}
 			|- return existing target
 			/if (${Bool[${svdTGTID}]}) /call TrueTarget ${svdTGTID}
 		}
@@ -485,10 +488,9 @@ Sub StickToTarget
 			/goto :navDelay
 		}
 	} else {
-		/rs Target is too far away to get to.
+		/rs Target is too far away to get to!
 		/if (${Navigation.Active}) /nav stop
-		/stick off
-		/melee reset
+		/call Disengage
 		/return
 	}
 /return
@@ -573,13 +575,12 @@ Sub chkCA_ROG
 
 |-- Not Used
 Sub killthis
-	/killthis
+	/squelch /killthis
 /return
 
 
 Sub meleeReset
-	/echo meleeReset
-	/melee reset
+	/squelch /melee reset
 /return
 
 

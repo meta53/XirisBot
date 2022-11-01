@@ -1,39 +1,39 @@
 #Turbo 20
 Sub Main 
+    | Set Xiris (MT) Healing
+    /dt Tragic AutoCureMTOn
+    /dt Xirael AutoCureMTOn
+    /dt Xunshia AutoCureMTOn
+
     | Set Xirin (OT) Healing
-    /dt Theist changeMT Xirin
-    /dt Tragic changeMT Xirin
-    /dt Xirael changeMT Xirin
-
-    /dt Xinshia changeMT Xirin
-    /dt Xinshia AutoCureMTOn
-
     /dt Xenshia changeMT Xirin
     /dt Xenshia AutoCureMTOn
 
-    | Set the mode to efficient
-    /dgt healMode EFFICIENT 
+    | Set Xiria (TT) AutoCuring
+    /dt Xirael changeMT Xiria 
+    /dt Xirael AutoCureMTOn
 
-    | Set more offtanks
-    /dt Sadelia offtankon
-    /dt Xiria offtankon 
-    /dt Xirea offtankon 
+    /dge clr /warp wp keldcleric
+    /dge caster /warp wp keldcaster
 
     | Set MT
     /dex Xiris /melee aggro=on
     /dex Xiris /melee taunt=on
-    /dt Xanshia AutoCureMTOn
-    /dt Xunshia AutoCureMTOn
 
     | Set OT
     /dex Xirin /melee aggro=on
     /dex Xirin /melee taunt=on
 
+    | Set ST ()
+    /dex Xiria /end 
+    /dex Xiria /melee aggro=on
+    /dex Xiria /melee taunt=on
+
+    | Set Self
     /melee aggro=on
     /melee taunt=on
 
-
     | Run raidcommands
-    /mac raidcmds
+    /mac keldPuller
 
 /return

@@ -63,7 +63,7 @@ Sub ToggleOfftanking(bool _blnOT)
 /return
 
 Sub chkOffTanking
-	/if (!${bln_offTank}) 	 /return
+	/if (!${bln_offTank} || ${bln_following}) 	 /return
 	
 	| If there are no spawns within OT Distance, return
 	/if (!${SpawnCount[npc radius ${int_offtankRadius} range 46 80]}) {
@@ -74,6 +74,7 @@ Sub chkOffTanking
 	:OffTankCheck
 	| Check Raid Events
 	/call RunRaidEvents
+	/if (!${bln_offTank} || ${bln_following}) 	 /return
 
 	| Check all NPCs within offtankRadius
 	/declare i int local
@@ -96,6 +97,7 @@ Sub chkOffTanking
 	/if (${SpawnCount[npc radius ${int_offtankRadius} range 46 80  noalert 5]} == 1 && ${bln_engaged}) {
 		/if (${NearestSpawn[npc radius ${int_offtankRadius} range 46 80 noalert 5].ID} == ${int_targetID}) {
 			/call TrueTarget ${int_targetID}
+			/if (!${Bool[${Me.TargetOfTarget.ID}]}) /return
 			/squelch /melee aggro=0
 			/squelch /melee taunt=0
 			/if (${Target.PctHPs} <=99) /killthis
@@ -105,6 +107,7 @@ Sub chkOffTanking
 
 
 Sub aggroByID(int _targetID)	
+	
 	/if (!${Me.Standing}) /stand on
 	/if (!${bln_engaged}) /varset bln_engaged TRUE
 	/cecho \ao Aggroing \ay${Target.Name}\aw(\ag${_targetID}\aw)
@@ -179,6 +182,7 @@ Sub xbot_initialize_offtanking
 	/squelch /alert add 5 "Voracious Feran"
 	/squelch /alert add 5 "Uchti"
 	/squelch /alert add 5 "Keldovan"
-
+	/squelch /alert add 5 "Jomica"
+	/squelch /alert add 5 "cursebearer"
 /return
  

@@ -115,6 +115,7 @@ Sub Main
     /dgt ResetGroupCurer
 
     | Set raidcommands
-    /mac bot_war xiris
     /melee aggro=1
+    /melee taunt=1
+    /mac bot_war xiris
 /return

@@ -50,16 +50,18 @@ Sub Main(bool _invert) {}
     /dex xeixi  /warp wp nwiz
     /dex xeqisa /warp wp nwiz
 
-    /dgt CreateCamp noqstart
+    /delay 40
 
+    /dga CreateCamp noqstart
+    /delay 10
     | Real Noqufiel
     | NTR
-    /dex xiris /warp wp ${realWAR}
-    /dex xiris /mac ntank REAL ${realWAR}
+    /warp wp ${realWAR}
+    /mac ntank REAL ${realWAR}
 
     | Fake Noqufiel
     | NTF
     /dex xirea /warp wp ${fakeWAR}
-    /dex xirea /mac ntank FAKE ${realTank}
+    /dex xirea /mac ntank FAKE ${fakeWAR}
 
 /return

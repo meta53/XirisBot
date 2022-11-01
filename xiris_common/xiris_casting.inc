@@ -946,16 +946,18 @@ Sub resetSpellLineup {
 
 
 Sub xbot_initialize_casting
-	/if (${str_classArchetype.Equal[MELEE_END]} || ${Me.Class.ShortName.Equal[WAR]}) /return
-
 	/cecho \aoxbot_initialize_casting
 
 	/declare	str_spellset				string  outer 	default
+
 	|-- Misc (resist types, fast only, etc
 	/declare str_defaultResistTypes	string	outer	Chromatic,Corruption,Cold,Disease,Fire,Magic,Poison,Prismatic
 	/declare str_useResistTypes		string	outer	${str_defaultResistTypes}
 	/if (${Zone.ShortName.Equal[pofire]}) /varset str_useResistTypes Cold,Magic,Poison,Disease
 	
+	|-- Return out if not a caster
+	/if (${str_classArchetype.Equal[MELEE_END]} || ${Me.Class.ShortName.Equal[WAR]}) /return
+
 	/declare bln_useFastOnly			bool	outer	FALSE
 	/declare int_concCount				int     outer 	0
 

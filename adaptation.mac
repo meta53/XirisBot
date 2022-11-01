@@ -5,10 +5,7 @@ Sub Main
     /dt Tragic changeMT Xiria
     /dt Xirael changeMT Xiria
     /dt Xinshia changeMT Xirin
-    /dt Xenshia changeMT xirin
 
-    | Set the mode to normal
-    /dt Xiria offtankOn
-    /dt Xirin offtankOn
+    /dex Xirin /end
 
 /return

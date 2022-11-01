@@ -210,16 +210,19 @@ Sub ChangeHealMode(string _strMode)
 		/echo Changing healing mode to DEFAULT
 		/varset str_spellset default
 		/varset str_healMode CHCHAIN
+		/call InterruptOFF
 	} else /if (${_strMode.Find[EFFICIENT]}) {
 		/echo Changing healing mode to EFFICIENT
 		/varset str_spellset efficient
 		/varset use_heal_HoT FALSE
 		/varset str_healMode EFFICIENT
+		/call InterruptON
 	} else {
 		/echo Changing healing mode to DEFAULT
 		/varset str_spellset default
 		/varset use_heal_HoT TRUE
 		/varset str_healMode DEFAULT
+		/call InterruptOFF
 	}
 	/memspellset ${str_spellset}
 /return

@@ -252,6 +252,7 @@ Sub MQ2Cast(string spellName,string spellType,timer giveUpTimer,string mySub,str
 
 
 Sub Interrupt
+	/cecho \awInterrupting Cast! \ao${Time.Time24}
 	/varset interruptFlag TRUE
 	/interrupt
 /return

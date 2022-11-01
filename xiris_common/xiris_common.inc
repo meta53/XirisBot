@@ -460,11 +460,14 @@ Sub EVENT_KillMob(_line, _sender, _eventParams)
 |-- Engage Target Sub, handles class specific modifications (minor)
 Sub EngageTarget(int _targetID)
 	/if (!${Bool[${_targetID}]}) /return
-	/cecho \awEngageTarget \ag${Spawn[id ${_targetID}].CleanName} \ay(${_targetID})
+	
+	| If I am following, stop it!
+	/if (${bln_following}) /call StopFollowing
+	
+	| Target the NPC
 	/varset int_targetID ${_targetID}
 	/varset bln_engaged TRUE
-
-	| Target the NPC
+	/cecho \awEngaging Target \ag${Spawn[id ${_targetID}].CleanName} \ay(${_targetID}) \ao${Time.Time24}
 	/if (${Me.Class.ShortName.NotEqual[CLR]}) /call TrueTarget ${int_targetID}
 	| Stand Up
 	/if ((${Me.Feigning} && (${Me.PctHPs} > 75)) || !${Me.Standing}) /stand
@@ -474,6 +477,8 @@ Sub EngageTarget(int _targetID)
 	/if (${Me.Pet.ID}) /call chkPetAttack
 	| Start Swinging
 	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]} || (${Me.Class.ShortName.Equal[CLR]} && ${bln_battleCleric})) {
+		/cecho \awKilling Target \ag${Spawn[id ${_targetID}].CleanName} \ay(${_targetID})  \ao${Time.Time24}
+		/squelch /melee reset
 		/squelch /face fast
 		/squelch /killthis
 		/call StickToTarget
@@ -588,7 +593,7 @@ Sub EVENT_Disengage
 /return 
 
 Sub Disengage 
-	/cecho \aoDisengaging
+	/cecho \awDisengaging \ao${Time.Time24}
 	|-- global reset
 	/varset bln_engaged 		FALSE
 	/varset int_targetID		0
@@ -598,12 +603,11 @@ Sub Disengage
 	}
 	|-- class archetype resets
 	/if (${str_classArchetype.Equal[PRIEST]}) {
-
+		| Do nothing
 	} else /if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
 		/squelch /stick off
 		/squelch /melee reset
 		/squelch /target clear
-		
 	} else /if (${str_classArchetype.Equal[CASTER]}) {
 		/if (${Me.Pet.ID}) {
 			/if (${Defined[bln_petAttacking]}) /varset bln_petAttacking FALSE
@@ -888,16 +892,15 @@ Sub chkBurn
 					:doCombatAbility
 					| Bards can click discs while singing
 					/doability "${Burn_${burn}}"
-					/rs ${burn}:DISC "${Burn_${burn}}" Clicked!
-					/cecho \agDISC \ayBurn_${burn} \agclicked!
+					/dgt DISC ${Burn_${burn}} clicked!
+					/cecho \agDISC \ay${Burn_${burn}} \agclicked!
 					/goto :nextBurn		
 				}
 				
 			
 			| ---------------	
 			| Alt Ability
-			| Note: We prefer Alt abilities with NUMBERS, they are quicker to fire, with less lag
-			| 		Additionally, if MGBable, (few) we have Burn_1_MGB = TRUE to look for (default FALSE)
+			| Note: Additionally, if MGBable, (few) we have Burn_1_MGB = TRUE to look for (default FALSE)
 			| ---------------
 			} else /if (${Burn_${burn}_Type.Equal[alt]} && ${Me.AltAbilityReady[${Burn_${burn}}]} && ${Burn_${burn}_Use} && ${Spell[${Burn_${burn}}].Stacks}) {
 				| Check to see if the burn Before disc/alt (0 if not) is already run
@@ -916,12 +919,13 @@ Sub chkBurn
 							/cecho \ag Mass Group Buff Activated!
 						}
 						/if (${Me.Class.ShortName.Equal[BRD]}) {
-							/medley "${Burn_${burn}}"
+							/medley "${Burn_${burn}}" -interrupt
+							/rs ${burn}:ALT  "${Burn_${burn}}" Clicked!
 						} else {
 							/call MQ2Cast "${Burn_${burn}}" alt
 						}
-						/rs ${burn}:AA "${Burn_${burn}}" Clicked!
-						/cecho \agAA \ayBurn_${burn} \agclicked!
+						/dgt AA ${Burn_${burn}} clicked!
+						/cecho \agAA \ay${Burn_${burn}} \agclicked!
 						/goto :nextBurn	
 				}
 			| ---------------	
@@ -931,12 +935,13 @@ Sub chkBurn
 			} else /if (${Burn_${burn}_Type.Equal[item]} && ${Burn_${burn}_Use} &&  (${Bool[${FindItem[${Burn_${burn}}].ID}]} && !${Bool[${FindItem[${Burn_${burn}}].TimerReady}]}) && (!${Me.Casting.ID} || ${Me.Class.ShortName.Equal[BRD]})) {
 				:doItemClick
 					/if (${Me.Class.ShortName.Equal[BRD]}) {
-						/medley queue "${Burn_${burn}}"
+						/medley queue "${Burn_${burn}}" -interrupt
+						/rs ${burn}:ITEM  "${Burn_${burn}}" Clicked!
 					} else {
 						/call MQ2Cast "${Burn_${burn}}" item 2s
 					}
-					/rs ${burn}:ITEM  "${Burn_${burn}}" Clicked!
-					/cecho \agItem \ayBurn_${burn} \agclicked!
+					/dgt Item ${Burn_${burn}} clicked!
+					/cecho \agItem \ay${Burn_${burn}} \agclicked!
 					/goto :nextBurn	
 			}
 		}
@@ -969,7 +974,7 @@ Sub chkClicks
 					} else {
 						/call MQ2Cast "${Click_${intC}}" item 2s
 					}
-					/cecho \agItem \ayBurn_${burn} \agclicked!
+					/cecho \agItem \ayClick_${burn} \agclicked!
 					/varset Click_${intC}_Timer ${Click_${intC}_Recast}s
 				}
 			}
@@ -1524,7 +1529,7 @@ SUB EVENT_shrinkGroup
 Sub TargetNamedCheck(_id)
 	/if (${Spawn[npc id ${_id}].Named} || ${Spawn[npc id ${_id}].Name.Find[#]}) /return TRUE
 	/if (${Zone.ShortName.Equal[tacvi]} || ${Zone.ShortName.Equal[txevu]}) /return TRUE
-	/if (${Zone.ShortName.Equal[chambersa]} ||${Zone.ShortName.Equal[chambersb]} ||${Zone.ShortName.Equal[chambersc]} ||${Zone.ShortName.Equal[chambersd]}||${Zone.ShortName.Equal[chamberse]}) /return TRUE
+	/if (${Zone.ShortName.Equal[chambersa]} || ${Zone.ShortName.Equal[chambersb]} || ${Zone.ShortName.Equal[chambersc]} || ${Zone.ShortName.Equal[chambersd]} || ${Zone.ShortName.Equal[chamberse]}) /return TRUE
 	/if (${Zone.ShortName.Equal[anguish]}) /return TRUE
 	/if (${Zone.ShortName.Equal[arena]}) /return TRUE
 	/if (${Zone.ShortName.Equal[thundercrest]}) /return TRUE

@@ -613,7 +613,7 @@ Sub RequestLobbyBuffs
 
 Sub chkZone
 	/if (${Zone.ShortName.NotEqual[${SZ_shortName}]}) {
-		/if (${Zone.ShortName.Equal[GuildLobby]}) {
+		/if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) {
 			/docommand /${cmdChannel}  I died! GTFO! ${Time.Time24}
 			/delay 5s
 			/return LOBBY
@@ -627,7 +627,7 @@ Sub OriginToLobby
 	
 	:OriginDelay
 	/if (${AltAbilityTimer[Origin]} == 0) {
-		/if (${Zone.ShortName.NotEqual[guildlobby]}) {
+		/if (${Zone.ShortName.NotEqual[${Me.BoundLocation[0]}]}) {
 			/varcalc originAttempt ${originAttempt} + 1
 			|-- tell each group member that isn't a bard to cast origin, bard add origin to queue
 			/for i 0 to ${Group}
@@ -649,7 +649,7 @@ Sub OriginToLobby
 /return 
 
 Sub ResetAtLobby
-	/if (${Zone.ShortName.Equal[guildlobby]}) {
+	/if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) {
 		/call RequestLobbyBuffs
 		/call zoneByMagus ${zoneMagus}
 	} else {

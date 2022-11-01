@@ -32,8 +32,6 @@ ______________________________________________
 |	Warden Hanvar
 #EVENT HanvarSetup  	"#*#HanvarSetup#*#"
 #EVENT HanvarStart		"#*#HanvarStart#*#"
-#EVENT HanvarAEd    	"#1# tells the raid#*#'HanvarAEonMT #2#'"
-#EVENT HanvarStun       "#1# tells the raid#*#'HanvarStunonMT #2#'"
 #EVENT HanvarRetreat    "#1# tells the raid#*#'HanvarRetreat #2#'"
 #EVENT HanvarKill       "#1# tells the raid#*#'HanvarKill #2#'"
 
@@ -55,7 +53,6 @@ Sub InitEvents_OOW_Anguish
 	/declare bln_hanvarEngaged bool outer FALSE
 	/declare bln_amvEngaged	   bool outer FALSE
 	/declare timer_hanvar_ae   timer outer 0
-	/declare timer_hanvar_stun timer outer 0
 	/call RegisterRaidEvents Events_OOW_Anguish 15
 
 	|-- Waypoints
@@ -171,6 +168,8 @@ Sub Event_TureRampOn
 		/stand on
 		/stick off
 		/nav wp tureSafe
+		/delay 10
+		/call chkNeedCure
 	} else /if (${Me.Class.ShortName.Equal[NEC]} || ${Me.Class.ShortName.Equal[MAG]}) {
 		/pet hold on
 		/pet back off
@@ -236,7 +235,7 @@ Sub Event_JelvanStart
 			/if (${SpawnCount[npc Tanthu]} == 1 && !${bln_jelvanEngaged}) {
 				/call TrueTarget ${Spawn[npc Tanthu].ID}
 				/varset bln_jelvanEngaged TRUE
-				/disc Stonewall
+				|/disc Stonewall
 				/killthis 
 				/rs DebuffTarget ${Target.ID}
 				/rs sing melee
@@ -285,7 +284,6 @@ Sub Event_JelvanStart
 		}
 
 	}
-
 /return
 
 Sub chkJelvanCures
@@ -409,19 +407,11 @@ Sub Event_HanvarStart
 	/doevents flush HanvarStart
 /return
 
-Sub Event_HanvarStun(string _sender, string _line, string _eventParams)
-	/cecho \arHanvar Stun Triggered \agStarting \aw${_eventParams}s \agTimer 
-	/varset timer_hanvar_stun ${Int[${_eventParams}]}s
-	/doevents flush HanvarStun
-/return
-
 Sub Event_HanvarRetreat(string _sender, string _line, string _eventParams)
 	/cecho \arHanvar Retreat Triggered \agStarting \aw${_eventParams}s \ag Timer
 	/if (${Target.Name.Find[Hanvar]} || ${Spawn[npc Hanvar].Distance} < 100) {
 		/if (${MeleeClasses.Find[${Me.Class.ShortName}]} ) {
-			/squelch /target clear
-			/melee reset
-			/melee reset
+			/call Disengage
 			/warp wp hanvarSafe
 		} 
 	}
@@ -431,11 +421,10 @@ Sub Event_HanvarRetreat(string _sender, string _line, string _eventParams)
 Sub Event_HanvarKill(string _sender, string _line, string _eventParams)
 	/cecho \arHanvar Kill Triggered \agStarting \aw${_eventParams}s \ag Timer
 	/if (${SpawnCount[npc guard]}) /return
-
 	/if (${MeleeClasses.Find[${Me.Class.ShortName}]} ) {
 		/call TrueTarget ${Spawn[npc Hanvar].ID}
 		/warp b 10
-		/killthis
+		/call EngageTarget ${Spawn[npc Hanvar].ID}
 	} else /if (${CasterClasses.Find[${Me.Class.ShortName}]}) {
 		/call EngageTarget ${Spawn[npc Hanvar].ID}
 	}

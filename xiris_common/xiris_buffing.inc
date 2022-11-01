@@ -631,14 +631,15 @@ Sub chkOOCBuffs
 			|/echo already have buff or it does not stack, doing next
 			/goto :next
 		}
-
 		/memspellset buff
+		/memspellset buffs
 		/cecho \awOOC Buff: \ag${buffSpell}
 		/varset		buffGem		 ${OOCBUFF_${i}_Gem}
 
 		:spellReadyWait
 		/call chkSpellMemorized "${buffSpell}" TRUE
 		/call RunAllEvents
+
 
 		
 		/delay 3s

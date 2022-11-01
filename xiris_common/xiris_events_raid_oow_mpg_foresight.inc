@@ -180,10 +180,12 @@ Sub ForesightNavigation(string _wp, string _watch, string _event)
 	/nav recordwaypoint origin
 
 	|- turn off melee & movement
+	
 	/if (${Melee.Attack})   /varset atk TRUE
+
+	/call Disengage
 	/if (${Navigation.Active}) /nav stop
 	/if (${Melee.Sticking})    /stick off
-	/melee reset
 
 	|- set the watch variable to TRUE
 	/varset ${_watch} TRUE
@@ -286,10 +288,11 @@ Sub EVENT_ForesightKyvStill
 	/declare atk bool local FALSE
 	/declare tid int local ${Target.ID}
 	/declare kyvstill timer local 30s
-	/if (${Melee.Attack})   /varset atk TRUE
-	/if (${Navigation.Active}) /nav stop
-	/if (${Melee.Sticking})    /stick off
-	/melee reset
+	/if (${Melee.Attack})   	/varset atk TRUE
+	/call Disengage
+	/if (${Navigation.Active}) 	/nav stop
+	/if (${Melee.Sticking})     /stick off
+
 
 	|- set the watch variable to TRUE
 	/varset IsHoldingStill TRUE
@@ -308,7 +311,7 @@ Sub EVENT_ForesightKyvStill
 	/if (${Me.Ducking}) /keypress duck
 	/if (${Me.State.NotEqual[STAND]}) /stand
 	/call TrueTarget ${tid}
-	/if (${atk}) /killthis
+	/if (${atk}) /call EngageTarget ${tid}
 /return
 
 Sub EVENT_ForesightKyvStillSafe
@@ -326,12 +329,12 @@ Sub EVENT_ForesightKyvDuck
 	/declare atk bool local FALSE
 	/declare tid int local ${Target.ID}
 	/declare kyvduck timer local 30s
-	/if (${Melee.Attack})   /varset atk TRUE
-	/if (${Navigation.Active}) /nav stop
-	/if (${Melee.Sticking})    /stick off
-	/melee reset
+	/if (${Melee.Attack})   	/varset atk TRUE
+	/call Disengage
+	/if (${Navigation.Active}) 	/nav stop
+	/if (${Melee.Sticking})    	/stick off
+	/if (${Me.Sitting}) 	 	/stand on
 
-	/if (${Me.Sitting})  /stand on
 	/if (${Me.Standing}) {
 		/keypress duck
 	}
@@ -352,7 +355,7 @@ Sub EVENT_ForesightKyvDuck
 	/if (${Me.Ducking}) /keypress duck
 	/if (${Me.State.NotEqual[STAND]}) /stand
 	/call TrueTarget ${tid}
-	/if (${atk}) /killthis
+	/if (${atk})  /call EngageTarget ${tid}
 /return
 
 Sub EVENT_ForesightKyvDuckSafe
@@ -364,7 +367,7 @@ Sub EVENT_ForesightKyvDuckSafe
 
 Sub EVENT_ForesightAEClose
 	/say AEClose to Dragorn!
-	/doevents flush EVENT_ForesightAEClose
+	/doevents flush ForesightAEClose
 
 	| The dragorns will cast spell 5693 Flashfire 5000 AE DD
 	/if (${str_classArchetype.Equal[PRIEST]} || ${str_classArchetype.Equal[CASTER]}) {

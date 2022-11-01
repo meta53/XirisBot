@@ -1,0 +1,20 @@
+#Turbo 20
+#Event active "#*#begins to glow#*#"
+Sub Main 
+    | Set Xiris (MT) Healing 
+    /dgt healMode EFFICIENT 
+    /dgt changeHP 65
+    /dgt UseFastOnly TRUE
+
+    :loop 
+        /doevents
+        /delay 30
+    /goto :loop
+/return
+
+Sub EVENT_active 
+    /dgt healmode NORMAL
+    /dgt changeHP 90
+    /beep 
+    /beep
+/return

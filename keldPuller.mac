@@ -1,0 +1,77 @@
+| Run as SK (initial puller)
+#Turbo 20
+
+#EVENT KeldovanEngage			"#*#KeldovanEngage#*#"
+
+Sub Main(string _type, string _tankPoint)
+	/melee aggro=on
+    /melee taunt=on
+	/declare bln_keldovanEngaged 	bool 	outer FALSE
+
+	/declare timer_harmshield 		timer 	outer 0
+
+
+	:wait_loop
+	/doevents
+	/delay 5
+	/if (!${bln_keldovanEngaged}) /goto :wait_loop
+
+	| Announcing Engage
+	/rs KeldovanStart ${Time.Time24}
+
+
+	:ActiveLoop
+		/doevents
+		|------
+		| Keldovan Harmshield Time check
+		|------
+		| I still have > 5s of harmshield left!
+		/if (${timer_harmshield} < 20) {
+            /call commandTankOn
+            /melee reset
+            /delay 80
+            /rs DebuffTarget ${Spawn[npc Keldovan].ID}
+            /melee aggro=off 
+            /melee taunt=off 
+            /dgt Sing
+            /goto : return
+		} 
+	/goto :ActiveLoop
+    :return 
+/return
+
+Sub commandTankOn
+	/cecho \ar${timer_harmshield} \awuntil Keldovan Rape, Send in Tank 
+	/dex Xiris /tar Keldovan
+    /dex Xiris /stick 10 front 
+    /delay 10
+    /dex Xiris /doability "Furious Discipline"
+    /dex Xiris /attack on 
+    /dex Xiris /doability "Ancient: Chaos Cry"
+    /delay 10
+    /dex Xiris /doability "Bazu Bellow"
+/return 
+
+
+
+Sub Event_KeldovanEngage
+	/if (!${Target.ID}) /target Keldovan
+	/delay 20
+    
+    /call chkSpellMemorized ${spell_hate} TRUE
+    /call chkSpellMemorized Harmshield TRUE
+    :spell_wait
+    /if (!${Me.SpellReady[${spell_hate}]} || !${Me.SpellReady[Harmshield]}) /goto :spell_wait
+    /call MQ2Cast ${spell_hate}
+    /call MQ2Cast Harmshield
+	/varset timer_harmshield 30s
+	/nav wp keldTank
+	:navKeld
+	/if (${Navigation.Active}) {
+		/goto :navKeld 
+	}
+	/varset bln_keldovanEngaged TRUE
+	/face fast
+/return
+
+

@@ -32,15 +32,17 @@ REQUIRED INCLUDES
 
 #Turbo 40
 
-#EVENT Sing				"#1# tells the group#*#'Sing #2#'"
-#EVENT Sing				"#1# tells you#*#'Sing #2#'"
-#EVENT Sing				"#1# tells the raid#*#'Sing #2#'"
-#EVENT Sing 			"[ #1# #*#]#*#Sing #2#"
+#EVENT Sing				"#1# tells the group#*#'SingSongs'"
+#EVENT Sing				"#1# tells you#*#'SingSongs'"
+#EVENT Sing				"#1# tells the raid#*#'SingSongs'"
+#EVENT Sing 			"[ #1# #*#]#*#SingSongs"
 
 #EVENT Hush				"#1# tells the group#*#'Hush#*#'"
 #EVENT Hush				"#1# tells you#*#'Hush#*#'"
 #EVENT Hush				"#1# tells the raid#*#'Hush#*#'"
 #EVENT Hush 			"[ #1# #*#]#*#Hush#*#"
+
+#EVENT BardSlow			"#*#BardSlow#*#"
 
 Sub InitEvents_Class
 	/call RegisterClassEvents Events_BRD 2
@@ -49,15 +51,18 @@ Sub InitEvents_Class
 Sub Events_BRD
 	/doevents Sing
 	/doevents Hush
+	/doevents BardSlow
 /return 
 
 Sub EVENT_Sing(_line, _sender, _eventParams)	
-	|/if (${Me.Class.ShortName.Equal[BRD]}) /varset str_currentMedley ${_type}
-	/call SongSongs ${str_currentMedley}
+	/call SingSongs ${str_currentMedley}
 	/doevents flush Sing
 /return
 
 Sub SingSongs(string _type)
+	/memspellset ${_type}
+	/cecho \awSinging \ag${_type} \awmemming set and delaying \ao4s
+	/delay 4s
 	/if (${Me.Class.ShortName.Equal[BRD]} && ${Medley.Active}) /medley stop
 	/if (${Me.Class.ShortName.Equal[BRD]} && !${Medley.Active}) /medley ${_type}
 /return
@@ -66,6 +71,26 @@ Sub EVENT_Hush(_line, _sender, _eventParams)
 	/if (${Me.Class.ShortName.Equal[BRD]} && ${Medley.Active}) /medley stop
 	/doevents flush Hush
 /return
+
+Sub Event_BardSlow
+	/cecho \awToggling Bard Slow \ag${bln_bardSlow} \awto TRUE
+	/call ToggleBardSlow TRUE
+	/doevents flush BardSlow
+/return
+
+
+Sub ToggleBardSlow(bool _on) 
+	/if (${_on}) {
+		/cecho \ag Turning on Slow! Memming Spell Set
+		/varset timer_bardSlow 10s
+		/varset bln_bardSlow TRUE
+		/memspellset slow 
+	} else {
+		/varset bln_bardSlow FALSE
+		/call SingSongs ${str_currentMedley}
+	}
+	
+/return 
 
 Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint, string _assistArgs)
 	
@@ -109,6 +134,9 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 		
 		|-- Check Auto Assist if its on
 		/if (${bln_autoAssist}) /call chkAutoAssist
+
+		|-- Check for Slowing 
+		/call chkBardSlow
 
 		/if (${bln_engaged}) {
 			|-- check engaged events
@@ -183,8 +211,19 @@ Sub SetupSongs
 			/if (${Me.CleanName.Equal[Aidos]}) 	/varset str_currentMedley MELEE
 			/if (${Me.CleanName.Equal[Achos]}) 	/varset str_currentMedley MELEE
 		}
+	}
+	/varset str_spellset ${str_currentMedley}
 	/memspellset ${str_currentMedley}	
 	/call SingSongs ${str_currentMedley}
+/return
+
+Sub chkBardSlow
+	
+	/if (${bln_bardSlow} && !${timer_bardSlow} && ${Target.Type.Equal[NPC]}) {
+		/cecho \aw Slow? \aoUse? \ag${bln_bardSlow} \aoTimer? \ag${timer_bardSlow} \aoTargetType? \ag${Target.Type.Equal[NPC]}
+		/medley queue ${str_bardSlow}
+		/varset timer_bardSlow 10s
+	}
 /return
 
 |**
@@ -229,6 +268,11 @@ Sub variant_initialize
 	/declare    str_currentMedley	    string	outer	melee
 	/call SetupSongs
 	/cecho \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID}) HealPoint:${healPoint} ST: ${str_STName}(${int_STID})
+	|--Bard Slow
+	/declare timer_bardSlow				timer	outer 	10s
+	/declare bln_bardSlow				bool	outer	FALSE
+	/declare str_bardSlow	            string	outer   "Zuriki's Song of Shenanigans"
+
 	/call InitEvents_Class
 /return
 
