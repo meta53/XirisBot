@@ -1,15 +1,17 @@
 | Run as SK (initial puller)
 #Turbo 20
+#include xiris_common/xiris_spell_routines.inc
 
 #EVENT KeldovanEngage			"#*#KeldovanEngage#*#"
 
 Sub Main(string _type, string _tankPoint)
+    /echo Running Keldovan
+    /call xbot_initialize_spellRoutines
 	/melee aggro=on
     /melee taunt=on
 	/declare bln_keldovanEngaged 	bool 	outer FALSE
-
+    /declare spell_hate             string  outer Terror of Discord
 	/declare timer_harmshield 		timer 	outer 0
-
 
 	:wait_loop
 	/doevents
@@ -21,20 +23,23 @@ Sub Main(string _type, string _tankPoint)
 
 
 	:ActiveLoop
+        /delay 10
+        /cecho Harmshield: ${timer_harmshield}
 		/doevents
 		|------
 		| Keldovan Harmshield Time check
 		|------
 		| I still have > 5s of harmshield left!
-		/if (${timer_harmshield} < 20) {
+		/if (${timer_harmshield} < 25) {
             /call commandTankOn
             /melee reset
             /delay 80
             /rs DebuffTarget ${Spawn[npc Keldovan].ID}
+            /dgt chstart 1 Xiris Xiria 30 empathic,dogmatist,xorael,pantheon
             /melee aggro=off 
             /melee taunt=off 
             /dgt Sing
-            /goto : return
+            /goto :return
 		} 
 	/goto :ActiveLoop
     :return 
@@ -43,10 +48,13 @@ Sub Main(string _type, string _tankPoint)
 Sub commandTankOn
 	/cecho \ar${timer_harmshield} \awuntil Keldovan Rape, Send in Tank 
 	/dex Xiris /tar Keldovan
-    /dex Xiris /stick 10 front 
+    /delay 5
+    /dex Xiris /stick 10 hold 
     /delay 10
     /dex Xiris /doability "Furious Discipline"
+    /delay 5
     /dex Xiris /attack on 
+    /delay 5
     /dex Xiris /doability "Ancient: Chaos Cry"
     /delay 10
     /dex Xiris /doability "Bazu Bellow"
@@ -55,16 +63,18 @@ Sub commandTankOn
 
 
 Sub Event_KeldovanEngage
-	/if (!${Target.ID}) /target Keldovan
+	/if (!${Target.ID}) /target Xiris
 	/delay 20
-    
-    /call chkSpellMemorized ${spell_hate} TRUE
-    /call chkSpellMemorized Harmshield TRUE
+
     :spell_wait
-    /if (!${Me.SpellReady[${spell_hate}]} || !${Me.SpellReady[Harmshield]}) /goto :spell_wait
-    /call MQ2Cast ${spell_hate}
-    /call MQ2Cast Harmshield
-	/varset timer_harmshield 30s
+    /delay 10
+    /cecho \awWaiting for \ao${Me.SpellReady[Terror of Discord]} \aw|| \ao${Me.SpellReady[Harmshield]}
+    /if (!${Me.SpellReady[Terror of Discord]} || !${Me.SpellReady[Harmshield]}) /goto :spell_wait
+    /call MQ2Cast "Terror of Discord"
+    /call MQ2Cast "Harmshield"
+    /varset timer_harmshield 30s
+    /delay 15
+	
 	/nav wp keldTank
 	:navKeld
 	/if (${Navigation.Active}) {

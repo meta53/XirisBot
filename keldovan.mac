@@ -1,9 +1,11 @@
 #Turbo 20
 Sub Main 
-    | Set Xiris (MT) Healing
+    | Set Autocures (most of them!)
     /dt Tragic AutoCureMTOn
     /dt Xirael AutoCureMTOn
     /dt Xunshia AutoCureMTOn
+    /dt Xerael AutoCureMTOn 
+    /dt Xarael AutoCureMTOn
 
     | Set Xirin (OT) Healing
     /dt Xenshia changeMT Xirin
@@ -34,6 +36,7 @@ Sub Main
     /melee taunt=on
 
     | Run raidcommands
+    /dgt Hush
     /mac keldPuller
 
 /return
