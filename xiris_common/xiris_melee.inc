@@ -217,7 +217,6 @@ Sub chkDownshits
 	/if ((${Target.ID} && ${Target.Type.Equal[NPC]}) || ${bln_engaged} || ${timer_check_downshits}) /return
 	|-- we don't buff at bind point because we might be naked.
 	/call chkNaked
-	/varset bln_naked ${Macro.Return}
 	/if (${bln_naked}) /return
 	
 	|- downshitif
@@ -243,6 +242,7 @@ Sub chkDownshits
 			/declare isSpell	bool	local	TRUE
 			/declare wornSlot   string  local 
 			/declare itemInSlot string  local
+			/declare hadToMemBuffs bool     local FALSE
 			
 			/for df 1 to ${downflagCount} 
 				| down flags look like: 
@@ -271,6 +271,7 @@ Sub chkDownshits
 					/if (${isSpell} && !${Me.SpellReady[${buffName}]}) {
 						/cecho \ay${buffName} \awis \arNOT \awReady, Memorizing
 						| Spell is not ready, memorize it
+						/varset hadToMemBuffs TRUE
 						/call chkSpellMemorized ${castArg} TRUE
 						/delay 10
 					} 
@@ -328,12 +329,13 @@ Sub chkDownshits
 				}
 			:nextDF
 			/next df
-			}
-
 			|- return existing spellset
-			/if (${str_classArchetype.Equal[CASTER]} || ${str_classArchetype.Equal[PRIEST]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${Me.Class.ShortName.Equal[PAL]} || ${Me.Class.ShortName.Equal[SHD]}) /memspellset ${str_spellset}
+			/if (${hadToMemBuffs}) /memspellset ${str_spellset}
 			|- return existing target
 			/if (${Bool[${svdTGTID}]}) /call TrueTarget ${svdTGTID}
+
+			}
+
 		}
 		/varset timer_check_downshits 45s
 	}

@@ -85,23 +85,20 @@ Sub Events_GoD_Uqua
 Sub Events_GoD_Inktuta
 	
 	| Cursebearers
-	/if (${SpawnCount[npc Cursecaller]} || (${SpawnCount[npc Noqufiel]}) ) {
-		/doevents CC1
-		/doevents CC2
-		/doevents CC3
-		/doevents CC4
-		/doevents CC5
-		/doevents CC6
-	}
 
-	/if (${SpawnCount[npc Cursecaller]}) {
-		/doevents InkCurse
-		/doevents InkCurseSafe
+	/doevents CC1
+	/doevents CC2
+	/doevents CC3
+	/doevents CC4
+	/doevents CC5
+	/doevents CC6
+	
+	/doevents InkCurse
+	/doevents InkCurseSafe
 		
-	}
 
 	| Noqufiel
-	/if (${Bool[${SpawnCount[npc Noqufiel]}]} && !${Bool[${SpawnCount[npc Cursecaller]}]} && ${SpawnCount[npc cursebearer]}) {
+	/if (${Bool[${SpawnCount[npc Noqufiel]}]} && !${Bool[${SpawnCount[npc Cursecaller]}]}) {
 		/doevents NoqCurse
 		/if (${Me.Class.ShortName.Equal[WIZ]} || ${Me.Class.ShortName.Equal[MAG]}) /call chkNoqCursebearers
 	}
@@ -127,6 +124,7 @@ Sub Events_GoD_Tacvi
 |--------------------------------------------------------------------------------
 Sub Event_UquaKey(string line,string key)
   /rs ${key}
+  /doevents flush UquaKey
 /return
 |--------------------------------------------------------------------------------
 
@@ -171,6 +169,7 @@ Sub Event_NoqCurse(_line, _chatSender, _eventParams)
 	/echo curseID: ${curseID}
 	/squelch /melee reset
 	/call InkNoqRun ${curseID}
+	/doevents flush NoqCurse
 /return
 
 Sub InkNoqRun(int _curseID)
@@ -330,26 +329,32 @@ Sub InkDeath
 
 Sub Event_CC1 
   /if (!${inkRunning}) /nav wp cc1
+  /doevents flush CC1
 /return
 
 Sub Event_CC2 
   /if (!${inkRunning}) /nav wp cc2
+  /doevents flush CC2
 /return
 
 Sub Event_CC3 
   /if (!${inkRunning}) /nav wp cc3
+  /doevents flush CC3
 /return
 
 Sub Event_CC4 
   /if (!${inkRunning}) /nav wp cc4
+  /doevents flush CC4
 /return
 
 Sub Event_CC5 
   /if (!${inkRunning}) /nav wp cc5
+  /doevents flush CC5
 /return
 
 Sub Event_CC6 
   /if (!${inkRunning}) /nav wp cc6
+  /doevents flush CC6
 /return
 
 |--Ikkinz4
@@ -364,6 +369,7 @@ Sub Event_KeeperPosition
 			/nav wp kclr
 		}
 	}
+	/doevents flush KeeperPosition
 /return
 
 
@@ -375,6 +381,7 @@ Sub EVENT_VORRAMP
 	} else {
 		/return
 	}
+	/doevents flush VORRAMP
 /return
 
 Sub EVENT_VORBLUR
@@ -389,6 +396,7 @@ Sub EVENT_VORBLUR
 			/attack on
 		}
 	}
+	/doevents flush VORBLUR
 /return 
 
 
@@ -401,6 +409,7 @@ SUB EVENT_PIRIKACTIVE
 	/if (${Me.Class.ShortName.Equal[CLR]}) {
 		/call InterruptOFF
 	}
+	/doevents flush PIRIKACTIVE
 /return
 
 SUB EVENT_BALANCE
@@ -493,6 +502,7 @@ SUB EVENT_BALANCE
 		/call BalancerReset
 	} 
 :return
+/doevents flush BALANCE
 /return	
 
 Sub BalancerKillMelee(string _targetName, int _targetID, int _balanceTo)
@@ -564,6 +574,7 @@ Sub BalancerKillCaster(string _targetName, int _targetID, int _balanceTo)
 
 Sub EVENT_BALANCEOFF
 	/call BalancerReset
+	/doevents flush BALANCEOFF
 /return
 
 Sub BalancerReset
@@ -618,11 +629,13 @@ Sub EVENT_BALANCERAPE
 		/call MQ2Cast "${str_heal_normal}" gem2 1s
 		/if (!${SpawnCount[npc kvxe]}) /return
 	/goto :balanceRapeHeal
+	/doevents flush BALANCERAPE
 /return
 	
 Sub EVENT_BALANCERAPEOFF
 	/echo Turning Spam Healing off.
 	/varset balanceRapeHeal FALSE
+	/doevents flush BALANCERAPEOFF
 /return	
 
 

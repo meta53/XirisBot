@@ -71,7 +71,6 @@ Sub Events_Buffing
 
 
 Sub EVENT_DORAIDBUFFS(_line, _chatSender, _eventParams)
-	
 	/if (!${bln_doRaidBuff} && !${bln_doSingleTargetBuff}) /return
 	/echo Doing Raid Buffs on ${_eventParams}
 	/memspellset buff
@@ -87,12 +86,10 @@ Sub EVENT_DORAIDBUFFS(_line, _chatSender, _eventParams)
 /return
 
 Sub EVENT_DOCHARBUFFS(_line, _chatSender, _eventParams)
-	/if (!${bln_doRaidBuff}) /return
-
+	/if (!${bln_doRaidBuff} && !${bln_doSingleTargetBuff}) /return
+	/echo Doing Char Buffs on ${_eventParams}
 	/memspellset buff
 	/delay 3s
-	/echo Doing Group Buffs on ${_eventParams}
-	/delay 10
 	/call doGroupBuffOnTarget ${_eventParams}
 	/call doSingleTargetBuffOnChar ${_eventParams}
 	/dgt ${Me.Class.Name} CHAR BUFF [${_eventParams}] COMPLETE
@@ -184,29 +181,36 @@ Sub doRaidBuffs
 **|
 Sub cmbtBuffMT
 	/if (!${bln_engaged})     /return
-	/if (!${bln_cmbtBuffUse}) /return
-	/if (${int_cmbtBuffTotal} == 0 && ${CMBTBUFF_1_Timer}) /return
+	/if (!${bln_cmbtBuffUse} || !${int_cmbtBuffTotal}) /return
+
 
 	|-- check if MT has the single target buff on him (think DI/Pyrillen Skin/Panoply)
+	/declare i 			int 	local  
 	/declare bSpell		string	local	${CMBTBUFF_1}
 	/declare bDuration  string	local
 	/declare bGem		string	local	${CMBTBUFF_1_Gem}
 	/declare delay		int		local	0
 
-	/call chkSpellMemorized "${bSpell}" FALSE ${bGem}
-	/dquery ${str_MTName} -q "Me.Buff[${bSpell}].Duration"
-	/delay 20 ${DanNet.Query.Received}
-	/varset bDuration ${DanNet.Q}
+	/for i 1 to ${int_cmbtBuffTotal}
+		/varset bSpell 	${CMBTBUFF_${i}}
+		/varset bGem 	${CMBTBUFF_${i}_Gem}
+		/call chkSpellMemorized "${bSpell}" FALSE ${bGem}
+		/if (${Me.SpellReady[${bSpell}]}) {
+			/dquery ${str_MTName} -q "Me.Buff[${bSpell}].Duration"
+			/delay 20 ${DanNet.Query.Received}
+			/varset bDuration ${DanNet.Q}
 
-	/if (!${Bool[${bDuration}]} ) {
-		/call TrueTarget ${Spawn[pc =${str_MTName}].ID}
-		/call MQ2Cast "${bSpell}" ${bGem}
-		/if (${Cast.Result.Equal[CAST_SUCCESS]}) {
-			/cecho \ag ${bSpell} ${Cast.Result} : DELAYING for \ay ${Spell[${bSpell}].Duration.TotalSeconds}s \agrefresh
-			/varset delay	${Spell[${bSpell}].Duration.TotalSeconds}
-			/varset CMBTBUFF_1_Timer ${delay}s
+			/if (!${Bool[${bDuration}]} ) {
+				/call TrueTarget ${Spawn[pc =${str_MTName}].ID}
+				/call MQ2Cast "${bSpell}" ${bGem}
+				/if (${Cast.Result.Equal[CAST_SUCCESS]}) {
+					/cecho \ag ${bSpell} ${Cast.Result} : DELAYING for \ay ${Spell[${bSpell}].Duration.TotalSeconds}s \agrefresh
+				}
+			}
 		}
-	}
+	:nextCombatBuff 
+	/next i
+
 /return
 
 |**
@@ -618,6 +622,7 @@ Sub chkOOCBuffs
 	/declare i    		  int		local
 	/declare buffSpell    string	local
 	/declare buffGem	  string	local
+	/declare hadToMemBuffs bool     local FALSE
 
 	/for i 1 to ${int_oocBuffTotal}
 		/call RunAllEvents
@@ -631,21 +636,28 @@ Sub chkOOCBuffs
 			|/echo already have buff or it does not stack, doing next
 			/goto :next
 		}
-		/memspellset buff
-		/memspellset buffs
+		/if (!${Me.SpellReady[${buffSpell}]}) {
+			/memspellset buff
+			/memspellset buffs
+			/varset hadToMemBuffs TRUE
+		}
+		
 		/cecho \awOOC Buff: \ag${buffSpell}
 		/varset		buffGem		 ${OOCBUFF_${i}_Gem}
 
 		:spellReadyWait
-		/call chkSpellMemorized "${buffSpell}" TRUE
-		/call RunAllEvents
-
-
+		/if (!${Me.SpellReady[${buffSpell}]}) {
+			/call chkSpellMemorized "${buffSpell}" TRUE
+			/delay 10
+			/goto :spellReadyWait
+		}
 		
-		/delay 3s
+		/call RunAllEvents
+		
 		/if (!${Me.SpellReady[${buffSpell}]} || ${Me.CurrentMana} < ${Spell[${buffSpell}].Mana}) {
-			/echo Waiting for ${buffSpell} for SELF buff
+			/echo Waiting for ${buffSpell} for buff to be ready, or mana...
 			/if (${Me.Standing}) /sit
+			/delay 30
 			/goto :spellReadyWait
 		}
 
@@ -664,9 +676,11 @@ Sub chkOOCBuffs
 		}
 		
 	:next
-		/next i
-		/memspellset ${str_spellset}
-		/call TrueTarget ${int_targetID}
+	/next i
+	
+	:return
+	/if (${hadToMemBuffs}) /memspellset ${str_spellset}
+	/call TrueTarget ${int_targetID}
 /return
 
 

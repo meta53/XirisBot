@@ -57,11 +57,12 @@ Sub chkPetBuffs
 				/call MQ2Cast "${petBuff_${i}}" 
 			}
 		/next i
+		/memspellset ${str_spellset}
 	}
 	/if (${Target.ID}==${Me.Pet.ID}) /squelch /target clear
 	/if (!${timer_petBuffRecheck})	 /varset timer_petBuffRecheck 30s
 
-	/memspellset ${str_spellset}
+	
 /return
 
 |**
@@ -110,21 +111,10 @@ Sub chkPetSpawn
 
 
 Sub chkPetWeaps
-	/if (${bln_engaged}) /return
-	/if (!${Me.Pet.ID}) /return
-	/if (${bln_petWeaponized}) /return
-
-	/declare i int local
-	/declare e int local 
-	/declare retryTimer timer local 
-	/declare petItem string local
-	/declare packItem string local 
-
+	/if (${bln_engaged} || !${Me.Pet.ID} || ${bln_petWeaponized}) /goto :return
 
 	|-- load 'petWeap' spell set
 	/delay 3s
-	/echo checking Pet weapons
-	/echo weaponized? ${bln_petWeaponized}
 	/memspellset petweap
 	/delay 5s
 
@@ -135,11 +125,11 @@ Sub chkPetWeaps
 	|-- Weapon 2
 	/call SummonItemForPet "Summoned: ${str_petWeap2}" "Summon ${str_petWeap2}" ${Me.Pet.ID}
 	
-
-	:return
-	/varset bln_petWeaponized TRUE
 	/memspellset ${str_spellset}
 	/autoinv
+	/varset bln_petWeaponized TRUE
+
+	:return
 /return
 
 Sub WeaponizePet(int _petID)

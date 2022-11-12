@@ -64,7 +64,8 @@ Sub ToggleOfftanking(bool _blnOT)
 
 Sub chkOffTanking
 	/if (!${bln_offTank} || ${bln_following}) 	 /return
-	
+	/if (${bln_engaged}) /call chkDivineIntervention
+
 	| If there are no spawns within OT Distance, return
 	/if (!${SpawnCount[npc radius ${int_offtankRadius} range 46 80]}) {
 		| Refresh XTarget if we haven't done it in the last 30s

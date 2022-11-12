@@ -103,7 +103,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 
 			|-- class specific
 			/call chkPetAttack
-			/call cmbtBuffGRP
+			/call cmbtBuffMT
 			
 			|-- dps library (caster)
 			/call RunRaidEvents

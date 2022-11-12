@@ -4,12 +4,13 @@ Sub Main
     /dt Tragic AutoCureMTOn
     /dt Xirael AutoCureMTOn
     /dt Xunshia AutoCureMTOn
-    /dt Xerael AutoCureMTOn 
+    /dt Xerael AutoCureMTOn
     /dt Xarael AutoCureMTOn
 
     | Set Xirin (OT) Healing
     /dt Xenshia changeMT Xirin
     /dt Xenshia AutoCureMTOn
+    /dt Xinshia AutoCureMTOn
 
     | Set Xiria (TT) AutoCuring
     /dt Xirael changeMT Xiria 

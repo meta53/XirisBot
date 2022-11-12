@@ -12,7 +12,7 @@ Sub Main(string _type, string _tankPoint)
 	/declare bln_keldovanEngaged 	bool 	outer FALSE
     /declare spell_hate             string  outer Terror of Discord
 	/declare timer_harmshield 		timer 	outer 0
-
+    /declare stonewall_count        int     local 1
 	:wait_loop
 	/doevents
 	/delay 5
@@ -20,7 +20,6 @@ Sub Main(string _type, string _tankPoint)
 
 	| Announcing Engage
 	/rs KeldovanStart ${Time.Time24}
-
 
 	:ActiveLoop
         /delay 10
@@ -30,18 +29,27 @@ Sub Main(string _type, string _tankPoint)
 		| Keldovan Harmshield Time check
 		|------
 		| I still have > 5s of harmshield left!
-		/if (${timer_harmshield} < 25) {
-            /call commandTankOn
-            /melee reset
-            /delay 80
-            /rs DebuffTarget ${Spawn[npc Keldovan].ID}
+		/if (${timer_harmshield} < 50) {
             /dgt chstart 1 Xiris Xiria 30 empathic,dogmatist,xorael,pantheon
+            /call commandTankOn
+            /delay 50
+            /rs DebuffTarget ${Spawn[npc Keldovan].ID}
+            /melee reset
             /melee aggro=off 
             /melee taunt=off 
-            /dgt Sing
-            /goto :return
+            /dgt SingSongs
+            /dex Xiria /shield Xiris
+            /dex Xirea /shield Xiris
+            
+            /goto :Stonewall
+
 		} 
 	/goto :ActiveLoop
+    :Stonewall 
+        /varcalc stonewall_count ${stonewall_count}+1
+        /dex Xiris /doability "Stonewall Discipline"
+        /delay 5
+        /if (${stonewall_count} < 100) /goto :Stonewall
     :return 
 /return
 
@@ -51,6 +59,12 @@ Sub commandTankOn
     /delay 5
     /dex Xiris /stick 10 hold 
     /delay 10
+    /dex Xiris /casting "Warlord's Tenacity" alt
+    /delay 5
+    /dex Xiris /casting "Champion's Sword of Eternal Power" item
+    /delay 5 
+    /dex Xiris /casting "Armsmaster's Breastplate" item
+    /delay 5
     /dex Xiris /doability "Furious Discipline"
     /delay 5
     /dex Xiris /attack on 

@@ -54,14 +54,15 @@ Sub Main(bool _invert) {}
 
     /dga CreateCamp noqstart
     /delay 10
-    | Real Noqufiel
-    | NTR
-    /warp wp ${realWAR}
-    /mac ntank REAL ${realWAR}
 
     | Fake Noqufiel
     | NTF
     /dex xirea /warp wp ${fakeWAR}
     /dex xirea /mac ntank FAKE ${fakeWAR}
+
+    | Real Noqufiel
+    | NTR
+    /warp wp ${realWAR}
+    /mac ntank REAL ${realWAR}
 
 /return

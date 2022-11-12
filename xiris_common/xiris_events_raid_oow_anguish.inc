@@ -23,11 +23,8 @@ ______________________________________________
 #EVENT TureWanton		"#*#dissolves into a landscape#*#"
 
 |	Jelvan
+#Event JelvanSetup		"#*#JelvanSetup#*#"
 #EVENT JelvanStart  	"#*#Hail, Jelvan#*#"
-#EVENT Jelvan1 			"#*#MD1#*#"
-#EVENT Jelvan2			"#*#MD2#*#"
-#EVENT Jelvan3 			"#*#MD3#*#"
-#EVENT Jelvan4 			"#*#MD4#*#"
 
 |	Warden Hanvar
 #EVENT HanvarSetup  	"#*#HanvarSetup#*#"
@@ -53,54 +50,13 @@ Sub InitEvents_OOW_Anguish
 	/declare bln_hanvarEngaged bool outer FALSE
 	/declare bln_amvEngaged	   bool outer FALSE
 	/declare timer_hanvar_ae   timer outer 0
+
+	/declare jelvanTarget 	   string outer Tantho
+	/declare jelvanResists     string outer Tanthi
+
 	/call RegisterRaidEvents Events_OOW_Anguish 15
 
-	|-- Waypoints
-| 	Pulled from MQ2Nav		   X	   Y	  Z
-	/declare J1T string outer -163.085 2127.05 -152.985
-	/declare J1C string outer -126.979 2093.99 -152.917
-	/declare J2T string outer -236.852 2003.96 -152.739
-	/declare J2C string outer -253.437 1970.36 -152.672
-	/declare J3T string outer -351.176 2117.72 -152.972
-	/declare J3C string outer -390.152 2100.88 -152.939
-	
-	/declare J4T string outer -257.657 2071.92 -152.877
-	/declare J4C string outer -253.437 1970.36 -152.672
 
-	/declare J1TX int outer ${J1T.Arg[1, ]}
-	/declare J1TY int outer ${J1T.Arg[2, ]}
-	/declare J1TZ int outer ${J1T.Arg[3, ]}
-
-	/declare J1CX int outer ${J1C.Arg[1, ]}
-	/declare J1CY int outer ${J1C.Arg[2, ]}
-	/declare J1CZ int outer ${J1C.Arg[3, ]}
-	
-	/declare J2TX int outer ${J2T.Arg[1, ]}
-	/declare J2TY int outer ${J2T.Arg[2, ]}
-	/declare J2TZ int outer ${J2T.Arg[3, ]}
-	
-	/declare J2CX int outer ${J2C.Arg[1, ]}
-	/declare J2CY int outer ${J2C.Arg[2, ]}
-	/declare J2CZ int outer ${J2C.Arg[3, ]}
-	
-	/declare J3TX int outer ${J3T.Arg[1, ]}
-	/declare J3TY int outer ${J3T.Arg[2, ]}
-	/declare J3TZ int outer ${J3T.Arg[3, ]}
-	
-	/declare J3CX int outer ${J3C.Arg[1, ]}
-	/declare J3CY int outer ${J3C.Arg[2, ]}
-	/declare J3CZ int outer ${J3C.Arg[3, ]}
-
-	/declare J4CX int outer ${J4C.Arg[1, ]}
-	/declare J4CY int outer ${J4C.Arg[2, ]}
-	/declare J4CZ int outer ${J4C.Arg[3, ]}
-
-	| Hanvar
-	/declare H1C string outer 443.138 4184.97 206.677 
-
-	/declare H1CX int outer ${H1C.Arg[1, ]}
-	/declare H1CY int outer ${H1C.Arg[2, ]} 
-	/declare H1CZ int outer ${H1C.Arg[3, ]}
 /return
 
 Sub Events_OOW_Anguish 
@@ -114,26 +70,26 @@ Sub Events_OOW_Anguish
 
 	| Jelvan Events
 	/if (${Bool[${SpawnCount[npc Jelvan]}]} && ${Spawn[npc Jelvan].Distance3D} < 400) {
-		/if (!${bln_jelvanEngaged}) /doevents JelvanStart
-		/if (${bln_jelvanEngaged})  {
-			/doevents Jelvan1
-			/doevents Jelvan2
-			/doevents Jelvan3
-			/doevents Jelvan4
-			/call chkJelvanCures
-		}
+		/if (!${bln_jelvanEngaged}) {
+			/doevents JelvanStart
+		} else {
+			/if (${str_classArchetype.Equal[PRIEST]} || ${Me.Class.ShortName.NotEqual[PAL]}) /call chkJelvanCures
+			/if (${str_classArchetype.Equal[PRIEST]} || ${str_classArchetype.Equal[CASTER]}) /call chkJelvanResists
+			/if (${Me.Class.ShortName.NotEqual[PAL]} || ${Me.Class.ShortName.NotEqual[ENC]}) /call chkJelvanSlows
+		} 
 	}
 
 	| Hanvar Events
-	|/if (${Bool[${SpawnCount[npc Hanvar]}]} && ${Spawn[npc Hanvar].Distance3D} < 400) {
+	/if (${Bool[${SpawnCount[npc Hanvar]}]} && ${Spawn[npc Hanvar].Distance3D} < 400) {
 		/call chkHanvarEvents
-	|}
+	}
 
 
 	| Vangl Events
 	/if (${Bool[${SpawnCount[npc Vangl]}]} && ${Spawn[npc Vangl].Distance3D} < 400) {
-		/if (!${bln_amvEngaged})  /doevents AMVStart
-		/if (${bln_amvEngaged}) {
+		/if (!${bln_amvEngaged}) {
+			/doevents AMVStart
+		} else {
 			/if (${Me.Buff[Feedback Dispersion].ID} && ${Me.AltAbilityReady[Purify Soul]} && ${Me.Class.ShortName.Equal[CLR]}) {
 				/target id ${Me.ID}
 				/casting "Purify Soul" alt
@@ -175,7 +131,6 @@ Sub Event_TureRampOn
 		/pet back off
 	}
 /return 
-
 
 Sub Event_TureRampOff 
 	/if (!${bln_engaged}) /return
@@ -286,9 +241,26 @@ Sub Event_JelvanStart
 	}
 /return
 
-Sub chkJelvanCures
-	/if (${str_classArchetype.NotEqual[PRIEST]} || ${Me.Class.ShortName.NotEqual[PAL]}) /return
+Sub chkJelvanResists
+	/if (${Target.Name.Find[Tanthi]} && ${str_useResistTypes.NotEqual[cold|disease|fire]}) /call SetResistTypes cold|disease|fire
+	/if (${Target.Name.Find[Tanthu]} && ${str_useResistTypes.NotEqual[fire|magic]}) /call SetResistTypes fire|magic
+	/if (${Target.Name.Find[Tantho]} && ${str_useResistTypes.NotEqual[cold|magic]}) /call SetResistTypes cold|magic
+/return
 
+Sub chkJelvanSlows
+	/if (${str_targetName.Find[Tanthi]}) {
+		/call TrueTarget ${Target.ID}
+		/if (!${Bool[${Target.Slowed}]}) /call SlowTarget disease
+	} else /if (${str_targetName.Find[Tanthu]}) {
+		/call TrueTarget ${Target.ID}
+		/if (!${Bool[${Target.Slowed}]}) /call SlowTarget magic
+	} else /if (${str_targetName.Find[Tantho]}) {
+		/call TrueTarget ${Target.ID}
+		/if (!${Bool[${Target.Slowed}]}) /call SlowTarget magic
+	}
+/return
+
+Sub chkJelvanCures
 	| Gaze of Anguish (hp/mana drain)
 	/if (${Me.Buff[Gaze of Anguish].ID}) {
 		/if (${Me.Class.ShortName.Equal[SHM]}) {
@@ -312,62 +284,6 @@ Sub chkJelvanCures
 		}		
 	}
 /return 
-
-
-| Movement on Jelvan
-Sub EVENT_Jelvan1
-	/doevents flush Jelvan1
-	/if (!${Me.Standing}) /stand on
-	/if (${Navigation.Active}) /nav stop
-
-	/if (${Me.Class.ShortName.Equal[CLR]} || ${str_classArchetype.Equal[CASTER]}) {
-		/goto :return 
-	} else {
-		/nav wp jelvan1Tank
-		/call MoveToPosition ${J1TY} ${J1TX} ${J1TZ} 30 FALSE
-	}
-	:return 
-/return 
-
-Sub EVENT_Jelvan2
-	/doevents flush Jelvan2
-	/if (${Navigation.Active}) /nav stop
-
-	/if (${Me.Class.ShortName.Equal[CLR]}) { 
-		/nav wp jelvan2Cleric
-		/call MoveToPosition ${J2CY} ${J2CX} ${J2CZ} 30 FALSE
-	} else {
-		/nav wp jelvan2Tank
-		/call MoveToPosition ${J2TY} ${J2TX} ${J2TZ} 30 FALSE
-	}
-	:return 
-/return 
-
-Sub EVENT_Jelvan3
-	/doevents flush Jelvan3
-	/if (${Navigation.Active}) /nav stop
-	/if (${Me.Class.ShortName.Equal[CLR]} || ${str_classArchetype.Equal[CASTER]}) {
-		/goto :return 
-	} else {
-		/nav wp jelvan3Tank
-		/call MoveToPosition ${J3TY} ${J3TX} ${J3TZ} 30 FALSE
-	}
-	:return 
-/return
-
-Sub EVENT_Jelvan4
-	/doevents flush Jelvan4
-	/if (${Navigation.Active}) /nav stop
-
-	/if (${Me.Class.ShortName.Equal[CLR]} || ${str_classArchetype.Equal[CASTER]}) {
-		/goto :return 
-	} else {
-		/nav wp jelvan4Tank
-		/call MoveToPosition ${J4TY} ${J4TX} ${J4TZ} 30 FALSE
-	}
-	:return 
-/return
-
 
 
 

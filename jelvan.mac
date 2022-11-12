@@ -73,11 +73,12 @@ Sub Main
     /dex Deist      /nav wp jelvan3Cleric
     /dex Tragic     /nav wp jelvan3Cleric
     /dex Eurydice   /nav wp jelvan3Tank
+
+    /delay 5s
     
     | Have the 3 Tanks change their raids to only heal them
     /rs changeMT Xiris
     /dex Xiria /rs changeMT Xiria
-
     /dex Xirea /rs changeMT Xirea
 
     | Have the 3 Tanks turn aggro on
@@ -98,21 +99,33 @@ Sub Main
     /dt Sadelia offtankoff
     /dt Xiris offtankoff
 
-    | Turn on preventspeed
-    /dga /docrack preventspeed on
-
     | Set resists
     | Tanthi (1)
-    /dex Xiria /rs ResistTypes cold|disease|fire
+    /dex Xiria /rs ResistTypes cold|disease|fire 
     | Tanthu (2)
-    /rs ResistTypes fire|magic
+    /rs ResistTypes fire|magic 
     | Tantho (3)
-    /dex Xirea /rs ResistTypes cold|magic
+    /dex Xirea /rs ResistTypes cold|magic 
 
     | Raid type setting
     /dgt SetRaidGroupMode JELVAN
 	/dgt SetRaidDIClerics JELVAN
     /dgt ResetGroupCurer
+
+    | Set Autocure for MT 
+    | Tanthi (1) - Xiria
+    /dt Xirael autoCureMTOn
+    /dt Shynxia autoCureMTOn
+    | Tanthu (2) - Xiris
+    /dt Xanshia autoCureMTOn 
+    /dt Shinxia autoCureMTOn
+    | Tantho (3)
+    /dt Xenshia autoCureMTOn 
+    /dt Tragic autoCureMTOn
+
+    | Turn on preventspeed
+    /dga /docrack preventspeed on
+    /dga /docrack nostun on
 
     | Set raidcommands
     /melee aggro=1

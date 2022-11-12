@@ -16,44 +16,49 @@ REVISION HISTORY
 
 
 |NECRO/DOT/DEBUFF class stuff
-#event DotOff1				"#*#Your |${DOT_1}| spell has worn off#*#"
-#event DotOff2				"#*#Your |${DOT_2}| spell has worn off#*#"
-#event DotOff3				"#*#Your |${DOT_3}| spell has worn off#*#"
-#event DotOff4				"#*#Your |${DOT_4}| spell has worn off#*#"
-#event DotOff5				"#*#Your |${DOT_5}| spell has worn off#*#"
-#event DotOff6				"#*#Your |${DOT_6}| spell has worn off#*#"
-#event DotOff7				"#*#Your |${DOT_7}| spell has worn off#*#"
-#event DotOff8				"#*#Your |${DOT_8}| spell has worn off#*#"
-#event DotOff9				"#*#Your |${DOT_9}| spell has worn off#*#"
-#event DotOff10				"#*#Your |${DOT_10}| spell has worn off#*#"
-#event DotOff11				"#*#Your |${DOT_11}| spell has worn off#*#"
-#event DotOff12				"#*#Your |${DOT_12}| spell has worn off#*#"
+#EVENT DotOff1				"#*#Your |${DOT_1}| spell has worn off#*#"
+#EVENT DotOff2				"#*#Your |${DOT_2}| spell has worn off#*#"
+#EVENT DotOff3				"#*#Your |${DOT_3}| spell has worn off#*#"
+#EVENT DotOff4				"#*#Your |${DOT_4}| spell has worn off#*#"
+#EVENT DotOff5				"#*#Your |${DOT_5}| spell has worn off#*#"
+#EVENT DotOff6				"#*#Your |${DOT_6}| spell has worn off#*#"
+#EVENT DotOff7				"#*#Your |${DOT_7}| spell has worn off#*#"
+#EVENT DotOff8				"#*#Your |${DOT_8}| spell has worn off#*#"
+#EVENT DotOff9				"#*#Your |${DOT_9}| spell has worn off#*#"
+#EVENT DotOff10				"#*#Your |${DOT_10}| spell has worn off#*#"
+#EVENT DotOff11				"#*#Your |${DOT_11}| spell has worn off#*#"
+#EVENT DotOff12				"#*#Your |${DOT_12}| spell has worn off#*#"
 
-#event Slow					"#1#is hindered by a shackle of spirit#*#"
-#event SlowResist			"#*#Your target resisted the |${str_slowSpell}|#*#"
-#event Snareon				"#*#damage by your |${str_snareSpell}|#*#"
-#event Snareon				"#*#engulfed by darkness#*#"
-#event Snareon				"#*#engulfed in an embracing darkness#*#"
-#event Snareon				"#*#is shackled to the ground#*#"
-#event Snareon				"#*#has been ensnared#*#"
-#event Snareon				"#*#movements slow as their feet are covered in tangling weeds#*#"
-#event Snareon				"#*#has been entangled#*#"
-#event Snareon				"#*#has been entrapped in living earth#*#"
-#event Snareon				"#*##covered in coruscating black shadows#*#"
-#event SnareResist			"#*#Your target resisted the |${Snare}|#*#"
-#event SnareWornOff			"Your |${str_snareSpell}| spell has worn off#*#"
-#event NoSnare         		"#*#is immune to changes in its#*#"
-#event NoSnareHold     		"#*#Your spell did not take hold.#*#"
+#EVENT Slow					"#1#is hindered by a shackle of spirit#*#"
+#EVENT SlowResist			"#*#Your target resisted the |${str_slowSpell}|#*#"
+#EVENT Snareon				"#*#damage by your |${str_snareSpell}|#*#"
+#EVENT Snareon				"#*#engulfed by darkness#*#"
+#EVENT Snareon				"#*#engulfed in an embracing darkness#*#"
+#EVENT Snareon				"#*#is shackled to the ground#*#"
+#EVENT Snareon				"#*#has been ensnared#*#"
+#EVENT Snareon				"#*#movements slow as their feet are covered in tangling weeds#*#"
+#EVENT Snareon				"#*#has been entangled#*#"
+#EVENT Snareon				"#*#has been entrapped in living earth#*#"
+#EVENT Snareon				"#*##covered in coruscating black shadows#*#"
+#EVENT SnareResist			"#*#Your target resisted the |${Snare}|#*#"
+#EVENT SnareWornOff			"Your |${str_snareSpell}| spell has worn off#*#"
+#EVENT NoSnare         		"#*#is immune to changes in its#*#"
+#EVENT NoSnareHold     		"#*#Your spell did not take hold.#*#"
 
 |SPELL Checking stuff
-#event ChkHasSpell           "#*#ChkHasSpell #2#"
+#EVENT ChkHasSpell           "#*#ChkHasSpell #2#"
 
 |RESIST TYPE stuff
-#event SetResistType     	"#*#ResistTypes #1#"
+#EVENT SetResistType     	"#1# tells the group#*#'ResistTypes #2#'"
+#EVENT SetResistType		"#1# tells you#*#'ResistTypes #2#'"
+#EVENT SetResistType		"#1# tells the raid#*#ResistTypes #2#'"
+#EVENT SetResistType 		"[ #1# #*#]#*#ResistTypes #2#"
 
 |SETTING Triggers
-#event SetUseFastOnly		"#*#UseFastOnly #1#"
-
+#EVENT SetUseFastOnly     	"#1# tells the group#*#'UseFastOnly #2#'"
+#EVENT SetUseFastOnly		"#1# tells you#*#'UseFastOnly #2#'"
+#EVENT SetUseFastOnly		"#1# tells the raid#*#UseFastOnly #2#'"
+#EVENT SetUseFastOnly 		"[ #1# #*#]#*#UseFastOnly #2#"
 
 Sub InitEvents_Casting
 	/call RegisterBackgroundEvents Events_Casting_Background 2
@@ -152,7 +157,7 @@ Sub chkNuke
 			|-- Named Target check
 			|-- if we only cast this spell on named, and this is NOT a named target, skip
 			/if (!${isNamed} && ${NUKE_${i}_NamedOnly}) {
-				/echo Skipping Nuke ${NUKE_${i}_Spell} is named only
+				|/echo Skipping Nuke ${NUKE_${i}_Spell} is named only
 				/goto :NextNuke
 			}
 
@@ -313,7 +318,7 @@ Sub chkQNuke
  AE Direct Damage  
  ----------------------------
  Loops through the AE nuke list and applies, doesn't do much checking because
- this is usually triggered via an event
+ this is usually triggered via an EVENT
  ----------------------------
 **|
 Sub chkAENuke
@@ -747,10 +752,10 @@ Sub Event_SnareWornOff
 	/doevents flush SnareWornOff
 /return
 
-Sub EVENT_SetUseFastOnly(_chatText, _use)
+Sub EVENT_SetUseFastOnly(_line, _chatSender, _eventParams)
 	/if (${QNUKE_Total} > 0) {
-		/echo setting fast only:${_use}
-		/varset bln_useFastOnly ${_use}
+		/echo setting fast only:${_eventParams}
+		/varset bln_useFastOnly ${_eventParams}
 	} else {
 		/varset bln_useFastOnly FALSE
 	}
@@ -765,9 +770,10 @@ Sub EVENT_SetUseFastOnly(_chatText, _use)
 | CSV value Chromatic,Corruption,Cold,Disease,Fire,Magic,Poison,Prismatic
 |--------------------------------------------------------------------------------
 
-Sub EVENT_SetResistType(_chatText, _strResists) 
+Sub EVENT_SetResistType(_line, _chatSender, _eventParams) 
 	/if (${str_classArchetype.Equal[MELEE_END]} || ${Me.Class.ShortName.Equal[WAR]}) /return
-	/cecho \awSetting resist types: \ag${_strResists}
+	/declare _strResists string local ${_eventParams}
+	/cecho \awSetting resist types: \ag${_eventParams}
 	
 	/if (${_strResists.Equal[ALL]}) /varset _strResists ${str_defaultResistTypes}
 	/call SetResistTypes ${_strResists}

@@ -284,6 +284,7 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/declare	bln_engaged				bool	outer	FALSE
 	/declare	bln_enraged				bool	outer	FALSE
 	/declare 	int_targetID			int		outer 	0
+	/declare    str_targetName			string  outer   NULL
 	/declare 	aggroAnim 				string 	outer 	|5|8|12|17|18|42|44|80|106|129|144|
 	/declare    bln_naked               bool	outer   FALSE
 	/declare 	bln_ducking				bool	outer	FALSE
@@ -359,6 +360,14 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/declare int_slowResisted		int		outer	0
 	/declare int_slowMaxTries		int		outer	3
 	
+	:init_naked_wait
+	/call chkNaked 
+	/if (${bln_naked}) {
+		/cecho \arI am naked, waiting 30s and rechecking before I initialize!
+		/delay 30s
+		/goto :init_naked_wait
+	}
+
 	|-- init common events
 	/call xbot_initialize_events
 	/call InitEvents_Common
@@ -466,8 +475,9 @@ Sub EngageTarget(int _targetID)
 	
 	| Target the NPC
 	/varset int_targetID ${_targetID}
+	/varset str_targetName ${Spawn[id ${_targetID}].Name}
 	/varset bln_engaged TRUE
-	/cecho \awEngaging Target \ag${Spawn[id ${_targetID}].CleanName} \ay(${_targetID}) \ao${Time.Time24}
+	/cecho \awEngaging Target \ag${Spawn[id ${_targetID}].Name} \ay(${_targetID}) \ao${Time.Time24}
 	/if (${Me.Class.ShortName.NotEqual[CLR]}) /call TrueTarget ${int_targetID}
 	| Stand Up
 	/if ((${Me.Feigning} && (${Me.PctHPs} > 75)) || !${Me.Standing}) /stand
@@ -477,7 +487,7 @@ Sub EngageTarget(int _targetID)
 	/if (${Me.Pet.ID}) /call chkPetAttack
 	| Start Swinging
 	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]} || (${Me.Class.ShortName.Equal[CLR]} && ${bln_battleCleric})) {
-		/cecho \awKilling Target \ag${Spawn[id ${_targetID}].CleanName} \ay(${_targetID})  \ao${Time.Time24}
+		/cecho \awKilling Target \ag${Spawn[id ${_targetID}].Name} \ay(${_targetID})  \ao${Time.Time24}
 		/squelch /melee reset
 		/squelch /face fast
 		/squelch /killthis
@@ -597,6 +607,7 @@ Sub Disengage
 	|-- global reset
 	/varset bln_engaged 		FALSE
 	/varset int_targetID		0
+	/varset str_targetName		NULL
 	|-- clean up potential XTarget issues
 	/if (!${SpawnCount[npc radius 300]} || (${Me.XTarget[0].Name.Find[s_corpse]} || (!${Bool[${Me.XTarget[0]}]} && ${Bool[${Me.XTarget[1]}]}) || (!${Bool[${Me.XTarget[0]}]} && !${Bool[${Me.XTarget[1]}]} && ${Bool[${Me.XTarget[2]}]})) && (!${timer_xtargetRefresh})) {
 		/call doRefreshXTarget
@@ -1528,9 +1539,9 @@ SUB EVENT_shrinkGroup
 |-------------------------------------------------------------|
 Sub TargetNamedCheck(_id)
 	/if (${Spawn[npc id ${_id}].Named} || ${Spawn[npc id ${_id}].Name.Find[#]}) /return TRUE
-	/if (${Zone.ShortName.Equal[tacvi]} || ${Zone.ShortName.Equal[txevu]}) /return TRUE
+	/if (${Zone.ShortName.Equal[tacvi]}) /return TRUE
 	/if (${Zone.ShortName.Equal[chambersa]} || ${Zone.ShortName.Equal[chambersb]} || ${Zone.ShortName.Equal[chambersc]} || ${Zone.ShortName.Equal[chambersd]} || ${Zone.ShortName.Equal[chamberse]}) /return TRUE
-	/if (${Zone.ShortName.Equal[anguish]}) /return TRUE
+	|/if (${Zone.ShortName.Equal[anguish]}) /return TRUE
 	/if (${Zone.ShortName.Equal[arena]}) /return TRUE
 	/if (${Zone.ShortName.Equal[thundercrest]}) /return TRUE
 /return FALSE
@@ -1610,14 +1621,15 @@ Sub Event_CheckNaked
 
 Sub chkNaked
 	/doevents flush chkNaked
-	/declare naked bool local FALSE
-	/declare haveHelm bool local FALSE
-	/varset haveHelm ${Bool[${Me.Inventory[2].Name}]}
-	/if (!${haveHelm} && !${timer_naked}) {
+	/if (!${Bool[${Me.Inventory[2].Name}]} && !${timer_naked}) {
 		/rs I am NAKED. 
+		/varset bln_naked TRUE
 		/varset timer_naked 30s
+	} else {
+		/varset bln_naked FALSE
+		/varset timer_naked 0
 	}
-/return ${naked}
+/return
 
 
 Sub findslot(string _commandtext)
