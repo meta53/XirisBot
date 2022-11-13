@@ -84,15 +84,19 @@ XirisBot individual character properties are defined in a INI file, with the nam
 
 ## Commands
 While there are *many* commands built into XirisBot, only a few are generally needed to start. It is recommended that you create hotkeys for these however it is comfortable to use, primarily on your MT. Note that these examples use `/rs` which is raidsay, you could also do this with `/dgt` which tells all toons online the same thing.
+
 ### Attack
 Hotkey that is used on the MT to call assist on the MT's current target, and has the MT attack the target as well. 
 `/multiline ; /rs KillMob ${Target.ID} "${Target.Name}" ${Time.Time24} ; /killthis`
+
 ### Buffing
 Hotkey or command that is used to tell all available buffers to walk through the raid buffing each group (and single target buff defined memembers with special buffs)
 `/rs doraidbuff ALL`
+
 ### Debuffing
 Hotkey or command that is used to tell all available debuffers to debuff the current target. Note: usually debuffers will also debuff on the Attack call, but sometimes you want to predebuff a target (if its rooted like in Tacvi) or force them to re-debuff all at the same time.
 `/rs DebuffTarget ${Target.ID}`
+
 ### Curing
 Curing becomes *vitally* important in Txevu+ As such there are several commands to force curing. Note: for the majority of the time, all toons will request the appropriate cure from their assigned curers. However, there are times when you want to force it.
 1. Cure All Raid Groups `/dgt cureGroupPoison 45` this example tells all curers to look at their groups and to attempt to cure at least 45 poisons counters. Note that the curer will inspect the curee before casting and if its not required will skip that curee. The valid commands here are `cureGroupPoison` `cureGroupDisease` `cureGroupCurse`
@@ -117,9 +121,16 @@ Loot INI file layout, arguments seperated by pipes
 - Only Tooname or * for everyone
 - Beep T or F if the looter should emit a beep if item is found
 
-
 ### Movement
+Movement can be achieved either using MQ2Nav or MQ2MoveUtils(stick) with MQ2Nav far preferable. Note in some cases Nav will fail if the toon is on an unnavigable surface (stuck near wall, etc) and you may have to either manually move them or tell them to stick to you.
+`/rs FollowMe /type|NAV` or `/rs FollowMe /type|STICK`
+
+Additionally you can tell toons to navigate to waypoints which you had already defined (the command `/nav recordwaypoint WaypointName`)
+`/rs NavToWP WaypointName`
+
 ### Offtanking
+To tell a toon to offtank (and currently only plate classes listen for this) the command is
+`/dt ToonName offtankon` and the offtank will attempt to offtank any aggrod mob that isn't currently hitting a tank. However due to lag or other issues sometimes this is not 100% reliable. It works mostly though. `/dt ToonName offtankoff` will cancel offtanking
 
 ## Detailed Library Descriptions
 ### Overview
