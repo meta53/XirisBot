@@ -77,9 +77,6 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 		|-- Check to make sure MT is still alive, if not, find another
 		/call chkMTAlive FALSE
 
-		|-- Check Offtanking Situation (xiris_offtanking.inc)
-		/call chkOffTanking
-
 		|-- Check to see if self needs to be cured (xiris_curing.inc)
 		/call chkNeedCure
 		
@@ -103,7 +100,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 			|-- class specific Jolt is handled by mq2melee
 			|/call chkConcussion
 
-			|-- dps library (caster)
+			|-- dps library (casting hybrid)
 			/call chkNuke
 			
 			|-- std library (burns/aa/clicks)

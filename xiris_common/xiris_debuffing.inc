@@ -69,7 +69,7 @@ Sub SlowTarget(string _resist)
 |   with the target ID, so we don't continually try to debuff the thing
 Sub chkDebuffsOnSingleTarget(int _targetID)
 	/if (!${int_debuffTotal}) /return
-	/if (${str_debuffedTargets.find[${_targetID}]}) /return
+	/if (${str_debuffedTargets.Find[${_targetID}]}) /return
 	/call CastDebuffsOnTarget ${_targetID} FALSE
 /return
 
