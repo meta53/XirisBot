@@ -79,21 +79,20 @@ Sub chkDebuffsOnSingleTarget(int _targetID)
 |-- Loop through all debuffs, and attempt to cast one at a time
 |   Will check to see if the target already has the debuff and if so has more than 30s left on it
 Sub CastDebuffsOnTarget(int _targetID, bool _forced) 	
-
 	| Check if named, or we are forcing this
 	/call TargetNamedCheck ${_targetID}
 	/declare isNamed	bool	local	${Macro.Return}
-	/if (${_forced}) /cecho \agCastDebuffsOnTarget \awID:\ay${_targetID}  \awisNamed:\ay${isNamed}  \awforcing?:\ay${_forced}
 	/if (${_forced}) /varset isNamed TRUE
+
+	/cecho \agCastDebuffsOnTarget \awID:\ay${_targetID}  \awisNamed:\ay${isNamed}  \awforcing?:\ay${_forced}
 
 	|-- Global Checking for mana 
 	/if (${isNamed} && ${Me.PctMana} < ${DEBUFF_Mana_NamedMinimum}) /return
 	/if (!${isNamed} && ${Me.PctMana} < ${DEBUFF_Mana_Minimum}) /return
 
-
 	|-- Mana Check Passed, Check individual debuffs now
 	:debuffTarget
-	/declare	db		int		local	1
+	/declare	db		int		local	${DEBUFF_Total}
 	/declare 	debuffDuration int local
 	/for db 1 to ${DEBUFF_Total}
 		:debuffChecks
@@ -110,29 +109,31 @@ Sub CastDebuffsOnTarget(int _targetID, bool _forced)
 
 		| Trigger Check (triggers are stored as strings with $ replaced with #. Run this through a replace and check)
 		/if (!${DEBUFF_${db}_Trigger.Replace[#,$]}) {
-			/cecho \ar ${DEBUFF_${db}} Failed use Check ${DEBUFF_${db}_Trigger}
+			/cecho \ar ${DEBUFF_${db}_Spell} Failed use Check ${DEBUFF_${db}_Trigger}
 			/goto :nextDB
 		}
 
 		| Checks passed, check if the spell is memorized. Skip if not
 		:debuffSpellMemorized
-			/call chkSpellMemorized "${DEBUFF_${db}}" ${_forced} ${DEBUFF_${db}_Gem}
+			/echo checking spell memorized ${db} ${DEBUFF_${db}_Spell}
+			/call chkSpellMemorized "${DEBUFF_${db}_Spell}" ${_forced} ${DEBUFF_${db}_Gem}
 		:debuffSpellReadyWait 
 			| If this is a forced cast, wait for the spell to be ready
-			/if ((!${Me.SpellReady[${DEBUFF_${db}}]} && ${_forced}) || (${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]})) {
+			/if ((!${Me.SpellReady[${DEBUFF_${db}_Spell}]} && ${_forced}) || (${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]})) {
 				/delay 2
 				/goto :debuffSpellReadyWait
 			} 
 
 		:debuffCast
+		
 			/call TrueTarget ${_targetID}
-			/varset debuffDuration ${Spell[${DEBUFF_${db}}].Duration.TotalSeconds}
+			/varset debuffDuration ${Spell[${DEBUFF_${db}_Spell} ].Duration.TotalSeconds}
 			/if (${Me.Class.ShortName.Equal[BRD]}) {
-				/medley queue "${DEBUFF_${db}}"
-				/docommand /${cmdChannel} << ${Target.Name} >> ${DEBUFF_${db}}
-				/cecho \ag ${DEBUFF_${db}}  : DELAYING for \ay${debuffDuration}s \agrefresh	
+				/medley queue "${DEBUFF_${db}_Spell}"
+				/docommand /${cmdChannel} << ${Target.Name} >> ${DEBUFF_${db}_Spell} 
+				/cecho \ag ${DEBUFF_${db}_Spell}   : DELAYING for \ay${debuffDuration}s \agrefresh	
 			} else {
-				/call CastDebuff "${DEBUFF_${db}}" ${DEBUFF_${db}_Gem} ${DEBUFF_${db}_MaxTries} ${Target.ID}
+				/call CastDebuff "${DEBUFF_${db}_Spell}" ${DEBUFF_${db}_Gem} ${DEBUFF_${db}_MaxTries} ${Target.ID}
 			}
 	:nextDB
 		/call RunRaidEvents
@@ -152,6 +153,7 @@ Sub CastDebuff(string _debuff, string _gem,  int _maxTries, int _targetID)
 	/if (!${Target.ID} || ${Target.ID} != ${_targetID}) /call TrueTarget ${_targetID}
 	/declare 	tgtName string  local ${Target.CleanName}
 	:AttemptDebuff
+		/echo AttemptDebuff
 		|pre-check before attempt
 		/if (${Target.PctHPs} == 0 || !${Target.ID} || (${Target.ID} != ${tgtID}) || ${Target.Name.Find['s_corpse']} || ${Target.Type.Equal[corpse]} || ${Target.Type.Equal[pc]}) {
 			/varset rslt TARGET_ERROR
@@ -203,8 +205,8 @@ Sub CreateDebuffLineup
 	/if (${Bool[${DEBUFF_Total}]}) {
 		/for i 1 to ${DEBUFF_Total} 
 			/call addSpellToLineup DEBUFF ${i} ${Ini[botINI,DEBUFF,DEBUFF_${i}]}
-			/declare DEBUFF_${i}_Trigger ${Ini[botINI,DEBUFF,DEBUFF_${db}_Trigger,#{Bool[1]}]}
-			/declare DEBUFF_${i}_Type ${Ini[botINI,DEBUFF,DEBUFF_${i}_Type,RESIST_DEBUFF]}
+			/declare DEBUFF_${i}_Trigger	string	outer	${Ini[botINI,DEBUFF,DEBUFF_${i}_Trigger,#{Bool[1]}]}
+			/declare DEBUFF_${i}_Type		string	outer	${Ini[botINI,DEBUFF,DEBUFF_${i}_Type,RESIST_DEBUFF]}
 		/next i
 	}
 

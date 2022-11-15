@@ -1311,7 +1311,7 @@ Sub xbot_initialize_healing(int _healPoint)
 	/declare 	int_healRandomRange			int		outer 	5
 	/declare	int_healRandomMin			int     0
 	/declare	int_healRandomMax			int     0
-	/if (${bln_useHealRandomization}) {
+	/if (${bln_useHealRandomization} && ${Bool[${_healPoint}]}) {
 		/varcalc int_healRandomMin	${_healPoint}-${int_healRandomRange}
 		/varcalc int_healRandomMax	${_healPoint}+${int_healRandomRange}
 		/varset  _healPoint ${Math.Rand[${int_healRandomMin},${int_healRandomMax}]}
@@ -1424,7 +1424,7 @@ Sub xbot_initialize_healing(int _healPoint)
 
 		|-- TANK (Overrides)
 		/declare	int_point_tankPatch		int		outer	${Ini[botINI,Heal_Points,int_point_tankPatch,${int_def_tankPatch}]}
-		/if (${_healPoint} > 0) {
+		/if (${Bool[${_healPoint}]}) {
 			/cecho \agHealpoint setting overriding defaults: ${_healPoint}	
 			/varset	int_point_tankPatch	${_healPoint}
 		} else {
@@ -1523,5 +1523,5 @@ Sub xbot_initialize_healing(int _healPoint)
 	
 
 	/call InitEvents_Healing
-	/cecho \ao xbot_initialize_healing ${_healPoint}
+	/cecho \ao xbot_initialize_healing ${int_point_tankPatch}
 /return

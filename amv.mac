@@ -1,12 +1,18 @@
 #Turbo 20
 Sub Main 
-    | Set Xiris (MT) Healing 
-    /dgt changeHPTank 65
-    /dgt changeHPSelf 50
-    /dgt changeHPGroup 50
-
     | Set Resist to Cold, Poison, Magic, Fire
     | MR: 300 (120%) 	CR: 325 (130%) 	FR: 300 (120%)
     | PR: 200 (80%) 	DR: 600 (240%)
     /dgt ResistTypes cold|poison|magic|fire
+
+    | Xiria (ST)
+    /dt Xirael changeMT xiria
+    /dt Xinshia changeMT xiria
+    
+    /dt Xirael autocureMTon 
+    /dt Xinshia  autocureMTon
+
+    | Xiris (MT) 
+    /dt Xenshia autocureMTon
+    /dt Tragic autocureMTon
 /return

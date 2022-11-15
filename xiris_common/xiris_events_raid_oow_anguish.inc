@@ -32,10 +32,9 @@ ______________________________________________
 #EVENT HanvarRetreat    "#1# tells the raid#*#'HanvarRetreat #2#'"
 #EVENT HanvarKill       "#1# tells the raid#*#'HanvarKill #2#'"
 
-
-
 |	Arch Magus Vangl
 #EVENT AMVStart			"#*#AMVStart#*#"
+#EVENT MarkOfDeath		"#*#You have been marked for death#*#"
 
 |   OMM
 #EVENT GazeYou			"#*#gaze of deadly power focusing on you#*#" 
@@ -87,19 +86,7 @@ Sub Events_OOW_Anguish
 
 	| Vangl Events
 	/if (${Bool[${SpawnCount[npc Vangl]}]} && ${Spawn[npc Vangl].Distance3D} < 400) {
-		/if (!${bln_amvEngaged}) {
-			/doevents AMVStart
-		} else {
-			/if (${Me.Buff[Feedback Dispersion].ID} && ${Me.AltAbilityReady[Purify Soul]} && ${Me.Class.ShortName.Equal[CLR]}) {
-				/target id ${Me.ID}
-				/casting "Purify Soul" alt
-			}
-			/if (${Me.Class.ShortName.Equal[CLR]} || ${Me.Class.ShortName.Equal[SHM]} || ${Me.Class.ShortName.Equal[PAL]}) {
-				/call chkMarkedForDeath
-			} else {
-				/call chkMarkedForDeathCureDist
-			}
-		}
+		/call chkAMVEvents
 	}
 
 	| OMM Events
@@ -445,15 +432,19 @@ Sub chkHanvarMelee
 |----------------------------
 | Arch Magus Vangl
 |----------------------------
+Sub chkAMVEvents
+	| Hanvar Events
+	/doevents AMVStart 
+	
+	/if (${bln_amvEngaged}) {
+		/if (${Me.Class.ShortName.NotEqual[CLR]} && ${Me.Class.ShortName.NotEqual[SHM]}) /call chkMarkedForDeathCureDist
+		/if (${Me.Class.ShortName.Equal[CLR]} || ${Me.Class.ShortName.Equal[SHM]}) /call chkGroupMarkedForDeath 
+		/if (${Me.Class.ShortName.Equal[PAL]}) /call chkSelfMarkedForDeath
+	}
+
+/return 
 Sub Event_AMVStart 
 	/varset bln_amvEngaged TRUE 
-	/if (${str_classArchetype.Equal[CASTER]} || ${Me.Class.ShortName.Equal[SHM]} || ${Me.Class.ShortName.Equal[DRU]}) {
-		/nav wp amvCaster
-	} else /if (${Me.Class.ShortName.Equal[CLR]}) {
-		/nav wp amvCleric
-	} else {
-		/nav wp amvDPS
-	}
 	/doevents flush AMVStart
 /return
 
@@ -465,26 +456,46 @@ Sub chkMarkedForDeathCureDist
 	}
 
 	/if (${Me.Buff[Mark of Death].ID}) {
-		/if (${Spawn[pc ${str_myCurer}].Distance3D} > 80 && ${Spawn[pc ${str_myCurer}].Distance3D} < 250 && !${bln_tanking}) {
-			/varset str_navCureStart ${Me.X} ${Me.Y} ${Me.Z}
-			/cecho \awNavigating to Curer because range is too far for cure
-			/varset bln_navCure TRUE
-			/navigate spawn ${str_myCurer}
-			:nav_curer
-			/if (${Spawn[pc ${str_myCurer}].Distance3D} <= 80) /nav stop
-			/if (${Navigation.Active}) /goto :nav_curer
+		/if (${Spawn[pc ${str_myCurer}].Distance3D} > 70 && ${Spawn[pc ${str_myCurer}].Distance3D} < 250 && !${bln_tanking}) {
+			/cecho \awWarping to Curer because range is too far for cure
+			/warp wp amvCLeric
 			/goto :markLoop
-		} else /if (${Spawn[pc ${str_myCurer}].Distance3D} <= 80) {
+		} else /if (${Spawn[pc ${str_myCurer}].Distance3D} <= 70) {
 			/cecho \ayWaiting for cure of Mark of Death
 		} else /if (${Spawn[pc ${str_myCurer}].Distance3D} >= 250) {
 			/cecho \arMyCurer \ay${str_myCurer} \aris too far away!
 			/rs Cannot be cured!
 		}
+	} else {
+		/if (${MeleeClasses.Find[${Me.Class.ShortName}]} ) {
+			/call TrueTarget ${Spawn[npc Vangl].ID}
+			/warp b 10
+			/call EngageTarget ${Spawn[npc Vangl].ID}
+		} else /if (${CasterClasses.Find[${Me.Class.ShortName}]}) {
+			/call EngageTarget ${Spawn[npc Vangl].ID}
+		}
 	}
 	:return
 /return 
 
-Sub chkMarkedForDeath
+Sub EVENT_MarkOfDeath
+	/if (${Me.Class.ShortName.Equal[SHM]}) {
+		/call cureGroupDisease 14 
+		/call chkMarkedForDeath
+	} else /if (${Me.Class.ShortName.Equal[CLR]} && !${bln_chChainMember}) {
+		/call MQ2Cast "${str_heal_group}" gem4 2s 
+		/call chkMarkedForDeath
+	}
+	/doevents flush MarkOfDeath
+/return
+
+Sub chkSelfMarkedForDeath
+	/if (${Me.Buff[Mark of Death].ID}) {
+		/if (${Me.Class.ShortName.Equal[PAL]}) /call handleCureRequest ${Me.Name} ${Me.ID} disease 14 TRUE
+	}
+:return 
+/return
+Sub chkGroupMarkedForDeath
 	/if (${bln_chChainMember}) /return
  
 	/declare gm int local 1

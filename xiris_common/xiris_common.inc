@@ -513,7 +513,7 @@ Sub chkTargetStatus
 	}
  	/if (!${Bool[${Target.ID}]} && !${bln_engaged}) /goto :return
 	/if (!${Bool[${Target.ID}]} && ${bln_engaged}) {
-		/echo no target and engaged
+		/cecho \ayNO Target and Engaged\aw, clearing
 		/goto :disengage
 	} else /if ((${Spawn[id ${int_targetID}].Name.Find[_corpse]}) && ${bln_engaged}) {
 		| Target is dead?
@@ -525,7 +525,7 @@ Sub chkTargetStatus
 		/goto :disengage
 	} else /if ((${Target.ID} != ${int_targetID}) && (${Spawn[id ${int_targetID}].PctHPs} >= 0 && !${Spawn[id ${int_targetID}].Name.Find[_corpse]})) {
 		| I am not targetting the correct NPC
-		/echo not targetting ccorrect
+		/cecho \aoCurrent Target \arNOT \ao${Spawn[id ${int_targetID}]}(${int_targetID})\aw, re-targetting
 		/call TrueTarget ${int_targetID}
 		/goto :chkTargetTarget
 	} 
@@ -1616,13 +1616,12 @@ Sub chkDead
 
 |-- CHECK NAKED
 Sub Event_CheckNaked
-	/declare haveHelm bool local FALSE
-	/varset haveHelm ${Bool[${Me.Inventory[2].Name}]}
-	/if (!${haveHelm}) /rs I am NAKED. 
+	/call chkNaked
 	/doevents flush CheckNaked
 /return
 
 Sub chkNaked
+	|/echo chkNaked ${Bool[${Me.Inventory[2].Name}]} ${timer_naked}
 	/doevents flush chkNaked
 	/if (!${Bool[${Me.Inventory[2].Name}]} && !${timer_naked}) {
 		/rs I am NAKED. 
@@ -1630,7 +1629,6 @@ Sub chkNaked
 		/varset timer_naked 30s
 	} else {
 		/varset bln_naked FALSE
-		/varset timer_naked 0
 	}
 /return
 
