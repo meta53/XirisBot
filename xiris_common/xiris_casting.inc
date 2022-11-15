@@ -836,7 +836,7 @@ Sub addSpellToLineup(string _type, int _index, string _line)
 /return
 
 
-Sub clearSpellLineUp(string _prefix){
+Sub clearSpellLineUp(string _prefix)
 	/declare i int local 
 	/declare j int local
 
@@ -855,10 +855,8 @@ Sub clearSpellLineUp(string _prefix){
 
 
 | Reloads entire spell lineup from INI
-Sub resetSpellLineup {
-
+Sub CreateCastingLineup 
 	/declare i 							int		local
-
 	|-- Nukes
 	/declare NUKE_Total					int		outer	${Ini[botINI,NUKE,NUKE_Total,0]}	
 	/declare NUKE_DelayTimer			timer	outer	${Ini[botINI,NUKE,NUKE_DelayTimer,1s]}
@@ -958,18 +956,18 @@ Sub resetSpellLineup {
 Sub xbot_initialize_casting
 	/cecho \aoxbot_initialize_casting
 
+	|-- Initial Spellset
 	/declare	str_spellset				string  outer 	default
 
-	|-- Misc (resist types, fast only, etc
+	|-- Misc (resist types, fast only, etc)
 	/declare str_defaultResistTypes	string	outer	Chromatic,Corruption,Cold,Disease,Fire,Magic,Poison,Prismatic
 	/declare str_useResistTypes		string	outer	${str_defaultResistTypes}
 	/if (${Zone.ShortName.Equal[pofire]}) /call SetResistTypes Cold,Magic,Poison,Disease
+	/declare bln_useFastOnly			bool	outer	FALSE
+	/declare int_concCount				int     outer 	0
 	
 	|-- Return out if not a caster
 	/if (${str_classArchetype.Equal[MELEE_END]} || ${Me.Class.ShortName.Equal[WAR]}) /return
-
-	/declare bln_useFastOnly			bool	outer	FALSE
-	/declare int_concCount				int     outer 	0
 
 	|-- Templates
 	/declare DOT_Template				string outer  	_Spell|_Use|_Gem|_MaxTries|_NamedOnly|_StartHP|_StopHP|_Resist|_HasCastOnce|_RecastTimer
@@ -979,21 +977,13 @@ Sub xbot_initialize_casting
 	/declare AENUKE_Template	 		string outer  	_Spell|_Use|_Gem|_MaxTries|_NamedOnly|_StartHP|_StopHP|_Resist|_HasCastOnce|_RecastTimer
 	/declare STUN_Template				string outer	_Spell|_Use|_Gem|_MaxTries|_NamedOnly|_StartHP|_StopHP|_Resist|_HasCastOnce|_RecastTimer
 
-
-	|-- Load the spell sets from the INI file
-	/call resetSpellLineup
-
-
-
+	|-- Load the spells set in the INI file
+	/call CreateCastingLineup
 
 	/call InitEvents_Casting
 	/cecho \awNukes: \ag${NUKE_Total} \awAENukes: \ag${AENUKE_Total} \awQNuke: \ag${QNUKE_Total} \awStun: \ag${STUN_Total} \awDOT: \ag${DOT_Total} 
 
-	|**
-	|								_Spell      |_Use|_Gem|_MaxTries|_NamedOnly|_StartHP|_StopHP|_Resist|_HasCastOnce|_RecastTimer
-	|									1		   2  3 4   5   6  7   8      9   
-	/call setSpellLineUp DOT 2  "Blood of Thule"|TRUE|8|2|TRUE|100|0|Poison|FALSE|0,"Chaos Venom"|TRUE|9|2|TRUE|100|0|Poison|FALSE|0
-	**|
+
 /return
 	
 	

@@ -14,6 +14,8 @@ REVISION HISTORY
 	07.29.22	xiris   Updated CastDebuff to handle some more error states (So we don't try to debuff failed targets)
 	11.08.22	xiris 	Added SlowTarget to manually slow a target with a resist type
 	11.14.22	xiris 	Updated chkDebuffsOnSingleTarget to not continually fire if debuffs have already been attempted
+	11.15.22	xiris 	Updated DEBUFF INI file entries and code to look more like NUKE/DOT etc ie: single lines of ini entry to define
+
 **|
 
 #EVENT DebuffTarget	"#1# tells you#*#'DebuffTarget #2#'"
@@ -29,7 +31,7 @@ REVISION HISTORY
 #EVENT TestDebuff   "#*#TestDebuff#*#"
 
 Sub InitEvents_Debuffing
-	/if (${int_debuffTotal} > 0 ) {
+	/if (${DEBUFF_Total} > 0 ) {
 		/call RegisterRaidEvents Events_Debuffing 2
 	}	
 /return
@@ -40,9 +42,9 @@ Sub Events_Debuffing
 	/doevents TestDebuff
 /return
 
-|-- Force casting debuffs on target (forced to treat as named)
+|-- Force casting debuffs on target (FORCED cast, will ignore checks)
 Sub EVENT_DebuffTarget(_line, _sender, _eventParams)
-	/if (${int_debuffTotal} == 0) /return 
+	/if (!${DEBUFF_Total}) /return 
 	/call CastDebuffsOnTarget ${_eventParams.Arg[1, ]} TRUE
 /return
 
@@ -54,7 +56,7 @@ Sub EVENT_SlowTarget(_line, _chatSender, _eventParams)
 Sub SlowTarget(string _resist)
 	/if (${Me.Class.ShortName.NotEqual[SHM]} || ${Me.Class.ShortName.NotEqual[ENC]} || ${Me.Class.ShortName.NotEqual[BRD]}) /return
 	/declare db int local 
-	/for db 1 to ${int_debuffTotal}
+	/for db 1 to ${DEBUFF_Total}
 		/if (${DEBUFF_${db}_Type.Find[SLOW]} && ${DEBUFF_${db}_ResistType.Find[${_resist}]} && ${DEBUFF_${db}_Trigger.Replace[#,$]}) {
 			/call chkSpellMemorized "DEBUFF_${db} " TRUE DEBUFF_${db}_Gem 
 			/call MQ2Cast "DEBUFF_${db}"
@@ -68,7 +70,7 @@ Sub SlowTarget(string _resist)
 |   Additionally once debuffs have been cast (either sucesffully or through max tries) the str_debuffedTargets is updated
 |   with the target ID, so we don't continually try to debuff the thing
 Sub chkDebuffsOnSingleTarget(int _targetID)
-	/if (!${int_debuffTotal}) /return
+	/if (!${DEBUFF_Total}) /return
 	/if (${str_debuffedTargets.Find[${_targetID}]}) /return
 	/call CastDebuffsOnTarget ${_targetID} FALSE
 /return
@@ -77,35 +79,46 @@ Sub chkDebuffsOnSingleTarget(int _targetID)
 |-- Loop through all debuffs, and attempt to cast one at a time
 |   Will check to see if the target already has the debuff and if so has more than 30s left on it
 Sub CastDebuffsOnTarget(int _targetID, bool _forced) 	
+
 	| Check if named, or we are forcing this
 	/call TargetNamedCheck ${_targetID}
 	/declare isNamed	bool	local	${Macro.Return}
 	/if (${_forced}) /cecho \agCastDebuffsOnTarget \awID:\ay${_targetID}  \awisNamed:\ay${isNamed}  \awforcing?:\ay${_forced}
 	/if (${_forced}) /varset isNamed TRUE
 
+	|-- Global Checking for mana 
+	/if (${isNamed} && ${Me.PctMana} < ${DEBUFF_Mana_NamedMinimum}) /return
+	/if (!${isNamed} && ${Me.PctMana} < ${DEBUFF_Mana_Minimum}) /return
 
-	|-- things passed, lets target the NPC
+
+	|-- Mana Check Passed, Check individual debuffs now
 	:debuffTarget
 	/declare	db		int		local	1
 	/declare 	debuffDuration int local
-	/for db 1 to ${int_debuffTotal}
+	/for db 1 to ${DEBUFF_Total}
 		:debuffChecks
 
-		| Forcing Check
+		| Forcing Check - if this is forced, just cast the damn thing
 		/if (${_forced}) /goto :debuffSpellMemorized
 
-		| Named Check
+		| Named Check - If this is a named only debuff, and target is not named, skipp
 		/if (${DEBUFF_${db}_NamedOnly} && !${isNamed}) /goto :nextDB
 
-		| Use Trigger Check
+		| Start HP/Stop HP Check
 		/call TrueTarget ${_targetID}
+		/if (${Target.PctHPs} > ${DEBUFF_${db}_StartHP} || ${Target.PctHPs} < ${DEBUFF_${db}_StopHP}) /goto :nextDB
+
+		| Trigger Check (triggers are stored as strings with $ replaced with #. Run this through a replace and check)
 		/if (!${DEBUFF_${db}_Trigger.Replace[#,$]}) {
 			/cecho \ar ${DEBUFF_${db}} Failed use Check ${DEBUFF_${db}_Trigger}
 			/goto :nextDB
 		}
+
+		| Checks passed, check if the spell is memorized. Skip if not
 		:debuffSpellMemorized
 			/call chkSpellMemorized "${DEBUFF_${db}}" ${_forced} ${DEBUFF_${db}_Gem}
 		:debuffSpellReadyWait 
+			| If this is a forced cast, wait for the spell to be ready
 			/if ((!${Me.SpellReady[${DEBUFF_${db}}]} && ${_forced}) || (${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]})) {
 				/delay 2
 				/goto :debuffSpellReadyWait
@@ -175,38 +188,46 @@ Sub CastDebuff(string _debuff, string _gem,  int _maxTries, int _targetID)
 /varset str_debuffedTargets "${str_debuffedTargets},${_targetID}"
 /return
 
+| Reloads entire debuff lineup from INI
+| Note the method addSpellToLineup is found in the xiris_casting.inc
+Sub CreateDebuffLineup
+	/declare i 							int		local
+	|-- Debuffs
+	/declare DEBUFF_Total				int		outer	${Ini[botINI,DEBUFF,DEBUFF_Total,0]}
+	/declare DEBUFF_HasCastOnce			bool 	outer	FALSE
+	/declare DEBUFF_Mana_Minimum		int 	outer	${Ini[botINI,DEBUFF,DEBUFF_Mana_Minimum,10]}
+	/declare DEBUFF_Mana_NamedMinimum	int		outer	${Ini[botINI,DEBUFF,DEBUFF_Mana_NamedMinimum,10]} 
+	/declare DEBUFF_StartHP				int		outer	${Ini[botINI,DEBUFF,DEBUFF_StartHP,100]}
+	/declare DEBUFF_StopHP				int		outer	${Ini[botINI,DEBUFF,DEBUFF_StopHP,10]}
+
+	/if (${Bool[${DEBUFF_Total}]}) {
+		/for i 1 to ${DEBUFF_Total} 
+			/call addSpellToLineup DEBUFF ${i} ${Ini[botINI,DEBUFF,DEBUFF_${i}]}
+			/declare DEBUFF_${i}_Trigger ${Ini[botINI,DEBUFF,DEBUFF_${db}_Trigger,#{Bool[1]}]}
+			/declare DEBUFF_${i}_Type ${Ini[botINI,DEBUFF,DEBUFF_${i}_Type,RESIST_DEBUFF]}
+		/next i
+	}
+
+/return
+
 
 Sub xbot_initialize_debuffing
 	/cecho \ao xbot_initialize_debuffing
 
-	|--Debuff(s)
+	|-- Templates
+	/declare DEBUFF_Template			string outer	_Spell|_Use|_Gem|_MaxTries|_NamedOnly|_StartHP|_StopHP|_Resist|_HasCastOnce|_RecastTimer
+	
+	|-- Misc Settings
 	/declare str_debuffedTargets		string  outer   NULL
-	/declare bln_debuffUse				bool	outer	${Ini[botINI,Debuff,bln_debuffUse,TRUE]}
-	/declare bln_debuffActive			bool	outer	FALSE
-	/declare int_debuffResist			int		outer	0
-	/declare int_tmpIndex				int		outer   0
-	
-	/declare int_debuffTotal			int		outer	${Ini[botINI,Debuff,int_debuffTotal,0]}
-	/declare int_debuffTotalIfNamed		int		outer	${Ini[botINI,Debuff,int_debuffTotalIfNamed,${int_debuffTotal}]}
-	/declare int_debuffStartHP			int		outer   ${Ini[botINI,Debuff,int_debuffStartHP,100]}
-	/declare int_debuffStopHP			int		outer   ${Ini[botINI,Debuff,int_debuffStartHP,10]}
-	
-	/declare db							int		local
-	/declare dbt string local
-	/for db 1 to ${int_debuffTotalIfNamed} 
-		/declare DEBUFF_${db} 				string	outer	${Ini[botINI,Debuff,DEBUFF_${db}]}
-		/declare DEBUFF_${db}_Type 			string	outer	${Ini[botINI,Debuff,DEBUFF_${db}_Type,RESIST_DEBUFF]}
-		/declare DEBUFF_${db}_Use 			bool	outer	${Ini[botINI,Debuff,DEBUFF_${db}_Use,TRUE]}
-		/declare DEBUFF_${db}_Trigger 	string	outer		${Ini[botINI,Debuff,DEBUFF_${db}_Trigger,TRUE]}
-		/cecho \aw ${db} UseTrigger \ag${DEBUFF_${db}_Trigger}
-		/declare DEBUFF_${db}_Gem 			string	outer	${Ini[botINI,Debuff,DEBUFF_${db}_Gem]}
-		/declare DEBUFF_${db}_MaxTries 		int		outer	${Ini[botINI,Debuff,DEBUFF_${db}_MaxTries,2]}
-		/declare DEBUFF_${db}_NamedOnly		bool	outer	${Ini[botINI,Debuff,DEBUFF_${db}_NamedOnly,TRUE]}
-		/declare DEBUFF_${db}_ResistType 	string  outer   ${Spell[${DEBUFF_${db}}].ResistType} 		
-	/next db
+
+	|-- Return out if not a caster
+	/if (${str_classArchetype.Equal[MELEE_END]} || ${Me.Class.ShortName.Equal[WAR]}) /return
+
+	|-- Load the debuffs set in the INI file
+	/call CreateDebuffLineup
 
 	/call InitEvents_Debuffing
-
+	/cecho \awDebuffs: \ag${DEBUFF_Total}
 /return
 
 
