@@ -60,7 +60,7 @@ Sub EVENT_Sing(_line, _sender, _eventParams)
 /return
 
 Sub SingSongs(string _type)
-	/memspellset ${_type}
+	/call setSpellSet ${_type}
 	/cecho \awSinging \ag${_type} \awmemming set and delaying \ao4s
 	/delay 4s
 	/if (${Me.Class.ShortName.Equal[BRD]} && ${Medley.Active}) /medley stop

@@ -2,7 +2,7 @@
 Sub Main 
     | Set Autocures (most of them!)
     /dt Tragic AutoCureMTOn
-    /dt Xirael AutoCureMTOn
+    /dt Xonshia AutoCureMTOn
     /dt Xunshia AutoCureMTOn
     /dt Xerael AutoCureMTOn
     /dt Xarael AutoCureMTOn
@@ -18,6 +18,8 @@ Sub Main
 
     /dge clr /warp wp keldcleric
     /dge caster /warp wp keldcaster
+    /dge shm /warp wp keldcaster
+    /dge dru /warp wp keldcaster
 
     | Set MT
     /dex Xiris /melee aggro=on

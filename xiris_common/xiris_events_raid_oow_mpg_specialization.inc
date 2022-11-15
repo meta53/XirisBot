@@ -107,7 +107,7 @@ Sub handleSpecializationChange
 		/echo RIGIDITY	
 		| RIGIDITY: Don't use blunt weapons or cold based spells (casting time will be slowed);
 		/if (${str_classArchetype.Equal[CASTER]}) {
-			/varset str_useResistTypes Fire,Magic,Poison,Disease
+			/call SetResistTypes Fire,Magic,Poison,Disease
 		} else /if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
 			/call doBandolier NOBLUNT
 			/if (${Me.Class.ShortName.Equal[MNK]}) /melee flyingkick=on	
@@ -117,7 +117,7 @@ Sub handleSpecializationChange
 		/echo MISFORTUNE
 		| CURSE OF MISFORTUNE: Don't use slashing weapons and or magic based spell  (MOB becomes 100% resistant to them);
 		/if (${str_classArchetype.Equal[CASTER]}) {
-			/varset str_useResistTypes Fire,Cold,Poison,Disease
+			/call SetResistTypes Fire,Cold,Poison,Disease
 		} else /if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
 			/call doBandolier NOSLASHING
 			/if (${Me.Class.ShortName.Equal[MNK]}) /melee flyingkick=on	
@@ -127,7 +127,7 @@ Sub handleSpecializationChange
 		/echo IMPRECISION
 		| IMPRECISION: Don't use piercing weapons, back stab or fire based spells (damage will be decreased);
 		/if (${str_classArchetype.Equal[CASTER]}) {
-			/varset str_useResistTypes Magic,Cold,Poison,Disease
+			/call SetResistTypes Magic,Cold,Poison,Disease
 		} else /if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
 			/call doBandolier NOPIERCING
 			/if (${Me.Class.ShortName.Equal[MNK]}) /melee flyingkick=on	
@@ -137,7 +137,7 @@ Sub handleSpecializationChange
 		/echo IMPURITY
 		| IMPURITY: Don't use hand to hand, flying kick, poison based spells or disease based spells (there is a significant mana increase to cast spells);
 		/if (${str_classArchetype.Equal[CASTER]}) {
-			/varset str_useResistTypes Fire,Magic,Cold
+			/call SetResistTypes Fire,Magic,Cold
 		} else /if (${Me.Class.ShortName.Equal[MNK]} || ${Me.Class.ShortName.Equal[BST]} ) {
 			/call doBandolier NOH2H
 			/if (${Me.Class.ShortName.Equal[MNK]}) /melee flyingkick=off	
@@ -149,7 +149,7 @@ Sub handleSpecializationChange
 		/echo NORMAL
 		| NORMAL: Use whatever you want!
 		/if (${str_classArchetype.Equal[CASTER]}) {
-			/varset str_useResistTypes Fire,Cold,Poison,Disease
+			/call SetResistTypes Fire,Cold,Poison,Disease
 		} else /if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
 			/call doBandolier default
 			/if (${Me.Class.ShortName.Equal[MNK]}) /melee flyingkick=on	

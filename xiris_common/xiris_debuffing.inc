@@ -13,6 +13,7 @@ REVISION HISTORY
 	06.29.22	xiris 	Updated all events to only be either generic, or [/gsay, /rsay, /tell, MQ2DanNet(dgt, dt)] only	
 	07.29.22	xiris   Updated CastDebuff to handle some more error states (So we don't try to debuff failed targets)
 	11.08.22	xiris 	Added SlowTarget to manually slow a target with a resist type
+	11.14.22	xiris 	Updated chkDebuffsOnSingleTarget to not continually fire if debuffs have already been attempted
 **|
 
 #EVENT DebuffTarget	"#1# tells you#*#'DebuffTarget #2#'"
@@ -64,8 +65,11 @@ Sub SlowTarget(string _resist)
 |-- Do not use the target array to check the targets, lets just check a single (current) target
 |   Useful for bards, and others that do not need to AE/Mez/Slow whatever will check if engaged on current target
 |   Note we currently disabled the array of targets so this is the only debuff check method
+|   Additionally once debuffs have been cast (either sucesffully or through max tries) the str_debuffedTargets is updated
+|   with the target ID, so we don't continually try to debuff the thing
 Sub chkDebuffsOnSingleTarget(int _targetID)
 	/if (!${int_debuffTotal}) /return
+	/if (${str_debuffedTargets.find[${_targetID}]}) /return
 	/call CastDebuffsOnTarget ${_targetID} FALSE
 /return
 
@@ -143,7 +147,9 @@ Sub CastDebuff(string _debuff, string _gem,  int _maxTries, int _targetID)
 		/if (${try} > ${_maxTries}) {
 			/varset rslt MAX_TRIES
 			/goto :DebuffFailure
-		}					
+		}				
+		|if I am a cleric, check MT health
+		/if (${Me.Class.ShortName.Equal[CLR]}) /call chkHeal_MT	
 		|attempt
 		/call MQ2Cast "${_debuff}" ${_gem} 5s
 		/varset rslt ${Macro.Return}
@@ -166,6 +172,7 @@ Sub CastDebuff(string _debuff, string _gem,  int _maxTries, int _targetID)
 	/dgt DEBUFF_SUCCESS::[${_debuff}] -> ${tgtName} (${try})
 
 :return
+/varset str_debuffedTargets "${str_debuffedTargets},${_targetID}"
 /return
 
 
@@ -173,6 +180,7 @@ Sub xbot_initialize_debuffing
 	/cecho \ao xbot_initialize_debuffing
 
 	|--Debuff(s)
+	/declare str_debuffedTargets		string  outer   NULL
 	/declare bln_debuffUse				bool	outer	${Ini[botINI,Debuff,bln_debuffUse,TRUE]}
 	/declare bln_debuffActive			bool	outer	FALSE
 	/declare int_debuffResist			int		outer	0

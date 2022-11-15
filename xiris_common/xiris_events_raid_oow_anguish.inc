@@ -290,20 +290,6 @@ Sub chkJelvanCures
 |----------------------------
 | Warden Hanvar
 |----------------------------
-Sub Event_HanvarSetup
-	/echo Hanvar Setup
-	/call SetResistTypes Cold,Poison,Magic
-	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
-		/nav wp hanvarCaster
-	} else /if (${str_classArchetype.Equal[CASTER]} || ${Me.Class.ShortName.Equal[SHM]} ||  ${Me.Class.ShortName.Equal[DRU]}) {
-		/nav wp hanvarCaster
-	} else /if (${Me.Class.ShortName.Equal[CLR]}) {
-		/nav wp hanvarCleric
-	}
-	| We need to light up the fucker with DOTs and Cold Nukes
-	/if (${Me.Class.ShortName.Equal[SHM]}) /call setupForHanvarSHM
-	/doevents flush HanvarSetup
-/return
 
 Sub chkHanvarEvents
 	| Hanvar Events
@@ -321,6 +307,19 @@ Sub Event_HanvarStart
 	/cecho \ag HANVAR EVENT STARTED \aw@ \ao${Time.Time24}
 	/varset bln_hanvarEngaged TRUE
 	/doevents flush HanvarStart
+/return
+
+Sub Event_HanvarSetup
+	/echo Hanvar Setup
+	/call SetResistTypes Cold,Poison,Magic
+	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
+		/nav wp hanvarSafe
+	} else /if (${str_classArchetype.Equal[CASTER]} || ${Me.Class.ShortName.Equal[SHM]} ||  ${Me.Class.ShortName.Equal[DRU]}) {
+		/nav wp hanvarCaster
+	}
+	| We need to light up the fucker with DOTs and Cold Nukes
+	/if (${Me.Class.ShortName.Equal[SHM]}) /call setSpell
+	/doevents flush HanvarSetup
 /return
 
 Sub Event_HanvarRetreat(string _sender, string _line, string _eventParams)
@@ -363,21 +362,9 @@ Sub setupForHanvarSHM
 
 	/call clearSpellLineUp DOT
 	/varset DOT_Total 2
-	/call addSpellToLineup DOT 1 "Blood of Yoppa"|TRUE|1|2|TRUE|100|0|Poison|FALSE|0
-	/call addSpellToLineup DOT 2 "Blood of Saryrn"|TRUE|1|2|TRUE|100|0|Poison|FALSE|0
+	/call addSpellToLineup DOT 3 "Blood of Yoppa"|TRUE|3|2|TRUE|100|0|Poison|FALSE|0
+	/call addSpellToLineup DOT 4 "Blood of Saryrn"|TRUE|4|2|TRUE|100|0|Poison|FALSE|0
 
-	/call clearSpellLineUp NUKE
-	/varset NUKE_Total 1
-	/call addSpellToLineup NUKE 1 "Ice Age"|TRUE|1|2|TRUE|100|0|Poison|FALSE|0
-	
-	| Reset my DEBUFF types
-	/varset int_debuffTotal 2
-	/varset DEBUFF_1 "Malos"
-	/varset DEBUFF_1_Use TRUE 
-	/varset DEBUFF_1_Resist ${Spell[${DEBUFF_1}].ResistType}
-	/varset DEBUFF_2 "Balance of Discord"
-	/varset DEBUFF_2_Use TRUE 
-	/varset DEBUFF_2_Resist ${Spell[${DEBUFF_2}].ResistType}
 /return
 
 Sub chkHanvarCaster
@@ -387,18 +374,18 @@ Sub chkHanvarCaster
 		/casting "Purify Soul" alt
 	}
 
-	/if (${Me.Class.ShortName.Equal[DRU]}) {
-		| Check to make sure it's slowed
+	/if (${Me.Class.ShortName.Equal[DRU]} && !${timer_hanvarDebuff}) {
+		| Check to make sure it's debuffed correctly
 		/call chkDebuffsOnSingleTarget ${Spawn[npc Hanvar].ID}
 	}
 
-	/if (${Me.Class.ShortName.Equal[SHM]}) {
-		| Check to make sure it's slowed
+	/if (${Me.Class.ShortName.Equal[SHM]} && !${timer_hanvarDebuff}) {
+		| Check to make sure it's slowed|malod
 		/call chkDebuffsOnSingleTarget ${Spawn[npc Hanvar].ID}
 	}
 
-	/if (${Me.Class.ShortName.Equal[ENC]}) {
-		| Check to make sure it's slowed
+	/if (${Me.Class.ShortName.Equal[ENC]} && !${timer_hanvarDebuff}) {
+		| Check to make sure it's slowed|tashed
 		/call chkDebuffsOnSingleTarget ${Spawn[npc Hanvar].ID}
 	}
 

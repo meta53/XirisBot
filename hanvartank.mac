@@ -45,7 +45,6 @@ Sub Main(string _type, string _tankPoint)
 	| Announcing Engage
 	/rs HanvarStart ${Time.Time24}
 
-
 	:ActiveLoop
 		/doevents
 		|------
@@ -132,12 +131,24 @@ Sub commandAttackHanvar
 
 
 Sub Event_HanvarEngage
+	/echo engaging hanvar
 	/if (!${Target.ID}) /target Hanvar
+	/echo delaying 2s
 	/delay 20
+	/if (!${Target.Name.Find[Hanvar]}) {
+		/cecho \ar HANVAR not targetted. Try that again!
+		/return
+	}
+	/if (${Target.Name.Find[Hanvar]} && !${Target.Distance3D} > 100) {
+		/cecho \ar HANVAR out of Range. Try that again!
+		/return
+	}
+	/echo hammering aggro
 	|/if (${Me.CombatAbilityReady[Furious Discipline]}) /doability "Furious Discipline"
 	/if (${Me.CombatAbilityReady[Ancient: Chaos Cry]}) /doability "Ancient: Chaos Cry"
 	/delay 5
 	/if (${Me.CombatAbilityReady[Bazu Bellow]}) /doability "Bazu Bellow"
+	/delay 5
 	/nav wp hanvarTank
 	
 	:navHanvar

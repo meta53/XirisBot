@@ -790,6 +790,10 @@ Sub GetResistTypes
 
 /return
 
+Sub setSpellSet(string _type)
+	/memspellset ${_type}
+	/varset str_spellset ${_type}
+/return 
 
 | Create the ability to pass a CSV|CSV list of new spells to cast for a type
 | for specific events that we need to change the spell lineup for like Hanvar
@@ -959,7 +963,7 @@ Sub xbot_initialize_casting
 	|-- Misc (resist types, fast only, etc
 	/declare str_defaultResistTypes	string	outer	Chromatic,Corruption,Cold,Disease,Fire,Magic,Poison,Prismatic
 	/declare str_useResistTypes		string	outer	${str_defaultResistTypes}
-	/if (${Zone.ShortName.Equal[pofire]}) /varset str_useResistTypes Cold,Magic,Poison,Disease
+	/if (${Zone.ShortName.Equal[pofire]}) /call SetResistTypes Cold,Magic,Poison,Disease
 	
 	|-- Return out if not a caster
 	/if (${str_classArchetype.Equal[MELEE_END]} || ${Me.Class.ShortName.Equal[WAR]}) /return

@@ -608,6 +608,8 @@ Sub Disengage
 	/varset bln_engaged 		FALSE
 	/varset int_targetID		0
 	/varset str_targetName		NULL
+	/varset str_debuffedTargets NULL
+	
 	|-- clean up potential XTarget issues
 	/if (!${SpawnCount[npc radius 300]} || (${Me.XTarget[0].Name.Find[s_corpse]} || (!${Bool[${Me.XTarget[0]}]} && ${Bool[${Me.XTarget[1]}]}) || (!${Bool[${Me.XTarget[0]}]} && !${Bool[${Me.XTarget[1]}]} && ${Bool[${Me.XTarget[2]}]})) && (!${timer_xtargetRefresh})) {
 		/call doRefreshXTarget
@@ -943,7 +945,8 @@ Sub chkBurn
 			| Item
 			| Check to see if  burn == item &&  useable && (item in inventory && there is no timer) && (I am not Casting || I am a bard)
 			| ---------------
-			} else /if (${Burn_${burn}_Type.Equal[item]} && ${Burn_${burn}_Use} &&  (${Bool[${FindItem[${Burn_${burn}}].ID}]} && !${Bool[${FindItem[${Burn_${burn}}].TimerReady}]}) && (!${Me.Casting.ID} || ${Me.Class.ShortName.Equal[BRD]})) {
+			} else /if (${Burn_${burn}_Type.Equal[item]} && ${Burn_${burn}_Use} && (${Bool[${FindItem[${Burn_${burn}}].ID}]} && ${FindItem[${Burn_${burn}}].TimerReady} == 0) && (!${Me.Casting.ID} || ${Me.Class.ShortName.Equal[BRD]})) {
+				/if (${FindItem[${Burn_${burn}}].TimerReady} > 0) /goto :nextBurn
 				:doItemClick
 					/if (${Me.Class.ShortName.Equal[BRD]}) {
 						/medley queue "${Burn_${burn}}" -interrupt

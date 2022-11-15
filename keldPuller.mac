@@ -40,12 +40,13 @@ Sub Main(string _type, string _tankPoint)
             /dgt SingSongs
             /dex Xiria /shield Xiris
             /dex Xirea /shield Xiris
-            
+            /rs SingSongs
             /goto :Stonewall
 
 		} 
 	/goto :ActiveLoop
     :Stonewall 
+        | trigger that waits 50~ seconds or so to call stonewall
         /varcalc stonewall_count ${stonewall_count}+1
         /dex Xiris /doability "Stonewall Discipline"
         /delay 5
