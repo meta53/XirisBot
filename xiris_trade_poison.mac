@@ -1,0 +1,108 @@
+|**
+----------------------------
+XIRIS_TRADE_POISON.mac
+----------------------------
+This macro is for rogues that need to skill poison
+
+Usage: /mac xiris_trade_poison ${_skill}
+
+______________________________________________
+REVISION HISTORY
+    11.16.22	xiris	INITIAL REVISION
+______________________________________________
+REQUIRED PLUGINS
+    mq2nav
+    mq2exchange
+
+    
+______________________________________________
+REQUIRED INCLUDES  
+	xiris_common/xiris_trade_poison.ini
+**|
+
+#define poisonINI xiris_trade_ini/xiris_trade_poison.ini
+
+
+Sub Main(int _skillDesired) 
+    /cecho \awStarting \agPoison Making \awTrainer
+    /call init_tradeskills ${_skillDesired}
+    /cecho \aoStarting Skill:\ag${int_startSkill}
+
+    :mainloop 
+        /call chkPlatinum
+        /call chkSkill
+        /call getRecipe ${str_recipeKey}
+        
+        :open_container
+
+        :find_recipe 
+
+        :do_combine 
+
+        :do_sell 
+        
+
+/return
+
+Sub chkPlatinum
+    /if (${Me.Platinum}<${int_minPlatinum}) {
+        /cecho \arOut of Platinum!
+        /endmacro
+    }
+/return
+
+Sub chkSkill 
+    /varset int_currentSkill ${Me.Skill[Make Poison]}
+    /if (${int_currentSkill}>=172 && ${int_currentSkill}<275) { 
+		/varset str_recipeKey SoS
+		/varset str_recipeValue Spirit of Sloth
+	} 
+	/if (${int_currentSkill}>=130 && ${int_currentSkill}<172) { 
+		/varset str_recipeKey CR
+		/varset str_recipeValue Calcium Rot
+	} 
+	/if (${int_currentSkill}>=98 && ${int_currentSkill}<130) { 
+		/varset str_recipeKey BF
+		/varset str_recipeValue Brain Freeze
+	} 
+	/if (${int_currentSkill}<98) { 
+		/varset str_recipeKey AS
+		/varset str_recipeValue Atrophic Sap
+	} 
+    /if (${int_currentSkill} >= ${_skillDesired}) {
+        /cecho \agSkill ${int_currentSkill} Acquired!
+        /endmacro
+    }
+/return 
+
+
+Sub getRecipe  
+    /cecho \aoLooking for recipe \ag[${_recipe}]
+    /if (${Ini[xiris_trade_poison.ini,${_recipe}].Count[|]}==0) {
+		/cecho \arRecipe ${RecipeName} not found 
+		/endmacro 
+	}
+    /declare i int local
+    /varset container ${}
+/return 
+
+Sub init_tradeskills(int _skillDesired) 
+    /declare int_currentSkill       int outer   ${Me.Skill[Make Poison]}
+    /declare int_startSkill         int outer   ${Me.Skill[Make Poison]}
+    /declare int_skillDesired       int outer   ${_skillDesired}
+
+    /declare int_minPlatinum        int outer   500
+    /declare int_currentPlatinum    int outer   ${Me.Platinum} 
+    /declare int_startingPlatinum   int outer   ${Me.Platinum}
+
+    /declare str_recipeKey          string  outer 
+    /declare str_recipeValue        string  outer
+
+    | recipe elements 
+    /declare container string outer
+    /declare i int local 
+    /for i 1 to 10 
+        /declare component_${i} string  outer   NULL
+    /next i
+
+/return

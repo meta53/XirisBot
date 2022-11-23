@@ -507,6 +507,10 @@ Sub EngageTarget(int _targetID)
 
 Sub chkTargetStatus
 	:chkTargetValid
+	/if (!${Bool[SpawnCount npc id ${int_targetID}]} || ${Spawn[id ${int_targetID}].Type.Equal[corpse]}) {
+		/cecho \ag No Target with ID of \aw${int_targetID} or is CORPSE
+		/goto :disengage
+	}
 	/if (${Bool[${Target.ID}]} && ${Target.ID} == ${int_MTID} && !${SpawnCount[npc id ${int_targetID} radius 200]} &&  ${bln_engaged}) {
 		/cecho \agTarget Status \awXT:\ag${Me.XTarget} \aw|| no \ag${int_targetID}\aw within radius 200 (\ag!${SpawnCount[npc id ${int_targetID} radius 200]}\aw)
 		/goto :disengage

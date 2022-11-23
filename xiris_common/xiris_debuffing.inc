@@ -70,8 +70,7 @@ Sub SlowTarget(string _resist)
 |   Additionally once debuffs have been cast (either sucesffully or through max tries) the str_debuffedTargets is updated
 |   with the target ID, so we don't continually try to debuff the thing
 Sub chkDebuffsOnSingleTarget(int _targetID)
-	/if (!${DEBUFF_Total}) /return
-	/if (${str_debuffedTargets.Find[${_targetID}]}) /return
+	/if (!${DEBUFF_Total} || !${_targetID} || ${str_debuffedTargets.Find[${_targetID}]}) /return
 	/call CastDebuffsOnTarget ${_targetID} FALSE
 /return
 
@@ -84,11 +83,11 @@ Sub CastDebuffsOnTarget(int _targetID, bool _forced)
 	/declare isNamed	bool	local	${Macro.Return}
 	/if (${_forced}) /varset isNamed TRUE
 
-	/cecho \agCastDebuffsOnTarget \awID:\ay${_targetID}  \awisNamed:\ay${isNamed}  \awforcing?:\ay${_forced}
-
 	|-- Global Checking for mana 
 	/if (${isNamed} && ${Me.PctMana} < ${DEBUFF_Mana_NamedMinimum}) /return
 	/if (!${isNamed} && ${Me.PctMana} < ${DEBUFF_Mana_Minimum}) /return
+	
+	/cecho \agCastDebuffsOnTarget \awID:\ay${_targetID}  \awisNamed:\ay${isNamed}  \awforcing?:\ay${_forced}
 
 	|-- Mana Check Passed, Check individual debuffs now
 	:debuffTarget
@@ -115,7 +114,6 @@ Sub CastDebuffsOnTarget(int _targetID, bool _forced)
 
 		| Checks passed, check if the spell is memorized. Skip if not
 		:debuffSpellMemorized
-			/echo checking spell memorized ${db} ${DEBUFF_${db}_Spell}
 			/call chkSpellMemorized "${DEBUFF_${db}_Spell}" ${_forced} ${DEBUFF_${db}_Gem}
 		:debuffSpellReadyWait 
 			| If this is a forced cast, wait for the spell to be ready
@@ -125,7 +123,6 @@ Sub CastDebuffsOnTarget(int _targetID, bool _forced)
 			} 
 
 		:debuffCast
-		
 			/call TrueTarget ${_targetID}
 			/varset debuffDuration ${Spell[${DEBUFF_${db}_Spell} ].Duration.TotalSeconds}
 			/if (${Me.Class.ShortName.Equal[BRD]}) {

@@ -308,6 +308,7 @@ Sub LootTarget(int _corpseID)
 		/declare bln_includedByCharName	bool	local	FALSE	| loot only on this character
 		/declare bln_useBeep			bool    local   FALSE 	| should I beep if I can't loot this item?
 		/declare reason					string  local   <no reason>
+		/declare fCount 				int  	local   0
 
 		/for n 1 to ${Corpse.Items}
 			|-check to see if I want the item
@@ -409,8 +410,9 @@ Sub LootTarget(int _corpseID)
 
 			:loot_gank
 			/if (${keep}) {
-				/cecho \agKeeping ${lootName} ${lootType} ${FindItemCount[${lootName}]} of ${int_numberToLoot}
-				/docommand /${str_lootChannel} Keeping ${lootName} ${lootType} ${FindItemCount[${lootName}]} of ${int_numberToLoot}
+				/varcalc fCount ${FindItemCount[${lootName}]} + 1
+				/cecho \agKeeping ${lootName} ${lootType} ${fCount} of ${int_numberToLoot}
+				/docommand /${str_lootChannel} Keeping ${lootName} ${lootType} ${fCount} of ${int_numberToLoot}
 				/itemnotify loot${n} leftmouseup
 				/delay 5 ${Cursor.ID} || ${Window[ConfirmationDialogBox].Open} || ${Window[QuantityWnd].Open}
 				/if (${Cursor.ID}) {

@@ -6,8 +6,8 @@ Sub Main
     /dgt ResistTypes cold|poison|magic|fire
 
     | Xiria (ST)
-    /dt Xirael changeMT xiria
-    /dt Xinshia changeMT xiria
+    /dt Xirael changeMT xirin
+    /dt Xinshia changeMT xirin
     
     /dt Xirael autocureMTon 
     /dt Xinshia  autocureMTon

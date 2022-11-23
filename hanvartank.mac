@@ -17,20 +17,16 @@ Sub Main(string _type, string _tankPoint)
 	/declare bln_rootTank			bool	outer FALSE
 
 
-	/declare timer_hanvar_stun 		timer 	outer 85
-	/declare timer_hanvar_ae 		timer 	outer 360s
-	/declare chainSeconds			int 	outer 0
-	/declare stunSeconds			int   	outer 0	
-	/declare int_timeChainOn 		int outer 	0
-	/declare int_timeChainOff 		int outer	0
-	/declare int_timeChainOn_1 		int outer	0
-	/declare int_timeChainOn_2 		int outer 	0
-	/declare int_timeChainInterval 	int outer   0
+	/declare timer_hanvar_stun 		timer 	outer 	85
+	/declare timer_hanvar_ae 		timer 	outer 	360s
+	/declare chainSeconds			int 	outer 	360
+	/declare stunSeconds			int   	outer 	0	
+	/declare int_timeChainInterval 	int 	outer   550
 
 
 	/declare bln_announcedRetreat   bool    outer FALSE
+	/declare bln_announcedKill 		bool	outer FALSE
 	/declare timer_announce_retreat	timer   outer 0
-	/declare timer_announce_chains	timer  	outer 0
 	/declare timer_announce_guards	timer  	outer 0
 	/declare timer_announce_kill 	timer  	outer 0
 
@@ -52,19 +48,16 @@ Sub Main(string _type, string _tankPoint)
 		|------
 		| Guards are up!
 		/if (${SpawnCount[npc guard radius 150]}) {
-			/varset chainSeconds ${Int[${chainSeconds}]}
 			/if (!${timer_announce_guards}) /call commandAttackGuards
 		} 
 		
 		| Run away!
-		/if (${timer_hanvar_ae} <= 50 && !${bln_announcedRetreat}) {
-			/varset chainSeconds ${Int[${chainSeconds}]}
+		/if (${chainSeconds} <= 5 && !${bln_announcedRetreat}) {
 			/if (!${timer_announce_retreat}) /call commandRetreat
 		} 
 		
 		| Kill Hanvar
-		/if (!${SpawnCount[npc guard radius 150]} && ${timer_hanvar_ae} > 50) {
-			/varset chainSeconds ${Int[${chainSeconds}]}
+		/if (!${SpawnCount[npc guard radius 150]} && ${chainSeconds} > 5) {
 			/if (!${timer_announce_kill}) /call commandAttackHanvar
 		}
 
@@ -75,23 +68,9 @@ Sub Main(string _type, string _tankPoint)
 
 | Hanvar fired his AE, safe to kill
 Sub Event_HanvarChainsOn
-	/cecho \arChains ON! \aw${Time.Time24} \ag${Time.SecondsSinceMidnight}
-	/varset int_timeChainOn  ${Time.SecondsSinceMidnight}  
-	/if (${int_timeChainOn_1} == 0) {
-		/varset int_timeChainOn_1  ${Time.SecondsSinceMidnight}  
-	} else /if (${int_timeChainOn_2} == 0) {
-		/varset int_timeChainOn_2  ${Time.SecondsSinceMidnight}  
-	}
-	/if (${int_timeChainOn_1} != 0 && ${int_timeChainOn_2} != 0 && ${int_timeChainInterval} == 0) {
-		/varcalc int_timeChainInterval (${int_timeChainOn_2} - ${int_timeChainOn_1})
-		/cecho \ayNew Chain Interval: \aw(\ag${int_timeChainOn_2} \aw- \ag${int_timeChainOn_1}\aw) =  \ag${int_timeChainInterval}
-		/varset timer_hanvar_ae ${int_timeChainInterval}s
-	} else {
-		/varset timer_hanvar_ae 50s
-	}
-	
-	/varcalc chainSeconds ${timer_hanvar_ae} / 10
-	/varset chainSeconds ${Int[${chainSeconds}]}
+	/cecho \arChains ON! \aw${Time.Time24} \ag${Time.SecondsSinceMidnight}, resetting interval to ${int_timeChainInterval}
+	/varset timer_hanvar_ae ${int_timeChainInterval}
+	/varcalc chainSeconds ${int_timeChainInterval} / 10
 	/rs Hanvar Chains On! ${chainSeconds}s till recast!
 	/call commandAttackHanvar
 	/doevents flush HanvarChainsOn
@@ -100,7 +79,8 @@ Sub Event_HanvarChainsOn
 | Hanvar's chains wore off
 Sub Event_HanvarChainsOff
 	/cecho \arChains OFF! \aw${Time.Time24} \ag${Time.SecondsSinceMidnight}
-	/varset timer_hanvar_ae 15s
+	/varset timer_hanvar_ae 100
+	/varset chainSeconds 10
 	/doevents flush HanvarChainsOff
 /return
 
@@ -110,13 +90,15 @@ Sub commandAttackGuards
 	/dex Xirin /target ${NearestSpawn[npc guard]}
 	/dex Xirin /casting "Terror of Discord"
 	/varset bln_announcedRetreat  FALSE
+	/varset bln_announcedKill	  FALSE
 	/varset timer_announce_guards 10s
 /return
 
 Sub commandRetreat
 	/cecho \ar${timer_hanvar_ae} ${chainSeconds}s \awuntil Hanvar AE, \aoRETREAT
 	/rs HanvarRetreat ${chainSeconds}
-	/varset bln_announcedRetreat TRUE
+	/varset bln_announcedRetreat 	TRUE
+	/varset bln_announcedKill		FALSE
 	/varset timer_announce_retreat 50s
 /return 
 
@@ -125,16 +107,18 @@ Sub commandAttackHanvar
 	/if (!${SpawnCount[npc guard]}) /rs HanvarKill ${chainSeconds}
 	/cecho \ar${timer_hanvar_ae} ${chainSeconds}s \awuntil Hanvar AE  (no guards), \agKILLHANVAR
 	/varset bln_announcedRetreat  FALSE
+	/varset bln_announcedKill	  TRUE
 	/varset timer_announce_kill 10s
 /return
 
 
-
 Sub Event_HanvarEngage
 	/echo engaging hanvar
-	/if (!${Target.ID}) /target Hanvar
-	/echo delaying 2s
-	/delay 20
+	:hanvarTarget
+	/if (!${Target.ID}) {
+		/target Hanvar
+		/goto :hanvarTarget
+	}
 	/if (!${Target.Name.Find[Hanvar]}) {
 		/cecho \ar HANVAR not targetted. Try that again!
 		/return
@@ -143,8 +127,7 @@ Sub Event_HanvarEngage
 		/cecho \ar HANVAR out of Range. Try that again!
 		/return
 	}
-	/echo hammering aggro
-	|/if (${Me.CombatAbilityReady[Furious Discipline]}) /doability "Furious Discipline"
+	/echo Hammering aggro
 	/if (${Me.CombatAbilityReady[Ancient: Chaos Cry]}) /doability "Ancient: Chaos Cry"
 	/delay 5
 	/if (${Me.CombatAbilityReady[Bazu Bellow]}) /doability "Bazu Bellow"
@@ -152,10 +135,10 @@ Sub Event_HanvarEngage
 	/nav wp hanvarTank
 	
 	:navHanvar
+	/varset bln_hanvarEngaged TRUE
 	/if (${Navigation.Active}) {
 		/goto :navHanvar 
 	}
-	/varset bln_hanvarEngaged TRUE
 	/face fast
 	/attack on
 /return

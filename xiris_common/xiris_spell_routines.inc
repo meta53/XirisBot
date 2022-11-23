@@ -61,6 +61,7 @@ ______________________________________________
 | CAST_NOTREADY        | AA ability or spell is not ready yet                                 | 
 | CAST_OUTOFMANA       | You don't have enough mana for this spell!                           | 
 | CAST_OUTOFRANGE      | Target is out of range                                               | 
+| CAST_OUTOFREAGENTS   | You are out of required reagents for this spell                      | 
 | CAST_RESIST          | Your spell was resisted!                                             | 
 | CAST_SUCCESS         | Your spell was cast successfully! (yay)                              | 
 | CAST_UNKNOWN         | Spell/Item/Ability was not found                                     | 
@@ -72,7 +73,8 @@ ______________________________________________
 | CAST_STUNNED		   | Stunned 															  |
 | CAST_STANDING		   | Not Standing 														  |
 | CAST_DISTRACTED      | To Distracted ( spell book open )    								  |
-| CAST_NOCHARM		   | This NPC cannot be charmed			                                  |
+| CAST_NOCHARM		   | This NPC cannot be charmed											  |
+| CAST_NOTARGET		   | You must first select a target for this spell!	                      |
 +----------------------+----------------------------------------------------------------------+
 
 **|	
@@ -94,10 +96,11 @@ ______________________________________________
 #Event NoHold 		"#*#Your spell is too powerful for your intended target#*#"
 #Event NoLOS 		"#*#You cannot see your target.#*#"
 #Event NoMount 		"#*#You can not summon a mount here.#*#"
-#Event NoTarget 	"#*#You must first select a target for this spell!#*#"
+#Event NoTarget 	"#*#You must first select a target#*#"
 #Event NotReady 	"#*#Spell recast time not yet met.#*#"
 #Event OutOfMana 	"#*#Insufficient Mana to cast this spell!#*#"
 #Event OutOfRange 	"#*#Your target is out of range, get closer!#*#"
+#Event OutOfRReagents "#*#You are missing some required components#*#"
 #Event Recover 		"#*#You haven't recovered yet...#*#"
 #Event Recover 		"#*#Spell recovery time not yet met#*#"
 #Event Resisted 	"#*#Your target resisted the #1# spell#*#"
@@ -119,6 +122,7 @@ Sub Events_SpellRoutines
 	/doevents FDFail
 	/doevents OutOfRange
 	/doevents OutOfMana
+	/doevents OutOfRReagents
 	/doevents NoLOS
 	/doevents Resisted2
 	/doevents Resisted
@@ -235,11 +239,11 @@ Sub MQ2Cast(string spellName,string spellType,timer giveUpTimer,string mySub,str
 		/varset castReturn ${Cast.Result}
 		/call Events_SpellRoutines
 	}
-:cast_spell_pending
-	
+	:cast_spell_pending
 	/if ( ${Cast.Status.Find[C]} ) {
-		/if (${Cast.Result.Equal[CAST_NOTARGET]}) /goto :CastEnd
-		/if ( !${interruptFlag} && ${mySub.Length} ) /call ${mySub}
+		/if (${Cast.Result.Equal[CAST_OUTOFREAGENTS]}) 	/goto :CastEnd
+		/if (${Cast.Result.Equal[CAST_NOTARGET]}) 		/goto :CastEnd
+		/if ( !${interruptFlag} && ${mySub.Length} ) 	/call ${mySub}
 		/goto :cast_spell_pending
 	} else /if ( ${Cast.Result.Equal[CAST_RESIST]} ) {
 		/if ( ( ${FindItem[${spellName}].ID} && ${giveUpTimer} && !${FindItem[${spellName}].Timer} ) || ( ${Spell[${spellName}].ID} && ${giveUpTimer} > ${Spell[${spellName}].RecoveryTime} ) ) /goto :cast_spell
@@ -247,7 +251,6 @@ Sub MQ2Cast(string spellName,string spellType,timer giveUpTimer,string mySub,str
 		/if ( !${interruptFlag} && ( ${FindItem[${spellName}].ID} && ${giveUpTimer} && !${FindItem[${spellName}].Timer} ) || ( ${Me.AltAbility[${spellName}].ID} && ${Me.AltAbilityReady[${spellName}]} ) || ( ${Spell[${spellName}].ID} && ${giveUpTimer} > ${Spell[${spellName}].RecoveryTime} ) ) /goto :cast_spell
 	}
 	:CastEnd
-	/call Events_SpellRoutines
 /return ${castReturn}
 
 
@@ -301,6 +304,10 @@ Sub Event_OutOfMana
 
 Sub Event_OutOfRange
 	/if (${Defined[castReturn]}) /varset castReturn CAST_OUTOFRANGE
+/return
+
+Sub Event_OutOfRReagents
+	/if (${Defined[castReturn]}) /varset castReturn CAST_OUTOFREAGENTS
 /return
 
 Sub Event_Recover

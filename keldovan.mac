@@ -1,4 +1,5 @@
 #Turbo 20
+| Run as SK (initial puller)
 Sub Main 
     | Set Autocures (most of them!)
     /dt Tragic AutoCureMTOn

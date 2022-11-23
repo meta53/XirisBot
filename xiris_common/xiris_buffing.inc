@@ -313,12 +313,15 @@ Sub doGroupBuffOnTarget(string tgt)
 	/declare i    		  		int		local
 	/declare buffDuration 		int		local
 	/declare buffSpell    		string	local
+	/declare buffUse  			bool    local
 	/declare buffGem	  		string	local
 	/declare spellReadyCount	int 	local 0
 	/target pc ${tgt}
 	/delay 10
 
 	/for i 1 to ${int_oocBuffTotal}
+		/varset 	buffUse		 ${Bool[${OOCBUFF_${i}_Use}]} 
+		/if (!${buffUse}) /goto :NextGB
 		/varset 	buffSpell    ${OOCBUFF_${i}}
 		/varcalc	buffDuration ${Spell[${OOCBUFF_${i}}].Duration.TotalSeconds}
 		/varset		buffGem		 ${OOCBUFF_${i}_Gem}
@@ -346,13 +349,24 @@ Sub doGroupBuffOnTarget(string tgt)
 			/echo Cast "${buffSpell}" on TARGET: ${tgt}
 			/call MQ2Cast "${buffSpell}" ${buffGem} 10s
 			/delay 10
-			/if (${Cast.Result.Equal[CAST_FIZZLE]})  	/goto :spellReadyWait
-			/if (${Cast.Result.Equal[CAST_OUTOFMANA]})  	/goto :spellReadyWait
-			/if (${Cast.Result.Equal[CAST_CANNOTSEE]})  	/goto :spellReadyWait
-			/if (${Cast.Result.Equal[CAST_OUTOFRANGE]}) 	/goto :spellReadyWait
-			/if (${Cast.Result.Equal[CAST_INTERRUPTED]}) 	/goto :spellReadyWait
-			/if (${Cast.Result.Equal[CAST_NOTREADY]}) 		/goto :spellReadyWait
-			/if (${Cast.Result.Equal[CAST_SUCCESS]}) {
+					
+			/if (${Cast.Result.Equal[CAST_FIZZLE]}) { 		
+				/goto :spellReadyWait
+			} else /if (${Cast.Result.Equal[CAST_OUTOFMANA]}) { 	
+				/goto :spellReadyWait
+			} else /if (${Cast.Result.Equal[CAST_CANNOTSEE]}) { 	
+				/goto :spellReadyWait
+			} else /if (${Cast.Result.Equal[CAST_OUTOFRANGE]}) {	
+				/goto :spellReadyWait
+			} else /if (${Cast.Result.Equal[CAST_INTERRUPTED]}) {	
+				/goto :spellReadyWait
+			} else /if (${Cast.Result.Equal[CAST_NOTREADY]}) {	
+				/goto :spellReadyWait
+			} else /if (${Cast.Result.Equal[CAST_OUTOFREAGENTS]}) {
+				/cecho \ar ${buffSpell} ${Cast.Result} Disabling
+				/rs Out of reagents for ${buffSpell}
+				/varset OOCBUFF_${i}_Use FALSE
+			} else /if (${Cast.Result.Equal[CAST_SUCCESS]}) {
 				/cecho \ag ${buffSpell} ${Cast.Result}
 			}
 		}

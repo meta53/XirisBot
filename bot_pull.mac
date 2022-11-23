@@ -1023,7 +1023,8 @@ Sub setAlerts
 	|    06/12 ordered by zone for performance
 	|=================================
 	|-- Global Ignores
-	/squelch /alert add 2 "abadacadvra"
+	/squelch /alert clear 1
+	/squelch /alert add 1 "abadacadvra"
 
 	|-- LDON Ignores
 	/squelch /alert add 1 "a bitten victim"
@@ -1074,6 +1075,7 @@ Sub setAlerts
 		/squelch /alert add 1 "Scribe"
 		/squelch /alert add 1 "Gurru"
 		/squelch /alert add 1 "Udranda"
+		/squelch /alert add 1 "Aneuk Controller"
 	} else /if (${Zone.ShortName.Equal[ferubi]}) {
 		/squelch /alert add 1 "Rondo"
 	}  else /if (${Zone.ShortName.Equal[qinimi]}) {
@@ -1134,12 +1136,19 @@ Sub setAlerts
 		/squelch /alert add 1 "Trelak" 
 		/squelch /alert add 1 "Verow"
 		/squelch /alert add 1 "Sandak"
+ 	} else /if (${Zone.ShortName.Equal[ssratemple]}) {
+		/squelch /alert add 1 "Rhag"
+	} else /if (${Zone.ShortName.Equal[chardok]}) {
+		/squelch /alert add 1 "slave"
+		/squelch /alert add 1 "niblek"
+		/squelch /alert add 1 "vault master"
 	}
 
 
 	|=================================
 	|--- specific zone mobs to hunt;
 	|=================================
+	/squelch /alert clear 2
 	/squelch /alert add 2 "foobarbaza"
 	/if (${Zone.ShortName.Equal[trakanon]}) {
 		|--Hunter Cycle--|
@@ -1229,22 +1238,16 @@ Sub setAlerts
 
 	|--Epic Stuff
 	} else /if (${Zone.ShortName.Equal[povalor]}) {
-		/squelch /alert add 2 "a valorian guard"
-		/squelch /alert add 2 "Grenic Drere"
-		/squelch /alert add 2 "Popoah"
-		/squelch /alert add 2 "Cupperhide"
-		/squelch /alert add 2 "Aiden Finn"
-		/squelch /alert add 2 "Sikfaun"
-		/squelch /alert add 2 "A Squad Leader"
-		/squelch /alert add 2 "A Valorian Guardsman"
-		/squelch /alert add 2 "Tillan"
-		/squelch /alert add 2 "Gregek"
-		/squelch /alert add 2 "Kriead"
-		/squelch /alert add 2 "Tead"
-		/squelch /alert add 2 "Yelios"
-		/squelch /alert add 2 "Bakeside"
-		/squelch /alert add 2 "Matthers"
-		/squelch /alert add 2 "Daryin"
+		/squelch /alert add 2 "a crystalline arachnae"
+	} else /if (${Zone.ShortName.Equal[poinnovation]}) {
+		/squelch /alert add 2  "a degrading guardian"
+		/squelch /alert add 2  "a weathered guardian"
+		/squelch /alert add 2  "a weathered clockwork"
+	} else /if (${Zone.ShortName.Equal[ssratemple]}) {
+		/squelch /alert add 2 "Shissar Assassin"
+	} else /if (${Zone.ShortName.Equal[chardok]}) {
+		/squelch /alert add 2 "overseer"
+		/squelch /alert add 2 "foreman"
 	}
 /return
 

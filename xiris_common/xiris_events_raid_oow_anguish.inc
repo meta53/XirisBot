@@ -305,7 +305,7 @@ Sub Event_HanvarSetup
 		/nav wp hanvarCaster
 	}
 	| We need to light up the fucker with DOTs and Cold Nukes
-	/if (${Me.Class.ShortName.Equal[SHM]}) /call setSpell
+	|/if (${Me.Class.ShortName.Equal[SHM]}) /call setSpell
 	/doevents flush HanvarSetup
 /return
 
@@ -458,7 +458,9 @@ Sub chkMarkedForDeathCureDist
 	/if (${Me.Buff[Mark of Death].ID}) {
 		/if (${Spawn[pc ${str_myCurer}].Distance3D} > 70 && ${Spawn[pc ${str_myCurer}].Distance3D} < 250 && !${bln_tanking}) {
 			/cecho \awWarping to Curer because range is too far for cure
-			/warp wp amvCLeric
+			/melee reset
+			/melee reset
+			/warp wp amvCleric
 			/goto :markLoop
 		} else /if (${Spawn[pc ${str_myCurer}].Distance3D} <= 70) {
 			/cecho \ayWaiting for cure of Mark of Death
@@ -495,6 +497,7 @@ Sub chkSelfMarkedForDeath
 	}
 :return 
 /return
+
 Sub chkGroupMarkedForDeath
 	/if (${bln_chChainMember}) /return
  
