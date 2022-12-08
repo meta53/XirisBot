@@ -5,13 +5,13 @@ Sub Main
     | PR: 200 (80%) 	DR: 600 (240%)
     /dgt ResistTypes cold|poison|magic|fire
 
-    | Xiria (ST)
-    /dt Xirael changeMT Xiria
-    /dt Xinshia changeMT Xiria
-    | Xiria (ST) Autocure
+    | Xirin (ST)
+    /dt Xirael changeMT Xirin
+    /dt Xinshia changeMT Xirin
+    /dt Xenshia changeMT Xirin
+    | Xirin (ST) Autocure
     /dt Xirael autocureMTon 
     /dt Xinshia  autocureMTon
-
     | Xiris (MT) Autocure
     /dt Xanshia autoCureMTon
     /dt Xenshia autocureMTon
@@ -26,15 +26,20 @@ Sub Main
     /melee taunt=on 
     /dt deist dime
 
-    | Healing Focus
-    | So these clerics will not try to cure group
-    /dt Tragic FocusHealMTOn
-    /dt Xanshia FocusHealMTOn
-    /dt Xirael FocusHealMTOn
-    /dt Xinshia FocusHealMTOn
-    /dt Xenshia FocusHealMTOn
+   /delay 5s
+   
+   /dge clr /warp wp zcleric 
+   /dga war /warp wp ztank 
+   /dge melee /warp wp ztank 
+   /dge caster /warp wp zcaster
+   /dge dru /warp wp ztank 
+   /dge shm /warp wp ztank
+   /dge enc /warp wp ztank
 
-    | Turn off cures for pretty much everyone except clerics
-    /dga /varset bln_useCures FALSE
+   /tar zun
+   /attack on 
+
+   /dex Xirin /casting "Dread Gaze"
+
 
 /return

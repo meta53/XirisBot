@@ -32,6 +32,7 @@ ______________________________________________
 **|
 
 #EVENT NoqCurse 				"[ #1# #*#]#*#NoqCurse,#2#"
+#EVENT NoqSafe  				"#*#noqsafe#*#"
 #EVENT InkCurse					"#*#The thoughts of a cursed trusik#*#"
 #EVENT InkCurseSafe				"#*#inkstop#*#"
 #EVENT InkCurseSafe				"#*#inksafe#*#"
@@ -100,6 +101,7 @@ Sub Events_GoD_Inktuta
 	| Noqufiel
 	/if (${Bool[${SpawnCount[npc Noqufiel]}]} && !${Bool[${SpawnCount[npc Cursecaller]}]}) {
 		/doevents NoqCurse
+		/doevents NoqSafe
 		/if (${Me.Class.ShortName.Equal[WIZ]} || ${Me.Class.ShortName.Equal[MAG]}) /call chkNoqCursebearers
 	}
 	
@@ -179,7 +181,7 @@ Sub InkNoqRun(int _curseID)
 	} 
 	/rs Running Noqufiel ${_curseID}
 	/doevents flush
-
+	/call Disengage
 	|-- find which cursebearer has you on aggro;
 	/call TrueTarget ${_curseID}
 	/delay 10
@@ -214,7 +216,7 @@ Sub InkNoqRun(int _curseID)
 	
 	:farLoop
 	/if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /call InkDeath
-	/if (${Me.TargetOfTarget.Name.Equal[${Me.Name}]}) {
+	/if (${Me.TargetOfTarget.Name.Equal[${Me.Name}]} || !${Target.Name.Find[_corpse]}) {
 		/if (${Target.Distance} < 50) {
 			/varset inkRunning TRUE
 			/call InkCurseRun
@@ -225,7 +227,7 @@ Sub InkNoqRun(int _curseID)
 	/if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /call InkDeath
 	|-- insert some return logic here	
 	/varset inkRunning FALSE
-	/nav wp noqstart
+	/nav spawn pc ${str_MTName}
 	|-- clear events queue so we dont get into an echo chamber
 	/doevents flush
 /return
@@ -311,7 +313,7 @@ Sub InkCurseRun
 /return
 
 Sub InkDeath
-	/rs ${Me.Name} is dead, resetting.
+	/rs ${Me.Name} is dead, Resetting.
 	
 	/varset inkRunning FALSE
 	/play off

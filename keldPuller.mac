@@ -64,7 +64,7 @@ Sub commandTankOn
     /delay 5
     /dex Xiris /casting "Champion's Sword of Eternal Power" item
     /delay 5 
-    /dex Xiris /casting "Armsmaster's Breastplate" item
+    /dex Xiris /casting "Gladiator's Plate Chestguard of War" item
     /delay 5
     /dex Xiris /doability "Furious Discipline"
     /delay 5

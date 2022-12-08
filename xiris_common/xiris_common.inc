@@ -364,8 +364,12 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/call chkNaked 
 	/if (${bln_naked}) {
 		/cecho \arI am naked, waiting 30s and rechecking before I initialize!
-		/delay 30s
-		/goto :init_naked_wait
+		/call LootSelf
+		/call chkNaked 
+		/if (${bln_naked}) {
+			/delay 30s
+			/goto :init_naked_wait
+		}
 	}
 
 	|-- init common events
@@ -637,7 +641,7 @@ Sub Disengage
 
 
 Sub chkMobDead
-	/if (${SpawnCount[npc radius 200]} == 0 && ${bln_engaged}) {
+	/if ((${SpawnCount[npc radius 200]} == 0 || ${Me.XTarget} == 0) && ${bln_engaged} ) {
 		/echo chkMobDead triggered Xtarget:${Me.XTarget} || SpawnCount:!${SpawnCount[npc id ${int_targetID} radius 250]}  && engaged:${bln_engaged}
 		/call Disengage
 	}

@@ -8,18 +8,19 @@ Sub Main
     /dex Xurael     /nav wp jelvan1Cleric
     /dex Xirael     /nav wp jelvan1Cleric
     /dex Achlys     /nav wp jelvan1Cleric
-    /dex Achlys     /end
     /dex Shynxia    /nav wp jelvan1Tank
     | Group 2
     /dex Sadelia    /nav wp jelvan1Tank
     /dex Dogmatist  /nav wp jelvan1Cleric
     /dex Theist     /nav wp jelvan1Cleric
 
+
     | South, 2 - start and most of the Clerics here
     | Group 1
     /nav wp jelvan2Tank
     /dex Xanshia    /nav wp jelvan2Cleric
     /dex Xerael     /nav wp jelvan2Cleric
+    
     /dex Ophidia    /nav wp jelvan2Tank
     /dex Opheoia    /nav wp jelvan2Tank
     /dex Shinxia    /nav wp jelvan2Tank
@@ -66,7 +67,6 @@ Sub Main
     /dex Empathic   /nav wp jelvan3Cleric
     /dex Xunshia    /nav wp jelvan3Cleric
     /dex Adikia     /nav wp jelvan3Cleric
-    /dex Adikia     /end
 
     | Group 2
     /dex Xirin      /nav wp jelvan3Tank
@@ -115,13 +115,10 @@ Sub Main
     | Set Autocure for MT 
     | Tanthi (1) - Xiria
     /dt Xirael autoCureMTOn
-    /dt Shynxia autoCureMTOn
     | Tanthu (2) - Xiris
     /dt Xanshia autoCureMTOn 
-    /dt Shinxia autoCureMTOn
     | Tantho (3)
     /dt Xenshia autoCureMTOn 
-    /dt Tragic autoCureMTOn
 
     | Turn on preventspeed
     /dga /docrack preventspeed on

@@ -90,11 +90,11 @@ Sub Events_OOW_Anguish
 	}
 
 	| OMM Events
-	/if (${Bool[${SpawnCount[npc Overlord]}]} && ${Spawn[npc Overlord].Distance3D} < 300) {
+	|/if (${Bool[${SpawnCount[npc Overlord]}]} && ${Spawn[npc Overlord].Distance3D} < 300) {
 		/doevents GazeYou
 		/doevents GazeBurst
 		/doevents GazeDone
-	} 
+	|} 
 
 /return 
 
@@ -438,7 +438,7 @@ Sub chkAMVEvents
 	
 	/if (${bln_amvEngaged}) {
 		/if (${Me.Class.ShortName.NotEqual[CLR]} && ${Me.Class.ShortName.NotEqual[SHM]}) /call chkMarkedForDeathCureDist
-		/if (${Me.Class.ShortName.Equal[CLR]} || ${Me.Class.ShortName.Equal[SHM]}) /call chkGroupMarkedForDeath 
+		/if (${Me.Class.ShortName.Equal[CLR]} || ${Me.Class.ShortName.Equal[SHM]}  && !${bln_chChainMember}) /call chkGroupMarkedForDeath 
 		/if (${Me.Class.ShortName.Equal[PAL]}) /call chkSelfMarkedForDeath
 	}
 
@@ -458,6 +458,7 @@ Sub chkMarkedForDeathCureDist
 	/if (${Me.Buff[Mark of Death].ID}) {
 		/if (${Spawn[pc ${str_myCurer}].Distance3D} > 70 && ${Spawn[pc ${str_myCurer}].Distance3D} < 250 && !${bln_tanking}) {
 			/cecho \awWarping to Curer because range is too far for cure
+			/call Disengage
 			/melee reset
 			/melee reset
 			/warp wp amvCleric
@@ -469,49 +470,48 @@ Sub chkMarkedForDeathCureDist
 			/rs Cannot be cured!
 		}
 	} else {
-		/if (${MeleeClasses.Find[${Me.Class.ShortName}]} ) {
+		/if (${MeleeClasses.Find[${Me.Class.ShortName}]} && !${bln_engaged}) {
 			/call TrueTarget ${Spawn[npc Vangl].ID}
-			/warp b 10
-			/call EngageTarget ${Spawn[npc Vangl].ID}
-		} else /if (${CasterClasses.Find[${Me.Class.ShortName}]}) {
-			/call EngageTarget ${Spawn[npc Vangl].ID}
+			/if (${Target.PctHPs} <=99) {
+				/warp b 10
+				/call EngageTarget ${Spawn[npc Vangl].ID}
+			}
+		} else /if (${CasterClasses.Find[${Me.Class.ShortName}]} && !${bln_engaged}) {
+			/if (${Target.PctHPs} <=99) /call EngageTarget ${Spawn[npc Vangl].ID}
 		}
 	}
 	:return
 /return 
 
 Sub EVENT_MarkOfDeath
-	/if (${Me.Class.ShortName.Equal[SHM]}) {
-		/call cureGroupDisease 14 
-		/call chkMarkedForDeath
-	} else /if (${Me.Class.ShortName.Equal[CLR]} && !${bln_chChainMember}) {
-		/call MQ2Cast "${str_heal_group}" gem4 2s 
-		/call chkMarkedForDeath
-	}
+	/cecho \aoMarked for Death!
+	/if (!${bln_amvEngaged}) /varset bln_amvEngaged TRUE
 	/doevents flush MarkOfDeath
 /return
 
 Sub chkSelfMarkedForDeath
-	/if (${Me.Buff[Mark of Death].ID}) {
-		/if (${Me.Class.ShortName.Equal[PAL]}) /call handleCureRequest ${Me.Name} ${Me.ID} disease 14 TRUE
-	}
-:return 
+	/if (${Me.Buff[Mark of Death].ID}) /call handleCureRequest ${Me.Name} ${Me.ID} disease 14 TRUE
 /return
 
 Sub chkGroupMarkedForDeath
-	/if (${bln_chChainMember}) /return
+	/if (${Me.Class.ShortName.Equal[CLR]} && (${bln_chChainMember} || ${bln_focusHealMT})) /return
  
-	/declare gm int local 1
+	/declare i int local 0
 	/declare haveMark int local 0
-	/declare gcount[5]  int local 0
+	/declare gcount[6]  int local 0
 	/declare foundMark bool local FALSE
 	/declare tankIndex int local 10
+	/declare cureWaitCount int local 0
+	/declare gm int local 1
 
 	:CheckGroup
 	/varset haveMark 	0
 	/varset foundMark 	FALSE
-	/for gm 0 to ${Group}
-		/if (${Group.Member[${gm}].CleanName.Equal[Xiris]}) /varset tankIndex ${gm}
+	
+	| Remember, Group.Member needs 0-5, whereas the array needs 1-6
+	/for i 1 to 6
+		/varcalc gm ${i}-1
+		/if (${Group.Member[${gm}].CleanName.Equal[${str_MTName}]}) /varset tankIndex ${gm}
 		/dquery ${Group.Member[${gm}]} -q "Me.Buff[Mark of Death].ID"
 		/delay 20 ${DanNet.Query.Received}
 		
@@ -521,11 +521,9 @@ Sub chkGroupMarkedForDeath
 			/varset  foundMark TRUE
 			/varcalc haveMark ${haveMark}+1
 			/call getCureCounters ${Group.Member[${gm}]} disease
-			/varset gcount[${gm}] ${Int[${Macro.Return}]}
-		} else {
-			|/cecho \ag${Group.Member[${gm}]} reply: ${Bool[${DanNet.Q}]}
-		}
-	/next gm
+			/varset gcount[${i}] ${Int[${Macro.Return}]}
+		} 
+	/next i
 	
 	| No Marks found? return
 	/if (!${foundMark}) /goto :return
@@ -537,10 +535,24 @@ Sub chkGroupMarkedForDeath
 	
 	| If I am a cleric or shaman, cast group cure, and then recheck counters
 	:GroupCure 
-	/cecho \awGroupCure: \ag${str_heal_group} \ay${Me.SpellReady[${str_heal_group}]} \aw(\ag${Me.PctMana}) \ay${haveMark}>=3
-	/if (${Me.Class.ShortName.Equal[CLR]} && ${Me.SpellReady[${str_heal_group}]} && ${Me.PctMana} > 30 && ${haveMark} >= 2) {
-		/call MQ2Cast "${str_heal_group}" gem4 2s 
-		/goto :CheckGroup
+	/cecho \awGroupCure: \ag${str_heal_group} \ay${Me.SpellReady[${str_heal_group}]} \aw(\ag${Me.PctMana}) \ay${haveMark}>=2
+	/if (${Me.Class.ShortName.Equal[CLR]} && ${Me.PctMana} > 30 && ${haveMark} >= 2) {
+		:GroupCureWait 
+		/varcalc cureWaitCount ${cureWaitCount}+1
+		/if (!${Me.SpellReady[${str_heal_group}]}) {
+			/delay 5
+			/if (${cureWaitCount} > 10) {
+				/cecho \arGroupCure failed due to wait, trying by counters
+				/goto :CureByCounters
+			} else {
+				/cecho \arGroupCure waiting for ${str_heal_group} ${Me.SpellReady[${str_heal_group}]}
+				/goto :GroupCureWait
+			}
+		} else {
+			/cecho \agGroupCuring with ${str_heal_group}
+			/call MQ2Cast "${str_heal_group}" gem4 2s 
+			/goto :CheckGroup
+		}
 	} else /if (${Me.Class.ShortName.Equal[SHM]}) {
 		/call cureSelf disease 18 
 		/goto :CheckGroup
@@ -548,15 +560,18 @@ Sub chkGroupMarkedForDeath
 
 	| All else fails so cure anyone with a disease counter singly
 	:CureByCounters
-	/cecho \awCureByCounters: \ag${str_cure_disease} \ay${Me.SpellReady[${str_heal_group}]} \aw(\ag${Me.PctMana}) \ay${haveMark}< 2
-	/for gm 0 to ${Group} 
-		/if (${gcount[${gm}]} > 0) {
-			/call handleCureRequest ${Group.Member[${gm}].Name} ${Group.Member[${gm}].ID} disease ${gcount[${gm}]}
+	/cecho \awCureByCounters: \ag${str_cure_disease} \ayReady?${Me.SpellReady[${str_cure_disease}]} \aw(\ag${Me.PctMana}) \ay${haveMark}< 2
+	/for i 1 to 6
+		/varcalc gm ${i}-1
+		/call chkHeal_MT
+		/if (${gcount[${i}]} > 0) {
+			/call handleCureRequest ${Group.Member[${gm}].Name} ${Group.Member[${gm}].ID} disease ${gcount[${i}]} TRUE
 		}
-	/next gm
+	/next i
 
 	:CheckMT
 	/if (${tankIndex}<10) {
+		
 		/dquery ${Group.Member[${tankIndex}]} -q "Me.Buff[Mark of Death].ID"
 		/delay 20 ${DanNet.Query.Received}
 		
@@ -564,7 +579,7 @@ Sub chkGroupMarkedForDeath
 			/cecho \ar${Group.Member[${tankIndex}]} \awreply: ${DanNet.Q} ${Bool[${DanNet.Q}]}
 			/cecho \ar MARK OF DEATH FOUND on TANK
 			/call getCureCounters ${Group.Member[${tankIndex}].Name} disease
-			/call handleCureRequest ${Group.Member[${tankIndex}].Name} ${Group.Member[${tankIndex}].ID} disease ${Int[${Macro.Return}]}
+			/call handleCureRequest ${Group.Member[${tankIndex}].Name} ${Group.Member[${tankIndex}].ID} disease ${Int[${Macro.Return}]} TRUE
 		}
 	}
 :return
@@ -574,6 +589,16 @@ Sub chkGroupMarkedForDeath
 | Overlord Mata'Muram
 |----------------------------
 Sub Event_GazeYou 
+	/cecho \arGAZE OF MATA MURAM on ME!
+	/cecho \a-w Clicking \agMirrored Mask
+	/if (${Me.Class.ShortName.Equal[BRD]}) {
+		/medley queue "Mirrored Mask" -interrupt
+	} else {
+		/if (!${Defined[interruptFlag]}) /declare interruptFlag bool outer FALSE	
+		/if (${Bool[${Me.Casting.ID}]}) /call Interrupt
+		/call MQ2Cast "Amulet of Necropotence" 
+	}
+
 /return 
 
 Sub Event_GazeBurst

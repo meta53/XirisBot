@@ -190,15 +190,11 @@ Sub chkNeedCure
 	|-- If I have bln_autoCureMT Set to TRUE, always check if the MT needs cure and do it proactively
 	/if (${bln_autoCureMT}) /call cureMTAuto
 	|-- Verify that I actually have debuffs even if it says i need to cure, reset that
-	/if (!${Debuff} && ${bln_needsCure}) /call resetCureState
+	/if ((!${Debuff} && ${bln_needsCure})) /call resetCureState
 	|-- Verify need if I havent asked and recently
-	/if (${timer_cure_request}) 	/return
-	|-- Verify debuff counters
-	/if (${Debuff.Count} == 0 || ${Debuff.Counters} > 200) /return
-	|-- Verify ability to be cured
-	/if (${str_myCurer.Equal[NULL]}) 	/return
-	|-- Verify I am not tanking
-	/if (${Spawn[pc ${str_myCurer}].Distance3D} > 100 && ${bln_tanking}) /return
+	/if (${Debuff.Count} == 0 || ${Debuff.Counters} > 200 || ${timer_cure_request}) 	/return
+	|-- Skip if nocure mode is on
+	/if (!${bln_useCures} && ${Me.Class.ShortName.NotEqual[CLR]}) /return
 	
 	|-- Force the cure?
 	/declare forceCure		bool 	local	FALSE
@@ -225,12 +221,12 @@ Sub chkNeedCure
 
 	|-- Debuffs that MUST be removed (DISEASE)
 	|  Force cure these in all cases
-	/if ((${Me.Buff[Gaze of Anguish].ID} && !${bln_jelvanEngaged}) || ${Me.Buff[Mark of Death].ID}) {
+	/if ((${Me.Buff[Gaze of Anguish].ID} && !${bln_jelvanEngaged})) {
 		|-- Gaze of Anguish must be cured!
 		/varset cureType disease
 		/varset counters ${Debuff.Diseased}
 		/varset forceCure TRUE
-		/varset debuffName "GazeOfAnguish|MarkOfDeath"
+		/varset debuffName "GazeOfAnguish"
 		/goto :get_curer
 
 	|-- Debuffs that MUST be removed (CURSE)	
@@ -297,7 +293,7 @@ Sub chkNeedCure
 
 		:get_cureRange
 		| Get the range of this cure
-		/call setCureRange ${cureType}
+		|/call setCureRange ${cureType}
 
 		| Start asking for cure
 		:request_cure
@@ -457,17 +453,14 @@ Sub getGroupCurer(string _cureType)
 /return ${myCurer}
 
 Sub setCureRange(string _cureType) 
-	/if (${_cureType.Equal[poison]}) {
-		/varset cureRange 200
-		/if (${Spawn[${str_myCurer}].Class.ShortName.Equal[SHM]}) /varset cureRange 100
-		/if (${Spawn[${str_myCurer}].Class.ShortName.Equal[PAL]}) /varset cureRange 100
-		/if (${Spawn[${str_myCurer}].Class.ShortName.Equal[DRU]}) /varset cureRange 100
+	/if (${_cureType.Equal[poison]}) {]
+		/varset cureRange ${Spell[${str_cure_poison}].MyRange}
 	} else /if (${_cureType.Equal[curse]}) { 
-		/varset cureRange 100
+		/varset cureRange ${Spell[${str_cure_curse}].MyRange}
 	} else /if (${_cureType.Equal[disease]}) { 
-		/varset cureRange 100
-	} else /if (${_cureType.Equal[corruption]}) { 
-		/varset cureRange 100
+		/varset cureRange ${Spell[${str_cure_disease}].MyRange}
+	} else /if (${_cureType.Equal[corruption]}) {
+		/varset cureRange ${Spell[${str_cure_corruption}].MyRange} 
 	}
 
 /return 
@@ -489,7 +482,7 @@ Sub getCureCounters(string _pcName, string _type)
 /return ${c}
 
 Sub cureGroup(string _cureType, int _counters)
-	/if (${bln_chChainMember}) /return
+	/if (${bln_chChainMember} || ${bln_focusHealMT}) /return
 	/if (${Me.Class.ShortName.NotEqual[CLR]} && ${Me.Class.ShortName.NotEqual[DRU]} && ${Me.Class.ShortName.NotEqual[SHM]} && ${Me.Class.ShortName.NotEqual[PAL]}) /return
 	/g Curing Group ${_cureType} ${_counters}
 	| Cure Group with Group Cure
@@ -572,11 +565,31 @@ Sub cureSelf(string _cureType, int _counters)
 | Handle Incoming cure request.
 | TODO: If cleric, check MT hp before healing unless FORCED is true.
 Sub handleCureRequest(string _name, int _id, string _cureType, int _counters, bool _forced) 
-	/cecho \ayhandleCureRequest: ${_name}, ${_id}, ${_cureType}, ${_counters}
+	/cecho \ayhandleCureRequest: ${_name}, ${_id}, ${_cureType}, ${_counters}, ${_forced}
 	|-- find cure spell string & counters it clears
-	/declare	str_spell	  string	local	${str_cure_disease}
-	/declare    int_count     int		local   ${_counters}
-	/declare    int_castCount float     local   1
+	/declare	str_spell	  	string		local	${str_cure_disease}
+	/declare    int_count     	int			local   ${_counters}
+	/declare    int_castCount 	float    	local   1
+	/declare    qstring  	  	string   	local
+	/declare 	c 				int 		local	0
+
+	/if (${_cureType.Equal[disease]}) /varset qstring Debuff.Diseased
+	/if (${_cureType.Equal[curse]})   /varset qstring Debuff.Cursed
+	/if (${_cureType.Equal[poison]})  /varset qstring Debuff.Poisoned
+
+	|-- Sanity check their cure request with a query *(if we arent forced!)
+	/if (!${_forced}) {
+		/cecho Verifying Need ${_name} "${qstring}"
+		/dquery ${_name} -q "${qstring}"
+		/delay 20 ${DanNet.Query.Received}
+		/varset c ${DanNet.Q}
+		/if (!${c}) {
+			/cecho \ao${_name} \agdid NOT need curing, returning
+			/goto :return
+		} else {
+			/cecho \ag${_name} \awNEEDS curing ${c}, continuing
+		}
+	}
 
 	/if (!${Bool[${_counters}]}) {
 		/dt ${_name} I cannot cure you, you sent no counters!
@@ -590,8 +603,10 @@ Sub handleCureRequest(string _name, int _id, string _cureType, int _counters, bo
 	/call setCureRange ${_cureType}
 
 	| If cure target is out of range, return
-	/if (${Spawn[pc ${_name}].Distance} > ${cureRange}) /return
-
+	/if (${Spawn[pc ${_name}].Distance} > ${cureRange}) {
+		/cecho \ar ${_name} \awis out of cure range! \ao${Spawn[pc ${_name}].Distance} > ${cureRange}
+		/return
+	}
 
 	/if (${_cureType.Equal[disease]}) {
 		/cecho \aoDISEASE CURE selected.
@@ -653,22 +668,23 @@ Sub handleCureRequest(string _name, int _id, string _cureType, int _counters, bo
 	:cureReadyWait1
 	/call chkSpellMemorized "${str_spell}" TRUE
 	/if (${Me.SpellReady[${str_spell}]} && (${Target.Distance}<=200)) {
-		/call castCure ${_name} ${_id} "${str_spell}" ${int_castCount} ${_cureType} ${_forced}
+		/call castCure ${_name} ${_id} "${str_spell}" ${int_castCount} ${_cureType} ${_counters} ${_forced}
 	} else {
 		/goto :cureReadyWait1
 	}
+	:return
 /return
 
 |-- Casts a cure, for _count many times, on a _tgtID
 Sub castCure(string _name, int _id, string _spell, int _castCount, string _cureType, int _counters, bool _isForced) 
-	/cecho \aw CastCure ${_name}, ${_id}, ${_spell}, ${_counters}
+	/cecho \aoCastCure \aw${_name}, ${_id}, ${_spell}, ${_counters}
 	
 	/declare i int local 1
 	/for i 1 to ${_castCount}
 		| If I am a cleric and this is unforced, quickly check MT health
 		/if (${Me.Class.ShortName.Equal[CLR]} && !${_isForced}) /call chkHeal_MT
 		/call TrueTarget ${_id}
-		/cecho \aw Casting ${_spell}
+		/cecho \aoCasting \aw${i} \ag${_spell}
 		/call MQ2Cast "${_spell}" gem7 8s
 		/delay 10
 	/next i 
@@ -685,6 +701,7 @@ Sub xbot_initialize_curing
 	/declare 	bln_autoCureMT			bool    outer   FALSE
 	/declare    str_myCurer				string	outer 	NULL
 	/declare	timer_cure_request		timer   outer
+	/declare  	bln_useCures			bool    outer   TRUE
 
 	| Temporary work around
 	/if (!${Defined[bln_jelvanEngaged]}) /declare bln_jelvanEngaged bool outer FALSE

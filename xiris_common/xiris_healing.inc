@@ -48,6 +48,17 @@ REVISION HISTORY
 #EVENT HealMode			"#1# tells the raid#*#'HealMode #2#'"
 #EVENT HealMode 		"[ #1# #*#]#*#HealMode #2#"
 
+|-- Heal type events
+#EVENT FocusHEALMT_ON 	"#1# tells you#*#'FocusHealMTOn#*#'"
+#EVENT FocusHEALMT_ON	"#1# tells the group#*#'FocusHealMTOn#*#'"
+#EVENT FocusHEALMT_ON	"#1# tells the raid#*#'FocusHealMTOn#*#'"
+#EVENT FocusHEALMT_ON	"[ #1# #*#]#*#FocusHealMTOn#*#"
+
+#EVENT FocusHEALMT_OFF 	"#1# tells you#*#'FocusHealMTOff#*#'"
+#EVENT FocusHEALMT_OFF	"#1# tells the group#*#'FocusHealMTOff#*#'"
+#EVENT FocusHEALMT_OFF	"#1# tells the raid#*#'FocusHealMTOff#*#'"
+#EVENT FocusHEALMT_OFF	"[ #1# #*#]#*#FocusHealMTOff#*#"
+
 #EVENT HealType			"#1# tells you#*#'HealType #2#'"
 #EVENT HealType			"#1# tells the group#*#'HealType #2#'"
 #EVENT HealType			"#1# tells the raid#*#'HealType #2#'"
@@ -128,6 +139,8 @@ Sub Events_Healing
 	/doevents InterruptOFF
 	/doevents FireTotem
 	/doevents CheckHoTOnTarget
+	/doevents FocusHEALMT_ON
+	/doevents FocusHEALMT_OFF
 /return
 
 Sub Events_CH 
@@ -143,6 +156,20 @@ Sub Events_CH
 	} 
 /return 
 
+Sub EVENT_FocusHEALMT_OFF
+	/cecho \aoFocus Healing MT \agOFF
+	/varset bln_focusHealMT FALSE
+	/call ChangeHealType 2
+	/doevents flush FocusHEALMT_OFF
+/return
+
+Sub EVENT_FocusHEALMT_ON
+	/cecho \aoFocus Healing MT \agON
+	/varset bln_focusHealMT TRUE
+	/call ChangeHealType 1
+	/doevents flush FocusHEALMT_ON
+/return
+
 Sub EVENT_CheckHoTOnTarget
 	/call chkTargetHoT
 	/doevents flush CheckHoTOnTarget
@@ -154,7 +181,6 @@ Sub chkTargetHoT
 	/dquery ${str_MTName} -q "Me.SPA[100]"  -o perTick
 	/delay 120 ${DanNet.Q.Received}
 	/cecho \arReturned: ${Bool[${perTick}]}
-	
 /return ${perTick}
 
 Sub EVENT_GroupHeal
@@ -223,18 +249,18 @@ Sub EVENT_HealMode(_line, _chatSender, _eventParams)
 Sub ChangeHealMode(string _strMode)
 	|- Mem the appropriate spell set
 	/if (${_strMode.Find[CHCHAIN]}) {
-		/echo Changing healing mode to DEFAULT
+		/cecho \a-wChanging healing \aoMODE \a-wto \agDEFAULT
 		/varset str_spellset default
 		/varset str_healMode CHCHAIN
 		/call InterruptOFF
 	} else /if (${_strMode.Find[EFFICIENT]}) {
-		/echo Changing healing mode to EFFICIENT
+		/cecho \a-wChanging healing \aoMODE \a-wto \agEFFICIENT
 		/varset str_spellset efficient
 		/varset use_heal_HoT FALSE
 		/varset str_healMode EFFICIENT
 		/call InterruptON
 	} else {
-		/echo Changing healing mode to DEFAULT
+		/cecho \a-wChanging healing \aoMODE \a-wto \agDEFAULT
 		/varset str_spellset default
 		/varset use_heal_HoT TRUE
 		/varset str_healMode DEFAULT
@@ -253,8 +279,16 @@ Sub ChangeHealMode(string _strMode)
 **|
 Sub EVENT_HealType(_line, _chatSender, _eventParams)
 	/if (${Me.Class.ShortName.NotEqual[CLR]}) /return
-	/call ChangeHealMode ${_eventParams}
+	/call ChangeHealType ${_eventParams}
 	/doevents flush HealMode
+/return
+
+Sub ChangeHealType(int _type) 
+	/varset int_healMode ${Int[${_type}]}
+	/if (${int_healMode}==0) /cecho \a-wChanging healing \aoTYPE \a-wto \ag0-Self (only)
+	/if (${int_healMode}==1) /cecho \a-wChanging healing \aoTYPE \a-wto \ag1-MT (and self)
+	/if (${int_healMode}==2) /cecho \a-wChanging healing \aoTYPE \a-wto \ag2-Group (and MT, includes self)
+	/if (${int_healMode}==3) /cecho \a-wChanging healing \aoTYPE \a-wto \ag3-GroupOnly (includes self)
 /return
 
 
@@ -643,7 +677,7 @@ Sub healGRP
 			/if (!${use_heal_HoT}) /goto :next_groupMember
 			/dquery ${Spawn[pc id ${arr_groupHP[${i},3]}].Name} -q "Me.SPA[100]"  -o perTick
 			/delay 120 ${DanNet.Q.Received}
-			/cecho /ag${Spawn[pc id ${arr_groupHP[${i},3]}].Name} \awhas \ay${perTick} \awHoT happening
+			/cecho \ag${Spawn[pc id ${arr_groupHP[${i},3]}].Name} \awhas \ay${perTick} \awHoT happening
 			/if (${arr_groupHP[${i},1]} <= ${int_point_grpHot} && ${arr_groupHP[${i},2]} <= ${int_range_HoT} && ${perTick} < ${int_heal_HoT_perTick}) {
 				/cecho  \aoHoT \ag(${str_healMode})   \ay${str_currentHeal} \awon \ag ${memName}\aw(\ay${arr_groupHP[${i},3]}\aw)
 				/if ((${Me.CurrentMana} < ${Spell[${str_heal_HoT}].Mana})) /goto :return
@@ -1333,8 +1367,9 @@ Sub xbot_initialize_healing(int _healPoint)
 	| 	Heal Mode: 0|Self Only, 1|Self/MT 2|Self/MT/Group
 
 	/declare 	int_defaultHealMode			int 	outer   ${Ini[${healINI},Heal_Settings,int_healMode]}
-	/echo ${int_defaultHealMode} ${botINI} 					${Ini[${healINI},CelestialRegeneration,cr_1_name]}
 	/declare	int_healMode    			int     outer   ${Ini[botINI,Healing_Settings,int_healMode,${int_defaultHealMode}]}
+	/declare 	bln_focusHealMT				bool    outer   FALSE
+	/if (${int_healMode}<=1) 				/varset bln_focusHealMT	TRUE
 	/cecho \arint_healMode: \ag${int_healMode} ${int_defaultHealMode}
 
 	/declare 	use_heal_defaultDivineArb	bool	outer 	${Ini[${healINI},Heal_Settings,use_heal_divineArb, FALSE]}

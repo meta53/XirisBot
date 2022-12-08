@@ -1248,6 +1248,9 @@ Sub setAlerts
 	} else /if (${Zone.ShortName.Equal[chardok]}) {
 		/squelch /alert add 2 "overseer"
 		/squelch /alert add 2 "foreman"
+	} else /if (${Zone.ShortName.Equal[southkarana]} || ${Zone.ShortName.Equal[rathemtn]}) {
+		/squelch /alert add 2 "Brother Zephyl"
+		/squelch /alert add 2 "Brother Qwinn"
 	}
 /return
 

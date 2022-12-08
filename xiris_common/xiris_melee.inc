@@ -293,7 +293,8 @@ Sub chkDownshits
 						|   to at least our open inventory slot 30
 
 						| Slot the item is supposed to be worn in
-						| Note, instead out it in the the empty inventory slot 8 InvSlot[30]
+						| Note, instead put it in the the empty inventory slot 8 InvSlot[30]
+						| this is more reliable and if the toon dies, you dont have orphan crap equipped
 						|/varset wornSlot ${InvSlot[${FindItem[=${itemName}].WornSlot[1]}].Name}
 						| Item that is currently in that slot
 						|/varset itemInSlot ${InvSlot[${wornSlot}].Item.Name}
@@ -320,12 +321,8 @@ Sub chkDownshits
 						/cecho \ayDownflag (\ag${df}\ay) Casting \ay${buffName} \ag${downflag${df}.Token[2,|]}
 						/call MQ2Cast ${castArg}
 					}
-					
 					:dfcast
 					/if (${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]}) /goto :dfcast
-			
-					
-					
 				}
 			:nextDF
 			/next df

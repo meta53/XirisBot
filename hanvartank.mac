@@ -70,7 +70,7 @@ Sub Main(string _type, string _tankPoint)
 Sub Event_HanvarChainsOn
 	/cecho \arChains ON! \aw${Time.Time24} \ag${Time.SecondsSinceMidnight}, resetting interval to ${int_timeChainInterval}
 	/varset timer_hanvar_ae ${int_timeChainInterval}
-	/varcalc chainSeconds ${int_timeChainInterval} / 10
+	/varset chainSeconds 55
 	/rs Hanvar Chains On! ${chainSeconds}s till recast!
 	/call commandAttackHanvar
 	/doevents flush HanvarChainsOn
@@ -105,7 +105,7 @@ Sub commandRetreat
 
 Sub commandAttackHanvar
 	/if (!${SpawnCount[npc guard]}) /rs HanvarKill ${chainSeconds}
-	/cecho \ar${timer_hanvar_ae} ${chainSeconds}s \awuntil Hanvar AE  (no guards), \agKILLHANVAR
+	/cecho \artimer:${timer_hanvar_ae} seconds${chainSeconds}s \awuntil Hanvar AE  (no guards), \agKILLHANVAR
 	/varset bln_announcedRetreat  FALSE
 	/varset bln_announcedKill	  TRUE
 	/varset timer_announce_kill 10s

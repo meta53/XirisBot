@@ -44,6 +44,8 @@ REVISION HISTORY
 #EVENT HIDE_LOOTED		"#1# tells the raid#*#DoHideLooted#*#'"
 #EVENT HIDE_LOOTED 		"[ #1# #*#]#*#DoHideLooted#*#"
 
+#EVENT LOOT_SELF  		"#*#LootYourself#*#"
+
 Sub InitEvents_Looting
 	/call RegisterBackgroundEvents Events_Looting 6
 /return
@@ -53,7 +55,7 @@ Sub Events_Looting
 	/doevents SELL_VENDOR
 	/doevents HIDE_CORPSES
 	/doevents HIDE_LOOTED
-
+	/doevents LOOT_SELF
 	|- Only need to run these events if you are looting
 	/if (${bln_lootAuto}) {	
 		/doevents LOOT_REFRESH
@@ -65,6 +67,22 @@ Sub EVENT_LOOT_ON(_line, _chatSender, _eventParams)
 	/call EnableLooting "${_eventParams}"
 	/doevents flush LOOT_ON
 /return 
+
+Sub EVENT_LOOT_SELF
+	/if (${bln_naked}) {
+		/call LootSelf
+	}
+	
+/return
+
+Sub LootSelf 
+	/cecho \ao${Me.Name} is looting self
+	/if (${Me.Class.ShortName.Equal[MNK]} || ${Me.Class.ShortName.Equal[NEC]} ) {
+		/multiline ; /squelch /melee feigndeath=0 ; /stand ; /delay 2s; /tar ${Me.Name}'s ; /corpse ; /loot ; /delay 2s ; /notify LootWnd LW_LootAllButton leftmouseup ; /delay 10s ; /squelch /melee feigndeath=10 ; /memspellset default;
+	} else {
+		/multiline ;  /delay 2s; /tar ${Me.Name}'s ; /corpse ; /loot ; /delay 2s ; /notify LootWnd LW_LootAllButton leftmouseup ; /delay 10s ; /memspellset default; /mqpause off
+	}
+/return
 
 Sub EnableLooting(string _eventParams)
 	| Announce
