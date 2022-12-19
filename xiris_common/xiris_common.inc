@@ -1114,6 +1114,14 @@ Sub SetRaidGroupMode(string _mode)
 			/varset	RaidGroupLeaders[1] Xirea
 			/varset	RaidGroupLeaders[2] Xirin
 		}
+	} else /if (${_mode.Equal[THIRTYSIX]}) {
+		/declare RaidGroupLeaders[6] string outer NULL
+		/varset	RaidGroupLeaders[1] Xiris
+		/varset	RaidGroupLeaders[2] Xirin
+		/varset RaidGroupLeaders[6] Xaeliea
+		/varset RaidGroupLeaders[7] Xaexa
+		/varset RaidGroupLeaders[8] Xaia
+		/varset RaidGroupLeaders[9] Xepatia
 	}
 /return
 
@@ -1133,7 +1141,7 @@ Sub SetRaidDIClerics(string _mode)
 	/cecho \aySetting raid di members to ${_mode}
 	/deletevar RaidDIClerics
 		
-	/if (${_mode.Equal[RAID]} || ${_mode.Equal[HATRED]}) {
+	/if (${_mode.Equal[RAID]} || ${_mode.Equal[HATRED]} || ${_mode.Equal[DEFAULT]} ) {
 		/declare RaidDIClerics[6] string outer NULL
 		/varset	RaidDIClerics[1] Xanshia
 		/varset	RaidDIClerics[2] Xinshia
@@ -1154,7 +1162,7 @@ Sub SetRaidDIClerics(string _mode)
 			/varset	RaidDIClerics[1] Deist
 			/varset	RaidDIClerics[2] Xenshia
 		}
-	}  else /if (${_mode.Equal[JELVAN]}) {
+	} else /if (${_mode.Equal[JELVAN]}) {
 		/declare RaidDIClerics[2] string outer NULL
 		/if (${Raid.Leader.CleanName.Equal[Xiris]}) {
 			/varset	RaidDIClerics[1] Xanshia
@@ -1166,6 +1174,13 @@ Sub SetRaidDIClerics(string _mode)
 			/varset	RaidDIClerics[1] Deist
 			/varset	RaidDIClerics[2] Xenshia
 		}
+	} else /if (${_mode.Equal[THIRTYSIX]}) {
+		/declare RaidDIClerics[5] string outer NULL
+		/varset	RaidDIClerics[1] Xanshia
+		/varset	RaidDIClerics[2] Xinshia
+		/varset RaidDIClerics[3] Theist
+		/varset RaidDIClerics[4] Xirael
+		/varset RaidDIClerics[5] Xenshia
 	}
 	/declare i int local
 	/for i 1 to ${RaidDIClerics.Size}
@@ -1248,9 +1263,9 @@ Sub EVENT_UseStaunchRecovery
 		/casting "Staunch Recovery" alt
 	} else /if (${Me.Class.ShortName.Equal[BRD]} && ${Me.PctMana} < 20) { 
 		/medley queue "Staunch Recovery" -interrupt
-	} else { 
+	} else /if ((${str_classArchetype.Equal[PRIEST]} || ${str_classArchetype.Equal[CASTER]}) && ${Me.PctMana} < 20) { 
 		/casting "Staunch Recovery" alt 
-	}
+	} 
 /return
 
 Sub EVENT_UseIntensity

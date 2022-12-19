@@ -623,6 +623,7 @@ Sub healGRP
 			/goto :CastSingleTargetHeals
 		}
 	} else /if (${int_minorHurt} >=3 && ${Me.Class.ShortName.Equal[CLR]} && ${use_heal_groupHoT} && (${Me.CurrentMana} > ${Spell[${str_heal_groupHoT}].Mana})) {
+		/if (${timer_groupHoT}) /goto :CastSingleTargetHeals
 		/call getGroupInRange ${int_range_groupHoT}
 		/varset int_inRange ${Int[${Macro.Return}]}
 		/if (${int_inRange}>=3 ) {
@@ -1220,20 +1221,20 @@ Sub CleanRezIgnoreList
 
 
 Sub EVENT_InterruptON
-	/cecho \ayAutoInterrupt: \agON
 	/call InterruptON
 /return
 
 Sub EVENT_InterruptOFF
-	/cecho \ayAutoInterrupt: \arOFF
 	/call InterruptOFF
 /return
 
 Sub InterruptON
+	/cecho \ayAutoInterrupt: \agON
 	/varset bln_autointerrupt TRUE
 /return
 
 Sub InterruptOFF 
+	/cecho \ayAutoInterrupt: \arOFF
 	/varset bln_autointerrupt FALSE
 /return
 
@@ -1520,7 +1521,7 @@ Sub xbot_initialize_healing(int _healPoint)
 	/declare	int_rezIgnore			int     outer   0 
 	/declare 	arr_rezIgnore[1]		int		outer   0
 	/declare 	bln_skipCorpse			bool	outer	FALSE
-	/declare 	timer_groupHoT  		timer outer 0
+	/declare 	timer_groupHoT  		timer	outer	0
 
 	|-- Group HitPoints 1: HP 2:Dist3D 3:ID 4: CleanName
 	/declare	arr_groupHP[6,4]		int     outer   100   

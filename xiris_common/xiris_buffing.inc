@@ -44,10 +44,11 @@ REVISION HISTORY
 #EVENT DOCHARBUFFS			"#1# tells the raid#*#'doCharBuffs #2#'"
 #EVENT DOCHARBUFFS 			"[ #1# #*#]#*#doCharBuffs #2#"
 
-#EVENT REMOVEBUFF			"#1# tells the group#*#'removebuff #2#'"
-#EVENT REMOVEBUFF			"#1# tells you#*#'removebuff #2#'"
-#EVENT REMOVEBUFF			"#1# tells the raid#*#'removebuff #2#'"
-#EVENT REMOVEBUFF 			"[ #1# #*#]#*#doCharBuffs #2#"
+#EVENT REMOVEBUFF			"#1# tells the group#*#REMOVEBUFF #2#'"
+#EVENT REMOVEBUFF			"#1# tells you#*#REMOVEBUFF #2#'"
+#EVENT REMOVEBUFF			"#1# tells the raid#*#REMOVEBUFF #2#'"
+#EVENT REMOVEBUFF 			"[ #1# #*#]#*#REMOVEBUFF #2#"
+
 
 #EVENT REMOVEALLBUFFS		"#1# tells the group#*#'removeallbuffs#*#'"
 #EVENT REMOVEALLBUFFS		"#1# tells you#*#'removeallbuffs#*#'"
@@ -57,7 +58,7 @@ REVISION HISTORY
 
 
 Sub InitEvents_Buffing
-	/call RegisterBackgroundEvents Events_Buffing 5
+	/call RegisterBackgroundEvents Events_Buffing 6
 /return
 
 Sub Events_Buffing
@@ -706,8 +707,10 @@ Sub chkOOCBuffs
 |----------------------------------------------------|
 
 Sub EVENT_REMOVEBUFF(_line, _chatSender, _eventParams)
+	| Note these Buffs need to replace single quote with pipe due to chat mangling quotes: eg Brell|s Brawny Bulwark
 	/declare buffToRemove string local ${_eventParams.Arg[1,-]}
-	/call RemoveBuff ${buffToRemove}
+	/cecho \awEvent Remove Buff called: ${_eventParams} -> ${buffToRemove}
+	/call RemoveBuff "${buffToRemove}"
 	/doevents flush REMOVEBUFF
 /return
 
@@ -719,21 +722,24 @@ Sub EVENT_REMOVEALLBUFFS(_line, _chatSender, _eventParams)
 Sub RemoveAllBuffs
 	/declare n int local
 	/for n 1 to 25
-		/if (${Me.Buff[${n}].ID}) /call RemoveBuff ${Me.Buff[${n}]}
+		/if (${Me.Buff[${n}].ID}) /call RemoveBuff "${Me.Buff[${n}]}"
 	/next n
 /return
 
 Sub RemoveBuff(_badBuff)
 	/declare i int local
-
+	/declare buffName ${_badBuff.Replace[|,']}
+	/cecho \agRemoving Buff \ao${buffName} (was ${_badBuff})
 	/for i 0 to 24
 		|/echo Remove_Buff ${i}
 		|/echo 1: ${Bool[${Window[BuffWindow].Child[BW_Buff${i}_Button].Tooltip}]}
-		|/echo 2: ${Window[BuffWindow].Child[BW_Buff${i}_Button].Tooltip.Find[${_badBuff}]}
-		/if (${Bool[${Window[BuffWindow].Child[BW_Buff${i}_Button].Tooltip}]} && ${Window[BuffWindow].Child[BW_Buff${i}_Button].Tooltip.Find[${_badBuff}]}) {
-			/varset _badBuff ${Window[BuffWindow].Child[BW_Buff${i}_Button].Tooltip.Arg[1,(]}
-			/varset _badBuff ${_badBuff.Left[${Math.Calc[${_badBuff.Length}-1]}]}
-			/if (${Bool[${_badBuff}]}) /nomodkey /notify BuffWindow Buff${Math.Calc[${Me.Buff[${_badBuff}].ID}-1].Int} leftmouseup
+		|/echo 2: ${Window[BuffWindow].Child[BW_Buff${i}_Button].Tooltip}
+		|/echo 3: ${Window[BuffWindow].Child[BW_Buff${i}_Button].Tooltip.Find[${buffName}]}
+		/if (${Bool[${Window[BuffWindow].Child[BW_Buff${i}_Button].Tooltip}]} && ${Window[BuffWindow].Child[BW_Buff${i}_Button].Tooltip.Find[${buffName}]}) {
+			/varset buffName ${Window[BuffWindow].Child[BW_Buff${i}_Button].Tooltip.Arg[1,(]}
+			/varset buffName ${buffName.Left[${Math.Calc[${buffName.Length}-1]}]}
+			/cecho \awBuff \ao${buffName} \awfound. \agRemoving.
+			/if (${Bool[${buffName}]}) /nomodkey /notify BuffWindow Buff${Math.Calc[${Me.Buff[${buffName}].ID}-1].Int} leftmouseup
 		}
 		
 	/next i
@@ -743,7 +749,7 @@ Sub RemoveBuff(_badBuff)
 
 
 Sub xbot_initialize_buffing
-	/if (${str_classArchetype.Equal[MELEE_END]} || ${Me.Class.ShortName.Equal[WAR]}) /return
+	|/if (${str_classArchetype.Equal[MELEE_END]} || ${Me.Class.ShortName.Equal[WAR]}) /return
 	/cecho \aoxbot_initialize_buffing
 
 	|--OOC Buff(s)

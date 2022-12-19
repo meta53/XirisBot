@@ -235,20 +235,20 @@ Sub chkNeedCure
 		/varset cureType curse
 		/varset counters ${Debuff.Cursed}
 		/varset forceCure TRUE
-		/varset debuffName "TormentOfBody|WantonDestruction|FeedbackDispersion"
+		/varset debuffName "TormentOfBody|Wanton Destruction|Feedback Dispersion"
 		/goto :get_curer
 		
 	|-- Debuffs that MUST be removed (POISON)
 	|   Only force cure these if we are a priest or caster
-	} else /if (${Me.Buff[Fulmination].ID} && (${str_classArchetype.Equal[PRIEST]} || ${str_classArchetype.Equal[CASTER]})) {
+	} else /if ((${Me.Buff[Fulmination].ID}) && (${str_classArchetype.Equal[PRIEST]} || ${str_classArchetype.Equal[CASTER]})) {
 		/varset cureType poison
 		/varset counters ${Debuff.Poisoned}
 		/varset forceCure TRUE
 		/varset debuffName "Fulmination"
 		/goto :get_curer
 		
-	|-- Debuffs that CANNOT be removed	
-	} else /if ((${Me.Buff[Gaze of Anguish].ID} && ${bln_jelvanEngaged}) || ${Me.Buff[ Test of Efficiency].ID} || ${Me.Buff[Chains of Anguish].ID} || ${Me.Buff[Aura of Destruction].ID} || ${Me.Buff[Rigidity].ID} || ${Me.Buff[Curse of Misfortune].ID} || ${Me.Buff[Imprecision].ID} || ${Me.Buff[Impurity].ID} || ${Me.Buff[Ressurection Sickness].ID}) {
+	|-- Debuffs that CANNOT be removed || Need to let our healer specific events handle it
+	} else /if ((${Me.Buff[Gaze of Anguish].ID} && ${bln_jelvanEngaged}) || ${Me.Buff[ Test of Efficiency].ID} || ${Me.Buff[Chains of Anguish].ID} || ${Me.Buff[Aura of Destruction].ID} || ${Me.Buff[Rigidity].ID} || ${Me.Buff[Curse of Misfortune].ID} || ${Me.Buff[Imprecision].ID} || ${Me.Buff[Impurity].ID} || ${Me.Buff[Ressurection Sickness].ID} || ${Me.Buff[Clockwork Doom]}) {
 		/call resetCureState
 		/goto :return
 	}

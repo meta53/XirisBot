@@ -86,7 +86,7 @@ Sub Main
     /dex Xiria /melee aggro=1
     /dex Xirea /melee aggro=1
     /dex Xiria /echo changeMT Xiria
-    /dex Xirea /echo changeMT Xirea0
+    /dex Xirea /echo changeMT Xirea
 
     | Change mode to efficient
     /dgt healMode EFFICIENT

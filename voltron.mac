@@ -3,7 +3,8 @@
 Sub Main(string _mode)
 	/if (!${Defined[_mode]}) /declare _mode string local DEFAULT
 	/if (!${Bool[${_mode}]}) /varset _mode DEFAULT
-	/echo Setup up Voltron
+	/if (${Mode.Equal[36]}) /varset _mode THIRTYSIX
+	/echo Forming Voltron Mode: ${_mode}
 	
 	/call SetupGroups${_mode}
 	/delay 5s
@@ -188,4 +189,28 @@ Sub InviteGroupsToDEFAULT
 
 	|/dga /notify LargeDialogWindow LDW_YesButton leftmouseup
 	|/dga /notify LargeDialogWindow LDW_OkButton leftmouseup
+/return
+
+|-- Hatred, where we primarily want to heal the group you are in, and the assist tank
+Sub SetupGroupsTHIRTYSIX
+	/multiline ; /invite Ophidia;  /invite Xeixa; /invite Xanshia; /invite Xinshia; /invite Ania;
+	/dex Xirin /multiline ; /invite Opheoia;  /invite Mluian; /invite Theist; /invite Tragic; /invite Aergia;
+	/dex Xaeliea /multiline ; /invite Ertres;  /invite Ophexia; /invite Shinxia; /invite Xerael; /invite Achlys;
+	/dex Xaexa /multiline ; /invite Erinyes;  /invite Ophelia; /invite Shynxia; /invite Xarael; /invite Adikia;
+	/dex Xaia /multiline ; /invite Ertris;  /invite Ophemia; /invite Opheyia; /invite Xirael; /invite Aidos;
+	/dex Xepatia /multiline ; /invite Erinyas;  /invite Ophenia; /invite Ophezia; /invite Xenshia; /invite Achos;
+/return
+
+Sub InviteGroupsToTHIRTYSIX
+	/echo Inviting Groups to Raid
+	/delay 5
+	/raidinvite Xirin
+	/delay 5
+	/raidinvite Xaeliea
+	/delay 5
+	/raidinvite Xaexa
+	/delay 5
+	/raidinvite Xaia
+	/delay 5
+	/raidinvite Xepatia
 /return

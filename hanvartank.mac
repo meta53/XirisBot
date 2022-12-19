@@ -21,7 +21,7 @@ Sub Main(string _type, string _tankPoint)
 	/declare timer_hanvar_ae 		timer 	outer 	360s
 	/declare chainSeconds			int 	outer 	360
 	/declare stunSeconds			int   	outer 	0	
-	/declare int_timeChainInterval 	int 	outer   550
+	/declare int_timeChainInterval 	int 	outer   520
 
 
 	/declare bln_announcedRetreat   bool    outer FALSE
@@ -47,6 +47,8 @@ Sub Main(string _type, string _tankPoint)
 		| NPC/Hanvar Kills
 		|------
 		| Guards are up!
+		/varcalc chainSeconds ${timer_hanvar_ae}/10
+		/echo timer: ${timer_hanvar_ae} seconds: ${chainSeconds}
 		/if (${SpawnCount[npc guard radius 150]}) {
 			/if (!${timer_announce_guards}) /call commandAttackGuards
 		} 
@@ -70,7 +72,7 @@ Sub Main(string _type, string _tankPoint)
 Sub Event_HanvarChainsOn
 	/cecho \arChains ON! \aw${Time.Time24} \ag${Time.SecondsSinceMidnight}, resetting interval to ${int_timeChainInterval}
 	/varset timer_hanvar_ae ${int_timeChainInterval}
-	/varset chainSeconds 55
+	/varcalc chainSeconds ${int_timeChainInterval}/10
 	/rs Hanvar Chains On! ${chainSeconds}s till recast!
 	/call commandAttackHanvar
 	/doevents flush HanvarChainsOn
@@ -79,9 +81,9 @@ Sub Event_HanvarChainsOn
 | Hanvar's chains wore off
 Sub Event_HanvarChainsOff
 	/cecho \arChains OFF! \aw${Time.Time24} \ag${Time.SecondsSinceMidnight}
-	/varset timer_hanvar_ae 100
-	/varset chainSeconds 10
-	/doevents flush HanvarChainsOff
+	|/varset timer_hanvar_ae 100
+	|/varset chainSeconds 10
+	|/doevents flush HanvarChainsOff
 /return
 
 Sub commandAttackGuards

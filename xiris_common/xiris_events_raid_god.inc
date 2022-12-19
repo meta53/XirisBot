@@ -94,9 +94,10 @@ Sub Events_GoD_Inktuta
 	/doevents CC5
 	/doevents CC6
 	
-	/doevents InkCurse
-	/doevents InkCurseSafe
-		
+	/if (${Bool[${SpawnCount[npc Cursecaller]}]}) {
+		/doevents InkCurse
+		/doevents InkCurseSafe
+	}		
 
 	| Noqufiel
 	/if (${Bool[${SpawnCount[npc Noqufiel]}]} && !${Bool[${SpawnCount[npc Cursecaller]}]}) {
@@ -181,6 +182,7 @@ Sub InkNoqRun(int _curseID)
 	} 
 	/rs Running Noqufiel ${_curseID}
 	/doevents flush
+	/stick off
 	/call Disengage
 	|-- find which cursebearer has you on aggro;
 	/call TrueTarget ${_curseID}
@@ -223,7 +225,7 @@ Sub InkNoqRun(int _curseID)
 		}
 	}
 	|-- no longer targeted or you dont have a target. safe now
-	/rs ${Me.Name} is safe, returning.
+
 	/if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /call InkDeath
 	|-- insert some return logic here	
 	/varset inkRunning FALSE
@@ -289,7 +291,7 @@ Sub chkNoqCursebearers
 |----------------------------
 Sub InkCurseRun
     /rs Running Cursecallers
-	/nav wp cursedentrance
+	/nav wp cc1
     /delay 3s
 	/maxfps bg 30
 	:start
@@ -301,6 +303,7 @@ Sub InkCurseRun
 		/if (${AdvPath.State} == 2) {
 			/delay 10
 			/doevents InkCurseSafe
+			/doevents NoqSafe
 			/if (!${inkRunning}) {
 				/play off
 				/doevents flush
@@ -314,15 +317,13 @@ Sub InkCurseRun
 
 Sub InkDeath
 	/rs ${Me.Name} is dead, Resetting.
-	
 	/varset inkRunning FALSE
 	/play off
 	/delay 30
     /keypress back
 	:InkDeathWait
 	/doevents flush
-	
-	/if (${Zone.ShortName.Equal[GuildLobby]}) {
+	/if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) {
 		/delay 5s
 		/goto :InkDeathWait
 	}

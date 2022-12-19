@@ -456,6 +456,7 @@ Sub chkMarkedForDeathCureDist
 	}
 
 	/if (${Me.Buff[Mark of Death].ID}) {
+		/cecho \ar MARK OF DEATH \awis \ag${str_myCurer} \aw@ \ag${Spawn[pc ${str_myCurer}].Distance3D}
 		/if (${Spawn[pc ${str_myCurer}].Distance3D} > 70 && ${Spawn[pc ${str_myCurer}].Distance3D} < 250 && !${bln_tanking}) {
 			/cecho \awWarping to Curer because range is too far for cure
 			/call Disengage
@@ -514,7 +515,6 @@ Sub chkGroupMarkedForDeath
 		/if (${Group.Member[${gm}].CleanName.Equal[${str_MTName}]}) /varset tankIndex ${gm}
 		/dquery ${Group.Member[${gm}]} -q "Me.Buff[Mark of Death].ID"
 		/delay 20 ${DanNet.Query.Received}
-		
 		/if (${Bool[${DanNet.Q}]}) {
 			/cecho \ar${Group.Member[${gm}]} \awreply:${Bool[${DanNet.Q}]}
 			/cecho \ar MARK OF DEATH FOUND
@@ -523,6 +523,8 @@ Sub chkGroupMarkedForDeath
 			/call getCureCounters ${Group.Member[${gm}]} disease
 			/varset gcount[${i}] ${Int[${Macro.Return}]}
 		} 
+
+		
 	/next i
 	
 	| No Marks found? return
@@ -537,6 +539,7 @@ Sub chkGroupMarkedForDeath
 	:GroupCure 
 	/cecho \awGroupCure: \ag${str_heal_group} \ay${Me.SpellReady[${str_heal_group}]} \aw(\ag${Me.PctMana}) \ay${haveMark}>=2
 	/if (${Me.Class.ShortName.Equal[CLR]} && ${Me.PctMana} > 30 && ${haveMark} >= 2) {
+		
 		:GroupCureWait 
 		/varcalc cureWaitCount ${cureWaitCount}+1
 		/if (!${Me.SpellReady[${str_heal_group}]}) {
@@ -551,10 +554,20 @@ Sub chkGroupMarkedForDeath
 		} else {
 			/cecho \agGroupCuring with ${str_heal_group}
 			/call MQ2Cast "${str_heal_group}" gem4 2s 
+			/g Group Heal incoming, get close!
+			/for i 1 to 6
+				/if (${Group.Member[${i}]} != ${int_MTID}) /dex ${Group.Member[${i}]} /warp loc ${Me.Y} ${Me.X} ${Me.Z} 
+			/next i
 			/goto :CheckGroup
 		}
 	} else /if (${Me.Class.ShortName.Equal[SHM]}) {
-		/call cureSelf disease 18 
+		/cecho \agGroupCuring with ${str_cure_disease}
+		/g Group Heal incoming, get close!
+		/for i 1 to 6
+			/if (${Group.Member[${i}].ID} != ${int_MTID}) /dex ${Group.Member[${i}]} /warp loc ${Me.Y} ${Me.X} ${Me.Z} 
+		/next i
+		
+		/call MQ2Cast "${str_cure_disease}" gem7 8s
 		/goto :CheckGroup
 	}
 

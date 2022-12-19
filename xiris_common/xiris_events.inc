@@ -20,6 +20,7 @@ ______________________________________________
 
 #include xiris_common/xiris_events_raid_god.inc 
 #include xiris_common/xiris_events_raid_dodh_demiplane.inc 
+#include xiris_common/xiris_events_raid_epic.inc 
 #include xiris_common/xiris_events_raid_oow_anguish.inc
 #include xiris_common/xiris_events_raid_oow_mpg_adaptation.inc
 #include xiris_common/xiris_events_raid_oow_mpg_corruption.inc 
@@ -59,6 +60,9 @@ Sub xbot_initialize_events
     /if (${Zone.ShortName.Equal[chamberse]})    /call InitEvents_OOW_MPG_Adaptation
     /if (${Zone.ShortName.Equal[chambersf]})    /call InitEvents_OOW_MPG_Corruption
     /if (${Zone.ShortName.Equal[anguish]} || ${Zone.ShortName.Equal[thundercrest]} )      /call InitEvents_OOW_Anguish
+
+    |-- Epic 1.5 Fights
+    /if (${Zone.ShortName.Equal[gfaydark]})     /call InitEvents_Epic
     
     |-- Dragons of Norrath
     /if (${Zone.ShortName.Equal[thenest]})      /call InitEvents_DoN_Vishimtar
