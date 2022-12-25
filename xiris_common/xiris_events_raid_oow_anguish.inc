@@ -25,6 +25,7 @@ ______________________________________________
 |	Jelvan
 #Event JelvanSetup		"#*#JelvanSetup#*#"
 #EVENT JelvanStart  	"#*#Hail, Jelvan#*#"
+#EVENT JelvanPhase2		"#*#JelvanP2#*#"
 
 |	Warden Hanvar
 #EVENT HanvarSetup  	"#*#HanvarSetup#*#"
@@ -72,29 +73,30 @@ Sub Events_OOW_Anguish
 		/if (!${bln_jelvanEngaged}) {
 			/doevents JelvanStart
 		} else {
-			/if (${str_classArchetype.Equal[PRIEST]} || ${Me.Class.ShortName.NotEqual[PAL]}) /call chkJelvanCures
-			/if (${str_classArchetype.Equal[PRIEST]} || ${str_classArchetype.Equal[CASTER]}) /call chkJelvanResists
-			/if (${Me.Class.ShortName.NotEqual[PAL]} || ${Me.Class.ShortName.NotEqual[ENC]}) /call chkJelvanSlows
+			/doevents JelvanPhase2
+			/if (${str_classArchetype.Equal[PRIEST]} || ${Me.Class.ShortName.Equal[PAL]}) /call chkJelvanCures
+			/if (${Me.Class.ShortName.Equal[SHM]} || ${str_classArchetype.Equal[CASTER]}) /call chkJelvanResists
+			/if (${Me.Class.ShortName.Equal[SHM]} || ${Me.Class.ShortName.Equal[ENC]}) /call chkJelvanSlows
 		} 
 	}
 
 	| Hanvar Events
-	/if (${Bool[${SpawnCount[npc Hanvar]}]} && ${Spawn[npc Hanvar].Distance3D} < 400) {
+	/if (${Bool[${SpawnCount[npc Hanvar]}]} && ${Spawn[npc Hanvar].Distance3D} < 300) {
 		/call chkHanvarEvents
 	}
 
 
 	| Vangl Events
-	/if (${Bool[${SpawnCount[npc Vangl]}]} && ${Spawn[npc Vangl].Distance3D} < 400) {
+	/if (${Bool[${SpawnCount[npc Vangl]}]} && ${Spawn[npc Vangl].Distance3D} < 300) {
 		/call chkAMVEvents
 	}
 
 	| OMM Events
-	|/if (${Bool[${SpawnCount[npc Overlord]}]} && ${Spawn[npc Overlord].Distance3D} < 300) {
+	/if (${Bool[${SpawnCount[npc Overlord]}]} && ${Spawn[npc Overlord].Distance3D} < 300) {
 		/doevents GazeYou
 		/doevents GazeBurst
 		/doevents GazeDone
-	|} 
+	} 
 
 /return 
 
@@ -228,6 +230,10 @@ Sub Event_JelvanStart
 	}
 /return
 
+Sub EVENT_JelvanPhase2
+	/if (${str_classArchetype.Equal[CASTER]} || ${Me.Class.ShortName.Equal[SHM]}) /nav wp JelvanCaster
+/return
+
 Sub chkJelvanResists
 	/if (${Target.Name.Find[Tanthi]} && ${str_useResistTypes.NotEqual[cold|disease|fire]}) /call SetResistTypes cold|disease|fire
 	/if (${Target.Name.Find[Tanthu]} && ${str_useResistTypes.NotEqual[fire|magic]}) /call SetResistTypes fire|magic
@@ -312,7 +318,7 @@ Sub Event_HanvarSetup
 Sub Event_HanvarRetreat(string _sender, string _line, string _eventParams)
 	/cecho \arHanvar Retreat Triggered \agStarting \aw${_eventParams}s \ag Timer
 	/if (${Target.Name.Find[Hanvar]} || ${Spawn[npc Hanvar].Distance} < 100) {
-		/if (${MeleeClasses.Find[${Me.Class.ShortName}]} ) {
+		/if (${MeleeClasses.Find[${Me.Class.ShortName}]}) {
 			/call Disengage
 			/warp wp hanvarSafe
 		} 
@@ -335,24 +341,6 @@ Sub Event_HanvarKill(string _sender, string _line, string _eventParams)
 	/doevents flush HanvarKill
 /return
 
-
-Sub setupForHanvarSHM
-
-	/echo setupForHanvarSHM
-	/varset str_spellset hanvar
-	/memspellset ${str_spellset}
-	
-	| Reset my DOT types
-	| |_Spell|_Use|_Gem|_MaxTries|_NamedOnly|_StartHP|_StopHP|_Resist|_HasCastOnce|_RecastTimer
-
-	| "Blood of Yoppa"|TRUE|1|2|TRUE|100|0|Poison|FALSE|0
-
-	/call clearSpellLineUp DOT
-	/varset DOT_Total 2
-	/call addSpellToLineup DOT 3 "Blood of Yoppa"|TRUE|3|2|TRUE|100|0|Poison|FALSE|0
-	/call addSpellToLineup DOT 4 "Blood of Saryrn"|TRUE|4|2|TRUE|100|0|Poison|FALSE|0
-
-/return
 
 Sub chkHanvarCaster
 	| Feedback Dispersion Test
@@ -436,8 +424,7 @@ Sub chkAMVEvents
 	| Hanvar Events
 	/doevents AMVStart 
 	
-	/if (${bln_amvEngaged}) {
-		/if (${Me.Class.ShortName.NotEqual[CLR]} && ${Me.Class.ShortName.NotEqual[SHM]}) /call chkMarkedForDeathCureDist
+	/if (${bln_amvEngaged} || ${Spawn[npc Vangl].Distance3D} < 200) {
 		/if (${Me.Class.ShortName.Equal[CLR]} || ${Me.Class.ShortName.Equal[SHM]}  && !${bln_chChainMember}) /call chkGroupMarkedForDeath 
 		/if (${Me.Class.ShortName.Equal[PAL]}) /call chkSelfMarkedForDeath
 	}
@@ -553,22 +540,30 @@ Sub chkGroupMarkedForDeath
 			}
 		} else {
 			/cecho \agGroupCuring with ${str_heal_group}
-			/call MQ2Cast "${str_heal_group}" gem4 2s 
 			/g Group Heal incoming, get close!
-			/for i 1 to 6
-				/if (${Group.Member[${i}]} != ${int_MTID}) /dex ${Group.Member[${i}]} /warp loc ${Me.Y} ${Me.X} ${Me.Z} 
+			/for i 1 to 5
+				/if (${Group.Member[${i}].ID} != ${int_MTID} && ${Select[${Group.Member[${i}].Class.ShortName},${MeleeClasses}]}) {
+					/dex ${Group.Member[${i}]} /multiline ; /mqpause on ; /melee reset ; /warp wp amvCleric ; 
+				}
 			/next i
+			/call MQ2Cast "${str_heal_group}" gem4 2s 
+			/dgge /mqpause off
+			/if (${Spawn[npc Vangl].PctHPs} <= 99) /dgge KillMob ${Spawn[npc Vangl].ID} "${Spawn[npc Vangl].Name}" ${Time.Time24}
 			/goto :CheckGroup
 		}
 	} else /if (${Me.Class.ShortName.Equal[SHM]}) {
 		/cecho \agGroupCuring with ${str_cure_disease}
 		/g Group Heal incoming, get close!
-		/for i 1 to 6
-			/if (${Group.Member[${i}].ID} != ${int_MTID}) /dex ${Group.Member[${i}]} /warp loc ${Me.Y} ${Me.X} ${Me.Z} 
+		/for i 1 to 5
+			/if (${Group.Member[${i}].ID} != ${int_MTID} && ${Select[${Group.Member[${i}].Class.ShortName},${MeleeClasses}]}) {
+				/dex ${Group.Member[${i}]} /warp wp amvCleric ; 
+			}
 		/next i
-		
 		/call MQ2Cast "${str_cure_disease}" gem7 8s
+		/dgge /mqpause off
+		/if (${Spawn[npc Vangl].PctHPs} <= 99) /dgge KillMob ${Spawn[npc Vangl].ID} "${Spawn[npc Vangl].Name}" ${Time.Time24}
 		/goto :CheckGroup
+		
 	}
 
 	| All else fails so cure anyone with a disease counter singly

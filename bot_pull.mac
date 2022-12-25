@@ -4,9 +4,6 @@ BOT_PULL.mac
 ----------------------------
 This macro is configured for use by an SK, but may work for any class
 Modify the BOT_PULL_zoneinfo.ini file for use in a specific zone
-A great majority of this code has been repurposed from several 
-excellent macros by PeteSampras, Fry, et al
-
 ______________________________________________
 REVISION HISTORY
     09.16.10    xiris  	Initial Revision
@@ -16,12 +13,12 @@ REVISION HISTORY
 	07.14.18	xiris  	Removed fartaunt due to server banning it
 	11.18.21	xiris	Added mq2nav for pulling now that emulator mq2 has it
 	12.01.21	xiris	Added some tweaked events around pulling (NOLOS/TOOCLOSE) to handle weird edge cases
-	01.17.22	xiris	Added support for buff lines in chkBuffs, see xiris_buffing_lines.inc
 	04.10.22	xiris	Normalized arguments
 	05.24.22	xiris	Reworked the pulling sub - gained performance
 	05.28.22	xiris	Refactored /docommand /${cmdChannel} to be consistent globally
 	06.13.22	xiris 	Changed things that were explicit commands to event requests so we don't
 						rely on bcaa (and can use rsay or gsay) and was able to remove announce Channel
+	12.19.22	xiris   Tweaked the incamp target acquisition to ignore alert 1
 ______________________________________________
 REQUIRED PLUGINS
     mq2melee
@@ -87,9 +84,8 @@ Sub Main(int _pull_dist, string _channel, string _campName, bool _useDownFlags)
 		/if (${SpawnCount[npc radius ${int_campRadius} zradius 25]} == 0) {
 			/call resetCamp
 			/call doRefreshXTarget
-			/docommand /${cmdChannel} RefreshXTarget
 			/docommand /${cmdChannel} Disengage
-			/if (!${bln_lootAuto}) /hidecorpse npc
+			/if (!${bln_looting}) /hidecorpse npc
 		}
 		
 		|-- run the pull/kill segment
@@ -147,9 +143,9 @@ Sub getTarget
 		/call setRSTVars
 		/squelch /target clear
 		
-		|----------USE THIS FOR SPECIFIC HUNTER (ALERT 2) --------
-		/if (${SpawnCount[npc radius ${int_campRadius} zradius 15]} > 0) {
-			/call TrueTarget ${NearestSpawn[npc radius ${int_campRadius} zradius 15].ID} 
+		|----------Alert 1 is never target, Alert 2 is hunter targets--------
+		/if (${SpawnCount[npc radius ${int_campRadius} zradius 15 noalert 1]} > 0) {
+			/call TrueTarget ${NearestSpawn[npc radius ${int_campRadius} zradius 15 noalert 1].ID} 
 			/echo NPC in camp (R:${int_campRadius}), killing: Distance: ${Target.Distance3D}
 			/delay 5
 		} else /if (${SpawnCount[npc alert 2 radius ${int_alert2Radius} range ${int_minTLevel} ${int_maxTLevel} zradius ${int_zRadius} noalert 1]} > 0) {
@@ -554,7 +550,7 @@ Sub chkCombatState
 	/if (${Target.Type.NotEqual[NPC]}) 		 /varset bln_TGTDead TRUE
 	/if (${Target.Type.Equal[Item]})		 /varset bln_TGTDead TRUE
 	/if (!${Target.ID}) 					 /varset bln_TGTDead TRUE
-	/if (${bln_TGTDead} && ${SpawnCount[npc radius ${int_campRadius}]} == 0 && ${bln_lootAuto}) /call chkLoot
+	/if (${bln_TGTDead} && ${SpawnCount[npc radius ${int_campRadius}]} == 0 && ${bln_looting}) /call chkLoot
 /return
 
 
@@ -872,9 +868,12 @@ Sub chkComponents
  ----------------------------
 **|
 Sub variant_initialize(int _pull_dist, string _channel, string _campName, bool _useDownFlags)
+	|-- Global Flag
+	/varset bln_pulling				TRUE
+
 	|--loot
-	/varset bln_lootAuto			FALSE
-	/if (${bln_lootAuto}) 			/call EnableLooting
+	/varset bln_looting				FALSE
+	/if (${bln_looting}) 			/call EnableLooting
 
 	|--downflags 
 	/declare useDownFlags	bool	outer	TRUE
@@ -914,8 +913,8 @@ Sub variant_initialize(int _pull_dist, string _channel, string _campName, bool _
 
 	|--radii
 	/declare int_pcCount			int 	outer   ${SpawnCount[PC]}
-	/if (!${Defined[int_campRadius]}) /declare int_campRadius			int		outer	35
-	/varset int_campRadius 80
+	/if (!${Defined[int_campRadius]}) /declare int_campRadius			int		outer	85
+	/varset int_campRadius 85
 	/declare int_maxRadius			int		outer	75
 	/if (${Defined[_pull_dist]}) {
 		/varset int_maxRadius ${_pull_dist}
@@ -1025,6 +1024,11 @@ Sub setAlerts
 	|-- Global Ignores
 	/squelch /alert clear 1
 	/squelch /alert add 1 "abadacadvra"
+	/squelch /alert add 1 "Xeixa`"
+	/squelch /alert add 1 "Xiexa`"
+	/squelch /alert add 1 "Xeixi`"
+	/squelch /alert add 1 "Shinxia`"
+	/squelch /alert add 1 "Shynxia`"
 
 	|-- LDON Ignores
 	/squelch /alert add 1 "a bitten victim"

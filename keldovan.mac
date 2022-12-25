@@ -23,12 +23,9 @@ Sub Main
     /dge dru /warp wp keldcaster
 
     | Set MT
+    /dex Xiris /end
     /dex Xiris /melee aggro=on
     /dex Xiris /melee taunt=on
-
-    | Set OT
-    /dex Xirin /melee aggro=on
-    /dex Xirin /melee taunt=on
 
     | Set ST ()
     /dex Xiria /end 

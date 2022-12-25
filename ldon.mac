@@ -1095,7 +1095,7 @@ Sub chkCombatState
 	/if (${Target.Type.NotEqual[NPC]}) 		 /varset bln_TGTDead TRUE
 	/if (${Target.Type.Equal[Item]})		 /varset bln_TGTDead TRUE
 	/if (!${Target.ID}) 					 /varset bln_TGTDead TRUE
-	/if (${bln_TGTDead} && ${SpawnCount[npc radius ${int_campRadius}]} == 0 && ${bln_lootAuto}) /call chkLoot
+	/if (${bln_TGTDead} && ${SpawnCount[npc radius ${int_campRadius}]} == 0 && ${bln_looting}) /call chkLoot
 /return
 
 |**
@@ -1457,8 +1457,8 @@ Sub variant_initialize(string _channel, string _announce, bool _useDownFlags, bo
 	/declare groupMember_4			string	outer  	${Group.Member[4].Name}
 	/declare groupMember_5			string	outer  	${Group.Member[5].Name}
 	|--loot
-	/varset bln_lootAuto			FALSE
-	/if (${bln_lootAuto}) 			/call EnableLooting
+	/varset bln_looting			FALSE
+	/if (${bln_looting}) 			/call EnableLooting
 	
 	|--offtank
 	/declare offtank string	outer   NULL

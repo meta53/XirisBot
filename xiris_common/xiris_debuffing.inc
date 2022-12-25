@@ -130,7 +130,7 @@ Sub CastDebuffsOnTarget(int _targetID, bool _forced)
 				/docommand /${cmdChannel} << ${Target.Name} >> ${DEBUFF_${db}_Spell} 
 				/cecho \ag ${DEBUFF_${db}_Spell}   : DELAYING for \ay${debuffDuration}s \agrefresh	
 			} else {
-				/call CastDebuff "${DEBUFF_${db}_Spell}" ${DEBUFF_${db}_Gem} ${DEBUFF_${db}_MaxTries} ${Target.ID}
+				/call CastDebuff "${DEBUFF_${db}_Spell}" ${DEBUFF_${db}_Gem} ${DEBUFF_${db}_MaxTries} ${Target.ID} ${_forced}
 			}
 	:nextDB
 		/call RunRaidEvents
@@ -142,7 +142,7 @@ Sub CastDebuffsOnTarget(int _targetID, bool _forced)
 
 
 |-- Cast a Specific Debuff spell on the target
-Sub CastDebuff(string _debuff, string _gem,  int _maxTries, int _targetID)
+Sub CastDebuff(string _debuff, string _gem,  int _maxTries, int _targetID, bool _forced)
 	/cecho \aoCastDebuff \aw_spell: \ag${_debuff}\aw, _gem: \ag${_gem}\aw, _maxTries: \ag${_maxTries}
 	/declare	try		int		local	0
 	/declare    tgtID   int     local ${_targetID}
@@ -150,22 +150,32 @@ Sub CastDebuff(string _debuff, string _gem,  int _maxTries, int _targetID)
 	/if (!${Target.ID} || ${Target.ID} != ${_targetID}) /call TrueTarget ${_targetID}
 	/declare 	tgtName string  local ${Target.CleanName}
 	:AttemptDebuff
-		/echo AttemptDebuff
+		/cecho \aoAttempting Debuff: \aw${_debuff}
+		/call chkTargetStatus
+		/if (${int_targetID} == 0 && !${_forced}) {
+			/cecho \ar Debuff Failure\aw Target Already Dead
+			/varset rslt TARGET_ALREADY_DEAD
+			/goto :DebuffFailure
+		}
 		|pre-check before attempt
 		/if (${Target.PctHPs} == 0 || !${Target.ID} || (${Target.ID} != ${tgtID}) || ${Target.Name.Find['s_corpse']} || ${Target.Type.Equal[corpse]} || ${Target.Type.Equal[pc]}) {
+			/cecho \ar Debuff Failure\aw Target Error
 			/varset rslt TARGET_ERROR
 			/goto :DebuffFailure
 		}
 		/if (${try} > ${_maxTries}) {
+			/cecho \ar Debuff Failure\aw Max Tries reached
 			/varset rslt MAX_TRIES
 			/goto :DebuffFailure
 		}				
 		|if I am a cleric, check MT health
 		/if (${Me.Class.ShortName.Equal[CLR]}) /call chkHeal_MT	
 		|attempt
+		/cecho \agCalling MQ2Cast ${_debuff}
 		/call MQ2Cast "${_debuff}" ${_gem} 5s
 		/varset rslt ${Macro.Return}
 		/varcalc try ${try}+1
+
 		|handle result
 		/if (${rslt.Equal[CAST_OUTOFRANGE]}) 	/goto :DebuffFailure
 		/if (${rslt.Equal[CAST_OUTOFMANA]}) 	/goto :DebuffFailure

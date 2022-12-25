@@ -113,7 +113,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 			|-- check utilities, includes: sit,loot,leash (out of combat only) and only once every 10 seconds
 			/if (!${timer_check_utilities}) /call chkUtils
 			/if (!${timer_check_downshits}) /call chkDownshits
-			/if (!${timer_check_loot} && ${bln_lootAuto}) /call chkLoot
+			/if (!${timer_check_loot} && ${bln_looting}) /call chkLoot
 		}
 	|-- start again	
     /goto :MainLoop
@@ -150,26 +150,6 @@ Sub chkConcussion
 		/varset int_concCount 0
 	}
 /return
-
-|**
- ----------------------------
- Sit/Med Checking
- ----------------------------
- This macro burns a lot of endurance if configured right, so sit whenever able
- ----------------------------
-**|
-Sub chkSit
-    /if ( ${Me.PctMana}<=85 && !${Me.Combat} && (${SpawnCount[npc radius 75 zradius 55]} == 0)) {
-        /if (!${Me.Sitting}) /sit on
-        /delay 2s
-    } else {
-        /if (${Me.Sitting}) /sit off
-    }
-/return
-
-
-
-
 
 |**
  ----------------------------

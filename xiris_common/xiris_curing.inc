@@ -194,7 +194,7 @@ Sub chkNeedCure
 	|-- Verify need if I havent asked and recently
 	/if (${Debuff.Count} == 0 || ${Debuff.Counters} > 200 || ${timer_cure_request}) 	/return
 	|-- Skip if nocure mode is on
-	/if (!${bln_useCures} && ${Me.Class.ShortName.NotEqual[CLR]}) /return
+	/if (!${bln_useCures} && ${Me.Class.ShortName.NotEqual[CLR]} || ${Me.Class.ShortName.NotEqual[SHM]}) /return
 	
 	|-- Force the cure?
 	/declare forceCure		bool 	local	FALSE
@@ -219,9 +219,14 @@ Sub chkNeedCure
 	/if ((${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[PRIEST]} || ${str_classArchetype.Equal[CASTER]}) && ${Debuff.SpellSlowed} && (${Debuff.Counters} < 100 )) /varset bln_needsCure TRUE
 
 
+	|-- Debuffs that CANNOT be removed || Need to let our healer specific events handle it
+	/if ((${Me.Buff[Gaze of Anguish].ID} && (${bln_jelvanEngaged} || ${bln_amvEngaged}))  || ${Me.Buff[Test of Efficiency].ID} || ${Me.Buff[Chains of Anguish].ID} || ${Me.Buff[Aura of Destruction].ID} || ${Me.Buff[Rigidity].ID} || ${Me.Buff[Curse of Misfortune].ID} || ${Me.Buff[Imprecision].ID} || ${Me.Buff[Impurity].ID} || ${Me.Buff[Ressurection Sickness].ID} || ${Me.Buff[Clockwork Doom]}) {
+		/call resetCureState
+		/goto :return
+
 	|-- Debuffs that MUST be removed (DISEASE)
-	|  Force cure these in all cases
-	/if ((${Me.Buff[Gaze of Anguish].ID} && !${bln_jelvanEngaged})) {
+	|  Force cure these in all case
+	} else /if ((${Me.Buff[Gaze of Anguish].ID})) {
 		|-- Gaze of Anguish must be cured!
 		/varset cureType disease
 		/varset counters ${Debuff.Diseased}
@@ -246,12 +251,9 @@ Sub chkNeedCure
 		/varset forceCure TRUE
 		/varset debuffName "Fulmination"
 		/goto :get_curer
-		
-	|-- Debuffs that CANNOT be removed || Need to let our healer specific events handle it
-	} else /if ((${Me.Buff[Gaze of Anguish].ID} && ${bln_jelvanEngaged}) || ${Me.Buff[ Test of Efficiency].ID} || ${Me.Buff[Chains of Anguish].ID} || ${Me.Buff[Aura of Destruction].ID} || ${Me.Buff[Rigidity].ID} || ${Me.Buff[Curse of Misfortune].ID} || ${Me.Buff[Imprecision].ID} || ${Me.Buff[Impurity].ID} || ${Me.Buff[Ressurection Sickness].ID} || ${Me.Buff[Clockwork Doom]}) {
-		/call resetCureState
-		/goto :return
-	}
+
+	}  
+
 	
 	:cure_determine
 	/if ( ${forceCure} || ${bln_needsCure}) {
@@ -566,6 +568,11 @@ Sub cureSelf(string _cureType, int _counters)
 | TODO: If cleric, check MT hp before healing unless FORCED is true.
 Sub handleCureRequest(string _name, int _id, string _cureType, int _counters, bool _forced) 
 	/cecho \ayhandleCureRequest: ${_name}, ${_id}, ${_cureType}, ${_counters}, ${_forced}
+	|-- if requester is not in zone, ignore it
+	/if (!${SpawnCount[pc ${_name}]}) {
+		/dt ${_name} I cured you ${_name}(${_id}) of ${_counters} ${_cureType} counters.
+		/return
+	}
 	|-- find cure spell string & counters it clears
 	/declare	str_spell	  	string		local	${str_cure_disease}
 	/declare    int_count     	int			local   ${_counters}
@@ -681,6 +688,11 @@ Sub castCure(string _name, int _id, string _spell, int _castCount, string _cureT
 	
 	/declare i int local 1
 	/for i 1 to ${_castCount}
+		|Check for Death
+		/if (!${SpawnCount[pc ${_name}]}) {
+		/dt ${_name} I cured you ${_name}(${_id}) of ${_counters} ${_cureType} counters.
+			/return
+		}
 		| If I am a cleric and this is unforced, quickly check MT health
 		/if (${Me.Class.ShortName.Equal[CLR]} && !${_isForced}) /call chkHeal_MT
 		/call TrueTarget ${_id}

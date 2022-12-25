@@ -283,6 +283,7 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/declare	str_spellSet			string	outer	${Ini[botINI,Settings,str_spellSet,default]}
 	/declare	bln_engaged				bool	outer	FALSE
 	/declare	bln_enraged				bool	outer	FALSE
+	/declare    bln_pulling		    	bool    outer   FALSE
 	/declare 	int_targetID			int		outer 	0
 	/declare    str_targetName			string  outer   NULL
 	/declare 	aggroAnim 				string 	outer 	|5|8|12|17|18|42|44|80|106|129|144|
@@ -437,7 +438,7 @@ Sub chkSit
 	|-- Mana Check
 	/if (${str_classArchetype.Equal[CASTER]} ||  ${str_classArchetype.Equal[PRIEST]}) {
 		| Sit my ass down
-		/if ( ${Me.PctMana}<=${int_medPercent} && !${bln_engaged} && (${SpawnCount[npc radius ${int_sitRadius} zradius 55]} == 0) && (${Melee.Casted} > 3000) ) {
+		/if ( ${Me.PctMana}<=${int_medPercent} && !${bln_engaged} && (${SpawnCount[npc radius ${int_sitRadius} zradius 55]} == 0)) {
 			|/echo I should be sitting my ass down for MANA Am I sitting? ${Me.Sitting}
 			/if (!${Me.Sitting}) /sit
 			/delay 2s
@@ -446,7 +447,7 @@ Sub chkSit
 	}
 	|-- Endurance Check
 	/if (${str_classArchetype.Equal[MELEE_END]} ||  ${str_classArchetype.Equal[TANK]}) {
-		/if ( ${Me.PctEndurance}<=${int_medPercent} && !${bln_engaged} && (${SpawnCount[npc radius ${int_sitRadius} zradius 55]} == 0) && (${Melee.Casted} > 3000) ) {
+		/if ( ${Me.PctEndurance}<=${int_medPercent} && !${bln_engaged} && (${SpawnCount[npc radius ${int_sitRadius} zradius 55]} == 0)) {
 			|/echo I should be sitting my ass down for Endurance Am I sitting? ${Me.Sitting}
 			/if (!${Me.Sitting}) /sit on
 			/delay 2s
@@ -510,6 +511,11 @@ Sub EngageTarget(int _targetID)
 **|
 
 Sub chkTargetStatus
+	/if (!${Target.ID}) /goto :return
+	/if (${int_targetID} == 0) {
+		/if (${bln_engaged}) /goto :disengage
+	}
+	
 	:chkTargetValid
 	/if (!${Bool[SpawnCount npc id ${int_targetID}]} || ${Spawn[id ${int_targetID}].Type.Equal[corpse]}) {
 		/cecho \ag No Target with ID of \aw${int_targetID} or is CORPSE
@@ -588,10 +594,9 @@ Sub chkTargetStatus
 
 	:disengage
 		/call Disengage
-
+		/goto :return
 	:retarget
 	
-
 	:return
 /return
 
@@ -619,7 +624,7 @@ Sub Disengage
 	/varset str_debuffedTargets NULL
 	
 	|-- clean up potential XTarget issues
-	/if (!${SpawnCount[npc radius 300]} || (${Me.XTarget[0].Name.Find[s_corpse]} || (!${Bool[${Me.XTarget[0]}]} && ${Bool[${Me.XTarget[1]}]}) || (!${Bool[${Me.XTarget[0]}]} && !${Bool[${Me.XTarget[1]}]} && ${Bool[${Me.XTarget[2]}]})) && (!${timer_xtargetRefresh})) {
+	/if (!${bln_pulling} && (!${SpawnCount[npc radius 200]} || (${Me.XTarget[0].Name.Find[s_corpse]} || (!${Bool[${Me.XTarget[0]}]} && ${Bool[${Me.XTarget[1]}]}) || (!${Bool[${Me.XTarget[0]}]} && !${Bool[${Me.XTarget[1]}]} && ${Bool[${Me.XTarget[2]}]})) && (!${timer_xtargetRefresh}))) {
 		/call doRefreshXTarget
 	}
 	|-- class archetype resets
@@ -1359,7 +1364,8 @@ Sub EVENT_DUCKOFF
 |SUB: Event_ZONE HANDLERS
 |--------------------------------------------------------------------------------
 Sub Event_Zoned
-	/echo event_zoned ${Time.Time24}
+	/cecho \awEvent_Zoned ${Time.Time24}
+	/call setExclusions
 	/if (${MacroQuest.GameState.Equal[CHARSELECT]}) /end
   	/doevents flush Zoned
 /return
@@ -1845,7 +1851,7 @@ SUB doRefreshXTarget
 		/delay 1
 		/xtarget set ${i} autohater
 	/next i
-	/varset timer_xtargetRefresh ${timer_xtargetRefresh.OriginalValue}
+	/varset timer_xtargetRefresh 30s
 /return
 
 |--------------------------------------------------------|

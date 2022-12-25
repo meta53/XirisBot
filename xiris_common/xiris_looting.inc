@@ -57,7 +57,7 @@ Sub Events_Looting
 	/doevents HIDE_LOOTED
 	/doevents LOOT_SELF
 	|- Only need to run these events if you are looting
-	/if (${bln_lootAuto}) {	
+	/if (${bln_looting}) {	
 		/doevents LOOT_REFRESH
 		/doevents LOOT_OFF
 	}
@@ -92,7 +92,7 @@ Sub EnableLooting(string _eventParams)
 	/if (${_eventParams.Arg[2, ].Equal[RS]}) 	/varset str_lootChannel rs
 	/if (${_eventParams.Arg[2, ].Equal[DGT]}) 	/varset str_lootChannel dgt
 	/if (${_eventParams.Arg[2, ].Equal[G]}) 	/varset str_lootChannel gsay
-	/varset bln_lootAuto TRUE
+	/varset bln_looting TRUE
 	/if (${bln_onlyQuest}) {
 		/docommand /${str_lootChannel} ${Me.Name} is now Looting QUEST items
 	} else {
@@ -111,7 +111,7 @@ Sub DisableLooting
 	| Annnounce
 	/docommand /${str_lootChannel} ${Me.Name} is no longer Looting
 	/hidecorpse npc
-	/varset bln_lootAuto FALSE
+	/varset bln_looting FALSE
 /return 
 
 Sub EVENT_LOOT_REFRESH
@@ -143,7 +143,7 @@ Sub EVENT_HIDE_LOOTED
 |SUB: Checking available corpses 
 |-------------------------------------------------------------------------------- 
 Sub chkLoot
-	 /if (${bln_lootAuto} && !${timer_check_loot} && ${SpawnCount[npc radius ${int_sitRadius} zradius 15]} == 0 && ${SpawnCount[npc corpse radius 85]} > 0 ) {
+	 /if (${bln_looting} && !${timer_check_loot} && ${SpawnCount[npc radius ${int_sitRadius} zradius 15]} == 0 && ${SpawnCount[npc corpse radius 85]} > 0 ) {
 		|-- check to see if I even have room to loot
 		/if (${Me.FreeInventory} <= 2) {
 			/docommand /${str_lootChannel} out of bagspace
@@ -592,7 +592,7 @@ SUB openBags
 
 Sub xbot_initialize_looting
 
-	/declare bln_lootAuto			bool	outer 	${Ini[botINI,Settings,lootUse,FALSE]}
+	/declare bln_looting			bool	outer 	${Ini[botINI,Settings,lootUse,FALSE]}
 	/declare str_lootChannel		string  outer   rs
 	/declare bln_onlyQuest			bool 	outer	FALSE
 	/declare bln_lootAttuneable		bool	outer 	TRUE
@@ -605,7 +605,7 @@ Sub xbot_initialize_looting
 	/declare lootINIFile			string  outer	xiris_common/xiris_loot.ini
 
 	|-- turn on looting by default if the Bot's INI is set to true (unlikely)
-	|/if (${bln_lootAuto}) /call EnableLooting
+	|/if (${bln_looting}) /call EnableLooting
 
 	/cecho \aoxbot_initialize_looting
 	/call InitEvents_Looting 

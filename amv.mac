@@ -5,17 +5,9 @@ Sub Main
     | PR: 200 (80%) 	DR: 600 (240%)
     /dgt ResistTypes cold|poison|magic|fire
 
-    | Xiria (ST)
-    /dt Xirael changeMT Xiria
-    /dt Xinshia changeMT Xiria
-    | Xiria (ST) Autocure
-    /dt Xirael autocureMTon 
-    /dt Xinshia  autocureMTon
-
     | Xiris (MT) Autocure
     /dt Xanshia autoCureMTon
     /dt Xenshia autocureMTon
-    /dt Tragic autocureMTon
 
     | Set the mode to efficient
     /dgt healMode EFFICIENT 
@@ -28,13 +20,13 @@ Sub Main
 
     | Healing Focus
     | So these clerics will not try to cure group
-    /dt Tragic FocusHealMTOn
     /dt Xanshia FocusHealMTOn
     /dt Xirael FocusHealMTOn
     /dt Xinshia FocusHealMTOn
     /dt Xenshia FocusHealMTOn
 
     | Turn off cures for pretty much everyone except clerics
-    /dga /varset bln_useCures FALSE
+    /dga melee  /varset bln_useCures FALSE
+    /dga caster /varset bln_useCures FALSE
 
 /return

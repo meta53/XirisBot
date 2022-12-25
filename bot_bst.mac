@@ -115,7 +115,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 			|-- check utilities, includes: sit,loot,leash (out of combat only) and only once every 10 seconds
 			/if (!${timer_check_utilities}) /call chkUtils
 			/if (!${timer_check_downshits}) /call chkDownshits
-			/if (!${timer_check_loot} && ${bln_lootAuto}) /call chkLoot
+			/if (!${timer_check_loot} && ${bln_looting}) /call chkLoot
 		}
 	|-- start again	
     /goto :MainLoop

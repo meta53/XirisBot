@@ -26,6 +26,11 @@ ______________________________________________
 #EVENT OFFTANKOFF			"#1# tells the raid#*#OfftankOff#*#'"
 #EVENT OFFTANKOFF	 		"[ #1# #*#]#*#OfftankOff#*#"
 
+#EVENT OFFTANKRADIUS		"#1# tells the group#*#'OfftankRadius #2#'"
+#EVENT OFFTANKRADIUS		"#1# tells you#*#'OfftankRadius #2#'"
+#EVENT OFFTANKRADIUS		"#1# tells the raid#*#OfftankRadius #2#'"
+#EVENT OFFTANKRADIUS	 	"[ #1# #*#]#*#OfftankRadius #2#"
+
 Sub InitEvents_Offtanking 
 	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) /call RegisterBackgroundEvents Events_Offtanking 2
 /return
@@ -33,6 +38,7 @@ Sub InitEvents_Offtanking
 Sub Events_Offtanking 
 	/doevents OFFTANKON
 	/doevents OFFTANKOFF
+	/doevents OFFTANKRADIUS
 /return
 
 Sub EVENT_OFFTANKON
@@ -43,6 +49,14 @@ Sub EVENT_OFFTANKON
 Sub EVENT_OFFTANKOFF
 	/call ToggleOfftanking FALSE
 	/doevents flush OFFTANKOFF
+/return
+
+Sub EVENT_OFFTANKRADIUS(_line, _chatSender, _eventParams) 
+	/call ChangeOfftankRadius ${_eventParams}
+/return
+
+Sub ChangeOfftankRadius(_radius)
+	/varset int_offtankRadius ${Int[${_radius}]}
 /return
 
 Sub ToggleOfftanking(bool _blnOT)
@@ -61,6 +75,8 @@ Sub ToggleOfftanking(bool _blnOT)
 	}
 	
 /return
+
+
 
 Sub chkOffTanking
 	/if (!${bln_offTank} || ${bln_following}) 	 /return
@@ -91,12 +107,13 @@ Sub chkOffTanking
 			/squelch /target clear
 		}
 	:nextTarget
+	/delay 5
 	/next i
 
 	:NormalKillCheck
 	| Check to see if there is only one NPC, and if we are engaged, turn aggro off and attack it
 	/if (${SpawnCount[npc radius ${int_offtankRadius} range 46 80  noalert 5]} == 1 && ${bln_engaged}) {
-		/if (${NearestSpawn[npc radius ${int_offtankRadius} range 46 80 noalert 5].ID} == ${int_targetID}) {
+		/if (${SpawnCount[npc id ${int_targetID}]}) {
 			/call TrueTarget ${int_targetID}
 			/if (!${Bool[${Me.TargetOfTarget.ID}]}) /return
 			/squelch /melee aggro=0
@@ -172,7 +189,6 @@ Sub xbot_initialize_offtanking
 	/cecho \ao xbot_initialize_offtanking
 	|-- [Settings] : Off Tanking
 	/declare bln_offTank		 	bool 	outer FALSE
-	/declare int_OT_dist 			int 	outer 65
 	/declare int_offtankRadius		int     outer 85
 
 	/call InitEvents_Offtanking
