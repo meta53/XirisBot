@@ -1,9 +1,8 @@
 |**
 ----------------------------
-EVENTS_EPIC.INC
+xiris_events_raid_epic.inc
 ----------------------------
-This was written ground up for usage with xiris's bots
-NOTE: this requires MQ2NAV
+Event Handlers for the Raid Events for Epic 1, 1.5, and 2.0
 ______________________________________________
 REQUIRED PLUGINS
 	mq2nav
@@ -12,7 +11,6 @@ REVISION HISTORY
 	12.10.22    xiris	INITIAL REVISION
 ______________________________________________
 **|	
-|-- Random Epic 1.5 and 2.0 Events
 
 
 

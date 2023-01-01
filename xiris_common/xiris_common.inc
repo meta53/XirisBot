@@ -1,6 +1,6 @@
 |**
 ----------------------------
-xiris_common.inc version 10.14.22
+xiris_common.inc
 ----------------------------
 Common subs used in the majority of xiris's bots.
 Looting, Leashing, AA Purchasing are common threads.
@@ -27,6 +27,9 @@ REVISION HISTORY
 	08.05.22	xiris 	Added support for DI checking
 	10.01.22	xiris	Fixed the default tank settings on no param passing
 	10.14.22	xiris	Fixed Burn with item. Had logic error, would never click item.
+	12.27.22	xiris	Moved Burn logic to xiris_burn.inc since its... verbose.
+	12.29.22	xiris 	Removed Bufflines init/file due to it not being used for the foreseeable future.
+	12.31.22	xiris	Moved Clicky/AA/Burns to their own file
 ______________________________________________
 
 **|
@@ -35,7 +38,7 @@ ______________________________________________
 
 #include xiris_common/xiris_dannet.inc
 #include xiris_common/xiris_buffing.inc
-#include xiris_common/xiris_buffing_lines.inc
+#include xiris_common/xiris_burn.inc
 #include xiris_common/xiris_casting.inc
 #include xiris_common/xiris_charm.inc
 #include xiris_common/xiris_curing.inc
@@ -93,17 +96,6 @@ ______________________________________________
 #EVENT ChangeAP				"#1# tells the raid#*#'ChangeAP #2#'"
 #EVENT ChangeAP 			"[ #1# #*#]#*#ChangeAP #2#"
 
-| Burninating
-#EVENT BurnOn1				"#*#BurnOn1#*#"
-#EVENT BurnOn2				"#*#BurnOn2#*#"
-#EVENT BurnOff				"#*#BurnOff#*#"
-#EVENT ShortBurnOn1 		"#*#ShortBurn1#*#"
-#EVENT ShortBurnOn2 		"#*#ShortBurn2#*#"
-
-#EVENT LongBurnOn1			"#*#LongBurn1#*#"
-#EVENT LongBurnOn2 			"#*#LongBurn2#*#"
-
-#EVENT MaxiumumBurn			"#*#MaximumBurn#*#"
 
 #EVENT UseStaunchRecovery   "#*#DoStaunchRecovery#*#"
 #EVENT UseIntensity			"#*#DoIntensity#*#"
@@ -113,7 +105,6 @@ ______________________________________________
 |MISC events
 #EVENT ConnectEQBC			"#*#ConnectEQBC#*#"
 #EVENT CheckNaked			"#*#CheckNaked#*#"
-#EVENT BurnOnALL			"#*#BurnOnAll#*#"
 
 #EVENT RageOff				"#*#is no longer enraged#*#"
 #EVENT RageOn				"#*#has become ENRAGED#*#"
@@ -127,7 +118,7 @@ ______________________________________________
 #EVENT SaveCurrentWeaponset "#1#SaveCurrentWeaponset #2#"
 #EVENT InvisOFF				"#1#InvisOff#*#"
 #EVENT SkillCheck           "#1#SkillCheck #2#"
-#EVENT ReportBurnKey        "#1#ReportBurnKey #2#"
+
 #EVENT FixCorpses			"#*#fixCorpses#*#"
 
 #EVENT RaidGroupMode 		"[#1#] SetRaidGroupMode #2#"
@@ -158,10 +149,6 @@ Sub InitEvents_Common
 Sub Events_Raid 
 	/doevents RageOn
 	/doevents RageOff
-	/doevents BurnOnALL
-	/doevents BurnOn1
-	/doevents BurnOn2
-	/doevents BurnOff
 	/doevents BackOff
 	/doevents ChangeMT
 	/doevents ChangeSA
@@ -185,12 +172,6 @@ Sub Events_Common
 	|/doevents SkillCheck
 	/doevents Disengage
 	|/doevents QuitExpedition
-	|/doevents ReportBurnKey
-	|/doevents ShortBurnOn1 
-	|/doevents ShortBurnOn2 
-	|/doevents LongBurnOn1 
-	|/doevents LongBurnOn2
-	|/doevents MaximumBurn
 	/doevents RaidGroupMode
 	/doevents RaidDIClerics
 	/doevents doRefreshXTarget
@@ -308,52 +289,6 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/declare int_campRadius			int		outer	85			
 	/declare SZ_shortName			string	outer ${Zone.ShortName}
 	
-	|-- [Settings] : AAs & CAs
-	/declare	int_aaStopHP		int		outer	${Ini[botINI,AA,int_aaStopHP,5]}
-	/declare	int_aaStartHP		int		outer	${Ini[botINI,AA,int_aaStartHP,99]}
-	/declare 	int_aaNamedStopHP	int		outer 	${Ini[botINI,AA,int_aaNamedStopHP,5]}
-	/declare    int_aaNamedStartHP	int		outer 	${Ini[botINI,AA,int_aaNamedStartHP,99]}
-	/declare 	int_aaTotal			int		outer	${Ini[botINI,AA,int_aaTotal,0]}
-		/declare aa int local
-			/for aa 1 to ${int_aaTotal}
-				/declare AA_${aa} 				string 	outer ${Ini[botINI,AA,AA_${aa}]}
-				/declare AA_${aa}_Use 			bool 	outer ${Ini[botINI,AA,AA_${aa}_Use]}
-				/declare AA_${aa}_Gem 			string 	outer ${Ini[botINI,AA,AA_${aa}_Gem]}
-				/declare AA_${aa}_NamedOnly		int		outer ${Ini[botINI,AA,AA_${aa}_NamedOnly]}
-				/declare AA_${aa}_MyHP			int		outer ${Ini[botINI,AA,AA_${aa}_MyHP,100]}
-				/declare AA_${aa}_StartHP		int		outer ${Ini[botINI,AA,AA_${aa}_StartHP]}
-				/declare AA_${aa}_StopHP		int		outer ${Ini[botINI,AA,AA_${aa}_StopHP]}
-			/next aa
-			
-	|- [Settings] : OffensiveClickies
-	/declare	int_clickStopHP		int		outer	${Ini[botINI,OffensiveClickies,int_clickStopHP,5]}
-	/declare	int_clickTotal		int		outer	${Ini[botINI,OffensiveClickies,int_clickTotal,0]}
-		/declare oc int local
-			/for oc 1 to ${int_clickTotal} 
-				/declare Click_${oc} 			string 	outer ${Ini[botINI,OffensiveClickies,Click_${oc}]}
-				/declare Click_${oc}_Use		bool 	outer ${Ini[botINI,OffensiveClickies,Click_${oc}_Use]}
-				/declare Click_${oc}_StartHP 	int 	outer ${Ini[botINI,OffensiveClickies,Click_${oc}_StartHP]}
-				/declare Click_${oc}_StopHP  	int 	outer ${Ini[botINI,OffensiveClickies,Click_${oc}_StopHP]}
-				/declare Click_${oc}_NamedOnly  bool	outer ${Ini[botINI,OffensiveClickies,Click_${oc}_NamedOnly]}
-				/declare Click_${oc}_Recast 	int		outer ${Ini[botINI,OffensiveClickies,Click_${oc}_Recast]}
-				/declare Click_${oc}_Timer  	timer	outer 0
-			/next oc
-
-	|- [Settings] : BurnMode
-	/declare bln_BURNMode			bool	outer FALSE
-	/declare int_burnModeTotal int outer ${Ini[botINI,BurnMode,int_burnModeTotal,0]}
-	/declare int_burnKey       int outer ${Ini[botINI,BurnMode,int_burnKey,ALL]}
-	
-		/declare bm int local
-		/for bm 1 to ${int_burnModeTotal} 
-			/declare Burn_${bm} 			string	outer ${Ini[botINI,BurnMode,Burn_${bm}]}
-			/declare Burn_${bm}_Type 		string	outer ${Ini[botINI,BurnMode,Burn_${bm}_Type]}
-			/declare Burn_${bm}_Use 		bool	outer ${Ini[botINI,BurnMode,Burn_${bm}_Use]}
-			/declare Burn_${bm}_Num 		bool	outer ${Ini[botINI,BurnMode,Burn_${bm}_Num]}
-			/declare Burn_${bm}_After 		int		outer ${Ini[botINI,BurnMode,Burn_${bm}_After]}
-			/declare Burn_${bm}_MGB			bool	outer ${Ini[botINI,BurnMode,Burn_${bm}_MGB,FALSE]}
-		/next bm
-			
 	|--include the custom event initializations & other things
 	/declare bln_outside			bool	outer	TRUE
 	/declare bln_slowUse			bool	outer	FALSE
@@ -381,7 +316,7 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/call xbot_initialize_dannet
 	/call xbot_initialize_spellRoutines
 	/call xbot_initialize_buffing
-	/call xbot_initialize_bufflines
+	/call xbot_initialize_burns
 	/call xbot_initialize_casting
 	/call xbot_initialize_charming
 	/call xbot_initialize_curing
@@ -799,216 +734,6 @@ Sub getClassBaseType(string _shortName)
 /return 
 
 
-|**
- ----------------------------
- AA routine
- ----------------------------
- Fires the AAs, controlled via INI
- Changed this to require an alt-activate number to be more reliable
- ----------------------------
-**|
-Sub chkAAs
-
-	/if (${int_aaTotal} == 0) 	/return 
-	/if (!${bln_engaged}) 		/return
-	
-	/if ((${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]}) || ${Me.Moving} || ${Me.Invis} || ${Me.Feigning}) /return
-	
-	/if (${Target.Type.NotEqual[NPC]}) /return
-	
-	|-- named check
-	:named_check
-	/declare isNamed bool local FALSE
-	/call TargetNamedCheck ${Target.ID}
-	/varset isNamed ${Macro.Return}
-
-	|-- target HP check
-	/if (${isNamed}  && (${Target.PctHPs} < ${int_aaNamedStopHP}))	/return
-	/if (${isNamed}  && (${Target.PctHPs} > ${int_aaNamedStartHP}))	/return
-	/if (!${isNamed} && (${Target.PctHPs} < ${int_aaStopHP}))		/return
-	/if (!${isNamed} && (${Target.PctHPs} > ${int_aaStartHP}))		/return
-
-	:fd_check
-	/if (${Me.Feigning}) /stand
-
-	|-- Final Check before casting
-	/if (${Target.ID} && ${Target.Type.Equal[NPC]} && ${Target.LineOfSight}) {
-		/declare aa int local
-
-		/for aa 1 to ${int_aaTotal} 
-			:AALoopStart
-			|-- skip if disabled
-			| Check that the AA is ready
-			/if (!${AA_${aa}_Use} || !${Me.AltAbilityReady[${AA_${aa}}]}) /goto :NextAA
-
-			|-- Named Target check
-			|-- if we only cast this spell on named, and this is NOT a named target, skip
-			/if (!${isNamed} && ${AA_${aa}_NamedOnly}) {
-				/echo Skipping AA ${AA_${aa}} is named only
-				/goto :NextAA
-			}
-
-			
-			| Check that the hitpoints of target fall into the range
-			| Check to see that my HP is at or below the trigger range (for things like desperation)
-			/if ((${Target.ID}==${int_targetID}) && (${Target.PctHPs}<${AA_${aa}_StartHP}) && (${Me.PctHPs} <= ${AA_${aa}_MyHP}) && (${Target.PctHPs}>${AA_${aa}_StopHP})) {
-				/echo checking ${AA_${aa}}
-				/if (${Me.Class.ShortName.Equal[BRD]}) {
-					/if (${AA_${aa}_Gem.Equal[combat]} && (${Me.PctEndurance} > 10)) {
-						/doability "${AA_${aa}}"
-					} else {
-						/medley queue "${AA_${aa}}"
-					}
-					/cecho \ag ${AA_${aa}}  : FIRED	
-				} else {
-					/if (${AA_${aa}_Gem.Equal[combat]} && (${Me.PctEndurance} > 10)) {
-						/doability "${AA_${aa}}"
-					} else {
-						/call MQ2Cast "${AA_${aa}}"	alt
-						/if (${Macro.Return.Equal[CAST_SUCCESS]}) {
-						/cecho \ag ${AA_${aa}} : FIRED	
-						}
-					}
-				}
-					
-			}
-			
-		:NextAA
-		/next aa
-	}
-/return
-
-
-
-|**
- ----------------------------
- Check BURN routine
- ----------------------------
- Fires the burn setup if an event has set bln_BURNMode TRUE
- This is a little awkward due to the mix of combat abilities and alt abilities
- I made this verbose for clarity
- ----------------------------
-**|
-
-Sub chkBurn
-	/if (!${bln_engaged} || !${bln_BURNMode} || (${int_burnModeTotal} < 1)) /return
-	/if (!${Target.ID} || ${Target.Type.NotEqual[NPC]}) /return
-	/if (${Me.Casting.ID} || ${Me.Moving} || ${Me.Invis} || ${Me.Feigning}) /return
-
-	/declare burn int local
-	|/echo BurnMode Activated! Total Burns: ${int_burnModeTotal}
-	/for burn 1 to ${int_burnModeTotal} 
-		
-		/if (${Target.ID} && ${Target.Type.Equal[NPC]}) {
-			| ---------------
-			| Combat Ability
-			| Note: Run the DISC if it is a combat type, it is ready, and we aren't already discing
-			| ---------------
-			/if (${Burn_${burn}_Type.Equal[combat]} && ${Me.CombatAbilityReady[${Burn_${burn}}]} && ${Burn_${burn}_Use} && !${Bool[${Melee.DiscID}]}) {
-				/echo burn is combat type, trying ${Burn_${burn}}
-				| Check to see if the burn Before disc/alt (0 if not) is already run
-				/if (${Burn_${burn}_After} > 0) {
-					| Check to see if the burn Before is an alt or combatdisc (two different ways of checking)
-					/if (${Burn_${Burn_${burn}_After}_Type.Equal[combat]} && !${Me.CombatAbilityReady[${Burn_${Burn_${burn}_After}}]}) {
-						/goto :doCombatAbility
-					} else /if (${Burn_${Burn_${burn}_After}_Type.Equal[alt]} && !${Me.AltAbilityReady[${Burn_${Burn_${burn}_After}}]}) {
-						/goto :doCombatAbility
-					}
-				} else {
-					:doCombatAbility
-					| Bards can click discs while singing
-					/doability "${Burn_${burn}}"
-					/dgt DISC ${Burn_${burn}} clicked!
-					/cecho \agDISC \ay${Burn_${burn}} \agclicked!
-					/goto :nextBurn		
-				}
-				
-			
-			| ---------------	
-			| Alt Ability
-			| Note: Additionally, if MGBable, (few) we have Burn_1_MGB = TRUE to look for (default FALSE)
-			| ---------------
-			} else /if (${Burn_${burn}_Type.Equal[alt]} && ${Me.AltAbilityReady[${Burn_${burn}}]} && ${Burn_${burn}_Use} && ${Spell[${Burn_${burn}}].Stacks}) {
-				| Check to see if the burn Before disc/alt (0 if not) is already run
-				/if (${Burn_${burn}_After} > 0) {
-					| Check to see if the burn Before is an alt or combatdisc  (two different ways of checking)
-					/if (${Burn_${Burn_${burn}_After}_Type.Equal[combat]} && !${Me.CombatAbilityReady[${Burn_${Burn_${burn}_After}}]}) {
-						/goto :doAltAbility
-					} else /if (${Burn_${Burn_${burn}_After}_Type.Equal[alt]} && !${Me.AltAbilityReady[${Burn_${Burn_${burn}_After}}]}) {
-						/goto :doAltAbility
-					}
-				} else {
-					:doAltAbility
-						/if (${Burn_${burn}_MGB}) {
-							/call MQ2Cast "Mass Group Buff" alt
-							/delay 5
-							/cecho \ag Mass Group Buff Activated!
-						}
-						/if (${Me.Class.ShortName.Equal[BRD]}) {
-							/medley "${Burn_${burn}}" -interrupt
-							/rs ${burn}:ALT  "${Burn_${burn}}" Clicked!
-						} else {
-							/call MQ2Cast "${Burn_${burn}}" alt
-						}
-						/dgt AA ${Burn_${burn}} clicked!
-						/cecho \agAA \ay${Burn_${burn}} \agclicked!
-						/goto :nextBurn	
-				}
-			| ---------------	
-			| Item
-			| Check to see if  burn == item &&  useable && (item in inventory && there is no timer) && (I am not Casting || I am a bard)
-			| ---------------
-			} else /if (${Burn_${burn}_Type.Equal[item]} && ${Burn_${burn}_Use} && (${Bool[${FindItem[${Burn_${burn}}].ID}]} && ${FindItem[${Burn_${burn}}].TimerReady} == 0) && (!${Me.Casting.ID} || ${Me.Class.ShortName.Equal[BRD]})) {
-				/if (${FindItem[${Burn_${burn}}].TimerReady} > 0) /goto :nextBurn
-				:doItemClick
-					/if (${Me.Class.ShortName.Equal[BRD]}) {
-						/medley queue "${Burn_${burn}}" -interrupt
-						/rs ${burn}:ITEM  "${Burn_${burn}}" Clicked!
-					} else {
-						/call MQ2Cast "${Burn_${burn}}" item 2s
-					}
-					/dgt Item ${Burn_${burn}} clicked!
-					/cecho \agItem \ay${Burn_${burn}} \agclicked!
-					/goto :nextBurn	
-			}
-		}
-	:nextBurn
-	/next burn
-/return
-
-|**
- ----------------------------
- chkClicks Clickie Nuke routine
- ----------------------------
- Fires the Clickie Items, controlled via INI
- ----------------------------
-**|
-Sub chkClicks
-	/if (!${bln_engaged}) /return
-	/if (${Me.Casting.ID} || ${Me.Moving} || ${Me.Invis} || ${Me.Feigning}) /return
-	/if (${Target.PctHPs}<${int_clickStopHP}) /return
-	/if (${int_clickTotal} == 0) /return
-
-	/declare intC int local
-	/for intC 1 to ${int_clickTotal} 
-		
-		/if (${Target.PctHPs}<=${Click_${intC}_StartHP} && ${Target.PctHPs}>=${Click_${intC}_StopHP} && ${Target.ID} && !${Me.Casting.ID} && ${Target.Type.Equal[NPC]}) {
-			/if ((!${Click_${intC}_NamedOnly}||${Target.ID}==${NearestSpawn[named npc].ID}) && (${Click_${intC}_Timer} <= 0)) {
-				/if (${FindItem[${Click_${intC}}].InvSlot}) {
-
-					/if (${Me.Class.ShortName.Equal[BRD]}) {
-						/medley queue "${Click_${intC}}"
-					} else {
-						/call MQ2Cast "${Click_${intC}}" item 2s
-					}
-					/cecho \agItem \ayClick_${burn} \agclicked!
-					/varset Click_${intC}_Timer ${Click_${intC}_Recast}s
-				}
-			}
-        }
-    /next intC
-/return
-
 
 Sub Event_SKILLCHECK(_line, _sender, _eventParams) 	
 	/echo ${_sender} checking skill archetype:${_eventParams.Arg[1,|]} | skill:${_eventParams.Arg[2,|]}
@@ -1022,7 +747,7 @@ Sub Event_SKILLCHECK(_line, _sender, _eventParams)
 Sub Event_ReportBurnKey(_line, _sender, _eventParams)
 	/declare _burnKey int local ${_eventParams.Arg[1,|]}
 	/echo ${_sender} checking burnKey:${_burnKey}
-	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} && ${int_burnKey} == ${_burnKey}) {
+	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} && ${BURN_Group} == ${_burnKey}) {
 		/rs ${_burnKey} ${Me.CleanName} ${Me.Class.ShortName}
 	}
 /return
@@ -1224,35 +949,35 @@ Sub Event_EndMac
 |--------------------------------------------------------------------------------
 Sub EVENT_BurnOn
 	/echo Enabling Burn Mode
-	/varset bln_BURNMode TRUE
+	/varset bln_burning TRUE
 	/doevents flush BurnOn
 /return
 
 Sub EVENT_BurnOnAll
 	/echo Enabling Burn on ALL
-	/varset bln_BURNMode TRUE
+	/varset bln_burning TRUE
 	/doevents flush BurnOnAll
 /return
 
 Sub EVENT_BurnOn1
-	/if (${int_burnKey}==1) {
+	/if (${BURN_Group}==1) {
 		/echo Enabling Burn on Cohort 1
-		/varset bln_BURNMode TRUE
+		/varset bln_burning TRUE
 	}
 	/doevents flush BurnOn1
 /return
 
 Sub EVENT_BurnOn2
-	/if (${int_burnKey}==2) {
+	/if (${BURN_Group}==2) {
 		/echo Enabling Burn on Cohort 2
-		/varset bln_BURNMode TRUE
+		/varset bln_burning TRUE
 	}
 	/doevents flush BurnOn2
 /return
 
 Sub EVENT_BurnOff
 	/echo Disabling Burn Mode
-	/varset bln_BURNMode FALSE
+	/varset bln_burning FALSE
 	/doevents flush BurnOff
 /return
 
@@ -1267,7 +992,7 @@ Sub EVENT_UseStaunchRecovery
 	} else /if (${Me.Class.ShortName.Equal[PAL]} && ${Me.PctMana} < 20) {
 		/casting "Staunch Recovery" alt
 	} else /if (${Me.Class.ShortName.Equal[BRD]} && ${Me.PctMana} < 20) { 
-		/medley queue "Staunch Recovery" -interrupt
+		/call MQ2Medley ALT "Staunch Recovery" ${int_targetID} FALSE
 	} else /if ((${str_classArchetype.Equal[PRIEST]} || ${str_classArchetype.Equal[CASTER]}) && ${Me.PctMana} < 20) { 
 		/casting "Staunch Recovery" alt 
 	} 
@@ -1277,7 +1002,7 @@ Sub EVENT_UseIntensity
 	| Do not use if at bind point (ie: dead)
 	/if (${Zone.ID} == 340 && ${Zone.ID} == 344 && ${Zone.ID} == 345) /return
 	/if (${Me.Class.ShortName.Equal[BRD]}) {
-		/medley queue "Intensity of the Resolute" -interrupt
+		/call MQ2Medley ALT "Intensity of the Resolute" ${int_targetID} TRUE
 	} else {
 		/casting "Intensity of the Resolute" alt
 	}
@@ -1287,7 +1012,7 @@ Sub EVENT_UseServants
 	| Do not use if at bind point (ie: dead)
 	/if (${Zone.ID} == 340 && ${Zone.ID} == 344 && ${Zone.ID} == 345) /return
 	/if (${Me.Class.ShortName.Equal[BRD]}) {
-		/medley queue "Steadfast Servant" -interrupt
+		/call MQ2Medley ALT "Steadfast Servant" ${int_targetID} FALSE
 	} else {
 		/casting "Steadfast Servant" alt
 	}
@@ -1297,7 +1022,7 @@ Sub EVENT_UseInfusion
 	| Do not use if at bind point (ie: dead)
 	/if (${Zone.ID} == 340 && ${Zone.ID} == 344 && ${Zone.ID} == 345) /return
 	/if (${Me.Class.ShortName.Equal[BRD]}) {
-		/medley queue "Infusion of the Faithful" -interrupt
+		/call MQ2Medley ALT "Infusion of the Faithful" ${int_targetID} FALSE
 	} else {
 		/casting "Infusion of the Faithful" alt
 	}

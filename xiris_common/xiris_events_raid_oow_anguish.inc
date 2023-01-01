@@ -1,9 +1,8 @@
 |**
 ----------------------------
-EVENTS_OOW_ANGUISH.INC
+xiris_events_raid_oow_anguish.inc
 ----------------------------
-This was written ground up for usage with xiris's bots
-NOTE: this requires MQ2NAV
+Event Handlers for the OOW Citadel of Anguish raid.
 ______________________________________________
 REQUIRED PLUGINS
 	mq2nav
@@ -50,6 +49,7 @@ Sub InitEvents_OOW_Anguish
 	/declare bln_hanvarEngaged bool outer FALSE
 	/declare bln_amvEngaged	   bool outer FALSE
 	/declare timer_hanvar_ae   timer outer 0
+	/declare timer_hanvarDebuff timer outer 30s
 
 	/declare jelvanTarget 	   string outer Tantho
 	/declare jelvanResists     string outer Tanthi
@@ -320,7 +320,8 @@ Sub Event_HanvarRetreat(string _sender, string _line, string _eventParams)
 	/if (${Target.Name.Find[Hanvar]} || ${Spawn[npc Hanvar].Distance} < 100) {
 		/if (${MeleeClasses.Find[${Me.Class.ShortName}]}) {
 			/call Disengage
-			/warp wp hanvarSafe
+			/nav wp hanvarSafe
+			|/warp wp hanvarSafe
 		} 
 	}
 	/doevents flush HanvarRetreat
@@ -331,7 +332,8 @@ Sub Event_HanvarKill(string _sender, string _line, string _eventParams)
 	/if (${SpawnCount[npc guard]}) /return
 	/if (${MeleeClasses.Find[${Me.Class.ShortName}]} ) {
 		/call TrueTarget ${Spawn[npc Hanvar].ID}
-		/warp b 10
+		|/warp b 10
+		/nav wp hanvarTank
 		/call EngageTarget ${Spawn[npc Hanvar].ID}
 	} else /if (${CasterClasses.Find[${Me.Class.ShortName}]}) {
 		/call EngageTarget ${Spawn[npc Hanvar].ID}
@@ -600,7 +602,7 @@ Sub Event_GazeYou
 	/cecho \arGAZE OF MATA MURAM on ME!
 	/cecho \a-w Clicking \agMirrored Mask
 	/if (${Me.Class.ShortName.Equal[BRD]}) {
-		/medley queue "Mirrored Mask" -interrupt
+		/call MQ2Medley SONG "${DEBUFF_${db}_Spell}" ${int_targetID} TRUE
 	} else {
 		/if (!${Defined[interruptFlag]}) /declare interruptFlag bool outer FALSE	
 		/if (${Bool[${Me.Casting.ID}]}) /call Interrupt

@@ -1,6 +1,6 @@
 |**
 ----------------------------
-XIRIS_OFFTANK.INC updated version 10.12.2017
+xiris_offtank.inc
 ----------------------------
 Offtank module for Xiris bots
 Determines if there are mobs within a certain radius, and if they are not currently

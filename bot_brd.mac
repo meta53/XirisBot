@@ -60,15 +60,15 @@ Sub EVENT_Sing(_line, _sender, _eventParams)
 /return
 
 Sub SingSongs(string _type)
-	/call setSpellSet ${_type}
-	/cecho \awSinging \ag${_type} \awmemming set and delaying \ao4s
-	/delay 4s
-	/if (${Me.Class.ShortName.Equal[BRD]} && ${Medley.Active}) /medley stop
-	/if (${Me.Class.ShortName.Equal[BRD]} && !${Medley.Active}) /medley ${_type}
+	/call SetSpellSet ${_type}
+	/cecho \awSinging \ag${_type} \awmemming set and delaying \ao3s
+	/delay 30
+	/medley stop
+	/medley ${_type}
 /return
 
 Sub EVENT_Hush(_line, _sender, _eventParams)
-	/if (${Me.Class.ShortName.Equal[BRD]} && ${Medley.Active}) /medley stop
+	/medley stop
 	/doevents flush Hush
 /return
 
@@ -158,9 +158,9 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 			|-- std library (burns/aa/clicks)
 			/call RunRaidEvents
 			/call RunClassEvents
-			/call chkAAs
+			/call chkAA
 			/call chkBurn
-			/call chkClicks
+			/call chkClicky
 		} else {
 			|-- check utilities, includes: sit,loot,leash (out of combat only) and only once every 10 seconds
 			/if (!${timer_check_utilities}) /call chkUtils
@@ -174,44 +174,43 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 
 Sub SetupSongs
 	| Set Bard songs based on raid type and group leader
-	/if (${Me.Class.ShortName.Equal[BRD]}) {
-		/if (${str_raidGroupMode.Equal[DEFAULT]}) {
-			/if (${Me.CleanName.Equal[Ania]}) 	/varset str_currentMedley TANK
-			/if (${Me.CleanName.Equal[Aergia]}) /varset str_currentMedley TANK
-			/if (${Me.CleanName.Equal[Achlys]}) /varset str_currentMedley MELEE
-			/if (${Me.CleanName.Equal[Adikia]}) /varset str_currentMedley MELEE
-			/if (${Me.CleanName.Equal[Aidos]}) 	/varset str_currentMedley CASTER
-			/if (${Me.CleanName.Equal[Achos]}) 	/varset str_currentMedley TANK
-		} else /if (${str_raidGroupMode.Equal[HATRED]}) {
-			/if (${Me.CleanName.Equal[Ania]}) 	/varset str_currentMedley TANK
-			/if (${Me.CleanName.Equal[Aergia]}) /varset str_currentMedley TANK
-			/if (${Me.CleanName.Equal[Achlys]}) /varset str_currentMedley MELEE
-			/if (${Me.CleanName.Equal[Adikia]}) /varset str_currentMedley MELEE
-			/if (${Me.CleanName.Equal[Aidos]}) 	/varset str_currentMedley MELEE
-			/if (${Me.CleanName.Equal[Achos]}) 	/varset str_currentMedley MELEE
-		} else /if (${str_raidGroupMode.Equal[TRIAD]}) {
-			/if (${Me.CleanName.Equal[Ania]}) 	/varset str_currentMedley TANK
-			/if (${Me.CleanName.Equal[Aergia]}) /varset str_currentMedley MELEE
-			/if (${Me.CleanName.Equal[Achlys]}) /varset str_currentMedley TANK
-			/if (${Me.CleanName.Equal[Adikia]}) /varset str_currentMedley MELEE
-			/if (${Me.CleanName.Equal[Aidos]}) 	/varset str_currentMedley TANK
-			/if (${Me.CleanName.Equal[Achos]}) 	/varset str_currentMedley MELEE
-		} else /if (${str_raidGroupMode.Equal[JELVAN]}) {
-			/if (${Me.CleanName.Equal[Ania]}) 	/varset str_currentMedley MELEE
-			/if (${Me.CleanName.Equal[Aergia]}) /varset str_currentMedley MELEE
-			/if (${Me.CleanName.Equal[Achlys]}) /varset str_currentMedley TANK
-			/if (${Me.CleanName.Equal[Adikia]}) /varset str_currentMedley TANK
-			/if (${Me.CleanName.Equal[Aidos]}) 	/varset str_currentMedley MELEE
-			/if (${Me.CleanName.Equal[Achos]}) 	/varset str_currentMedley MELEE
-		} else {
-			/if (${Me.CleanName.Equal[Ania]}) 	/varset str_currentMedley TANK
-			/if (${Me.CleanName.Equal[Aergia]}) /varset str_currentMedley TANK
-			/if (${Me.CleanName.Equal[Achlys]}) /varset str_currentMedley MELEE
-			/if (${Me.CleanName.Equal[Adikia]}) /varset str_currentMedley MELEE
-			/if (${Me.CleanName.Equal[Aidos]}) 	/varset str_currentMedley MELEE
-			/if (${Me.CleanName.Equal[Achos]}) 	/varset str_currentMedley MELEE
-		}
+	/if (${str_raidGroupMode.Equal[DEFAULT]}) {
+		/if (${Me.CleanName.Equal[Ania]}) 	/varset str_currentMedley TANK
+		/if (${Me.CleanName.Equal[Aergia]}) /varset str_currentMedley TANK
+		/if (${Me.CleanName.Equal[Achlys]}) /varset str_currentMedley MELEE
+		/if (${Me.CleanName.Equal[Adikia]}) /varset str_currentMedley MELEE
+		/if (${Me.CleanName.Equal[Aidos]}) 	/varset str_currentMedley CASTER
+		/if (${Me.CleanName.Equal[Achos]}) 	/varset str_currentMedley TANK
+	} else /if (${str_raidGroupMode.Equal[HATRED]}) {
+		/if (${Me.CleanName.Equal[Ania]}) 	/varset str_currentMedley TANK
+		/if (${Me.CleanName.Equal[Aergia]}) /varset str_currentMedley TANK
+		/if (${Me.CleanName.Equal[Achlys]}) /varset str_currentMedley MELEE
+		/if (${Me.CleanName.Equal[Adikia]}) /varset str_currentMedley MELEE
+		/if (${Me.CleanName.Equal[Aidos]}) 	/varset str_currentMedley MELEE
+		/if (${Me.CleanName.Equal[Achos]}) 	/varset str_currentMedley MELEE
+	} else /if (${str_raidGroupMode.Equal[TRIAD]}) {
+		/if (${Me.CleanName.Equal[Ania]}) 	/varset str_currentMedley TANK
+		/if (${Me.CleanName.Equal[Aergia]}) /varset str_currentMedley MELEE
+		/if (${Me.CleanName.Equal[Achlys]}) /varset str_currentMedley TANK
+		/if (${Me.CleanName.Equal[Adikia]}) /varset str_currentMedley MELEE
+		/if (${Me.CleanName.Equal[Aidos]}) 	/varset str_currentMedley TANK
+		/if (${Me.CleanName.Equal[Achos]}) 	/varset str_currentMedley MELEE
+	} else /if (${str_raidGroupMode.Equal[JELVAN]}) {
+		/if (${Me.CleanName.Equal[Ania]}) 	/varset str_currentMedley MELEE
+		/if (${Me.CleanName.Equal[Aergia]}) /varset str_currentMedley MELEE
+		/if (${Me.CleanName.Equal[Achlys]}) /varset str_currentMedley TANK
+		/if (${Me.CleanName.Equal[Adikia]}) /varset str_currentMedley TANK
+		/if (${Me.CleanName.Equal[Aidos]}) 	/varset str_currentMedley MELEE
+		/if (${Me.CleanName.Equal[Achos]}) 	/varset str_currentMedley MELEE
+	} else {
+		/if (${Me.CleanName.Equal[Ania]}) 	/varset str_currentMedley TANK
+		/if (${Me.CleanName.Equal[Aergia]}) /varset str_currentMedley TANK
+		/if (${Me.CleanName.Equal[Achlys]}) /varset str_currentMedley MELEE
+		/if (${Me.CleanName.Equal[Adikia]}) /varset str_currentMedley MELEE
+		/if (${Me.CleanName.Equal[Aidos]}) 	/varset str_currentMedley MELEE
+		/if (${Me.CleanName.Equal[Achos]}) 	/varset str_currentMedley MELEE
 	}
+
 	/varset str_spellset ${str_currentMedley}
 	/memspellset ${str_currentMedley}	
 	/call SingSongs ${str_currentMedley}
@@ -266,6 +265,7 @@ Sub variant_initialize
 	|--Bard Specific Settings
 	|--Medley
 	/declare    str_currentMedley	    string	outer	melee
+	/declare 	str_savedMedley			string  outer   melee
 	/call SetupSongs
 	/cecho \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID}) HealPoint:${healPoint} ST: ${str_STName}(${int_STID})
 	|--Bard Slow

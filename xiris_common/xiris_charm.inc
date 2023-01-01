@@ -1,6 +1,6 @@
 |**
 ----------------------------
-CHARM CASTING HANDLERS
+xiris_charm.inc
 ----------------------------
 This includes the charm setup (see xiris_charm.ini) which has mobs to force 
 charm on check (ie: Specialization mote of frost, OMM lieutenants, etc)

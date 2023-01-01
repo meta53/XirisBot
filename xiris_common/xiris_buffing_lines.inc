@@ -1,6 +1,6 @@
 |**
 ----------------------------
-xiris_buffing_lines.inc version 01.17.22
+xiris_buffing_lines.inc
 ----------------------------
 Methods to 'buff beg' from an appropriate class.
 ______________________________________________

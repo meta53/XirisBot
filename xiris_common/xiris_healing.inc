@@ -1,6 +1,6 @@
 |**
 ----------------------------
-HEAL CASTING HANDLERS
+xiris_common.inc
 ----------------------------
 This includes the healing setup (INI READ)
 and sub routines as necessary
@@ -13,7 +13,8 @@ REVISION HISTORY
 	05.08.22	xiris	Integrated AERez.mac
 	06.29.22	xiris 	Updated all events to only be either generic, or [/gsay, /rsay, /tell, MQ2DanNet(dgt, dt)] only	
 						Updated the rez portion to work with new dannet handlers
-	10.13.22	xiris 	Update sub healCast to ignore hp checks on group heals					
+	10.13.22	xiris 	Update sub healCast to ignore hp checks on group heals			
+	12.31.22	xiris	Worked on Divine Arbitration handler, should be cleaner		
 **|
 
 
@@ -806,14 +807,15 @@ Sub healCast(int _id, string _name, string _spell, bool _isGroup)
  ----------------------------
 **|
 Sub chkHP
-	| If the Target is Dead... stop
-	/if (${Target.Name.Find[s_corpse]}) /call Interrupt
-
-	| Check to see if I should interrupt because target is healed
-	/if ((${bln_autointerrupt}) && (${Target.PctHPs} > ${int_point_calcStopHeal})) /call Interrupt 
-
 	| I'm no longer casting, or no longer need to stop it ie, target is MT
 	/if (!${Bool[${Me.Casting.ID}]}) /goto :return
+
+	| If the Target is Dead... stop
+	/if (${Target.Name.Find[s_corpse]}) /goto :interrupt
+
+	| Check to see if I should interrupt because target is healed
+	/if ((${bln_autointerrupt}) && (${Target.PctHPs} > ${int_point_calcStopHeal}))  /goto :interrupt
+
 
 	| Divine Arbitration Checks
    	| -------------------------
@@ -821,6 +823,7 @@ Sub chkHP
 	| Loop through group members to check to see if anyone needs Divine Arbitration
 	/if (${Me.Class.ShortName.NotEqual[CLR]} || !${use_heal_divineArb} || !${bln_DARBReady}) /goto :return
 
+	:divine
 	/declare gmember int local 0
 	/for gmember 0 to ${Group.Members}
 		/if (${Group.Member[${gmember}].PctHPs}<=${int_point_divineArb}) {
@@ -828,9 +831,13 @@ Sub chkHP
 			/dgt ${Group.Member[${gmember}].Name} triggered Divine Arbitration!
 			/call Interrupt
 			/call healDivineArbitration
-			/return
+			/goto :return
 		}
 	/next gmember
+
+	:interrupt
+	/call Interrupt
+
     :return
 /return
 
@@ -859,6 +866,9 @@ Sub healDivineArbitration
     } 
 /return
 
+Sub chkDA 
+
+/return
 
 
 |**

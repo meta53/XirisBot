@@ -1,6 +1,6 @@
 |**
 ----------------------------
-DEBUFFING HANDLERS
+xiris_debuffing.inc
 ----------------------------
 This library supplements/abstracts mq2cast functionality
 ______________________________________________
@@ -106,8 +106,9 @@ Sub CastDebuffsOnTarget(int _targetID, bool _forced)
 		/call TrueTarget ${_targetID}
 		/if (${Target.PctHPs} > ${DEBUFF_${db}_StartHP} || ${Target.PctHPs} < ${DEBUFF_${db}_StopHP}) /goto :nextDB
 
-		| Trigger Check (triggers are stored as strings with $ replaced with #. Run this through a replace and check)
-		/if (!${DEBUFF_${db}_Trigger.Replace[#,$]}) {
+		| Trigger Check (triggers are stored as strings with $ replaced with #. Run this through a replace and check);
+		| This is usually a complex string such as DEBUFF_1_Trigger=(!${Target.Maloed.ID} || ${Target.Buff[${DEBUFF_1_Spell}].Duration.TotalSeconds} < 30)
+		/if (!${Bool[${DEBUFF_${db}_Trigger.Replace[#,$]}]}) {
 			/cecho \ar ${DEBUFF_${db}_Spell} Failed use Check ${DEBUFF_${db}_Trigger}
 			/goto :nextDB
 		}
@@ -126,7 +127,7 @@ Sub CastDebuffsOnTarget(int _targetID, bool _forced)
 			/call TrueTarget ${_targetID}
 			/varset debuffDuration ${Spell[${DEBUFF_${db}_Spell} ].Duration.TotalSeconds}
 			/if (${Me.Class.ShortName.Equal[BRD]}) {
-				/medley queue "${DEBUFF_${db}_Spell}"
+				/call MQ2Medley SONG "${DEBUFF_${db}_Spell}" ${_targetID} TRUE
 				/docommand /${cmdChannel} << ${Target.Name} >> ${DEBUFF_${db}_Spell} 
 				/cecho \ag ${DEBUFF_${db}_Spell}   : DELAYING for \ay${debuffDuration}s \agrefresh	
 			} else {

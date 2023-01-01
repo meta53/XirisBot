@@ -1,8 +1,7 @@
 |**
 ----------------------------
-XIRIS_EVENTS.INC
+xiris_events.inc
 ----------------------------
-This was written ground up for usage with xiris's bots
 Allows for aggregation of event handlers, and the kicking off of special cases
 ______________________________________________
 REQUIRED PLUGINS

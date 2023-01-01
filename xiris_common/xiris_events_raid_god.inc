@@ -1,9 +1,8 @@
 |**
 ----------------------------
-EVENTS_RAID_GOD.INC
+xiris_events_raid_god.inc
 ----------------------------
-This was written ground up for usage with xiris's bots
-NOTE: this requires MQ2NAV
+Event Handlers for the Gates of Discord raids.
 ______________________________________________
 REQUIRED PLUGINS
 	mq2nav

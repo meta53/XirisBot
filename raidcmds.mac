@@ -32,53 +32,53 @@ Sub Main
 /return
 
 Sub EVENT_burn1a 
-    /dex Ophelia    /varset bln_BURNMode TRUE
-    /dex Mluian     /varset bln_BURNMode TRUE
-    /dex Xaeliea    /varset bln_BURNMode TRUE
-    /dex Xaia       /varset bln_BURNMode TRUE
-    /dex Ophemia    /varset bln_BURNMode TRUE
-    /dex Xepatia    /varset bln_BURNMode TRUE
-    /dex Ophenia    /varset bln_BURNMode TRUE
-    /dex Erinyas    /varset bln_BURNMode TRUE
-    /dex Ophidia    /varset bln_BURNMode TRUE
+    /dex Ophelia    /varset bln_burning TRUE
+    /dex Mluian     /varset bln_burning TRUE
+    /dex Xaeliea    /varset bln_burning TRUE
+    /dex Xaia       /varset bln_burning TRUE
+    /dex Ophemia    /varset bln_burning TRUE
+    /dex Xepatia    /varset bln_burning TRUE
+    /dex Ophenia    /varset bln_burning TRUE
+    /dex Erinyas    /varset bln_burning TRUE
+    /dex Ophidia    /varset bln_burning TRUE
 /return 
 
 Sub EVENT_burn1b
-    /dex  Opheoia   /varset bln_BURNMode TRUE
-    /dex Ophexia    /varset bln_BURNMode TRUE
-    /dex Ertris     /varset bln_BURNMode TRUE
-    /dex Erinyes    /varset bln_BURNMode TRUE
-    /dex Ertres     /varset bln_BURNMode TRUE
-    /dex Ophezia    /varset bln_BURNMode TRUE
-    /dex Xaexa      /varset bln_BURNMode TRUE
-    /dex Opheyia    /varset bln_BURNMode TRUE
+    /dex  Opheoia   /varset bln_burning TRUE
+    /dex Ophexia    /varset bln_burning TRUE
+    /dex Ertris     /varset bln_burning TRUE
+    /dex Erinyes    /varset bln_burning TRUE
+    /dex Ertres     /varset bln_burning TRUE
+    /dex Ophezia    /varset bln_burning TRUE
+    /dex Xaexa      /varset bln_burning TRUE
+    /dex Opheyia    /varset bln_burning TRUE
 /return 
 
 Sub EVENT_burn2a
-    /dex Ertris     /varset bln_BURNMode TRUE
-    /dex Aidos      /varset bln_BURNMode TRUE
-    /dex Erinyas    /varset bln_BURNMode TRUE
-    /dex Ophelia    /varset bln_BURNMode TRUE
-    /dex Ania       /varset bln_BURNMode TRUE
-    /dex Achlys     /varset bln_BURNMode TRUE
-    /dex Achos      /varset bln_BURNMode TRUE
-    /dex Xaia       /varset bln_BURNMode TRUE
-    /dex Xepatia    /varset bln_BURNMode TRUE
-    /dex Ophenia    /varset bln_BURNMode TRUE
-    /dex Ophemia    /varset bln_BURNMode TRUE
-    /dex Xaexa      /varset bln_BURNMode TRUE
+    /dex Ertris     /varset bln_burning TRUE
+    /dex Aidos      /varset bln_burning TRUE
+    /dex Erinyas    /varset bln_burning TRUE
+    /dex Ophelia    /varset bln_burning TRUE
+    /dex Ania       /varset bln_burning TRUE
+    /dex Achlys     /varset bln_burning TRUE
+    /dex Achos      /varset bln_burning TRUE
+    /dex Xaia       /varset bln_burning TRUE
+    /dex Xepatia    /varset bln_burning TRUE
+    /dex Ophenia    /varset bln_burning TRUE
+    /dex Ophemia    /varset bln_burning TRUE
+    /dex Xaexa      /varset bln_burning TRUE
 /return 
 
 Sub EVENT_burn2b
-    /dex Erinyes    /varset bln_BURNMode TRUE
-    /dex Xaeliea    /varset bln_BURNMode TRUE
-    /dex Adikia     /varset bln_BURNMode TRUE
-    /dex Opheoia    /varset bln_BURNMode TRUE
-    /dex Ophexia    /varset bln_BURNMode TRUE
-    /dex Ertres     /varset bln_BURNMode TRUE
-    /dex Aergia     /varset bln_BURNMode TRUE
-    /dex Ophidia    /varset bln_BURNMode TRUE
-    /dex Ophezia    /varset bln_BURNMode TRUE
-    /dex Opheyia    /varset bln_BURNMode TRUE
+    /dex Erinyes    /varset bln_burning TRUE
+    /dex Xaeliea    /varset bln_burning TRUE
+    /dex Adikia     /varset bln_burning TRUE
+    /dex Opheoia    /varset bln_burning TRUE
+    /dex Ophexia    /varset bln_burning TRUE
+    /dex Ertres     /varset bln_burning TRUE
+    /dex Aergia     /varset bln_burning TRUE
+    /dex Ophidia    /varset bln_burning TRUE
+    /dex Ophezia    /varset bln_burning TRUE
+    /dex Opheyia    /varset bln_burning TRUE
 /return
 

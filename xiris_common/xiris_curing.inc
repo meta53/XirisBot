@@ -1,6 +1,6 @@
 |**
 ----------------------------
-CURING DEBUFF HANDLERS updated version 07.28.22
+xiris_curing.inc
 ----------------------------
 This include contains logic for curing self/group debuffs.
 Useful for raids like Txevu

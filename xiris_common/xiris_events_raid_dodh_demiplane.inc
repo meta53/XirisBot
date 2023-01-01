@@ -1,9 +1,8 @@
 |**
 ----------------------------
-EVENTS_DODH_DEMIPLANE.INC updated version 12.04.11
+xiris_events_raid_dodh_demiplane.inc
 ----------------------------
-This was written ground up for usage with xiris's bots
-NOTE: this requires ACTIVE HACKS.
+Event Handlers for the DODH raids in Demiplane of Blood
 ______________________________________________
 REQUIRED PLUGINS
     mq2mmoreachit

@@ -1,6 +1,6 @@
 |**
 ----------------------------
-Looting HANDLERS
+xiris_looting.inc
 ----------------------------
 This includes the looting setup (INI READ)
 and sub routines as necessary

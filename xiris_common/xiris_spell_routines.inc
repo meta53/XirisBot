@@ -1,18 +1,19 @@
 |**
 ----------------------------
-XIRIS_SPELL_ROUTINES.INC
+xiris_spell_routines.inc
 ----------------------------
-This MQ2Cast_Spell_Routines.inc is much like The normal Spell_Routines.inc by Rusty~ this macro 
-use the MQ2Cast Plugin by s0rcier
+This file is similar to the normal Spell_Routines.inc by Rusty~ and edited by TreeHuggingDruid
+This file modified the default handlers and includes a handler for MQ2Medley (bards)
+This macro uses the MQ2Cast Plugin by s0rcier
 ______________________________________________
 REQUIRED PLUGINS
-    
+    MQ2Cast
 ______________________________________________
 REVISION HISTORY
 	04.06.22	xiris	Changed name to xiris_spell_routines.inc to avoid conflics with mmoloader updates
 						Incorprated some changes from Devestator's version
 	04.24.22	xiris	Incorporated some of the methods form mmobug's version written by Pete Sampras
-
+	12.31.22	xiris	Added MQ2Medley which allows bards to cast like MQ2Cast does
 ______________________________________________
 
   Cast: the main subroutine that casts spells or items for you 
@@ -165,6 +166,40 @@ Sub xbot_initialize_spellRoutines
 		}
 	}
 	
+/return
+
+| Note the _token must be a string "song|alt aa name|item name"
+Sub MQ2Medley(string _type, string _token, int _targetID, bool _interrupt)
+    
+    /declare argstring string local "${_token}" -targetid|${_targetID}
+    /if (${_interrupt}) /varset argstring "${_token}" -interrupt -targetid|${_targetID}
+    /declare castTime int  local
+
+    /cecho \aoMQ2Medley \ag${_type} \ay${argstring}
+    /echo 
+  
+    /if (${_type.NotEqual[ITEM]}) {
+        /varcalc castTime (${Spell[${_token}].CastTime} / 100)+20
+        /medley queue ${argstring}
+        /delay ${castTime}
+    } else {
+        /autoinv
+        /varcalc castTime (${FindItem[${_token}].CastTime} / 100)+20
+        |/cecho \awItem! "${_token}" ${FindItem[${_token}].CastTime} ${castTime}
+        | if the item is not in wornslot or slot 30
+        | Check to see if worn, if so we can just click
+        | MQ2Exchange requries ITEMNAME
+        /if (${FindItem[${_token}].InvSlot} <=30) {
+            /medley queue ${argstring}
+            /if (${_interrupt}) /delay ${castTime}
+        } else {
+            | Swap the item with whatever is in slot 30
+            /exchange "${_token}" 30
+            /delay 10
+            /medley queue ${argstring}
+            /if (${_interrupt}) /delay ${castTime}
+        }
+    }
 /return
 
 

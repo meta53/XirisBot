@@ -1,6 +1,6 @@
 |**
 ----------------------------
-MQ2DANNET Utilities
+xiris_dannet.inc
 ----------------------------
 This file includes various utilities to help querying members with mq2dannet
 

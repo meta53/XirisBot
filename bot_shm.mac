@@ -123,9 +123,9 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 			|-- std library (burns/aa/clicks)
 			/call RunRaidEvents
     		/call RunClassEvents
-			/call chkAAs
+			/call chkAA
 			/call chkBurn
-			/call chkClicks
+			/call chkClicky
 		} else {
 			|-- check utilities, includes: sit,loot,leash (out of combat only) and only once every 10 seconds
 			/if (!${timer_check_utilities}) /call chkUtils

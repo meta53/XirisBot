@@ -1,6 +1,6 @@
 |**
 ----------------------------
-BUFFING HANDLERS updated version 01.14.22 
+xiris_buffing.inc
 ----------------------------
 This include contains logic for buffing raid/groups
 

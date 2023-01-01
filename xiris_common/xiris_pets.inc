@@ -1,6 +1,6 @@
 |**
 ----------------------------
-Pet HANDLERS updated version 08.01.19 
+xiris_pets.inc
 ----------------------------
 This include contains logic for pet spawning/buffing/etc
 
@@ -10,7 +10,6 @@ ______________________________________________
 REVISION HISTORY
     08.01.19    xiris 	INITIAL REVISION
 	06.29.22	xiris 	Changed the chkPet to only chkPetWeapons if its a new pet
-	
 **|
 
 

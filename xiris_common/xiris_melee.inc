@@ -1,8 +1,18 @@
 |**
 ----------------------------
-MELEE HANDLERS updated version 08.02.18
+xiris_melee.inc
 ----------------------------
-This library suppliments mq2melee functionality
+This library supplements|replaces mq2melee functionality
+
+Manual Downshits since mq2melee was being flakey at the time
+	Storing downflags in the BOT_CLS_Tooname.ini under the [downflags]
+	note the second token area isd the casting arguments in full
+	Usage downflagX=BuffName|itemID item|(opt)Target
+
+	[Downflags]
+		downflagCount=6
+		downflag1=E'ci's Icy Familiar|"E'ci's Icy Familiar" alt
+		downflag2=Form of Endurance II|9435 item
 ______________________________________________
 REVISION HISTORY
     11.09.17    xiris	INITIAL REVISION - Handling of clickies and other things
@@ -15,15 +25,7 @@ REVISION HISTORY
 	06.29.22	xiris 	Updated all events to only be either generic, or [/gsay, /rsay, /tell, MQ2DanNet(dgt, dt)] only
 **|
 
-|-- Manual Downshits since mq2melee was being flakey at the time
-|   Storing downflags in the BOT_CLS_Tooname.ini under the [downflags]
-|   note the second token area isd the casting arguments in full
-|   Usage downflagX=BuffName|itemID item|(opt)Target
-
-|	[Downflags]
-|		downflagCount=1
-|		downflag1=Aura of White Petals|28953 item
-
+|-- 
 #EVENT RESTICK			"#*#restick#*#"
 #EVENT AERAMP			"#*#aerampON#*#"
 #EVENT GETCLOSER		"Your target is too far away, get closer!"
@@ -98,23 +100,26 @@ Sub EVENT_NoDS(_line, _sender, _eventParams)
 	/declare ds int local 
 	/for ds 1 to ${dsSpellTotal} 
 		/call RemoveBuff ${dsSpells[${ds}]}
+		/delay 5
 	/next ds
-
-	| if I am a bard, switch to the noDS medley
-	/if (${Me.Class.ShortName.Equal[BRD]} && ${Medley.Active})	/medley stop
-	/if (${Me.Class.ShortName.Equal[BRD]} && !${Medley.Active}) /medley nods
-	/if (${Me.Class.ShortName.Equal[BRD]}) /varset str_currentMedley nods
+	/if (${Me.Class.ShortName.Equal[BRD]}) {
+		/varset str_savedMedley ${str_currentMedley}
+		/varset str_currentMedley nods
+		/medley ${str_currentMedley}
+	}	
+	:return
 	/doevents flush NoDS
 /return
 
-Sub EVENT_YesDS(_line, _sender, _eventParams)
-	/echo turning on DS
+Sub EVENT_YesDS(_line, _sender, _eventParams)s
 	/varset bln_useDS TRUE
-
-	| if I am a bard, switch to the normal medley
-	/if (${Me.Class.ShortName.Equal[BRD]} && ${Medley.Active})	/medley stop
-	/if (${Me.Class.ShortName.Equal[BRD]} && !${Medley.Active}) /medley melee
-	/if (${Me.Class.ShortName.Equal[BRD]}) /varset str_currentMedley melee
+	/if (${Me.Class.ShortName.Equal[BRD]}) {
+		/cecho \aoTurning on ${str_savedMedley} Medley
+		/memspellset ${str_savedMedley}
+		/delay 10
+		/medley ${str_savedMedley}
+	}
+	:return
 	/doevents flush YesDS
 /return
 
@@ -266,7 +271,7 @@ Sub chkDownshits
 				/call RunAllEvents	
 				/if (${bln_engaged}) /return
 				|/echo BuffName: ${buffName} castArg: ${castArg} tgtID: ${tgtID} ready: ${Me.SpellReady[${buffName}]} isSpell: ${isSpell} ?: ${castArg.Find[item]}
-				|/echo Stacks? ${Spell[${buffName}].Stacks} && Do I have it? !${Bool[${Me.Buff[${buffName}].ID}]}
+				|/echo Stacks? ${Spell[${buffName}].Stacks} && Do I have it? ${Bool[${Me.Buff[${buffName}].ID}]}
 				/if (${Spell[${buffName}].Stacks} && !${Bool[${Me.Buff[${buffName}].ID}]}) {
 					/if (${isSpell} && !${Me.SpellReady[${buffName}]}) {
 						/cecho \ay${buffName} \awis \arNOT \awReady, Memorizing
@@ -282,40 +287,17 @@ Sub chkDownshits
 					
 					| - Bard specific handler using mq2medley
 					| - Note mq2medley will not auto swap items!
+					/varset itemArgs ${downflag${df}.Token[2,|]}
+					/varset itemID ${itemArgs.Token[1, ]}
+					/if (!${FindItem[${itemID}].ID} && !${isSpell}) {
+						/cecho \arCannot find downflag_${df}: \aw${itemID}!
+						/goto :nextDF
+					}
 					/if (${Me.Class.ShortName.Equal[BRD]}) {
-						/varset itemArgs ${downflag${df}.Token[2,|]}
-						/varset itemID ${itemArgs.Token[1, ]}
-						/varset itemName ${FindItem[${itemID}]}
-						/varcalc castTime ${FindItem[${itemID}].CastTime} / 1000
-						/echo bard downshit : ${itemID} ${itemName} ${castTime}
-						/autoinv
-						|-- check if the item is worn or in a bag. If its in a bag, we need to exchange it
-						|   to at least our open inventory slot 30
-
-						| Slot the item is supposed to be worn in
-						| Note, instead put it in the the empty inventory slot 8 InvSlot[30]
-						| this is more reliable and if the toon dies, you dont have orphan crap equipped
-						|/varset wornSlot ${InvSlot[${FindItem[=${itemName}].WornSlot[1]}].Name}
-						| Item that is currently in that slot
-						|/varset itemInSlot ${InvSlot[${wornSlot}].Item.Name}
-						/varset itemInSlot ${InvSlot[30].Item.Name}
-						/varset wornSlot 30
-						/if (${itemInSlot.Equal[NULL]}) {
-							| Nothing is in, so move the item to the slot
-						}
-						| exchange itemName with itemInSlot
-						/cecho \ay Exchanging \ag${itemName} \ayin \ag${wornSlot} \ar(${itemInSlot})
-						/exchange "${itemName}" ${wornSlot}
-
-						/if (!${Medley}) /medley ${str_currentMedley}
-						/medley queue "${itemName}" -interrupt
-						/delay ${castTime}s
-		
-						| exchange itemInSlot with itemName (back to the way it was)
-						/if (${itemInSlot.NotEqual[NULL]}) {
-							/delay 2s
-							/cecho \ag Returning \ay${itemInSlot}\ag to \ay${wornSlot}
-							/exchange "${itemInSlot}" ${wornSlot}
+						/if (!${isSpell}) {
+							/call MQ2Medley ITEM "${FindItem[${itemID}]}" ${Me.ID} TRUE
+						} else {
+							/call MQ2Medley SONG ${buffName} ${Me.ID} TRUE
 						}
 					} else {
 						/cecho \ayDownflag (\ag${df}\ay) Casting \ay${buffName} \ag${downflag${df}.Token[2,|]}
@@ -334,7 +316,7 @@ Sub chkDownshits
 			}
 
 		}
-		/varset timer_check_downshits 45s
+		/varset timer_check_downshits 30s
 	}
 /return
 

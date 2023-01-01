@@ -1,9 +1,8 @@
 |**
 ----------------------------
-EVENTS_OOW_MPG_ADAPTATION.INC
+xiris_events_raid_mpg_adaptation.inc
 ----------------------------
-This was written ground up for usage with xiris's bots
-NOTE: this requires MQ2NAV
+Event Handlers for the MPG: Trial of Adaptation raid.
 ______________________________________________
 REQUIRED PLUGINS
 	mq2nav

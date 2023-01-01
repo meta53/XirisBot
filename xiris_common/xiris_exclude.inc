@@ -3,6 +3,23 @@
 	/if (!${ExcludeList.Find[${Spawn[${mobID}]}].Name}) /continue
 **|
 
+|**
+----------------------------
+xiris_exclude.inc
+----------------------------
+Exclusion List for Mobs to ignore. 
+Organized in xiris_exclude.ini by global or by zone
+Used by autotargetters (offtanking, pulling)
+______________________________________________
+REQUIRED PLUGINS
+    
+______________________________________________
+REVISION HISTORY
+	04.03.13    xiris   INITIAL REVISION
+	12.12.22	xiris	Added methods for adding exclusions on the fly
+______________________________________________
+**|	
+
 #EVENT REFRESHEXCLUSIONS 	"#1# tells the group#*#'RefreshExclusions#*#'"
 #EVENT REFRESHEXCLUSIONS	"#1# tells you#*#'RefreshExclusions#*#'"
 #EVENT REFRESHEXCLUSIONS	"#1# tells the raid#*#RefreshExclusions#*#'"

@@ -1,12 +1,13 @@
 |**
 ----------------------------
-XIRIS_FOLLOW.INC
+xiris_movement.inc
 ----------------------------
 This was written ground up for usage with xiris's bots
 Allows to bln_following via stick or nav
 ______________________________________________
 REQUIRED PLUGINS
-    
+    mq2nav
+	mq2moveutils
 ______________________________________________
 REVISION HISTORY
 	04.05.22    xiris   INITIAL REVISION

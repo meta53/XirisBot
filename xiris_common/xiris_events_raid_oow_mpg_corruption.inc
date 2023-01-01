@@ -1,9 +1,8 @@
 |**
 ----------------------------
-EVENTS_OOW_MPG_CORRUPTION.INC
+xiris_events_raid_mpg_corruption.inc
 ----------------------------
-This was written ground up for usage with xiris's bots
-NOTE: this requires MQ2NAV
+Event Handlers for the MPG: Trial of Corruption raid.
 ______________________________________________
 REQUIRED PLUGINS
 	mq2nav

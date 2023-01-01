@@ -1,8 +1,8 @@
 |**
 ----------------------------
-SPELL/CASTING HANDLERS
+xiris_casting.inc
 ----------------------------
-This library supplements/abstracts mq2cast functionality
+SPELL/CASTING HANDLERS. This library supplements/abstracts mq2cast functionality
 ______________________________________________
 REVISION HISTORY
     11.09.17    xiris	INITIAL REVISION - Handling of clickies and other things
@@ -11,6 +11,7 @@ REVISION HISTORY
 	04.16.22	xiris	Added chkStun and support for Stun Locking
 	05.08.22	xiris	Added support for bards in Nuke/DOT
 	06.13.22	xiris   Removed resist events as the xiris_spell_routines.inc handles that.
+	12.31.22	xiris	Changed Bards medley calls to use new method in spell_routines.inc
 **|
 
 
@@ -98,8 +99,7 @@ Sub Events_Casting_DOT
 **|
 
 Sub chkNuke
-
-	/if (!${bln_engaged}) 		/return
+	/if (!${bln_engaged} || !${Target.ID}) 		/return
 	/if (${bln_useFastOnly})	/return
 	/if (${NUKE_Total} == 0)    /return 
 	/if (${AENUKE_Active}) 		/return
@@ -183,9 +183,8 @@ Sub chkNuke
 			|-- All this ready, check for LOS/Distance/Mana
 			/if (${Target.PctHPs}<=${NUKE_${i}_StartHP} && ${Target.PctHPs}>=${NUKE_${i}_StopHP}) {
 				/if (${Me.CurrentMana}>=${Spell[${NUKE_${i}_Spell}].Mana} && ${Target.Distance}<=${Spell[${NUKE_${i}_Spell}].Range} && ${Target.LineOfSight}) {
-					/cecho \agTimer ready for \ay${NUKE_${i}_Spell} :: \ay${NUKE_${i}_DelayTimer} \awSpellReady?\ag${Me.SpellReady[${NUKE_${i}_Spell}]} ${Target.PctHPs}<=${NUKE_${i}_StartHP} && ${Target.PctHPs}>=${NUKE_${i}_StopHP})	
 					/if (${Me.Class.ShortName.Equal[BRD]}) {
-						/medley queue "${NUKE_${i}_Spell}"
+						/call MQ2Medley SONG "${NUKE_${i}}" ${int_targetID} FALSE
 						/cecho \ag ${NUKE_${i}_Spell}  : DELAYING for \ay${NUKE_${i}_DelayTimer.OriginalValue}s \agrefresh	
 					} else {
 						/call MQ2Cast "${NUKE_${i}_Spell}"	
@@ -207,7 +206,7 @@ Sub chkNuke
 /return
 
 Sub chkQNuke
-	/if (!${bln_engaged}) 		 /return
+	/if (!${bln_engaged} || !${Target.ID}) 		/return
 	/if (${QNUKE_Total} == 0) /return 
 	/if (${AENUKE_Active}) 		 /return
 	/if (${QNUKE_DelayTimer} && ${QNUKE_HasCastOnce})	 	/return 
@@ -289,9 +288,8 @@ Sub chkQNuke
 			|-- All this ready, check for LOS/Distance/Mana
 			/if (${Target.PctHPs}<=${QNUKE_${i}_StartHP} && ${Target.PctHPs}>=${QNUKE_${i}_StopHP}) {
 				/if (${Me.CurrentMana}>=${Spell[${QNUKE_${i}_Spell}].Mana} && ${Target.Distance}<=${Spell[${QNUKE_${i}_Spell}].Range} && ${Target.LineOfSight}) {
-					
 					/if (${Me.Class.ShortName.Equal[BRD]}) {
-						/medley queue "${QNUKE_${i}_Spell}"
+						/call MQ2Medley SONG "${QNUKE_${i}}" ${int_targetID} FALSE
 						/cecho \ag ${QNUKE_${i}_Spell}  : DELAYING for \ay${QNUKE_${i}_DelayTimer.OriginalValue}s \agrefresh	
 					} else {
 						/call MQ2Cast "${QNUKE_${i}_Spell}"	
@@ -371,7 +369,7 @@ Sub chkAENuke
  ----------------------------
 **|
 Sub chkStun(bool _memorize)
-	/if (!${bln_engaged}) 		 /return
+	/if (!${bln_engaged} || !${Target.ID}) 		/return
 	/if (${STUN_Total} == 0)  /return 
 	/if (${STUN_DelayTimer} && ${STUN_HasCastOnce})	 	/return 
 
@@ -454,9 +452,9 @@ Sub chkStunLockStop
 **|
 
 Sub chkDOT
-	/if (!${bln_engaged}) 		/return
+	/if (!${bln_engaged} || !${Target.ID}) 		/return
 	/if (${bln_useFastOnly}) 	/return
-	/if (${DOT_Total} == 0)	/return 
+	/if (${DOT_Total} == 0)		/return 
 	/if (${AENUKE_Active}) 		/return
 	/if (${DOT_DelayTimer} && ${DOT_HasCastOnce})	 	/return 
 
@@ -470,7 +468,6 @@ Sub chkDOT
 	/declare isNamed bool local FALSE
 	/call TargetNamedCheck ${Target.ID}
 	/varset isNamed ${Macro.Return}
-	/echo chkDOT ${isNamed}
 
 	|-- target HP and my mana check
 	/if (${isNamed}  && (${Target.PctHPs} < ${DOT_StopHPIfNamed}))		/return
@@ -544,7 +541,7 @@ Sub chkDOT
 				/if (${Me.CurrentMana}>=${Spell[${DOT_${i}_Spell}].Mana} && (${Me.SpellReady[${DOT_${i}_Spell}]} || ${Me.Class.ShortName.Equal[BRD]}) && ${Target.Distance}<=${Spell[${DOT_${i}_Spell}].Range} && ${Target.LineOfSight} && (${DOT_${i}_RecastTimer} <= 0)) {
 					/varset dotDuration ${Spell[${DOT_${i}_Spell}].Duration.TotalSeconds}
 					/if (${Me.Class.ShortName.Equal[BRD]}) {
-						/medley queue "${DOT_${i}_Spell}"
+						/call MQ2Medley SONG "${DOT_${i}}" ${int_targetID} FALSE
 						/cecho \ag ${DOT_${i}_Spell}  : DELAYING for \ay${dotDuration}s \agrefresh	
 					} else {
 						/call MQ2Cast "${DOT_${i}_Spell}"	
@@ -790,26 +787,26 @@ Sub GetResistTypes
 
 /return
 
-Sub setSpellSet(string _type)
+Sub SetSpellSet(string _type)
 	/memspellset ${_type}
 	/varset str_spellset ${_type}
 /return 
 
 | Create the ability to pass a CSV|CSV list of new spells to cast for a type
 | for specific events that we need to change the spell lineup for like Hanvar
-|  example: /call setSpellLineUp DOT 2  "Blood of Thule"|TRUE|8|2|TRUE|100|0|Poison|FALSE|0,"Chaos Venom"|TRUE|9|2|TRUE|100|0|Poison|FALSE|0
+|  example: /call SetSpellLineUp DOT 2  "Blood of Thule"|TRUE|8|2|TRUE|100|0|Poison|FALSE|0,"Chaos Venom"|TRUE|9|2|TRUE|100|0|Poison|FALSE|0
 |  prefix count line,line
-Sub setSpellLineUp(string _type, int _count, string _blob)
+Sub SetSpellLineUp(string _type, int _count, string _blob)
 	
-	/call clearSpellLineUp ${_type}
+	/call ClearSpellLineUp ${_type}
 
 	/declare s int local 1
 	/for s 1 to ${_count}
-		/call addSpellToLineup ${_type} ${s} "${_blob.Arg[${s},,]}"
+		/call AddSpellToLineup ${_type} ${s} "${_blob.Arg[${s},,]}"
 	/next s
 /return
 
-Sub addSpellToLineup(string _type, int _index, string _line)
+Sub AddSpellToLineup(string _type, int _index, string _line)
 	/cecho \awAdding Spell to Lineup: \aoType:\ag${_type} \aoIndex:\ag${_index} \aoArgs:\ag${_line}
 	/declare propertyList string local ${${_type}_Template}
 	/declare propertyCount int local ${propertyList.Count[|]}
@@ -836,7 +833,7 @@ Sub addSpellToLineup(string _type, int _index, string _line)
 /return
 
 
-Sub clearSpellLineUp(string _prefix)
+Sub ClearSpellLineUp(string _prefix)
 	/declare i int local 
 	/declare j int local
 
@@ -857,6 +854,7 @@ Sub clearSpellLineUp(string _prefix)
 | Reloads entire spell lineup from INI
 Sub CreateCastingLineup 
 	/declare i 							int		local
+
 	|-- Nukes
 	/declare NUKE_Total					int		outer	${Ini[botINI,NUKE,NUKE_Total,0]}	
 	/declare NUKE_DelayTimer			timer	outer	${Ini[botINI,NUKE,NUKE_DelayTimer,1s]}
@@ -869,11 +867,11 @@ Sub CreateCastingLineup
 	/declare NUKE_StopHPIfNamed			int 	outer 	${Ini[botINI,NUKE,NUKE_StopHPIfNamed,0]}
 	/if (${Bool[${NUKE_Total}]}) {
 		/for i 1 to ${NUKE_Total} 
-			/call addSpellToLineup NUKE ${i} ${Ini[botINI,NUKE,NUKE_${i}]}
+			/call AddSpellToLineup NUKE ${i} ${Ini[botINI,NUKE,NUKE_${i}]}
 		/next i
 	}
 
-		|--AE Nuke
+	|--AE Nuke
 	/declare AENUKE_Active				bool	outer   FALSE
 	/declare AENUKE_Total 				int		outer	${Ini[botINI,AENUKE,AENUKE_Total,0]}	
 	/declare AENUKE_DelayTimer			timer	outer	${Ini[botINI,AENUKE,AENUKE_DelayTimer,0]}
@@ -882,7 +880,7 @@ Sub CreateCastingLineup
 	/declare AENUKE_StopHP				int		outer	${Ini[botINI,AENUKE,AENUKE_StopHP,0]}
 	/if (${Bool[${AENUKE_Total}]}) {
 		/for i 1 to ${AENUKE_Total} 
-			/call addSpellToLineup AENUKE ${i} ${Ini[botINI,AENUKE,AENUKE_${i}]}
+			/call AddSpellToLineup AENUKE ${i} ${Ini[botINI,AENUKE,AENUKE_${i}]}
 		/next i
 	}
 
@@ -899,7 +897,7 @@ Sub CreateCastingLineup
 	/declare QNUKE_StopHPIfNamed		int 	outer 	${Ini[botINI,QNUKE,QNUKE_StopHPIfNamed,0]}
 	/if (${Bool[${QNUKE_Total}]}) {
 		/for i 1 to ${QNUKE_Total} 
-			/call addSpellToLineup QNUKE ${i} ${Ini[botINI,QNUKE,QNUKE_${i}]}
+			/call AddSpellToLineup QNUKE ${i} ${Ini[botINI,QNUKE,QNUKE_${i}]}
 		/next i	
 	}
 
@@ -911,12 +909,12 @@ Sub CreateCastingLineup
 	/declare STUN_UseLocking			bool	outer	FALSE
 	/if (${Bool[${STUN_Total}]}) {
 		/for i 1 to ${STUN_Total} 
-			/call addSpellToLineup STUN ${i} ${Ini[botINI,STUN,STUN_${i}]}
+			/call AddSpellToLineup STUN ${i} ${Ini[botINI,STUN,STUN_${i}]}
 		/next i	
 	}
 
 	|-- DOTs MOAR DOTS!
-	|--FAST Damage Over Time
+	|--FAST Damage Over Time (note, not really useful on EMU due to era)
 	/declare QDOT_Total					int		outer	${Ini[botINI,QDOT,QDOT_Total,0]}
 	/declare QDOT_TotalIfNamed			int		outer	${Ini[botINI,QDOT,QDOT_TotalIfNamed,${QDOT_Total}]}
 	/declare QDOT_DelayTimer			timer	outer	${Ini[botINI,QDOT,QDOT_DelayTimer,1s]}
@@ -929,10 +927,9 @@ Sub CreateCastingLineup
 	/declare QDOT_StopHPIfNamed			int 	outer 	${Ini[botINI,QDOT,QDOT_StopHPIfNamed,5]}
 	/if (${Bool[${QDOT_Total}]}) {
 		/for i 1 to ${QDOT_Total} 
-			/call addSpellToLineup QDOT ${i} ${Ini[botINI,QDOT,QDOT_${i}]}
+			/call AddSpellToLineup QDOT ${i} ${Ini[botINI,QDOT,QDOT_${i}]}
 		/next i	
 	}
-
 
 	|--Damage Over Time
 	/declare DOT_Total					int		outer	${Ini[botINI,DOT,DOT_Total,0]}
@@ -947,7 +944,7 @@ Sub CreateCastingLineup
 	/declare DOT_StopHPIfNamed			int 	outer 	${Ini[botINI,DOT,DOT_StopHPIfNamed,0]}
 	/if (${Bool[${DOT_Total}]}) {	
 		/for i 1 to ${DOT_Total} 
-			/call addSpellToLineup DOT ${i} ${Ini[botINI,DOT,DOT_${i}]}
+			/call AddSpellToLineup DOT ${i} ${Ini[botINI,DOT,DOT_${i}]}
 		/next i
 	}
 /return
@@ -956,6 +953,7 @@ Sub CreateCastingLineup
 Sub xbot_initialize_casting
 	/cecho \aoxbot_initialize_casting
 
+	|- [Settings] : Casting 
 	|-- Initial Spellset
 	/declare	str_spellset				string  outer 	default
 

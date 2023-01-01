@@ -130,6 +130,9 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 		|-- Check to see if we are autorezzing
 		/call chkRez
 
+		|-- Check Divine Arbitration Flag
+		/if (!${bln_DARBReady}) /call chkDARBReady
+
 		|-- Check Auto Assist if its on
 		/if (${bln_autoAssist}) /call chkAutoAssist
 		
@@ -159,9 +162,9 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 				|-- std library (burns/aa/clicks)
 				/call RunRaidEvents
 				/call RunClassEvents
-				/call chkAAs
+				/call chkAA
 				/call chkBurn
-				/call chkClicks
+				/call chkClicky
 			}
 		} else {
 			|-- check utilities, includes: sit,loot,leash (out of combat only) and only once every 10 seconds
@@ -262,7 +265,6 @@ Sub CombatRezOFF
 |**
 ----------------------------
 Check|Set to see if Divine Arbitration is Ready
-Note: Not currently in use.
 ----------------------------  
 **|
 Sub chkDARBReady
@@ -270,6 +272,12 @@ Sub chkDARBReady
 	/if (${Me.AltAbilityReady[divine arbitration]} || !${FindItem[${str_epicName}].Timer}) /varset bln_DARBReady TRUE
 /return
 
+
+|**
+----------------------------
+Check|Set to see if Divine Intervention is Ready
+----------------------------  
+**|
 Sub chkDivineIntervention
 	/if (${FindItemCount[Emerald]} && ${Me.SpellReady[Divine Intervention]} && !${NetBots[${Target.Name}].Buff[Divine Intervention].Name.Equal[Divine Intervention]}) {
 		/say Casting Divine Intervention on ${Target.Name}!
