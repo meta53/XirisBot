@@ -130,6 +130,7 @@ Sub EVENT_RiposteDisc(_line, _sender, _eventParams)
 /return
 
 Sub FireRiposteDisc
+	/cecho \aoFiring Riposte Disc!
 	:monk
 	/if (${Me.Class.ShortName.Equal[MNK]}) {
 		/if (${Me.CombatAbilityReady[Whirlwind Discipline]}) {
@@ -189,12 +190,12 @@ Sub Event_AutoAssist(string _eventParams)
 /return
 
 Sub AutoAssistON
-	/dgt ${Me.Name} is now AutoAssisting!
+	/dgt ${Me.Name} is now Auto Assisting!
 	/varset bln_autoAssist TRUE
 /return
 
 Sub AutoAssistOFF
-	/dgt ${Me.Name} is no longer AutoAssisting.
+	/dgt ${Me.Name} is no longer Auto Assisting.
 	/varset bln_autoAssist FALSE
 /return
 
