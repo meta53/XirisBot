@@ -22,6 +22,8 @@ REVISION HISTORY
 	05.13.22	xiris	Reduced events to BC only		
 	06.13.22	xiris	Restored events for Group/Party/Raid due to need to split raids sometimes (multiple camp pulling)	
 	06.29.22	xiris 	Updated all events to only be either generic, or [/gsay, /rsay, /tell, MQ2DanNet(dgt, dt)] only	
+	01.02.23	xiris	Removed chkOOC buffs as auto casting due to never using it, and mostly getting in the way.
+	01.03.23	xiris	Reworked buffing slightly (naming convention mostly)
 **|
 
 #EVENT DORAIDBUFFS			"#1# tells the group#*#'doRaidBuffs #2#'"
@@ -624,79 +626,6 @@ Sub chkBuffByType(string _key)
 		}
 	}
 /return ${hasBuffType}
-
-
-
-|-- check OOC Buffs for myself
-Sub chkOOCBuffs
-	|- downshitif (this is essentially a downshit)
-	/if ((${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]}) || ${Me.Moving} || !${bln_doAutoBuff} || (${SpawnCount[npc radius 55]}>0 && (${Zone.ID} != 340 && ${Zone.ID} != 344 && ${Zone.ID} != 345)) || ${Me.Feigning} || ${Me.Invis}) { 
-		/return
-	}
-
-	/declare i    		  int		local
-	/declare buffSpell    string	local
-	/declare buffGem	  string	local
-	/declare hadToMemBuffs bool     local FALSE
-
-	/for i 1 to ${int_oocBuffTotal}
-		/call RunAllEvents
-		/if (${bln_engaged}) /return
-		/varset 	buffSpell    ${OOCBUFF_${i}}
-		/if (!${Bool[${Me.Spell[${buffSpell}]}]}) {
-			|/echo I dont have this spell
-			/goto :next
-		}
-		/if (${Bool[${Me.Buff[${buffSpell}].ID}]} || !${Bool[${Spell[${buffSpell}].Stacks}]}) {
-			|/echo already have buff or it does not stack, doing next
-			/goto :next
-		}
-		/if (!${Me.SpellReady[${buffSpell}]}) {
-			/memspellset buff
-			/memspellset buffs
-			/varset hadToMemBuffs TRUE
-		}
-		
-		/cecho \awOOC Buff: \ag${buffSpell}
-		/varset		buffGem		 ${OOCBUFF_${i}_Gem}
-
-		:spellReadyWait
-		/if (!${Me.SpellReady[${buffSpell}]}) {
-			/call chkSpellMemorized "${buffSpell}" TRUE
-			/delay 10
-			/goto :spellReadyWait
-		}
-		
-		/call RunAllEvents
-		
-		/if (!${Me.SpellReady[${buffSpell}]} || ${Me.CurrentMana} < ${Spell[${buffSpell}].Mana}) {
-			/echo Waiting for ${buffSpell} for buff to be ready, or mana...
-			/if (${Me.Standing}) /sit
-			/delay 30
-			/goto :spellReadyWait
-		}
-
-		/if (!${Me.Standing}) /stand on
-		/keypress f1
-		/if (${Me.SpellReady[${buffSpell}]}) {
-			/echo Cast "${buffSpell}" on MYSELF
-			/call MQ2Cast "${buffSpell}" ${buffGem} 10s
-			/delay 10
-			/if (${Cast.Result.Equal[CAST_FIZZLE]})  		/goto :spellReadyWait
-			/if (${Cast.Result.Equal[CAST_OUTOFMANA]})  	/goto :spellReadyWait
-			/if (${Cast.Result.Equal[CAST_CANNOTSEE]})  	/goto :spellReadyWait
-			/if (${Cast.Result.Equal[CAST_OUTOFRANGE]}) 	/goto :spellReadyWait
-			/if (${Cast.Result.Equal[CAST_INTERRUPTED]}) 	/goto :spellReadyWait
-			/if (${Cast.Result.Equal[CAST_NOTREADY]}) 		/goto :spellReadyWait
-		}
-		
-	:next
-	/next i
-	
-	:return
-	/if (${hadToMemBuffs}) /memspellset ${str_spellset}
-	/call TrueTarget ${int_targetID}
-/return
 
 
 

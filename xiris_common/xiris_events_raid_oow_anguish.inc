@@ -321,7 +321,6 @@ Sub Event_HanvarRetreat(string _sender, string _line, string _eventParams)
 		/if (${MeleeClasses.Find[${Me.Class.ShortName}]}) {
 			/call Disengage
 			/nav wp hanvarSafe
-			|/warp wp hanvarSafe
 		} 
 	}
 	/doevents flush HanvarRetreat
@@ -332,8 +331,9 @@ Sub Event_HanvarKill(string _sender, string _line, string _eventParams)
 	/if (${SpawnCount[npc guard]}) /return
 	/if (${MeleeClasses.Find[${Me.Class.ShortName}]} ) {
 		/call TrueTarget ${Spawn[npc Hanvar].ID}
-		|/warp b 10
-		/nav wp hanvarTank
+		/if (${Target.Distance3D} > 20) {
+			/nav wp hanvarTank
+		}
 		/call EngageTarget ${Spawn[npc Hanvar].ID}
 	} else /if (${CasterClasses.Find[${Me.Class.ShortName}]}) {
 		/call EngageTarget ${Spawn[npc Hanvar].ID}

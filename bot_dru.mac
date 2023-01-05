@@ -85,10 +85,6 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 		/call chkHeal_MT
 		/call chkHeal_Self
 		/call chkHeal_Group
-		
-		|-- Check for out of combat buffs
-		/call RunAllEvents
-		/call chkOOCBuffs
 
 		|-- Check Auto Assist if its on
 		/if (${bln_autoAssist}) /call chkAutoAssist

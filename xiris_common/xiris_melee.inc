@@ -710,5 +710,6 @@ Sub xbot_initialize_melee
 	/declare dsSongsTotal	int		outer   ${Ini[dsListINI,Settings,SongCount,0]}
 	/declare dsSongs[${dsSongsTotal}]	string outer
 
+	| Initialize Library Events
 	/call InitEvents_Melee
 /return

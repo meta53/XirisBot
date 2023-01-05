@@ -204,6 +204,7 @@ Sub MQ2Medley(string _type, string _token, int _targetID, bool _interrupt)
 
 
 Sub MQ2Cast(string spellName,string spellType,timer giveUpTimer,string mySub,string MQ2Feature1,string MQ2Feature2,string MQ2Feature3,string MQ2Feature4,string MQ2Feature5,string MQ2Feature6,string MQ2Feature7,string MQ2Feature8)
+	/cecho \aoMQ2Cast \ag${spellName} \aw ${spellType}
 	/if ( !${Defined[spellType]} )   /declare spellType   string local NULL
 	/if ( !${Defined[giveUpTimer]} ) /declare giveUpTimer timer  local 0
 	/if ( !${Defined[MQ2Feature1]} ) /declare MQ2Feature1 string local
@@ -253,6 +254,11 @@ Sub MQ2Cast(string spellName,string spellType,timer giveUpTimer,string mySub,str
 
 :cast_spell
 	/if ( ${FindItem[=${spellName}].ID} ) {
+		/if (${FindItem[=${spellName}].TimerReady}) {
+			/varset castReturn CAST_NOTREADY
+			/goto :CastEnd
+		}
+
 		/if ( ${Cursor.ID} && ${Me.FreeBuffSlots} ) /autoinventory
 		/if ( ${FindItem[${spellName}].InvSlot.ID} && ${FindItem[${spellName}].InvSlot.ID} > 21 ) {			
 			/if ( ${FindItem[${spellName}].InvSlot.ID} > 30 && ${FindItem[${spellName}].EffectType.Equal[Click Inventory]} || ${FindItem[${spellName}].EffectType.Equal[Click Unknown]} ) {
@@ -266,11 +272,11 @@ Sub MQ2Cast(string spellName,string spellType,timer giveUpTimer,string mySub,str
 	}
 	
 	/if ( ${noInvis} ) {
-		/squelch /casting "${spellName}" ${spellType} "-invis" "${MQ2Feature1}" "${MQ2Feature2}" "${MQ2Feature3}" "${MQ2Feature4}" "${MQ2Feature5}" "${MQ2Feature6}" "${MQ2Feature7}" "${MQ2Feature8}"
+		/casting "${spellName}" ${spellType} "-invis" "${MQ2Feature1}" "${MQ2Feature2}" "${MQ2Feature3}" "${MQ2Feature4}" "${MQ2Feature5}" "${MQ2Feature6}" "${MQ2Feature7}" "${MQ2Feature8}"
 		/varset castReturn ${Cast.Result}
 		/call Events_SpellRoutines
 	} else {
-		/squelch /casting "${spellName}" ${spellType} "${MQ2Feature1}" "${MQ2Feature2}" "${MQ2Feature3}" "${MQ2Feature4}" "${MQ2Feature5}" "${MQ2Feature6}" "${MQ2Feature7}" "${MQ2Feature8}"
+		/casting "${spellName}" ${spellType} "${MQ2Feature1}" "${MQ2Feature2}" "${MQ2Feature3}" "${MQ2Feature4}" "${MQ2Feature5}" "${MQ2Feature6}" "${MQ2Feature7}" "${MQ2Feature8}"
 		/varset castReturn ${Cast.Result}
 		/call Events_SpellRoutines
 	}
@@ -278,6 +284,7 @@ Sub MQ2Cast(string spellName,string spellType,timer giveUpTimer,string mySub,str
 	/if ( ${Cast.Status.Find[C]} ) {
 		/if (${Cast.Result.Equal[CAST_OUTOFREAGENTS]}) 	/goto :CastEnd
 		/if (${Cast.Result.Equal[CAST_NOTARGET]}) 		/goto :CastEnd
+		/if (${Cast.Result.Equal[CAST_NOTREADY]}) 		/goto :CastEnd
 		/if ( !${interruptFlag} && ${mySub.Length} ) 	/call ${mySub}
 		/goto :cast_spell_pending
 	} else /if ( ${Cast.Result.Equal[CAST_RESIST]} ) {

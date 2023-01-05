@@ -29,10 +29,6 @@ ______________________________________________
 #include xiris_common/xiris_events_raid_oow_mpg_specialization.inc
 
 
-| SPECIAL NOTE:
-| Tells have a single space from comma to text
-| GroupSay has 2 spaces from comma to text
-| RaidSay has 2 spaces from comma to text
 
 Sub xbot_initialize_events
     |--Array

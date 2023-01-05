@@ -83,9 +83,6 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 		|-- Check the group for healing (xiris_healing.inc)
 		/call chkHeal_Group
 
-		|-- Check for out of combat buffs (xiris_buffing.inc)
-		/call chkOOCBuffs
-		
 		|-- Check Auto Assist if its on
 		/if (${bln_autoAssist}) /call chkAutoAssist
 		

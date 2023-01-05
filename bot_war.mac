@@ -40,7 +40,6 @@ REQUIRED INCLUDES
 
 
 #include xiris_common/xiris_common.inc
-#warning
 #Turbo 40
 
 Sub InitEvents_Class
@@ -93,7 +92,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 		|-- Check Auto Assist if its on
 		/if (${bln_autoAssist}) /call chkAutoAssist
 		
-		/if (${bln_engaged}) {
+		|/if (${bln_engaged}) {
 			|-- check engaged events
 			/call RunRaidEvents
 			/call RunClassEvents
@@ -107,12 +106,12 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 			/call chkAA
 			/call chkBurn
 			/call chkClicky
-		} else {
+		|} else {
 			|-- check utilities, includes: sit,loot,leash (out of combat only) and only once every 10 seconds
 			/if (!${timer_check_utilities}) /call chkUtils
 			/if (!${timer_check_downshits}) /call chkDownshits
 			/if (!${timer_check_loot} && ${bln_looting}) /call chkLoot
-		}
+		|}
 
 	|-- start again	
     /goto :MainLoop

@@ -15,7 +15,10 @@ ______________________________________________
 **|	
 |-- Muramite Proving Grounds events
 |-- Mastery of Adaptation
+|-- Mastery of Destruction
 
+
+#EVENT DestructionActive "#*#Destruction begins to glow#*#"
 
 Sub InitEvents_OOW_MPG_Adaptation
 	/cecho \ag Initializing MPG Adaptation
@@ -29,11 +32,19 @@ Sub InitEvents_OOW_MPG_Adaptation
 /return
 
 Sub Events_OOW_MPG_Adaptation
+    /if (${SpawnCount[npc Master of Destruction]}) /doevents DestructionActive
 	|/if (${Me.Class.ShortName.Equal[ENC]}) /call chkAdaptationMez
 	/if (${Me.Class.ShortName.Equal[WAR]}) /call chkCorruptionAdds
     /if (${Me.Class.ShortName.Equal[PAL]}) /call chkCorruptionAdds
 	/if (${Me.Class.ShortName.Equal[SHD]}) /call chkCorruptionAdds
 /return
+
+Sub EVENT_DestructionActive 
+    /cecho \arDESTRUCTION Glow Triggered! ${Time.Time24}
+    /gsay DESTRUCTION Glow Triggered! ${Time.Time24}
+    /beep
+    /doevents flush DestructionActive
+/return 
 
 Sub chkAdaptationMez
     | Construct of Power (5 dimunitives)

@@ -27,21 +27,58 @@ REVISION HISTORY
 #EVENT ReportBurnKey        "#1#ReportBurnKey #2#"
 
 Sub InitEvents_Burn
-    /call RegisterBackgroundEvents Events_Burn_Background 1
-    /call RegisterRaidEvents Events_Burn 4
+    /call RegisterBackgroundEvents Events_Burn 5
 /return 
 
-Sub Events_Burn 
+Sub Events_Burn
     /doevents BurnOnALL
 	/doevents BurnOn1
 	/doevents BurnOn2
 	/doevents BurnOff
+	/doevents ReportBurnKey
 /return 
 
-Sub Events_Burn_Background 
-    /doevents ReportBurnKey
+
+|-------------------------------------------------------------------------------- 
+|SUB: Event_BURNINATE!
+|--------------------------------------------------------------------------------
+Sub EVENT_BurnOn
+	/if (!${bln_engaged}) /return
+	/cecho \agEnabling \arBurn \agMode
+	/varset bln_burning TRUE
+	/doevents flush BurnOn
 /return
 
+Sub EVENT_BurnOnAll
+	/if (!${bln_engaged}) /return
+	/cecho \agEnabling \arBurn ALL \agMode
+	/varset bln_burning TRUE
+	/doevents flush BurnOnAll
+/return
+
+Sub EVENT_BurnOn1
+	/if (!${bln_engaged}) /return
+	/if (${BURN_Group}==1) {
+		/cecho \agEnabling \arBurn \agMode on CoHort \ao1
+		/varset bln_burning TRUE
+	}
+	/doevents flush BurnOn1
+/return
+
+Sub EVENT_BurnOn2
+	/if (!${bln_engaged}) /return
+	/if (${BURN_Group}==2) {
+		/cecho \agEnabling \arBurn \agMode on CoHort \ao2
+		/varset bln_burning TRUE
+	}
+	/doevents flush BurnOn2
+/return
+
+Sub EVENT_BurnOff
+	/cecho \agDisablig \ayBurn \agMode
+	/varset bln_burning FALSE
+	/doevents flush BurnOff
+/return
 
 |**
  ----------------------------
@@ -54,86 +91,96 @@ Sub Events_Burn_Background
 **|
 
 Sub chkBurn
-	/if (!${bln_engaged} || !${bln_burning} || (${BURN_Total} < 1)) /return
+	/if (!${bln_engaged} || !${bln_burning} || (${BURN_Total} == 0)) /return
 	/if (!${Target.ID} || ${Target.Type.NotEqual[NPC]}) /return
 	/if (${Me.Casting.ID} || ${Me.Moving} || ${Me.Invis} || ${Me.Feigning}) /return
 
 	/declare i int local
-	|/echo BurnMode Activated! Total Burns: ${BURN_Total}
+	/echo BurnMode Activated! Total Burns: ${BURN_Total}
+
 	/for i 1 to ${BURN_Total} 
 		
+		|/cecho \awBurn_\ag${i} \ao${BURN_${i}} \awType:\ag${BURN_${i}_Type} \awUse:\ag${BURN_${i}_Use} \awAfter:\ag${BURN_${i}_AfterIndex} \awMGB:\ag${BURN_${i}_MGB} 
 		/if (${Target.ID} && ${Target.Type.Equal[NPC]}) {
 			| ---------------
 			| Combat Ability
 			| Note: Run the DISC if it is a combat type, it is ready, and we aren't already discing
 			| ---------------
-			/if (${Burn_${i}_Type.Equal[combat]} && ${Me.CombatAbilityReady[${Burn_${i}}]} && ${Burn_${i}_Use} && !${Bool[${Melee.DiscID}]}) {
-				/cecho \aoBurn is combat type, trying ${Burn_${i}}
+			/if (${BURN_${i}_Type.Equal[combat]} && ${Me.CombatAbilityReady[${BURN_${i}}]} && ${BURN_${i}_Use} && !${Bool[${Melee.DiscID}]}) {
+				/cecho \aoBurn is combat type, trying ${BURN_${i}}
 				| Check to see if the burn Before disc/alt (0 if not) is already run
-				/if (${Burn_${i}_After} > 0) {
-					| Check to see if the burn Before is an alt or combatdisc (two different ways of checking)
-					/if (${Burn_${Burn_${i}_After}_Type.Equal[combat]} && !${Me.CombatAbilityReady[${Burn_${Burn_${i}_After}}]}) {
-						/goto :doCombatAbility
-					} else /if (${Burn_${Burn_${i}_After}_Type.Equal[alt]} && !${Me.AltAbilityReady[${Burn_${Burn_${i}_After}}]}) {
-						/goto :doCombatAbility
-					}
-				} else {
+				|/if (${BURN_${i}_AfterIndex} > 0) {
+				|	| Check to see if the burn Before is an alt or combatdisc (two different ways of checking)
+				|	/if (${Burn_${BURN_${i}_AfterIndex}_Type.Equal[combat]} && !${Me.CombatAbilityReady[${Burn_${BURN_${i}_AfterIndex}}]}) {
+				|		/goto :doCombatAbility
+				|	} else /if (${Burn_${BURN_${i}_AfterIndex}_Type.Equal[alt]} && !${Me.AltAbilityReady[${Burn_${BURN_${i}_AfterIndex}}]}) {
+				|		/goto :doCombatAbility
+				|	}
+				|} else {
 					:doCombatAbility
 					| Bards can click discs while singing
-					/doability "${Burn_${i}}"
-					/dgt DISC ${Burn_${i}} clicked!
-					/cecho \agDISC \ay${Burn_${i}} \agclicked!
+					/doability "${BURN_${i}}"
+					/delay 5
+					/dgt DISC ${BURN_${i}} clicked!
+					/cecho \agDISC \ay${BURN_${i}} \agclicked!
 					/goto :nextBurn		
-				}
+				|}
 				
 			
 			| ---------------	
 			| Alt Ability
 			| Note: Additionally, if MGBable, (few) we have Burn_1_MGB = TRUE to look for (default FALSE)
 			| ---------------
-			} else /if (${Burn_${i}_Type.Equal[alt]} && ${Me.AltAbilityReady[${Burn_${i}}]} && ${Burn_${i}_Use} && ${Spell[${Burn_${i}}].Stacks}) {
+			} else /if (${BURN_${i}_Type.Equal[alt]} && ${Me.AltAbilityReady[${BURN_${i}}]} && ${BURN_${i}_Use} && ${Spell[${BURN_${i}}].Stacks}) {
 				| Check to see if the burn Before disc/alt (0 if not) is already run
-				/if (${Burn_${i}_After} > 0) {
+				/if (${BURN_${i}_AfterIndex} > 0) {
 					| Check to see if the burn Before is an alt or combatdisc  (two different ways of checking)
-					/if (${Burn_${Burn_${i}_After}_Type.Equal[combat]} && !${Me.CombatAbilityReady[${Burn_${Burn_${i}_After}}]}) {
+					/if (${Burn_${BURN_${i}_AfterIndex}_Type.Equal[combat]} && !${Me.CombatAbilityReady[${Burn_${BURN_${i}_AfterIndex}}]}) {
 						/goto :doAltAbility
-					} else /if (${Burn_${Burn_${i}_After}_Type.Equal[alt]} && !${Me.AltAbilityReady[${Burn_${Burn_${i}_After}}]}) {
+					} else /if (${Burn_${BURN_${i}_AfterIndex}_Type.Equal[alt]} && !${Me.AltAbilityReady[${Burn_${BURN_${i}_AfterIndex}}]}) {
 						/goto :doAltAbility
 					}
 				} else {
 					:doAltAbility
-						/if (${Burn_${i}_MGB}) {
+						/if (${BURN_${i}_MGB}) {
 							/call MQ2Cast "Mass Group Buff" alt
 							/delay 5
 							/cecho \ag Mass Group Buff Activated!
 						}
 						/if (${Me.Class.ShortName.Equal[BRD]}) {
-                            /call MQ2Medley ALT "${Burn_${i}}" ${int_targetID} FALSE
+                            /call MQ2Medley ALT "${BURN_${i}}" ${int_targetID} TRUE
 						} else {
-							/call MQ2Cast "${Burn_${i}}" alt
+							/call MQ2Cast "${BURN_${i}}" alt
 						}
-						/dgt AA ${Burn_${i}} clicked!
-						/cecho \agAA \ay${Burn_${i}} \agclicked!
+						/delay 5
+						/dgt AA ${BURN_${i}} clicked!
+						/cecho \agAA \ay${BURN_${i}} \agclicked!
 						/goto :nextBurn	
 				}
 			| ---------------	
 			| Item
 			| Check to see if  burn == item &&  useable && (item in inventory && there is no timer) && (I am not Casting || I am a bard)
 			| ---------------
-			} else /if (${Burn_${i}_Type.Equal[item]} && ${Burn_${i}_Use} && (${Bool[${FindItem[${Burn_${i}}].ID}]} && ${FindItem[${Burn_${i}}].TimerReady} == 0) && (!${Me.Casting.ID} || ${Me.Class.ShortName.Equal[BRD]})) {
+			} else /if (${BURN_${i}_Type.Equal[item]} && ${BURN_${i}_Use} && (${Bool[${FindItem[${BURN_${i}}].ID}]} && !${Bool[${FindItem[=${BURN_${i}}].TimerReady}]}) && (!${Bool[${Me.Casting.ID}]} || ${Me.Class.ShortName.Equal[BRD]})) {
 				:doItemClick
 					/if (${Me.Class.ShortName.Equal[BRD]}) {
-                        /call MQ2Medley ITEM "${Burn_${i}}" ${int_targetID} FALSE
+                        /call MQ2Medley ITEM "${BURN_${i}}" ${int_targetID} TRUE
 					} else {
-						/call MQ2Cast "${Burn_${i}}" item 2s
+						/call MQ2Cast "${BURN_${i}}" item 2s
 					}
-					/dgt Item ${Burn_${i}} clicked!
-					/cecho \agItem \ay${Burn_${i}} \agclicked!
+					/delay 5
+					/if (${Macro.Return.NotEqual[CAST_SUCCESS]}) {
+						/cecho \aoITEM \ay${BURN_${i}} \aofailed! \ar${Macro.Return}	
+					} else {
+						/dgt Item ${BURN_${i}} clicked!
+						/cecho \agITEM \ay${BURN_${i}} \agclicked!
+					}
+					
 					/goto :nextBurn	
 			}
 		}
 	:nextBurn
-	/next burn
+	/next i
 /return
 
 
@@ -154,7 +201,7 @@ Sub AddBurnToLineup(string _type, int _index, string _line)
 		/varset property ${propertyList.Token[${j},|]} 
 		/if (${property.Find[Timer]}) {
 			/declare ${_type}_${_index}${property} timer outer ${_line.Token[${j},|]}s
-		|	|/cecho \ao${_type}_${_index}${property} \awis a timer \ar${${_type}_${_index}${property}}
+			|/cecho \ao${_type}_${_index}${property} \awis a timer \ar${${_type}_${_index}${property}}
 		} else {
 			/declare ${_type}_${_index}${property} string outer ${_line.Token[${j},|]}
             |/cecho \ay${property}:\ag ${_line.Token[${j},|]}
@@ -166,6 +213,7 @@ Sub AddBurnToLineup(string _type, int _index, string _line)
 
 Sub chkAA
 	/if (${AA_Total} == 0) 	/return 
+	/if (!${Target.ID} || ${Target.Type.NotEqual[NPC]}) /return
 	/if ((${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]}) || ${Me.Moving} || ${Me.Invis} || ${Me.Feigning}) /return
 	
 
@@ -176,7 +224,7 @@ Sub chkAA
     /call TargetNamedCheck ${int_targetID}
     /declare isNamed bool local ${Macro.Return}
     /for i 1 to ${AA_Total}
-        /if (${${Me.AltAbilityReady[${AA_${i}}]}}) {
+        /if (${Me.AltAbilityReady[${AA_${i}}]}) {
             | If Offense, make sure we are engaged | If Defense, doesn't matter
             /if ((${AA_${i}_Type.Equal[OFFENSE]} && ${bln_engaged}) || ${AA_${i}_Type.Equal[DEFENSE]} ) {
                  | HP Check
@@ -187,14 +235,16 @@ Sub chkAA
                 /if (${Bool[${AA_${i}_Trigger.Replace[#,$]}]}) /goto :nextAA
             }
 
-        }
+        } else {
+			/goto :nextAA
+		}
            
         :castingAA
         /if (${Me.Class.ShortName.Equal[BRD]}) {
             /if (${AA_${i}_Type.Equal[DEFENSE]}) {
-                /call MQ2Medley ALT "${AA_${i}}" ${Me.ID} FALSE
+                /call MQ2Medley ALT "${AA_${i}}" ${Me.ID} TRUE
             } else {
-                /call MQ2Medley ALT "${AA_${i}}" ${int_targetID} FALSE
+                /call MQ2Medley ALT "${AA_${i}}" ${int_targetID} TRUE
             }
         } else {                
             /if (${AA_${i}_Type.Equal[DEFENSE]}) {
@@ -237,6 +287,7 @@ Sub AddAAToLineup(string _type, int _index, string _line)
 
 Sub chkClicky
 	/if (${CLICKY_Total} == 0) 	/return 
+	/if (!${Target.ID} || ${Target.Type.NotEqual[NPC]}) /return
 	/if ((${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]}) || ${Me.Moving} || ${Me.Invis} || ${Me.Feigning}) /return
 	
 
@@ -247,7 +298,7 @@ Sub chkClicky
     /call TargetNamedCheck ${int_targetID}
     /declare isNamed bool local ${Macro.Return}
     /for i 1 to ${CLICKY_Total}
-        /if (${${Me.AltAbilityReady[${CLICKY_${i}}]}}) {
+        /if (${FindItem[${CLICKY_${i}}].TimerReady} == 0) {
             | If Offense, make sure we are engaged | If Defense, doesn't matter
             /if ((${CLICKY_${i}_Type.Equal[OFFENSE]} && ${bln_engaged}) || ${CLICKY_${i}_Type.Equal[DEFENSE]} ) {
                 | Offense named-only check
@@ -263,9 +314,9 @@ Sub chkClicky
         /if (${Me.Class.ShortName.Equal[BRD]}) {
             | We need to make sure BARDs (with medley) have the item in a worn slot or slot 30
             /if (${CLICKY_${i}_Type.Equal[DEFENSE]}) {
-                /call MQ2Medley ITEM "${CLICKY_${i}}" ${Me.ID} FALSE
+                /call MQ2Medley ITEM "${CLICKY_${i}}" ${Me.ID} TRUE
             } else {
-                /call MQ2Medley ITEM "${CLICKY_${i}}" ${int_targetID} FALSE
+                /call MQ2Medley ITEM "${CLICKY_${i}}" ${int_targetID} TRUE
             }
         } else {                
             /if (${CLICKY_${i}_Type.Equal[DEFENSE]}) {
@@ -365,6 +416,15 @@ Sub xbot_initialize_burns
     /call CreateBurnLineup
     /call CreateAALineup
     /call CreateClickyLineup
-	
+
+	| Initialize Library Events
+	/call InitEvents_Burn
 /return
 
+Sub Event_ReportBurnKey(_line, _sender, _eventParams)
+	/declare _burnKey int local ${_eventParams.Arg[1,|]}
+	/echo ${_sender} checking burnKey:${_burnKey}
+	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} && ${BURN_Group} == ${_burnKey}) {
+		/rs ${_burnKey} ${Me.CleanName} ${Me.Class.ShortName}
+	}
+/return

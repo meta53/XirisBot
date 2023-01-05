@@ -102,10 +102,6 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 		
 		|-- Check to see if self needs to be cured (xiris_curing.inc)
 		/call chkNeedCure
-	
-		|-- Check for out of combat buffs
-		/call RunAllEvents
-		/call chkOOCBuffs
 
 		|-- Check Auto Assist if its on
 		/if (${bln_autoAssist}) /call chkAutoAssist

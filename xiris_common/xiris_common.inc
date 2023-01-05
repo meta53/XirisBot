@@ -60,6 +60,7 @@ ______________________________________________
 #EVENT KillMob				"#1# tells the group#*#'KillMob #2#'"
 #EVENT KillMob				"#1# tells you#*#'KillMob #2#'"
 #EVENT KillMob				"#1# tells the raid#*#'KillMob #2#'"
+#EVENT KillMob				"#1# tell your raid#*#'KillMob #2#'"
 #EVENT KillMob				"#1# tell your party, #*#'KillMob #2#'"
 #EVENT KillMob 				"[ #1# #*#]#*#KillMob #2#"
 
@@ -74,12 +75,12 @@ ______________________________________________
 #EVENT Disengage   			"#*#Disengage#*#"
 #EVENT QuitExpedition       "#*#DZQUIT#*#"
 
-#EVENT ChangeMT 			"[#1#] changeMT #2#"
-#EVENT ChangeMT 			"<#1#> changeMT #2#"
-#EVENT ChangeMT				"#1# tells the group#*#'changeMT #2#'"
-#EVENT ChangeMT				"#1# tells you#*#'changeMT #2#'"
-#EVENT ChangeMT				"#1# tells the raid#*#'changeMT #2#'"
-#EVENT ChangeMT				"#1# tell your raid#*#'changeMT #2#'"
+#EVENT ChangeMT 			"[#1#] ChangeMT #2#"
+#EVENT ChangeMT 			"<#1#> ChangeMT #2#"
+#EVENT ChangeMT				"#1# tells the group#*#'ChangeMT #2#'"
+#EVENT ChangeMT				"#1# tells you#*#'ChangeMT #2#'"
+#EVENT ChangeMT				"#1# tells the raid#*#'ChangeMT #2#'"
+#EVENT ChangeMT				"#1# tell your raid#*#'ChangeMT #2#'"
 #EVENT ChangeMT 			"[ #1# #*#]#*#ChangeMT #2#"
 
 #EVENT ChangeSA 			"[#1#] ChangeSA #2#"
@@ -87,6 +88,7 @@ ______________________________________________
 #EVENT ChangeSA				"#1# tells the group#*#'ChangeSA #2#'"
 #EVENT ChangeSA				"#1# tells you#*#'ChangeSA #2#'"
 #EVENT ChangeSA				"#1# tells the raid#*#'ChangeSA #2#'"
+#EVENT ChangeSA				"#1# tell your raid#*#'ChangeSA #2#'"
 #EVENT ChangeSA 			"[ #1# #*#]#*#ChangeSA #2#"
 
 #EVENT ChangeAP 			"[#1#] ChangeAP #2#"
@@ -94,6 +96,7 @@ ______________________________________________
 #EVENT ChangeAP				"#1# tells the group#*#'ChangeAP #2#'"
 #EVENT ChangeAP				"#1# tells you#*#'ChangeAP #2#'"
 #EVENT ChangeAP				"#1# tells the raid#*#'ChangeAP #2#'"
+#EVENT ChangeAP				"#1# tell your raid#*#'ChangeAP #2#'"
 #EVENT ChangeAP 			"[ #1# #*#]#*#ChangeAP #2#"
 
 
@@ -126,6 +129,7 @@ ______________________________________________
 #EVENT RaidGroupMode		"#1# tells the group#*#'SetRaidGroupMode #2#'"
 #EVENT RaidGroupMode		"#1# tells you#*#'SetRaidGroupMode #2#'"
 #EVENT RaidGroupMode		"#1# tells the raid#*#'SetRaidGroupMode #2#'"
+#EVENT RaidGroupMode		"#1# tell your raid#*#'SetRaidGroupMode #2#'"
 #EVENT RaidGroupMode 		"[ #1# #*#]#*#SetRaidGroupMode #2#"
 
 #EVENT RaidDIClerics		"[#1#] SetRaidDIClerics #2#"
@@ -133,11 +137,13 @@ ______________________________________________
 #EVENT RaidDIClerics		"#1# tells the group#*#'SetRaidDIClerics #2#'"
 #EVENT RaidDIClerics		"#1# tells you#*#'SetRaidDIClerics #2#'"
 #EVENT RaidDIClerics		"#1# tells the raid#*#'SetRaidDIClerics #2#'"
+#EVENT RaidDIClerics		"#1# tell your raid#*#'SetRaidDIClerics #2#'"
 #EVENT RaidDIClerics 		"[ #1# #*#]#*#SetRaidDIClerics #2#"		
 
 #EVENT doRefreshXTarget		"#1# tells the group#*#'RefreshXTarget#*#'"
 #EVENT doRefreshXTarget		"#1# tells you#*#'RefreshXTarget#*#'"
 #EVENT doRefreshXTarget		"#1# tells the raid#*#'RefreshXTarget#*#'"
+#EVENT doRefreshXTarget		"#1# tell your raid#*#'RefreshXTarget#*#'"
 #EVENT doRefreshXTarget		"#*#RefreshXTarget#*#"
 
 Sub InitEvents_Common
@@ -398,6 +404,7 @@ Sub EVENT_KillMob(_line, _sender, _eventParams)
 		/cecho \aoNULL Target, exiting!
 		/return
 	}
+	/if (${_sender.Equal[You]}) /varset _sender ${Me.Name}
 	|-> #EVENT KillMob "<#1#> KillMob #2#"
 	|-> Sender> == #1
 	|->_eventParams> == #2
@@ -449,6 +456,7 @@ Sub chkTargetStatus
 	/if (!${Target.ID}) /goto :return
 	/if (${int_targetID} == 0) {
 		/if (${bln_engaged}) /goto :disengage
+		/goto :return
 	}
 	
 	:chkTargetValid
@@ -744,13 +752,7 @@ Sub Event_SKILLCHECK(_line, _sender, _eventParams)
 	|}
 /return
 
-Sub Event_ReportBurnKey(_line, _sender, _eventParams)
-	/declare _burnKey int local ${_eventParams.Arg[1,|]}
-	/echo ${_sender} checking burnKey:${_burnKey}
-	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} && ${BURN_Group} == ${_burnKey}) {
-		/rs ${_burnKey} ${Me.CleanName} ${Me.Class.ShortName}
-	}
-/return
+
 
 |**
  ------------------------
@@ -944,42 +946,7 @@ Sub Event_EndMac
 	/doevents flush EndMac
 /return
 
-|-------------------------------------------------------------------------------- 
-|SUB: Event_BURNINATE!
-|--------------------------------------------------------------------------------
-Sub EVENT_BurnOn
-	/echo Enabling Burn Mode
-	/varset bln_burning TRUE
-	/doevents flush BurnOn
-/return
 
-Sub EVENT_BurnOnAll
-	/echo Enabling Burn on ALL
-	/varset bln_burning TRUE
-	/doevents flush BurnOnAll
-/return
-
-Sub EVENT_BurnOn1
-	/if (${BURN_Group}==1) {
-		/echo Enabling Burn on Cohort 1
-		/varset bln_burning TRUE
-	}
-	/doevents flush BurnOn1
-/return
-
-Sub EVENT_BurnOn2
-	/if (${BURN_Group}==2) {
-		/echo Enabling Burn on Cohort 2
-		/varset bln_burning TRUE
-	}
-	/doevents flush BurnOn2
-/return
-
-Sub EVENT_BurnOff
-	/echo Disabling Burn Mode
-	/varset bln_burning FALSE
-	/doevents flush BurnOff
-/return
 
 
 | AA Special Events

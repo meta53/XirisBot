@@ -184,7 +184,7 @@ Sub chkNuke
 			/if (${Target.PctHPs}<=${NUKE_${i}_StartHP} && ${Target.PctHPs}>=${NUKE_${i}_StopHP}) {
 				/if (${Me.CurrentMana}>=${Spell[${NUKE_${i}_Spell}].Mana} && ${Target.Distance}<=${Spell[${NUKE_${i}_Spell}].Range} && ${Target.LineOfSight}) {
 					/if (${Me.Class.ShortName.Equal[BRD]}) {
-						/call MQ2Medley SONG "${NUKE_${i}}" ${int_targetID} FALSE
+						/call MQ2Medley SONG "${NUKE_${i}}" ${int_targetID} TRUE
 						/cecho \ag ${NUKE_${i}_Spell}  : DELAYING for \ay${NUKE_${i}_DelayTimer.OriginalValue}s \agrefresh	
 					} else {
 						/call MQ2Cast "${NUKE_${i}_Spell}"	
@@ -289,7 +289,7 @@ Sub chkQNuke
 			/if (${Target.PctHPs}<=${QNUKE_${i}_StartHP} && ${Target.PctHPs}>=${QNUKE_${i}_StopHP}) {
 				/if (${Me.CurrentMana}>=${Spell[${QNUKE_${i}_Spell}].Mana} && ${Target.Distance}<=${Spell[${QNUKE_${i}_Spell}].Range} && ${Target.LineOfSight}) {
 					/if (${Me.Class.ShortName.Equal[BRD]}) {
-						/call MQ2Medley SONG "${QNUKE_${i}}" ${int_targetID} FALSE
+						/call MQ2Medley SONG "${QNUKE_${i}}" ${int_targetID} TRUE
 						/cecho \ag ${QNUKE_${i}_Spell}  : DELAYING for \ay${QNUKE_${i}_DelayTimer.OriginalValue}s \agrefresh	
 					} else {
 						/call MQ2Cast "${QNUKE_${i}_Spell}"	
@@ -541,7 +541,7 @@ Sub chkDOT
 				/if (${Me.CurrentMana}>=${Spell[${DOT_${i}_Spell}].Mana} && (${Me.SpellReady[${DOT_${i}_Spell}]} || ${Me.Class.ShortName.Equal[BRD]}) && ${Target.Distance}<=${Spell[${DOT_${i}_Spell}].Range} && ${Target.LineOfSight} && (${DOT_${i}_RecastTimer} <= 0)) {
 					/varset dotDuration ${Spell[${DOT_${i}_Spell}].Duration.TotalSeconds}
 					/if (${Me.Class.ShortName.Equal[BRD]}) {
-						/call MQ2Medley SONG "${DOT_${i}}" ${int_targetID} FALSE
+						/call MQ2Medley SONG "${DOT_${i}}" ${int_targetID} TRUE
 						/cecho \ag ${DOT_${i}_Spell}  : DELAYING for \ay${dotDuration}s \agrefresh	
 					} else {
 						/call MQ2Cast "${DOT_${i}_Spell}"	
