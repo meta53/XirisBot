@@ -321,7 +321,7 @@ Sub LootTarget(int _corpseID)
 		/declare lootName 				string 	local 
 		/declare lootType 				string 	local
 		/declare int_numberToLoot		int		local	1000
-		/declare bln_includedByClass	bool 	local 	FALSE
+		/declare bln_includedByClass	bool 	local 	TRUE    | my class can loot
 		/declare bln_excludedByCharName	bool    local   TRUE	| do not loot on this character [if found, dont loot]
 		/declare bln_includedByCharName	bool	local	FALSE	| loot only on this character
 		/declare bln_useBeep			bool    local   FALSE 	| should I beep if I can't loot this item?
@@ -331,6 +331,9 @@ Sub LootTarget(int _corpseID)
 		/for n 1 to ${Corpse.Items}
 			|-check to see if I want the item
 			| [item][1] Name [2] type|* [3] count|* [4] class|*
+			/varset bln_includedByClass 	FALSE
+			/varset bln_excludedByCharName 	FALSE 
+			/varset bln_includedByCharName	TRUE
 			/echo Slot ${n}: ${Corpse.Item[${n}].Name}
 			/if (!${bln_onlyQuest}) {
 				/for i 1 to ${loot_ALL.Size[1]}
@@ -391,7 +394,7 @@ Sub LootTarget(int _corpseID)
 
 			|-check to see if item is lore
 			:loot_validation
-			/cecho ${lootName} \awCount in Inventory: \ay${FindItemCount[${lootName}]} \awMaximum: \ay${int_numberToLoot} \awClass Lootable?: \ay${bln_includedByClass} \awExcluded by Name: \ay${bln_excludedByCharName} \awLoot By Me Only? \ay${bln_includedByCharName} \awBeep? \ay${bln_useBeep}
+			/cecho ${lootName} \awCount in Inventory: \ay${FindItemCount[${lootName}]} \awMaximum: \ay${int_numberToLoot} \awClass Lootable?: \ay${bln_includedByClass} \awExcluded by Name: \ay${bln_excludedByCharName} \awLoot By Me|*|Only? \ay${bln_includedByCharName} \awBeep? \ay${bln_useBeep}
 			
 			|- My character name is in the exclusion list
 			/if (${bln_excludedByCharName} || !${bln_includedByClass}) {

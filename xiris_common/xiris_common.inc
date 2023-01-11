@@ -30,6 +30,7 @@ REVISION HISTORY
 	12.27.22	xiris	Moved Burn logic to xiris_burn.inc since its... verbose.
 	12.29.22	xiris 	Removed Bufflines init/file due to it not being used for the foreseeable future.
 	12.31.22	xiris	Moved Clicky/AA/Burns to their own file
+	01.05.23	xiris	Changed logic in chkTargetStatus method to be more streamlined
 ______________________________________________
 
 **|
@@ -261,11 +262,11 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/declare	int_defAssistAt			int		outer   ${Ini[botINI,Settings,assistAt,98]}
 	/declare 	int_assistAt			int		outer   ${int_defAssistAt}
 	/if (${_assistArgs.Length}) {
-		/cecho \ayAutoAssist settings: \ag${_assistArgs}
-		/varset bln_autoAssist ${_assistArgs.Token[1,|]}
-		/varset int_assistAt ${_assistArgs.Token[2,|]}
+		/varset bln_autoAssist ${Bool[${_assistArgs.Token[1,,]}]}
+		/varset int_assistAt ${_assistArgs.Token[2,,]}
 	} 
-	
+	/cecho \ayAuto Assist settings: \awAuto?\ag${bln_autoAssist} \awAt?\ag${int_assistAt} \awArgs:\ag${_assistArgs}
+
 	|-- [Settings] : Miscellaneous Defaults
 	/declare	str_spellSet			string	outer	${Ini[botINI,Settings,str_spellSet,default]}
 	/declare	bln_engaged				bool	outer	FALSE
@@ -453,42 +454,51 @@ Sub EngageTarget(int _targetID)
 **|
 
 Sub chkTargetStatus
-	/if (!${Target.ID}) /goto :return
-	/if (${int_targetID} == 0) {
+	/if (!${Bool[${Target.ID}]} && !${bln_engaged}) /goto :return
+	| No target, or I am at my bound zone, if engaged, kill
+	/if (${int_targetID} == 0 || !${Bool[${Target.ID}]} || ${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) {
 		/if (${bln_engaged}) /goto :disengage
 		/goto :return
 	}
 	
 	:chkTargetValid
-	/if (!${Bool[SpawnCount npc id ${int_targetID}]} || ${Spawn[id ${int_targetID}].Type.Equal[corpse]}) {
-		/cecho \ag No Target with ID of \aw${int_targetID} or is CORPSE
+	| Assumes bln_engaged == true
+	| Check for target being corpse or non-existant
+	/if ((!${Bool[SpawnCount npc id ${int_targetID}]} || ${Spawn[id ${int_targetID}].Type.Equal[corpse]} || ${Spawn[id ${int_targetID}].Name.Find[s_corpse]})) {
+		/cecho \awNo Targets with ID(\ay${int_targetID}\aw) or is a CORPSE \aoDisengaging!
+		/goto :disengage
+	} 
+	
+	| Check to see if my target is NPC and there is no NPCs around
+	/if (${Bool[${Target.ID}]} && ${Target.ID} == ${int_MTID} && (!${SpawnCount[npc id ${int_targetID} radius 200]} || ${Zone.ShortName.Equal[${Me.BoundLocation[0]}]})) {
+		/cecho \awTarget is MT, and No NPC in radius 200 (or at bind) \aoDisengaging!
 		/goto :disengage
 	}
-	/if (${Bool[${Target.ID}]} && ${Target.ID} == ${int_MTID} && !${SpawnCount[npc id ${int_targetID} radius 200]} &&  ${bln_engaged}) {
-		/cecho \agTarget Status \awXT:\ag${Me.XTarget} \aw|| no \ag${int_targetID}\aw within radius 200 (\ag!${SpawnCount[npc id ${int_targetID} radius 200]}\aw)
+
+	| Check to see if there are any NPCs on XTarget and Radius
+	/if ((${Me.XTarget}==0 && !${SpawnCount[npc radius 200]})) {
+		/cecho \awNo Targets within 200, or on XTarget \aoDisengaging!
+		/goto :disengage
+	} 
+
+	| If there is something on XTarget, and its over 400 away, ignore it.
+	/if (${Bool[${Me.XTarget}]} && (!${SpawnCount[npc radius 400]}  || ${Zone.ShortName.Equal[${Me.BoundLocation[0]}]})) {
+		/cecho \awNo Targets within 400, even if they are on XTarget \aoDisengaging!
 		/goto :disengage
 	}
- 	/if (!${Bool[${Target.ID}]} && !${bln_engaged}) /goto :return
-	/if (!${Bool[${Target.ID}]} && ${bln_engaged}) {
-		/cecho \ayNO Target and Engaged\aw, clearing
-		/goto :disengage
-	} else /if ((${Spawn[id ${int_targetID}].Name.Find[_corpse]}) && ${bln_engaged}) {
-		| Target is dead?
-		/cecho \awTarget is dead: \ayPctHP \ag!${Bool[${Target.PctHPs}]} \ao|| \ay!TargetID \ag!${Bool[${Target.ID}]} \ao|| \ayCorpseFound \ag${Spawn[id ${int_targetID}].Name.Find[_corpse]}
-		/goto :disengage
-	} else /if ((${Me.XTarget}==0 && !${SpawnCount[npc radius 200]}) && ${bln_engaged}) {
-		| Target is over 400 distance away, that will blur it
-		/cecho \agTarget Status \awXT:\ag${Me.XTarget} \aw|| no \ag${int_targetID}\aw within radius 200 (\ag!${SpawnCount[npc id ${int_targetID} radius 200]}\aw)
-		/goto :disengage
-	} else /if ((${Target.ID} != ${int_targetID}) && (${Spawn[id ${int_targetID}].PctHPs} >= 0 && !${Spawn[id ${int_targetID}].Name.Find[_corpse]})) {
+
+	| Priests can skip next check and just go to check hott aggro
+	/if (${Me.Class.ShortName.Equal[SHM]} && ${Me.Class.ShortName.Equal[CLR]} && ${Me.Class.ShortName.Equal[DRU]}) /goto :chkTargetTarget
+
+	| I am engaged, check we are targetting correct NPC
+	/if ((${Target.ID} != ${int_targetID}) && (${Spawn[id ${int_targetID}].PctHPs} >= 0 && !${Spawn[id ${int_targetID}].Name.Find[s_corpse]})) {
 		| I am not targetting the correct NPC
 		/cecho \aoCurrent Target \arNOT \ao${Spawn[id ${int_targetID}]}(${int_targetID})\aw, re-targetting
 		/call TrueTarget ${int_targetID}
-		/goto :chkTargetTarget
 	} 
 	
 	:chkTargetTarget
-	/if (${Me.TargetOfTarget.CleanName.Equal[${Me.CleanName}]} && !${bln_aggro} && !${timer_hott}) {
+	/if (${Target.Type.Equal[NPC]} && ${Me.TargetOfTarget.CleanName.Equal[${Me.CleanName}]} && !${bln_aggro}) {
 		| Priest/Caster (with some sort of a aggro dump ability)
 		/if (${str_classArchetype.Equal[PRIEST]} || ${str_classArchetype.Equal[CASTER]}) {
 			| Wizard
@@ -503,7 +513,7 @@ Sub chkTargetStatus
 			} else /if (${Me.Class.ShortName.Equal[MAG]}) {
 
 			} else /if (${Me.Class.ShortName.Equal[CLR]}) {
-				/if (${Me.AltAbilityReady[Sanctuary]}) /call MQ2Cast "Sanctuary" alt	
+				/if (${Me.AltAbilityReady[Sanctuary]}) 		/call MQ2Cast "Sanctuary" alt	
 			} else /if (${Me.Class.ShortName.Equal[SHM]}) {
 
 			} else /if (${Me.Class.ShortName.Equal[DRU]}) { 
@@ -511,15 +521,21 @@ Sub chkTargetStatus
 			}
 		} else /if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
 			/declare use_riposte bool local FALSE
-			/if (${Target.Name.Find[Pirik]} || ${Target.Name.Find[Yihst]} || ${Target.Name.Find[Tunat]} || ${Target.Name.Find[Master]}) /varset use_riposte TRUE
+			/if (${Zone.ShortName.Equal[tacvi]} && (${Target.Name.Find[Pirik]} || ${Target.Name.Find[Yihst]} || ${Target.Name.Find[Tunat]})) {
+				/varset use_riposte TRUE
+			} else /if (${Zone.ShortName.Equal[anguish]} && (${Target.Name.Find[Keldovan]} || ${Target.Name.Find[Ture]} || ${Target.Name.Find[Vangl]} || ${Target.Name.Find[Zun]} || ${Target.Name.Find[Hanvar]} || ${Target.Name.Find[Overlord]})) {
+				/varset use_riposte TRUE
+			} else /if (${Zone.ShortName.Find[chambers]} &&  ${Target.Name.Find[Master]}) {
+				/varset use_riposte TRUE
+			} 
 			/if (${Me.Class.ShortName.Equal[SHD]}) {
 				/if (${Me.AltAbilityReady[Death Peace]})   	/call MQ2Cast "Death Peace" alt
 				/if (!${Me.Standing}) /stand
 			} else /if (${Me.Class.ShortName.Equal[BER]}) { 
 				/if (${use_riposte}) /call FireRiposteDisc
 				/if (${Me.CombatAbilityReady[Baffling Strike]} && ${FindItemCount[Axe of the Destroyer]}>0) /disc Baffling Strike
-				/if (${Me.CombatAbilityReady[Confusing Strike]} && ${FindItemCount[Rage Axe]}>0) /disc Confusing Strike
-				/if (${Me.CombatAbilityReady[Distracting Strike]} && ${FindItemCount[Bonesplicer Axe]}>0) /disc Distracting Strike
+				/if (${Me.CombatAbilityReady[Confusing Strike]} && ${FindItemCount[Rage Axe]}>0) 			/disc Confusing Strike
+				/if (${Me.CombatAbilityReady[Distracting Strike]} && ${FindItemCount[Bonesplicer Axe]}>0) 	/disc Distracting Strike
 			} else /if (${Me.Class.ShortName.Equal[ROG]}) { 
 				/if (${use_riposte}) /call FireRiposteDisc
 			} else /if (${Me.Class.ShortName.Equal[RNG]}) { 
@@ -531,7 +547,6 @@ Sub chkTargetStatus
 				/if (!${Me.Standing}) /stand
 			}
 		}
-		/varset timer_hott ${timer_hott.OriginalValue}
 	}
 	/goto :return
 
@@ -590,7 +605,7 @@ Sub Disengage
 
 Sub chkMobDead
 	/if ((${SpawnCount[npc radius 200]} == 0 || ${Me.XTarget} == 0) && ${bln_engaged} ) {
-		/echo chkMobDead triggered Xtarget:${Me.XTarget} || SpawnCount:!${SpawnCount[npc id ${int_targetID} radius 250]}  && engaged:${bln_engaged}
+		/echo chkMobDead triggered XTarget:${Me.XTarget} || SpawnCount:!${SpawnCount[npc id ${int_targetID} radius 250]}  && engaged:${bln_engaged}
 		/call Disengage
 	}
 /return
@@ -952,7 +967,7 @@ Sub Event_EndMac
 | AA Special Events
 Sub EVENT_UseStaunchRecovery
 	| Do not use if at bind point (ie: dead)
-	/if (${Zone.ID} == 340 && ${Zone.ID} == 344 && ${Zone.ID} == 345) /return
+	/if (${Zone.ID} == 340 || ${Zone.ID} == 344 || ${Zone.ID} == 345 || ${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /return
 
 	/if ((${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[TANK]}) && ${Me.PctEndurance} < 20) {
 		/casting "Staunch Recovery" alt 
@@ -967,7 +982,7 @@ Sub EVENT_UseStaunchRecovery
 
 Sub EVENT_UseIntensity
 	| Do not use if at bind point (ie: dead)
-	/if (${Zone.ID} == 340 && ${Zone.ID} == 344 && ${Zone.ID} == 345) /return
+	/if (${Zone.ID} == 340 || ${Zone.ID} == 344 || ${Zone.ID} == 345 || ${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /return
 	/if (${Me.Class.ShortName.Equal[BRD]}) {
 		/call MQ2Medley ALT "Intensity of the Resolute" ${int_targetID} TRUE
 	} else {
@@ -977,7 +992,7 @@ Sub EVENT_UseIntensity
 
 Sub EVENT_UseServants
 	| Do not use if at bind point (ie: dead)
-	/if (${Zone.ID} == 340 && ${Zone.ID} == 344 && ${Zone.ID} == 345) /return
+	/if (${Zone.ID} == 340 || ${Zone.ID} == 344 || ${Zone.ID} == 345 || ${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /return
 	/if (${Me.Class.ShortName.Equal[BRD]}) {
 		/call MQ2Medley ALT "Steadfast Servant" ${int_targetID} FALSE
 	} else {
@@ -987,7 +1002,7 @@ Sub EVENT_UseServants
 
 Sub EVENT_UseInfusion
 	| Do not use if at bind point (ie: dead)
-	/if (${Zone.ID} == 340 && ${Zone.ID} == 344 && ${Zone.ID} == 345) /return
+	/if (${Zone.ID} == 340 || ${Zone.ID} == 344 || ${Zone.ID} == 345 || ${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /return
 	/if (${Me.Class.ShortName.Equal[BRD]}) {
 		/call MQ2Medley ALT "Infusion of the Faithful" ${int_targetID} FALSE
 	} else {
@@ -1151,8 +1166,12 @@ Sub EVENT_ChangeMT(_line, _sender, _eventParams)
 	/if (${Me.Class.ShortName.Equal[CLR]}) /call TrueTarget ${int_MTID}
 	/if (${Me.Name.Equal[${name}]}) {
 		/varset bln_tanking TRUE
+		/varset bln_aggro 	TRUE
 		/melee aggro=1
 		/melee taunt=1
+	} else {
+		/varset bln_tanking FALSE
+		/varset bln_aggro 	FALSE
 	}
 	/doevents flush ChangeMT
 /return
@@ -1528,7 +1547,7 @@ SUB check_macroTimers
 
 
 |----------------------------------------------------|
-|- Resets Xtarget window 1-5 elements to auto		-|
+|- Resets XTarget window 1-5 elements to auto		-|
 |----------------------------------------------------|
 Sub Event_RefreshXTarget
 	/echo refreshing XTarget

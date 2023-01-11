@@ -130,6 +130,7 @@ Sub EVENT_RiposteDisc(_line, _sender, _eventParams)
 /return
 
 Sub FireRiposteDisc
+	/cecho \aoFiring Riposte Disc!
 	:monk
 	/if (${Me.Class.ShortName.Equal[MNK]}) {
 		/if (${Me.CombatAbilityReady[Whirlwind Discipline]}) {
@@ -189,12 +190,12 @@ Sub Event_AutoAssist(string _eventParams)
 /return
 
 Sub AutoAssistON
-	/dgt ${Me.Name} is now AutoAssisting!
+	/dgt ${Me.Name} is now Auto Assisting!
 	/varset bln_autoAssist TRUE
 /return
 
 Sub AutoAssistOFF
-	/dgt ${Me.Name} is no longer AutoAssisting.
+	/dgt ${Me.Name} is no longer Auto Assisting.
 	/varset bln_autoAssist FALSE
 /return
 
@@ -258,7 +259,7 @@ Sub chkDownshits
 				/varset castArg   ${downflag${df}.Token[2,|]}|${downflag${df}.Token[3,|]}
 				/varset tgtID     ${downflag${df}.Token[3,|]}
 				/varset isSpell TRUE
-				/if (${castArg.Find[item]}>0) /varset isSpell FALSE
+				/if (${castArg.Find[item]}>0 || ${castArg.Find[alt]}>0) /varset isSpell FALSE
 				
 
 				|- If we have Damage Shields turned off, check to see if this is a damage shield before casting it

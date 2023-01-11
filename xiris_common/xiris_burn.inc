@@ -50,6 +50,7 @@ Sub EVENT_BurnOn
 /return
 
 Sub EVENT_BurnOnAll
+    /cecho \ao Burn on All triggered
 	/if (!${bln_engaged}) /return
 	/cecho \agEnabling \arBurn ALL \agMode
 	/varset bln_burning TRUE

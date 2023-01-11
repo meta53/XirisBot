@@ -17,7 +17,18 @@ Sub Main(string _type, string _tankPoint)
 	/doevents
 	/delay 5
 	/if (!${bln_keldovanEngaged}) /goto :wait_loop
+    /if (!${Target.Name.Find[Keldovan]}) {
+        /cecho \ar CANNOT Start! Keldovan not targetted!
+        /varset bln_keldovanEngaged FALSE
+        /goto :wait_loop
+    } 
 
+     /if (!${Target.Distance3D} > 200) {
+        /cecho \ar CANNOT Start! Keldovan not close enough!
+        /varset bln_keldovanEngaged FALSE
+        /goto :wait_loop
+    }
+    
 	| Announcing Engage
 	/rs KeldovanStart ${Time.Time24}
 
@@ -32,15 +43,17 @@ Sub Main(string _type, string _tankPoint)
 		/if (${timer_harmshield} < 50) {
             /dgt chstart 1 Xiris Xiria 30 empathic,dogmatist,xorael,pantheon
             /call commandTankOn
+            /dgt SingSongs
             /delay 50
+            /rs SingSongs
             /rs DebuffTarget ${Spawn[npc Keldovan].ID}
             /melee reset
             /melee aggro=off 
             /melee taunt=off 
-            /dgt SingSongs
+           
             /dex Xiria /shield Xiris
             /dex Xirea /shield Xiris
-            /rs SingSongs
+            
             /goto :Stonewall
 
 		} 
@@ -60,19 +73,17 @@ Sub commandTankOn
     /delay 5
     /dex Xiris /stick 10 hold 
     /delay 10
-    /dex Xiris /casting "Warlord's Tenacity" alt
-    /delay 5
-    /dex Xiris /casting "Champion's Sword of Eternal Power" item
-    /delay 5 
-    /dex Xiris /casting "Gladiator's Plate Chestguard of War" item
-    /delay 5
     /dex Xiris /doability "Furious Discipline"
     /delay 5
     /dex Xiris /attack on 
-    /delay 5
+     /delay 5
     /dex Xiris /doability "Ancient: Chaos Cry"
     /delay 10
     /dex Xiris /doability "Bazu Bellow"
+    /delay 10s
+    /dex Xiris /casting "Warlord's Tenacity" alt
+    /delay 2s
+    /dex Xiris /casting "Champion's Sword of Eternal Power" item
 /return 
 
 

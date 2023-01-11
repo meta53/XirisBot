@@ -1,17 +1,14 @@
 #Turbo 20
 | Run as SK (initial puller)
 Sub Main 
+    | Set Healmode efficient
+    /dgt healmode efficient
+    
     | Set Autocures (most of them!)
     /dt Tragic AutoCureMTOn
     /dt Xonshia AutoCureMTOn
     /dt Xunshia AutoCureMTOn
-    /dt Xerael AutoCureMTOn
-    /dt Xarael AutoCureMTOn
 
-    | Set Xirin (OT) Healing
-    /dt Xenshia changeMT Xirin
-    /dt Xenshia AutoCureMTOn
-    /dt Xinshia AutoCureMTOn
 
     | Set Xiria (TT) AutoCuring
     /dt Xirael changeMT Xiria 
