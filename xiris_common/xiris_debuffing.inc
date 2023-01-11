@@ -70,7 +70,7 @@ Sub SlowTarget(string _resist)
 |   Additionally once debuffs have been cast (either sucesffully or through max tries) the str_debuffedTargets is updated
 |   with the target ID, so we don't continually try to debuff the thing
 Sub chkDebuffsOnSingleTarget(int _targetID)
-	/if (!${DEBUFF_Total} || !${_targetID} || ${str_debuffedTargets.Find[${_targetID}]} || ${Target.Name.Find[s_corpse]}) /return
+	/if (!${DEBUFF_Total} || !${_targetID} || ${str_debuffedTargets.Find[${_targetID}]} || ${Target.Name.Find[s_corpse]} || (${DEBUFF_Total} == 1 && !${Bool[${DEBUFF_1_Trigger.Replace[#,$]}]}) ) /return
 	/call CastDebuffsOnTarget ${_targetID} FALSE
 /return
 

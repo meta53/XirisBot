@@ -1,0 +1,129 @@
+#Turbo 20
+#EVENT AMVMarkOn		    "#*#You have been marked for death#*#"
+
+#EVENT AMVEngage			"#*#AMVEngage#*#"
+
+Sub Main(string _type, string _tankPoint)
+	/melee aggro=on
+    /melee taunt=on
+	/declare bln_amvEngaged 		bool 	outer FALSE
+	/declare bln_rootTank			bool	outer FALSE
+
+	/declare timer_mark_ae 		    timer 	outer 	300s
+	/declare markSeconds			int 	outer 	300
+	/declare stunSeconds			int   	outer 	0	
+	/declare int_timeMarkInterval 	int 	outer   300
+
+
+	/declare bln_announcedRetreat   bool    outer FALSE
+	/declare bln_announcedKill 		bool	outer FALSE
+	/declare timer_announce_retreat	timer   outer 0
+	/declare timer_announce_kill 	timer  	outer 0
+
+	/echo Calling AMV Setup
+	/dgt AMVSetup
+
+	:wait_loop
+	/doevents
+	/delay 5
+	/if (!${bln_amvEngaged}) /goto :wait_loop
+
+	| Announcing Engage
+	/rs AMVStart ${Time.Time24}
+
+	:ActiveLoop
+		/doevents
+		|------
+		| NPC/AMV Kills
+		|------
+
+		/varcalc markSeconds ${timer_mark_ae}/10
+		/echo timer: ${timer_mark_ae} seconds: ${markSeconds}
+		
+		| Mark of Death Run away!
+		/if (${markSeconds} <= 5 && !${bln_announcedRetreat}) {
+			/if (!${timer_announce_retreat}) /call commandRetreat
+		} 
+		
+		| Kill AMV
+		/if (${markSeconds} > 5) {
+			/if (!${timer_announce_kill}) /call commandAttack
+		}
+
+		/doevents
+		/call getAggro
+	/goto :ActiveLoop
+/return
+
+| AMV fired his AE, safe to kill
+Sub Event_AMVMarkOn
+	/cecho \arMark ON! \aw${Time.Time24} \ag${Time.SecondsSinceMidnight}, resetting interval to ${int_timeMarkInterval}
+	/varset timer_mark_ae ${int_timeMarkInterval}
+	/varcalc markSeconds ${int_timeMarkInterval}/10
+	/rs Mark of Death On! ${markSeconds}s till recast!
+	/call commandRetreat
+	/doevents flush AMVMarkOn
+/return
+
+
+
+
+Sub commandRetreat
+	/cecho \ar${timer_mark_ae} ${markSeconds}s \awuntil AMV AE, \aoRETREAT
+	/rs AMVRetreat ${markSeconds}
+	/varset bln_announcedRetreat 	TRUE
+	/varset bln_announcedKill		FALSE
+	/varset timer_announce_retreat 50s
+/return 
+
+
+Sub commandAttack
+	/if (!${SpawnCount[npc guard]}) /rs AMVKill ${markSeconds}
+	/cecho \artimer:${timer_mark_ae} seconds${markSeconds}s \awuntil AMV AE  (no guards), \agKILLAMV
+	/varset bln_announcedRetreat  FALSE
+	/varset bln_announcedKill	  TRUE
+	/varset timer_announce_kill 10s
+/return
+
+
+Sub Event_AMVEngage
+	/echo Engaging AMV
+	:amvTarget
+	/if (!${Target.ID}) {
+		/target Arch
+		/goto :amvTarget
+	}
+	/if (!${Target.Name.Find[Arch]}) {
+		/cecho \ar AMV not targetted. Try that again!
+		/return
+	}
+	/if (${Target.Name.Find[AMV]} && !${Target.Distance3D} > 100) {
+		/cecho \ar AMV out of Range. Try that again!
+		/return
+	}
+    /if (${Me.CombatAbilityReady[Stonewall Discipline]})  /doability "Stonewall Discipline"
+    /delay 5
+	/echo Hammering aggro
+	/if (${Me.CombatAbilityReady[Ancient: Chaos Cry]}) /doability "Ancient: Chaos Cry"
+	/delay 5
+	/if (${Me.CombatAbilityReady[Bazu Bellow]}) /doability "Bazu Bellow"
+	/delay 5
+
+
+	/face fast
+	/attack on
+/return
+
+
+Sub getAggro
+	:aggroLoop
+		/if (${Target.Distance} > 20 && ${bln_rootTank}) /warp f 15
+		/if (${Me.TargetOfTarget.ID} != ${Me.ID}) {
+			/echo AMV NOT TARGETTING ME
+            /if (${Me.CombatAbilityReady["Bellow of the Mastruq"]}) /doability "Bellow of the Mastruq"
+			/if (${Me.CombatAbilityReady["Bazu Bellow"]}) /doability "Bazu Bellow"
+			/delay 10
+			/goto :aggroLoop
+		} 
+/return
+

@@ -259,7 +259,7 @@ Sub chkDownshits
 				/varset castArg   ${downflag${df}.Token[2,|]}|${downflag${df}.Token[3,|]}
 				/varset tgtID     ${downflag${df}.Token[3,|]}
 				/varset isSpell TRUE
-				/if (${castArg.Find[item]}>0) /varset isSpell FALSE
+				/if (${castArg.Find[item]}>0 || ${castArg.Find[alt]}>0) /varset isSpell FALSE
 				
 
 				|- If we have Damage Shields turned off, check to see if this is a damage shield before casting it
