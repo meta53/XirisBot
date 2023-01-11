@@ -30,6 +30,8 @@ song3=Verse of Vesagran^18^1
 song4=War March of Muram^18^1
 song5=Psalm of Mystic Shielding^18^1 
 ```
+###### MQ2Melee
+Standard plugin generally. Used to handle the auto skills portion of meleeing, such as backstab/frenzy/kick etc. Note: if there is a desire, I can eliminate this and run it entirely within the macro. 
 
 #### Everquest Build
 While Xiris bot would work with UF, the MQ2 Plugin requirements mean that only the ROF2 build of Everquest will work properly without a huge degredation of service and code changes.
@@ -83,7 +85,7 @@ XirisBot individual character properties are defined in a INI file, with the nam
 **bot_melee.mac** Standard melee class macro
 
 ## Commands
-While there are *many* commands built into XirisBot, only a few are generally needed to start. It is recommended that you create hotkeys for these however it is comfortable to use, primarily on your MT. Note that these examples use `/rs` which is raidsay, you could also do this with `/dgt` which tells all toons online the same thing.
+While there are *many* commands built into XirisBot, only a few are generally needed to start. It is recommended that you create hotkeys for these however it is comfortable to use, primarily on your MT. Note that these examples use `/rs` which is raidsay, you could also do this with `/dgt` which tells all toons online the same thing. A full command list will follow under the detailed library descriptions.
 
 ### Attack
 Hotkey that is used on the MT to call assist on the MT's current target, and has the MT attack the target as well. 
@@ -133,14 +135,60 @@ To tell a toon to offtank (and currently only plate classes listen for this) the
 `/dt ToonName offtankon` and the offtank will attempt to offtank any aggrod mob that isn't currently hitting a tank. However due to lag or other issues sometimes this is not 100% reliable. It works mostly though. `/dt ToonName offtankoff` will cancel offtanking
 
 ## Detailed Library Descriptions
+
 ### Overview
+XirisBot shares libraries for all class variants. These files are found in the xiris_common sub folder.
 
 ### xiris_buffing.inc
+#### Overview
+XirisBot buffing handlers. The library reads the buff settings in each character ini file to determine what buffs the character can cast (if any). There are several classes of buffs:
+1. OutOfCombat (OOC) Buffs - These are buffs such as Symbol/Haste/etc which you would generally cast out of combat
+2. SingleTarget (ST) Buffs  - These are buffs that effect a single target, like Panoply of Vie, or Guard of Earth
+3. Combat (CMBT) Buffs - These are buffs that are (auto) cast during a fight, eg: Spirit of Jaguar
 #### Requirements
+mq2cast, mq2dannet
 #### Events
-#### Use Cases
+1. `/dgt DoRaidBuffs *ALL*` Will have all buffers walk through the raid and cast all designated buffs (OOC and ST).
+2. `/dgt DoCharBuffs *CharName*` Will have all buffers target the specified character, and cast all buffs (note: most buffs are group buffs)
+3. `/dgt RemoveBuff *BuffName*` Will find and remove that buff from all characters
+4. `/dgt RemoveAllBuffs` Will remove all buffs from all characters
+
 
 ### xiris_casting.inc
+#### Overview
+XirisBot casting handler. The library reads the casting (NUKE, AE NUKE, QUICK NUKE, DOT, FAST DOT, and STUN) settings in each character ini file to determine what the character can cast (if any)
 #### Requirements
+mq2cast, mq2dannet
 #### Events
-#### Use Cases
+1. `/dgt SetResistTypes *fire|poison|magic|etc*` Sets the resist types that will be cast. Can be used to limit to only say... fire and magic on Ture (`/dgt setresisttypes fire|magic`)
+2. `/dgt SetUseFastOnly *on|off` Turning this on will have wizards (and other classes if they have any defined QNUKE) only use the QNUKE entries instead of normal NUKE
+
+### xiris_charm.inc
+#### Overview
+XiristBot charm handler. The library reads the charming (CHARM) settings in the Bard, Necromancer, and Enchanter ini files. Note this is generally untested as there is very little need to charm things (other than OMM)
+#### Requirements
+mq2cast, mq2dannet
+#### Events
+1. `/dt charname CharmNPCByID *NPCID*` Tells toon charname to charm the npc with the id given
+2. `/dt charname CharmNPCByName *NPCName*` Tells toon charname to charm the npc with the name given
+3. `/dt charmOn` Allows charming, must be called before telling a toon to charm with the above commands
+4. `/dt charmOff` Disables charming.
+
+### xiris_common.inc
+#### Overview
+XirisBot common files. Contains the links to all other includes. Has the common functions for all the class macros, and serves to kick off all initializations.
+#### Requirements
+mq2cast, mq2dannet, mq2exchange, mq2melee
+#### Events
+1. `/dgt KillMob ${Target.ID} "${Target.Name}" ${Time.Time24}` Directs everyone to kill your target
+2. `/dgt BackOff` Directs everyone to reset melee, stop casting, etc.
+3. `/dgt ChangeMT *MTNAME*` Changes the current Main Tank  (MT) to the new MT via name
+4. `/dgt ChangeSA *SANAME*` Changes the current Secondary Assist (SA) to the new SA via name
+5. `/dgt ChangeAP *AP*` Changes the autoassist point to int AP
+6. `/dgt DoStaunchRecovery` Tells everyone to hit Staunch Recovery AA
+7. `/dgt DoIntensity` Tells everyone to hit Intensity of the Resolute AA
+8. `/dgt DoServants` Tells everyone to hit Steadfast Servant AA
+9. `/dgt DoInfusion` Tells everyone to hit Infusion of the Faithful AA
+10. `/dgt RaidGroupMode` A mostly internal or event used event. Describes the raid mode currerntly running, defaults to.. DEFAULT. Calls SetRaidGroupMode which has hard coded raid group layout currently. Will change to INI driven in future.
+11. `/dgt RaidDIClerics` Similar to RaidGroupMode, mostly internal or event driven. Describes what clerics have DI in the current raid. Calls SetRaidDIClerics which has coded DI cleric group layouts. Will change to INI driven in future.
+12. `/dgt doRefreshXTarget` Used to manually force raid to refresh their XTarget list.
