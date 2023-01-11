@@ -595,7 +595,7 @@ SUB openBags
 
 Sub xbot_initialize_looting
 
-	/declare bln_looting			bool	outer 	${Ini[botINI,Settings,lootUse,FALSE]}
+	/declare bln_looting			bool	outer 	${Ini[INI_CHAR,Settings,lootUse,FALSE]}
 	/declare str_lootChannel		string  outer   rs
 	/declare bln_onlyQuest			bool 	outer	FALSE
 	/declare bln_lootAttuneable		bool	outer 	TRUE

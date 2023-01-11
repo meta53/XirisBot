@@ -856,95 +856,95 @@ Sub CreateCastingLineup
 	/declare i 							int		local
 
 	|-- Nukes
-	/declare NUKE_Total					int		outer	${Ini[botINI,NUKE,NUKE_Total,0]}	
-	/declare NUKE_DelayTimer			timer	outer	${Ini[botINI,NUKE,NUKE_DelayTimer,1s]}
+	/declare NUKE_Total					int		outer	${Ini[INI_CHAR,NUKE,NUKE_Total,0]}	
+	/declare NUKE_DelayTimer			timer	outer	${Ini[INI_CHAR,NUKE,NUKE_DelayTimer,1s]}
 	/declare NUKE_HasCastOnce			bool	outer   FALSE
-	/declare NUKE_Mana_Minimum			int		outer	${Ini[botINI,NUKE,NUKE_Mana_Minimum,10]}
-	/declare NUKE_Mana_NamedMinimum		int		outer	${Ini[botINI,DOT,NUKE_Mana_NamedMinimum,10]} 
-	/declare NUKE_StartHP				int		outer	${Ini[botINI,NUKE,NUKE_StartHP,98]}
-	/declare NUKE_StopHP				int		outer	${Ini[botINI,NUKE,NUKE_StopHP,5]}
-	/declare NUKE_StartHPIfNamed		int 	outer 	${Ini[botINI,NUKE,NUKE_StartHPIfNamed,100]}
-	/declare NUKE_StopHPIfNamed			int 	outer 	${Ini[botINI,NUKE,NUKE_StopHPIfNamed,0]}
+	/declare NUKE_Mana_Minimum			int		outer	${Ini[INI_CHAR,NUKE,NUKE_Mana_Minimum,10]}
+	/declare NUKE_Mana_NamedMinimum		int		outer	${Ini[INI_CHAR,DOT,NUKE_Mana_NamedMinimum,10]} 
+	/declare NUKE_StartHP				int		outer	${Ini[INI_CHAR,NUKE,NUKE_StartHP,98]}
+	/declare NUKE_StopHP				int		outer	${Ini[INI_CHAR,NUKE,NUKE_StopHP,5]}
+	/declare NUKE_StartHPIfNamed		int 	outer 	${Ini[INI_CHAR,NUKE,NUKE_StartHPIfNamed,100]}
+	/declare NUKE_StopHPIfNamed			int 	outer 	${Ini[INI_CHAR,NUKE,NUKE_StopHPIfNamed,0]}
 	/if (${Bool[${NUKE_Total}]}) {
 		/for i 1 to ${NUKE_Total} 
-			/call AddSpellToLineup NUKE ${i} ${Ini[botINI,NUKE,NUKE_${i}]}
+			/call AddSpellToLineup NUKE ${i} ${Ini[INI_CHAR,NUKE,NUKE_${i}]}
 		/next i
 	}
 
 	|--AE Nuke
 	/declare AENUKE_Active				bool	outer   FALSE
-	/declare AENUKE_Total 				int		outer	${Ini[botINI,AENUKE,AENUKE_Total,0]}	
-	/declare AENUKE_DelayTimer			timer	outer	${Ini[botINI,AENUKE,AENUKE_DelayTimer,0]}
-	/declare AENUKE_Mana_Minimum		int		outer	${Ini[botINI,AENUKE,AENUKE_Mana_Minimum,10]}
-	/declare AENUKE_StartHP				int		outer	${Ini[botINI,AENUKE,AENUKE_StartHP,98]}
-	/declare AENUKE_StopHP				int		outer	${Ini[botINI,AENUKE,AENUKE_StopHP,0]}
+	/declare AENUKE_Total 				int		outer	${Ini[INI_CHAR,AENUKE,AENUKE_Total,0]}	
+	/declare AENUKE_DelayTimer			timer	outer	${Ini[INI_CHAR,AENUKE,AENUKE_DelayTimer,0]}
+	/declare AENUKE_Mana_Minimum		int		outer	${Ini[INI_CHAR,AENUKE,AENUKE_Mana_Minimum,10]}
+	/declare AENUKE_StartHP				int		outer	${Ini[INI_CHAR,AENUKE,AENUKE_StartHP,98]}
+	/declare AENUKE_StopHP				int		outer	${Ini[INI_CHAR,AENUKE,AENUKE_StopHP,0]}
 	/if (${Bool[${AENUKE_Total}]}) {
 		/for i 1 to ${AENUKE_Total} 
-			/call AddSpellToLineup AENUKE ${i} ${Ini[botINI,AENUKE,AENUKE_${i}]}
+			/call AddSpellToLineup AENUKE ${i} ${Ini[INI_CHAR,AENUKE,AENUKE_${i}]}
 		/next i
 	}
 
 		|--Quick Nuke
-	/declare QNUKE_Total				int		outer	${Ini[botINI,QNUKE,QNUKE_Total,0]}	
-	/declare QNUKE_TotalIfNamed			int 	outer   ${Ini[botINI,QNUKE,QNUKE_Total,${QNUKE_Total}]}	
-	/declare QNUKE_DelayTimer			timer	outer	${Ini[botINI,QNUKE,QNUKE_DelayTimer,1s]}
+	/declare QNUKE_Total				int		outer	${Ini[INI_CHAR,QNUKE,QNUKE_Total,0]}	
+	/declare QNUKE_TotalIfNamed			int 	outer   ${Ini[INI_CHAR,QNUKE,QNUKE_Total,${QNUKE_Total}]}	
+	/declare QNUKE_DelayTimer			timer	outer	${Ini[INI_CHAR,QNUKE,QNUKE_DelayTimer,1s]}
 	/declare QNUKE_HasCastOnce			bool	outer   FALSE
-	/declare QNUKE_Mana_Minimum			int		outer	${Ini[botINI,QNUKE,QNUKE_Mana_Minimum,10]}
-	/declare QNUKE_Mana_NamedMinimum	int		outer	${Ini[botINI,QNUKE,QNUKE_Mana_NamedMinimum,10]} 
-	/declare QNUKE_StartHP				int		outer	${Ini[botINI,QNUKE,QNUKE_StartHP,98]}
-	/declare QNUKE_StopHP				int		outer	${Ini[botINI,QNUKE,QNUKE_StopHP,0]}
-	/declare QNUKE_StartHPIfNamed		int 	outer 	${Ini[botINI,QNUKE,QNUKE_StartHPIfNamed,100]}
-	/declare QNUKE_StopHPIfNamed		int 	outer 	${Ini[botINI,QNUKE,QNUKE_StopHPIfNamed,0]}
+	/declare QNUKE_Mana_Minimum			int		outer	${Ini[INI_CHAR,QNUKE,QNUKE_Mana_Minimum,10]}
+	/declare QNUKE_Mana_NamedMinimum	int		outer	${Ini[INI_CHAR,QNUKE,QNUKE_Mana_NamedMinimum,10]} 
+	/declare QNUKE_StartHP				int		outer	${Ini[INI_CHAR,QNUKE,QNUKE_StartHP,98]}
+	/declare QNUKE_StopHP				int		outer	${Ini[INI_CHAR,QNUKE,QNUKE_StopHP,0]}
+	/declare QNUKE_StartHPIfNamed		int 	outer 	${Ini[INI_CHAR,QNUKE,QNUKE_StartHPIfNamed,100]}
+	/declare QNUKE_StopHPIfNamed		int 	outer 	${Ini[INI_CHAR,QNUKE,QNUKE_StopHPIfNamed,0]}
 	/if (${Bool[${QNUKE_Total}]}) {
 		/for i 1 to ${QNUKE_Total} 
-			/call AddSpellToLineup QNUKE ${i} ${Ini[botINI,QNUKE,QNUKE_${i}]}
+			/call AddSpellToLineup QNUKE ${i} ${Ini[INI_CHAR,QNUKE,QNUKE_${i}]}
 		/next i	
 	}
 
 	|--Stuns
-	/declare STUN_Total					int		outer	${Ini[botINI,STUN,STUN_Total,0]}	
-	/declare STUN_DelayTimer			timer	outer	${Ini[botINI,STUN,STUN_DelayTimer,1s]}
+	/declare STUN_Total					int		outer	${Ini[INI_CHAR,STUN,STUN_Total,0]}	
+	/declare STUN_DelayTimer			timer	outer	${Ini[INI_CHAR,STUN,STUN_DelayTimer,1s]}
 	/declare STUN_HasCastOnce			bool	outer   FALSE
-	/declare STUN_Mana_Minimum			int		outer	${Ini[botINI,STUN,STUN_Mana_Minimum,0]}
+	/declare STUN_Mana_Minimum			int		outer	${Ini[INI_CHAR,STUN,STUN_Mana_Minimum,0]}
 	/declare STUN_UseLocking			bool	outer	FALSE
 	/if (${Bool[${STUN_Total}]}) {
 		/for i 1 to ${STUN_Total} 
-			/call AddSpellToLineup STUN ${i} ${Ini[botINI,STUN,STUN_${i}]}
+			/call AddSpellToLineup STUN ${i} ${Ini[INI_CHAR,STUN,STUN_${i}]}
 		/next i	
 	}
 
 	|-- DOTs MOAR DOTS!
 	|--FAST Damage Over Time (note, not really useful on EMU due to era)
-	/declare QDOT_Total					int		outer	${Ini[botINI,QDOT,QDOT_Total,0]}
-	/declare QDOT_TotalIfNamed			int		outer	${Ini[botINI,QDOT,QDOT_TotalIfNamed,${QDOT_Total}]}
-	/declare QDOT_DelayTimer			timer	outer	${Ini[botINI,QDOT,QDOT_DelayTimer,1s]}
+	/declare QDOT_Total					int		outer	${Ini[INI_CHAR,QDOT,QDOT_Total,0]}
+	/declare QDOT_TotalIfNamed			int		outer	${Ini[INI_CHAR,QDOT,QDOT_TotalIfNamed,${QDOT_Total}]}
+	/declare QDOT_DelayTimer			timer	outer	${Ini[INI_CHAR,QDOT,QDOT_DelayTimer,1s]}
 	/declare QDOT_HasCastOnce			bool	outer   FALSE
-	/declare QDOT_Mana_Minimum			int		outer	${Ini[botINI,QDOT,QDOT_Mana_Minimum,10]} 
-	/declare QDOT_Mana_NamedMinimum		int		outer	${Ini[botINI,QDOT,QDOT_Mana_NamedMinimum,1]}
-	/declare QDOT_StartHP				int		outer	${Ini[botINI,QDOT,QDOT_StartHP,94]}
-	/declare QDOT_StopHP				int		outer	${Ini[botINI,QDOT,QDOT_StopHP,10]}
-	/declare QDOT_StartHPIfNamed		int 	outer 	${Ini[botINI,QDOT,QDOT_StartHPIfNamed,100]}
-	/declare QDOT_StopHPIfNamed			int 	outer 	${Ini[botINI,QDOT,QDOT_StopHPIfNamed,5]}
+	/declare QDOT_Mana_Minimum			int		outer	${Ini[INI_CHAR,QDOT,QDOT_Mana_Minimum,10]} 
+	/declare QDOT_Mana_NamedMinimum		int		outer	${Ini[INI_CHAR,QDOT,QDOT_Mana_NamedMinimum,1]}
+	/declare QDOT_StartHP				int		outer	${Ini[INI_CHAR,QDOT,QDOT_StartHP,94]}
+	/declare QDOT_StopHP				int		outer	${Ini[INI_CHAR,QDOT,QDOT_StopHP,10]}
+	/declare QDOT_StartHPIfNamed		int 	outer 	${Ini[INI_CHAR,QDOT,QDOT_StartHPIfNamed,100]}
+	/declare QDOT_StopHPIfNamed			int 	outer 	${Ini[INI_CHAR,QDOT,QDOT_StopHPIfNamed,5]}
 	/if (${Bool[${QDOT_Total}]}) {
 		/for i 1 to ${QDOT_Total} 
-			/call AddSpellToLineup QDOT ${i} ${Ini[botINI,QDOT,QDOT_${i}]}
+			/call AddSpellToLineup QDOT ${i} ${Ini[INI_CHAR,QDOT,QDOT_${i}]}
 		/next i	
 	}
 
 	|--Damage Over Time
-	/declare DOT_Total					int		outer	${Ini[botINI,DOT,DOT_Total,0]}
-	/declare DOT_TotalIfNamed			int		outer	${Ini[botINI,DOT,DOT_TotalIfNamed,${DOT_Total}]}
-	/declare DOT_DelayTimer				timer	outer	${Ini[botINI,DOT,DOT_DelayTimer,0]}
+	/declare DOT_Total					int		outer	${Ini[INI_CHAR,DOT,DOT_Total,0]}
+	/declare DOT_TotalIfNamed			int		outer	${Ini[INI_CHAR,DOT,DOT_TotalIfNamed,${DOT_Total}]}
+	/declare DOT_DelayTimer				timer	outer	${Ini[INI_CHAR,DOT,DOT_DelayTimer,0]}
 	/declare DOT_HasCastOnce			bool	outer   FALSE
-	/declare DOT_Mana_Minimum			int		outer	${Ini[botINI,DOT,DOT_Mana_Minimum,10]} 
-	/declare DOT_Mana_NamedMinimum		int		outer	${Ini[botINI,DOT,DOT_Mana_NamedMinimum,1]}
-	/declare DOT_StartHP				int		outer	${Ini[botINI,DOT,DOT_StartHP,98]}
-	/declare DOT_StopHP					int		outer	${Ini[botINI,DOT,DOT_StopHP,10]}
-	/declare DOT_StartHPIfNamed			int 	outer 	${Ini[botINI,DOT,DOT_StartHPIfNamed,100]}
-	/declare DOT_StopHPIfNamed			int 	outer 	${Ini[botINI,DOT,DOT_StopHPIfNamed,0]}
+	/declare DOT_Mana_Minimum			int		outer	${Ini[INI_CHAR,DOT,DOT_Mana_Minimum,10]} 
+	/declare DOT_Mana_NamedMinimum		int		outer	${Ini[INI_CHAR,DOT,DOT_Mana_NamedMinimum,1]}
+	/declare DOT_StartHP				int		outer	${Ini[INI_CHAR,DOT,DOT_StartHP,98]}
+	/declare DOT_StopHP					int		outer	${Ini[INI_CHAR,DOT,DOT_StopHP,10]}
+	/declare DOT_StartHPIfNamed			int 	outer 	${Ini[INI_CHAR,DOT,DOT_StartHPIfNamed,100]}
+	/declare DOT_StopHPIfNamed			int 	outer 	${Ini[INI_CHAR,DOT,DOT_StopHPIfNamed,0]}
 	/if (${Bool[${DOT_Total}]}) {	
 		/for i 1 to ${DOT_Total} 
-			/call AddSpellToLineup DOT ${i} ${Ini[botINI,DOT,DOT_${i}]}
+			/call AddSpellToLineup DOT ${i} ${Ini[INI_CHAR,DOT,DOT_${i}]}
 		/next i
 	}
 /return

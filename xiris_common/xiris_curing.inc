@@ -723,23 +723,23 @@ Sub xbot_initialize_curing
 	/declare    str_navCureStart  		string  outer 
 	/declare 	timer_cure_complain		timer   outer   0
 
-	/declare    str_cure_curse			string  outer   ${Ini[botINI,Curing,str_cure_curse,"Remove Greater Curse"]}
-	/declare    int_cure_curse			string  outer   ${Ini[botINI,Curing,int_cure_curse,36]}
-	/declare    is_curse_group          bool    outer   ${Ini[botINI,Curing,is_curse_group, FALSE]}
+	/declare    str_cure_curse			string  outer   ${Ini[INI_CHAR,Curing,str_cure_curse,"Remove Greater Curse"]}
+	/declare    int_cure_curse			string  outer   ${Ini[INI_CHAR,Curing,int_cure_curse,36]}
+	/declare    is_curse_group          bool    outer   ${Ini[INI_CHAR,Curing,is_curse_group, FALSE]}
 	
-	/declare    str_cure_corruption		string  outer   ${Ini[botINI,Curing,str_cure_corruption,"NULL"]}
-	/declare    int_cure_corruption		string  outer   ${Ini[botINI,Curing,int_cure_corruption,36]}
-	/declare    is_corr_group           bool    outer   ${Ini[botINI,Curing,is_corr_group, FALSE]}
+	/declare    str_cure_corruption		string  outer   ${Ini[INI_CHAR,Curing,str_cure_corruption,"NULL"]}
+	/declare    int_cure_corruption		string  outer   ${Ini[INI_CHAR,Curing,int_cure_corruption,36]}
+	/declare    is_corr_group           bool    outer   ${Ini[INI_CHAR,Curing,is_corr_group, FALSE]}
 	
-	/declare    str_cure_poison			string  outer   ${Ini[botINI,Curing,str_cure_poison,"Antidote"]}
-	/declare    int_cure_poison			string  outer   ${Ini[botINI,Curing,int_cure_poison,64]}
-	/declare    is_poison_group         bool    outer   ${Ini[botINI,Curing,is_poison_group, FALSE]}
+	/declare    str_cure_poison			string  outer   ${Ini[INI_CHAR,Curing,str_cure_poison,"Antidote"]}
+	/declare    int_cure_poison			string  outer   ${Ini[INI_CHAR,Curing,int_cure_poison,64]}
+	/declare    is_poison_group         bool    outer   ${Ini[INI_CHAR,Curing,is_poison_group, FALSE]}
 	
-	/declare    str_cure_disease		string  outer   ${Ini[botINI,Curing,str_cure_disease,"Pure Blood"]}
-	/declare    int_cure_disease		string  outer   ${Ini[botINI,Curing,int_cure_disease,18]}
-	/declare    is_disease_group        bool    outer   ${Ini[botINI,Curing,is_disease_group, FALSE]}
+	/declare    str_cure_disease		string  outer   ${Ini[INI_CHAR,Curing,str_cure_disease,"Pure Blood"]}
+	/declare    int_cure_disease		string  outer   ${Ini[INI_CHAR,Curing,int_cure_disease,18]}
+	/declare    is_disease_group        bool    outer   ${Ini[INI_CHAR,Curing,is_disease_group, FALSE]}
 	
-	/declare    str_secondary_radiant	string	outer   ${Ini[botINI,Curing,str_secondary_radiant,"NULL"]} 
+	/declare    str_secondary_radiant	string	outer   ${Ini[INI_CHAR,Curing,str_secondary_radiant,"NULL"]} 
 	
 
 	/declare	bln_hasDiseaseCure		bool	outer	TRUE

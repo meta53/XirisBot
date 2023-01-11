@@ -31,11 +31,6 @@ REVISION HISTORY
 #EVENT DORAIDBUFFS			"#1# tells the raid#*#'doRaidBuffs #2#'"
 #EVENT DORAIDBUFFS 			"[ #1# #*#]#*#doRaidBuffs #2#"
 
-#EVENT DOGROUPBUFFS			"#1# tells the group#*#'doGroupBuffs #2#'"
-#EVENT DOGROUPBUFFS			"#1# tells you#*#'doGroupBuffs #2#'"
-#EVENT DOGROUPBUFFS			"#1# tells the raid#*#doGroupBuffs #2#'"
-#EVENT DOGROUPBUFFS 		"[ #1# #*#]#*#doGroupBuffs #2#"
-
 #EVENT DOSINGLETARGETBUFFS	"#1# tells the group#*#'doSingleTargetBuffs #2#'"
 #EVENT DOSINGLETARGETBUFFS	"#1# tells you#*#'doSingleTargetBuffs #2#'"
 #EVENT DOSINGLETARGETBUFFS	"#1# tells the raid#*#'doSingleTargetBuffs #2#'"
@@ -65,7 +60,6 @@ Sub InitEvents_Buffing
 
 Sub Events_Buffing
 	/doevents DORAIDBUFFS
-	/doevents DOGROUPBUFFS
 	/doevents DOSINGLETARGETBUFFS
 	/doevents DOCHARBUFFS
 	/doevents REMOVEBUFF
@@ -103,19 +97,6 @@ Sub EVENT_DOCHARBUFFS(_line, _chatSender, _eventParams)
 	/doevents flush DOCHARBUFFS
 /return
 
-
-Sub EVENT_DOGROUPBUFFS(_line, _chatSender, _eventParams)
-	/if (!${bln_doGroupBuff}) /return
-
-	/memspellset buff
-	/echo Doing Group Buffs [OOCBUFF]
-	/call doGroupBuffOnTarget ${Me.Name}
-	/dgt ${Me.Class.Name} GROUP BUFF COMPLETE
-	/delay 10
-	/memspellset ${str_spellset}
-	
-	/doevents flush DOGROUPBUFFS
-/return
 
 Sub EVENT_DOSINGLETARGETBUFFS(_line, _chatSender, _eventParams)
 	/if (!${bln_doSingleTargetBuff}) /return
@@ -682,17 +663,17 @@ Sub xbot_initialize_buffing
 	/cecho \aoxbot_initialize_buffing
 
 	|--OOC Buff(s)
-	/declare bln_doRaidBuff				bool	outer	${Ini[botINI,OOCBuffs,bln_doRaidBuff,FALSE]}
-	/declare bln_doGroupBuff			bool	outer	${Ini[botINI,OOCBuffs,bln_doGroupBuff,FALSE]}
-	/declare bln_doAutoBuff				bool	outer	${Ini[botINI,OOCBuffs,bln_doGroupBuff,FALSE]}
-	/declare int_oocBuffTotal			int		outer	${Ini[botINI,OOCBuffs,int_oocBuffTotal,0]}
+	/declare bln_doRaidBuff				bool	outer	${Ini[INI_CHAR,OOCBuffs,bln_doRaidBuff,FALSE]}
+	/declare bln_doGroupBuff			bool	outer	${Ini[INI_CHAR,OOCBuffs,bln_doGroupBuff,FALSE]}
+	/declare bln_doAutoBuff				bool	outer	${Ini[INI_CHAR,OOCBuffs,bln_doGroupBuff,FALSE]}
+	/declare int_oocBuffTotal			int		outer	${Ini[INI_CHAR,OOCBuffs,int_oocBuffTotal,0]}
 	
 	/if (${int_oocBuffTotal} > 0) {
 		/declare ooct						int		local
 		/for ooct 1 to ${int_oocBuffTotal} 
-			/declare OOCBUFF_${ooct} 				string	outer	${Ini[botINI,OOCBuffs,OOCBUFF_${ooct}]}
-			/declare OOCBUFF_${ooct}_Use 			bool	outer	${Ini[botINI,OOCBuffs,OOCBUFF_${ooct}_Use]}
-			/declare OOCBUFF_${ooct}_Gem 			string	outer	${Ini[botINI,OOCBuffs,OOCBUFF_${ooct}_Gem]}
+			/declare OOCBUFF_${ooct} 				string	outer	${Ini[INI_CHAR,OOCBuffs,OOCBUFF_${ooct}]}
+			/declare OOCBUFF_${ooct}_Use 			bool	outer	${Ini[INI_CHAR,OOCBuffs,OOCBUFF_${ooct}_Use]}
+			/declare OOCBUFF_${ooct}_Gem 			string	outer	${Ini[INI_CHAR,OOCBuffs,OOCBUFF_${ooct}_Gem]}
 			/declare OOCBUFF_${ooct}_Active			bool	outer 	FALSE
 			/declare OOCBUFF_${ooct}_Timer	timer   outer   0
 		/next ooct
@@ -700,16 +681,16 @@ Sub xbot_initialize_buffing
 	
 	|--Single Target Buff(s)
 	|--eg: Divine Intervention, Mage Huge DS, Ranger AC Buff, Cleric AC buff (if no group version)
-	/declare bln_doSingleTargetBuff		bool	outer	${Ini[botINI,TargetBuffs,bln_doSingleTargetBuff,FALSE]}
-	/declare int_stBuffTotal			int		outer	${Ini[botINI,TargetBuffs,int_stBuffTotal,0]}
+	/declare bln_doSingleTargetBuff		bool	outer	${Ini[INI_CHAR,TargetBuffs,bln_doSingleTargetBuff,FALSE]}
+	/declare int_stBuffTotal			int		outer	${Ini[INI_CHAR,TargetBuffs,int_stBuffTotal,0]}
 	
 	/if (${int_stBuffTotal} > 0) {
 		/declare stbuff						int		local
 		/for stbuff 1 to ${int_stBuffTotal} 
-			/declare STBUFF_${stbuff} 				string	outer	${Ini[botINI,TargetBuffs,STBUFF_${stbuff}]}
-			/declare STBUFF_${stbuff}_Use 			bool	outer	${Ini[botINI,TargetBuffs,STBUFF_${stbuff}_Use]}
-			/declare STBUFF_${stbuff}_Gem 			string	outer	${Ini[botINI,TargetBuffs,STBUFF_${stbuff}_Gem]}
-			/declare STBUFF_${stbuff}_Targets		string	outer	${Ini[botINI,TargetBuffs,STBUFF_${stbuff}_Targets]}
+			/declare STBUFF_${stbuff} 				string	outer	${Ini[INI_CHAR,TargetBuffs,STBUFF_${stbuff}]}
+			/declare STBUFF_${stbuff}_Use 			bool	outer	${Ini[INI_CHAR,TargetBuffs,STBUFF_${stbuff}_Use]}
+			/declare STBUFF_${stbuff}_Gem 			string	outer	${Ini[INI_CHAR,TargetBuffs,STBUFF_${stbuff}_Gem]}
+			/declare STBUFF_${stbuff}_Targets		string	outer	${Ini[INI_CHAR,TargetBuffs,STBUFF_${stbuff}_Targets]}
 			/declare STBUFF_${stbuff}_Active		bool	outer 	FALSE
 			/declare STBUFF_${stbuff}_Timer	timer   outer   0
 		/next stbuff
@@ -717,15 +698,15 @@ Sub xbot_initialize_buffing
 	
 	|--Combat Buff(s)
 	|--eg: Spirit of the Jaguar
-	/declare bln_cmbtBuffUse			bool	outer	${Ini[botINI,CombatBuffs,bln_cmbtBuffUse,TRUE]}
-	/declare int_cmbtBuffTotal			int		outer	${Ini[botINI,CombatBuffs,int_cmbtBuffTotal,0]}
+	/declare bln_cmbtBuffUse			bool	outer	${Ini[INI_CHAR,CombatBuffs,bln_cmbtBuffUse,TRUE]}
+	/declare int_cmbtBuffTotal			int		outer	${Ini[INI_CHAR,CombatBuffs,int_cmbtBuffTotal,0]}
 	/declare cmbt						int		local
 	/declare cmbtG						int		local
 
 	/for cmbt 1 to ${int_cmbtBuffTotal} 
-		/declare CMBTBUFF_${cmbt} 				string	outer	${Ini[botINI,CombatBuffs,CMBTBUFF_${cmbt}]}
-		/declare CMBTBUFF_${cmbt}_Use 			bool	outer	${Ini[botINI,CombatBuffs,CMBTBUFF_${cmbt}_Use]}
-		/declare CMBTBUFF_${cmbt}_Gem 			string	outer	${Ini[botINI,CombatBuffs,CMBTBUFF_${cmbt}_Gem]}
+		/declare CMBTBUFF_${cmbt} 				string	outer	${Ini[INI_CHAR,CombatBuffs,CMBTBUFF_${cmbt}]}
+		/declare CMBTBUFF_${cmbt}_Use 			bool	outer	${Ini[INI_CHAR,CombatBuffs,CMBTBUFF_${cmbt}_Use]}
+		/declare CMBTBUFF_${cmbt}_Gem 			string	outer	${Ini[INI_CHAR,CombatBuffs,CMBTBUFF_${cmbt}_Gem]}
 		/declare CMBTBUFF_${cmbt}_Active		bool	outer 	FALSE
 		/declare CMBTBUFF_${cmbt}_Timer			timer   outer   ${Spell[CMBTBUFF_${cmbt}].Duration.TotalSeconds}
 		/for cmbtG 0 to ${Group}

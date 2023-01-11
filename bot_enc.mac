@@ -223,21 +223,21 @@ Sub variant_initialize
 
 	
 	|--Enchanter Specific Settings
-	/declare 	str_mezSingle			string	outer	${Ini[botINI,ENC_Spells,Mez_Single,Euphoria]}
-	/declare	use_mezSingle			bool	outer	${Ini[botINI,ENC_Spells,Mez_Single_Use,TRUE]}
-	/declare	int_mezSingleMinLvl		int		outer	${Ini[botINI,ENC_Spells,Mez_Single_MinLevel,40]}
-	/declare	int_mezSingleMaxLvl		int		outer	${Ini[botINI,ENC_Spells,Mez_Single_MaxLevel,73]}
-	/declare	int_mezSingleGem		string	outer	${Ini[botINI,ENC_Spells,Mez_Single_Gem,gem4]}
+	/declare 	str_mezSingle			string	outer	${Ini[INI_CHAR,ENC_Spells,Mez_Single,Euphoria]}
+	/declare	use_mezSingle			bool	outer	${Ini[INI_CHAR,ENC_Spells,Mez_Single_Use,TRUE]}
+	/declare	int_mezSingleMinLvl		int		outer	${Ini[INI_CHAR,ENC_Spells,Mez_Single_MinLevel,40]}
+	/declare	int_mezSingleMaxLvl		int		outer	${Ini[INI_CHAR,ENC_Spells,Mez_Single_MaxLevel,73]}
+	/declare	int_mezSingleGem		string	outer	${Ini[INI_CHAR,ENC_Spells,Mez_Single_Gem,gem4]}
 
-	/declare 	str_mezAE				string	outer	${Ini[botINI,ENC_Spells,Mez_AE,Bliss of the Nihil]}
-	/declare	use_mezAE				bool	outer	${Ini[botINI,ENC_Spells,Mez_AE,TRUE]}
-	/declare	int_mezAEMinLvl			int		outer	${Ini[botINI,ENC_Spells,Mez_AE_MinLevel,40]}
-	/declare	int_mezAEMaxLvl			int		outer	${Ini[botINI,ENC_Spells,Mez_AE_MaxLevel,68]}
-	/declare	int_mezAEGem			string	outer	${Ini[botINI,ENC_Spells,Mez_AE_Gem,gem5]}
+	/declare 	str_mezAE				string	outer	${Ini[INI_CHAR,ENC_Spells,Mez_AE,Bliss of the Nihil]}
+	/declare	use_mezAE				bool	outer	${Ini[INI_CHAR,ENC_Spells,Mez_AE,TRUE]}
+	/declare	int_mezAEMinLvl			int		outer	${Ini[INI_CHAR,ENC_Spells,Mez_AE_MinLevel,40]}
+	/declare	int_mezAEMaxLvl			int		outer	${Ini[INI_CHAR,ENC_Spells,Mez_AE_MaxLevel,68]}
+	/declare	int_mezAEGem			string	outer	${Ini[INI_CHAR,ENC_Spells,Mez_AE_Gem,gem5]}
 	
-	/declare	str_rune				string	outer 	${Ini[botINI,ENC_Spells,Rune,Rune of Salik]}
-	/declare	use_rune				bool	outer	${Ini[botINI,ENC_Spells,Rune_Use,TRUE]}
-	/declare	str_runeGem				string	outer	${Ini[botINI,ENC_Spells,Rune_Gem,gem6]}
+	/declare	str_rune				string	outer 	${Ini[INI_CHAR,ENC_Spells,Rune,Rune of Salik]}
+	/declare	use_rune				bool	outer	${Ini[INI_CHAR,ENC_Spells,Rune_Use,TRUE]}
+	/declare	str_runeGem				string	outer	${Ini[INI_CHAR,ENC_Spells,Rune_Gem,gem6]}
 	/declare 	bln_runeActive			bool	outer	FALSE
 
 	/memspellset ${str_spellset}

@@ -360,20 +360,20 @@ Sub variant_initialize
 	/declare	str_currHeal			string	outer	NULL
 
 	|-- Yaulp Settings
-	/declare	bln_useYaulp			bool	outer	${Ini[botINI,Yaulp,bln_useYaulp,FALSE]}
-	/declare	str_spellYaulp			string	outer 	${Ini[botINI,Yaulp,str_spellYaulp,Yaulp VII]}
-	/declare 	str_gemYaulp			string	outer 	${Ini[botINI,Yaulp,str_spellYaulp,gem9]}
+	/declare	bln_useYaulp			bool	outer	${Ini[INI_CHAR,Yaulp,bln_useYaulp,FALSE]}
+	/declare	str_spellYaulp			string	outer 	${Ini[INI_CHAR,Yaulp,str_spellYaulp,Yaulp VII]}
+	/declare 	str_gemYaulp			string	outer 	${Ini[INI_CHAR,Yaulp,str_spellYaulp,gem9]}
 	
 	|-- Heal Settings
-	/declare	bln_annouce     		bool    outer   ${Ini[botINI,Cleric_Settings,bln_annouce,FALSE]}
-	/declare	str_buffGem     		string  outer   ${Ini[botINI,Cleric_Settings,str_buffGem,gem9]}
+	/declare	bln_annouce     		bool    outer   ${Ini[INI_CHAR,Cleric_Settings,bln_annouce,FALSE]}
+	/declare	str_buffGem     		string  outer   ${Ini[INI_CHAR,Cleric_Settings,str_buffGem,gem9]}
 	
 	|-- Items 
-	/declare	str_epicName			string	outer	${Ini[botINI,Items,str_epicName,Aegis of Superior Divinity]}
-	/declare    bln_hasEpic				bool    outer   ${Ini[botINI,Items,bln_hasEpic,FALSE]}
-	/declare    bln_divineArb			bool    outer   ${Ini[botINI,Items,bln_divineArb,TRUE]}
-	/declare    int_interruptToDivineArb		int outer   ${Ini[botINI,Items,int_interruptToDivineArb,8]}
-	/declare 	bln_healAfterArb		bool	outer	${Ini[botINI,Items,bln_healAfterArb,TRUE]}
+	/declare	str_epicName			string	outer	${Ini[INI_CHAR,Items,str_epicName,Aegis of Superior Divinity]}
+	/declare    bln_hasEpic				bool    outer   ${Ini[INI_CHAR,Items,bln_hasEpic,FALSE]}
+	/declare    bln_divineArb			bool    outer   ${Ini[INI_CHAR,Items,bln_divineArb,TRUE]}
+	/declare    int_interruptToDivineArb		int outer   ${Ini[INI_CHAR,Items,int_interruptToDivineArb,8]}
+	/declare 	bln_healAfterArb		bool	outer	${Ini[INI_CHAR,Items,bln_healAfterArb,TRUE]}
 
 	|-- Celestial MGB Rotation
 	/declare	arr_celestial[17]		string  outer

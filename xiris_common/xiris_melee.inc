@@ -639,58 +639,58 @@ Sub xbot_initialize_melee
 
 	|-- ALL CLASSES COMMON
 	|-- [Settings] : Downflags
-	/declare	downflagCount			int		outer	${Ini[botINI,Downflags,downflagCount,0]}
+	/declare	downflagCount			int		outer	${Ini[INI_CHAR,Downflags,downflagCount,0]}
 	/declare df int local
 		/for df 1 to ${downflagCount} 
-			/declare downflag${df} 		string 	outer	${Ini[botINI,Downflags,downflag${df}]}
+			/declare downflag${df} 		string 	outer	${Ini[INI_CHAR,Downflags,downflag${df}]}
 		/next df
 	
 	|-- [Settings] : Holyflags
-	/declare	holyflagCount			int		outer	${Ini[botINI,Holyflags,holyflagCount,0]}
+	/declare	holyflagCount			int		outer	${Ini[INI_CHAR,Holyflags,holyflagCount,0]}
 	/declare hf int local
 		/for hf 1 to ${holyflagCount} 
-			/declare holyflag${hf} 		string 	outer	${Ini[botINI,Holyflags,holyflag${hf}]}
+			/declare holyflag${hf} 		string 	outer	${Ini[INI_CHAR,Holyflags,holyflag${hf}]}
 		/next hf
 
 
 	|-- MELEE AND HYBRID CLASSES ONLY
 	|- [Settings] : Components
-	/declare	int_componentTotal		int		outer	${Ini[botINI,Components,int_componentTotal,0]}
+	/declare	int_componentTotal		int		outer	${Ini[INI_CHAR,Components,int_componentTotal,0]}
 	/declare 	bln_componentCheck		bool	outer   ${If[${int_componentTotal}>0,TRUE,FALSE]}
 		/declare comp int local
 			/for comp 1 to ${int_componentTotal} 
-				/declare COMPONENT_${comp} 			string 	outer ${Ini[botINI,Components,COMPONENT_${comp}]}
-				/declare COMPONENT_${comp}_Check	bool 	outer ${Ini[botINI,Components,COMPONENT_${comp}_Check,FALSE]}
-				/declare COMPONENT_${comp}_Count 	int 	outer ${Ini[botINI,Components,COMPONENT_${comp}_Count]}
-				/declare COMPONENT_${comp}_Type  	string 	outer ${Ini[botINI,Components,COMPONENT_${comp}_Type]}
-				/declare COMPONENT_${comp}_Summoner string	outer ${Ini[botINI,Components,COMPONENT_${comp}_Summoner]}
-				/declare COMPONENT_${comp}_Reagent 	string	outer ${Ini[botINI,Components,COMPONENT_${comp}_Reagent]}
+				/declare COMPONENT_${comp} 			string 	outer ${Ini[INI_CHAR,Components,COMPONENT_${comp}]}
+				/declare COMPONENT_${comp}_Check	bool 	outer ${Ini[INI_CHAR,Components,COMPONENT_${comp}_Check,FALSE]}
+				/declare COMPONENT_${comp}_Count 	int 	outer ${Ini[INI_CHAR,Components,COMPONENT_${comp}_Count]}
+				/declare COMPONENT_${comp}_Type  	string 	outer ${Ini[INI_CHAR,Components,COMPONENT_${comp}_Type]}
+				/declare COMPONENT_${comp}_Summoner string	outer ${Ini[INI_CHAR,Components,COMPONENT_${comp}_Summoner]}
+				/declare COMPONENT_${comp}_Reagent 	string	outer ${Ini[INI_CHAR,Components,COMPONENT_${comp}_Reagent]}
 			/next comp
 	
 	
 
 	|--[Settings] : Spell & Support Definitions
-	/declare item_pull				string	outer	${Ini[botINI,Puller,item_pull,"Shuriken of Eternity"]}
-	/declare item_pull_clean		string	outer	${Ini[botINI,Puller,item_pull_clean,Shuriken of Eternity]}
-	/declare item_summon			string	outer	${Ini[botINI,Puller,item_summon,"Ton Po's Mystical Pouch"]}
+	/declare item_pull				string	outer	${Ini[INI_CHAR,Puller,item_pull,"Shuriken of Eternity"]}
+	/declare item_pull_clean		string	outer	${Ini[INI_CHAR,Puller,item_pull_clean,Shuriken of Eternity]}
+	/declare item_summon			string	outer	${Ini[INI_CHAR,Puller,item_summon,"Ton Po's Mystical Pouch"]}
 	
-	/declare spell_pull				string	outer	${Ini[botINI,Puller,spell_pull,"Terror of Discord"]}
-	/declare spell_pullGem			string 	outer	${Ini[botINI,Puller,spell_pullGem,"gem2"]}
-	/declare spell_hate				string	outer	${Ini[botINI,Puller,spell_hate,"Terror of Discord"]}
-	/declare spell_hateGem			string  outer   ${Ini[botINI,Puller,spell_hateGem,"gem2"]}
-	/declare spell_aehate			string	outer	${Ini[botINI,Puller,spell_aehate,"Dread Gaze"]}
-	/declare spell_aehateGem		string	outer	${Ini[botINI,Puller,spell_aehate,"gem3"]}
-	/declare spell_snare			string	outer	${Ini[botINI,Puller,spell_snare,"Festering Darkness"]}
-	/declare bln_useSnare			bool	outer	${Ini[botINI,Puller,bln_useSnare,FALSE]}
-	/declare war_ca_hate_1			string	outer	${Ini[botINI,Puller,war_ca_hate_1,Bazu Bellow]}
-	/declare war_ca_hate_2			string	outer 	${Ini[botINI,Puller,war_ca_hate_2,Bellow of the Mastruq]}
-	/declare int_castDistance		int		outer	${Ini[botINI,Puller,int_castDistance,120]}
+	/declare spell_pull				string	outer	${Ini[INI_CHAR,Puller,spell_pull,"Terror of Discord"]}
+	/declare spell_pullGem			string 	outer	${Ini[INI_CHAR,Puller,spell_pullGem,"gem2"]}
+	/declare spell_hate				string	outer	${Ini[INI_CHAR,Puller,spell_hate,"Terror of Discord"]}
+	/declare spell_hateGem			string  outer   ${Ini[INI_CHAR,Puller,spell_hateGem,"gem2"]}
+	/declare spell_aehate			string	outer	${Ini[INI_CHAR,Puller,spell_aehate,"Dread Gaze"]}
+	/declare spell_aehateGem		string	outer	${Ini[INI_CHAR,Puller,spell_aehate,"gem3"]}
+	/declare spell_snare			string	outer	${Ini[INI_CHAR,Puller,spell_snare,"Festering Darkness"]}
+	/declare bln_useSnare			bool	outer	${Ini[INI_CHAR,Puller,bln_useSnare,FALSE]}
+	/declare war_ca_hate_1			string	outer	${Ini[INI_CHAR,Puller,war_ca_hate_1,Bazu Bellow]}
+	/declare war_ca_hate_2			string	outer 	${Ini[INI_CHAR,Puller,war_ca_hate_2,Bellow of the Mastruq]}
+	/declare int_castDistance		int		outer	${Ini[INI_CHAR,Puller,int_castDistance,120]}
 
 	|-- [Settings] : Melee Defaults
 	/declare 	MinStrikeEndurance 		int		outer	200
 	/declare 	MinBellowEndurance		int		outer	200
 	/declare    provokeTimer            timer   outer   0
-	/declare 	stickCmd				string	outer   ${Ini[botINI,Sticking,stickCmd,behindonce 35]}
+	/declare 	stickCmd				string	outer   ${Ini[INI_CHAR,Sticking,stickCmd,behindonce 35]}
 	/declare 	bln_chkComponents		bool	outer	TRUE
 	/declare 	bln_tgtDeadSoon			bool	outer	FALSE
 	/declare	timer_reAssist			timer	outer	5s

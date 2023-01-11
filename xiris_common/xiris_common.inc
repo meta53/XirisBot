@@ -35,7 +35,8 @@ ______________________________________________
 
 **|
 
-#define botINI xiris_class_ini/BOT_${Me.Class.ShortName}_${Me.CleanName}.ini
+#define INI_CHAR xiris_class_ini/BOT_${Me.Class.ShortName}_${Me.CleanName}.ini
+#define INI_RAID xiris_common/xiris_common.ini
 
 #include xiris_common/xiris_dannet.inc
 #include xiris_common/xiris_buffing.inc
@@ -107,7 +108,6 @@ ______________________________________________
 #Event UseInfusion			"#*#DoInfusion#*#"
 
 |MISC events
-#EVENT ConnectEQBC			"#*#ConnectEQBC#*#"
 #EVENT CheckNaked			"#*#CheckNaked#*#"
 
 #EVENT RageOff				"#*#is no longer enraged#*#"
@@ -235,9 +235,9 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/if (!${bln_tanking} || !${bln_aggro}) 	/squelch /melee aggro=0
 	/if (!${bln_tanking} || !${bln_aggro}) 	/squelch /melee taunt=0
 	|-- Set the default tanks
-	/declare	str_defTank1			string	outer	${Ini[botINI,Settings,defaultTank1,Xiris]}
-	/declare	str_defTank2			string	outer	${Ini[botINI,Settings,defaultTank2,Xiria]}
-	/declare	str_defTank3			string	outer	${Ini[botINI,Settings,defaultTank3,Xirea]}
+	/declare	str_defTank1			string	outer	${Ini[INI_CHAR,Settings,defaultTank1,Xiris]}
+	/declare	str_defTank2			string	outer	${Ini[INI_CHAR,Settings,defaultTank2,Xiria]}
+	/declare	str_defTank3			string	outer	${Ini[INI_CHAR,Settings,defaultTank3,Xirea]}
 	/declare 	str_tankName1			string	outer 	${str_defTank1}
 	/declare	str_tankName2			string	outer 	${str_defTank2}
 	/declare 	str_tankName3			string  outer	${str_defTank3}
@@ -259,7 +259,7 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 
 	|-- [Settings] :Auto Assist Settings
 	/declare 	bln_autoAssist			bool	outer 	FALSE
-	/declare	int_defAssistAt			int		outer   ${Ini[botINI,Settings,assistAt,98]}
+	/declare	int_defAssistAt			int		outer   ${Ini[INI_CHAR,Settings,assistAt,98]}
 	/declare 	int_assistAt			int		outer   ${int_defAssistAt}
 	/if (${_assistArgs.Length}) {
 		/varset bln_autoAssist ${Bool[${_assistArgs.Token[1,,]}]}
@@ -268,7 +268,7 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/cecho \ayAuto Assist settings: \awAuto?\ag${bln_autoAssist} \awAt?\ag${int_assistAt} \awArgs:\ag${_assistArgs}
 
 	|-- [Settings] : Miscellaneous Defaults
-	/declare	str_spellSet			string	outer	${Ini[botINI,Settings,str_spellSet,default]}
+	/declare	str_spellSet			string	outer	${Ini[INI_CHAR,Settings,str_spellSet,default]}
 	/declare	bln_engaged				bool	outer	FALSE
 	/declare	bln_enraged				bool	outer	FALSE
 	/declare    bln_pulling		    	bool    outer   FALSE
@@ -282,10 +282,10 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/declare 	timer_xtargetRefresh	timer	outer 	30s
 
 	|-- [Settings] : Meditation & Utilities
-	/declare int_sitRadius   		int     outer ${Ini[botINI,Settings,sitRadius,50]}
-	/declare int_medPercent       	int     outer ${Ini[botINI,Settings,medPercent,100]}
-	/declare timer_medDelay			timer	outer ${Ini[botINI,Settings,medDelay,45s]}
-	/declare timer_sitDelay			timer	outer ${Ini[botINI,Settings,sitDelay,10s]}
+	/declare int_sitRadius   		int     outer ${Ini[INI_CHAR,Settings,sitRadius,50]}
+	/declare int_medPercent       	int     outer ${Ini[INI_CHAR,Settings,medPercent,100]}
+	/declare timer_medDelay			timer	outer ${Ini[INI_CHAR,Settings,medDelay,45s]}
+	/declare timer_sitDelay			timer	outer ${Ini[INI_CHAR,Settings,sitDelay,10s]}
 	/declare timer_check_utilities	timer   outer 0
 	
 	|-- [Settings] : Camp
@@ -795,29 +795,7 @@ Sub SetRaidGroupMode(string _mode)
 	/varset str_raidGroupMode ${_mode}
 	/deletevar RaidGroupLeaders 
 	/cecho \aySetting raid group mode to ${_mode}
-	/if (${_mode.Equal[RAID]}) {
-		/declare RaidGroupLeaders[9] string outer NULL
-		/varset	RaidGroupLeaders[1] Xiris
-		/varset	RaidGroupLeaders[2] Xiria
-		/varset RaidGroupLeaders[3] Theist
-		/varset RaidGroupLeaders[4] Cereborn
-		/varset RaidGroupLeaders[5] Sadelia
-		/varset RaidGroupLeaders[6] Xaeliea
-		/varset RaidGroupLeaders[7] Xaexa
-		/varset RaidGroupLeaders[8] Xaia
-		/varset RaidGroupLeaders[9] Xepatia
-	} else /if (${_mode.Equal[HATRED]}) {
-		/declare RaidGroupLeaders[9] string outer NULL
-		/varset	RaidGroupLeaders[1] Xiris
-		/varset	RaidGroupLeaders[2] Xiria
-		/varset RaidGroupLeaders[3] Xirea
-		/varset RaidGroupLeaders[4] Cereborn
-		/varset RaidGroupLeaders[5] Sadelia
-		/varset RaidGroupLeaders[6] Xaeliea
-		/varset RaidGroupLeaders[7] Xaexa
-		/varset RaidGroupLeaders[8] Xaia
-		/varset RaidGroupLeaders[9] Xepatia
-	} else /if (${_mode.Equal[DEFAULT]}) {
+	 /if (${_mode.Equal[DEFAULT]}) {
 		/declare RaidGroupLeaders[9] string outer NULL
 		/varset	RaidGroupLeaders[1] Xiris
 		/varset	RaidGroupLeaders[2] Xiria
@@ -865,10 +843,10 @@ Sub SetRaidGroupMode(string _mode)
 		/declare RaidGroupLeaders[6] string outer NULL
 		/varset	RaidGroupLeaders[1] Xiris
 		/varset	RaidGroupLeaders[2] Xirin
-		/varset RaidGroupLeaders[6] Xaeliea
-		/varset RaidGroupLeaders[7] Xaexa
-		/varset RaidGroupLeaders[8] Xaia
-		/varset RaidGroupLeaders[9] Xepatia
+		/varset RaidGroupLeaders[3] Xaeliea
+		/varset RaidGroupLeaders[4] Xaexa
+		/varset RaidGroupLeaders[5] Xaia
+		/varset RaidGroupLeaders[6] Xepatia
 	}
 /return
 
@@ -888,7 +866,7 @@ Sub SetRaidDIClerics(string _mode)
 	/cecho \aySetting raid di members to ${_mode}
 	/deletevar RaidDIClerics
 		
-	/if (${_mode.Equal[RAID]} || ${_mode.Equal[HATRED]} || ${_mode.Equal[DEFAULT]} ) {
+	/if (${_mode.Equal[DEFAULT]} ) {
 		/declare RaidDIClerics[6] string outer NULL
 		/varset	RaidDIClerics[1] Xanshia
 		/varset	RaidDIClerics[2] Xinshia
@@ -1668,8 +1646,8 @@ Sub SaveRingset
 	/declare rightfinger string local ${Me.Inventory[rightfinger].Name}
 
 	/cecho \aoSaving Ringset \awleft: \ag${leftfinger} \awright: \ag${rightfinger}
-	/ini botINI "SavedInventory" "leftfinger" "${leftfinger}"
-	/ini botINI "SavedInventory" "rightfinger" "${rightfinger}"
+	/ini INI_CHAR "SavedInventory" "leftfinger" "${leftfinger}"
+	/ini INI_CHAR "SavedInventory" "rightfinger" "${rightfinger}"
 /return
 
 Sub EVENT_RemoveRingset
@@ -1702,8 +1680,8 @@ Sub EVENT_LoadRingset(string _line, string _sender, string _eventParams)
 /return
 
 Sub LoadRingset
-	/declare leftfinger string local ${Ini[botINI,SavedInventory,leftfinger]}
-	/declare rightfinger string local ${Ini[botINI,SavedInventory,rightfinger]}
+	/declare leftfinger string local ${Ini[INI_CHAR,SavedInventory,leftfinger]}
+	/declare rightfinger string local ${Ini[INI_CHAR,SavedInventory,rightfinger]}
 	/if (${Me.Class.ShortName.Equal[BRD]}) /medley stop
 	/echo ${leftfinger},  ${rightfinger}
 
@@ -1737,7 +1715,7 @@ Sub EVENT_LoadWeaponset(string _line, string _sender, string _evtParams)
 Sub LoadWeaponset(string _weaponset)
 	|/if (${str_classArchetype.Equal[CASTER]} || ${str_classArchetype.Equal[PRIEST]} && ${_weaponset.NotEqual[default]}) /return
 	/if (${_weaponset.Equal[NULL]}) /varset _weaponset default
-	/declare set string local ${Ini[botINI,Weaponsets,${_weaponset}]}
+	/declare set string local ${Ini[INI_CHAR,Weaponsets,${_weaponset}]}
 	/if (${set.Equal[NULL]}) /return
 	/if (${Me.Class.ShortName.Equal[BRD]}) /medley stop
 	/cecho \aw ${_weaponset}: ${set}
@@ -1841,7 +1819,7 @@ Sub SaveWeaponset(string _key, string _weaponset)
 	|weaponset line should be [_key] [item1|mainhand,item2|offhand]
 	|example: default=Longsword of Execration|mainhand,Aegis of Midnight|offhand
 	/echo writing key: ${_key} weaponset: ${_weaponset}
-	/ini botINI "Weaponsets" "${_key}" "${_weaponset}"
+	/ini INI_CHAR "Weaponsets" "${_key}" "${_weaponset}"
 /return
 
 |#EVENT SaveCurrentWeaponset "#1#SaveCurrentWeaponset #2#"
@@ -1855,7 +1833,7 @@ Sub SaveCurrentWeaponset(string _key)
 	/declare pri string local ${Me.Inventory[mainhand].Name}
 	/declare off string local ${Me.Inventory[offhand].Name}
 	
- 	/ini botINI "Weaponsets" "${_key}" "${pri}|mainhand,${off}|offhand"
+ 	/ini INI_CHAR "Weaponsets" "${_key}" "${pri}|mainhand,${off}|offhand"
 /return
 
 

@@ -1370,7 +1370,7 @@ Sub xbot_initialize_healing(int _healPoint)
 
 	|-- Heal Settings
 	/declare    bln_defaultAutoInterrupt 	bool	outer  	${Ini[healINI,Heal_Settings,bln_autointerrupt]}
-	/declare 	bln_autointerrupt			bool	outer	${Ini[botINI,Healing_Settings,bln_autointerrupt,${bln_defaultAutoInterrupt}]}
+	/declare 	bln_autointerrupt			bool	outer	${Ini[INI_CHAR,Healing_Settings,bln_autointerrupt,${bln_defaultAutoInterrupt}]}
 	
 	| 	Heal Mode: NORMAL|EFFICIENT|CHCHAIN
 	/declare    str_healMode				string  outer 	NORMAL
@@ -1378,29 +1378,29 @@ Sub xbot_initialize_healing(int _healPoint)
 	| 	Heal Mode: 0|Self Only, 1|Self/MT 2|Self/MT/Group
 
 	/declare 	int_defaultHealMode			int 	outer   ${Ini[${healINI},Heal_Settings,int_healMode]}
-	/declare	int_healMode    			int     outer   ${Ini[botINI,Healing_Settings,int_healMode,${int_defaultHealMode}]}
+	/declare	int_healMode    			int     outer   ${Ini[INI_CHAR,Healing_Settings,int_healMode,${int_defaultHealMode}]}
 	/declare 	bln_focusHealMT				bool    outer   FALSE
 	/if (${int_healMode}<=1) 				/varset bln_focusHealMT	TRUE
 	/cecho \arint_healMode: \ag${int_healMode} ${int_defaultHealMode}
 
 	/declare 	use_heal_defaultDivineArb	bool	outer 	${Ini[${healINI},Heal_Settings,use_heal_divineArb, FALSE]}
-	/declare	use_heal_divineArb			bool	outer	${Ini[botINI,Healing_Settings,use_heal_divineArb,${use_heal_defaultDivineArb}]}
+	/declare	use_heal_divineArb			bool	outer	${Ini[INI_CHAR,Healing_Settings,use_heal_divineArb,${use_heal_defaultDivineArb}]}
 	
 	|-- Healing Spells
-	/declare 	str_heal_normal				string	outer	${Ini[botINI,Healing_Spells,str_heal_normal,NULL]}
-	/declare 	str_heal_normal_efficient	string	outer	${Ini[botINI,Healing_Spells,str_heal_normal_efficient,${str_heal_normal}]}
-	/declare 	str_heal_frantic			string	outer	${Ini[botINI,Healing_Spells,str_heal_frantic,${str_heal_normal}]}
-	/declare 	str_heal_frantic_efficient 	string	outer	${Ini[botINI,Healing_Spells,str_heal_frantic_efficient,${str_heal_frantic}]}
-	/declare 	str_heal_HoT				string	outer	${Ini[botINI,Healing_Spells,str_heal_HoT,NULL]}
-	/declare 	str_heal_group				string	outer	${Ini[botINI,Healing_Spells,str_heal_group,NULL]}
-	/declare 	str_heal_groupHoT			string	outer	${Ini[botINI,Healing_Spells,str_heal_groupHoT,NULL]}
-	/declare 	str_heal_complete			string	outer	${Ini[botINI,Healing_Spells,str_heal_complete,NULL]}
+	/declare 	str_heal_normal				string	outer	${Ini[INI_CHAR,Healing_Spells,str_heal_normal,NULL]}
+	/declare 	str_heal_normal_efficient	string	outer	${Ini[INI_CHAR,Healing_Spells,str_heal_normal_efficient,${str_heal_normal}]}
+	/declare 	str_heal_frantic			string	outer	${Ini[INI_CHAR,Healing_Spells,str_heal_frantic,${str_heal_normal}]}
+	/declare 	str_heal_frantic_efficient 	string	outer	${Ini[INI_CHAR,Healing_Spells,str_heal_frantic_efficient,${str_heal_frantic}]}
+	/declare 	str_heal_HoT				string	outer	${Ini[INI_CHAR,Healing_Spells,str_heal_HoT,NULL]}
+	/declare 	str_heal_group				string	outer	${Ini[INI_CHAR,Healing_Spells,str_heal_group,NULL]}
+	/declare 	str_heal_groupHoT			string	outer	${Ini[INI_CHAR,Healing_Spells,str_heal_groupHoT,NULL]}
+	/declare 	str_heal_complete			string	outer	${Ini[INI_CHAR,Healing_Spells,str_heal_complete,NULL]}
 	
 	|-- Ressurection
 	/declare	bln_autoRez					bool	outer	FALSE
 	/declare 	bln_combatRez				bool	outer	FALSE
-	/declare	str_rezSpell				string	outer	${Ini[botINI,Healing_Spells,str_rezSpell,Reviviscence]}
-	/declare  	str_rezGem					string	outer	${Ini[botINI,Healing_Spells,str_rezGem,gem7]}
+	/declare	str_rezSpell				string	outer	${Ini[INI_CHAR,Healing_Spells,str_rezSpell,Reviviscence]}
+	/declare  	str_rezGem					string	outer	${Ini[INI_CHAR,Healing_Spells,str_rezGem,gem7]}
 
 	/echo ---------------
 	/cecho \ayHeal Spells: \awNormal:\ag${str_heal_normal}\aw  || Efficient:\ag${str_heal_frantic_efficient}\aw || CH:\ag${str_heal_complete}
@@ -1459,9 +1459,9 @@ Sub xbot_initialize_healing(int _healPoint)
 		/declare 	int_def_selfHot			int     outer   ${Ini[${healINI},Heal_Points,int_point_selfHot]}
 
 		|-- SELF (Overrides)
-		/declare	int_point_selfPatch		int 	outer 	${Ini[botINI,Heal_Points,int_point_selfPatch,${int_def_selfPatch}]}
-		/declare	int_point_selfFrantic	int		outer	${Ini[botINI,Heal_Points,int_point_selfFrantic,${int_def_selfFrantic}]}
-		/declare	int_point_selfHot		int		outer	${Ini[botINI,Heal_Points,int_point_selfHot,${int_def_selfHot}]}
+		/declare	int_point_selfPatch		int 	outer 	${Ini[INI_CHAR,Heal_Points,int_point_selfPatch,${int_def_selfPatch}]}
+		/declare	int_point_selfFrantic	int		outer	${Ini[INI_CHAR,Heal_Points,int_point_selfFrantic,${int_def_selfFrantic}]}
+		/declare	int_point_selfHot		int		outer	${Ini[INI_CHAR,Heal_Points,int_point_selfHot,${int_def_selfHot}]}
 	
 		|-- TANK (Defaults)
 		/declare 	int_def_tankPatch		int     outer   ${Ini[${healINI},Heal_Points,int_point_tankPatch]}
@@ -1469,15 +1469,15 @@ Sub xbot_initialize_healing(int _healPoint)
 		/declare 	int_def_tankHot			int     outer   ${Ini[${healINI},Heal_Points,int_point_tankHot]}
 
 		|-- TANK (Overrides)
-		/declare	int_point_tankPatch		int		outer	${Ini[botINI,Heal_Points,int_point_tankPatch,${int_def_tankPatch}]}
+		/declare	int_point_tankPatch		int		outer	${Ini[INI_CHAR,Heal_Points,int_point_tankPatch,${int_def_tankPatch}]}
 		/if (${Bool[${_healPoint}]}) {
 			/cecho \agHealpoint setting overriding defaults: ${_healPoint}	
 			/varset	int_point_tankPatch	${_healPoint}
 		} else {
 			/echo No healpoint defined using INI values
 		}
-		/declare	int_point_tankFrantic	int		outer	${Ini[botINI,Heal_Points,int_point_tankFrantic,${int_def_tankFrantic}]}
-		/declare	int_point_tankHot		int		outer	${Ini[botINI,Heal_Points,int_point_tankHot,${int_def_tankHot}]}
+		/declare	int_point_tankFrantic	int		outer	${Ini[INI_CHAR,Heal_Points,int_point_tankFrantic,${int_def_tankFrantic}]}
+		/declare	int_point_tankHot		int		outer	${Ini[INI_CHAR,Heal_Points,int_point_tankHot,${int_def_tankHot}]}
 	
 		|-- Rest of Group (Defaults)
 		/declare 	int_def_grpPatch		int     outer   ${Ini[${healINI},Heal_Points,int_point_grpPatch]}
@@ -1485,16 +1485,16 @@ Sub xbot_initialize_healing(int _healPoint)
 		/declare 	int_def_grpHot			int     outer   ${Ini[${healINI},Heal_Points,int_point_grpHot]}
 
 		|-- Rest of Group (Overrides)
-		/declare	int_point_grpPatch		int		outer	${Ini[botINI,Heal_Points,int_point_grpPatch,${int_def_grpPatch}]}	
-		/declare	int_point_grpFrantic	int		outer	${Ini[botINI,Heal_Points,int_point_grpFrantic,${int_def_grpFrantic}]}
-		/declare	int_point_grpHot		int		outer	${Ini[botINI,Heal_Points,int_point_grpHot,${int_def_grpHot}]}	
+		/declare	int_point_grpPatch		int		outer	${Ini[INI_CHAR,Heal_Points,int_point_grpPatch,${int_def_grpPatch}]}	
+		/declare	int_point_grpFrantic	int		outer	${Ini[INI_CHAR,Heal_Points,int_point_grpFrantic,${int_def_grpFrantic}]}
+		/declare	int_point_grpHot		int		outer	${Ini[INI_CHAR,Heal_Points,int_point_grpHot,${int_def_grpHot}]}	
 
 		|-- Divine Arbitration && Misc
-		/declare    int_point_divineArb     int		outer	${Ini[botINI,Heal_Points,int_point_divineArb,20]}
-		/declare    int_point_stopHeal    	int		outer   ${Ini[botINI,Heal_Points,int_point_stopHeal,90]}	
+		/declare    int_point_divineArb     int		outer	${Ini[INI_CHAR,Heal_Points,int_point_divineArb,20]}
+		/declare    int_point_stopHeal    	int		outer   ${Ini[INI_CHAR,Heal_Points,int_point_stopHeal,90]}	
 		/declare	int_point_calcStopHeal	int		outer	100
 		/declare    use_interrupt_selfHeal  bool	outer   TRUE
-		/declare    int_point_interrupt		int		outer   ${Ini[botINI,Heal_Points,int_point_interrupt,50]}
+		/declare    int_point_interrupt		int		outer   ${Ini[INI_CHAR,Heal_Points,int_point_interrupt,50]}
 	
 	|-- Celestial Regeneration Chain
 	/declare bln_hasCelRegen 				bool    outer   ${Me.Class.ShortName.Equal[CLR]}
@@ -1515,8 +1515,8 @@ Sub xbot_initialize_healing(int _healPoint)
 	|-- Totems
 	/declare    bln_hasTotem		 	bool    outer  FALSE
 	/if (${str_classArchetype.Equal[PRIEST]}) /varset bln_hasTotem TRUE
-	/declare    str_totemName			string  outer  ${Ini[botINI,Totems,str_totemName,NULL]}	
-	/declare	int_totemKey			int 	outer  ${Ini[botINI,Totems,int_totemKey,99]}	
+	/declare    str_totemName			string  outer  ${Ini[INI_CHAR,Totems,str_totemName,NULL]}	
+	/declare	int_totemKey			int 	outer  ${Ini[INI_CHAR,Totems,int_totemKey,99]}	
 
 
 	|-- Various Flags
@@ -1554,7 +1554,7 @@ Sub xbot_initialize_healing(int _healPoint)
 	/if (${Me.Class.Name.Equal[Cleric]}) /varset str_completeHeal Complete Heal
     /if (${Me.Class.Name.Equal[Druid]})  /varset str_completeHeal Karana's Renewal
     /if (${Me.Class.Name.Equal[Shaman]}) /varset str_completeHeal Kragg's Mending
-	/declare	str_chGem				string	outer   ${Ini[botINI,Healing_Spells,int_grpHealRNG,gem9]}
+	/declare	str_chGem				string	outer   ${Ini[INI_CHAR,Healing_Spells,int_grpHealRNG,gem9]}
 	
 	
 	|-- Complete Healing Arguments

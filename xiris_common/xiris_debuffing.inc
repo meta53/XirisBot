@@ -203,18 +203,18 @@ Sub CastDebuff(string _debuff, string _gem,  int _maxTries, int _targetID, bool 
 Sub CreateDebuffLineup
 	/declare i 							int		local
 	|-- Debuffs
-	/declare DEBUFF_Total				int		outer	${Ini[botINI,DEBUFF,DEBUFF_Total,0]}
+	/declare DEBUFF_Total				int		outer	${Ini[INI_CHAR,DEBUFF,DEBUFF_Total,0]}
 	/declare DEBUFF_HasCastOnce			bool 	outer	FALSE
-	/declare DEBUFF_Mana_Minimum		int 	outer	${Ini[botINI,DEBUFF,DEBUFF_Mana_Minimum,10]}
-	/declare DEBUFF_Mana_NamedMinimum	int		outer	${Ini[botINI,DEBUFF,DEBUFF_Mana_NamedMinimum,10]} 
-	/declare DEBUFF_StartHP				int		outer	${Ini[botINI,DEBUFF,DEBUFF_StartHP,100]}
-	/declare DEBUFF_StopHP				int		outer	${Ini[botINI,DEBUFF,DEBUFF_StopHP,10]}
+	/declare DEBUFF_Mana_Minimum		int 	outer	${Ini[INI_CHAR,DEBUFF,DEBUFF_Mana_Minimum,10]}
+	/declare DEBUFF_Mana_NamedMinimum	int		outer	${Ini[INI_CHAR,DEBUFF,DEBUFF_Mana_NamedMinimum,10]} 
+	/declare DEBUFF_StartHP				int		outer	${Ini[INI_CHAR,DEBUFF,DEBUFF_StartHP,100]}
+	/declare DEBUFF_StopHP				int		outer	${Ini[INI_CHAR,DEBUFF,DEBUFF_StopHP,10]}
 
 	/if (${Bool[${DEBUFF_Total}]}) {
 		/for i 1 to ${DEBUFF_Total} 
-			/call addSpellToLineup DEBUFF ${i} ${Ini[botINI,DEBUFF,DEBUFF_${i}]}
-			/declare DEBUFF_${i}_Trigger	string	outer	${Ini[botINI,DEBUFF,DEBUFF_${i}_Trigger,#{Bool[1]}]}
-			/declare DEBUFF_${i}_Type		string	outer	${Ini[botINI,DEBUFF,DEBUFF_${i}_Type,RESIST_DEBUFF]}
+			/call addSpellToLineup DEBUFF ${i} ${Ini[INI_CHAR,DEBUFF,DEBUFF_${i}]}
+			/declare DEBUFF_${i}_Trigger	string	outer	${Ini[INI_CHAR,DEBUFF,DEBUFF_${i}_Trigger,#{Bool[1]}]}
+			/declare DEBUFF_${i}_Type		string	outer	${Ini[INI_CHAR,DEBUFF,DEBUFF_${i}_Type,RESIST_DEBUFF]}
 		/next i
 	}
 

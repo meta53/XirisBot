@@ -221,7 +221,7 @@ Sub variant_initialize
 	/memspellset ${str_spellset}
 
 	|-- Champion
-	/declare 	champ_groups 				string  outer   ${Ini[botINI,Champion,champ_groups]}
+	/declare 	champ_groups 				string  outer   ${Ini[INI_CHAR,Champion,champ_groups]}
 	|/rs ${Me.Name} responsible for champion on ${champ_groups}
 
 	/declare 	timer_champion				timer   outer   60s
@@ -233,9 +233,9 @@ Sub variant_initialize
 
 
 	|-- Cannibalization
-	/declare	int_canniManaThreshold	int		outer 	${Ini[botINI,Cannibalize,int_canni_mana_threshold,80]}
-	/declare	int_canniHPThreshold	int		outer 	${Ini[botINI,Cannibalize,int_canni_hp_threshold,40]}
-	/declare	str_canniSpell			string	outer 	${Ini[botINI,Cannibalize,str_canni_spell,Ancient:Chaotic Pain]}
+	/declare	int_canniManaThreshold	int		outer 	${Ini[INI_CHAR,Cannibalize,int_canni_mana_threshold,80]}
+	/declare	int_canniHPThreshold	int		outer 	${Ini[INI_CHAR,Cannibalize,int_canni_hp_threshold,40]}
+	/declare	str_canniSpell			string	outer 	${Ini[INI_CHAR,Cannibalize,str_canni_spell,Ancient:Chaotic Pain]}
 	
 	/cecho \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID}) HealPoint:${healPoint} ST: ${str_STName}(${int_STID})
 	/call InitEvents_Class

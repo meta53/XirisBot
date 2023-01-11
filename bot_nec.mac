@@ -202,28 +202,28 @@ Sub variant_initialize
 
 	|--Necro Specific Settings
 	|--Lifetap
-	/declare bln_lifetapUse				bool	outer	${Ini[botINI,Lifetap,bln_lifetapUse,TRUE]}
-	/declare str_lifetapSpell			string	outer	${Ini[botINI,Lifetap,str_lifetapSpell,Divert Essence Rk. II]}
-	/declare str_lifetapGem				string	outer	${Ini[botINI,Lifetap,str_lifetapGem,gem12]}
-	/declare int_lifetapHP				string	outer	${Ini[botINI,Lifetap,int_lifetapHP,70]}
+	/declare bln_lifetapUse				bool	outer	${Ini[INI_CHAR,Lifetap,bln_lifetapUse,TRUE]}
+	/declare str_lifetapSpell			string	outer	${Ini[INI_CHAR,Lifetap,str_lifetapSpell,Divert Essence Rk. II]}
+	/declare str_lifetapGem				string	outer	${Ini[INI_CHAR,Lifetap,str_lifetapGem,gem12]}
+	/declare int_lifetapHP				string	outer	${Ini[INI_CHAR,Lifetap,int_lifetapHP,70]}
 	
 	|--Feign Death
-	/declare bln_feignUse				bool	outer 	${Ini[botINI,FeignDeath,bln_feignUse,TRUE]}
-	/declare bln_feignAggro				bool	outer 	${Ini[botINI,FeignDeath,bln_feignAggro,TRUE]}
-	/declare int_feignCountActive		int		outer	${Ini[botINI,FeignDeath,int_feignCountActive,5]}
-	/declare int_feignHP				int		outer   ${Ini[botINI,FeignDeath,int_feignHP,25]}
-	/declare int_feignStandHP			int		outer   ${Ini[botINI,FeignDeath,int_feignStandHP,65]}
-	/declare str_feignSpell				string	outer   ${Ini[botINI,FeignDeath,str_feignSpell,Death Peace]}
-	/declare str_feignGem				string	outer   ${Ini[botINI,FeignDeath,str_feignGem,alt]}
-	/declare timer_feignDelay			timer	outer   ${Ini[botINI,FeignDeath,timer_feignDelay,3s]}
+	/declare bln_feignUse				bool	outer 	${Ini[INI_CHAR,FeignDeath,bln_feignUse,TRUE]}
+	/declare bln_feignAggro				bool	outer 	${Ini[INI_CHAR,FeignDeath,bln_feignAggro,TRUE]}
+	/declare int_feignCountActive		int		outer	${Ini[INI_CHAR,FeignDeath,int_feignCountActive,5]}
+	/declare int_feignHP				int		outer   ${Ini[INI_CHAR,FeignDeath,int_feignHP,25]}
+	/declare int_feignStandHP			int		outer   ${Ini[INI_CHAR,FeignDeath,int_feignStandHP,65]}
+	/declare str_feignSpell				string	outer   ${Ini[INI_CHAR,FeignDeath,str_feignSpell,Death Peace]}
+	/declare str_feignGem				string	outer   ${Ini[INI_CHAR,FeignDeath,str_feignGem,alt]}
+	/declare timer_feignDelay			timer	outer   ${Ini[INI_CHAR,FeignDeath,timer_feignDelay,3s]}
 	
 	|--Snaring
-	/declare bln_snareUse				bool	outer	${Ini[botINI,Snare,bln_snareUse,FALSE]}
-	/declare int_snareHP				int		outer	${Ini[botINI,Snare,int_snareHP,35]}
-	/if (!${Defined[str_snareSpell]}) /declare str_snareSpell string	outer	${Ini[botINI,Snare,str_snareSpell,Embracing Darkness]}
-	/varset str_snareSpell	${Ini[botINI,Snare,str_snareSpell,Embracing Darkness]}
-	/declare str_snareGem				string	outer   ${Ini[botINI,Snare,str_snareSpell,alt]}
-	/declare int_snareLocalNPC			int		outer	${Ini[botINI,Snare,int_snareLocalNPC,99]}
+	/declare bln_snareUse				bool	outer	${Ini[INI_CHAR,Snare,bln_snareUse,FALSE]}
+	/declare int_snareHP				int		outer	${Ini[INI_CHAR,Snare,int_snareHP,35]}
+	/if (!${Defined[str_snareSpell]}) /declare str_snareSpell string	outer	${Ini[INI_CHAR,Snare,str_snareSpell,Embracing Darkness]}
+	/varset str_snareSpell	${Ini[INI_CHAR,Snare,str_snareSpell,Embracing Darkness]}
+	/declare str_snareGem				string	outer   ${Ini[INI_CHAR,Snare,str_snareSpell,alt]}
+	/declare int_snareLocalNPC			int		outer	${Ini[INI_CHAR,Snare,int_snareLocalNPC,99]}
 	/declare bln_snareActive			bool	outer	FALSE
 	/declare int_snareCounter			int		outer	0
 	

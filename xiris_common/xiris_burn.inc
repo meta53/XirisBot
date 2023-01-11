@@ -362,14 +362,14 @@ Sub CreateBurnLineup
     |   Burn_Index=_Burn|_Type|_Use|_AfterIndex|_MGB
     |	BURN_1="Ancestral Aid"|alt|TRUE|0|FALSE
 
-    /declare BURN_Total             int     outer   ${Ini[botINI,BURN,BURN_Total,0]}
-	/declare BURN_Group             int     outer   ${Ini[botINI,BURN,BURN_Group,ALL]}
+    /declare BURN_Total             int     outer   ${Ini[INI_CHAR,BURN,BURN_Total,0]}
+	/declare BURN_Group             int     outer   ${Ini[INI_CHAR,BURN,BURN_Group,ALL]}
 
 
     /declare i int local
     /if (${Bool[${BURN_Total}]}) {
         /for i 1 to ${BURN_Total}
-            /call AddBurnToLineup BURN ${i} ${Ini[botINI,BURN,BURN_${i}]}
+            /call AddBurnToLineup BURN ${i} ${Ini[INI_CHAR,BURN,BURN_${i}]}
         /next i
     }
 /return
@@ -378,12 +378,12 @@ Sub CreateAALineup
     |_AA|_Type|_Use|_NamedOnly|_StartHP|_StopHP|_Trigger
 	|AA_1="Assault Rk. II"|OFFENSE|TRUE|FALSE|97|15|#{Me.PctHps}>0
 
-    /declare AA_Total               int		outer	${Ini[botINI,AA,AA_Total,0]}
+    /declare AA_Total               int		outer	${Ini[INI_CHAR,AA,AA_Total,0]}
 
     /declare i int local
     /if (${Bool[${AA_Total}]}) {
         /for i 1 to ${AA_Total}
-            /call AddAAToLineup AA ${i} ${Ini[botINI,AA,AA_${i}]}
+            /call AddAAToLineup AA ${i} ${Ini[INI_CHAR,AA,AA_${i}]}
         /next i
     }
 
@@ -393,12 +393,12 @@ Sub CreateClickyLineup
 	|_Item|_Type|_Use|_NamedOnly|_StartHP|_StopHP|_Trigger
 	|CLICKY_1="Nightshade, Blade of Entropy"|OFFENSE|TRUE|FALSE|97|15|#{Me.PctHps}>0
 
-    /declare CLICKY_Total		    int		outer	${Ini[botINI,CLICKY,CLICKY_Total,0]}
+    /declare CLICKY_Total		    int		outer	${Ini[INI_CHAR,CLICKY,CLICKY_Total,0]}
 
     /declare i int local
     /if (${Bool[${CLICKY_Total}]}) {
         /for i 1 to ${CLICKY_Total}
-            /call AddClickyToLineup CLICKY ${i} ${Ini[botINI,CLICKY,CLICKY_${i}]}
+            /call AddClickyToLineup CLICKY ${i} ${Ini[INI_CHAR,CLICKY,CLICKY_${i}]}
         /next i
     }
 /return

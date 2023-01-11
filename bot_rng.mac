@@ -173,32 +173,32 @@ Sub variant_initialize
 	|--Archery
 	/declare	bln_archeryAuto			bool	outer	TRUE
 	/declare	bln_autoFireState		bool	outer	FALSE
-	/declare	int_archeryDist			int		outer	${Ini[botINI,Settings,archeryDist,200]}
+	/declare	int_archeryDist			int		outer	${Ini[INI_CHAR,Settings,archeryDist,200]}
 	
 	|--Concussion
-	/declare bln_concUse				bool	outer 	${Ini[botINI,Concussion,bln_concUse,TRUE]}
-	/declare bln_concAggro				bool	outer 	${Ini[botINI,Concussion,bln_concAggro,FALSE]}
-	/declare int_concCountActive		int		outer	${Ini[botINI,Concussion,int_concCountActive,5]}
-	/declare str_concSpell				string	outer   ${Ini[botINI,Concussion,str_concSpell,Concussion]}
-	/declare str_concGem				string	outer   ${Ini[botINI,Concussion,str_concGem,alt]}
-	/declare timer_concDelay			timer	outer   ${Ini[botINI,Concussion,timer_concDelay,10s]}
+	/declare bln_concUse				bool	outer 	${Ini[INI_CHAR,Concussion,bln_concUse,TRUE]}
+	/declare bln_concAggro				bool	outer 	${Ini[INI_CHAR,Concussion,bln_concAggro,FALSE]}
+	/declare int_concCountActive		int		outer	${Ini[INI_CHAR,Concussion,int_concCountActive,5]}
+	/declare str_concSpell				string	outer   ${Ini[INI_CHAR,Concussion,str_concSpell,Concussion]}
+	/declare str_concGem				string	outer   ${Ini[INI_CHAR,Concussion,str_concGem,alt]}
+	/declare timer_concDelay			timer	outer   ${Ini[INI_CHAR,Concussion,timer_concDelay,10s]}
 	
 
 	|--Hail of Arrows
 	|  note: not available in POP
-	/declare bln_useHail				bool	outer	${Ini[botINI,HailOfArrows,bln_hailofarrows,FALSE]}
-	/declare str_hailSpell				string	outer	${Ini[botINI,HailOfArrows,str_hailSpell,Barrage of Arrows]}
-	/declare int_hailAt					int		outer	${Ini[botINI,HailOfArrows,int_hailAt,95]}
-	/declare int_hailStop				int		outer	${Ini[botINI,HailOfArrows,int_hailStop,10]}
-	/declare int_hailDelay				int		outer	${Ini[botINI,HailOfArrows,int_hailDelay,320]}
+	/declare bln_useHail				bool	outer	${Ini[INI_CHAR,HailOfArrows,bln_hailofarrows,FALSE]}
+	/declare str_hailSpell				string	outer	${Ini[INI_CHAR,HailOfArrows,str_hailSpell,Barrage of Arrows]}
+	/declare int_hailAt					int		outer	${Ini[INI_CHAR,HailOfArrows,int_hailAt,95]}
+	/declare int_hailStop				int		outer	${Ini[INI_CHAR,HailOfArrows,int_hailStop,10]}
+	/declare int_hailDelay				int		outer	${Ini[INI_CHAR,HailOfArrows,int_hailDelay,320]}
 	
 	|--Snaring
-	/declare bln_snareUse				bool	outer	${Ini[botINI,Snare,bln_snareUse,FALSE]}
-	/declare int_snareHP				int		outer	${Ini[botINI,Snare,int_snareHP,35]}
-	/if (!${Defined[str_snareSpell]}) /declare str_snareSpell string	outer	${Ini[botINI,Snare,str_snareSpell,Atol's Spectral Shackles]}
-	/varset str_snareSpell	${Ini[botINI,Snare,str_snareSpell,Atol's Spectral Shackles]}
-	/declare str_snareGem				string	outer   ${Ini[botINI,Snare,str_snareSpell,alt]}
-	/declare int_snareLocalNPC			int		outer	${Ini[botINI,Snare,int_snareLocalNPC,99]}
+	/declare bln_snareUse				bool	outer	${Ini[INI_CHAR,Snare,bln_snareUse,FALSE]}
+	/declare int_snareHP				int		outer	${Ini[INI_CHAR,Snare,int_snareHP,35]}
+	/if (!${Defined[str_snareSpell]}) /declare str_snareSpell string	outer	${Ini[INI_CHAR,Snare,str_snareSpell,Atol's Spectral Shackles]}
+	/varset str_snareSpell	${Ini[INI_CHAR,Snare,str_snareSpell,Atol's Spectral Shackles]}
+	/declare str_snareGem				string	outer   ${Ini[INI_CHAR,Snare,str_snareSpell,alt]}
+	/declare int_snareLocalNPC			int		outer	${Ini[INI_CHAR,Snare,int_snareLocalNPC,99]}
 	/declare bln_snareActive			bool	outer	FALSE
 	/declare int_snareCounter			int		outer	0
 	

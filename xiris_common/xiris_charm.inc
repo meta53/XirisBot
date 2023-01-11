@@ -79,11 +79,11 @@ Sub xbot_initialize_charming
     /call InitEvents_Charm
 
     |-- Charm Spell(s)
-    /declare bln_doCharm            bool    outer   ${Ini[botINI,Charm,bln_doCharm,FALSE]}
+    /declare bln_doCharm            bool    outer   ${Ini[INI_CHAR,Charm,bln_doCharm,FALSE]}
     /declare bln_activeCharming     bool    outer   FALSE
 
-    /declare str_charm              string  outer   ${Ini[botINI,Charm,Charm_Spell,NULL]}
-    /declare int_charmGem           int     outer   ${Ini[botINI,Charm,Charm_Gem,7]}    
-    /declare int_charmMinLevel      int     outer   ${Ini[botINI,Charm,Charm_MinLevel,46]}
-    /declare int_charmMaxLevel      int     outer   ${Ini[botINI,Charm,Charm_MaxLevel,69]}
+    /declare str_charm              string  outer   ${Ini[INI_CHAR,Charm,Charm_Spell,NULL]}
+    /declare int_charmGem           int     outer   ${Ini[INI_CHAR,Charm,Charm_Gem,7]}    
+    /declare int_charmMinLevel      int     outer   ${Ini[INI_CHAR,Charm,Charm_MinLevel,46]}
+    /declare int_charmMaxLevel      int     outer   ${Ini[INI_CHAR,Charm,Charm_MaxLevel,69]}
 /return 

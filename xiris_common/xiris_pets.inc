@@ -249,34 +249,34 @@ Sub xbot_initialize_pets
 	/cecho \ao xbot_initialize_pets
 	
 	|--Pet Information
-	/declare str_petReagent				string  outer	${Ini[botINI,Pet,str_petReagent,NULL]}
-	/declare bln_petUse					bool	outer	${Ini[botINI,Pet,bln_petUse,TRUE]}
+	/declare str_petReagent				string  outer	${Ini[INI_CHAR,Pet,str_petReagent,NULL]}
+	/declare bln_petUse					bool	outer	${Ini[INI_CHAR,Pet,bln_petUse,TRUE]}
 	/declare bln_petAttacking			bool	outer 	${Me.Pet.Combat}
-	/declare int_petAttackHP			int		outer	${Ini[botINI,Pet,int_petAttackHP,99]}
-	/declare bln_petDiscipline			bool	outer	${Ini[botINI,Pet,bln_petDiscipline,TRUE]}
+	/declare int_petAttackHP			int		outer	${Ini[INI_CHAR,Pet,int_petAttackHP,99]}
+	/declare bln_petDiscipline			bool	outer	${Ini[INI_CHAR,Pet,bln_petDiscipline,TRUE]}
 	
-	/declare str_petSpell				string	outer	${Ini[botINI,Pet,str_petSpell,Dark Assassin]}
-	/declare str_petGem					string	outer	${Ini[botINI,Pet,str_petGem,gem11]}
+	/declare str_petSpell				string	outer	${Ini[INI_CHAR,Pet,str_petSpell,Dark Assassin]}
+	/declare str_petGem					string	outer	${Ini[INI_CHAR,Pet,str_petGem,gem11]}
 	
-	/declare bln_petUseBuffs			bool	outer	${Ini[botINI,Pet,bln_petUseBuffs,FALSE]}
-	/declare int_petBuffTotal			int		outer   ${Ini[botINI,DOT,int_petBuffTotal,0]}
+	/declare bln_petUseBuffs			bool	outer	${Ini[INI_CHAR,Pet,bln_petUseBuffs,FALSE]}
+	/declare int_petBuffTotal			int		outer   ${Ini[INI_CHAR,DOT,int_petBuffTotal,0]}
 	/declare timer_petBuffRecheck		timer	outer	0
 
 	/declare pb							int		local
 	|--Pet Shrinker
-	/declare str_petShrinker			string	outer  	${Ini[botINI,Pet,str_petShrinker,NULL]}
+	/declare str_petShrinker			string	outer  	${Ini[INI_CHAR,Pet,str_petShrinker,NULL]}
 	/declare bln_petShrunk				bool	outer	FALSE
 	
 	|--Pet Buffs
 	/for pb 1 to ${int_petBuffTotal} 
-		/declare petBuff_${pb} 				string	outer	${Ini[botINI,Pet,petBuff_${pb}]}
-		/declare petBuff_${pb}_Gem 			string	outer	${Ini[botINI,Pet,petBuff_${pb}_Gem]}
+		/declare petBuff_${pb} 				string	outer	${Ini[INI_CHAR,Pet,petBuff_${pb}]}
+		/declare petBuff_${pb}_Gem 			string	outer	${Ini[INI_CHAR,Pet,petBuff_${pb}_Gem]}
 	/next pb
 	
 	|--Pet Weapons
-	/declare str_petBelt				string	outer 	${Ini[botINI,Pet,str_petBelt,Girdle of Magi`Kot]}
-	/declare str_petWeap1				string  outer   ${Ini[botINI,Pet,str_petWeap1,Blade of the Kedge]}
-	/declare str_petWeap2				string  outer   ${Ini[botINI,Pet,str_petWeap2,Fist of Ixiblat]}
+	/declare str_petBelt				string	outer 	${Ini[INI_CHAR,Pet,str_petBelt,Girdle of Magi`Kot]}
+	/declare str_petWeap1				string  outer   ${Ini[INI_CHAR,Pet,str_petWeap1,Blade of the Kedge]}
+	/declare str_petWeap2				string  outer   ${Ini[INI_CHAR,Pet,str_petWeap2,Fist of Ixiblat]}
 	/declare bln_petWeaponized			bool	outer	FALSE
 	
 	

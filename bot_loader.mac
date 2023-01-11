@@ -17,7 +17,7 @@ REVISION HISTORY
 **|
 
 #turbo 120
-#define botINI xiris_class_ini/BOT_${Me.Class.ShortName}_${Me.CleanName}.ini
+#define INI_CHAR xiris_class_ini/BOT_${Me.Class.ShortName}_${Me.CleanName}.ini
 
 	
 |-------------------------------------------------------------------------------- 
@@ -29,10 +29,10 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 	/echo You are now in BOT_LOADER.mac
 
 	| set default values here in case we just started the loader with no args
-	/declare	str_defTank1		string	outer	${Ini[botINI,Settings,defaultTank1,Xiris]}
-	/declare	str_defTank2		string	outer	${Ini[botINI,Settings,defaultTank2,Xiria]}
-	/declare	str_defTank3		string	outer	${Ini[botINI,Settings,defaultTank3,Xirea]}
-	/declare	int_defHealPoint	int		outer	${Ini[botINI,Heal_Points,int_point_tankPatch,65]}
+	/declare	str_defTank1		string	outer	${Ini[INI_CHAR,Settings,defaultTank1,Xiris]}
+	/declare	str_defTank2		string	outer	${Ini[INI_CHAR,Settings,defaultTank2,Xiria]}
+	/declare	str_defTank3		string	outer	${Ini[INI_CHAR,Settings,defaultTank3,Xirea]}
+	/declare	int_defHealPoint	int		outer	${Ini[INI_CHAR,Heal_Points,int_point_tankPatch,65]}
 	/declare    str_defAssistArgs	string	outer 	FALSE,98
 
 	/if (!${_tank1Name.Length} || ${_tank1Name.Equal[NULL]}) /varset _tank1Name ${str_defTank1}
