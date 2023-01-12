@@ -189,6 +189,5 @@ mq2cast, mq2dannet, mq2exchange, mq2melee
 7. `/dgt DoIntensity` Tells everyone to hit Intensity of the Resolute AA
 8. `/dgt DoServants` Tells everyone to hit Steadfast Servant AA
 9. `/dgt DoInfusion` Tells everyone to hit Infusion of the Faithful AA
-10. `/dgt RaidGroupMode` A mostly internal or event used event. Describes the raid mode currerntly running, defaults to.. DEFAULT. Calls SetRaidGroupMode which has hard coded raid group layout currently. Will change to INI driven in future.
-11. `/dgt RaidDIClerics` Similar to RaidGroupMode, mostly internal or event driven. Describes what clerics have DI in the current raid. Calls SetRaidDIClerics which has coded DI cleric group layouts. Will change to INI driven in future.
-12. `/dgt doRefreshXTarget` Used to manually force raid to refresh their XTarget list.
+10. `/dgt SetupRaid` A mostly internal or event used event. Describes the raid mode currerntly running, defaults to.. DEFAULT. Calls SetupRaid which pulls from xiris_common INI. Sets lists of group leaders, and DI available clerics
+12. `/dgt RefreshXTarget` Used to manually force raid to refresh their XTarget list.

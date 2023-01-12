@@ -11,8 +11,7 @@ Sub Main(string _mode)
 	/call InviteGroupsTo${_mode}
 
 	/delay 5s
-	/dgt SetRaidGroupMode ${_mode}
-	/dgt SetRaidDIClerics ${_mode}
+	/dgt SetupRaid ${_mode}
 	/dgt ResetGroupCurer
 /return
 

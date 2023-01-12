@@ -125,27 +125,19 @@ ______________________________________________
 
 #EVENT FixCorpses			"#*#fixCorpses#*#"
 
-#EVENT RaidGroupMode 		"[#1#] SetRaidGroupMode #2#"
-#EVENT RaidGroupMode 		"<#1#> SetRaidGroupMode #2#"
-#EVENT RaidGroupMode		"#1# tells the group#*#'SetRaidGroupMode #2#'"
-#EVENT RaidGroupMode		"#1# tells you#*#'SetRaidGroupMode #2#'"
-#EVENT RaidGroupMode		"#1# tells the raid#*#'SetRaidGroupMode #2#'"
-#EVENT RaidGroupMode		"#1# tell your raid#*#'SetRaidGroupMode #2#'"
-#EVENT RaidGroupMode 		"[ #1# #*#]#*#SetRaidGroupMode #2#"
+#EVENT SetupRaid 	"[#1#] SetupRaid #2#"
+#EVENT SetupRaid 	"<#1#> SetupRaid #2#"
+#EVENT SetupRaid	"#1# tells the group#*#'SetupRaid #2#'"
+#EVENT SetupRaid	"#1# tells you#*#'SetupRaid #2#'"
+#EVENT SetupRaid	"#1# tells the raid#*#'SetupRaid #2#'"
+#EVENT SetupRaid	"#1# tell your raid#*#'SetupRaid #2#'"
+#EVENT SetupRaid 	"[ #1# #*#]#*#SetupRaid #2#"
 
-#EVENT RaidDIClerics		"[#1#] SetRaidDIClerics #2#"
-#EVENT RaidDIClerics 		"<#1#> SetRaidDIClerics #2#"
-#EVENT RaidDIClerics		"#1# tells the group#*#'SetRaidDIClerics #2#'"
-#EVENT RaidDIClerics		"#1# tells you#*#'SetRaidDIClerics #2#'"
-#EVENT RaidDIClerics		"#1# tells the raid#*#'SetRaidDIClerics #2#'"
-#EVENT RaidDIClerics		"#1# tell your raid#*#'SetRaidDIClerics #2#'"
-#EVENT RaidDIClerics 		"[ #1# #*#]#*#SetRaidDIClerics #2#"		
-
-#EVENT doRefreshXTarget		"#1# tells the group#*#'RefreshXTarget#*#'"
-#EVENT doRefreshXTarget		"#1# tells you#*#'RefreshXTarget#*#'"
-#EVENT doRefreshXTarget		"#1# tells the raid#*#'RefreshXTarget#*#'"
-#EVENT doRefreshXTarget		"#1# tell your raid#*#'RefreshXTarget#*#'"
-#EVENT doRefreshXTarget		"#*#RefreshXTarget#*#"
+#EVENT RefreshXTarget		"#1# tells the group#*#'RefreshXTarget#*#'"
+#EVENT RefreshXTarget		"#1# tells you#*#'RefreshXTarget#*#'"
+#EVENT RefreshXTarget		"#1# tells the raid#*#'RefreshXTarget#*#'"
+#EVENT RefreshXTarget		"#1# tell your raid#*#'RefreshXTarget#*#'"
+#EVENT RefreshXTarget		"#*#RefreshXTarget#*#"
 
 Sub InitEvents_Common
 	/call RegisterBackgroundEvents Events_Common 19
@@ -178,10 +170,8 @@ Sub Events_Common
 	|/doevents InvisOFF
 	|/doevents SkillCheck
 	/doevents Disengage
-	|/doevents QuitExpedition
-	/doevents RaidGroupMode
-	/doevents RaidDIClerics
-	/doevents doRefreshXTarget
+	/doevents SetupRaid
+	/doevents RefreshXTarget
 	/doevents FixCorpses
 /return
 
@@ -215,8 +205,7 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/declare 	RaidGroupLeaders[9] 	string  outer 	NULL 
 	/declare 	RaidDIClerics[6] 		string  outer 	NULL
 
-	/call SetRaidGroupMode ${str_raidGroupMode}
-	/call SetRaidDIClerics ${str_raidGroupMode}
+	/call SetupRaid ${str_raidGroupMode}
 
 	/declare timer_di_request timer outer 30s
 	/declare i int local 0
@@ -583,7 +572,7 @@ Sub Disengage
 	
 	|-- clean up potential XTarget issues
 	/if (!${bln_pulling} && (!${SpawnCount[npc radius 200]} || (${Me.XTarget[0].Name.Find[s_corpse]} || (!${Bool[${Me.XTarget[0]}]} && ${Bool[${Me.XTarget[1]}]}) || (!${Bool[${Me.XTarget[0]}]} && !${Bool[${Me.XTarget[1]}]} && ${Bool[${Me.XTarget[2]}]})) && (!${timer_xtargetRefresh}))) {
-		/call doRefreshXTarget
+		/call RefreshXTarget
 	}
 	|-- class archetype resets
 	/if (${str_classArchetype.Equal[PRIEST]}) {
@@ -778,140 +767,94 @@ Sub Event_SKILLCHECK(_line, _sender, _eventParams)
 **|
 
 |-------------------------------------------------------------------------------- 
-|SUB: Event_SetRaidGroupMode
+|SUB: Event_SetupRaid
 |	  Sets the raid group leaders based on mode. Also, calls this on init with default settings
+|     Also sets the list of available Divine INtervention Clerics
+
 |--------------------------------------------------------------------------------
-Sub Event_SetRaidGroupMode(_line, _sender, _eventParams)
-	/call SetRaidGroupMode ${_eventParams.Arg[1,|]}
-	/doevents flush SetRaidGroupMode
+Sub Event_SetupRaid(_line, _sender, _eventParams)
+	/call SetupRaid ${_eventParams.Arg[1,|]}
+	/doevents flush SetupRaid
 /return 
 
 
-Sub SetRaidGroupMode(string _mode)
-	|-- Manually set an array with the standard group leaders(ugh)
-	| 	Xiris,Xiria,Xirian,Xeixa,Sadelia,Xaeliea,Xaexa,Xaia,Xepatia
-	| 	in the future maybe have an event that can set this
+Sub SetupRaid(string _mode)
+	|-- Pull from the common ini settings file to grab the group leaders/di clerics etc
 	|/echo Setting raid group mode to ${_mode}
+	/varset _mode TRIAD
 	/varset str_raidGroupMode ${_mode}
+
+	
+
 	/deletevar RaidGroupLeaders 
-	/cecho \aySetting raid group mode to ${_mode}
-	 /if (${_mode.Equal[DEFAULT]}) {
-		/declare RaidGroupLeaders[9] string outer NULL
-		/varset	RaidGroupLeaders[1] Xiris
-		/varset	RaidGroupLeaders[2] Xiria
-		/varset RaidGroupLeaders[3] Xirea
-		/varset RaidGroupLeaders[4] Xirin
-		/varset RaidGroupLeaders[5] Xeqisa
-		/varset RaidGroupLeaders[6] Xaeliea
-		/varset RaidGroupLeaders[7] Xaexa
-		/varset RaidGroupLeaders[8] Xaia
-		/varset RaidGroupLeaders[9] Xepatia
-	} else /if (${_mode.Equal[TRIAD]}) {
-		/declare RaidGroupLeaders[3] string outer NULL
-		/if (${Raid.Leader.CleanName.Equal[Xiris]}) {
-			/varset	RaidGroupLeaders[1] Xiris
-			/varset	RaidGroupLeaders[2] Xirin
-			/varset RaidGroupLeaders[3] Xaeliea
-		} else /if (${Raid.Leader.CleanName.Equal[Xiria]}) {
-			/varset	RaidGroupLeaders[1] Xiria
-			/varset	RaidGroupLeaders[2] Sadelia
-			/varset RaidGroupLeaders[3] Xaexa
-		} else /if (${Raid.Leader.CleanName.Equal[Xirea]}) {
-			/varset	RaidGroupLeaders[1] Xirea
-			/varset	RaidGroupLeaders[2] Xaia
-			/varset RaidGroupLeaders[3] Mluian
-		}
-	} else /if (${_mode.Equal[JELVAN]}) {
-		/if (${Raid.Leader.CleanName.Equal[Xiris]}) {
-			/declare RaidGroupLeaders[6] string outer NULL
-			/varset	RaidGroupLeaders[1] Xiris
-			/varset	RaidGroupLeaders[2] Nihilist
-			/varset RaidGroupLeaders[3] Xonshia
-			/varset RaidGroupLeaders[4] Tragic
-			/varset RaidGroupLeaders[5] Xarael
-			/varset RaidGroupLeaders[6] Pantheon
-		} else /if (${Raid.Leader.CleanName.Equal[Xiria]}) {
-			/declare RaidGroupLeaders[2] string outer NULL
-			/varset	RaidGroupLeaders[1] Xiria
-			/varset	RaidGroupLeaders[2] Sadelia
-		} else /if (${Raid.Leader.CleanName.Equal[Xirea]}) {
-			/declare RaidGroupLeaders[2] string outer NULL
-			/varset	RaidGroupLeaders[1] Xirea
-			/varset	RaidGroupLeaders[2] Xirin
-		}
-	} else /if (${_mode.Equal[THIRTYSIX]}) {
-		/declare RaidGroupLeaders[6] string outer NULL
-		/varset	RaidGroupLeaders[1] Xiris
-		/varset	RaidGroupLeaders[2] Xirin
-		/varset RaidGroupLeaders[3] Xaeliea
-		/varset RaidGroupLeaders[4] Xaexa
-		/varset RaidGroupLeaders[5] Xaia
-		/varset RaidGroupLeaders[6] Xepatia
-	}
-/return
-
-|-------------------------------------------------------------------------------- 
-|SUB: Event_RaidDIClerics
-|	  Sets the raid di clerics based on mode. Also, calls this on init with default settings
-|--------------------------------------------------------------------------------
-Sub Event_RaidDIClerics(_line, _sender, _eventParams)
-	/call SetRaidDIClerics ${_eventParams.Arg[1,|]}
-	/doevents flush SetRaidDIClerics
-/return
-
-Sub SetRaidDIClerics(string _mode) 
-	|-- Manually set an array with the clerics in the raid that can DI (note, make sure everyone gets DI in future)
-	| 	Xirael,Xinshia,Xenshia,Xanshia,Theist,Deist
-	| 	in the future maybe have an event that can set this
-	/cecho \aySetting raid di members to ${_mode}
 	/deletevar RaidDIClerics
-		
-	/if (${_mode.Equal[DEFAULT]} ) {
-		/declare RaidDIClerics[6] string outer NULL
-		/varset	RaidDIClerics[1] Xanshia
-		/varset	RaidDIClerics[2] Xinshia
-		/varset RaidDIClerics[3] Theist
-		/varset RaidDIClerics[4] Xirael
-		/varset RaidDIClerics[5] Deist
-		/varset RaidDIClerics[6] Xenshia
-	} else /if (${_mode.Equal[TRIAD]}) {
-		| Note if this truly needs DI to use, we need to reorganize that raid setup
-		/declare RaidDIClerics[2] string outer NULL
-		/if (${Raid.Leader.CleanName.Equal[Xiris]}) {
-			/varset	RaidDIClerics[1] Xanshia
-			/varset	RaidDIClerics[2] Xinshia
-		} else /if (${Raid.Leader.CleanName.Equal[Xiria]}) {
-			/varset	RaidDIClerics[1] Theist
-			/varset	RaidDIClerics[2] Xirael
-		} else /if (${Raid.Leader.CleanName.Equal[Xirea]}) {
-			/varset	RaidDIClerics[1] Deist
-			/varset	RaidDIClerics[2] Xenshia
-		}
-	} else /if (${_mode.Equal[JELVAN]}) {
-		/declare RaidDIClerics[2] string outer NULL
-		/if (${Raid.Leader.CleanName.Equal[Xiris]}) {
-			/varset	RaidDIClerics[1] Xanshia
-			/varset	RaidDIClerics[2] Xinshia
-		} else /if (${Raid.Leader.CleanName.Equal[Xiria]}) {
-			/varset	RaidDIClerics[1] Theist
-			/varset	RaidDIClerics[2] Xirael
-		} else /if (${Raid.Leader.CleanName.Equal[Xirea]}) {
-			/varset	RaidDIClerics[1] Deist
-			/varset	RaidDIClerics[2] Xenshia
-		}
-	} else /if (${_mode.Equal[THIRTYSIX]}) {
-		/declare RaidDIClerics[5] string outer NULL
-		/varset	RaidDIClerics[1] Xanshia
-		/varset	RaidDIClerics[2] Xinshia
-		/varset RaidDIClerics[3] Theist
-		/varset RaidDIClerics[4] Xirael
-		/varset RaidDIClerics[5] Xenshia
+	
+	|[RaidBuilder]
+	|keys=DEFAULT|TRIAD|JELVAN|THIRTYSIX
+	/declare keys string local ${Ini[INI_RAID,RaidBuilder,keys]}
+	:fail_noRaid
+	/if (!${keys.Find[${_mode}]}) {
+		/cecho \awSetting Raid Group Mode \arERROR: 
+		/cecho \aw   Unable to find \ay${_mode} in \ao${keys}
+		/declare RaidGroupLeaders[1] string outer NULL
+		/declare RaidDIClerics[1] string outer NULL
+		/goto :return
 	}
+
+	/declare settingsGroup	string local RAID_${_mode}
+	/declare raidCount		int	local ${Ini[INI_RAID,${settingsGroup},RaidCount]}
+	/declare groupCount     int local
+	/declare groupCountCSV	string local ${Ini[INI_RAID,${settingsGroup},GroupCount]}
+
+	/declare leaderList  	string local
+	/declare leaderIndex  	int local 0
+
+	/declare DICount		int local
+	/declare DIList			string local
+
 	/declare i int local
-	/for i 1 to ${RaidDIClerics.Size}
-		/cecho \ag Divine Intervention \aw[\ag${i}\aw] \ay${RaidDIClerics[${i}]}
+	/declare j int local
+
+	| Find which Group Set I am in 
+	/for i 1 to ${raidCount}
+		/varset leaderList ${Ini[INI_RAID,${settingsGroup},Raid_${i}_Leaders]}
+		
+		/if (${leaderList.Find[${Raid.Leader}]}) {
+			/varset leaderIndex ${i}
+			/varset groupCount ${groupCountCSV.Arg[${i},,]}
+			| Set the group leaders
+			/declare RaidGroupLeaders[${groupCount}] string outer NULL
+			/varset leaderList ${Ini[INI_RAID,${settingsGroup},Raid_${i}_Leaders]}
+			/cecho \awFound my membership in Raid \ao${i}
+			/cecho \aySetting Raid Group mode to \ao${_mode}
+			/for j 1 to ${groupCount}
+				/varset	RaidGroupLeaders[${j}]  ${leaderList.Arg[${j},|]}
+				/cecho \ag Raid Group Leader \aw[\ag${j}\aw] \ay${RaidGroupLeaders[${j}]}
+			/next j
+
+			| Set the Divine Intervention Information
+			/varset DICount ${Ini[INI_RAID,${settingsGroup},Raid_${i}_DI_Count]}
+			/varset DIList	${Ini[INI_RAID,${settingsGroup},Raid_${i}_DI_Clerics]}
+			/declare RaidDIClerics[${DICount}] string outer NULL
+			/cecho \aySetting Raid Divine Intervention mode to \ao${_mode}
+			/for j 1 to ${DICount}
+				/varset	RaidDIClerics[${j}]  ${DIList.Arg[${j},|]}
+				/cecho \ag Divine Intervention \aw[\ag${j}\aw] \ay${RaidDIClerics[${j}]}
+			/next j
+			/goto :return
+		}
+
 	/next i
+	:fail_noGroup
+		/cecho \awSetting Raid Group Mode \arERROR
+		/cecho \aw   Unable to find our raid leader in the leader list for the \ao${_mode} \awraid type.
+		/declare RaidGroupLeaders[1] string outer NULL
+		/declare RaidDIClerics[1] string outer NULL
+		/goto :return
+	:return
+
 /return
+
 
 |-------------------------------------------------------------------------------- 
 |SUB: Event_InvisOff
@@ -1528,12 +1471,13 @@ SUB check_macroTimers
 |- Resets XTarget window 1-5 elements to auto		-|
 |----------------------------------------------------|
 Sub Event_RefreshXTarget
-	/echo refreshing XTarget
-	/call doRefreshXTarget
+
+	/call RefreshXTarget
 /return 
 
 
-SUB doRefreshXTarget
+SUB RefreshXTarget
+	/cecho\aoRefreshing \aoXTarget \ay${timer_xtargetRefresh}
 	/declare i int local 1
 	/for i 1 to 5
 		/xtarget set ${i} grouptank

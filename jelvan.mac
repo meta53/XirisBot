@@ -108,8 +108,7 @@ Sub Main
     /dex Xirea /rs ResistTypes cold|magic 
 
     | Raid type setting
-    /dgt SetRaidGroupMode JELVAN
-	/dgt SetRaidDIClerics JELVAN
+    /dgt SetupRaid JELVAN
     /dgt ResetGroupCurer
 
     | Set Autocure for MT 

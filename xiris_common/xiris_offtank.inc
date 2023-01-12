@@ -86,7 +86,7 @@ Sub chkOffTanking
 	| If there are no spawns within OT Distance, return
 	/if (!${SpawnCount[npc radius ${int_offtankRadius} range 46 80]}) {
 		| Refresh XTarget if we haven't done it in the last 30s
-		/if (!${timer_xtargetRefresh}) /call doRefreshXTarget
+		/if (!${timer_xtargetRefresh}) /call RefreshXTarget
 		/return
 	}
 	:OffTankCheck

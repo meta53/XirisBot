@@ -83,7 +83,7 @@ Sub Main(int _pull_dist, string _channel, string _campName, bool _useDownFlags)
 		|-- reset group to camp spot (leash) if its empty
 		/if (${SpawnCount[npc radius ${int_campRadius} zradius 25]} == 0) {
 			/call resetCamp
-			/call doRefreshXTarget
+			/call RefreshXTarget
 			/docommand /${cmdChannel} Disengage
 			/if (!${bln_looting}) /hidecorpse npc
 		}
