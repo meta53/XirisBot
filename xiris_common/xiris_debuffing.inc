@@ -152,7 +152,7 @@ Sub CastDebuff(string _debuff, string _gem,  int _maxTries, int _targetID, bool 
 	/declare 	tgtName string  local ${Target.CleanName}
 	:AttemptDebuff
 		/cecho \aoAttempting Debuff: \aw${_debuff}
-		/call chkTargetStatus
+		|/call chkTargetStatus
 		/if (${int_targetID} == 0 && !${_forced}) {
 			/cecho \ar Debuff Failure\aw Target Already Dead
 			/varset rslt TARGET_ALREADY_DEAD

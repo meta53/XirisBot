@@ -781,7 +781,7 @@ Sub Event_SetupRaid(_line, _sender, _eventParams)
 Sub SetupRaid(string _mode)
 	|-- Pull from the common ini settings file to grab the group leaders/di clerics etc
 	|/echo Setting raid group mode to ${_mode}
-	/varset _mode TRIAD
+	|/varset _mode TRIAD
 	/varset str_raidGroupMode ${_mode}
 
 	
@@ -1477,7 +1477,7 @@ Sub Event_RefreshXTarget
 
 
 SUB RefreshXTarget
-	/cecho\aoRefreshing \aoXTarget \ay${timer_xtargetRefresh}
+	/cecho \aoRefreshing \aoXTarget \ay${timer_xtargetRefresh}
 	/declare i int local 1
 	/for i 1 to 5
 		/xtarget set ${i} grouptank

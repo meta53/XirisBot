@@ -299,19 +299,21 @@ Sub chkClicky
     /call TargetNamedCheck ${int_targetID}
     /declare isNamed bool local ${Macro.Return}
     /for i 1 to ${CLICKY_Total}
-        /if (${FindItem[${CLICKY_${i}}].TimerReady} == 0) {
-            | If Offense, make sure we are engaged | If Defense, doesn't matter
-            /if ((${CLICKY_${i}_Type.Equal[OFFENSE]} && ${bln_engaged}) || ${CLICKY_${i}_Type.Equal[DEFENSE]} ) {
-                | Offense named-only check
-                /if (${CLICKY_${i}_Type.Equal[OFFENSE]} && !${isNamed} && ${CLICKY_${i}_NamedOnly}) /goto :nextClicky
-                | Trigger Check
-                /if (${Bool[${CLICKY_${i}_Trigger.Replace[#,$]}]}) /goto :nextClicky
-                /goto :castingClicky
-            }
-        }
-           
+		| If the timer isn't ready, skip
+		/if (${FindItem[${CLICKY_${i}}].TimerReady}) /goto :nextClicky
+
+		| If Offense, make sure we are engaged | If Defense, doesn't matter
+		/if ((${CLICKY_${i}_Type.Equal[OFFENSE]} && ${bln_engaged}) || ${CLICKY_${i}_Type.Equal[DEFENSE]} ) {
+			| Offense named-only check
+			/if (${CLICKY_${i}_Type.Equal[OFFENSE]} && !${isNamed} && ${CLICKY_${i}_NamedOnly}) /goto :nextClicky
+			| Trigger Check
+			/if (${Bool[${CLICKY_${i}_Trigger.Replace[#,$]}]}) /goto :nextClicky
+			/goto :castingClicky
+		}
+        
+        | Passed the above checks, cast the clicky   
         :castingClicky
-        /cecho \ag ${CLICKY_${aa}} : FIRED	
+        /cecho \ag ${CLICKY_${i}} : FIRED	
         /if (${Me.Class.ShortName.Equal[BRD]}) {
             | We need to make sure BARDs (with medley) have the item in a worn slot or slot 30
             /if (${CLICKY_${i}_Type.Equal[DEFENSE]}) {

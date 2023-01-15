@@ -176,7 +176,7 @@ mq2cast, mq2dannet
 
 ### xiris_common.inc
 #### Overview
-XirisBot common files. Contains the links to all other includes. Has the common functions for all the class macros, and serves to kick off all initializations.
+XirisBot common handlers. Contains the links to all other includes. Has the common functions for all the class macros, and serves to kick off all initializations.
 #### Requirements
 mq2cast, mq2dannet, mq2exchange, mq2melee
 #### Events
@@ -191,3 +191,61 @@ mq2cast, mq2dannet, mq2exchange, mq2melee
 9. `/dgt DoInfusion` Tells everyone to hit Infusion of the Faithful AA
 10. `/dgt SetupRaid` A mostly internal or event used event. Describes the raid mode currerntly running, defaults to.. DEFAULT. Calls SetupRaid which pulls from xiris_common INI. Sets lists of group leaders, and DI available clerics
 12. `/dgt RefreshXTarget` Used to manually force raid to refresh their XTarget list.
+### xiris_curing.inc
+#### Overview
+XirisBot curing handlers. This library has several events that can be fired via hotkey, or auto cures driven by the curing section in the toon ini files. Note that this file is responsible for a toons self-need-cure checks - something to be familiar with.
+#### Requirements
+mq2cast, mq2dannet, mq2debuffs
+#### Events
+1. `/dt CurerName AutoCureMTOn` `/dt CurerName AutoCureMTOff` Toggle to tell specific character to auto cure the MT (clerics mostly)
+2. `/dgt cureGroupPoison 45` Tell the curers in raid to walk through their groups and cure 45 poison counters on whomever has poison counters (will skip toons with no counters)
+3. `/dgt cureGroupCurse 45` Tell the curers in raid to walk through their groups and cure 45 curse counters on whomever has curse counters (will skip toons with no counters)
+4. `/dgt cureGroupDisease 45` Tell the curers in raid to walk through their groups and cure 45 disease counters on whomever has disease counters (will skip toons with no counters)
+5. `/dt CurerName cureMe cureType` Asks a curer to cure requester by type (poison, disease, curse) - curer will determine how many counters.
+### xiris_debuffing.inc
+#### Overview
+XirisBot debuffing handlers. This library has several events that can be fired via hotkey. Much of the debuffing is automatic and is controlled by character ini file.
+#### Requirements
+mq2cast, mq2dannet, mq2debuffs
+#### Events
+1. `/dgt DebuffTarget ${Target.ID}` Will force raid debuffers to cycle through debuffs on target. 
+### xiris_debuffing.inc
+#### Overview
+XirisBot debuffing handlers. This library has several events that can be fired via hotkey. Much of the debuffing is automatic and is controlled by character ini file.
+#### Requirements
+mq2cast, mq2dannet, mq2debuffs
+#### Events
+1. `/dgt DebuffTarget ${Target.ID}` Will force raid debuffers to cycle through debuffs on target. 
+### xiris_events.inc
+#### Overview
+XirisBot event handler(s). This library has several sub libraries. These contain all the handlers for specific raid/mob events, such as MPG trials, or Anguish events. Each of those files is specific to the raid, and should be familiarized before attempting those raids.
+#### Requirements
+*all*
+#### Events
+Many events, all raid specific.
+### xiris_healing.inc
+#### Overview
+XirisBot healing handler. This library is a core library for priest classes.
+#### Requirements
+mq2cast, mq2dannet
+#### Events
+1. `/dgt GroupHeal` Tells every capable class to fire a group heal
+2. `/dgt InterruptON` `/dgt InterruptOFF` Toggles the ability to interrupt heals if no longer necessary (used usually in conjunction with efficiency mode)
+3. `/dgt ChangeHP 85` Changes the MT heal point to provided integer
+4. `/dgt ChangeHPTank 85` Changes the MT heal point to provided integer
+5. `/dgt ChangeHPSelf 85` Changes the Self heal point to provided integer
+6. `/dgt ChangeHpGroup 85` Changes the Group heal point to provided integer
+7. `/dgt HealMode EFFICIENT|DEFAULT` Changes the heal mode (and spells cast) to either default or efficient mode. Efficient recommended for most events if you have many clerics.
+8. `/dt Healer FocusHEALMT_ON|FocusHealMT_OFF` Toggles the healer to only heal self and MT
+9. `/dt Healer HealType 0|1|2|3` Changes the heal type to following:
+    a./if (${int_healMode}==0) /cecho \a-wChanging healing \aoTYPE \a-wto \ag0-Self (only)
+	b./if (${int_healMode}==1) /cecho \a-wChanging healing \aoTYPE \a-wto \ag1-MT (and self)
+	c./if (${int_healMode}==2) /cecho \a-wChanging healing \aoTYPE \a-wto \ag2-Group (and MT, includes self)
+	d./if (${int_healMode}==3) /cecho \a-wChanging healing \aoTYPE \a-wto \ag3-GroupOnly (includes self)
+10. `/dgt FireTotem X` where X is the totem group. (Cleric, Druid, Shaman) defined by char ini. Will cause toons in group X (integer) to place their heal totems
+##### CH Events
+1. `/dgt CHStart 1 ${Me.Name} Xiria 30 cleric1,cleric2,cleric3,cleric4` Will start a ch chain with the 4 clerics listed. 3 second delay. Chain key of 1, meaning that chain is index 1, so multiple chains can be run. `CHStart ChainIndex HealTarget BackupTarget Delay [CSV Clerics]`
+2. `/dgt CHStop 1` Will stop the 1 index CHChain
+3. `/dgt CHPause 1` CHChain #1 will pause until resumed
+4. `/dgt CHResume 1` CHChain #1 will resume 
+5. `/dgt CHSwitch 1 Xiria` CHChain #1 will switch to healing Xiria

@@ -246,6 +246,7 @@ Sub chkDownshits
 			/declare svdTGTID 	string 	local	${Target.ID}
 			/declare tgtID 		int 	local
 			/declare isSpell	bool	local	TRUE
+			/declare dsType  	string  local   SPELL
 			/declare wornSlot   string  local 
 			/declare itemInSlot string  local
 			/declare hadToMemBuffs bool     local FALSE
@@ -255,12 +256,16 @@ Sub chkDownshits
 				| downflag1=Cloak of Discord|"Cloak of Discord" gem6
 				| downflag2=Legacy of Nettles|"Legacy of Nettles" gem 8 -targetid|${Me.ID}  
 				| downflag3=Fiery Might|28988 item
+				| downflag4=Eldritch Rune|Eldritch Rune alt
 				/varset buffName  ${downflag${df}.Token[1,|]}
 				/varset castArg   ${downflag${df}.Token[2,|]}|${downflag${df}.Token[3,|]}
 				/varset tgtID     ${downflag${df}.Token[3,|]}
 				/varset isSpell TRUE
-				/if (${castArg.Find[item]}>0 || ${castArg.Find[alt]}>0) /varset isSpell FALSE
-				
+				/if (${castArg.Find[item]}>0) {
+					/varset dsType ITEM
+				} else /if (${castArg.Find[alt]}>0) {
+					/varset dsType ALT
+				}
 
 				|- If we have Damage Shields turned off, check to see if this is a damage shield before casting it
 				|  If found, skip the downflag
@@ -271,10 +276,10 @@ Sub chkDownshits
 				}
 				/call RunAllEvents	
 				/if (${bln_engaged}) /return
-				|/echo BuffName: ${buffName} castArg: ${castArg} tgtID: ${tgtID} ready: ${Me.SpellReady[${buffName}]} isSpell: ${isSpell} ?: ${castArg.Find[item]}
+				|/echo BuffName: ${buffName} castArg: ${castArg} tgtID: ${tgtID} ready: ${Me.SpellReady[${buffName}]} dsType: ${dsType} ?: ${castArg.Find[item]}
 				|/echo Stacks? ${Spell[${buffName}].Stacks} && Do I have it? ${Bool[${Me.Buff[${buffName}].ID}]}
 				/if (${Spell[${buffName}].Stacks} && !${Bool[${Me.Buff[${buffName}].ID}]}) {
-					/if (${isSpell} && !${Me.SpellReady[${buffName}]}) {
+					/if (${dsType.Equal[SPELL]} && !${Me.SpellReady[${buffName}]}) {
 						/cecho \ay${buffName} \awis \arNOT \awReady, Memorizing
 						| Spell is not ready, memorize it
 						/varset hadToMemBuffs TRUE
@@ -290,15 +295,17 @@ Sub chkDownshits
 					| - Note mq2medley will not auto swap items!
 					/varset itemArgs ${downflag${df}.Token[2,|]}
 					/varset itemID ${itemArgs.Token[1, ]}
-					/if (!${FindItem[${itemID}].ID} && !${isSpell}) {
+					/if (${dsType.Equal[ITEM]} && !${FindItem[${itemID}].ID}) {
 						/cecho \arCannot find downflag_${df}: \aw${itemID}!
 						/goto :nextDF
 					}
 					/if (${Me.Class.ShortName.Equal[BRD]}) {
-						/if (!${isSpell}) {
+						/if (${dsType.Equal[ITEM]}) {
 							/call MQ2Medley ITEM "${FindItem[${itemID}]}" ${Me.ID} TRUE
-						} else {
+						} else /if (${dsType.Equal[SPELL]}) {
 							/call MQ2Medley SONG ${buffName} ${Me.ID} TRUE
+						} else /if (${dsType.Equal[ALT]}) {
+							/call MQ2Medley ALT ${buffName} ${Me.ID} TRUE
 						}
 					} else {
 						/cecho \ayDownflag (\ag${df}\ay) Casting \ay${buffName} \ag${downflag${df}.Token[2,|]}

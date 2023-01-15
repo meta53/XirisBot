@@ -751,9 +751,10 @@ Sub Event_SnareWornOff
 
 Sub EVENT_SetUseFastOnly(_line, _chatSender, _eventParams)
 	/if (${QNUKE_Total} > 0) {
-		/echo setting fast only:${_eventParams}
+		/cecho \aoSetting fast only:\ag${_eventParams}
 		/varset bln_useFastOnly ${_eventParams}
 	} else {
+		/cecho \aoSetting fast only:\ag${_eventParams}
 		/varset bln_useFastOnly FALSE
 	}
 	/doevents flush SetUseFastOnly
