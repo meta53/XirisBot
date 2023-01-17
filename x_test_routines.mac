@@ -13,7 +13,7 @@ Sub Main
 	/call xbot_initialize_spellRoutines
 	/call xbot_initialize_burns
 	/delay 20
-	/cecho \ar ${BURN_9}
+	/echo \ar ${BURN_9}
 	/call MQ2Cast "Raging Taelosian Alloy Axe" item 2s
 
 /return

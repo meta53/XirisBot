@@ -241,7 +241,7 @@ Sub variant_initialize
 	/declare 	bln_runeActive			bool	outer	FALSE
 
 	/memspellset ${str_spellset}
-	/cecho \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID}) HealPoint:${healPoint} ST: ${str_STName}(${int_STID})
+	/echo \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID}) HealPoint:${healPoint} ST: ${str_STName}(${int_STID})
 	/call InitEvents_Class
 /return
 	

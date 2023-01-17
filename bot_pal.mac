@@ -156,21 +156,21 @@ Sub chkUtils
 /return
 
 Sub EVENT_STUNMOB(_line, _chatSender, _eventParams)
-	/cecho \ayI should stun this mob
+	/echo \ayI should stun this mob
 	/call TrueTarget(${_eventParams.Arg[1, ]})
 	/call chkStun TRUE
 	/doevents flush STUNMOB
 /return
 
 Sub EVENT_STUNLOCK(_line, _chatSender, _eventParams)
-	/cecho \aoI am Stun Locking this mob
+	/echo \aoI am Stun Locking this mob
 	/call TrueTarget(${_eventParams.Arg[1, ]})
 	/call chkStunLock
 	/doevents flush STUNLOCK
 /return
 
 Sub EVENT_STUNSTOP(_line, _chatSender, _eventParams)
-	/cecho \agI am no lnger Stun Locking the mob
+	/echo \agI am no lnger Stun Locking the mob
 	/call chkStunLockStop
 	/doevents flush STUNLOCKSTOP
 /return
@@ -188,7 +188,7 @@ Sub variant_initialize
 	/declare    str_action				string	outer	Assisting	
 	/memspellset ${str_spellset}
 
-	/cecho \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID}) HealPoint:${healPoint} ST: ${str_STName}(${int_STID})
+	/echo \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID}) HealPoint:${healPoint} ST: ${str_STName}(${int_STID})
 	/call InitEvents_Class
 /return
 

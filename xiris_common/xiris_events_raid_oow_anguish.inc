@@ -46,7 +46,7 @@ ______________________________________________
 
 
 Sub InitEvents_OOW_Anguish
-	/cecho \ag Initializing Anguish
+	/echo \ag Initializing Anguish
 	/if (!${Defined[bln_jelvanEngaged]}) /declare bln_jelvanEngaged bool outer FALSE
 	/declare bln_hanvarEngaged bool outer FALSE
 	/declare bln_amvEngaged	   bool outer FALSE
@@ -139,7 +139,7 @@ Sub Event_TureRampOff
 /return 
 
 Sub Event_TureWanton 
-	/cecho \aw Warning! \arWanton Destruction \awon me!
+	/echo \aw Warning! \arWanton Destruction \awon me!
 	/call chkNeedCure
 /return
 
@@ -153,7 +153,7 @@ Sub Event_JelvanStart
 		/varset bln_jelvanEngaged TRUE
 	} else {
 		:Tormentor_Checks
-		/cecho \ayRunning Tormentor Checks!
+		/echo \ayRunning Tormentor Checks!
 	|-------------	
 	| West, 1 MT	
 		/if (${Me.CleanName.Equal[Xiria]}) {
@@ -201,7 +201,7 @@ Sub Event_JelvanStart
 	|-------------
 	| East, 3 MT
 		} else /if (${Me.CleanName.Equal[Xirea]}) {
-			/cecho \awchecking for \agTantho! ${SpawnCount[npc Tantho]} 
+			/echo \awchecking for \agTantho! ${SpawnCount[npc Tantho]} 
 			/if (${SpawnCount[npc Tantho]} == 1 && !${bln_jelvanEngaged}) {
 				/call TrueTarget ${Spawn[npc Tantho].ID}
 				/varset bln_jelvanEngaged TRUE
@@ -299,7 +299,7 @@ Sub chkHanvarEvents
 /return
 
 Sub Event_HanvarStart
-	/cecho \ag HANVAR EVENT STARTED \aw@ \ao${Time.Time24}
+	/echo \ag HANVAR EVENT STARTED \aw@ \ao${Time.Time24}
 	/varset bln_hanvarEngaged TRUE
 	/doevents flush HanvarStart
 /return
@@ -318,7 +318,7 @@ Sub Event_HanvarSetup
 /return
 
 Sub Event_HanvarRetreat(string _sender, string _line, string _eventParams)
-	/cecho \arHanvar Retreat Triggered \agStarting \aw${_eventParams}s \ag Timer
+	/echo \arHanvar Retreat Triggered \agStarting \aw${_eventParams}s \ag Timer
 	/if (${Target.Name.Find[Hanvar]} || ${Spawn[npc Hanvar].Distance} < 100) {
 		/if (${MeleeClasses.Find[${Me.Class.ShortName}]}) {
 			/call Disengage
@@ -329,7 +329,7 @@ Sub Event_HanvarRetreat(string _sender, string _line, string _eventParams)
 /return
 
 Sub Event_HanvarKill(string _sender, string _line, string _eventParams)
-	/cecho \arHanvar Kill Triggered \agStarting \aw${_eventParams}s \ag Timer
+	/echo \arHanvar Kill Triggered \agStarting \aw${_eventParams}s \ag Timer
 	/if (${SpawnCount[npc guard]}) /return
 	/if (${MeleeClasses.Find[${Me.Class.ShortName}]} ) {
 		/call TrueTarget ${Spawn[npc Hanvar].ID}
@@ -378,7 +378,7 @@ Sub chkHanvarMelee
 	/declare targetToKill int local
 	/if (${timer_hanvar_ae} < 80 ) {
 		| GTFO he is about to AE
-		/cecho \arHavar AE in ${timer_hanvar_ae}!
+		/echo \arHavar AE in ${timer_hanvar_ae}!
 		/if (${Spawn[npc Hanvar].Distance} < 100 && !${Bool[${Target.Name.Find[guard]}]} ) {
 			/echo stopping melee! heading to safe point
 			/squelch /target clear
@@ -388,7 +388,7 @@ Sub chkHanvarMelee
 	}
 
 	/if (${SpawnCount[npc guard]}) {
-		/cecho \aoGuard is UP, assisting Xirin
+		/echo \aoGuard is UP, assisting Xirin
 		/squelch /target clear
 		/squelch /melee reset
 		:waitForGuard
@@ -404,7 +404,7 @@ Sub chkHanvarMelee
 			/goto :waitForGuard
 		}
 	} else {
-		/cecho \agGuard is Down, assisting ${str_MTName}
+		/echo \agGuard is Down, assisting ${str_MTName}
 		/squelch /target clear
 		/squelch /melee reset
 		/dquery  ${str_MTName} -q "Target.ID"
@@ -477,8 +477,8 @@ Sub chkMarkedForDeathCureDist
 	:markLoop
 	/doevents
 	/if (${Me.Buff[Mark of Death].ID}) {
-		/cecho \ar MARK OF DEATH \awis \ag${str_myCurer} \aw@ \ag${Spawn[pc ${str_myCurer}].Distance3D}
-		/cecho \awMoving to Curer!
+		/echo \ar MARK OF DEATH \awis \ag${str_myCurer} \aw@ \ag${Spawn[pc ${str_myCurer}].Distance3D}
+		/echo \awMoving to Curer!
 		/call Disengage
 		/melee reset
 		/melee reset
@@ -492,7 +492,7 @@ Sub chkMarkedForDeathCureDist
 /return 
 
 Sub EVENT_MarkOfDeath
-	/cecho \aoMarked for Death!
+	/echo \aoMarked for Death!
 	/if (!${bln_amvEngaged}) /varset bln_amvEngaged TRUE
 	/doevents flush MarkOfDeath
 	/call chkMarkedForDeathCureDist
@@ -524,8 +524,8 @@ Sub chkGroupMarkedForDeath
 		/dquery ${Group.Member[${gm}]} -q "Me.Buff[Mark of Death].ID"
 		/delay 20 ${DanNet.Query.Received}
 		/if (${Bool[${DanNet.Q}]}) {
-			/cecho \ar${Group.Member[${gm}]} \awreply:${Bool[${DanNet.Q}]}
-			/cecho \ar MARK OF DEATH FOUND
+			/echo \ar${Group.Member[${gm}]} \awreply:${Bool[${DanNet.Q}]}
+			/echo \ar MARK OF DEATH FOUND
 			/varset  foundMark TRUE
 			/varcalc haveMark ${haveMark}+1
 			/call getCureCounters ${Group.Member[${gm}]} disease
@@ -538,14 +538,14 @@ Sub chkGroupMarkedForDeath
 	| No Marks found? return
 	/if (!${foundMark}) /goto :return
 
-	/cecho \ar${haveMark} \aoInstances of Mark of Death found!
+	/echo \ar${haveMark} \aoInstances of Mark of Death found!
 	| If Marks are less than 3, or I am a paladin then single target cure them
 	:SingleCure
 	/if (${Me.Class.ShortName.Equal[PAL]} || ${haveMark} < 2) /goto :CureByCounters
 	
 	| If I am a cleric or shaman, cast group cure, and then recheck counters
 	:GroupCure 
-	/cecho \awGroupCure: \ag${str_heal_group} \ay${Me.SpellReady[${str_heal_group}]} \aw(\ag${Me.PctMana}) \ay${haveMark}>=2
+	/echo \awGroupCure: \ag${str_heal_group} \ay${Me.SpellReady[${str_heal_group}]} \aw(\ag${Me.PctMana}) \ay${haveMark}>=2
 	/if (${Me.Class.ShortName.Equal[CLR]} && ${Me.PctMana} > 30 && ${haveMark} >= 2) {
 		
 		:GroupCureWait 
@@ -553,14 +553,14 @@ Sub chkGroupMarkedForDeath
 		/if (!${Me.SpellReady[${str_heal_group}]}) {
 			/delay 5
 			/if (${cureWaitCount} > 10) {
-				/cecho \arGroupCure failed due to wait, trying by counters
+				/echo \arGroupCure failed due to wait, trying by counters
 				/goto :CureByCounters
 			} else {
-				/cecho \arGroupCure waiting for ${str_heal_group} ${Me.SpellReady[${str_heal_group}]}
+				/echo \arGroupCure waiting for ${str_heal_group} ${Me.SpellReady[${str_heal_group}]}
 				/goto :GroupCureWait
 			}
 		} else {
-			/cecho \agGroupCuring with ${str_heal_group}
+			/echo \agGroupCuring with ${str_heal_group}
 			/g Group Heal incoming, get close!
 			/for i 1 to 5
 				/if (${Group.Member[${i}].ID} != ${int_MTID} && ${Select[${Group.Member[${i}].Class.ShortName},${MeleeClasses}]}) {
@@ -573,7 +573,7 @@ Sub chkGroupMarkedForDeath
 			/goto :CheckGroup
 		}
 	} else /if (${Me.Class.ShortName.Equal[SHM]}) {
-		/cecho \agGroupCuring with ${str_cure_disease}
+		/echo \agGroupCuring with ${str_cure_disease}
 		/g Group Heal incoming, get close!
 		/for i 1 to 5
 			/if (${Group.Member[${i}].ID} != ${int_MTID} && ${Select[${Group.Member[${i}].Class.ShortName},${MeleeClasses}]}) {
@@ -589,7 +589,7 @@ Sub chkGroupMarkedForDeath
 
 	| All else fails so cure anyone with a disease counter singly
 	:CureByCounters
-	/cecho \awCureByCounters: \ag${str_cure_disease} \ayReady?${Me.SpellReady[${str_cure_disease}]} \aw(\ag${Me.PctMana}) \ay${haveMark}< 2
+	/echo \awCureByCounters: \ag${str_cure_disease} \ayReady?${Me.SpellReady[${str_cure_disease}]} \aw(\ag${Me.PctMana}) \ay${haveMark}< 2
 	/for i 1 to 6
 		/varcalc gm ${i}-1
 		/call chkHeal_MT
@@ -605,8 +605,8 @@ Sub chkGroupMarkedForDeath
 		/delay 20 ${DanNet.Query.Received}
 		
 		/if (${Bool[${DanNet.Q}]}) {
-			/cecho \ar${Group.Member[${tankIndex}]} \awreply: ${DanNet.Q} ${Bool[${DanNet.Q}]}
-			/cecho \ar MARK OF DEATH FOUND on TANK
+			/echo \ar${Group.Member[${tankIndex}]} \awreply: ${DanNet.Q} ${Bool[${DanNet.Q}]}
+			/echo \ar MARK OF DEATH FOUND on TANK
 			/call getCureCounters ${Group.Member[${tankIndex}].Name} disease
 			/call handleCureRequest ${Group.Member[${tankIndex}].Name} ${Group.Member[${tankIndex}].ID} disease ${Int[${Macro.Return}]} TRUE
 		}
@@ -618,8 +618,8 @@ Sub chkGroupMarkedForDeath
 | Overlord Mata'Muram
 |----------------------------
 Sub Event_GazeYou 
-	/cecho \arGAZE OF MATA MURAM on ME!
-	/cecho \a-w Clicking \agMirrored Mask
+	/echo \arGAZE OF MATA MURAM on ME!
+	/echo \a-w Clicking \agMirrored Mask
 	/if (${Me.Class.ShortName.Equal[BRD]}) {
 		/call MQ2Medley SONG "${DEBUFF_${db}_Spell}" ${int_targetID} TRUE
 	} else {

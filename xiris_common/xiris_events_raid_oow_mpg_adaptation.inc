@@ -21,7 +21,7 @@ ______________________________________________
 #EVENT DestructionActive "#*#Destruction begins to glow#*#"
 
 Sub InitEvents_OOW_MPG_Adaptation
-	/cecho \ag Initializing MPG Adaptation
+	/echo \ag Initializing MPG Adaptation
     /declare str_bandolier                  string  outer default
     /declare adaptationPowerDebuffTimer     timer   outer 0
     /declare adaptationIceDebuffTimer       timer   outer 0
@@ -40,7 +40,7 @@ Sub Events_OOW_MPG_Adaptation
 /return
 
 Sub EVENT_DestructionActive 
-    /cecho \arDESTRUCTION Glow Triggered! ${Time.Time24}
+    /echo \arDESTRUCTION Glow Triggered! ${Time.Time24}
     /gsay DESTRUCTION Glow Triggered! ${Time.Time24}
     /beep
     /doevents flush DestructionActive

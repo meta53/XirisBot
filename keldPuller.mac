@@ -18,13 +18,13 @@ Sub Main(string _type, string _tankPoint)
 	/delay 5
 	/if (!${bln_keldovanEngaged}) /goto :wait_loop
     /if (!${Target.Name.Find[Keldovan]}) {
-        /cecho \ar CANNOT Start! Keldovan not targetted!
+        /echo \ar CANNOT Start! Keldovan not targetted!
         /varset bln_keldovanEngaged FALSE
         /goto :wait_loop
     } 
 
      /if (!${Target.Distance3D} > 200) {
-        /cecho \ar CANNOT Start! Keldovan not close enough!
+        /echo \ar CANNOT Start! Keldovan not close enough!
         /varset bln_keldovanEngaged FALSE
         /goto :wait_loop
     }
@@ -34,7 +34,7 @@ Sub Main(string _type, string _tankPoint)
 
 	:ActiveLoop
         /delay 10
-        /cecho Harmshield: ${timer_harmshield}
+        /echo Harmshield: ${timer_harmshield}
 		/doevents
 		|------
 		| Keldovan Harmshield Time check
@@ -68,7 +68,7 @@ Sub Main(string _type, string _tankPoint)
 /return
 
 Sub commandTankOn
-	/cecho \ar${timer_harmshield} \awuntil Keldovan Rape, Send in Tank 
+	/echo \ar${timer_harmshield} \awuntil Keldovan Rape, Send in Tank 
 	/dex Xiris /tar Keldovan
     /delay 5
     /dex Xiris /stick 10 hold 
@@ -94,7 +94,7 @@ Sub Event_KeldovanEngage
 
     :spell_wait
     /delay 10
-    /cecho \awWaiting for \ao${Me.SpellReady[Terror of Discord]} \aw|| \ao${Me.SpellReady[Harmshield]}
+    /echo \awWaiting for \ao${Me.SpellReady[Terror of Discord]} \aw|| \ao${Me.SpellReady[Harmshield]}
     /if (!${Me.SpellReady[Terror of Discord]} || !${Me.SpellReady[Harmshield]}) /goto :spell_wait
     /call MQ2Cast "Terror of Discord"
     /call MQ2Cast "Harmshield"

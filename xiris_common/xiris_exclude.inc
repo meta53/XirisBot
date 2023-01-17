@@ -61,7 +61,7 @@ Sub setExclusions
 
 	| Load Global Exclusions
 	/declare ExcludeGlobal string  local ${Ini[${ExcludeINI},"Excludes.global","Exclude"]}
-	/cecho \ayGlobal Exclusions: \ag${ExcludeGlobal}
+	/echo \ayGlobal Exclusions: \ag${ExcludeGlobal}
 	/call AddExclusions "${ExcludeGlobal}"
 	
 	| Add zone specific Exclusions
@@ -70,18 +70,18 @@ Sub setExclusions
 	/if (${ExcludeZone.Equal[NULL]}) {
 		/ini "${ExcludeZone}" "Excludes.${Zone.ShortName}" "Exclude" "|"
 		/varset ExcludeZone ${Ini[${ExcludeINI},"Excludes.${Zone.ShortName}","Exclude"]}
-		/cecho \ayZone Exclusions: ${ExcludeZone}
+		/echo \ayZone Exclusions: ${ExcludeZone}
 	} else /if (${ExcludeZone.Equal[|]}) {
 		/varset ExcludeZone 
 	}
-	/cecho \ayZone Exclusions: ${ExcludeZone}
+	/echo \ayZone Exclusions: ${ExcludeZone}
 	/call AddExclusions "${ExcludeZone}"
 
-	/cecho \agExclusionList: \aw${ExcludeList}
+	/echo \agExclusionList: \aw${ExcludeList}
 /return 
 
 Sub xbot_initialize_exclusions
-	/cecho \ao xbot_initialize_exclusions
+	/echo \ao xbot_initialize_exclusions
 	|-- [Settings] : Mob Exclusion List
 	/declare 	ExcludeList string  outer   
 	/declare    ExcludeINI	string  outer   xiris_common/xiris_exclude.ini

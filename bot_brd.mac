@@ -61,7 +61,7 @@ Sub EVENT_Sing(_line, _sender, _eventParams)
 
 Sub SingSongs(string _type)
 	/call SetSpellSet ${_type}
-	/cecho \awSinging \ag${_type} \awmemming set and delaying \ao3s
+	/echo \awSinging \ag${_type} \awmemming set and delaying \ao3s
 	/delay 30
 	/medley stop
 	/medley ${_type}
@@ -73,7 +73,7 @@ Sub EVENT_Hush(_line, _sender, _eventParams)
 /return
 
 Sub Event_BardSlow
-	/cecho \awToggling Bard Slow \ag${bln_bardSlow} \awto TRUE
+	/echo \awToggling Bard Slow \ag${bln_bardSlow} \awto TRUE
 	/call ToggleBardSlow TRUE
 	/doevents flush BardSlow
 /return
@@ -81,7 +81,7 @@ Sub Event_BardSlow
 
 Sub ToggleBardSlow(bool _on) 
 	/if (${_on}) {
-		/cecho \ag Turning on Slow! Memming Spell Set
+		/echo \ag Turning on Slow! Memming Spell Set
 		/varset timer_bardSlow 10s
 		/varset bln_bardSlow TRUE
 		/memspellset slow 
@@ -219,7 +219,7 @@ Sub SetupSongs
 Sub chkBardSlow
 	
 	/if (${bln_bardSlow} && !${timer_bardSlow} && ${Target.Type.Equal[NPC]}) {
-		/cecho \aw Slow? \aoUse? \ag${bln_bardSlow} \aoTimer? \ag${timer_bardSlow} \aoTargetType? \ag${Target.Type.Equal[NPC]}
+		/echo \aw Slow? \aoUse? \ag${bln_bardSlow} \aoTimer? \ag${timer_bardSlow} \aoTargetType? \ag${Target.Type.Equal[NPC]}
 		/medley queue ${str_bardSlow}
 		/varset timer_bardSlow 10s
 	}
@@ -267,7 +267,7 @@ Sub variant_initialize
 	/declare    str_currentMedley	    string	outer	melee
 	/declare 	str_savedMedley			string  outer   melee
 	/call SetupSongs
-	/cecho \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID}) HealPoint:${healPoint} ST: ${str_STName}(${int_STID})
+	/echo \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID}) HealPoint:${healPoint} ST: ${str_STName}(${int_STID})
 	|--Bard Slow
 	/declare timer_bardSlow				timer	outer 	10s
 	/declare bln_bardSlow				bool	outer	FALSE

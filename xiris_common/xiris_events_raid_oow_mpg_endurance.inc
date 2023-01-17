@@ -17,7 +17,7 @@ ______________________________________________
 
 
 Sub InitEvents_OOW_MPG_Endurance
-	/cecho \ag Initializing MPG Endurance
+	/echo \ag Initializing MPG Endurance
     /call RegisterRaidEvents Events_OOW_MPG_Endurance 1
 /return
 

@@ -89,12 +89,12 @@ Sub Events_Curing_Background
 /return
 
 Sub Event_AutoCureMTOn
-	/cecho \agNow Automatically Curing MT
+	/echo \agNow Automatically Curing MT
 	/varset bln_autoCureMT TRUE
 /return 
 
 Sub Event_AutoCureMTOff
-	/cecho \awNo Longer Automatically Curing MT
+	/echo \awNo Longer Automatically Curing MT
 	/varset bln_autoCureMT FALSE
 /return
 
@@ -123,7 +123,7 @@ Sub Event_cureRequest(_line, _sender, _eventParams)
 	/declare forced bool local ${_eventParams.Arg[5, ]}
 
 	/if (${counters} == 0) /varset counters ${Macro.Return}
-	/cecho \awCure Request \ayname: \ag${name}(${id}) \aytype: \ag${curetype} \aycounters: \ag${counters} \ayforced: \ag${forced}
+	/echo \awCure Request \ayname: \ag${name}(${id}) \aytype: \ag${curetype} \aycounters: \ag${counters} \ayforced: \ag${forced}
 	/doevents flush cureRequest
 
 	/call handleCureRequest ${name} ${id} ${curetype} ${counters} ${forced}
@@ -175,7 +175,7 @@ Sub Event_cureGroupCorruptiuon(_line, _sender, _eventParams)
 /return
 
 Sub resetCureState
-	/cecho \agCure State Reset
+	/echo \agCure State Reset
 	/varset bln_askedForCure 	FALSE
 	/varset bln_needsCure		FALSE
 	/varset timer_cure_request  10s
@@ -286,7 +286,7 @@ Sub chkNeedCure
 		/call getGroupCurer ${cureType}
 		/varset str_myCurer ${Macro.Return}
 		/if (${str_myCurer.Equal[NOTFOUND]}) {
-			/cecho \ar I HAVE NO CURER!
+			/echo \ar I HAVE NO CURER!
 			/call resetCureState
 			/varset timer_cure_request 60s
 			/varset bln_askedForCure TRUE
@@ -299,33 +299,33 @@ Sub chkNeedCure
 
 		| Start asking for cure
 		:request_cure
-		/cecho \arCURE REQUIRED:\ay Counters:\ag${counters} \ayType:\ag${cureType} \ayRange:\ag${cureRange} \aoName:${debuffName}
+		/echo \arCURE REQUIRED:\ay Counters:\ag${counters} \ayType:\ag${cureType} \ayRange:\ag${cureRange} \aoName:${debuffName}
 		/if (${str_myCurer.Equal[${Me.Name}]}) {
 			/call handleCureRequest ${Me.Name} ${Me.ID} ${cureType} ${counters} ${forceCure}
 		} else {
 			/if (${Bool[${Spawn[pc ${str_myCurer}].ID}]}) {
-				/cecho \aoCurer:\ag${str_myCurer} \aoDist:\ag${Spawn[pc ${str_myCurer}].Distance3D} \aoRange:\ag${cureRange}
+				/echo \aoCurer:\ag${str_myCurer} \aoDist:\ag${Spawn[pc ${str_myCurer}].Distance3D} \aoRange:\ag${cureRange}
 				/if (${Spawn[pc ${str_myCurer}].Distance3D} < ${cureRange}) {
-					/cecho \aoCURE REQUESTED:\ay Counters:\ag${counters} \ayType:\ag${cureType} \ayForced:\ag${forceCure}
+					/echo \aoCURE REQUESTED:\ay Counters:\ag${counters} \ayType:\ag${cureType} \ayForced:\ag${forceCure}
 					/call requestCure ${cureType} ${counters} ${forceCure}
 |} else /if (${Spawn[pc ${str_myCurer}].Distance3D} > ${cureRange} && ${Spawn[pc ${str_myCurer}].Distance3D} < 250 && !${bln_tanking} && !${bln_jelvanEngaged}) {
 |					/varset str_navCureStart ${Me.X} ${Me.Y} ${Me.Z}
-|					/cecho \ayNavigating to Curer because range is too far for cure
+|					/echo \ayNavigating to Curer because range is too far for cure
 |					/varset bln_navCure TRUE
 |					/navigate spawn ${str_myCurer}
 |					:nav_curer
 |					/if (${Spawn[pc ${str_myCurer}].Distance3D} < ${cureRange}) /nav stop
 |					/if (${Navigation.Active}) /goto :nav_curer
-|					/cecho \arCURE REQUESTING:\ay Counters:\ag${counters} \ayType:\ag${cureType} \ayForced:\ag${forceCure}
+|					/echo \arCURE REQUESTING:\ay Counters:\ag${counters} \ayType:\ag${cureType} \ayForced:\ag${forceCure}
 |					/call requestCure ${cureType} ${counters} ${forceCure}
 				} else {
-					/cecho \arMy Curer is too far away
+					/echo \arMy Curer is too far away
 					/varset timer_cure_request 10s
 					/varset bln_askedForCure TRUE
 					/goto :return
 				}
 			} else {
-				/cecho \arMy Curer is dead or not in zone
+				/echo \arMy Curer is dead or not in zone
 				/varset timer_cure_request 10s
 				/varset bln_askedForCure TRUE
 				/goto :return
@@ -343,7 +343,7 @@ Sub requestCure(string _type, int _counters, bool _force)
 	/dt ${str_myCurer} cureRequest ${Me.Name} ${Me.ID} ${_type} ${_counters} ${_force}
 	/declare waitCounter int local 0
 	/if (${bln_navCure}) {
-		/cecho \awWaiting for cure since my initial spot is outside of cure range - \ag${cureRange}
+		/echo \awWaiting for cure since my initial spot is outside of cure range - \ag${cureRange}
 		:wait_loop
 		/doevents cureReceived
 		/varcalc waitCounter ${waitCounter}+1
@@ -360,7 +360,7 @@ Sub EVENT_ResetGroupCurer
 
 |-- Will get your curer, prefers shaman -> cleric -> druid -> paladin
 Sub getGroupCurer(string _cureType)
-	/cecho \aggetGroupCurer \ao ${_cureType}
+	/echo \aggetGroupCurer \ao ${_cureType}
 	/if (${_cureType.Equal[NULL]}) /varset  _cureType NOTSET
 	/declare 	myCurer			string	local	NOTFOUND
 	/declare	gmember			int 	local	0
@@ -379,7 +379,7 @@ Sub getGroupCurer(string _cureType)
 		/next gmember
 	}
 	
-	/cecho \awSHM:\ag${groupShaman} \awCLR:\ag${groupCleric} \awPAL:\ag${groupPaladin} \awDRU:\ag${groupDruid}
+	/echo \awSHM:\ag${groupShaman} \awCLR:\ag${groupCleric} \awPAL:\ag${groupPaladin} \awDRU:\ag${groupDruid}
 
 	/if (${_cureType.Equal[DEFAULT]}) {
 		/if (${Me.Class.ShortName.Equal[CLR]} || ${Me.Class.ShortName.Equal[DRU]} || ${Me.Class.ShortName.Equal[SHM]} || ${Me.Class.ShortName.Equal[PAL]}) {
@@ -447,7 +447,7 @@ Sub getGroupCurer(string _cureType)
 		/rs No curer found!
 		/varset timer_cure_complain 30s
 	} else {
-		/cecho \aggetGroupCurer: \ao${myCurer}  \aw(Cure Type: \ag${_cureType}\aw)
+		/echo \aggetGroupCurer: \ao${myCurer}  \aw(Cure Type: \ag${_cureType}\aw)
 	}
 
 	
@@ -567,7 +567,7 @@ Sub cureSelf(string _cureType, int _counters)
 | Handle Incoming cure request.
 | TODO: If cleric, check MT hp before healing unless FORCED is true.
 Sub handleCureRequest(string _name, int _id, string _cureType, int _counters, bool _forced) 
-	/cecho \ayhandleCureRequest: ${_name}, ${_id}, ${_cureType}, ${_counters}, ${_forced}
+	/echo \ayhandleCureRequest: ${_name}, ${_id}, ${_cureType}, ${_counters}, ${_forced}
 	|-- if requester is not in zone, ignore it
 	/if (!${SpawnCount[pc ${_name}]}) {
 		/dt ${_name} I cured you ${_name}(${_id}) of ${_counters} ${_cureType} counters.
@@ -586,15 +586,15 @@ Sub handleCureRequest(string _name, int _id, string _cureType, int _counters, bo
 
 	|-- Sanity check their cure request with a query *(if we arent forced!)
 	/if (!${_forced}) {
-		/cecho Verifying Need ${_name} "${qstring}"
+		/echo Verifying Need ${_name} "${qstring}"
 		/dquery ${_name} -q "${qstring}"
 		/delay 20 ${DanNet.Query.Received}
 		/varset c ${DanNet.Q}
 		/if (!${c}) {
-			/cecho \ao${_name} \agdid NOT need curing, returning
+			/echo \ao${_name} \agdid NOT need curing, returning
 			/goto :return
 		} else {
-			/cecho \ag${_name} \awNEEDS curing ${c}, continuing
+			/echo \ag${_name} \awNEEDS curing ${c}, continuing
 		}
 	}
 
@@ -611,12 +611,12 @@ Sub handleCureRequest(string _name, int _id, string _cureType, int _counters, bo
 
 	| If cure target is out of range, return
 	/if (${Spawn[pc ${_name}].Distance} > ${cureRange}) {
-		/cecho \ar ${_name} \awis out of cure range! \ao${Spawn[pc ${_name}].Distance} > ${cureRange}
+		/echo \ar ${_name} \awis out of cure range! \ao${Spawn[pc ${_name}].Distance} > ${cureRange}
 		/return
 	}
 
 	/if (${_cureType.Equal[disease]}) {
-		/cecho \aoDISEASE CURE selected.
+		/echo \aoDISEASE CURE selected.
 		/if (!${bln_hasDiseaseCure}) {
 			/echo I cannot cure Disease
 			/dt ${_name} I cannot cure you
@@ -625,7 +625,7 @@ Sub handleCureRequest(string _name, int _id, string _cureType, int _counters, bo
 		/varset str_spell 	${str_cure_disease}
 		/varset int_count 	${int_cure_disease}
 	} else /if (${_cureType.Equal[poison]}) {
-		/cecho \agPOISON CURE selected.
+		/echo \agPOISON CURE selected.
 		/if (!${bln_hasPoisonCure}) {
 			/echo I cannot cure Poison
 			/dt ${_name} I cannot cure you
@@ -634,7 +634,7 @@ Sub handleCureRequest(string _name, int _id, string _cureType, int _counters, bo
 		/varset str_spell 	${str_cure_poison}
 		/varset int_count 	${int_cure_poison}
 	} else /if (${_cureType.Equal[curse]}) {
-		/cecho \ayCURSE CURE selected.
+		/echo \ayCURSE CURE selected.
 		/if (!${bln_hasCurseCure}) {
 			/echo I cannot cure Curses
 			/dt ${_name} I cannot cure you
@@ -643,7 +643,7 @@ Sub handleCureRequest(string _name, int _id, string _cureType, int _counters, bo
 		/varset str_spell 	${str_cure_curse}
 		/varset int_count 	${int_cure_curse}
 	} else /if (${_cureType.Equal[corruption]}) {
-		/cecho \apCORRUPTION CURE selected.
+		/echo \apCORRUPTION CURE selected.
 		/if (!${bln_hasCorruptionCure}) {
 			/echo I cannot cure Corruption
 			/dt ${_name} I cannot cure you
@@ -668,7 +668,7 @@ Sub handleCureRequest(string _name, int _id, string _cureType, int _counters, bo
 	} else /if (${int_castCount} > 5 && ${int_castCount} < 6) { 
 		/varset int_castCount 5
 	}
-	/cecho \ar${str_spell} casting: ${int_castCount}x times (${_counters} / ${int_count})
+	/echo \ar${str_spell} casting: ${int_castCount}x times (${_counters} / ${int_count})
 
 	| need to mem curespell if I dont have it up
 	/target id ${_id}
@@ -684,7 +684,7 @@ Sub handleCureRequest(string _name, int _id, string _cureType, int _counters, bo
 
 |-- Casts a cure, for _count many times, on a _tgtID
 Sub castCure(string _name, int _id, string _spell, int _castCount, string _cureType, int _counters, bool _isForced) 
-	/cecho \aoCastCure \aw${_name}, ${_id}, ${_spell}, ${_counters}
+	/echo \aoCastCure \aw${_name}, ${_id}, ${_spell}, ${_counters}
 	
 	/declare i int local 1
 	/for i 1 to ${_castCount}
@@ -696,7 +696,7 @@ Sub castCure(string _name, int _id, string _spell, int _castCount, string _cureT
 		| If I am a cleric and this is unforced, quickly check MT health
 		/if (${Me.Class.ShortName.Equal[CLR]} && !${_isForced}) /call chkHeal_MT
 		/call TrueTarget ${_id}
-		/cecho \aoCasting \aw${i} \ag${_spell}
+		/echo \aoCasting \aw${i} \ag${_spell}
 		/call MQ2Cast "${_spell}" gem7 8s
 		/delay 10
 	/next i 
@@ -705,7 +705,7 @@ Sub castCure(string _name, int _id, string _spell, int _castCount, string _cureT
 
 
 Sub xbot_initialize_curing
-	/cecho \ao xbot_initialize_curing
+	/echo \ao xbot_initialize_curing
 	/declare 	int_manadrain_threshold int		outer 	100
 	/declare	int_hpdrain_threshold	int		outer	300
 	/declare 	bln_needsCure 			bool	outer	FALSE

@@ -49,7 +49,7 @@ Sub EVENT_CharmNPCByName(_line, _chatSender,_eventParams)
 Sub CharmNPC(int _id)
     /if (!${bln_activeCharming}) /return
     /if (${Me.Pet.ID}) {
-        /cecho \arCannot Charm ${_id}: Already have pet!
+        /echo \arCannot Charm ${_id}: Already have pet!
         /goto :Engage
     }
     /declare castAttempt int local 1
@@ -68,14 +68,14 @@ Sub CharmNPC(int _id)
     } else /if (${Macro.Return.Equal[CAST_SUCCESS]} && ${Me.Pet.ID}) {
         :Engage
         /delay 10
-        /cecho \awEngaging Target(\ag${int_targetID}\aw) with Charmed Pet \ag${Me.Pet.Name}! 
+        /echo \awEngaging Target(\ag${int_targetID}\aw) with Charmed Pet \ag${Me.Pet.Name}! 
         /call EngageTarget ${int_targetID}
     }
     :return
 /return
 
 Sub xbot_initialize_charming
-    /cecho \ao xbot_initialize_charming
+    /echo \ao xbot_initialize_charming
     /call InitEvents_Charm
 
     |-- Charm Spell(s)

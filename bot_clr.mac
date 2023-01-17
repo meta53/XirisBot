@@ -212,7 +212,7 @@ Sub EVENT_DoDivineIntervention(_line, _sender, _eventParams)
 			/if (${Target.ID} != ${tid}) {
 				/call TrueTarget ${tid}
 			}
-			/cecho \agDivine Intervention\aw on \ay${Target.Name}(${tid})
+			/echo \agDivine Intervention\aw on \ay${Target.Name}(${tid})
 			/call MQ2Cast "Divine Intervention" gem6 8s
 			/rs DI >> ${Target.Name}
 		} else {
@@ -379,6 +379,6 @@ Sub variant_initialize
 	/declare	arr_celestial[17]		string  outer
 
 	/memspellset default
-	/cecho \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID})  HealPoint:${healPoint} ST: ${str_STName}(${int_STID})
+	/echo \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID})  HealPoint:${healPoint} ST: ${str_STName}(${int_STID})
 	/call InitEvents_Class
 /return

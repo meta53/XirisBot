@@ -29,7 +29,7 @@ Sub xbot_initialize_dannet
 /return 
 
 Sub Bind_DanNet(_dName, _dQuery)
-    /cecho \aw/dannet \ayName:\ag${_dName} \ayQuery: \ag"${_dQuery}"
+    /echo \aw/dannet \ayName:\ag${_dName} \ayQuery: \ag"${_dQuery}"
     /if (${_dName.Equal[null]} || !${_dName.Length}) {
         /dnet info
         /return
@@ -57,9 +57,9 @@ Sub Bind_DanNet(_dName, _dQuery)
     }
 
     /if (${Bool[${dResponse}]}) {
-        /cecho \awQuery \ay(${_dQuery}) \awto Peer \ag${dName} \awReturned \ag${dResponse}
+        /echo \awQuery \ay(${_dQuery}) \awto Peer \ag${dName} \awReturned \ag${dResponse}
     } else {
-        /cecho \awQuery \ay(${_dQuery}) \awto Peer \ag${dName} \arFailed or returned NO Data.
+        /echo \awQuery \ay(${_dQuery}) \awto Peer \ag${dName} \arFailed or returned NO Data.
     }
    
 /return ${dResponse}

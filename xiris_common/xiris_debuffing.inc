@@ -87,7 +87,7 @@ Sub CastDebuffsOnTarget(int _targetID, bool _forced)
 	/if (${isNamed} && ${Me.PctMana} < ${DEBUFF_Mana_NamedMinimum}) /return
 	/if (!${isNamed} && ${Me.PctMana} < ${DEBUFF_Mana_Minimum}) /return
 	
-	/cecho \agCastDebuffsOnTarget \awID:\ay${_targetID}  \awisNamed:\ay${isNamed}  \awforcing?:\ay${_forced}
+	/echo \agCastDebuffsOnTarget \awID:\ay${_targetID}  \awisNamed:\ay${isNamed}  \awforcing?:\ay${_forced}
 
 	|-- Mana Check Passed, Check individual debuffs now
 	:debuffTarget
@@ -109,7 +109,7 @@ Sub CastDebuffsOnTarget(int _targetID, bool _forced)
 		| Trigger Check (triggers are stored as strings with $ replaced with #. Run this through a replace and check);
 		| This is usually a complex string such as DEBUFF_1_Trigger=(!${Target.Maloed.ID} || ${Target.Buff[${DEBUFF_1_Spell}].Duration.TotalSeconds} < 30)
 		/if (!${Bool[${DEBUFF_${db}_Trigger.Replace[#,$]}]}) {
-			/cecho \ar ${DEBUFF_${db}_Spell} Failed use Check ${DEBUFF_${db}_Trigger}
+			/echo \ar ${DEBUFF_${db}_Spell} Failed use Check ${DEBUFF_${db}_Trigger}
 			/goto :nextDB
 		}
 
@@ -129,7 +129,7 @@ Sub CastDebuffsOnTarget(int _targetID, bool _forced)
 			/if (${Me.Class.ShortName.Equal[BRD]}) {
 				/call MQ2Medley SONG "${DEBUFF_${db}_Spell}" ${_targetID} TRUE
 				/docommand /${cmdChannel} << ${Target.Name} >> ${DEBUFF_${db}_Spell} 
-				/cecho \ag ${DEBUFF_${db}_Spell}   : DELAYING for \ay${debuffDuration}s \agrefresh	
+				/echo \ag ${DEBUFF_${db}_Spell}   : DELAYING for \ay${debuffDuration}s \agrefresh	
 			} else {
 				/call CastDebuff "${DEBUFF_${db}_Spell}" ${DEBUFF_${db}_Gem} ${DEBUFF_${db}_MaxTries} ${Target.ID} ${_forced}
 			}
@@ -144,35 +144,35 @@ Sub CastDebuffsOnTarget(int _targetID, bool _forced)
 
 |-- Cast a Specific Debuff spell on the target
 Sub CastDebuff(string _debuff, string _gem,  int _maxTries, int _targetID, bool _forced)
-	/cecho \aoCastDebuff \aw_spell: \ag${_debuff}\aw, _gem: \ag${_gem}\aw, _maxTries: \ag${_maxTries}
+	/echo \aoCastDebuff \aw_spell: \ag${_debuff}\aw, _gem: \ag${_gem}\aw, _maxTries: \ag${_maxTries}
 	/declare	try		int		local	0
 	/declare    tgtID   int     local ${_targetID}
 	/declare 	rslt	string  local
 	/if (!${Target.ID} || ${Target.ID} != ${_targetID}) /call TrueTarget ${_targetID}
 	/declare 	tgtName string  local ${Target.CleanName}
 	:AttemptDebuff
-		/cecho \aoAttempting Debuff: \aw${_debuff}
+		/echo \aoAttempting Debuff: \aw${_debuff}
 		|/call chkTargetStatus
 		/if (${int_targetID} == 0 && !${_forced}) {
-			/cecho \ar Debuff Failure\aw Target Already Dead
+			/echo \ar Debuff Failure\aw Target Already Dead
 			/varset rslt TARGET_ALREADY_DEAD
 			/goto :DebuffFailure
 		}
 		|pre-check before attempt
 		/if (${Target.PctHPs} == 0 || !${Target.ID} || (${Target.ID} != ${tgtID}) || ${Target.Name.Find['s_corpse']} || ${Target.Type.Equal[corpse]} || ${Target.Type.Equal[pc]}) {
-			/cecho \ar Debuff Failure\aw Target Error
+			/echo \ar Debuff Failure\aw Target Error
 			/varset rslt TARGET_ERROR
 			/goto :DebuffFailure
 		}
 		/if (${try} > ${_maxTries}) {
-			/cecho \ar Debuff Failure\aw Max Tries reached
+			/echo \ar Debuff Failure\aw Max Tries reached
 			/varset rslt MAX_TRIES
 			/goto :DebuffFailure
 		}				
 		|if I am a cleric, check MT health
 		/if (${Me.Class.ShortName.Equal[CLR]}) /call chkHeal_MT	
 		|attempt
-		/cecho \agCalling MQ2Cast ${_debuff}
+		/echo \agCalling MQ2Cast ${_debuff}
 		/call MQ2Cast "${_debuff}" ${_gem} 5s
 		/varset rslt ${Macro.Return}
 		/varcalc try ${try}+1
@@ -222,7 +222,7 @@ Sub CreateDebuffLineup
 
 
 Sub xbot_initialize_debuffing
-	/cecho \ao xbot_initialize_debuffing
+	/echo \ao xbot_initialize_debuffing
 
 	|-- Templates
 	/declare DEBUFF_Template			string outer	_Spell|_Use|_Gem|_MaxTries|_NamedOnly|_StartHP|_StopHP|_Resist|_HasCastOnce|_RecastTimer
@@ -237,7 +237,7 @@ Sub xbot_initialize_debuffing
 	/call CreateDebuffLineup
 
 	/call InitEvents_Debuffing
-	/cecho \awDebuffs: \ag${DEBUFF_Total}
+	/echo \awDebuffs: \ag${DEBUFF_Total}
 /return
 
 

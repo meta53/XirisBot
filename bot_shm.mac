@@ -200,7 +200,7 @@ Sub chkUtils
 Sub EVENT_DOSHRINK(_line, _chatSender, _eventParams)
 	/echo \ay doShrinkEventCalled
 	/if (${FindItemCount[Umbracite Swarm Orb]}) {
-		/cecho \agShrinking
+		/echo \agShrinking
 		/call MQ2Cast "Umbracite Swarm Orb" item
 	}
 /return
@@ -237,7 +237,7 @@ Sub variant_initialize
 	/declare	int_canniHPThreshold	int		outer 	${Ini[INI_CHAR,Cannibalize,int_canni_hp_threshold,40]}
 	/declare	str_canniSpell			string	outer 	${Ini[INI_CHAR,Cannibalize,str_canni_spell,Ancient:Chaotic Pain]}
 	
-	/cecho \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID}) HealPoint:${healPoint} ST: ${str_STName}(${int_STID})
+	/echo \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID}) HealPoint:${healPoint} ST: ${str_STName}(${int_STID})
 	/call InitEvents_Class
 /return
 

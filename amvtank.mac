@@ -57,7 +57,7 @@ Sub Main(string _type, string _tankPoint)
 
 | AMV fired his AE, safe to kill
 Sub Event_AMVMarkOn
-	/cecho \arMark ON! \aw${Time.Time24} \ag${Time.SecondsSinceMidnight}, resetting interval to ${int_timeMarkInterval}
+	/echo \arMark ON! \aw${Time.Time24} \ag${Time.SecondsSinceMidnight}, resetting interval to ${int_timeMarkInterval}
 	/varset timer_mark_ae ${int_timeMarkInterval}
 	/varcalc markSeconds ${int_timeMarkInterval}/10
 	/rs Mark of Death On! ${markSeconds}s till recast!
@@ -69,7 +69,7 @@ Sub Event_AMVMarkOn
 
 
 Sub commandRetreat
-	/cecho \ar${timer_mark_ae} ${markSeconds}s \awuntil AMV AE, \aoRETREAT
+	/echo \ar${timer_mark_ae} ${markSeconds}s \awuntil AMV AE, \aoRETREAT
 	/rs AMVRetreat ${markSeconds}
 	/varset bln_announcedRetreat 	TRUE
 	/varset bln_announcedKill		FALSE
@@ -79,7 +79,7 @@ Sub commandRetreat
 
 Sub commandAttack
 	/if (!${SpawnCount[npc guard]}) /rs AMVKill ${markSeconds}
-	/cecho \artimer:${timer_mark_ae} seconds${markSeconds}s \awuntil AMV AE  (no guards), \agKILLAMV
+	/echo \artimer:${timer_mark_ae} seconds${markSeconds}s \awuntil AMV AE  (no guards), \agKILLAMV
 	/varset bln_announcedRetreat  FALSE
 	/varset bln_announcedKill	  TRUE
 	/varset timer_announce_kill 10s
@@ -94,11 +94,11 @@ Sub Event_AMVEngage
 		/goto :amvTarget
 	}
 	/if (!${Target.Name.Find[Arch]}) {
-		/cecho \ar AMV not targetted. Try that again!
+		/echo \ar AMV not targetted. Try that again!
 		/return
 	}
 	/if (${Target.Name.Find[AMV]} && !${Target.Distance3D} > 100) {
-		/cecho \ar AMV out of Range. Try that again!
+		/echo \ar AMV out of Range. Try that again!
 		/return
 	}
     /if (${Me.CombatAbilityReady[Stonewall Discipline]})  /doability "Stonewall Discipline"

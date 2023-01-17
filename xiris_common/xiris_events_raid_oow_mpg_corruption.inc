@@ -19,7 +19,7 @@ ______________________________________________
 
 
 Sub InitEvents_OOW_MPG_Corruption
-	/cecho \ag Initializing MPG Corruption
+	/echo \ag Initializing MPG Corruption
 	/call RegisterRaidEvents Events_OOW_MPG_Corruption 1
 /return
 

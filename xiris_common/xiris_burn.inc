@@ -44,15 +44,15 @@ Sub Events_Burn
 |--------------------------------------------------------------------------------
 Sub EVENT_BurnOn
 	/if (!${bln_engaged}) /return
-	/cecho \agEnabling \arBurn \agMode
+	/echo \agEnabling \arBurn \agMode
 	/varset bln_burning TRUE
 	/doevents flush BurnOn
 /return
 
 Sub EVENT_BurnOnAll
-    /cecho \ao Burn on All triggered
+    /echo \ao Burn on All triggered
 	/if (!${bln_engaged}) /return
-	/cecho \agEnabling \arBurn ALL \agMode
+	/echo \agEnabling \arBurn ALL \agMode
 	/varset bln_burning TRUE
 	/doevents flush BurnOnAll
 /return
@@ -60,7 +60,7 @@ Sub EVENT_BurnOnAll
 Sub EVENT_BurnOn1
 	/if (!${bln_engaged}) /return
 	/if (${BURN_Group}==1) {
-		/cecho \agEnabling \arBurn \agMode on CoHort \ao1
+		/echo \agEnabling \arBurn \agMode on CoHort \ao1
 		/varset bln_burning TRUE
 	}
 	/doevents flush BurnOn1
@@ -69,14 +69,14 @@ Sub EVENT_BurnOn1
 Sub EVENT_BurnOn2
 	/if (!${bln_engaged}) /return
 	/if (${BURN_Group}==2) {
-		/cecho \agEnabling \arBurn \agMode on CoHort \ao2
+		/echo \agEnabling \arBurn \agMode on CoHort \ao2
 		/varset bln_burning TRUE
 	}
 	/doevents flush BurnOn2
 /return
 
 Sub EVENT_BurnOff
-	/cecho \agDisablig \ayBurn \agMode
+	/echo \agDisablig \ayBurn \agMode
 	/varset bln_burning FALSE
 	/doevents flush BurnOff
 /return
@@ -101,14 +101,14 @@ Sub chkBurn
 
 	/for i 1 to ${BURN_Total} 
 		
-		|/cecho \awBurn_\ag${i} \ao${BURN_${i}} \awType:\ag${BURN_${i}_Type} \awUse:\ag${BURN_${i}_Use} \awAfter:\ag${BURN_${i}_AfterIndex} \awMGB:\ag${BURN_${i}_MGB} 
+		|/echo \awBurn_\ag${i} \ao${BURN_${i}} \awType:\ag${BURN_${i}_Type} \awUse:\ag${BURN_${i}_Use} \awAfter:\ag${BURN_${i}_AfterIndex} \awMGB:\ag${BURN_${i}_MGB} 
 		/if (${Target.ID} && ${Target.Type.Equal[NPC]}) {
 			| ---------------
 			| Combat Ability
 			| Note: Run the DISC if it is a combat type, it is ready, and we aren't already discing
 			| ---------------
 			/if (${BURN_${i}_Type.Equal[combat]} && ${Me.CombatAbilityReady[${BURN_${i}}]} && ${BURN_${i}_Use} && !${Bool[${Melee.DiscID}]}) {
-				/cecho \aoBurn is combat type, trying ${BURN_${i}}
+				/echo \aoBurn is combat type, trying ${BURN_${i}}
 				| Check to see if the burn Before disc/alt (0 if not) is already run
 				|/if (${BURN_${i}_AfterIndex} > 0) {
 				|	| Check to see if the burn Before is an alt or combatdisc (two different ways of checking)
@@ -123,7 +123,7 @@ Sub chkBurn
 					/doability "${BURN_${i}}"
 					/delay 5
 					/dgt DISC ${BURN_${i}} clicked!
-					/cecho \agDISC \ay${BURN_${i}} \agclicked!
+					/echo \agDISC \ay${BURN_${i}} \agclicked!
 					/goto :nextBurn		
 				|}
 				
@@ -146,7 +146,7 @@ Sub chkBurn
 						/if (${BURN_${i}_MGB}) {
 							/call MQ2Cast "Mass Group Buff" alt
 							/delay 5
-							/cecho \ag Mass Group Buff Activated!
+							/echo \ag Mass Group Buff Activated!
 						}
 						/if (${Me.Class.ShortName.Equal[BRD]}) {
                             /call MQ2Medley ALT "${BURN_${i}}" ${int_targetID} TRUE
@@ -155,7 +155,7 @@ Sub chkBurn
 						}
 						/delay 5
 						/dgt AA ${BURN_${i}} clicked!
-						/cecho \agAA \ay${BURN_${i}} \agclicked!
+						/echo \agAA \ay${BURN_${i}} \agclicked!
 						/goto :nextBurn	
 				}
 			| ---------------	
@@ -171,10 +171,10 @@ Sub chkBurn
 					}
 					/delay 5
 					/if (${Macro.Return.NotEqual[CAST_SUCCESS]}) {
-						/cecho \aoITEM \ay${BURN_${i}} \aofailed! \ar${Macro.Return}	
+						/echo \aoITEM \ay${BURN_${i}} \aofailed! \ar${Macro.Return}	
 					} else {
 						/dgt Item ${BURN_${i}} clicked!
-						/cecho \agITEM \ay${BURN_${i}} \agclicked!
+						/echo \agITEM \ay${BURN_${i}} \agclicked!
 					}
 					
 					/goto :nextBurn	
@@ -186,7 +186,7 @@ Sub chkBurn
 
 
 Sub AddBurnToLineup(string _type, int _index, string _line)
-    |/cecho \arAdding Burn to Lineup: \aoType:\ag${_type} \aoIndex:\ag${_index} \aoArgs:\ag${_line}
+    |/echo \arAdding Burn to Lineup: \aoType:\ag${_type} \aoIndex:\ag${_index} \aoArgs:\ag${_line}
     /declare propertyList string local ${${_type}_Template}
 	/declare propertyCount int local ${propertyList.Count[|]}
 	/varcalc propertyCount ${propertyCount}+1
@@ -196,16 +196,16 @@ Sub AddBurnToLineup(string _type, int _index, string _line)
 
     | Add the new Burn by type 
 	|_Burn|_Type|_Use|_AfterIndex|_MGB
-	/cecho \ayCreating New \ag ${_type} \ay: ${_type}_${_index}: \ag ${_line.Token[1,|]}
+	/echo \ayCreating New \ag ${_type} \ay: ${_type}_${_index}: \ag ${_line.Token[1,|]}
     /declare ${_type}_${_index} string outer  ${_line.Token[1,|]}
 	/for j 2 to ${propertyCount}
 		/varset property ${propertyList.Token[${j},|]} 
 		/if (${property.Find[Timer]}) {
 			/declare ${_type}_${_index}${property} timer outer ${_line.Token[${j},|]}s
-			|/cecho \ao${_type}_${_index}${property} \awis a timer \ar${${_type}_${_index}${property}}
+			|/echo \ao${_type}_${_index}${property} \awis a timer \ar${${_type}_${_index}${property}}
 		} else {
 			/declare ${_type}_${_index}${property} string outer ${_line.Token[${j},|]}
-            |/cecho \ay${property}:\ag ${_line.Token[${j},|]}
+            |/echo \ay${property}:\ag ${_line.Token[${j},|]}
 		}
 		
 	/next j
@@ -262,7 +262,7 @@ Sub chkAA
 /return
 
 Sub AddAAToLineup(string _type, int _index, string _line)
-    |/cecho \arAdding AA to Lineup: \aoType:\ag${_type} \aoIndex:\ag${_index} \aoArgs:\ag${_line}
+    |/echo \arAdding AA to Lineup: \aoType:\ag${_type} \aoIndex:\ag${_index} \aoArgs:\ag${_line}
     /declare propertyList string local ${${_type}_Template}
 	/declare propertyCount int local ${propertyList.Count[|]}
 	/varcalc propertyCount ${propertyCount}+1
@@ -270,16 +270,16 @@ Sub AddAAToLineup(string _type, int _index, string _line)
 	/declare i int local 1
 	/declare j int local 1
 
-    /cecho \ayCreating New \ag ${_type} \ay: ${_type}_${_index}: \ag${_line.Token[1,|]}
+    /echo \ayCreating New \ag ${_type} \ay: ${_type}_${_index}: \ag${_line.Token[1,|]}
     /declare ${_type}_${_index} string outer  ${_line.Token[1,|]}
 	/for j 2 to ${propertyCount}
 		/varset property ${propertyList.Token[${j},|]} 
 		/if (${property.Find[Timer]}) {
 			/declare ${_type}_${_index}${property} timer outer ${_line.Token[${j},|]}s
-		|	|/cecho \ao${_type}_${_index}${property} \awis a timer \ar${${_type}_${_index}${property}}
+		|	|/echo \ao${_type}_${_index}${property} \awis a timer \ar${${_type}_${_index}${property}}
 		} else {
 			/declare ${_type}_${_index}${property} string outer ${_line.Token[${j},|]}
-            |/cecho \ay${property}:\ag ${_line.Token[${j},|]}
+            |/echo \ay${property}:\ag ${_line.Token[${j},|]}
 		}
 		
 	/next j
@@ -313,7 +313,7 @@ Sub chkClicky
         
         | Passed the above checks, cast the clicky   
         :castingClicky
-        /cecho \ag ${CLICKY_${i}} : FIRED	
+        /echo \ag ${CLICKY_${i}} : FIRED	
         /if (${Me.Class.ShortName.Equal[BRD]}) {
             | We need to make sure BARDs (with medley) have the item in a worn slot or slot 30
             /if (${CLICKY_${i}_Type.Equal[DEFENSE]}) {
@@ -336,7 +336,7 @@ Sub chkClicky
 /return
 
 Sub AddClickyToLineup(string _type, int _index, string _line)
-    |/cecho \arAdding Clicky to Lineup: \aoType:\ag${_type} \aoIndex:\ag${_index} \aoArgs:\ag${_line}
+    |/echo \arAdding Clicky to Lineup: \aoType:\ag${_type} \aoIndex:\ag${_index} \aoArgs:\ag${_line}
      /declare propertyList string local ${${_type}_Template}
 	/declare propertyCount int local ${propertyList.Count[|]}
 	/varcalc propertyCount ${propertyCount}+1
@@ -344,16 +344,16 @@ Sub AddClickyToLineup(string _type, int _index, string _line)
 	/declare i int local 1
 	/declare j int local 1
 
-    /cecho \ayCreating New \ag ${_type} \ay: ${_type}_${_index}:\ag${_line.Token[1,|]}
+    /echo \ayCreating New \ag ${_type} \ay: ${_type}_${_index}:\ag${_line.Token[1,|]}
     /declare ${_type}_${_index} string outer  ${_line.Token[1,|]}
 	/for j 2 to ${propertyCount}
 		/varset property ${propertyList.Token[${j},|]} 
 		/if (${property.Find[Timer]}) {
 			/declare ${_type}_${_index}${property} timer outer ${_line.Token[${j},|]}s
-		|	|/cecho \ao${_type}_${_index}${property} \awis a timer \ar${${_type}_${_index}${property}}
+		|	|/echo \ao${_type}_${_index}${property} \awis a timer \ar${${_type}_${_index}${property}}
 		} else {
 			/declare ${_type}_${_index}${property} string outer ${_line.Token[${j},|]}
-            |/cecho \ay${property}:\ag ${_line.Token[${j},|]}
+            |/echo \ay${property}:\ag ${_line.Token[${j},|]}
 		}
 		
 	/next j
@@ -406,7 +406,7 @@ Sub CreateClickyLineup
 /return
 
 Sub xbot_initialize_burns
-    /cecho \aoxbot_initialize_burns
+    /echo \aoxbot_initialize_burns
     |- [Settings] : BurnMode
 	/declare bln_burning			bool	outer FALSE
 

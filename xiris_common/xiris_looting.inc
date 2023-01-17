@@ -76,7 +76,7 @@ Sub EVENT_LOOT_SELF
 /return
 
 Sub LootSelf 
-	/cecho \ao${Me.Name} is looting self
+	/echo \ao${Me.Name} is looting self
 	/if (${Me.Class.ShortName.Equal[MNK]} || ${Me.Class.ShortName.Equal[NEC]} ) {
 		/multiline ; /squelch /melee feigndeath=0 ; /stand ; /delay 2s; /tar ${Me.Name}'s ; /corpse ; /loot ; /delay 2s ; /notify LootWnd LW_LootAllButton leftmouseup ; /delay 10s ; /squelch /melee feigndeath=10 ; /memspellset default;
 	} else {
@@ -185,7 +185,7 @@ Sub EVENT_LootTooFar
 |SUB: Parsing the loot ini file (xiris_common/xiris_loot.ini)
 |-------------------------------------------------------------------------------- 
 Sub ParseLootINI 
-	/cecho \agParseLootINI \aw${lootINIFile}
+	/echo \agParseLootINI \aw${lootINIFile}
 
 	|-- determine the count of the 3 major type QUEST|TRADE|VENDOR
 	/declare int_total  int local ${Ini[${lootINIFile},Settings,Total]}
@@ -199,7 +199,7 @@ Sub ParseLootINI
 	/if (${Defined[loot_TRADE]}) 	/deletevar loot_TRADE
 	/if (${Defined[loot_QUEST]}) 	/deletevar loot_QUEST
 	
-	/cecho \awTotal Loot: \ag${int_total} \ayvendor: \ag${int_vendor} \aotrade: \ag${int_trade} \arquest: \ag${int_quest}
+	/echo \awTotal Loot: \ag${int_total} \ayvendor: \ag${int_vendor} \aotrade: \ag${int_trade} \arquest: \ag${int_quest}
 
 	|-- create new 2D arrays 
 	|	[1] item
@@ -271,7 +271,7 @@ Sub ParseLootINI
 |	- Loots if count < max, my class is a looter on the list
 |-------------------------------------------------------------------------------- 
 Sub LootTarget(int _corpseID)
-	/cecho \awLootTarget: \ag${_corpseID}
+	/echo \awLootTarget: \ag${_corpseID}
 	/call TrueTarget ${_corpseID}
 
 	
@@ -307,7 +307,7 @@ Sub LootTarget(int _corpseID)
 		/if (${Macro.Return.Equal[LOOT_NO_RIGHTS]}) /goto :return
 		/delay 10
 		/if (!${Corpse.Items}) {
-			/cecho \arEmpty Corpse
+			/echo \arEmpty Corpse
 			|/squelch /target clear
 			/notify LootWnd DoneButton leftmouseup
 			/keypress esc
@@ -394,11 +394,11 @@ Sub LootTarget(int _corpseID)
 
 			|-check to see if item is lore
 			:loot_validation
-			/cecho ${lootName} \awCount in Inventory: \ay${FindItemCount[${lootName}]} \awMaximum: \ay${int_numberToLoot} \awClass Lootable?: \ay${bln_includedByClass} \awExcluded by Name: \ay${bln_excludedByCharName} \awLoot By Me|*|Only? \ay${bln_includedByCharName} \awBeep? \ay${bln_useBeep}
+			/echo ${lootName} \awCount in Inventory: \ay${FindItemCount[${lootName}]} \awMaximum: \ay${int_numberToLoot} \awClass Lootable?: \ay${bln_includedByClass} \awExcluded by Name: \ay${bln_excludedByCharName} \awLoot By Me|*|Only? \ay${bln_includedByCharName} \awBeep? \ay${bln_useBeep}
 			
 			|- My character name is in the exclusion list
 			/if (${bln_excludedByCharName} || !${bln_includedByClass}) {
-				/cecho \arI shouldn't keep this (ex name: ${bln_excludedByCharName}, class: !${bln_includedByClass})
+				/echo \arI shouldn't keep this (ex name: ${bln_excludedByCharName}, class: !${bln_includedByClass})
 				/varset keep FALSE
 				/varset reason EXCLUDED CHARACTER||CLASS
 				/goto :loot_gank
@@ -406,21 +406,21 @@ Sub LootTarget(int _corpseID)
 
 			/if (${bln_includedByClass} && ${bln_includedByCharName}) {
 				| My character can loot this provisionally. More checks to follow
-				/cecho \awI may be able to keep this item
+				/echo \awI may be able to keep this item
 
 				| Check to see if its lore and I already have one
 				/if (${Corpse.Item[${n}].Lore} && ${FindItemCount[${lootName}]} == 1) {
-					/cecho \arItem is lore, and we have 1
+					/echo \arItem is lore, and we have 1
 					/varset keep FALSE
 					/varset reason LORE
 					/goto :loot_gank
 				} else /if (${FindItemCount[${lootName}]} >= ${int_numberToLoot}) {
-					/cecho \arI already have more than what I need of this item. (${FindItemCount[${lootName}]} >= ${int_numberToLoot})
+					/echo \arI already have more than what I need of this item. (${FindItemCount[${lootName}]} >= ${int_numberToLoot})
 					/varset keep FALSE
 					/varset reason LOOTCOUNT >= ${int_numberToLoot}
 					/goto :loot_gank
 				} else {
-					/cecho \agI should keep this. All checks passed.
+					/echo \agI should keep this. All checks passed.
 					/varset keep TRUE
 					/goto :loot_gank
 				}
@@ -432,7 +432,7 @@ Sub LootTarget(int _corpseID)
 			:loot_gank
 			/if (${keep}) {
 				/varcalc fCount ${FindItemCount[${lootName}]} + 1
-				/cecho \agKeeping ${lootName} ${lootType} ${fCount} of ${int_numberToLoot}
+				/echo \agKeeping ${lootName} ${lootType} ${fCount} of ${int_numberToLoot}
 				/docommand /${str_lootChannel} Keeping ${lootName} ${lootType} ${fCount} of ${int_numberToLoot}
 				/itemnotify loot${n} leftmouseup
 				/delay 5 ${Cursor.ID} || ${Window[ConfirmationDialogBox].Open} || ${Window[QuantityWnd].Open}
@@ -610,7 +610,7 @@ Sub xbot_initialize_looting
 	|-- turn on looting by default if the Bot's INI is set to true (unlikely)
 	|/if (${bln_looting}) /call EnableLooting
 
-	/cecho \aoxbot_initialize_looting
+	/echo \aoxbot_initialize_looting
 	/call InitEvents_Looting 
 /return
 	

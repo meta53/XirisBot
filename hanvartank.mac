@@ -70,7 +70,7 @@ Sub Main(string _type, string _tankPoint)
 
 | Hanvar fired his AE, safe to kill
 Sub Event_HanvarChainsOn
-	/cecho \arChains ON! \aw${Time.Time24} \ag${Time.SecondsSinceMidnight}, resetting interval to ${int_timeChainInterval}
+	/echo \arChains ON! \aw${Time.Time24} \ag${Time.SecondsSinceMidnight}, resetting interval to ${int_timeChainInterval}
 	/varset timer_hanvar_ae ${int_timeChainInterval}
 	/varcalc chainSeconds ${int_timeChainInterval}/10
 	/rs Hanvar Chains On! ${chainSeconds}s till recast!
@@ -80,7 +80,7 @@ Sub Event_HanvarChainsOn
 
 | Hanvar's chains wore off
 Sub Event_HanvarChainsOff
-	/cecho \arChains OFF! \aw${Time.Time24} \ag${Time.SecondsSinceMidnight}
+	/echo \arChains OFF! \aw${Time.Time24} \ag${Time.SecondsSinceMidnight}
 	|/varset timer_hanvar_ae 100
 	|/varset chainSeconds 10
 	|/doevents flush HanvarChainsOff
@@ -88,7 +88,7 @@ Sub Event_HanvarChainsOff
 
 Sub commandAttackGuards
 	/if (!${SpawnCount[npc guard radius 150]}) /return
-	/cecho \ar${SpawnCount[npc guard radius 150]} \aware spawned, \ayKILLGUARDS
+	/echo \ar${SpawnCount[npc guard radius 150]} \aware spawned, \ayKILLGUARDS
 	/dex Xirin /target ${NearestSpawn[npc guard]}
 	/dex Xirin /casting "Terror of Discord"
 	/varset bln_announcedRetreat  FALSE
@@ -97,7 +97,7 @@ Sub commandAttackGuards
 /return
 
 Sub commandRetreat
-	/cecho \ar${timer_hanvar_ae} ${chainSeconds}s \awuntil Hanvar AE, \aoRETREAT
+	/echo \ar${timer_hanvar_ae} ${chainSeconds}s \awuntil Hanvar AE, \aoRETREAT
 	/rs HanvarRetreat ${chainSeconds}
 	/varset bln_announcedRetreat 	TRUE
 	/varset bln_announcedKill		FALSE
@@ -107,7 +107,7 @@ Sub commandRetreat
 
 Sub commandAttackHanvar
 	/if (!${SpawnCount[npc guard]}) /rs HanvarKill ${chainSeconds}
-	/cecho \artimer:${timer_hanvar_ae} seconds${chainSeconds}s \awuntil Hanvar AE  (no guards), \agKILLHANVAR
+	/echo \artimer:${timer_hanvar_ae} seconds${chainSeconds}s \awuntil Hanvar AE  (no guards), \agKILLHANVAR
 	/varset bln_announcedRetreat  FALSE
 	/varset bln_announcedKill	  TRUE
 	/varset timer_announce_kill 10s
@@ -122,11 +122,11 @@ Sub Event_HanvarEngage
 		/goto :hanvarTarget
 	}
 	/if (!${Target.Name.Find[Hanvar]}) {
-		/cecho \ar HANVAR not targetted. Try that again!
+		/echo \ar HANVAR not targetted. Try that again!
 		/return
 	}
 	/if (${Target.Name.Find[Hanvar]} && !${Target.Distance3D} > 100) {
-		/cecho \ar HANVAR out of Range. Try that again!
+		/echo \ar HANVAR out of Range. Try that again!
 		/return
 	}
 	/echo Hammering aggro

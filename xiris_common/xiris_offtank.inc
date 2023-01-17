@@ -129,8 +129,8 @@ Sub aggroByID(int _targetID)
 	
 	/if (!${Me.Standing}) /stand on
 	/if (!${bln_engaged}) /varset bln_engaged TRUE
-	/cecho \ao Aggroing \ay${Target.Name}\aw(\ag${_targetID}\aw)
-	/cecho \aw Class being Targetted: \ar${Me.TargetOfTarget.Class.ShortName}
+	/echo \ao Aggroing \ay${Target.Name}\aw(\ag${_targetID}\aw)
+	/echo \aw Class being Targetted: \ar${Me.TargetOfTarget.Class.ShortName}
 	:aggroLoop
 	|-- if SK/PAL try casting on it, if not, smack it;
 	/if (${Me.Class.ShortName.Equal[PAL]}) {
@@ -187,7 +187,7 @@ Sub chkHate
 
 
 Sub xbot_initialize_offtanking
-	/cecho \ao xbot_initialize_offtanking
+	/echo \ao xbot_initialize_offtanking
 	|-- [Settings] : Off Tanking
 	/declare bln_offTank		 	bool 	outer FALSE
 	/declare int_offtankRadius		int     outer 85

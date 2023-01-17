@@ -139,7 +139,7 @@ Sub Events_SpellRoutines
 
 
 Sub xbot_initialize_spellRoutines
-	/cecho \aoxbot_initialize_spellRoutines
+	/echo \aoxbot_initialize_spellRoutines
 	|-- Default values for xiris_spell_routines.inc
 	/declare noInvis 			bool 	outer 	TRUE
 	/declare noFeigning 		bool 	outer 	TRUE
@@ -175,7 +175,7 @@ Sub MQ2Medley(string _type, string _token, int _targetID, bool _interrupt)
     /if (${_interrupt}) /varset argstring "${_token}" -interrupt -targetid|${_targetID}
     /declare castTime int  local
 
-    /cecho \aoMQ2Medley \ag${_type} \ay${argstring}
+    /echo \aoMQ2Medley \ag${_type} \ay${argstring}
     /echo 
   
     /if (${_type.NotEqual[ITEM]}) {
@@ -185,7 +185,7 @@ Sub MQ2Medley(string _type, string _token, int _targetID, bool _interrupt)
     } else {
         /autoinv
         /varcalc castTime (${FindItem[${_token}].CastTime} / 100)+20
-        |/cecho \awItem! "${_token}" ${FindItem[${_token}].CastTime} ${castTime}
+        |/echo \awItem! "${_token}" ${FindItem[${_token}].CastTime} ${castTime}
         | if the item is not in wornslot or slot 30
         | Check to see if worn, if so we can just click
         | MQ2Exchange requries ITEMNAME
@@ -204,7 +204,7 @@ Sub MQ2Medley(string _type, string _token, int _targetID, bool _interrupt)
 
 
 Sub MQ2Cast(string spellName,string spellType,timer giveUpTimer,string mySub,string MQ2Feature1,string MQ2Feature2,string MQ2Feature3,string MQ2Feature4,string MQ2Feature5,string MQ2Feature6,string MQ2Feature7,string MQ2Feature8)
-	/cecho \aoMQ2Cast \ag${spellName} \aw ${spellType}
+	/echo \aoMQ2Cast \ag${spellName} \aw ${spellType}
 	/if ( !${Defined[spellType]} )   /declare spellType   string local NULL
 	/if ( !${Defined[giveUpTimer]} ) /declare giveUpTimer timer  local 0
 	/if ( !${Defined[MQ2Feature1]} ) /declare MQ2Feature1 string local
@@ -297,7 +297,7 @@ Sub MQ2Cast(string spellName,string spellType,timer giveUpTimer,string mySub,str
 
 
 Sub Interrupt
-	/cecho \awInterrupting Cast! \ao${Time.Time24}
+	/echo \awInterrupting Cast! \ao${Time.Time24}
 	/varset interruptFlag TRUE
 	/interrupt
 /return

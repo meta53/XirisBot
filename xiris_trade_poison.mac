@@ -24,9 +24,9 @@ REQUIRED INCLUDES
 
 
 Sub Main(int _skillDesired) 
-    /cecho \awStarting \agPoison Making \awTrainer
+    /echo \awStarting \agPoison Making \awTrainer
     /call init_tradeskills ${_skillDesired}
-    /cecho \aoStarting Skill:\ag${int_startSkill}
+    /echo \aoStarting Skill:\ag${int_startSkill}
 
     :mainloop 
         /call chkPlatinum
@@ -46,7 +46,7 @@ Sub Main(int _skillDesired)
 
 Sub chkPlatinum
     /if (${Me.Platinum}<${int_minPlatinum}) {
-        /cecho \arOut of Platinum!
+        /echo \arOut of Platinum!
         /endmacro
     }
 /return
@@ -70,16 +70,16 @@ Sub chkSkill
 		/varset str_recipeValue Atrophic Sap
 	} 
     /if (${int_currentSkill} >= ${_skillDesired}) {
-        /cecho \agSkill ${int_currentSkill} Acquired!
+        /echo \agSkill ${int_currentSkill} Acquired!
         /endmacro
     }
 /return 
 
 
 Sub getRecipe  
-    /cecho \aoLooking for recipe \ag[${_recipe}]
+    /echo \aoLooking for recipe \ag[${_recipe}]
     /if (${Ini[xiris_trade_poison.ini,${_recipe}].Count[|]}==0) {
-		/cecho \arRecipe ${RecipeName} not found 
+		/echo \arRecipe ${RecipeName} not found 
 		/endmacro 
 	}
     /declare i int local

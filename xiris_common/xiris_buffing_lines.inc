@@ -31,19 +31,19 @@ This works for several buff lines
 #event requestBuffLine "[#1#(msg)] requestBuffLine #2#,#3#,#4#"
 
 Sub Event_requestBuffLine(_string _text, string _sender, string _buffLine, string _targetType, string _groupList)
-	/cecho \ao rqstBuffLine
-	/cecho \ao _text:\ag${_text}
-	/cecho \ao _sender:\ag${_sender}
-	/cecho \ao _buffLine:\ag${_buffLine}
-	/cecho \ao _targetType:\ag${_targetType}
-	/cecho \ao _groupList:\ag${_groupList}ye
+	/echo \ao rqstBuffLine
+	/echo \ao _text:\ag${_text}
+	/echo \ao _sender:\ag${_sender}
+	/echo \ao _buffLine:\ag${_buffLine}
+	/echo \ao _targetType:\ag${_targetType}
+	/echo \ao _groupList:\ag${_groupList}ye
 	/call requestBuffLine ${_buffLine} ${_targetType} ${_groupList}
 /return
 
 |-- Method for getting a buff for SINGLE or GROUP
 Sub requestBuffLine(string _buffLine, string _targetType, string _groupList)
 
-	/cecho \aorequestBuffLine\ax ${_buffLine}, ${_targetType}, ${_groupList}
+	/echo \aorequestBuffLine\ax ${_buffLine}, ${_targetType}, ${_groupList}
 	/declare hasBuffCount int local 0
 	/declare missingBuffCount int local 0
 	/declare whoHasBuff	string local
@@ -74,7 +74,7 @@ Sub requestBuffLine(string _buffLine, string _targetType, string _groupList)
 		/declare arrMissing[${missingBuffCount}]
 		/declare i int local 0
 		/for i 1 to ${missingBuffCount}
-			/cecho \ay${Spawn[pc ${whoMissingBuff.Arg[${i},,]}].ID}
+			/echo \ay${Spawn[pc ${whoMissingBuff.Arg[${i},,]}].ID}
 			/call castBuffLine ${_buffLine} SINGLE ${Spawn[pc ${whoMissingBuff.Arg[${i},,]}].ID}
 		/next i
 		
@@ -146,9 +146,9 @@ Sub chkGroupHasBuffLine(string _buffLine, string _groupMembers)
 	|-- compose the return string and send it ~ delimited 
 	:return
 
-	/cecho \ar Checked ${_groupMembers} for ${_buffLine} 
-	/cecho \ar Found: ${list_buffedMembers.Count} (${whoHasBuff})
-	/cecho \ar Missing: ${list_unbuffedMembers.Count} (${whoMissingBuff})
+	/echo \ar Checked ${_groupMembers} for ${_buffLine} 
+	/echo \ar Found: ${list_buffedMembers.Count} (${whoHasBuff})
+	/echo \ar Missing: ${list_unbuffedMembers.Count} (${whoMissingBuff})
 
 /return ${list_buffedMembers.Count}~${list_unbuffedMembers.Count}~${whoHasBuff}~${whoMissingBuff}
 
@@ -177,7 +177,7 @@ Sub chkHasBuffLine(string _buffLine, string _targetName)
 			/varset r ${li.Advance}
 		}
 	}
-	/cecho \apSetting line to ${_buffLine}
+	/echo \apSetting line to ${_buffLine}
 	|-- Set the reference to the requested line
 	/if (${_buffLine.Equal[AEGO]}) 		/vardata li list_aegoLine.First
 	/if (${_buffLine.Equal[SYMBOL]}) 	/vardata li list_symbolLine.First
@@ -225,7 +225,7 @@ Sub castBuffLine(string _buffLine, string _spellType, int _targetID)
 	/if (${_spellType.Equal[GROUP]}) /varset groupSpell TRUE
 	
 	|-- find which spell in the line I can cast
-	/cecho \aiSetting line to \ar${_buffLine}
+	/echo \aiSetting line to \ar${_buffLine}
 	|-- Set the reference to the requested line
 	/if (${_buffLine.Equal[AEGO]}) 		/vardata li list_aegoLine.First
 	/if (${_buffLine.Equal[SYMBOL]}) 	/vardata li list_symbolLine.First
@@ -249,12 +249,12 @@ Sub castBuffLine(string _buffLine, string _spellType, int _targetID)
 		/if (${bookSlot}) {
 			/if (!${groupSpell} && ${Spell[${spellName}].TargetType.Equal[Single]}) {
 				| we want the single target version
-				|/cecho Looking for my highest level \ay${_spellType} \axtarget version of ${_buffLine}
+				|/echo Looking for my highest level \ay${_spellType} \axtarget version of ${_buffLine}
 				/varset highestCastable ${li.Value}
 				|/echo I can cast ${spellName}(${li.Value})
 			} else /if (${groupSpell} && (${Spell[${spellName}].TargetType.Equal[Group v2]} || ${Spell[${spellName}].TargetType.Equal[Group v1]})) {
 				| we want the group version
-				|/cecho Looking for my highest level \ay${_spellType} \axversion of ${_buffLine}
+				|/echo Looking for my highest level \ay${_spellType} \axversion of ${_buffLine}
 				/varset highestCastable ${li.Value}
 				|/echo I can cast ${spellName}(${li.Value})
 			}
@@ -263,7 +263,7 @@ Sub castBuffLine(string _buffLine, string _spellType, int _targetID)
 		}
 		/varset r ${li.Advance}
 	}
-	/cecho \ap ${Me.Name}'s Highest Castable \ay${_spellType} \ar${_buffLine}\ap is ${Spell[${highestCastable}].Name} (${highestCastable})
+	/echo \ap ${Me.Name}'s Highest Castable \ay${_spellType} \ar${_buffLine}\ap is ${Spell[${highestCastable}].Name} (${highestCastable})
 	
 
 /return
@@ -278,7 +278,7 @@ Sub composeGroupList(string _delim)
 
 
 Sub xbot_initialize_bufflines
-	/cecho \aoxbot_initialize_bufflines - note: bypassed, unused for now.
+	/echo \aoxbot_initialize_bufflines - note: bypassed, unused for now.
 	/goto :return
 	/declare delim string local
 	/declare result string local

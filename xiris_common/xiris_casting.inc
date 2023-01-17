@@ -146,7 +146,7 @@ Sub chkNuke
 			|/if (${NUKE_${i}_RecastTimer} <= 0) 
 			/if (${NUKE_${i}_RecastTimer} > 0 && ${NUKE_${i}_HasCastOnce}) {
 				/if (${i}<${NUKE_Total}) { 
-					/cecho \arTimer not ready for \ay${NUKE_${i}_Spell} :: \ay${NUKE_${i}_RecastTimer}
+					/echo \arTimer not ready for \ay${NUKE_${i}_Spell} :: \ay${NUKE_${i}_RecastTimer}
 					/goto :NextNuke
 				} else {
 					/return
@@ -185,11 +185,11 @@ Sub chkNuke
 				/if (${Me.CurrentMana}>=${Spell[${NUKE_${i}_Spell}].Mana} && ${Target.Distance}<=${Spell[${NUKE_${i}_Spell}].Range} && ${Target.LineOfSight}) {
 					/if (${Me.Class.ShortName.Equal[BRD]}) {
 						/call MQ2Medley SONG "${NUKE_${i}}" ${int_targetID} TRUE
-						/cecho \ag ${NUKE_${i}_Spell}  : DELAYING for \ay${NUKE_${i}_DelayTimer.OriginalValue}s \agrefresh	
+						/echo \ag ${NUKE_${i}_Spell}  : DELAYING for \ay${NUKE_${i}_DelayTimer.OriginalValue}s \agrefresh	
 					} else {
 						/call MQ2Cast "${NUKE_${i}_Spell}"	
 						/if (${Macro.Return.Equal[CAST_SUCCESS]}) {
-							/cecho \ag ${NUKE_${i}_Spell} ${Macro.Return} : DELAYING for \ay${NUKE_${i}_DelayTimer.OriginalValue}s \agrefresh	
+							/echo \ag ${NUKE_${i}_Spell} ${Macro.Return} : DELAYING for \ay${NUKE_${i}_DelayTimer.OriginalValue}s \agrefresh	
 						}
 					}
 					/varset NUKE_DelayTimer	${NUKE_DelayTimer.OriginalValue}
@@ -250,7 +250,7 @@ Sub chkQNuke
 			|-- Check the timer on this nuke
 			/if (${QNUKE_${i}_RecastTimer} > 0 && ${QNUKE_${i}_HasCastOnce}) {
 				/if (${i}<${QNUKE_Total}) { 
-					/cecho \arTimer not ready for \ay${QNUKE_${i}_Spell} :: \ay${QNUKE_${i}_RecastTimer}
+					/echo \arTimer not ready for \ay${QNUKE_${i}_Spell} :: \ay${QNUKE_${i}_RecastTimer}
 					/goto :NextQuickNuke
 				} else {
 					/return
@@ -290,11 +290,11 @@ Sub chkQNuke
 				/if (${Me.CurrentMana}>=${Spell[${QNUKE_${i}_Spell}].Mana} && ${Target.Distance}<=${Spell[${QNUKE_${i}_Spell}].Range} && ${Target.LineOfSight}) {
 					/if (${Me.Class.ShortName.Equal[BRD]}) {
 						/call MQ2Medley SONG "${QNUKE_${i}}" ${int_targetID} TRUE
-						/cecho \ag ${QNUKE_${i}_Spell}  : DELAYING for \ay${QNUKE_${i}_DelayTimer.OriginalValue}s \agrefresh	
+						/echo \ag ${QNUKE_${i}_Spell}  : DELAYING for \ay${QNUKE_${i}_DelayTimer.OriginalValue}s \agrefresh	
 					} else {
 						/call MQ2Cast "${QNUKE_${i}_Spell}"	
 						/if (${Macro.Return.Equal[CAST_SUCCESS]}) {
-							/cecho \ag ${QNUKE_${i}_Spell} ${Macro.Return} : DELAYING for \ay${QNUKE_${i}_DelayTimer.OriginalValue}s \agrefresh	
+							/echo \ag ${QNUKE_${i}_Spell} ${Macro.Return} : DELAYING for \ay${QNUKE_${i}_DelayTimer.OriginalValue}s \agrefresh	
 						}
 					}
 					/varset QNUKE_DelayTimer		${QNUKE_DelayTimer.OriginalValue}
@@ -334,7 +334,7 @@ Sub chkAENuke
 
 		/if (${AENUKE_${i}_RecastTimer} > 0 && ${AENUKE_${i}_HasCastOnce}) {
 			/if (${i}<${int_AENukeTotal}) { 
-				/cecho \arTimer not ready for \ay${AENUKE_${i}_Spell} :: \ay${AENUKE_${i}_DelayTimer}
+				/echo \arTimer not ready for \ay${AENUKE_${i}_Spell} :: \ay${AENUKE_${i}_DelayTimer}
 				/goto :NextAENuke
 			}
 		}
@@ -347,7 +347,7 @@ Sub chkAENuke
 
 		/call MQ2Cast "${AENUKE_${i}_Spell}"	
 		/if (${Macro.Return.Equal[CAST_SUCCESS]}) {
-			/cecho \ag ${AENUKE_${i}_Spell} ${Macro.Return} : DELAYING for \ay${AENUKE_${i}_DelayTimer.OriginalValue}s \agrefresh	
+			/echo \ag ${AENUKE_${i}_Spell} ${Macro.Return} : DELAYING for \ay${AENUKE_${i}_DelayTimer.OriginalValue}s \agrefresh	
 		}
 		/varset AENUKE_DelayTimer	${AENUKE_DelayTimer.OriginalValue}
 		/varset AENUKE_${i}_RecastTimer	${AENUKE_${i}_RecastTimer.OriginalValue}
@@ -400,7 +400,7 @@ Sub chkStun(bool _memorize)
 				/if (${Me.CurrentMana}>=${Spell[${STUN_${i}_Spell}].Mana} && ${Target.Distance}<=${Spell[${STUN_${i}_Spell}].Range} && ${Target.LineOfSight}) {
 					/call MQ2Cast "${STUN_${i}_Spell}" ${STUN_${i}_Gem} 5s
 					/if (${Cast.Result.Equal[CAST_SUCCESS]}) {
-						/cecho \ag ${STUN_${i}_Spell} ${Cast.Result}
+						/echo \ag ${STUN_${i}_Spell} ${Cast.Result}
 						/varset STUN_${i}_HasCastOnce TRUE
 					}
 				}
@@ -497,10 +497,10 @@ Sub chkDOT
 			/if (!${DOT_${i}_Use}) /goto :NextDot
 
 			|-- Check the timer on this dot
-			/if (${DOT_${i}_RecastTimer} <= 0) /cecho \agTimer ready for \ay${DOT_${i}_Spell} :: \ay${DOT_${i}_RecastTimer}
+			/if (${DOT_${i}_RecastTimer} <= 0) /echo \agTimer ready for \ay${DOT_${i}_Spell} :: \ay${DOT_${i}_RecastTimer}
 			/if (${DOT_${i}_RecastTimer} > 0 && ${DOT_${i}_HasCastOnce}) {
 				/if (${i}<${DOT_Total}) { 
-					/cecho \arTimer not ready for \ay${DOT_${i}_Spell} :: \ay${DOT_${i}_RecastTimer}
+					/echo \arTimer not ready for \ay${DOT_${i}_Spell} :: \ay${DOT_${i}_RecastTimer}
 					/goto :NextDot
 				} else {
 					/return
@@ -542,11 +542,11 @@ Sub chkDOT
 					/varset dotDuration ${Spell[${DOT_${i}_Spell}].Duration.TotalSeconds}
 					/if (${Me.Class.ShortName.Equal[BRD]}) {
 						/call MQ2Medley SONG "${DOT_${i}}" ${int_targetID} TRUE
-						/cecho \ag ${DOT_${i}_Spell}  : DELAYING for \ay${dotDuration}s \agrefresh	
+						/echo \ag ${DOT_${i}_Spell}  : DELAYING for \ay${dotDuration}s \agrefresh	
 					} else {
 						/call MQ2Cast "${DOT_${i}_Spell}"	
 						/if (${Macro.Return.Equal[CAST_SUCCESS]}) {
-							/cecho \ag ${DOT_${i}_Spell} ${Macro.Return} : DELAYING for \ay${dotDuration}s \agrefresh	
+							/echo \ag ${DOT_${i}_Spell} ${Macro.Return} : DELAYING for \ay${dotDuration}s \agrefresh	
 						}
 					}
 					/varset DOT_DelayTimer ${DOT_DelayTimer.OriginalValue}
@@ -579,12 +579,12 @@ Sub chkSnare
 	}
 	
 	/if (${Cast.Result.Equal[CAST_SUCCESS]}) {
-		/cecho \ag ${str_snareSpell} ${Cast.Result}
+		/echo \ag ${str_snareSpell} ${Cast.Result}
 		/varset bln_snareActive TRUE
 	}
 	
 	/if (${Cast.Result.Equal[CAST_IMMUNE]}) {
-		/cecho \ar ${str_snareSpell} ${Cast.Result}
+		/echo \ar ${str_snareSpell} ${Cast.Result}
 		/ini "${IniFile}" "SnareImmunes.${Zone.ShortName}" "SnareImmune" "${list_immuneSnare}${Target.CleanName}|"
 		/varset list_immuneSnare ${Ini[${ignoreINI},"SnareImmunes.${Zone.ShortName}","SnareImmune"]}
 		/varset bln_snareActive TRUE
@@ -751,10 +751,10 @@ Sub Event_SnareWornOff
 
 Sub EVENT_SetUseFastOnly(_line, _chatSender, _eventParams)
 	/if (${QNUKE_Total} > 0) {
-		/cecho \aoSetting fast only:\ag${_eventParams}
+		/echo \aoSetting fast only:\ag${_eventParams}
 		/varset bln_useFastOnly ${_eventParams}
 	} else {
-		/cecho \aoSetting fast only:\ag${_eventParams}
+		/echo \aoSetting fast only:\ag${_eventParams}
 		/varset bln_useFastOnly FALSE
 	}
 	/doevents flush SetUseFastOnly
@@ -771,7 +771,7 @@ Sub EVENT_SetUseFastOnly(_line, _chatSender, _eventParams)
 Sub EVENT_SetResistType(_line, _chatSender, _eventParams) 
 	/if (${str_classArchetype.Equal[MELEE_END]} || ${Me.Class.ShortName.Equal[WAR]}) /return
 	/declare _strResists string local ${_eventParams}
-	/cecho \awSetting resist types: \ag${_eventParams}
+	/echo \awSetting resist types: \ag${_eventParams}
 	
 	/if (${_strResists.Equal[ALL]}) /varset _strResists ${str_defaultResistTypes}
 	/call SetResistTypes ${_strResists}
@@ -808,7 +808,7 @@ Sub SetSpellLineUp(string _type, int _count, string _blob)
 /return
 
 Sub AddSpellToLineup(string _type, int _index, string _line)
-	/cecho \awAdding Spell to Lineup: \aoType:\ag${_type} \aoIndex:\ag${_index} \aoArgs:\ag${_line}
+	/echo \awAdding Spell to Lineup: \aoType:\ag${_type} \aoIndex:\ag${_index} \aoArgs:\ag${_line}
 	/declare propertyList string local ${${_type}_Template}
 	/declare propertyCount int local ${propertyList.Count[|]}
 	/varcalc propertyCount ${propertyCount}+1
@@ -818,14 +818,14 @@ Sub AddSpellToLineup(string _type, int _index, string _line)
 
 	| Add the new spells by type 
 	|_Spell|_Use|_Gem|_MaxTries|_NamedOnly|_StartHP|_StopHP|_Resist|_HasCastOnce|_RecastTimer
-	/cecho \awCreating New \ag ${_type} \awset: ${_type}_${_index}  == ${_line.Token[1,|]}
+	/echo \awCreating New \ag ${_type} \awset: ${_type}_${_index}  == ${_line.Token[1,|]}
 	/declare ${_type}_${_index}_Spell string outer  ${_line.Token[1,|]}
 	/for j 2 to ${propertyCount}
 		/varset property ${propertyList.Token[${j},|]} 
 		|/echo ${property}
 		/if (${property.Find[Timer]}) {
 			/declare ${_type}_${_index}${property} timer outer ${_line.Token[${j},|]}s
-		|	/cecho \ao${_type}_${_index}${property} \awis a timer \ar${${_type}_${_index}${property}}
+		|	/echo \ao${_type}_${_index}${property} \awis a timer \ar${${_type}_${_index}${property}}
 		} else {
 			/declare ${_type}_${_index}${property} string outer ${_line.Token[${j},|]}
 		}
@@ -952,7 +952,7 @@ Sub CreateCastingLineup
 
 
 Sub xbot_initialize_casting
-	/cecho \aoxbot_initialize_casting
+	/echo \aoxbot_initialize_casting
 
 	|- [Settings] : Casting 
 	|-- Initial Spellset
@@ -980,7 +980,7 @@ Sub xbot_initialize_casting
 	/call CreateCastingLineup
 
 	/call InitEvents_Casting
-	/cecho \awNukes: \ag${NUKE_Total} \awAENukes: \ag${AENUKE_Total} \awQNuke: \ag${QNUKE_Total} \awStun: \ag${STUN_Total} \awDOT: \ag${DOT_Total} 
+	/echo \awNukes: \ag${NUKE_Total} \awAENukes: \ag${AENUKE_Total} \awQNuke: \ag${QNUKE_Total} \awStun: \ag${STUN_Total} \awDOT: \ag${DOT_Total} 
 
 
 /return

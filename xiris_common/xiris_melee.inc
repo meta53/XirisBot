@@ -114,7 +114,7 @@ Sub EVENT_NoDS(_line, _sender, _eventParams)
 Sub EVENT_YesDS(_line, _sender, _eventParams)s
 	/varset bln_useDS TRUE
 	/if (${Me.Class.ShortName.Equal[BRD]}) {
-		/cecho \aoTurning on ${str_savedMedley} Medley
+		/echo \aoTurning on ${str_savedMedley} Medley
 		/memspellset ${str_savedMedley}
 		/delay 10
 		/medley ${str_savedMedley}
@@ -130,7 +130,7 @@ Sub EVENT_RiposteDisc(_line, _sender, _eventParams)
 /return
 
 Sub FireRiposteDisc
-	/cecho \aoFiring Riposte Disc!
+	/echo \aoFiring Riposte Disc!
 	:monk
 	/if (${Me.Class.ShortName.Equal[MNK]}) {
 		/if (${Me.CombatAbilityReady[Whirlwind Discipline]}) {
@@ -201,7 +201,7 @@ Sub AutoAssistOFF
 
 
 Sub doBandolier(string _bando)
-	/cecho \ay Equipping set ${_bando}
+	/echo \ay Equipping set ${_bando}
 	/autoinv
 	/autoinv
 	/delay 5
@@ -280,7 +280,7 @@ Sub chkDownshits
 				|/echo Stacks? ${Spell[${buffName}].Stacks} && Do I have it? ${Bool[${Me.Buff[${buffName}].ID}]}
 				/if (${Spell[${buffName}].Stacks} && !${Bool[${Me.Buff[${buffName}].ID}]}) {
 					/if (${dsType.Equal[SPELL]} && !${Me.SpellReady[${buffName}]}) {
-						/cecho \ay${buffName} \awis \arNOT \awReady, Memorizing
+						/echo \ay${buffName} \awis \arNOT \awReady, Memorizing
 						| Spell is not ready, memorize it
 						/varset hadToMemBuffs TRUE
 						/call chkSpellMemorized ${castArg} TRUE
@@ -296,7 +296,7 @@ Sub chkDownshits
 					/varset itemArgs ${downflag${df}.Token[2,|]}
 					/varset itemID ${itemArgs.Token[1, ]}
 					/if (${dsType.Equal[ITEM]} && !${FindItem[${itemID}].ID}) {
-						/cecho \arCannot find downflag_${df}: \aw${itemID}!
+						/echo \arCannot find downflag_${df}: \aw${itemID}!
 						/goto :nextDF
 					}
 					/if (${Me.Class.ShortName.Equal[BRD]}) {
@@ -308,7 +308,7 @@ Sub chkDownshits
 							/call MQ2Medley ALT ${buffName} ${Me.ID} TRUE
 						}
 					} else {
-						/cecho \ayDownflag (\ag${df}\ay) Casting \ay${buffName} \ag${downflag${df}.Token[2,|]}
+						/echo \ayDownflag (\ag${df}\ay) Casting \ay${buffName} \ag${downflag${df}.Token[2,|]}
 						/call MQ2Cast ${castArg}
 					}
 					:dfcast
@@ -635,7 +635,7 @@ Sub chk_warProvoke(string _provokeDisc)
 
 
 Sub xbot_initialize_melee
-	/cecho \ao xbot_initialize_melee
+	/echo \ao xbot_initialize_melee
 	
 	/declare 	int_currentStickDistance		int		outer   25
 	/declare	int_maxStickDistance 	int 	outer 	30

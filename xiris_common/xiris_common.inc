@@ -186,7 +186,7 @@ Sub Events_Common
 **|   
 
 Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint, string _assistArgs) 
-	/cecho \aoxbot_initialize 1:${_tank1Name} 2:${_tank2Name} 3:${_tank3Name} 4:${_healPoint} 5:${_assistArgs}
+	/echo \aoxbot_initialize 1:${_tank1Name} 2:${_tank2Name} 3:${_tank3Name} 4:${_healPoint} 5:${_assistArgs}
 
 	|-- [Settings] : Communications & INI Declarations
 	/declare 	cmdChannel 				string	outer	dgt
@@ -244,7 +244,7 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/declare	int_TTID				int	 	outer 	${Spawn[${str_tankName3}].ID}
 	/declare 	str_TTName				string	outer 	${str_tankName3}
 
-	/cecho \aw Tanks \ayMT:\ag${str_MTName} \ayST:\ag${str_STName} \ayTT:\ag${str_TTName}
+	/echo \aw Tanks \ayMT:\ag${str_MTName} \ayST:\ag${str_STName} \ayTT:\ag${str_TTName}
 
 	|-- [Settings] :Auto Assist Settings
 	/declare 	bln_autoAssist			bool	outer 	FALSE
@@ -254,7 +254,7 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 		/varset bln_autoAssist ${Bool[${_assistArgs.Token[1,,]}]}
 		/varset int_assistAt ${_assistArgs.Token[2,,]}
 	} 
-	/cecho \ayAuto Assist settings: \awAuto?\ag${bln_autoAssist} \awAt?\ag${int_assistAt} \awArgs:\ag${_assistArgs}
+	/echo \ayAuto Assist settings: \awAuto?\ag${bln_autoAssist} \awAt?\ag${int_assistAt} \awArgs:\ag${_assistArgs}
 
 	|-- [Settings] : Miscellaneous Defaults
 	/declare	str_spellSet			string	outer	${Ini[INI_CHAR,Settings,str_spellSet,default]}
@@ -295,7 +295,7 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	:init_naked_wait
 	/call chkNaked 
 	/if (${bln_naked}) {
-		/cecho \arI am naked, waiting 30s and rechecking before I initialize!
+		/echo \arI am naked, waiting 30s and rechecking before I initialize!
 		/call LootSelf
 		/call chkNaked 
 		/if (${bln_naked}) {
@@ -326,7 +326,7 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/call xbot_initialize_movement
 
 	|-- report that the common things are initialized
-	/cecho \agXBOT_INITIALIZE COMPLETE
+	/echo \agXBOT_INITIALIZE COMPLETE
 /return
 
 
@@ -389,9 +389,9 @@ Sub chkSit
 
 |--Engage Target EVENT, calls EngageTarget
 Sub EVENT_KillMob(_line, _sender, _eventParams)
-	/cecho \ayKMCalled ${_sender} ${_eventParams}
+	/echo \ayKMCalled ${_sender} ${_eventParams}
 	/if (${_eventParams.Arg[1, ].Equal[NULL]}) {
-		/cecho \aoNULL Target, exiting!
+		/echo \aoNULL Target, exiting!
 		/return
 	}
 	/if (${_sender.Equal[You]}) /varset _sender ${Me.Name}
@@ -414,7 +414,7 @@ Sub EngageTarget(int _targetID)
 	/varset int_targetID ${_targetID}
 	/varset str_targetName ${Spawn[id ${_targetID}].Name}
 	/varset bln_engaged TRUE
-	/cecho \awEngaging Target \ag${Spawn[id ${_targetID}].Name} \ay(${_targetID}) \ao${Time.Time24}
+	/echo \awEngaging Target \ag${Spawn[id ${_targetID}].Name} \ay(${_targetID}) \ao${Time.Time24}
 	/if (${Me.Class.ShortName.NotEqual[CLR]}) /call TrueTarget ${int_targetID}
 	| Stand Up
 	/if ((${Me.Feigning} && (${Me.PctHPs} > 75)) || !${Me.Standing}) /stand
@@ -424,7 +424,7 @@ Sub EngageTarget(int _targetID)
 	/if (${Me.Pet.ID}) /call chkPetAttack
 	| Start Swinging
 	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]} || (${Me.Class.ShortName.Equal[CLR]} && ${bln_battleCleric})) {
-		/cecho \awKilling Target \ag${Spawn[id ${_targetID}].Name} \ay(${_targetID})  \ao${Time.Time24}
+		/echo \awKilling Target \ag${Spawn[id ${_targetID}].Name} \ay(${_targetID})  \ao${Time.Time24}
 		/squelch /melee reset
 		/squelch /face fast
 		/squelch /killthis
@@ -454,25 +454,25 @@ Sub chkTargetStatus
 	| Assumes bln_engaged == true
 	| Check for target being corpse or non-existant
 	/if ((!${Bool[SpawnCount npc id ${int_targetID}]} || ${Spawn[id ${int_targetID}].Type.Equal[corpse]} || ${Spawn[id ${int_targetID}].Name.Find[s_corpse]})) {
-		/cecho \awNo Targets with ID(\ay${int_targetID}\aw) or is a CORPSE \aoDisengaging!
+		/echo \awNo Targets with ID(\ay${int_targetID}\aw) or is a CORPSE \aoDisengaging!
 		/goto :disengage
 	} 
 	
 	| Check to see if my target is NPC and there is no NPCs around
 	/if (${Bool[${Target.ID}]} && ${Target.ID} == ${int_MTID} && (!${SpawnCount[npc id ${int_targetID} radius 200]} || ${Zone.ShortName.Equal[${Me.BoundLocation[0]}]})) {
-		/cecho \awTarget is MT, and No NPC in radius 200 (or at bind) \aoDisengaging!
+		/echo \awTarget is MT, and No NPC in radius 200 (or at bind) \aoDisengaging!
 		/goto :disengage
 	}
 
 	| Check to see if there are any NPCs on XTarget and Radius
 	/if ((${Me.XTarget}==0 && !${SpawnCount[npc radius 200]})) {
-		/cecho \awNo Targets within 200, or on XTarget \aoDisengaging!
+		/echo \awNo Targets within 200, or on XTarget \aoDisengaging!
 		/goto :disengage
 	} 
 
 	| If there is something on XTarget, and its over 400 away, ignore it.
 	/if (${Bool[${Me.XTarget}]} && (!${SpawnCount[npc radius 400]}  || ${Zone.ShortName.Equal[${Me.BoundLocation[0]}]})) {
-		/cecho \awNo Targets within 400, even if they are on XTarget \aoDisengaging!
+		/echo \awNo Targets within 400, even if they are on XTarget \aoDisengaging!
 		/goto :disengage
 	}
 
@@ -482,7 +482,7 @@ Sub chkTargetStatus
 	| I am engaged, check we are targetting correct NPC
 	/if ((${Target.ID} != ${int_targetID}) && (${Spawn[id ${int_targetID}].PctHPs} >= 0 && !${Spawn[id ${int_targetID}].Name.Find[s_corpse]})) {
 		| I am not targetting the correct NPC
-		/cecho \aoCurrent Target \arNOT \ao${Spawn[id ${int_targetID}]}(${int_targetID})\aw, re-targetting
+		/echo \aoCurrent Target \arNOT \ao${Spawn[id ${int_targetID}]}(${int_targetID})\aw, re-targetting
 		/call TrueTarget ${int_targetID}
 	} 
 	
@@ -563,7 +563,7 @@ Sub EVENT_Disengage
 /return 
 
 Sub Disengage 
-	/cecho \awDisengaging \ao${Time.Time24}
+	/echo \awDisengaging \ao${Time.Time24}
 	|-- global reset
 	/varset bln_engaged 		FALSE
 	/varset int_targetID		0
@@ -635,7 +635,7 @@ Sub chkMTAlive(bool _setAsTarget)
 	|--MT, ST, and TT are not in zone or dead!
 	/if (${Bool[${SpawnCount[PC ${str_MTName}]}]} && ${Bool[${SpawnCount[PC ${str_STName}]}]} && ${Bool[${SpawnCount[PC ${str_TTName}]}]}) {
 		/if (${Bool[${Me.Casting.ID}]}) /call Interrupt
-		/cecho \arALL TANKS ARE DEAD!
+		/echo \arALL TANKS ARE DEAD!
 		/call getMTbyPrecedence
 		/varset int_MTID ${Spawn[PC ${Macro.Return}].ID}
 		/varset str_MTName ${Spawn[PC ${Macro.Return}].Name}
@@ -644,7 +644,7 @@ Sub chkMTAlive(bool _setAsTarget)
 
 	|--MT is alive but ID is wrong; 
 	/if (${Bool[${SpawnCount[PC ${str_MTName}]}]} && (${int_MTID} != ${Spawn[PC ${str_MTName}].ID})) {
-		/cecho \ay MT ${str_MTName} is alive, and my MTID ${int_MTID} is wrong
+		/echo \ay MT ${str_MTName} is alive, and my MTID ${int_MTID} is wrong
 		/varset int_MTID ${Spawn[${str_MTName}].ID}
 		/goto :hasChanged
 	}
@@ -652,7 +652,7 @@ Sub chkMTAlive(bool _setAsTarget)
 	|--ST is still alive; 
 	/if (${Bool[${SpawnCount[PC ${str_STName}]}]} && (${int_MTID} != ${Spawn[PC ${str_STName}].ID})) {
 		/if (${Bool[${Me.Casting.ID}]}) /call Interrupt
-		/cecho \ao ST  is still alive, switching!
+		/echo \ao ST  is still alive, switching!
 		/varset str_MTName ${str_STName}
 		/varset str_STName ${str_TTName}
 		/varset int_MTID ${Spawn[${str_STName}].ID}
@@ -662,7 +662,7 @@ Sub chkMTAlive(bool _setAsTarget)
 	|--TT is still alive; 
 	/if (${Bool[${SpawnCount[PC ${str_TTName}]}]} && (${int_MTID} != ${Spawn[PC ${str_TTName}].ID})) {
 		/if (${Bool[${Me.Casting.ID}]}) /call Interrupt
-		/cecho \ao TT is still alive, switching!
+		/echo \ao TT is still alive, switching!
 		/varset str_MTName ${str_TTName}
 		/varset int_MTID ${Spawn[${str_TTName}].ID}
 		/goto :hasChanged
@@ -794,8 +794,8 @@ Sub SetupRaid(string _mode)
 	/declare keys string local ${Ini[INI_RAID,RaidBuilder,keys]}
 	:fail_noRaid
 	/if (!${keys.Find[${_mode}]}) {
-		/cecho \awSetting Raid Group Mode \arERROR: 
-		/cecho \aw   Unable to find \ay${_mode} in \ao${keys}
+		/echo \awSetting Raid Group Mode \arERROR: 
+		/echo \aw   Unable to find \ay${_mode} in \ao${keys}
 		/declare RaidGroupLeaders[1] string outer NULL
 		/declare RaidDIClerics[1] string outer NULL
 		/goto :return
@@ -825,29 +825,29 @@ Sub SetupRaid(string _mode)
 			| Set the group leaders
 			/declare RaidGroupLeaders[${groupCount}] string outer NULL
 			/varset leaderList ${Ini[INI_RAID,${settingsGroup},Raid_${i}_Leaders]}
-			/cecho \awFound my membership in Raid \ao${i}
-			/cecho \aySetting Raid Group mode to \ao${_mode}
+			/echo \awFound my membership in Raid \ao${i}
+			/echo \aySetting Raid Group mode to \ao${_mode}
 			/for j 1 to ${groupCount}
 				/varset	RaidGroupLeaders[${j}]  ${leaderList.Arg[${j},|]}
-				/cecho \ag Raid Group Leader \aw[\ag${j}\aw] \ay${RaidGroupLeaders[${j}]}
+				/echo \ag Raid Group Leader \aw[\ag${j}\aw] \ay${RaidGroupLeaders[${j}]}
 			/next j
 
 			| Set the Divine Intervention Information
 			/varset DICount ${Ini[INI_RAID,${settingsGroup},Raid_${i}_DI_Count]}
 			/varset DIList	${Ini[INI_RAID,${settingsGroup},Raid_${i}_DI_Clerics]}
 			/declare RaidDIClerics[${DICount}] string outer NULL
-			/cecho \aySetting Raid Divine Intervention mode to \ao${_mode}
+			/echo \aySetting Raid Divine Intervention mode to \ao${_mode}
 			/for j 1 to ${DICount}
 				/varset	RaidDIClerics[${j}]  ${DIList.Arg[${j},|]}
-				/cecho \ag Divine Intervention \aw[\ag${j}\aw] \ay${RaidDIClerics[${j}]}
+				/echo \ag Divine Intervention \aw[\ag${j}\aw] \ay${RaidDIClerics[${j}]}
 			/next j
 			/goto :return
 		}
 
 	/next i
 	:fail_noGroup
-		/cecho \awSetting Raid Group Mode \arERROR
-		/cecho \aw   Unable to find our raid leader in the leader list for the \ao${_mode} \awraid type.
+		/echo \awSetting Raid Group Mode \arERROR
+		/echo \aw   Unable to find our raid leader in the leader list for the \ao${_mode} \awraid type.
 		/declare RaidGroupLeaders[1] string outer NULL
 		/declare RaidDIClerics[1] string outer NULL
 		/goto :return
@@ -992,7 +992,7 @@ Sub EVENT_DUCKOFF
 |SUB: Event_ZONE HANDLERS
 |--------------------------------------------------------------------------------
 Sub Event_Zoned
-	/cecho \awEvent_Zoned ${Time.Time24}
+	/echo \awEvent_Zoned ${Time.Time24}
 	/call setExclusions
 	/if (${MacroQuest.GameState.Equal[CHARSELECT]}) /end
   	/doevents flush Zoned
@@ -1356,7 +1356,7 @@ SUB verifyEvent(sring _chatSender, string _eventParams)
 	
 	| -Check inRange
 	/if (${SpawnCount[pc =${sender} radius ${int_macroMaximumResponseDist}]}) /varset inRange TRUE
-	|/cecho \awVerifyEvent Sender:\ag${sender} \awParams: \ag${_eventParams}
+	|/echo \awVerifyEvent Sender:\ag${sender} \awParams: \ag${_eventParams}
 
 	| -Check for /only|
 	/if (${_eventParams.Find[/only|]}) {
@@ -1386,7 +1386,7 @@ SUB verifyEvent(sring _chatSender, string _eventParams)
 		/call check_selectedBots "${Macro.Return}" "${sender}"
 		/if (${Macro.Return}) /varset includeBot TRUE
 	}
-	/cecho \ayReturning Sender:\ag${sender} \awValid?\ag${userValidated} \awIncluded?\ag${includeBot} \awInZone?\ag${inZone} \awInRange?\ag${inRange}
+	/echo \ayReturning Sender:\ag${sender} \awValid?\ag${userValidated} \awIncluded?\ag${includeBot} \awInZone?\ag${inZone} \awInRange?\ag${inRange}
 /return ${sender}_${userValidated}_${includeBot}_${inZone}_${inRange}
 
 | See if the bot is in the return from the arguestring parser
@@ -1400,7 +1400,7 @@ SUB check_selectedBots(_selectedBots, _chatSender)
 
 | Evaluate and Argument string in E3 Format eg: \only|CLR,DRU,SHM
 SUB argueString(WhatToFind, givenData)
-	|/cecho \aoEvaluating Arguments \aw==> \ag${WhatToFind}  \aw=> \ay${givenData}
+	|/echo \aoEvaluating Arguments \aw==> \ag${WhatToFind}  \aw=> \ay${givenData}
 	/declare i 			int 	local 1
 	/declare foundData 	string 	local NULL
 	
@@ -1477,7 +1477,7 @@ Sub Event_RefreshXTarget
 
 
 SUB RefreshXTarget
-	/cecho \aoRefreshing \aoXTarget \ay${timer_xtargetRefresh}
+	/echo \aoRefreshing \aoXTarget \ay${timer_xtargetRefresh}
 	/declare i int local 1
 	/for i 1 to 5
 		/xtarget set ${i} grouptank
@@ -1589,7 +1589,7 @@ Sub SaveRingset
 	/declare leftfinger string local ${Me.Inventory[leftfinger].Name}
 	/declare rightfinger string local ${Me.Inventory[rightfinger].Name}
 
-	/cecho \aoSaving Ringset \awleft: \ag${leftfinger} \awright: \ag${rightfinger}
+	/echo \aoSaving Ringset \awleft: \ag${leftfinger} \awright: \ag${rightfinger}
 	/ini INI_CHAR "SavedInventory" "leftfinger" "${leftfinger}"
 	/ini INI_CHAR "SavedInventory" "rightfinger" "${rightfinger}"
 /return
@@ -1608,10 +1608,10 @@ Sub RemoveRingset
 	/if (${notemptyCount} > 10) /return
 	/if (${Cursor.ID}) /goto :notempty
 
-	/cecho \aoRemoving \ar${Ring_1_Name} \ayfrom leftfinger
+	/echo \aoRemoving \ar${Ring_1_Name} \ayfrom leftfinger
 	/unequip leftfinger
 	/delay 10
-	/cecho \aoRemoving \ar${Ring_2_Name} \ayfrom rightfinger
+	/echo \aoRemoving \ar${Ring_2_Name} \ayfrom rightfinger
 	/unequip rightfinger
 	/delay 10
 	/autoinventory
@@ -1619,7 +1619,7 @@ Sub RemoveRingset
 
 |-- method to load the saved rings from INI (primarily for Trial of Foresight)
 Sub EVENT_LoadRingset(string _line, string _sender, string _eventParams)
-	/cecho \ayLoading Ringset ${_eventParams}
+	/echo \ayLoading Ringset ${_eventParams}
 	/call LoadRingset
 /return
 
@@ -1643,7 +1643,7 @@ Sub LoadRingset
 	/if (${rightfinger.NotEqual[NULL]}) {
 		/exchange "${rightfinger}" rightfinger
 	}
-	/cecho \agSaved Ringset Equipped 
+	/echo \agSaved Ringset Equipped 
 	/autoinventory
 	/if (${Me.Class.ShortName.Equal[BRD]}) /medley
 /return 
@@ -1651,7 +1651,7 @@ Sub LoadRingset
 
 |-- method to load the saved weapons from INI (primarily for Trial of Specialization)
 Sub EVENT_LoadWeaponset(string _line, string _sender, string _evtParams)
-	/cecho \ayLoading Weaponset <${_evtParams}> (${_sender})
+	/echo \ayLoading Weaponset <${_evtParams}> (${_sender})
 	/if (${_evtParams.NotEqual[NULL]}) /call LoadWeaponset ${_evtParams}
 /return
 
@@ -1662,7 +1662,7 @@ Sub LoadWeaponset(string _weaponset)
 	/declare set string local ${Ini[INI_CHAR,Weaponsets,${_weaponset}]}
 	/if (${set.Equal[NULL]}) /return
 	/if (${Me.Class.ShortName.Equal[BRD]}) /medley stop
-	/cecho \aw ${_weaponset}: ${set}
+	/echo \aw ${_weaponset}: ${set}
 	/declare slot string local 
 	/declare weap string local
 	/declare posi string local 
@@ -1699,7 +1699,7 @@ Sub LoadWeaponset(string _weaponset)
 	/varset posi ${slot.Token[2,|]}
 	/if (${weap.Equal[NULL]}) {
 		/autoinventory
-		/cecho \ay Weaponset ${_weaponset} offhand is NULL! Removing.
+		/echo \ay Weaponset ${_weaponset} offhand is NULL! Removing.
 		/if (${Me.Inventory[offhand].Name.NotEqual[NULL]}) {
 			/echo unequip offhand
 			/unequip offhand
@@ -1709,7 +1709,7 @@ Sub LoadWeaponset(string _weaponset)
 		
 	} else {
 		/autoinventory
-		/cecho \ag Moving "${weap}" to ${posi}
+		/echo \ag Moving "${weap}" to ${posi}
 		/if (${FindItemCount[${weap}]} == 0) {
 			/rs Could not find ${weap}, fix my ini!
 			/goto :mainhand
@@ -1728,7 +1728,7 @@ Sub LoadWeaponset(string _weaponset)
 
 	/if (${weap.Equal[NULL]}) {
 		/autoinventory
-		/cecho \ay Weaponset ${_weaponset} mainhand is NULL! Removing.
+		/echo \ay Weaponset ${_weaponset} mainhand is NULL! Removing.
 		/if (${Me.Inventory[mainhand].Name.NotEqual[NULL]}) {
 			/echo unequip mainhand
 			/unequip mainhand
@@ -1737,7 +1737,7 @@ Sub LoadWeaponset(string _weaponset)
 		}
 	} else {
 		/autoinventory
-		/cecho \ag Moving "${weap}" to ${posi}
+		/echo \ag Moving "${weap}" to ${posi}
 		/if (${FindItemCount[${weap}]} == 0) {
 			/rs Could not find ${weap}, fix my ini!
 			/goto :return
@@ -1752,7 +1752,7 @@ Sub LoadWeaponset(string _weaponset)
 
 |#EVENT SaveWeaponset  		"#1#SaveWeaponset #2#"
 Sub EVENT_SaveWeaponset(string _line, string _sender, string _eventParams)
-	/cecho \aySavingWeaponset ${_sender} ${_eventParams}
+	/echo \aySavingWeaponset ${_sender} ${_eventParams}
 	/declare key string local ${_eventParams.Arg[1,=]}
 	/declare weapons string local ${_eventParams.Arg[2,=]}
 	/echo  key: ${key} weapons: ${weapons}

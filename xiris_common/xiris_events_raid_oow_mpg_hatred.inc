@@ -22,7 +22,7 @@ ______________________________________________
 #EVENT D6 					"#*#MD6#*#"
 
 Sub InitEvents_OOW_MPG_Hatred
-	/cecho \ag Initializing MPG Hatred
+	/echo \ag Initializing MPG Hatred
     /call RegisterRaidEvents Events_OOW_MPG_Hatred 6
 
 	|--Waypoints

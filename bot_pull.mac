@@ -271,7 +271,7 @@ Sub chkTargetValid
 **|
 
 Sub setCamp
-	/cecho \awSetting to Camp \ag${str_campName}
+	/echo \awSetting to Camp \ag${str_campName}
 	/docommand /${cmdChannel} NavToWP ${str_campName}
 	/navigate RecordWaypoint bot_pull_nav
 	|/if (${int_currentCamp} == 1) /docommand /${cmdChannel} CreateCamp camp1
@@ -287,7 +287,7 @@ Sub setCamp
 /return
 
 Sub resetCamp
-	/cecho \awResetting to Camp \ag${str_campName}
+	/echo \awResetting to Camp \ag${str_campName}
 	/docommand /${cmdChannel} NavToWP ${str_campName}
 	| -- don't run self back to camp its not necessary run to my pull spot instead
 	/nav wp bot_pull_nav
@@ -297,7 +297,7 @@ Sub resetCamp
 
 
 Sub moveCamp(int _campNumber) 
-	/cecho \awMoving to Camp Number \ag${str_campName}
+	/echo \awMoving to Camp Number \ag${str_campName}
 	/docommand /${cmdChannel} NavToWP camp${_campNumber}
 	/delay 1
 	:moveCampNavLoop
@@ -376,7 +376,7 @@ Sub pullTarget
 		} else {
 			| I have aggro, returning to camp
 			:ReturnWithPull
-			/cecho \agReturning to Camp with \ay${Me.XTarget}+ \agmobs.
+			/echo \agReturning to Camp with \ay${Me.XTarget}+ \agmobs.
 			/navigate waypoint bot_pull_nav 
 			
 			:ReturnLoop
@@ -585,12 +585,12 @@ Sub chkUtils
 		/call chkHP
 		/call chkComponentsAll
 		/if (!${timer_allBuffs}) {
-			/cecho \ayRequesting Buffs @${Time.Time24}
+			/echo \ayRequesting Buffs @${Time.Time24}
 			/docommand /${cmdChannel} DoHideCorpses
 			/delay 5s
 			/docommand /${cmdChannel} DoHideLooted
  			/docommand /${cmdChannel} Doraidbuffs ALL
-			/cecho \awBuffs Requested, setting timer to 45m, and waiting 45s!
+			/echo \awBuffs Requested, setting timer to 45m, and waiting 45s!
 			/varset timer_allBuffs 45m
 			:buffDelay
 			/if (${int_buffDelay} < 45) {
@@ -1016,7 +1016,7 @@ Sub variant_initialize(int _pull_dist, string _channel, string _campName, bool _
 
 
 Sub setAlerts
-	/cecho \awAdding Alerts (1: ignore, 2:hunt)
+	/echo \awAdding Alerts (1: ignore, 2:hunt)
 	|=================================
 	|--- specific zone mobs to avoid;
 	|    06/12 ordered by zone for performance

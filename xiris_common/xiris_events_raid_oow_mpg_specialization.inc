@@ -22,7 +22,7 @@ ______________________________________________
 #event IMPURITY     "#*#You lose your coordination#*#"
 
 Sub InitEvents_OOW_MPG_Specialization
-	/cecho \ag Initializing MPG Specialization
+	/echo \ag Initializing MPG Specialization
 	/declare str_currentMode string outer NORMAL
 	/call RegisterRaidEvents Events_OOW_MPG_Specialization 1
 	/if (${str_classArchetype.NotEqual[PRIEST]} && ${str_classArchetype.NotEqual[CASTER]}) /call toggleMQ2Melee FALSE

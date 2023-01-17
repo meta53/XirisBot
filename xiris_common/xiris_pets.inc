@@ -136,7 +136,7 @@ Sub WeaponizePet(int _petID)
 /return
 
 Sub SummonItemForPet(string _itemName, string _spellName, int _petID)
-	/cecho \ag Summoning Item \ay ${_itemName} \ag with \ay${_spellName}\ag for \aw${Spawn[id ${_petID}].CleanName}(${_petID})
+	/echo \ag Summoning Item \ay ${_itemName} \ag with \ay${_spellName}\ag for \aw${Spawn[id ${_petID}].CleanName}(${_petID})
 	/autoinv
 	:summon_item
 	/if (!${FindItemCount[=${petItem}]}) {
@@ -153,7 +153,7 @@ Sub SummonItemForPet(string _itemName, string _spellName, int _petID)
 		/if (${Target.Distance} < 100) {
 			/if (!${Navigation.Active}) /navigate target
 		} else {
-			/cecho \arPet is too far away! Abort!
+			/echo \arPet is too far away! Abort!
 			/goto :return
 		}
 		/delay 10
@@ -234,7 +234,7 @@ Sub chkPetHeal
 Sub chkPetAttack
 	/if (!${bln_engaged} || ${bln_petAttacking} || !${Bool[${Target.PctHPs}]} ) /return
 	/if (${Me.Pet.ID} && !${Me.Pet.Combat} && ${Target.ID}==${int_targetID} && ${Target.PctHPs}<${int_petAttackHP} && ${Target.Distance}<=100) {
-		/cecho \agSiccing Pet on \ay${Target.Name}
+		/echo \agSiccing Pet on \ay${Target.Name}
 		/varset bln_petAttacking TRUE
 		/pet attack
 	}
@@ -246,7 +246,7 @@ Sub xbot_initialize_pets
 	/if (${str_classArchetype.Equal[MELEE_END]}) /return
 	/if (${Me.Class.ShortName.Equal[WAR]}) /return
 	
-	/cecho \ao xbot_initialize_pets
+	/echo \ao xbot_initialize_pets
 	
 	|--Pet Information
 	/declare str_petReagent				string  outer	${Ini[INI_CHAR,Pet,str_petReagent,NULL]}

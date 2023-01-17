@@ -68,7 +68,7 @@ ______________________________________________
 #event D6 					"#*#MD6#*#"
 
 Sub InitEvents_OOW_MPG_Foresight
-	/cecho \ag Initializing MPG Foresight
+	/echo \ag Initializing MPG Foresight
 	/call RegisterRaidEvents Events_OOW_MPG_Foresight 24
 	/declare IsMovingNorth			bool	outer	FALSE
 	/declare IsMovingSouth			bool	outer	FALSE
@@ -173,7 +173,7 @@ Sub ForesightNavigation(string _wp, string _watch, string _event)
 	/say Navigating to ${_wp}
 	/declare atk bool local FALSE
 	/declare tid int local ${Target.ID}
-	/cecho \agForesightNavigation: SafeWP: ${_wp}, VariableWatch: ${_watch}, SafeEvent: ${_event}
+	/echo \agForesightNavigation: SafeWP: ${_wp}, VariableWatch: ${_watch}, SafeEvent: ${_event}
 	
 	|- record the origin waypoint
 	/nav recordwaypoint origin
@@ -449,7 +449,7 @@ Sub EVENT_ForesightWeapon
 	| The Kyv will cast spell 2315 Searing Heat 2000 DD
 	| save the weapon and slot information (well, its allways primary weapon) and unequip
 	/if (${Me.Inventory[mainhand].Name.Equal[NULL]}) /return
-	/cecho \ayRemoving \ar${MainHandWeapon} \ayfrom mainhand
+	/echo \ayRemoving \ar${MainHandWeapon} \ayfrom mainhand
 	/unequip mainhand
 	|- set the watch variable to TRUE
 	/varset HasRemovedWeapon TRUE
@@ -457,7 +457,7 @@ Sub EVENT_ForesightWeapon
 
 Sub EVENT_ForesightWeaponSafe
 	/delay 10
-	/cecho \agSafe event fired, returning \ar${MainHandWeapon} \agto mainhand
+	/echo \agSafe event fired, returning \ar${MainHandWeapon} \agto mainhand
 	/exchange "${MainHandWeapon}" mainhand
 	/varset HasRemovedWeapon	FALSE
 	/doevents flush ForesightWeaponSafe
@@ -482,11 +482,11 @@ Sub EVENT_ForesightRingSafe
 
 
 Sub EVENT_ForesightKyvSafe
-	/cecho \agForesightKyvSafe \ay: IsHoldingStill:${IsHoldingStill} IsDucking:${IsDucking} IsMovingAnywhere:${IsMovingAnywhere}
+	/echo \agForesightKyvSafe \ay: IsHoldingStill:${IsHoldingStill} IsDucking:${IsDucking} IsMovingAnywhere:${IsMovingAnywhere}
 	/varset IsHoldingStill 		FALSE
 	/varset IsDucking			FALSE
 	/varset IsMovingAnywhere	FALSE
-	/cecho \ag: IsHoldingStill:${IsHoldingStill} IsDucking:${IsDucking} IsMovingAnywhere:${IsMovingAnywhere}
+	/echo \ag: IsHoldingStill:${IsHoldingStill} IsDucking:${IsDucking} IsMovingAnywhere:${IsMovingAnywhere}
 	/doevents flush ForesightKyvSafe
 /return
 

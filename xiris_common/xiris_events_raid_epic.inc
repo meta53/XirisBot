@@ -15,7 +15,7 @@ ______________________________________________
 
 
 Sub InitEvents_Epic
-	/cecho \ag Initializing EPIC Raid events
+	/echo \ag Initializing EPIC Raid events
     /call RegisterRaidEvents Events_Epic 2
 /return
 
@@ -57,8 +57,8 @@ Sub chkGroupClockworkDoom
 		/dquery ${Group.Member[${gm}]} -q "Me.Buff[Clockwork Doom].ID"
 		/delay 20 ${DanNet.Query.Received}
 		/if (${Bool[${DanNet.Q}]}) {
-			/cecho \ar${Group.Member[${gm}]} \awreply:${Bool[${DanNet.Q}]}
-			/cecho \ar CLOCKWORK DOOM FOUND
+			/echo \ar${Group.Member[${gm}]} \awreply:${Bool[${DanNet.Q}]}
+			/echo \ar CLOCKWORK DOOM FOUND
 			/varset  foundMark TRUE
 			/varcalc haveMark ${haveMark}+1
 			/call getCureCounters ${Group.Member[${gm}]} poison
@@ -71,12 +71,12 @@ Sub chkGroupClockworkDoom
 	| No Marks found? return
 	/if (!${foundMark}) /goto :return
 
-	/cecho \ar${haveMark} \aoInstances of Clockwork Doom found!
+	/echo \ar${haveMark} \aoInstances of Clockwork Doom found!
 	| If Marks are less than 3, or I am a paladin then single target cure them
 	
 	| If I am a cleric or shaman, cast group cure, and then recheck counters
 	:GroupCure 
-	/cecho \awGroupCure: \ag${str_heal_group} \ay${Me.SpellReady[${str_heal_group}]} \aw(\ag${Me.PctMana}) \ay${haveMark}>=2
+	/echo \awGroupCure: \ag${str_heal_group} \ay${Me.SpellReady[${str_heal_group}]} \aw(\ag${Me.PctMana}) \ay${haveMark}>=2
 	/if (${Me.Class.ShortName.Equal[CLR]} && ${Me.PctMana} > 30 && ${haveMark} >= 2) {
 		
 		:GroupCureWait 
@@ -84,19 +84,19 @@ Sub chkGroupClockworkDoom
 		/if (!${Me.SpellReady[${str_heal_group}]}) {
 			/delay 5
 			/if (${cureWaitCount} > 10) {
-				/cecho \arGroupCure failed due to wait, trying by counters
+				/echo \arGroupCure failed due to wait, trying by counters
 				/goto :CureByCounters
 			} else {
-				/cecho \arGroupCure waiting for ${str_heal_group} ${Me.SpellReady[${str_heal_group}]}
+				/echo \arGroupCure waiting for ${str_heal_group} ${Me.SpellReady[${str_heal_group}]}
 				/goto :GroupCureWait
 			}
 		} else {
-			/cecho \agGroupCuring with ${str_heal_group}
+			/echo \agGroupCuring with ${str_heal_group}
 			/call MQ2Cast "${str_heal_group}" gem4 2s 
 			/goto :CheckGroup
 		}
 	} else /if (${Me.Class.ShortName.Equal[SHM]}) {
-		/cecho \agGroupCuring with ${str_cure_poison}
+		/echo \agGroupCuring with ${str_cure_poison}
 		/g Group Heal incoming, get close!
 		/call MQ2Cast "${str_cure_poison}" gem7 8s
 		/goto :CheckGroup
@@ -104,7 +104,7 @@ Sub chkGroupClockworkDoom
 
 	| All else fails so cure anyone with a poison counter singly
 	:CureByCounters
-	/cecho \awCureByCounters: \ag${str_cure_poison} \ayReady?${Me.SpellReady[${str_cure_poison}]} \aw(\ag${Me.PctMana}) \ay${haveMark}< 2
+	/echo \awCureByCounters: \ag${str_cure_poison} \ayReady?${Me.SpellReady[${str_cure_poison}]} \aw(\ag${Me.PctMana}) \ay${haveMark}< 2
 	/for i 1 to 6
 		/varcalc gm ${i}-1
 		/call chkHeal_MT
@@ -120,8 +120,8 @@ Sub chkGroupClockworkDoom
 		/delay 20 ${DanNet.Query.Received}
 		
 		/if (${Bool[${DanNet.Q}]}) {
-			/cecho \ar${Group.Member[${tankIndex}]} \awreply: ${DanNet.Q} ${Bool[${DanNet.Q}]}
-			/cecho \ar CLOCKWORK DOOM FOUND on TANK
+			/echo \ar${Group.Member[${tankIndex}]} \awreply: ${DanNet.Q} ${Bool[${DanNet.Q}]}
+			/echo \ar CLOCKWORK DOOM FOUND on TANK
 			/call getCureCounters ${Group.Member[${tankIndex}].Name} poison
 			/call handleCureRequest ${Group.Member[${tankIndex}].Name} ${Group.Member[${tankIndex}].ID} poison ${Int[${Macro.Return}]} TRUE
 		}

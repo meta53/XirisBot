@@ -188,7 +188,7 @@ Sub cmbtBuffMT
 				/call TrueTarget ${Spawn[pc =${str_MTName}].ID}
 				/call MQ2Cast "${bSpell}" ${bGem}
 				/if (${Cast.Result.Equal[CAST_SUCCESS]}) {
-					/cecho \ag ${bSpell} ${Cast.Result} : DELAYING for \ay ${Spell[${bSpell}].Duration.TotalSeconds}s \agrefresh
+					/echo \ag ${bSpell} ${Cast.Result} : DELAYING for \ay ${Spell[${bSpell}].Duration.TotalSeconds}s \agrefresh
 				}
 			}
 		}
@@ -244,14 +244,14 @@ Sub cmbtBuffGRP
 				/dquery ${gName} -q "Me.Buff[${buffSpell}].Duration.TotalSeconds"
 				/delay 20 ${DanNet.Query.Received}
 				/varcalc bDuration ${DanNet.Q}
-				/cecho cmbtBuffGRP: \aw${gName} -q \ag"Me.Buff[${buffSpell}].Duration" == \ar ${bDuration} \awbool \ag${Bool[${bDuration}]}
+				/echo cmbtBuffGRP: \aw${gName} -q \ag"Me.Buff[${buffSpell}].Duration" == \ar ${bDuration} \awbool \ag${Bool[${bDuration}]}
 				/if (${Bool[${bDuration}]} ) {
 					
 					/if (${bDuration} < 3 ) {
-						/cecho \awbDuration: \ay${bDuration} \aw<3s, \agrecasting
+						/echo \awbDuration: \ay${bDuration} \aw<3s, \agrecasting
 						/goto :castCMBTBuff
 					} else {
-						/cecho \awDuration: \ay${bDuration} \aw>= 3s, \aoskipping 
+						/echo \awDuration: \ay${bDuration} \aw>= 3s, \aoskipping 
 						/goto :nextGroupMember
 					}
 				} else {
@@ -262,12 +262,12 @@ Sub cmbtBuffGRP
 			}
 
 			:castCMBTBuff
-			|/cecho \ayCasting ${buffSpell} on ${gName}
+			|/echo \ayCasting ${buffSpell} on ${gName}
 			
 			/call TrueTarget ${Spawn[pc =${gName}].ID}
 			/call MQ2Cast "${buffSpell}" ${buffGem}
 			/if (${Cast.Result.Equal[CAST_SUCCESS]}) {
-				/cecho \ag ${buffSpell} ${Cast.Result} : DELAYING for \ay ${Spell[${buffSpell}].Duration.TotalSeconds}s \agrefresh
+				/echo \ag ${buffSpell} ${Cast.Result} : DELAYING for \ay ${Spell[${buffSpell}].Duration.TotalSeconds}s \agrefresh
 				/varset delay	${Spell[${buffSpell}].Duration.TotalSeconds}
 				/varset CMBTBUFF_${i}_Timer ${delay}s
 			}
@@ -347,11 +347,11 @@ Sub doGroupBuffOnTarget(string tgt)
 			} else /if (${Cast.Result.Equal[CAST_NOTREADY]}) {	
 				/goto :spellReadyWait
 			} else /if (${Cast.Result.Equal[CAST_OUTOFREAGENTS]}) {
-				/cecho \ar ${buffSpell} ${Cast.Result} Disabling
+				/echo \ar ${buffSpell} ${Cast.Result} Disabling
 				/rs Out of reagents for ${buffSpell}
 				/varset OOCBUFF_${i}_Use FALSE
 			} else /if (${Cast.Result.Equal[CAST_SUCCESS]}) {
-				/cecho \ag ${buffSpell} ${Cast.Result}
+				/echo \ag ${buffSpell} ${Cast.Result}
 			}
 		}
 	:NextGB
@@ -385,7 +385,7 @@ Sub doSingleTargetBuffOnRaid
 			/varset buffGem		${STBUFF_${b}_Gem}
 			/varset buffUse		${STBUFF_${b}_Use}
 
-			/cecho \ay${buffSpell} ${buffTargets} ${buffGem} ${buffUse}
+			/echo \ay${buffSpell} ${buffTargets} ${buffGem} ${buffUse}
 
 			/if (!${buffUse}) {
 				/if (${b} < ${int_stBuffTotal})  /goto :next_b0
@@ -401,7 +401,7 @@ Sub doSingleTargetBuffOnRaid
 	
 				/echo  ${Raid.Member[${i}]} ${charClass} : ${buffTargets.Find[${charClass}]}
 				/if (${buffTargets.Find[*]} || ${buffTargets.Find[${charClass}]}) {
-					/cecho \ag${Raid.Member[${i}]} is a valid Single Buff Target
+					/echo \ag${Raid.Member[${i}]} is a valid Single Buff Target
 					/call castSingleTargetBuff ${Raid.Member[${i}]} "${buffSpell}" ${buffGem}
 				}
 				
@@ -499,7 +499,7 @@ Sub castSingleTargetBuff(string tgt, string buffSpell, string buffGem)
 			/if (${Cast.Result.Equal[CAST_INTERRUPTED]}) 	/goto :spellReadyWait2
 			/if (${Cast.Result.Equal[CAST_NOTREADY]}) 		/goto :spellReadyWait2
 			/if (${Cast.Result.Equal[CAST_SUCCESS]}) {
-				/cecho \ag ${buffSpell} ${Cast.Result}
+				/echo \ag ${buffSpell} ${Cast.Result}
 			}
 		}
 		
@@ -619,7 +619,7 @@ Sub chkBuffByType(string _key)
 Sub EVENT_REMOVEBUFF(_line, _chatSender, _eventParams)
 	| Note these Buffs need to replace single quote with pipe due to chat mangling quotes: eg Brell|s Brawny Bulwark
 	/declare buffToRemove string local ${_eventParams.Arg[1,-]}
-	/cecho \awEvent Remove Buff called: ${_eventParams} -> ${buffToRemove}
+	/echo \awEvent Remove Buff called: ${_eventParams} -> ${buffToRemove}
 	/call RemoveBuff "${buffToRemove}"
 	/doevents flush REMOVEBUFF
 /return
@@ -639,7 +639,7 @@ Sub RemoveAllBuffs
 Sub RemoveBuff(_badBuff)
 	/declare i int local
 	/declare buffName ${_badBuff.Replace[|,']}
-	/cecho \agRemoving Buff \ao${buffName} (was ${_badBuff})
+	/echo \agRemoving Buff \ao${buffName} (was ${_badBuff})
 	/for i 0 to 24
 		|/echo Remove_Buff ${i}
 		|/echo 1: ${Bool[${Window[BuffWindow].Child[BW_Buff${i}_Button].Tooltip}]}
@@ -648,7 +648,7 @@ Sub RemoveBuff(_badBuff)
 		/if (${Bool[${Window[BuffWindow].Child[BW_Buff${i}_Button].Tooltip}]} && ${Window[BuffWindow].Child[BW_Buff${i}_Button].Tooltip.Find[${buffName}]}) {
 			/varset buffName ${Window[BuffWindow].Child[BW_Buff${i}_Button].Tooltip.Arg[1,(]}
 			/varset buffName ${buffName.Left[${Math.Calc[${buffName.Length}-1]}]}
-			/cecho \awBuff \ao${buffName} \awfound. \agRemoving.
+			/echo \awBuff \ao${buffName} \awfound. \agRemoving.
 			/if (${Bool[${buffName}]}) /nomodkey /notify BuffWindow Buff${Math.Calc[${Me.Buff[${buffName}].ID}-1].Int} leftmouseup
 		}
 		
@@ -660,7 +660,7 @@ Sub RemoveBuff(_badBuff)
 
 Sub xbot_initialize_buffing
 	|/if (${str_classArchetype.Equal[MELEE_END]} || ${Me.Class.ShortName.Equal[WAR]}) /return
-	/cecho \aoxbot_initialize_buffing
+	/echo \aoxbot_initialize_buffing
 
 	|--OOC Buff(s)
 	/declare bln_doRaidBuff				bool	outer	${Ini[INI_CHAR,OOCBuffs,bln_doRaidBuff,FALSE]}

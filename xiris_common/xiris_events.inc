@@ -65,7 +65,7 @@ Sub xbot_initialize_events
     |-- Depths of Darkhollow
     /if (${Zone.ShortName.Equal[dreadspire]})   /call InitEvents_DoDH_Demiplane
 
-    /cecho \aoxbot_initialize_events
+    /echo \aoxbot_initialize_events
 
 /return
 

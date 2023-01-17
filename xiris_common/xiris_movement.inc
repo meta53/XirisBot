@@ -56,7 +56,7 @@ Sub Events_Movement
 
 
 Sub xbot_initialize_movement
-	/cecho \aoxbot_initialize_movement
+	/echo \aoxbot_initialize_movement
 	/declare bln_following 			bool 	outer FALSE
 	/declare int_maxFollowDistance	int 	outer 1000
 	/declare str_followTarget		string  outer 
@@ -84,7 +84,7 @@ SUB EVENT_Stop(_line, _chatSender, _eventParams)
 
 
 SUB EVENT_NavigateWP(_line, _chatSender, _eventParams)
-	/cecho \ayNavigate to waypoint: \ag${_eventParams}
+	/echo \ayNavigate to waypoint: \ag${_eventParams}
 	/declare wp string local ${_eventParams.Arg[1]}
 	/nav wp ${wp}
 	/doevents flush NavigateWP
@@ -92,7 +92,7 @@ SUB EVENT_NavigateWP(_line, _chatSender, _eventParams)
 
 
 SUB EVENT_CreateCamp(_line, _chatSender, _eventParams)
-	/cecho \ayCreating Camp: \ag${_eventParams}
+	/echo \ayCreating Camp: \ag${_eventParams}
 	/declare cmp string local ${_eventParams.Arg[1]}
 	/nav recordwaypoint ${cmp}
 	/varset int_campY ${Me.Y}
@@ -104,7 +104,7 @@ SUB EVENT_CreateCamp(_line, _chatSender, _eventParams)
 
 Sub StartFollowing(string _leader, string _followType)
 	/varset bln_following TRUE
-	/cecho \ao Following \awLeader: \ag${_leader} \awFollowType: \ag${_followType}
+	/echo \ao Following \awLeader: \ag${_leader} \awFollowType: \ag${_followType}
 	
 	| -Check Range
 	/if (${Spawn[=${_leader}].Distance} > ${int_maxFollowDistance}) {
@@ -249,7 +249,7 @@ SUB EVENT_MoveHere(_line, _chatSender, _eventParams)
 /return
 
 Sub MoveToPosition(int _y, int _x, int _z, int _adjustment, bool _warp)
-	/cecho \ayMoveToPosition: \ag${_y},${_x},${_z} \aw@\ag${_adjustment}
+	/echo \ayMoveToPosition: \ag${_y},${_x},${_z} \aw@\ag${_adjustment}
 	/declare timer_movement timer local 30s
 	/declare dist int local ${Math.Distance[${Me.Y},${Me.X},${Me.Z}:${_y},${_x},${_z}]}
 	:movement 

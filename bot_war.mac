@@ -146,7 +146,7 @@ Sub chkUtils
 Sub variant_initialize
 	|-- set up default vars
 	/declare    str_action				string	outer	Assisting	
-	/cecho \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID}) HealPoint:${healPoint} ST: ${str_STName}(${int_STID}) Aggro? ${bln_aggro}
+	/echo \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID}) HealPoint:${healPoint} ST: ${str_STName}(${int_STID}) Aggro? ${bln_aggro}
 	/call InitEvents_Class
 /return
 
