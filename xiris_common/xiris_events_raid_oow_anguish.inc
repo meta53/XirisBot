@@ -582,7 +582,7 @@ Sub chkGroupMarkedForDeath
 		/next i
 		/call MQ2Cast "${str_cure_disease}" gem7 8s
 		/dgge /mqpause off
-		/if (${Spawn[npc Vangl].PctHPs} <= 99) /dgge KillMob ${Spawn[npc Vangl].ID} "${Spawn[npc Vangl].Name}" ${Time.Time24}
+		|/if (${Spawn[npc Vangl].PctHPs} <= 99) /dgge KillMob ${Spawn[npc Vangl].ID} "${Spawn[npc Vangl].Name}" ${Time.Time24}
 		/goto :CheckGroup
 		
 	}
