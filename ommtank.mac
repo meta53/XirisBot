@@ -1,11 +1,11 @@
 #Turbo 20
-#EVENT AMVMarkOn		    "#*#You have been marked for death#*#"
-#EVENT AMVEngage			"#*#AMVEngage#*#"
+#EVENT OMMGaze              "#*#gaze of deadly power focusing on you"
+#EVENT OMMEngage			"#*#OMMEngage#*#"
 
 Sub Main(string _type, string _tankPoint)
 	/melee aggro=on
     /melee taunt=on
-	/declare bln_amvEngaged 		bool 	outer FALSE
+	/declare bln_OMMEngaged 		bool 	outer FALSE
 	/declare bln_rootTank			bool	outer FALSE
 
 	/declare timer_mark_ae 		    timer 	outer 	300s
@@ -19,21 +19,21 @@ Sub Main(string _type, string _tankPoint)
 	/declare timer_announce_retreat	timer   outer 0
 	/declare timer_announce_kill 	timer  	outer 0
 
-	/echo Calling AMV Setup
-	/dgt AMVSetup
+	/echo Calling OMM Setup
+	/dgt OMMSetup
 
 	:wait_loop
 	/doevents
 	/delay 5
-	/if (!${bln_amvEngaged}) /goto :wait_loop
+	/if (!${bln_OMMEngaged}) /goto :wait_loop
 
 	| Announcing Engage
-	/rs AMVStart ${Time.Time24}
+	/rs OMMStart ${Time.Time24}
 
 	:ActiveLoop
 		/doevents
 		|------
-		| NPC/AMV Kills
+		| NPC/OMM Kills
 		|------
 
 		/varcalc markSeconds ${timer_mark_ae}/10
@@ -44,7 +44,7 @@ Sub Main(string _type, string _tankPoint)
 			/if (!${timer_announce_retreat}) /call commandRetreat
 		} 
 		
-		| Kill AMV
+		| Kill OMM
 		/if (${markSeconds} > 5) {
 			/if (!${timer_announce_kill}) /call commandAttack
 		}
@@ -54,22 +54,18 @@ Sub Main(string _type, string _tankPoint)
 	/goto :ActiveLoop
 /return
 
-| AMV fired his AE, safe to kill
-Sub Event_AMVMarkOn
-	/echo \arMark ON! \aw${Time.Time24} \ag${Time.SecondsSinceMidnight}, resetting interval to ${int_timeMarkInterval}
-	/varset timer_mark_ae ${int_timeMarkInterval}
-	/varcalc markSeconds ${int_timeMarkInterval}/10
-	/rs Mark of Death On! ${markSeconds}s till recast!
-	/call commandRetreat
-	/doevents flush AMVMarkOn
+
+Sub EVENT_OMMGaze
+    /echo \arGAZE OF MATA MURAM on ME!
+	/echo \a-w Clicking \agMirrored Mask
+    /call MQ2Cast "Mirrored Mask" item
 /return
 
 
 
-
 Sub commandRetreat
-	/echo \ar${timer_mark_ae} ${markSeconds}s \awuntil AMV AE, \aoRETREAT
-	/rs AMVRetreat ${markSeconds}
+	/echo \ar${timer_mark_ae} ${markSeconds}s \awuntil OMM AE, \aoRETREAT
+	/rs OMMRetreat ${markSeconds}
 	/varset bln_announcedRetreat 	TRUE
 	/varset bln_announcedKill		FALSE
 	/varset timer_announce_retreat 50s
@@ -77,27 +73,27 @@ Sub commandRetreat
 
 
 Sub commandAttack
-	/if (!${SpawnCount[npc guard]}) /rs AMVKill ${markSeconds}
-	/echo \artimer:${timer_mark_ae} seconds${markSeconds}s \awuntil AMV AE  (no guards), \agKILLAMV
+	/if (!${SpawnCount[npc guard]}) /rs OMMKill ${markSeconds}
+	/echo \artimer:${timer_mark_ae} seconds${markSeconds}s \awuntil OMM AE  (no guards), \agKILLOMM
 	/varset bln_announcedRetreat  FALSE
 	/varset bln_announcedKill	  TRUE
 	/varset timer_announce_kill 10s
 /return
 
 
-Sub Event_AMVEngage
-	/echo \aoEngaging AMV
-	:amvTarget
+Sub Event_OMMEngage
+	/echo \aoEngaging OMM
+	:OMMTarget
 	/if (!${Target.ID}) {
-		/target Vangl
-		/goto :amvTarget
+		/target Overlord
+		/goto :OMMTarget
 	}
-	/if (!${Target.Name.Find[Vangl]}) {
-		/echo \ar AMV not targetted. Try that again!
+	/if (!${Target.Name.Find[Overlord]}) {
+		/echo \ar OMM not targetted. Try that again!
 		/return
 	}
-	/if (${Target.Name.Find[Vangl]} && !${Target.Distance3D} > 100) {
-		/echo \ar AMV out of Range. Try that again!
+	/if (${Target.Name.Find[Overlord]} && !${Target.Distance3D} > 100) {
+		/echo \ar OMM out of Range. Try that again!
 		/return
 	}
     /if (${Me.CombatAbilityReady[Stonewall Discipline]})  /doability "Stonewall Discipline"
@@ -118,7 +114,7 @@ Sub getAggro
 	:aggroLoop
 		/if (${Target.Distance} > 20 && ${bln_rootTank}) /warp f 15
 		/if (${Me.TargetOfTarget.ID} != ${Me.ID}) {
-			/echo AMV NOT TARGETTING ME
+			/echo OMM NOT TARGETTING ME
             /if (${Me.CombatAbilityReady["Bellow of the Mastruq"]}) /doability "Bellow of the Mastruq"
 			/if (${Me.CombatAbilityReady["Bazu Bellow"]}) /doability "Bazu Bellow"
 			/delay 10

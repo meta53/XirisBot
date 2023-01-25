@@ -107,7 +107,7 @@ Sub Event_cureMe(_line, _sender, _eventParams)
 	/declare curetype string local ${_eventParams}
 	/call getCureCounters ${name} ${curetype}
 	/declare counters int local ${Macro.Return}
-	/call handleCureRequest ${_sender} ${Spawn[pc name ${pcName}].ID} ${curetype} ${counters}
+	/call handleCureRequest ${_sender} ${Spawn[pc ${pcName}].ID} ${curetype} ${counters}
 	/doevents flush cureMe
 /return
 

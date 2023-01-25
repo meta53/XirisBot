@@ -47,9 +47,13 @@ ______________________________________________
 
 Sub InitEvents_OOW_Anguish
 	/echo \ag Initializing Anguish
-	/if (!${Defined[bln_jelvanEngaged]}) /declare bln_jelvanEngaged bool outer FALSE
-	/declare bln_hanvarEngaged bool outer FALSE
-	/declare bln_amvEngaged	   bool outer FALSE
+	/if (!${Defined[bln_jelvanEngaged]}) 	/declare bln_jelvanEngaged bool outer FALSE
+	/if (!${Defined[bln_hanvarEngaged]}) 	/declare bln_hanvarEngaged bool outer FALSE
+	/if (!${Defined[bln_amvEngaged]}) 		/declare bln_amvEngaged	   bool outer FALSE
+	/if (!${Defined[bln_OMMEngaged]}) 		/declare bln_OMMEngaged    bool outer FALSE
+
+	/declare eventTarget	   string outer JELVAN
+	
 	/declare timer_hanvar_ae   timer outer 0
 	/declare timer_hanvarDebuff timer outer 30s
 
@@ -95,9 +99,7 @@ Sub Events_OOW_Anguish
 
 	| OMM Events
 	/if (${Bool[${SpawnCount[npc Overlord]}]} && ${Spawn[npc Overlord].Distance3D} < 300) {
-		/doevents GazeYou
-		/doevents GazeBurst
-		/doevents GazeDone
+		/call chkOMMEvents
 	} 
 
 /return 
@@ -149,6 +151,7 @@ Sub Event_TureWanton
 
 Sub Event_JelvanStart 
 	/echo JelvanStart
+	/varset eventTarget Jelvan
 	/if (${Me.Class.ShortName.NotEqual[WAR]} && ${Me.Class.ShortName.NotEqual[PAL]} && ${Me.Class.ShortName.NotEqual[SHD]}) {
 		/varset bln_jelvanEngaged TRUE
 	} else {
@@ -300,6 +303,7 @@ Sub chkHanvarEvents
 
 Sub Event_HanvarStart
 	/echo \ag HANVAR EVENT STARTED \aw@ \ao${Time.Time24}
+	/varset eventTarget Hanvar
 	/varset bln_hanvarEngaged TRUE
 	/doevents flush HanvarStart
 /return
@@ -427,7 +431,6 @@ Sub chkHanvarMelee
 Sub chkAMVEvents
 	| AMV Events
 	/doevents AMVStart
-	
 	/doevents AMVRetreat
 	/doevents AMVKill
 	
@@ -439,6 +442,7 @@ Sub chkAMVEvents
 /return 
 Sub Event_AMVStart 
 	/varset bln_amvEngaged TRUE 
+	/varset eventTarget Vangl
 	/doevents flush AMVStart
 /return
 
@@ -461,7 +465,7 @@ Sub EVENT_AMVKill
 	/if (${MeleeClasses.Find[${Me.Class.ShortName}]} ) {
 		/call TrueTarget ${Spawn[npc Vangl].ID}
 		/if (${Target.Distance3D} > 20) {
-			/nav wp hanvarTank
+			/nav wp amvTank
 		}
 		/call EngageTarget ${Spawn[npc Vangl].ID}
 	} else /if (${CasterClasses.Find[${Me.Class.ShortName}]}) {
@@ -472,35 +476,69 @@ Sub EVENT_AMVKill
 	/doevents flush HanvarKill
 /return 
 
-Sub chkMarkedForDeathCureDist
-	/nav wp amvCleric
-	:markLoop
-	/doevents
-	/if (${Me.Buff[Mark of Death].ID}) {
-		/echo \ar MARK OF DEATH \awis \ag${str_myCurer} \aw@ \ag${Spawn[pc ${str_myCurer}].Distance3D}
-		/echo \awMoving to Curer!
-		/call Disengage
-		/melee reset
-		/melee reset
-		/goto :markLoop
-	} 
-	/if (!${Me.Target.Name.Find[Vangl]}) {
-		/call TrueTarget ${Spawn[npc Vangl].ID}
+
+
+
+
+
+|----------------------------
+| Overlord Mata'Muram
+|----------------------------
+Sub Event_GazeYou 
+	/echo \arGAZE OF MATA MURAM on ME!
+	/echo \a-w Clicking \agMirrored Mask
+	/if (!${FindItem[Mirrored Mask].ID}) {
+		/rs NO MIRRORED MASK! WE ARE DOOOOMED!
+	} else {
+		/if (${Me.Class.ShortName.Equal[BRD]}) {
+		/call MQ2Medley ITEM "Mirrored Mask" ${Me.ID} TRUE
+	} else {
+		/if (!${Defined[interruptFlag]}) /declare interruptFlag bool outer FALSE	
+		/if (${Bool[${Me.Casting.ID}]}) /call Interrupt
+		/call MQ2Cast "Mirrored Mask" 
 	}
-	/call EngageTarget ${Spawn[npc Vangl].ID}
-	:return
+	}
+	
+
 /return 
+
+Sub Event_GazeBurst
+/return 
+
+Sub Event_GazeDone
+/return
+
+Sub Event_OMMStart 
+	/varset bln_OMMEngaged TRUE 
+	/varset eventTarget Overlord
+	/doevents flush OMMStart
+/return
+
+Sub chkOMMEvents
+	/doevents OMMStart
+	/doevents GazeYou
+	/doevents GazeBurst
+	/doevents GazeDone
+	/if (${bln_OMMEngaged} || ${Spawn[npc Overlord].Distance3D} < 200) {
+		/if (${Me.Class.ShortName.Equal[CLR]} || ${Me.Class.ShortName.Equal[SHM]}  && !${bln_chChainMember}) /call chkGroupMarkedForDeath 
+		/if (${Me.Class.ShortName.Equal[PAL]}) /call chkSelfMarkedForDeath
+	}
+/return 
+
+
+
+|----------------------------
+| Common
+|----------------------------
 
 Sub EVENT_MarkOfDeath
 	/echo \aoMarked for Death!
-	/if (!${bln_amvEngaged}) /varset bln_amvEngaged TRUE
+	/if (!${bln_amvEngaged} && ${eventTarget.Equal[Vangl]}) /varset bln_amvEngaged TRUE
+	/if (!${bln_OMMEngaged} && ${eventTarget.Equal[Overlord]}) /varset bln_OMMEngaged TRUE
 	/doevents flush MarkOfDeath
-	/call chkMarkedForDeathCureDist
+	/call chkMarkedForDeathCureDist 
 /return
 
-Sub chkSelfMarkedForDeath
-	/if (${Me.Buff[Mark of Death].ID}) /call handleCureRequest ${Me.Name} ${Me.ID} disease 14 TRUE
-/return
 
 Sub chkGroupMarkedForDeath
 	/if (${Me.Class.ShortName.Equal[CLR]} && (${bln_chChainMember} || ${bln_focusHealMT})) /return
@@ -569,7 +607,7 @@ Sub chkGroupMarkedForDeath
 			/next i
 			/call MQ2Cast "${str_heal_group}" gem4 2s 
 			/dgge /mqpause off
-			/if (${Spawn[npc Vangl].PctHPs} <= 99) /dgge KillMob ${Spawn[npc Vangl].ID} "${Spawn[npc Vangl].Name}" ${Time.Time24}
+			/if (${Spawn[npc ${eventTarget}].PctHPs} <= 99) /dgge KillMob ${Spawn[npc ${eventTarget}].ID} "${Spawn[npc ${eventTarget}].Name}" ${Time.Time24}
 			/goto :CheckGroup
 		}
 	} else /if (${Me.Class.ShortName.Equal[SHM]}) {
@@ -582,7 +620,7 @@ Sub chkGroupMarkedForDeath
 		/next i
 		/call MQ2Cast "${str_cure_disease}" gem7 8s
 		/dgge /mqpause off
-		|/if (${Spawn[npc Vangl].PctHPs} <= 99) /dgge KillMob ${Spawn[npc Vangl].ID} "${Spawn[npc Vangl].Name}" ${Time.Time24}
+		|/if (${Spawn[npc ${eventTarget}].PctHPs} <= 99) /dgge KillMob ${Spawn[npc ${eventTarget}].ID} "${Spawn[npc ${eventTarget}].Name}" ${Time.Time24}
 		/goto :CheckGroup
 		
 	}
@@ -614,24 +652,26 @@ Sub chkGroupMarkedForDeath
 :return
 /return
 
-|----------------------------
-| Overlord Mata'Muram
-|----------------------------
-Sub Event_GazeYou 
-	/echo \arGAZE OF MATA MURAM on ME!
-	/echo \a-w Clicking \agMirrored Mask
-	/if (${Me.Class.ShortName.Equal[BRD]}) {
-		/call MQ2Medley SONG "${DEBUFF_${db}_Spell}" ${int_targetID} TRUE
-	} else {
-		/if (!${Defined[interruptFlag]}) /declare interruptFlag bool outer FALSE	
-		/if (${Bool[${Me.Casting.ID}]}) /call Interrupt
-		/call MQ2Cast "Amulet of Necropotence" 
-	}
 
-/return 
-
-Sub Event_GazeBurst
-/return 
-
-Sub Event_GazeDone
+Sub chkSelfMarkedForDeath
+	/if (${Me.Buff[Mark of Death].ID}) /call handleCureRequest ${Me.Name} ${Me.ID} disease 14 TRUE
 /return
+
+Sub chkMarkedForDeathCureDist
+	/nav wp amvCleric
+	:markLoop
+	/doevents
+	/if (${Me.Buff[Mark of Death].ID}) {
+		/echo \ar MARK OF DEATH \awis \ag${str_myCurer} \aw@ \ag${Spawn[pc ${str_myCurer}].Distance3D}
+		/echo \awMoving to Curer!
+		/call Disengage
+		/melee reset
+		/melee reset
+		/goto :markLoop
+	} 
+	/if (!${Me.Target.Name.Find[${eventTarget}]}) {
+		/call TrueTarget ${Spawn[npc ${eventTarget}].ID}
+	}
+	/call EngageTarget ${Spawn[npc ${eventTarget}].ID}
+	:return
+/return 

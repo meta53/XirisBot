@@ -336,6 +336,8 @@ Sub pullTarget
 	
 		| Start the pull by running to the target
 		:RunningToTarget
+		/if (!${Navigation.Active}) /navigate target
+		/delay 20
 		/if (${Target.LineOfSight} && ${Target.Distance} < ${int_castDistance}) /goto :AggroCheck
 		/if (${Me.TargetOfTarget.Name.Equal[${Me.Name}]}) /goto :ReturnWithPull
 		/if (${attempt} > 10) {
@@ -343,7 +345,7 @@ Sub pullTarget
 			/goto :ReturnWithPull
 		} 
 		/if (!${Target.ID}) /goto :return
-		/if (!${Navigation.Active}) /navigate target
+		
 		/delay 10
 
 		|-- Check to see if I don't yet have aggro
@@ -356,6 +358,7 @@ Sub pullTarget
 				| I am, call aggro sub.
 				/call AggroTarget
 				/varcalc attempt ${attempt} + 1
+				/echo \aoAggro Attempt return ${Macro.Return}
 				/if (${Me.TargetOfTarget.Name.Equal[${Me.Name}]}) 	/goto :ReturnWithPull
 				/if (${Macro.Return.Equal[NOLOS]})    				/goto :RunningToTarget
 				/if (${Macro.Return.Equal[CAST_FIZZLE]})    		/goto :AggroCheck
@@ -425,9 +428,15 @@ Sub AggroTarget
 				/call chkSpellMemorized "${spell_pull}" TRUE ${spell_pullGem}
 				/echo ${Me.SpellReady[${spell_pull}]} Cast "${spell_pull}" ${spell_pullGem} 2s
 				/call MQ2Cast "${spell_pull}" ${spell_pullGem} 2s
+				/doevents NoLOS
+			
+				
+				/if (${bln_noLOS}) /varset ret NOLOS
 				/if (${Macro.Return.Equal[CAST_SUCCESS]}) /varset ret SUCCESS
 				/if (${Macro.Return.Equal[CAST_CANNOTSEE]}) /varset ret NOLOS
 				/if (${Macro.Return.Equal[CAST_INTERRUPTED]}) /goto :AttemptAggro
+	
+				
 			} else {
 				/varset ret NOMANA
 			}
@@ -933,7 +942,7 @@ Sub variant_initialize(int _pull_dist, string _channel, string _campName, bool _
 
 	|--target information
 	/declare int_minPullCount		int		outer   4
-	/declare int_minTLevel			int		outer	46
+	/declare int_minTLevel			int		outer	36
 	/declare int_maxTLevel			int		outer	75
 	/declare bln_validTGT			bool	outer	FALSE
 	/declare bln_TGTDead			bool	outer	FALSE
@@ -1255,6 +1264,16 @@ Sub setAlerts
 	} else /if (${Zone.ShortName.Equal[southkarana]} || ${Zone.ShortName.Equal[rathemtn]}) {
 		/squelch /alert add 2 "Brother Zephyl"
 		/squelch /alert add 2 "Brother Qwinn"
+	} else /if (${Zone.ShortName.Equal[skyfire]}) {
+		/squelch /alert add 2 "a skyash drake"
+		/squelch /alert add 2 "Eldrig the Old"
+		/squelch /alert add 2 "Guardian_of_Felia"
+		/squelch /alert add 2 "Faerie_of_Dismay"
+		/squelch /alert add 2 "a_wandering_wurm"
+		/squelch /alert add 2 "Felia_Goldenwing"
+		/squelch /alert add 2 "a_lava_walker"
+		/squelch /alert add 2 "a_soul_devourer"
+		/squelch /alert add 2 "a_wurm_spirit"
 	}
 /return
 

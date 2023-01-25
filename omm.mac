@@ -1,0 +1,52 @@
+#Turbo 20
+Sub Main 
+    | Set Resist to Cold, Poison, Magic, Fire
+    | MR: 300 (120%) 	CR: 325 (130%) 	FR: 300 (120%)
+    | PR: 200 (80%) 	DR: 600 (240%)
+    /dgt ResistTypes cold|poison|magic|fire
+
+    | Xiris (MT) Autocure
+    /dt Xanshia autoCureMTon
+    /dt Xenshia autoCureMTon
+
+    | Set the mode to efficient
+    /dgt healMode EFFICIENT 
+    /dgt InterruptON
+
+    | Xiris
+    /melee aggro=on
+    /melee taunt=on 
+  
+
+    | Healing Focus
+    | So these clerics will not try to cure group
+    /dt Xanshia FocusHealMTOn
+    /dt Xirael  FocusHealMTOn
+    /dt Xinshia FocusHealMTOn
+    /dt Xenshia FocusHealMTOn
+
+    | Turn off cures for pretty much everyone except clerics
+    /dga melee  /varset bln_useCures FALSE
+    /dga caster /varset bln_useCures FALSE
+
+    | Tell specific clerics to heal|cure only their group
+    /dt Empathic    HealType 3
+    /dt Tragic      HealType 3
+    /dt Xerael      HealType 3
+    /dt Xurael      HealType 3
+    /dt Nihilist    HealType 3
+    /dt Theist      HealType 3
+    /dt Xarael      HealType 3
+    /dt Xonshia     HealType 3
+    /dt Xunshia     HealType 3
+
+     | Set Self
+    /melee aggro=on
+    /melee taunt=on
+    /dt deist dime
+
+    | Run raidcommands
+    /dgt Hush
+    /mac ommTank
+
+/return
