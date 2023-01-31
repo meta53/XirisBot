@@ -52,7 +52,7 @@ Sub chkInventory
 				/varset name 	"${InvSlot[pack${i}].Item.Name}"
 				/varset effect	"${InvSlot[pack${i}].Item.Haste}"
 				/varset id 		 ${InvSlot[pack${i}].Item.ID}
-				/echo Haste Item found : ${InvSlot[pack${i}].Item.Name} (${InvSlot[pack${i}].Item.ID}) 
+				/echo . \aoHaste Item found : \ag${InvSlot[pack${i}].Item.Name} (${InvSlot[pack${i}].Item.ID}) 
 				/call dsWriter ${name} ${effect} ${id}
 				
 			}
@@ -71,7 +71,7 @@ Sub chkBagContents(int PackSlot)
 	/for i 1 to ${InvSlot[pack${PackSlot}].Item.Container}
 		/if (${InvSlot[pack${PackSlot}].Item.Item[${i}].ID} && ${InvSlot[pack${PackSlot}].Item.Item[${i}].Haste}) {
 			/varset name 	"${InvSlot[pack${PackSlot}].Item.Item[${i}].Name}"
-			/varset effect	"${InvSlot[pack${PackSlot}].Item.Item[${i}].Haste}"
+			/varset effect	"${InvSlot[pack${PackSlot}].Item.Item[${i}].Haste}%"
 			/varset id 		${InvSlot[pack${PackSlot}].Item.Item[${i}].ID}
 			/call dsWriter ${name} ${effect} ${id}
 		
@@ -91,10 +91,13 @@ Sub dsWriter(string itemName, string itemEffect, int itemID)
 	/declare a string local
 	/declare df string local Haste Item(${flagcount})
 	/declare ds string local downshit${flagcount}
+	
+	| a is the downshit (we used to use something like this to write all the downshit ifs)
 	/varset a /if (#{Spell[${itemEffect}].Stacks} && 
 	/varset a ${a}!#{Me.Buff[${itemEffect}].ID})
 	/varset a ${a} /casting ${itemID} item
-    /echo ${a}
+    |/echo ${a}
+	/echo "${Me.CleanName}" "${df}" "${itemName}(${itemID}) ${itemEffect}"
 	/ini "hasteINI" "${Me.CleanName}" "${df}" "${itemName}(${itemID}) ${itemEffect}"
 	/varcalc flagcount (${flagcount}+1)
 /return

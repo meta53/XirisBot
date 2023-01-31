@@ -14,7 +14,8 @@ REVISION HISTORY
 	06.29.22	xiris 	Updated all events to only be either generic, or [/gsay, /rsay, /tell, MQ2DanNet(dgt, dt)] only	
 						Updated the rez portion to work with new dannet handlers
 	10.13.22	xiris 	Update sub healCast to ignore hp checks on group heals			
-	12.31.22	xiris	Worked on Divine Arbitration handler, should be cleaner		
+	12.31.22	xiris	Worked on Divine Arbitration handler, should be cleaner
+	01.31.23	xiris 	Replaced chkGroup healing loops to use the MQ2WorstHurt plugin	
 **|
 
 
@@ -589,9 +590,11 @@ Sub healSELFOLD
 **|
 Sub healGRP
 	/declare 	i 			 	int local	0
+	/declare    n				int local   1
 	/declare 	int_inRange		int local 	0
 	/varcalc	int_point_calcStopHeal ${Math.Calc[${int_point_grpPatch}*1.1]}
 	/declare 	memName 		string local 
+	/declare 	memID			int  local 0
 
 	/declare    franticRange    int local ${int_range_frantic}
 	/declare    normalRange  	int local ${int_range_normal}
@@ -604,7 +607,8 @@ Sub healGRP
 
 	:determineGroupDamage
 	| Method updates the group array, in order of HP, and counts the major/minor hurt
-	/call updateGroupHP
+	|/call updateGroupHP
+	/call determineHurtCounts
 
 	| No one is hurt, return
 	|/echo determineGroupDamage healGRP major: ${int_majorHurt} minor: ${int_minorHurt}
@@ -642,8 +646,62 @@ Sub healGRP
 	| Note the worst hurt will be the first in the list, and then run the heal checks again
 	| This is so we heal 1 person, check tank, self, heal 1 person, check tank, self.
 	| The only time we skip to another person in group is if they are out of frantic range.
-	/call updateGroupHP
+	| Replaced the for loop with MQ2WorstHurt on 01/31/23
+	
+	|/call updateGroupHP
 	|/echo CastSingleTargetHeals healGRP major: ${int_majorHurt} minor: ${int_minorHurt}
+
+	| not pet and corpse
+	/varset memID ${Spawn[${WorstHurt[group,${n},200,FALSE]}].ID}
+	/varset memName ${Spawn[id ${memID}].Name}
+	/if (${Spawn[id ${memID}].Type.NotEqual[Pet]} && ${Spawn[id ${memID}].Type.NotEqual[Corpse]} && ${Spawn[id ${memID}].PctHPs} <= ${int_point_grpHot}) {
+		| hp checks
+		| frantic
+		/if (${Spawn[id ${memID}].PctHPs}<= ${int_point_grpFrantic}) {
+			/if (${Spawn[id ${memID}].Distance3D} >= ${franticRange}) {
+				/echo \ar${memName} is out of FRANTIC range! \aoIncrementing N, and checking next most damaged.
+				/varset n 2
+				/goto :CastSingleTargetHeals
+			}
+			/varset str_currentHeal ${str_heal_frantic}
+			/if (${str_healMode.Equal[EFFICIENT]}) /varset str_currentHeal ${str_heal_frantic_efficient}
+			/echo  \aoFRANTIC \ag(${str_healMode})  \ar${str_currentHeal} \awon \ag ${memName}\aw(\ay${memID}\aw)
+			/if ((${Me.CurrentMana} < ${Spell[${str_currentHeal}].Mana})) /goto :return
+			/call healCast ${memID} ${memName} "${str_currentHeal}" FALSE
+			/goto :return	
+		| normal	
+		} else /if (${Spawn[id ${memID}].PctHPs} <= ${int_point_grpPatch}) {
+			/if (${Spawn[id ${memID}].Distance3D} >= ${normalRange}) {
+				/echo \ar${memName} is out of NORMAL range!
+				/varset n 2
+				/goto :CastSingleTargetHeals
+			}
+			/varset str_currentHeal ${str_heal_normal}
+			/if (${str_healMode.Equal[EFFICIENT]}) /varset str_currentHeal ${str_heal_normal_efficient}
+			/echo \aoNORMAL \ag(${str_healMode})   \ay${str_currentHeal} \awon \ag ${memName}\aw(\ay${memID}\aw)
+			/if ((${Me.CurrentMana} < ${Spell[${str_currentHeal}].Mana})) /goto :return
+			/call healCast ${memID} ${memName} "${str_currentHeal}" FALSE
+			/goto :return
+		| HoT
+		} else {
+			/if (!${use_heal_HoT}) /goto :return
+			/dquery ${memName} -q "Me.SPA[100]"  -o perTick
+			/delay 120 ${DanNet.Q.Received}
+
+			/if (${Spawn[id ${memID}].PctHPs} <= ${int_point_grpHot} && ${Spawn[id ${memID}].Distance3D} <= ${int_range_HoT} && ${perTick} < ${int_heal_HoT_perTick}) {
+				/echo  \aoHoT \ag(${str_healMode})   \ay${str_currentHeal} \awon \ag ${memName}\aw(\ay${memID}\aw)
+				/if ((${Me.CurrentMana} < ${Spell[${str_heal_HoT}].Mana})) /goto :return
+				/call healCast ${memID} ${memName} "${str_heal_HoT}" TRUE
+				/goto :return
+			}
+		}
+		
+	}
+
+	| Skip old code
+	/goto :return
+
+	:old_loop
 	/for i 1 to 6 
 		| Not present or No Data? Then the toon is not in zone!
 		/varset memName ${Group.Member[${arr_groupHP[${i},4]}]}
@@ -699,7 +757,20 @@ Sub healGRP
 	:return
 /return
 
+|-- Method to determine how many in the group need healing
+Sub determineHurtCounts
+	/declare 	i 			 		int local	0
+	/varset int_minorHurt 0
+	/varset int_majorHurt 0
+	/for i 0 to 5
+		/varcalc j ${i}+1
+		/if (${Group.Member[${i}].Present} && (${Group.Member[${i}].PctHPs}< 100) && (${Group.Member[${i}].PctHPs}>=${int_point_grpPatch})) /varcalc int_minorHurt ${int_minorHurt}+1 
+		/if (${Group.Member[${i}].Present} && (${Group.Member[${i}].PctHPs}< 100) && (${Group.Member[${i}].PctHPs}< ${int_point_grpPatch})) /varcalc int_majorHurt ${int_majorHurt}+1 
+	/next i
+/return
+
 |-- Method to update the group HP tracker ordered
+|   Deprecated due to using mq2worsthurt instead
 Sub updateGroupHP
 	/declare 	i 			 		int local	0
 	/declare    j                   int local   0

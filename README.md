@@ -11,6 +11,8 @@ Xiris bot recommends the ROF2 EMU build of MQ2 from MMOBugs. As of Spring 2022 i
 XirisBot requires several plugins that are not standard to the E3 builds you are used to. These are more modern plugins than what were generally avaialable. These are powerful and important plugins that will greatly enhance the experience once you become used to them
 ###### MQ2Dannet
 DanNet was created by Dannuic, one of the main contributers to MQ2 and MQNext. This is a replacement for EQBC that provides direct access to any toon from any other toon via queries and observers. The documentation is found at [MQ2Dan on Github](https://github.com/dannuic/MQ2Dan) While it is not required that you know the details of this plugin, it will be helpful to learn the command syntax since it totally replaces EQBC - specifically the 1:1 replacements for common commands in EQBC. Forexample if in EQBC you'd use `/bcaa` instead you'd use `/dga` and instead of `/bct` you'd use `/dt`  Once you get used to it, it works the same.
+###### MQ2Debuffs
+Required for curing of group/raid. Probably also used with E3. Added it here for clarity.
 ###### MQ2Nav
 MQ2Nav is a game-changing quality of life improvement. Instead of having your toons `/stick` to you, you can have them follow you using MQ2Nav that *automatically generates paths* to the target (you) or you could tell your entire raid to navigate to a target or predefined (by you) waypoint. [MQ2Nav on Github](https://github.com/brainiac/MQ2Nav/wiki) The wiki link will give detail usage. Xiris bot has several built in commands that require MQ2Nav to function ex: `/rs FollowMe /type|NAV`
 The navigation paths are determined by the plugin parsing a pre-generated zone mesh file. These navmesh files are found in the */Macroquest2/MQ2Nav* folder. They do not come by default with the compile, it is best to grab a premade package of files from [MQ2Mesh](https://mqmesh.com/) grab each package from the expansions listed (you do not need anything past OOW at this point) and extract the zip files to the MQ2Nav folder.
@@ -32,10 +34,10 @@ song5=Psalm of Mystic Shielding^18^1
 ```
 ###### MQ2Melee
 Standard plugin generally. Used to handle the auto skills portion of meleeing, such as backstab/frenzy/kick etc. Note: if there is a desire, I can eliminate this and run it entirely within the macro. 
-
+###### MQ2WorstHurt
+Plugin available in modern compiles that replacing for loops looking at group, and xtarget members hp points. See https://www.redguides.com/wiki/MQ2WorstHurt
 #### Everquest Build
 While Xiris bot would work with UF, the MQ2 Plugin requirements mean that only the ROF2 build of Everquest will work properly without a huge degredation of service and code changes.
-
 ### Loading
 #### bot_loader.mac
 This macro will load the class specific macro. Think of this as a bootstrapper, or loader. The best way to accomplish loading the macro on all toons is to create a single hotkey on your tank wit the line: ```/dgza /mac bot_loader ${Me.Name} Xiria Xirea 85```  

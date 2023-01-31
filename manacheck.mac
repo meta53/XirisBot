@@ -1,0 +1,30 @@
+|**
+----------------------------
+manacheck.mac 
+----------------------------
+This macro creats the an output file (hastecheck.ini) with entries for each toon
+______________________________________________
+REVISION HISTORY
+    01.25.23	xiris	INITIAL REVISION
+	
+**|
+
+#define hasteINI hastecheck.ini
+
+Sub Main
+	/call WriteMana
+/return
+
+Sub WriteMana
+    /echo writingMana:
+    /declare df  string local CurrentMana
+    /ini "hasteINI" "${Me.CleanName}" "${df}" "${Me.CurrentMana}"
+/return 
+
+
+
+
+
+
+
+
