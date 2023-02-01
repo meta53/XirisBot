@@ -246,7 +246,6 @@ Sub chkDownshits
 			/declare castTime	int     local
 			/declare svdTGTID 	string 	local	${Target.ID}
 			/declare tgtID 		int 	local
-			/declare isSpell	bool	local	TRUE
 			/declare dsType  	string  local   SPELL
 			/declare wornSlot   string  local 
 			/declare itemInSlot string  local
@@ -261,7 +260,6 @@ Sub chkDownshits
 				/varset buffName  ${downflag${df}.Token[1,|]}
 				/varset castArg   ${downflag${df}.Token[2,|]}|${downflag${df}.Token[3,|]}
 				/varset tgtID     ${downflag${df}.Token[3,|]}
-				/varset isSpell TRUE
 				/varset dsType SPELL
 				/if (${castArg.Find[item]}>0) {
 					/varset dsType ITEM
