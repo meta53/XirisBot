@@ -23,6 +23,7 @@ REVISION HISTORY
 	04.27.22	xiris 	Added chkCombatAbilities which can be called when we need to turn off
 						MQ2Melee for whatever reason (like.. MPG Specialization not working on berserkers!)
 	06.29.22	xiris 	Updated all events to only be either generic, or [/gsay, /rsay, /tell, MQ2DanNet(dgt, dt)] only
+	01.31.23	xiris 	Implemented UHC's downshit fix (arround line 260)
 **|
 
 |-- 
@@ -261,6 +262,7 @@ Sub chkDownshits
 				/varset castArg   ${downflag${df}.Token[2,|]}|${downflag${df}.Token[3,|]}
 				/varset tgtID     ${downflag${df}.Token[3,|]}
 				/varset isSpell TRUE
+				/varset dsType SPELL
 				/if (${castArg.Find[item]}>0) {
 					/varset dsType ITEM
 				} else /if (${castArg.Find[alt]}>0) {
