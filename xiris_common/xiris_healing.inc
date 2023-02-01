@@ -763,7 +763,6 @@ Sub determineHurtCounts
 	/varset int_minorHurt 0
 	/varset int_majorHurt 0
 	/for i 0 to 5
-		/varcalc j ${i}+1
 		/if (${Group.Member[${i}].Present} && (${Group.Member[${i}].PctHPs}< 100) && (${Group.Member[${i}].PctHPs}>=${int_point_grpPatch})) /varcalc int_minorHurt ${int_minorHurt}+1 
 		/if (${Group.Member[${i}].Present} && (${Group.Member[${i}].PctHPs}< 100) && (${Group.Member[${i}].PctHPs}< ${int_point_grpPatch})) /varcalc int_majorHurt ${int_majorHurt}+1 
 	/next i
