@@ -15,6 +15,9 @@ REVISION HISTORY
 	11.08.22	xiris 	Added SlowTarget to manually slow a target with a resist type
 	11.14.22	xiris 	Updated chkDebuffsOnSingleTarget to not continually fire if debuffs have already been attempted
 	11.15.22	xiris 	Updated DEBUFF INI file entries and code to look more like NUKE/DOT etc ie: single lines of ini entry to define
+	02.02.23	xiris 	Updated logic in chkDebuffsOnSingleTarget to call CastDebuffsOnTarget if we have more than 1 debuff, which then
+						will check if the other debuffs fufill requirements. This is to allow for toons with a single debuff to not
+						have to call the larger logic block of CastDebuffsOnTarget, as it will check inline for the total=1 && trigger logic
 
 **|
 
@@ -70,7 +73,7 @@ Sub SlowTarget(string _resist)
 |   Additionally once debuffs have been cast (either sucesffully or through max tries) the str_debuffedTargets is updated
 |   with the target ID, so we don't continually try to debuff the thing
 Sub chkDebuffsOnSingleTarget(int _targetID)
-	/if (!${DEBUFF_Total} || !${_targetID} || ${str_debuffedTargets.Find[${_targetID}]} || ${Target.Name.Find[s_corpse]} || (${DEBUFF_Total} == 1 && !${Bool[${DEBUFF_1_Trigger.Replace[#,$]}]}) ) /return
+	/if (!${DEBUFF_Total} || !${_targetID} || ${Target.Name.Find[s_corpse]} || (${DEBUFF_Total} == 1 && !${Bool[${DEBUFF_1_Trigger.Replace[#,$]}]}) ) /return
 	/call CastDebuffsOnTarget ${_targetID} FALSE
 /return
 
@@ -87,8 +90,6 @@ Sub CastDebuffsOnTarget(int _targetID, bool _forced)
 	/if (${isNamed} && ${Me.PctMana} < ${DEBUFF_Mana_NamedMinimum}) /return
 	/if (!${isNamed} && ${Me.PctMana} < ${DEBUFF_Mana_Minimum}) /return
 	
-	/echo \agCastDebuffsOnTarget \awID:\ay${_targetID}  \awisNamed:\ay${isNamed}  \awforcing?:\ay${_forced}
-
 	|-- Mana Check Passed, Check individual debuffs now
 	:debuffTarget
 	/declare	db		int		local	${DEBUFF_Total}
@@ -124,6 +125,7 @@ Sub CastDebuffsOnTarget(int _targetID, bool _forced)
 			} 
 
 		:debuffCast
+			/echo \agCastDebuff OnTarget:\ao"${DEBUFF_${db}_Spell}" \awID:\ay${_targetID}  \awisNamed:\ay${isNamed}  \awforcing?:\ay${_forced}
 			/call TrueTarget ${_targetID}
 			/varset debuffDuration ${Spell[${DEBUFF_${db}_Spell} ].Duration.TotalSeconds}
 			/if (${Me.Class.ShortName.Equal[BRD]}) {
@@ -144,14 +146,19 @@ Sub CastDebuffsOnTarget(int _targetID, bool _forced)
 
 |-- Cast a Specific Debuff spell on the target
 Sub CastDebuff(string _debuff, string _gem,  int _maxTries, int _targetID, bool _forced)
-	/echo \aoCastDebuff \aw_spell: \ag${_debuff}\aw, _gem: \ag${_gem}\aw, _maxTries: \ag${_maxTries}
+	/echo \aoCastDebuff \aw_spell: \ag${_debuff}\aw, _gem: \ag${_gem}\aw, _maxTries: \ag${_maxTries}\aw, _targetID: \ag${_targetID}\aw, _forced: \ag${_forced}
 	/declare	try		int		local	0
 	/declare    tgtID   int     local ${_targetID}
 	/declare 	rslt	string  local
-	/if (!${Target.ID} || ${Target.ID} != ${_targetID}) /call TrueTarget ${_targetID}
+
+	/if (!${Target.ID} || (${Target.ID}  && (${Target.ID} != ${_targetID}))) {
+		/echo \aoWRONG TARGET\aw Re-target ${Spawn[npc id ${_targetID}]}(${_targetID})
+		/call TrueTarget ${_targetID}
+	} 
+	
 	/declare 	tgtName string  local ${Target.CleanName}
 	:AttemptDebuff
-		/echo \aoAttempting Debuff: \aw${_debuff}
+		/echo \aoAttempting Debuff: \aw${_debuff} 
 		|/call chkTargetStatus
 		/if (${int_targetID} == 0 && !${_forced}) {
 			/echo \ar Debuff Failure\aw Target Already Dead
@@ -172,11 +179,10 @@ Sub CastDebuff(string _debuff, string _gem,  int _maxTries, int _targetID, bool 
 		|if I am a cleric, check MT health
 		/if (${Me.Class.ShortName.Equal[CLR]}) /call chkHeal_MT	
 		|attempt
-		/echo \agCalling MQ2Cast ${_debuff}
 		/call MQ2Cast "${_debuff}" ${_gem} 5s
 		/varset rslt ${Macro.Return}
 		/varcalc try ${try}+1
-
+	
 		|handle result
 		/if (${rslt.Equal[CAST_OUTOFRANGE]}) 	/goto :DebuffFailure
 		/if (${rslt.Equal[CAST_OUTOFMANA]}) 	/goto :DebuffFailure
@@ -193,9 +199,8 @@ Sub CastDebuff(string _debuff, string _gem,  int _maxTries, int _targetID, bool 
 	
 	:DebuffSuccess
 	/dgt DEBUFF_SUCCESS::[${_debuff}] -> ${tgtName} (${try})
-
 :return
-/varset str_debuffedTargets "${str_debuffedTargets},${_targetID}"
+	/varset str_debuffedTargets "${str_debuffedTargets},${_targetID}"
 /return
 
 | Reloads entire debuff lineup from INI

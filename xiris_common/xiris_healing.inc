@@ -16,6 +16,8 @@ REVISION HISTORY
 	10.13.22	xiris 	Update sub healCast to ignore hp checks on group heals			
 	12.31.22	xiris	Worked on Divine Arbitration handler, should be cleaner
 	01.31.23	xiris 	Replaced chkGroup healing loops to use the MQ2WorstHurt plugin	
+	02.02.23	xiris	Fixed long standing bug: chkHeal_MT would always call chkMTAlive, with targetting to TRUE, which would break cleric debuffing since it 
+						would always target the MT before trying to cast debuff
 **|
 
 
@@ -493,7 +495,6 @@ Sub setHealingSpell(int _hp)
 
 Sub chkHeal_MT
 	/if (${int_healMode}== 0 || ${int_healMode} == 3) /return
-	/call chkMTAlive TRUE
 	/if ((${Spawn[id ${int_MTID}].PctHPs} < ${int_point_tankPatch}) && (${Spawn[id ${int_MTID}].Distance} < ${int_range_normal})) /call healMAINTANK
 /return
 
