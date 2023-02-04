@@ -67,7 +67,7 @@ Sub xbot_initialize_movement
 
 SUB EVENT_Follow(_line, _chatSender, _eventParams)
 	/if (${_chatSender.Equal[${Me.CleanName}]}) /return
-	/declare followType 	string local ${If[${_eventParams.Find[/type|NAV]},NAV,STICK]}
+	/declare followType 	string 	local 	${If[${_eventParams.Find[/type|NAV]},NAV,STICK]}
 	/call verifyEvent "${_chatSender}" "${_eventParams}"
 	/if (${Bool[${Macro.Return.Arg[2,_]}]} && ${Bool[${Macro.Return.Arg[3,_]}]} && ${Bool[${Macro.Return.Arg[4,_]}]}) {
 		/call StartFollowing ${_chatSender} ${followType}

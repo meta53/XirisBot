@@ -546,16 +546,6 @@ Sub healMAINTANKOLD
  ----------------------------
 **|
 
-|**
- ----------------------------
- HealSelf
- ----------------------------
- Healing Logic for the cleric
- Determines which spell to cast, then casts it.
- This routine is modified from the common one in xiris_healing.inc
- ----------------------------
-**|
-
 Sub healSELF
 	/varcalc 	int_point_calcStopHeal ${Math.Calc[${int_point_selfPatch}*1.05]}
 	/if (${Target.ID} != ${Me.ID}) /call TrueTarget ${Me.ID}
@@ -564,14 +554,6 @@ Sub healSELF
 	/call healCast ${Me.ID} ${Me.Name} "${str_currentHeal}" FALSE
 	/if (${Me.Class.ShortName.Equal[CLR]}) /call TrueTarget ${int_MTID}
 	/if (${Me.Class.ShortName.NotEqual[CLR]}) /call TrueTarget ${int_targetID}
-/return
-
-Sub healSELFOLD
-	/varcalc 	int_point_calcStopHeal ${Math.Calc[${int_point_selfPatch}*1.1]}
-	/if (${Target.ID} != ${Me.ID}) /call TrueTarget ${Me.ID}
-	/echo healSELF (healing.inc): ${Me.ID} ${Target.Name} "${str_heal_normal}"
-	/call healCast ${Me.ID} ${Me.Name} "${str_heal_normal}" FALSE
-	/varset int_point_calcStopHeal	${int_point_selfPatch}
 /return
 
 |**

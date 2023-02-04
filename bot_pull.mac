@@ -45,14 +45,14 @@ REQUIRED INCLUDES
 #event NoLOS				"#*#you cannot see your target#*#"
 #event TooClose				"#*#your target is too close#*#"
 
-Sub Main(int _pull_dist, string _channel, string _campName, bool _useDownFlags)
+Sub Main(int _pull_dist, string _channel, string _campName, bool _useDownFlags,  bool _usePull)
 	/delay 5
 
 	|-- initialize common xbot variables
 	/call xbot_initialize ${Me.Name}
 	
 	|-- initialize variables specific to this macro
-	/call variant_initialize ${_pull_dist} ${_channel} ${_campName} ${_useDownFlags}
+	/call variant_initialize ${_pull_dist} ${_channel} ${_campName} ${_useDownFlags} ${_usePull}
 
 	|-- report status
 	/echo Pulling >> ${Zone.Name} @ ${int_maxRadius} Range<<
@@ -82,6 +82,7 @@ Sub Main(int _pull_dist, string _channel, string _campName, bool _useDownFlags)
 		
 		|-- reset group to camp spot (leash) if its empty
 		/if (${SpawnCount[npc radius ${int_campRadius} zradius 25]} == 0) {
+			/if (${bln_looting}) /call chkLoot
 			/call resetCamp
 			/call RefreshXTarget
 			/docommand /${cmdChannel} Disengage
@@ -135,7 +136,6 @@ Sub setTGTAlert
  ----------------------------
 **|
 Sub getTarget
-	/echo getTarget
 	/if (${Me.Sitting}) /sit off
 
 	:AcquireLoop
@@ -273,7 +273,7 @@ Sub chkTargetValid
 Sub setCamp
 	/echo \awSetting to Camp \ag${str_campName}
 	/docommand /${cmdChannel} NavToWP ${str_campName}
-	/navigate RecordWaypoint bot_pull_nav
+	/navigate RecordWaypoint ${str_campName}
 	|/if (${int_currentCamp} == 1) /docommand /${cmdChannel} CreateCamp camp1
 	
 	/varset D1X int outer ${Me.X}
@@ -290,8 +290,15 @@ Sub resetCamp
 	/echo \awResetting to Camp \ag${str_campName}
 	/docommand /${cmdChannel} NavToWP ${str_campName}
 	| -- don't run self back to camp its not necessary run to my pull spot instead
-	/nav wp bot_pull_nav
-	/delay 20
+	/declare int_returnCount int local 0
+	/nav wp ${str_campName}
+	:campReturn
+	/if (${Navigation.Active} && ${int_returnCount} < 30) {
+		/delay 20
+		/varcalc int_returnCount ${int_returnCount} +1
+		/goto :campReturn
+	}
+	
 	/nav stop
 /return
 
@@ -354,7 +361,7 @@ Sub pullTarget
 			| I do not yet have aggro;
 			:AggroDistCheck 
 			| Am I close enough to aggro?
-			/if (${Target.Distance} < ${int_castDistance} && ${Target.LineOfSight}) {
+			/if ((${bln_usePull} && (${Target.Distance} < ${int_castDistance} && ${Target.LineOfSight})) || (!${bln_usePull} && (${Target.Distance} < 25 && ${Target.LineOfSight}))) {
 				| I am, call aggro sub.
 				/call AggroTarget
 				/varcalc attempt ${attempt} + 1
@@ -379,8 +386,14 @@ Sub pullTarget
 		} else {
 			| I have aggro, returning to camp
 			:ReturnWithPull
-			/echo \agReturning to Camp with \ay${Me.XTarget}+ \agmobs.
-			/navigate waypoint bot_pull_nav 
+			/if (${bln_usePull}) {
+				/echo \agReturning to Camp with \ay${Me.XTarget}+ \agmobs.
+				/navigate waypoint ${str_campName} 
+				/goto :ReturnLoop
+			} else {
+				/echo \agPulling is disabled, killing \ay${Me.XTarget}+ \agmobs.
+				/goto :return
+			}
 			
 			:ReturnLoop
 				/delay 10
@@ -406,6 +419,11 @@ Sub AggroTarget
 	} else {
 		| Need to aggro the mob somehow
 		:AttemptAggro
+		/if (!${bln_usePull}) {
+			/killthis
+			/varset ret SUCCESS
+			/goto :return
+		}
 		/if (${strPullType.Equal[RANGED]}) {
 			/face fast
 			/delay 5
@@ -460,14 +478,18 @@ Sub killTarget
 	/if (${Navigation.Active}) /navigate stop
 	
 	|--check camp distance
-	:campCheck
-	/if (${Math.Distance[${Me.Y},${Me.X}:${int_campY},${int_campX}]} > ${int_campRadius}) {
-		/if (!${Navigation.Active}) /navigate waypoint bot_pull_nav
-		/echo moving back to camp
-		/delay 5
-		/goto :campCheck
+	/if (${bln_usePull}) {
+		:campCheck
+		/if (${Math.Distance[${Me.Y},${Me.X}:${int_campY},${int_campX}]} > ${int_campRadius}) {
+			/if (!${Navigation.Active}) /navigate waypoint ${str_campName}
+			/echo \agMoving back to \ao${str_campName}
+			/delay 5
+			/goto :campCheck
+		} else {
+			/if (${Navigation.Active}) /navigate stop
+		}
 	} else {
-		/if (${Navigation.Active}) /navigate stop
+		/goto :killMob
 	}
 
 	|--check the distance, if its out of melee range/aggro range, lets wait a second
@@ -876,17 +898,22 @@ Sub chkComponents
  Eventually this needs to be pulled from an INI per zone and per puller!
  ----------------------------
 **|
-Sub variant_initialize(int _pull_dist, string _channel, string _campName, bool _useDownFlags)
-	|-- Global Flag
-	/varset bln_pulling				TRUE
+Sub variant_initialize(int _pull_dist, string _channel, string _campName, bool _useDownFlags, bool _usePull)
+	/echo \awvariant_initialize \ao ${_pull_dist} ${_channel} ${_campName} ${_useDownFlags} ${_usePull}
 
 	|--loot
-	/varset bln_looting				FALSE
+	/varset bln_looting				TRUE
 	/if (${bln_looting}) 			/call EnableLooting
 
 	|--downflags 
 	/declare useDownFlags	bool	outer	TRUE
 	/if (${Defined[_useDownFlags]} && !${_useDownFlags}) /varset useDownFlags FALSE
+
+	|--are we pulling or are we just running around killing?
+	/declare bln_usePull			bool	outer	TRUE
+	/if (${Defined[_usePull]}) {
+		/varset bln_usePull ${_usePull}
+	}
 	
 	|--melee plugin/aggro for the requester
 	/melee aggro=1
@@ -894,8 +921,8 @@ Sub variant_initialize(int _pull_dist, string _channel, string _campName, bool _
 	/declare useGroup	bool	outer	FALSE
 	
 	|--command channel setup
-	/if (!${Defined[cmdChannel]}) /declare cmdChannel string	outer	bcga
-	/varset cmdChannel bcga
+	/if (!${Defined[cmdChannel]}) /declare cmdChannel string	outer	dga
+	/varset cmdChannel dga
 	/if (${Defined[_channel]}) /varset cmdChannel ${_channel}
 	/echo 	cmdChannel is ${cmdChannel}
 
@@ -928,9 +955,11 @@ Sub variant_initialize(int _pull_dist, string _channel, string _campName, bool _
 	/if (${Defined[_pull_dist]}) {
 		/varset int_maxRadius ${_pull_dist}
 	}
-	
+
+
 	|--how far we can go for alert 2 mobs (note, seperate from maxRadius)
-	/declare int_alert2Radius		int 	outer 	1250
+	/declare int_alert2Radius		int 	outer 	
+	/varcalc int_alert2Radius		${int_maxRadius}+1000
 
 	|-- use 40 for POFire
 	/declare int_minZHeight			int		outer 	0
@@ -1019,13 +1048,14 @@ Sub variant_initialize(int _pull_dist, string _channel, string _campName, bool _
 	/declare str_groupSHMname string outer NULL
 	/declare timer_buffSHM timer	outer 1s
 		
+	
 	/call setSupportIDs
 	/call setAlerts
 /return
 
 
 Sub setAlerts
-	/echo \awAdding Alerts (1: ignore, 2:hunt)
+	/echo \aw Adding Alerts (1: ignore, 2:hunt)
 	|=================================
 	|--- specific zone mobs to avoid;
 	|    06/12 ordered by zone for performance
@@ -1065,11 +1095,13 @@ Sub setAlerts
 	|-- Zone Specific Ignores
 	/if (${Zone.ShortName.Equal[dranik]}) {
 		/squelch /alert add 1 "Filligno the Slayer"
-	} else /if (${Zone.ShortName.Equal[kodtaz]}) {
+	}
+	/if (${Zone.ShortName.Equal[kodtaz]}) {
 		/squelch /alert add 1 "Kenra"
 		/squelch /alert add 1 "Gazak"
 		/squelch /alert add 1 "Maroley"
-	} else /if (${Zone.ShortName.Equal[riwwi]}) {
+	}
+	/if (${Zone.ShortName.Equal[riwwi]}) {
 		/squelch /alert add 1 "yunjo"
 		/squelch /alert add 1 "Kayin"
 		/squelch /alert add 1 "Turlini"
@@ -1079,7 +1111,8 @@ Sub setAlerts
 		/squelch /alert add 1 "Iniba"
 		/squelch /alert add 1 "Uxnikk"
 		/squelch /alert add 1 "Kekken"
-	} else /if (${Zone.ShortName.Equal[barindu]}) {
+	}
+	/if (${Zone.ShortName.Equal[barindu]}) {
 		/squelch /alert add 1 "yunjo"
 		/squelch /alert add 1 "Chiaka"
 		/squelch /alert add 1 "Diru"
@@ -1089,9 +1122,11 @@ Sub setAlerts
 		/squelch /alert add 1 "Gurru"
 		/squelch /alert add 1 "Udranda"
 		/squelch /alert add 1 "Aneuk Controller"
-	} else /if (${Zone.ShortName.Equal[ferubi]}) {
+	}  
+	/if (${Zone.ShortName.Equal[ferubi]}) {
 		/squelch /alert add 1 "Rondo"
-	}  else /if (${Zone.ShortName.Equal[qinimi]}) {
+	}  
+	/if (${Zone.ShortName.Equal[qinimi]}) {
 		/squelch /alert add 1 "Krvne"
 		/squelch /alert add 1 "Mass of Stone"
 		/squelch /alert add 1 "Councilman"
@@ -1100,7 +1135,8 @@ Sub setAlerts
 		/squelch /alert add 1 "a disgruntled" 
 		/squelch /alert add 1 "a melancholy"
 		/squelch /alert add 1 "Besana"
-	} else /if (${Zone.ShortName.Equal[pofire]}) {
+	}  
+	/if (${Zone.ShortName.Equal[pofire]}) {
 		/squelch /alert add 1 "Guardian of Doomfire"
 		/squelch /alert add 1 "General Reparm"
 		/squelch /alert add 1 "General Druav Flamesinger"
@@ -1109,7 +1145,8 @@ Sub setAlerts
 		/squelch /alert add 1 "Pyronis"
 		/squelch /alert add 1 "Magmaton"
 		/squelch /alert add 1 "Arch Mage Yozanni"
-	} else /if (${Zone.ShortName.Equal[qvic]}) {
+	}  
+	/if (${Zone.ShortName.Equal[qvic]}) {
 		/squelch /alert add 1 "Ptav M'sha"
 		/squelch /alert add 1 "Dvoin M'sha"
 		/squelch /alert add 1 "Mnat M'sha"
@@ -1119,7 +1156,8 @@ Sub setAlerts
 		/squelch /alert add 1 "Svi`pral the Second Arbitor"
 		/squelch /alert add 1 "Vishai the First Arbitor"
 		/squelch /alert add 1 "Ytvagi the Third Arbitor"
-	} else /if (${Zone.ShortName.Equal[riftseekers]}) {
+	}  
+	/if (${Zone.ShortName.Equal[riftseekers]}) {
 		/squelch /alert add 1 "a ferocious chimera"
 		/squelch /alert add 1 "a ferocious feran"
 		/squelch /alert add 1 "Chailak"
@@ -1140,7 +1178,8 @@ Sub setAlerts
 		/squelch /alert add 1 "Queen Pyrilonis"
 		/squelch /alert add 1 "Taromani"
 		/squelch /alert add 1 "portal"
-	} else /if (${Zone.ShortName.Equal[wallofslaughter]}) {
+	} 
+	/if (${Zone.ShortName.Equal[wallofslaughter]}) {
 		/squelch /alert add 1 "Korshawn"
 		/squelch /alert add 1 "Jarekiv"
 		/squelch /alert add 1 "a portal crystal"
@@ -1149,12 +1188,22 @@ Sub setAlerts
 		/squelch /alert add 1 "Trelak" 
 		/squelch /alert add 1 "Verow"
 		/squelch /alert add 1 "Sandak"
- 	} else /if (${Zone.ShortName.Equal[ssratemple]}) {
+ 	}
+	/if (${Zone.ShortName.Equal[ssratemple]}) {
 		/squelch /alert add 1 "Rhag"
-	} else /if (${Zone.ShortName.Equal[chardok]}) {
+	}
+	/if (${Zone.ShortName.Equal[chardok]}) {
 		/squelch /alert add 1 "slave"
 		/squelch /alert add 1 "niblek"
 		/squelch /alert add 1 "vault master"
+	}
+	/if (${Zone.ShortName.Equal[burningwood]}) {
+		/squelch /alert add 1 "a sarnak imitator"
+	}
+	/if (${Zone.ShortName.Equal[rathemtn]}) {
+		/squelch /alert add 1 "Guzzla"
+		/squelch /alert add 1 "Chizzlik"
+		/squelch /alert add 1 "Ukla"
 	}
 
 
@@ -1163,6 +1212,7 @@ Sub setAlerts
 	|=================================
 	/squelch /alert clear 2
 	/squelch /alert add 2 "foobarbaza"
+
 	/if (${Zone.ShortName.Equal[trakanon]}) {
 		|--Hunter Cycle--|
 		/squelch /alert add 2 "froglok hunter"
@@ -1262,19 +1312,26 @@ Sub setAlerts
 		/squelch /alert add 2 "overseer"
 		/squelch /alert add 2 "foreman"
 	} else /if (${Zone.ShortName.Equal[southkarana]} || ${Zone.ShortName.Equal[rathemtn]}) {
-		/squelch /alert add 2 "Brother Zephyl"
-		/squelch /alert add 2 "Brother Qwinn"
+		/if (${Me.Class.ShortName.Equal[BRD]}) {
+			/varset int_minTLevel 8
+			/squelch /alert add 2 "an obsidian drake"
+			/squelch /alert add 2 "an ebon drake"
+			/squelch /alert add 2 "an onyx drake"
+			/squelch /alert add 2 "Blackwing"
+		} else /if (${Me.Class.ShortName.Equal[MNK]}) {
+			/squelch /alert add 2 "Brother Zephyl"
+			/squelch /alert add 2 "Brother Qwinn"
+		}
+		
+		
 	} else /if (${Zone.ShortName.Equal[skyfire]}) {
 		/squelch /alert add 2 "a skyash drake"
 		/squelch /alert add 2 "Eldrig the Old"
-		/squelch /alert add 2 "Guardian_of_Felia"
-		/squelch /alert add 2 "Faerie_of_Dismay"
-		/squelch /alert add 2 "a_wandering_wurm"
-		/squelch /alert add 2 "Felia_Goldenwing"
-		/squelch /alert add 2 "a_lava_walker"
-		/squelch /alert add 2 "a_soul_devourer"
-		/squelch /alert add 2 "a_wurm_spirit"
+	} else /if (${Zone.ShortName.Equal[burningwood]}) {
+		/squelch /alert add 2 "wurm"
+		/squelch /alert add 2 "Nezekezena"
 	}
+
 /return
 
 Sub Event_TooClose

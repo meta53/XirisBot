@@ -192,6 +192,7 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/declare 	cmdChannel 				string	outer	dgt
 	/declare 	mq2meleeEnabled			bool    outer   TRUE
 	/declare 	int_macroMaximumResponseDist	int outer 1000
+	/dnet fullnames off
 
 	|-- [Settings] : Class Archetype (used in case switching)
 	/declare 	str_classArchetype		string	outer	UNKNOWN
