@@ -231,7 +231,6 @@ Sub MQ2Cast(string spellName,string spellType,timer giveUpTimer,string mySub,str
 		/varset MQ2Feature3 ${MQ2Feature2}
 		/varset MQ2Feature2 ${MQ2Feature1}
 		/varset MQ2Feature1 ${mySub}
-		/varset mySub
 	}
 	
 :wait_for_stop

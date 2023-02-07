@@ -8,7 +8,7 @@ Sub Main
     /dex Xurael     /nav wp jelvan1Cleric
     /dex Xirael     /nav wp jelvan1Cleric
     /dex Achlys     /nav wp jelvan1Cleric
-    /dex Shynxia    /nav wp jelvan1Tank
+    /dex Shynxia    /nav wp jelvan2Caster
     | Group 2
     /dex Sadelia    /nav wp jelvan1Tank
     /dex Dogmatist  /nav wp jelvan1Cleric
@@ -23,7 +23,7 @@ Sub Main
     
     /dex Ophidia    /nav wp jelvan2Tank
     /dex Opheoia    /nav wp jelvan2Tank
-    /dex Shinxia    /nav wp jelvan2Tank
+    /dex Shinxia    /nav wp jelvan2Caster
     | Group 2
     /dex Nihilist   /nav wp jelvan2Cleric
     /dex Ophelia    /nav wp jelvan2Tank
@@ -47,18 +47,18 @@ Sub Main
     /dex Aergia     /nav wp jelvan2Tank
     | Group 5
     /dex Xarael     /nav wp jelvan2Cleric
-    /dex Cereborn   /nav wp jelvan2Tank
+    /dex Cereborn   /nav wp jelvan2Caster
     /dex Mluian     /nav wp jelvan2Tank
     /dex Ertris     /nav wp jelvan2Tank
     /dex Xepatia    /nav wp jelvan2Tank
     /dex Ania       /nav wp jelvan2Cleric
     | Group 6   
     /dex Pantheon   /nav wp jelvan2Cleric
-    /dex Drexia     /nav wp jelvan2Tank
-    /dex Xeixi      /nav wp jelvan2Tank
-    /dex Xeixa      /nav wp jelvan2Tank   
-    /dex Xiexa      /nav wp jelvan2Tank 
-    /dex Xeqisa     /nav wp jelvan2Tank 
+    /dex Drexia     /nav wp jelvan2Caster
+    /dex Xeixi      /nav wp jelvan2Caster
+    /dex Xeixa      /nav wp jelvan2Caster   
+    /dex Xiexa      /nav wp jelvan2Caster 
+    /dex Xeqisa     /nav wp jelvan2Caster 
 
     | East, 3 - Clerics that aren't doing DI/HoT move here, else, move south
     | Group 1

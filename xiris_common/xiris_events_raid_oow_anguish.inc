@@ -357,22 +357,25 @@ Sub chkHanvarCaster
 		/casting "Purify Soul" alt
 	}
 
-	/if (${Me.Class.ShortName.Equal[DRU]} && !${timer_hanvarDebuff}) {
+	/if (${Me.Class.ShortName.Equal[DRU]} && !${timer_hanvarDebuff} && ${Spawn[npc Hanvar].LineOfSight}) {
 		| Check to make sure it's debuffed correctly
 		/call chkDebuffsOnSingleTarget ${Spawn[npc Hanvar].ID}
+		/varset timer_hanvarDebuff 30s
 	}
 
-	/if (${Me.Class.ShortName.Equal[SHM]} && !${timer_hanvarDebuff}) {
+	/if (${Me.Class.ShortName.Equal[SHM]} && !${timer_hanvarDebuff} && ${Spawn[npc Hanvar].LineOfSight}) {
 		| Check to make sure it's slowed|malod
 		/call chkDebuffsOnSingleTarget ${Spawn[npc Hanvar].ID}
+		/varset timer_hanvarDebuff 30s
 	}
 
-	/if (${Me.Class.ShortName.Equal[ENC]} && !${timer_hanvarDebuff}) {
+	/if (${Me.Class.ShortName.Equal[ENC]} && !${timer_hanvarDebuff} && ${Spawn[npc Hanvar].LineOfSight}) {
 		| Check to make sure it's slowed|tashed
 		/call chkDebuffsOnSingleTarget ${Spawn[npc Hanvar].ID}
+		/varset timer_hanvarDebuff 30s
 	}
 
-	/if (${Me.Class.ShortName.Equal[NEC]} || ${Me.Class.ShortName.Equal[WIZ]} && ${Target.ID} != ${Spawn[npc Hanvar].ID}) {
+	/if (${Me.Class.ShortName.Equal[NEC]} || ${Me.Class.ShortName.Equal[WIZ]} && ${Target.ID} != ${Spawn[npc Hanvar].ID} && ${Spawn[npc Hanvar].LineOfSight}) {
 		/call TrueTarget ${Spawn[npc Hanvar].ID}
 		/if (${Target.PctHPs} <= 99 && !${bln_engaged}) /call EngageTarget ${Target.ID}
 	} 
@@ -447,13 +450,13 @@ Sub Event_AMVStart
 /return
 
 Sub EVENT_AMVRetreat
-	/if (${Target.Name.Find[Hanvar]} || ${Spawn[npc Hanvar].Distance} < 100) {
+	/if (${Target.Name.Find[Vangl]} || ${Spawn[npc Vangl].Distance} < 100) {
 		/if (${MeleeClasses.Find[${Me.Class.ShortName}]}) {
 			/call Disengage
 			/nav wp amvCleric
 		} 
 	}
-	/doevents flush HanvarRetreat
+	/doevents flush AMVRetreat
 	/if (${str_classArchetype.NotEqual[PRIEST]}) {
 		/warp wp amvCleric
 		/call Disengage
@@ -473,7 +476,7 @@ Sub EVENT_AMVKill
 	}
 
 	:return
-	/doevents flush HanvarKill
+	/doevents flush AMVKill
 /return 
 
 
@@ -602,12 +605,12 @@ Sub chkGroupMarkedForDeath
 			/g Group Heal incoming, get close!
 			/for i 1 to 5
 				/if (${Group.Member[${i}].ID} != ${int_MTID} && ${Select[${Group.Member[${i}].Class.ShortName},${MeleeClasses}]}) {
-					/dex ${Group.Member[${i}]} /multiline ; /mqpause on ; /melee reset ; /warp wp amvCleric ; 
+					/dex ${Group.Member[${i}]} /multiline ; /mqpause on ; /melee reset ; /nav wp amvCleric ; 
 				}
 			/next i
 			/call MQ2Cast "${str_heal_group}" gem4 2s 
 			/dgge /mqpause off
-			/if (${Spawn[npc ${eventTarget}].PctHPs} <= 99) /dgge KillMob ${Spawn[npc ${eventTarget}].ID} "${Spawn[npc ${eventTarget}].Name}" ${Time.Time24}
+			/if (${Spawn[npc ${eventTarget}].PctHPs} <= 99) /gsay KillMob ${Spawn[npc ${eventTarget}].ID} "${Spawn[npc ${eventTarget}].Name}" ${Time.Time24}
 			/goto :CheckGroup
 		}
 	} else /if (${Me.Class.ShortName.Equal[SHM]}) {
@@ -615,12 +618,12 @@ Sub chkGroupMarkedForDeath
 		/g Group Heal incoming, get close!
 		/for i 1 to 5
 			/if (${Group.Member[${i}].ID} != ${int_MTID} && ${Select[${Group.Member[${i}].Class.ShortName},${MeleeClasses}]}) {
-				/dex ${Group.Member[${i}]} /warp wp amvCleric ; 
+				/dex ${Group.Member[${i}]} /nav wp amvCleric
 			}
 		/next i
 		/call MQ2Cast "${str_cure_disease}" gem7 8s
 		/dgge /mqpause off
-		|/if (${Spawn[npc ${eventTarget}].PctHPs} <= 99) /dgge KillMob ${Spawn[npc ${eventTarget}].ID} "${Spawn[npc ${eventTarget}].Name}" ${Time.Time24}
+		/if (${Spawn[npc ${eventTarget}].PctHPs} <= 99) /gsay KillMob ${Spawn[npc ${eventTarget}].ID} "${Spawn[npc ${eventTarget}].Name}" ${Time.Time24}
 		/goto :CheckGroup
 		
 	}
@@ -669,7 +672,7 @@ Sub chkMarkedForDeathCureDist
 		/melee reset
 		/goto :markLoop
 	} 
-	/if (!${Me.Target.Name.Find[${eventTarget}]}) {
+	/if (!${Target.Name.Find[${eventTarget}]}) {
 		/call TrueTarget ${Spawn[npc ${eventTarget}].ID}
 	}
 	/call EngageTarget ${Spawn[npc ${eventTarget}].ID}

@@ -49,11 +49,13 @@ Sub Events_Debuffing
 Sub EVENT_DebuffTarget(_line, _sender, _eventParams)
 	/if (!${DEBUFF_Total}) /return 
 	/call CastDebuffsOnTarget ${_eventParams.Arg[1, ]} TRUE
+	/doevents flush DebuffTarget
 /return
 
 Sub EVENT_SlowTarget(_line, _chatSender, _eventParams) 
 	/if (${Me.Class.ShortName.NotEqual[SHM]} || ${Me.Class.ShortName.NotEqual[ENC]}) /return
 	/call SlowTarget ${_eventParams}
+	/doevents flush SlowTarget
 /return
 
 Sub SlowTarget(string _resist)
@@ -73,14 +75,17 @@ Sub SlowTarget(string _resist)
 |   Additionally once debuffs have been cast (either sucesffully or through max tries) the str_debuffedTargets is updated
 |   with the target ID, so we don't continually try to debuff the thing
 Sub chkDebuffsOnSingleTarget(int _targetID)
-	/if (!${DEBUFF_Total} || !${_targetID} || ${Target.Name.Find[s_corpse]} || (${DEBUFF_Total} == 1 && !${Bool[${DEBUFF_1_Trigger.Replace[#,$]}]}) ) /return
+	/if (!${DEBUFF_Total} || !${_targetID} || ${Target.Name.Find[s_corpse]}) /return
+	/if (!${Spawn[id ${_targetID}].LineOfSight}) /return
+	/if ((${DEBUFF_Total} == 1 && !${Bool[${DEBUFF_1_Trigger.Replace[#,$]}]})) /return
 	/call CastDebuffsOnTarget ${_targetID} FALSE
 /return
 
 
 |-- Loop through all debuffs, and attempt to cast one at a time
 |   Will check to see if the target already has the debuff and if so has more than 30s left on it
-Sub CastDebuffsOnTarget(int _targetID, bool _forced) 	
+Sub CastDebuffsOnTarget(int _targetID, bool _forced)
+	/if (!${Spawn[id ${_targetID}].LineOfSight}) /return
 	| Check if named, or we are forcing this
 	/call TargetNamedCheck ${_targetID}
 	/declare isNamed	bool	local	${Macro.Return}
@@ -158,9 +163,9 @@ Sub CastDebuff(string _debuff, string _gem,  int _maxTries, int _targetID, bool 
 	
 	/declare 	tgtName string  local ${Target.CleanName}
 	:AttemptDebuff
-		/echo \aoAttempting Debuff: \aw${_debuff} 
+		/echo \aoAttempting Debuff: \aw${_debuff} on \ao${Spawn[id ${_targetID}].Name}
 		|/call chkTargetStatus
-		/if (${int_targetID} == 0 && !${_forced}) {
+		/if (${_targetID} == 0 && !${_forced}) {
 			/echo \ar Debuff Failure\aw Target Already Dead
 			/varset rslt TARGET_ALREADY_DEAD
 			/goto :DebuffFailure

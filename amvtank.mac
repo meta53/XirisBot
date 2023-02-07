@@ -65,8 +65,6 @@ Sub Event_AMVMarkOn
 /return
 
 
-
-
 Sub commandRetreat
 	/echo \ar${timer_mark_ae} ${markSeconds}s \awuntil AMV AE, \aoRETREAT
 	/rs AMVRetreat ${markSeconds}
@@ -108,7 +106,7 @@ Sub Event_AMVEngage
 	/if (${Me.CombatAbilityReady[Bazu Bellow]}) /doability "Bazu Bellow"
 	/delay 5
 
-
+	/dgt SingSongs
 	/face fast
 	/attack on
 /return

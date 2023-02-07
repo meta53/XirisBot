@@ -8,6 +8,8 @@ Sub Main
     | Xiris (MT) Autocure
     /dt Xanshia autoCureMTon
     /dt Xenshia autoCureMTon
+    /dex Xanshia /varset DEBUFF_Total 0
+    /dex Xunshia /varset DEBUFF_Total 0
 
     | Set the mode to efficient
     /dgt healMode EFFICIENT 

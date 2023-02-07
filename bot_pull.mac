@@ -86,6 +86,7 @@ Sub Main(int _pull_dist, string _channel, string _campName, bool _useDownFlags, 
 			/call resetCamp
 			/call RefreshXTarget
 			/docommand /${cmdChannel} Disengage
+			/if (${bln_looting}) /call chkLoot
 			/if (!${bln_looting}) /hidecorpse npc
 		}
 		
@@ -137,68 +138,81 @@ Sub setTGTAlert
 **|
 Sub getTarget
 	/if (${Me.Sitting}) /sit off
+	/squelch /target clear
 
+	/echo getTarget
 	:AcquireLoop
 		| set the vars like target validity to FALSE so we can check
 		/call setRSTVars
-		/squelch /target clear
-		
-		|----------Alert 1 is never target, Alert 2 is hunter targets--------
-		/if (${SpawnCount[npc radius ${int_campRadius} zradius 15 noalert 1]} > 0) {
-			/call TrueTarget ${NearestSpawn[npc radius ${int_campRadius} zradius 15 noalert 1].ID} 
-			/echo NPC in camp (R:${int_campRadius}), killing: Distance: ${Target.Distance3D}
-			/delay 5
-		} else /if (${SpawnCount[npc alert 2 radius ${int_alert2Radius} range ${int_minTLevel} ${int_maxTLevel} zradius ${int_zRadius} noalert 1]} > 0) {
-			/call TrueTarget ${NearestSpawn[npc alert 2 radius ${int_alert2Radius} range ${int_minTLevel} ${int_maxTLevel} zradius ${int_zRadius}  noalert 1].ID}
-			/echo NPC on alert 2 is up, killing: Distance: ${Target.Distance3D}
-			/delay 5
-		} else /if (${SpawnCount[npc noalert 1 radius ${int_maxRadius} range ${int_minTLevel} ${int_maxTLevel} zradius ${int_zRadius}]} > 0) {
-			/echo No NPCs on the alert 2 list are up, trying random NPC
-			/call TrueTarget ${NearestSpawn[npc noalert 1 radius ${int_maxRadius} range ${int_minTLevel} ${int_maxTLevel} zradius ${int_zRadius}].ID} 
-			/delay 5
-		} 
+		/echo SpawnCount: ${SpawnCount[npc radius ${int_campRadius} zradius 15]}
+		/echo Target.ID: ${Target.ID}
+		|----------If I am getting smacked in camp, kill it
+		/if (${SpawnCount[npc radius ${int_campRadius} zradius 15]} > 0 && (${Target.ID} && ${Target.Type.Equal[NPC]} && ${Me.TargetOfTarget.CleanName.Equal[${Me.CleanName}]})) {
+			/echo Something is hitting me, killing it!
+			/goto :return
 
-		/if (${Target.ID} && (${Target.Distance} <= ${int_campRadius}) && ${Target.DistanceZ} < 25) {
-			|--if it is close, its valid;
-			/varset bln_validTGT	TRUE
 		} else {
-			|--check the target
-			/if (${Target.ID}) /call chkTargetValid
-		}
-		
-		
-		|--restart if there is no valid target
-		/if (!${bln_validTGT}) {
-			|-- if there is more than 1 camp in our dataset, we can start walking through the camps
-			/if (${int_campCount} > 1) {
-					/echo Checking on Moving the Camp
-					:MoveCamp
-					|-- if we are less than the current camp and we are incrementing, move forward
-					/if (${int_currentCamp} == ${int_campCount}) {
-						/varset bln_increment FALSE
-					} else /if (${int_currentCamp} == 1) {
-						/varset bln_increment TRUE
-					}
-
-					/if (${bln_increment}) {
-						/varset int_currentCamp ${int_currentCamp}+1
-						/docommand /${cmdChannel} Incrementing Camp to ${int_currentCamp}
-					} else {
-						/varset int_currentCamp ${int_currentCamp}-1
-						/docommand /${cmdChannel} Decrementing Camp to ${int_currentCamp}
-					}
-				
-					/call moveCamp ${int_currentCamp}
-					/delay 10
-			} else {
-				/if (${SpawnCount[npc noalert 1 radius ${int_maxRadius} range ${int_minTLevel} ${int_maxTLevel} zradius ${int_zRadius}]} == 0) {
-					/echo No valid targets delaying 5s
-					/delay 5s
-				} 
+			|----------Alert 1 is never target, Alert 2 is hunter targets--------
+			/if (${SpawnCount[npc radius ${int_campRadius} zradius 15 noalert 1]} > 0) {
+				/call TrueTarget ${NearestSpawn[npc radius ${int_campRadius} zradius 15 noalert 1].ID} 
+				/echo NPC in camp (R:${int_campRadius}), killing: Distance: ${Target.Distance3D}
+				/delay 5
+			} else /if (${SpawnCount[npc alert 2 radius ${int_alert2Radius} range ${int_minTLevel} ${int_maxTLevel} zradius ${int_zRadius} noalert 1]} > 0) {
+				/call TrueTarget ${NearestSpawn[npc alert 2 radius ${int_alert2Radius} range ${int_minTLevel} ${int_maxTLevel} zradius ${int_zRadius}  noalert 1].ID}
+				/echo NPC on alert 2 is up, killing: Distance: ${Target.Distance3D}
+				/delay 5
+			} else /if (${SpawnCount[npc noalert 1 radius ${int_maxRadius} range ${int_minTLevel} ${int_maxTLevel} zradius ${int_zRadius}]} > 0) {
+				/echo No NPCs on the alert 2 list are up, trying random NPC
+				/call TrueTarget ${NearestSpawn[npc noalert 1 radius ${int_maxRadius} range ${int_minTLevel} ${int_maxTLevel} zradius ${int_zRadius}].ID} 
+				/delay 5
 			}
-			/goto :AcquireLoop
+
+
+
+			|----------Target Validation
+			/if (${Target.ID} && (${Target.Distance} <= ${int_campRadius}) && ${Target.DistanceZ} < 25) {
+				|--if it is close, its valid;
+				/varset bln_validTGT	TRUE
+			} else {
+				|--check the target
+				/if (${Target.ID}) /call chkTargetValid
+			}
+			
+			
+			|--restart if there is no valid target
+			/if (!${bln_validTGT}) {
+				|-- if there is more than 1 camp in our dataset, we can start walking through the camps
+				/if (${int_campCount} > 1) {
+						/echo Checking on Moving the Camp
+						:MoveCamp
+						|-- if we are less than the current camp and we are incrementing, move forward
+						/if (${int_currentCamp} == ${int_campCount}) {
+							/varset bln_increment FALSE
+						} else /if (${int_currentCamp} == 1) {
+							/varset bln_increment TRUE
+						}
+
+						/if (${bln_increment}) {
+							/varset int_currentCamp ${int_currentCamp}+1
+							/docommand /${cmdChannel} Incrementing Camp to ${int_currentCamp}
+						} else {
+							/varset int_currentCamp ${int_currentCamp}-1
+							/docommand /${cmdChannel} Decrementing Camp to ${int_currentCamp}
+						}
+					
+						/call moveCamp ${int_currentCamp}
+						/delay 10
+				} else {
+					/if (${SpawnCount[npc noalert 1 radius ${int_maxRadius} range ${int_minTLevel} ${int_maxTLevel} zradius ${int_zRadius}]} == 0) {
+						/echo No valid targets delaying 5s
+						/delay 5s
+					} 
+				}
+				/goto :AcquireLoop
+			}
 		}
 
+		:return
 		|--target is valid, continue
 		/varset int_targetID 	${Target.ID}
 		/varset bln_TGTDead		FALSE
@@ -344,25 +358,42 @@ Sub pullTarget
 		| Start the pull by running to the target
 		:RunningToTarget
 		/if (!${Navigation.Active}) /navigate target
+
 		/delay 20
-		/if (${Target.LineOfSight} && ${Target.Distance} < ${int_castDistance}) /goto :AggroCheck
-		/if (${Me.TargetOfTarget.Name.Equal[${Me.Name}]}) /goto :ReturnWithPull
+		| Target in LOS, and in distance, going to aggrocheck
+		/if (${Target.LineOfSight} && ${Target.Distance3D} < ${int_castDistance}) {
+			/echo Target in LOS, and in distance, going to aggrocheck
+			/goto :AggroCheck
+		}
+
+		| Target has me as aggrod, and in range, going to returnWithPull
+		/if (${Me.TargetOfTarget.Name.Equal[${Me.Name}]} && (${Target.Distance3D} < ${int_castDistance})) {
+			/echo Target has me as aggrod, and in range, going to returnWithPull
+			/goto :ReturnWithPull
+		} 
+
+		| Too many attempts, returnwithpull
 		/if (${attempt} > 10) {
+			/echo Too many attempts, returnwithpull
+			/alert add 1 "${Target.ID}"
 			/target clear
 			/goto :ReturnWithPull
 		} 
+
 		/if (!${Target.ID}) /goto :return
 		
 		/delay 10
 
 		|-- Check to see if I don't yet have aggro
 		:AggroCheck
-		/if (!${Me.TargetOfTarget.ID} && (${Me.XTarget} < ${int_minPullCount})) {
+		
+		/if (!${Me.TargetOfTarget.ID} && (${Me.XTarget} < ${int_minPullCount}) && ((${bln_usePull} && (${Target.Distance} > ${int_castDistance})) || (!${bln_usePull} && (${Target.Distance} > 25 && ${Target.LineOfSight})))) {
 			| I do not yet have aggro;
 			:AggroDistCheck 
 			| Am I close enough to aggro?
-			/if ((${bln_usePull} && (${Target.Distance} < ${int_castDistance} && ${Target.LineOfSight})) || (!${bln_usePull} && (${Target.Distance} < 25 && ${Target.LineOfSight}))) {
+			/if ((${bln_usePull} && (${Target.Distance} < ${int_castDistance}) && ${Target.LineOfSight}) || (!${bln_usePull} && (${Target.Distance} < 25 && ${Target.LineOfSight}))) {
 				| I am, call aggro sub.
+				/echo \ao Attempting to Aggro Target
 				/call AggroTarget
 				/varcalc attempt ${attempt} + 1
 				/echo \aoAggro Attempt return ${Macro.Return}
@@ -380,7 +411,7 @@ Sub pullTarget
 						/goto :ReturnWithPull 
 					}
 				}
-			} else {
+			} else { 
 				/goto :RunningToTarget
 			}
 		} else {
@@ -391,6 +422,7 @@ Sub pullTarget
 				/navigate waypoint ${str_campName} 
 				/goto :ReturnLoop
 			} else {
+				/if (!${Target.Aggressive}) /call AggroTarget
 				/echo \agPulling is disabled, killing \ay${Me.XTarget}+ \agmobs.
 				/goto :return
 			}
@@ -477,6 +509,7 @@ Sub killTarget
 	/if (${bln_TGTDead})   /return
 	/if (${Navigation.Active}) /navigate stop
 	
+	/declare int_waited int local 0
 	|--check camp distance
 	/if (${bln_usePull}) {
 		:campCheck
@@ -494,7 +527,6 @@ Sub killTarget
 
 	|--check the distance, if its out of melee range/aggro range, lets wait a second
 	/face fast
-	/declare int_waited int local 0
 	:distanceWaitLoop
 		/varcalc int_waited ${int_waited}+1
 		/if (${int_waited} > 15) /return

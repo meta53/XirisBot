@@ -8,16 +8,16 @@ Sub Main
     /dt Tragic AutoCureMTOn
     /dt Xonshia AutoCureMTOn
     /dt Xunshia AutoCureMTOn
-
+    /dt Theist AutoCureMTOn
 
     | Set Xiria (TT) AutoCuring
     /dt Xirael changeMT Xiria 
     /dt Xirael AutoCureMTOn
 
-    /dge clr /warp wp keldcleric
-    /dge caster /warp wp keldcaster
-    /dge shm /warp wp keldcaster
-    /dge dru /warp wp keldcaster
+    /dge clr     /warp wp keldcleric
+    /dge caster  /warp wp keldcaster
+    /dge shm     /warp wp keldcaster
+    /dge dru     /warp wp keldcaster
 
     | Set MT
     /dex Xiris /end
