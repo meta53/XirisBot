@@ -107,7 +107,7 @@ Sub commandTankStonewall
             /delay 5
             /if (${stonewall_count} < 40) /goto :Stonewall
         } else {
-            /goto :StonewallKeldovanKill
+            /goto :return
         }
     :return 
 /return

@@ -1,5 +1,9 @@
 #Turbo 20
 Sub Main 
+    | Move Clerics to Heal point
+    /dge priest /nav wp ommCleric
+    /dge melee /nav wp ommMelee
+    /dge caster /nav wp ommCleric
     | Set Resist to Cold, Poison, Magic, Fire
     | MR: 300 (120%) 	CR: 325 (130%) 	FR: 300 (120%)
     | PR: 200 (80%) 	DR: 600 (240%)
@@ -16,29 +20,37 @@ Sub Main
     | Xiris
     /melee aggro=on
     /melee taunt=on 
-  
 
+    | Set the offtanks
+    /dt Xiria offtankON
+    /dt Xirea offtankON
+    /dt Xiris offtankON
+
+    | Xirin (SA) addtank needs heals
+    /dt xirael changeMT Xirin 
+
+    | Xiria (OT) needs heals
+    /dt xorael changeMT Xiria
+
+    | Xirea (OT) needs heals
+    /dt deist  changeMT Xirin 
+
+    | Eurydice needs heals and DI 
+    /dt Xinshia changeMT Eurydice 
+    /dex Eurydice /dt Xinshia dime
+
+  
     | Healing Focus
     | So these clerics will not try to cure group
     /dt Xanshia FocusHealMTOn
+    /dex Xanshia /varset DEBUFF_Total 0
     /dt Xirael  FocusHealMTOn
     /dt Xinshia FocusHealMTOn
     /dt Xenshia FocusHealMTOn
 
     | Turn off cures for pretty much everyone except clerics
-    /dga melee  /varset bln_useCures FALSE
-    /dga caster /varset bln_useCures FALSE
-
-    | Tell specific clerics to heal|cure only their group
-    /dt Empathic    HealType 3
-    /dt Tragic      HealType 3
-    /dt Xerael      HealType 3
-    /dt Xurael      HealType 3
-    /dt Nihilist    HealType 3
-    /dt Theist      HealType 3
-    /dt Xarael      HealType 3
-    /dt Xonshia     HealType 3
-    /dt Xunshia     HealType 3
+    /dge melee  /varset bln_useCures FALSE
+    /dge caster /varset bln_useCures FALSE
 
      | Set Self
     /melee aggro=on
@@ -47,6 +59,8 @@ Sub Main
 
     | Run raidcommands
     /dgt Hush
+    /rs CharmON
+    /rs OMMStart
     /mac ommTank
 
 /return

@@ -168,7 +168,7 @@ Sub xbot_initialize_spellRoutines
 	
 /return
 
-| Note the _token must be a string "song|alt aa name|item name"
+| Note the _token must be a string "song||alt aa name||item name"
 Sub MQ2Medley(string _type, string _token, int _targetID, bool _interrupt)
     
     /declare argstring string local "${_token}" -targetid|${_targetID}
@@ -176,8 +176,7 @@ Sub MQ2Medley(string _type, string _token, int _targetID, bool _interrupt)
     /declare castTime int  local
 
     /echo \aoMQ2Medley \ag${_type} \ay${argstring}
-    /echo 
-  
+
     /if (${_type.NotEqual[ITEM]}) {
         /varcalc castTime (${Spell[${_token}].CastTime} / 100)+20
         /medley queue ${argstring}
@@ -191,7 +190,6 @@ Sub MQ2Medley(string _type, string _token, int _targetID, bool _interrupt)
         | MQ2Exchange requries ITEMNAME
         /if (${FindItem[${_token}].InvSlot} <=30) {
             /medley queue ${argstring}
-            /if (${_interrupt}) /delay ${castTime}
         } else {
             | Swap the item with whatever is in slot 30
             /exchange "${_token}" 30
@@ -284,6 +282,7 @@ Sub MQ2Cast(string spellName,string spellType,timer giveUpTimer,string mySub,str
 		/if (${Cast.Result.Equal[CAST_OUTOFREAGENTS]}) 	/goto :CastEnd
 		/if (${Cast.Result.Equal[CAST_NOTARGET]}) 		/goto :CastEnd
 		/if (${Cast.Result.Equal[CAST_NOTREADY]}) 		/goto :CastEnd
+		/if (${Cast.Result.Equal[CAST_NOCHARM]})		/goto :CastEnd
 		/if ( !${interruptFlag} && ${mySub.Length} ) 	/call ${mySub}
 		/goto :cast_spell_pending
 	} else /if ( ${Cast.Result.Equal[CAST_RESIST]} ) {
@@ -297,7 +296,7 @@ Sub MQ2Cast(string spellName,string spellType,timer giveUpTimer,string mySub,str
 
 Sub Interrupt
 	/echo \awInterrupting Cast! \ao${Time.Time24}
-	/varset interruptFlag TRUE
+	/if (!${Defined[interruptFlag]}) /declare interruptFlag bool outer TRUE
 	/interrupt
 /return
 

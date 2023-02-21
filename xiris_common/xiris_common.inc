@@ -270,6 +270,8 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/declare	timer_naked 			timer   outer	0
 	/declare 	timer_hott				timer   outer   20s
 	/declare 	timer_xtargetRefresh	timer	outer 	30s
+	| strFaceItem storage (for OMM event have to swap masks)
+	/declare 	strFaceItem				string  outer   ${InvSlot[3].Item}
 
 	|-- [Settings] : Meditation & Utilities
 	/declare int_sitRadius   		int     outer ${Ini[INI_CHAR,Settings,sitRadius,50]}
@@ -1203,10 +1205,10 @@ SUB EVENT_shrinkGroup
 |- @param TargetID: The ID of the spawn you wish to check on
 |-------------------------------------------------------------|
 Sub TargetNamedCheck(_id)
-	/if (${Spawn[npc id ${_id}].Named} || ${Spawn[npc id ${_id}].Name.Find[#]}) /return TRUE
-	/if (${Zone.ShortName.Equal[tacvi]}) /return TRUE
-	/if (${Zone.ShortName.Equal[chambersa]} || ${Zone.ShortName.Equal[chambersb]} || ${Zone.ShortName.Equal[chambersc]} || ${Zone.ShortName.Equal[chambersd]} || ${Zone.ShortName.Equal[chamberse]}) /return TRUE
-	|/if (${Zone.ShortName.Equal[anguish]}) /return TRUE
+	/if ((${Spawn[npc id ${_id}].Named} || ${Spawn[npc id ${_id}].Name.Find[#]}) && ${Target.Level} >= 75) /return TRUE
+	/if (${Zone.ShortName.Equal[tacvi]} && ${Target.Level} >= 70) /return TRUE
+	/if (${Zone.ShortName.Equal[chambersa]} || ${Zone.ShortName.Equal[chambersb]} || ${Zone.ShortName.Equal[chambersc]} || ${Zone.ShortName.Equal[chambersd]} || ${Zone.ShortName.Equal[chamberse]}  && ${Target.Level} >= 70) /return TRUE
+	/if (${Zone.ShortName.Equal[anguish]}  && ${Target.Level} >= 75) /return TRUE
 	/if (${Zone.ShortName.Equal[arena]}) /return TRUE
 	/if (${Zone.ShortName.Equal[thundercrest]}) /return TRUE
 /return FALSE
@@ -1623,6 +1625,11 @@ Sub EVENT_LoadRingset(string _line, string _sender, string _eventParams)
 	/echo \ayLoading Ringset ${_eventParams}
 	/call LoadRingset
 /return
+
+Sub RestoreFaceSlot
+	/exchange "${strFaceItem}" face
+	/delay 5
+/return 
 
 Sub LoadRingset
 	/declare leftfinger string local ${Ini[INI_CHAR,SavedInventory,leftfinger]}

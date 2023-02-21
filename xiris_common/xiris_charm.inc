@@ -14,7 +14,15 @@ REVISION HISTORY
 
 #EVENT  CharmON         "#*#CharmON#*#"
 #EVENT  CharmOFF        "#*#CharmOFF#*#"
+
+#EVENT  CharmNPCByID    "#1# tells the group#*#'CharmNPCByID #2#'"
+#EVENT  CharmNPCByID    "#1# tells you#*#'CharmNPCByID #2#'"
+#EVENT  CharmNPCByID    "#1# tells the raid#*#CharmNPCByID #2#'"
 #EVENT  CharmNPCByID    "[ #1# #*#]#*#CharmNPCByID #2#"
+
+#EVENT  CharmNPCByName    "#1# tells the group#*#'CharmNPCByName #2#'"
+#EVENT  CharmNPCByName    "#1# tells you#*#'CharmNPCByName #2#'"
+#EVENT  CharmNPCByName    "#1# tells the raid#*#CharmNPCByName #2#'"
 #EVENT  CharmNPCByName  "[ #1# #*#]#*#CharmNPCByName #2#"
 
 Sub InitEvents_Charm
@@ -30,60 +38,176 @@ Sub Events_Charm
 /return
 
 Sub EVENT_CharmON 
+    /echo \agCharming Activated
     /varset bln_activeCharming TRUE
 /return 
 
 Sub EVENT_CharmOFF 
+    /echo \aoCharming De-activated
     /varset bln_activeCharming FALSE
 /return 
 
 Sub EVENT_CharmNPCByID(_line, _chatSender, _eventParams)
+    /varset bln_activeCharming TRUE
     /echo \ayCharming NPC by ID \ag${_eventParams}
     /call CharmNPC ${_eventParams}
 /return
 
 Sub EVENT_CharmNPCByName(_line, _chatSender,_eventParams)
+    /varset bln_activeCharming TRUE
     /echo \ayCharming NPC by Name \ag${_eventParams}
+    /call CharmNPC ${Spawn[npc ${_eventParams}].ID}
 /return 
 
-Sub CharmNPC(int _id)
-    /if (!${bln_activeCharming}) /return
-    /if (${Me.Pet.ID}) {
-        /echo \arCannot Charm ${_id}: Already have pet!
-        /goto :Engage
-    }
-    /declare castAttempt int local 1
-    /call chkSpellMemorized "${str_charm}" TRUE ${int_charmGem}
-    /echo calling TrueTarget ${_id}
-    /call TrueTarget ${_id}
-    :castAttempt
-    /varcalc castAttempt ${castAttempt}+1
-    /call MQ2Cast "${str_charm}" ${int_charmGem}
-    /if (${Macro.Return.Equal[CAST_NOCHARM]}) {
-        /rsay ${Target.Name} CANNOT be charmed!
-        /gsay ${Target.Name} CANNOT be charmed!
-        /goto :return
-    } else /if (${Macro.Return.Equal[CAST_RESIST]} && ${castAttempt} < 4) {
-        /goto :castAttempt
-    } else /if (${Macro.Return.Equal[CAST_SUCCESS]} && ${Me.Pet.ID}) {
-        :Engage
-        /delay 10
-        /echo \awEngaging Target(\ag${int_targetID}\aw) with Charmed Pet \ag${Me.Pet.Name}! 
-        /call EngageTarget ${int_targetID}
-    }
-    :return
+Sub chkCharmSpell
+
 /return
+
+Sub CharmNPC(int _targetID, bool _forced, bool _attack, int _attackID)
+    /echo \aoCharmNPC\aw(\ag${_id}\aw ${bln_activeCharming})
+    /if (!${bln_activeCharming} && !${_forced}) /return
+    /if (${Me.Pet.ID}) /return
+
+    | /declare CHARM_Template         string  outer   _Spell|_Gem|_MaxTries|_KeepAlive|_Resist|_RecastTimer
+    | Check the logic in charm (ie: if we can use ancient if enc, etc)
+    :charmTarget
+    /declare i int local ${CHARM_Total}
+    /for i  1 to ${CHARM_Total}
+        /call TrueTarget ${_targetID}
+        | Trigger Check (triggers are stored as strings with $ replaced with #. Run this through a replace and check);
+		| This is usually a complex string such as CHARM_1_Trigger=(!${Target.Maloed.ID} || ${Target.Buff[${DEBUFF_1_Spell}].Duration.TotalSeconds} < 30)
+		/if (!${Bool[${CHARM_${i}_Trigger.Replace[#,$]}]}) {
+			/echo \ar ${CHARM_${i}_Spell} Failed use Check ${CHARM_${i}_Trigger}
+			/goto :nextCharm
+		}
+        | Checks passed, check if the spell is memorized. Skip if not
+		:charmSpellMemorized
+			/call chkSpellMemorized "${CHARM_${i}_Spell}" ${_forced} ${CHARM_${i}_Gem}
+        :charmSpellReadyWait 
+			| If this is a forced cast, wait for the spell to be ready
+			/if ((!${Me.SpellReady[${CHARM_${i}_Spell}]} && ${_forced}) || (${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]})) {
+				/delay 2
+				/goto :charmSpellReadyWait
+			} 
+        :charmCast
+			/echo \agCastDebuff OnTarget:\ao"${CHARM_${i}_Spell}" \awID:\ay${_targetID}  \awisNamed:\ay${isNamed}  \awforcing?:\ay${_forced}
+			/call TrueTarget ${_targetID}
+			/varset debuffDuration ${Spell[${CHARM_${i}_Spell} ].Duration.TotalSeconds}
+			/if (${Me.Class.ShortName.Equal[BRD]}) {
+				/call MQ2Medley SONG "${CHARM_${i}_Spell}" ${_targetID} TRUE
+				/docommand /${cmdChannel} << ${Target.Name} >> ${CHARM_${i}_Spell} 
+				/echo \ag ${CHARM_${i}_Spell}   : DELAYING for \ay${debuffDuration}s \agrefresh	
+			} else {
+				/call CastCharm "${CHARM_${i}_Spell}" ${CHARM_${db}_Gem} ${CHARM_${i}_MaxTries} ${Target.ID} ${_forced}
+			}    
+    :nextCharm
+        /call RunRaidEvents
+        /next i
+    :return 
+    /if (${Me.Pet.ID} && ${Me.Pet.Target.ID} != ${_attackID} && ${_attack}) {
+        /echo \awEngaging Target(\ag${int_targetID}\aw) with Charmed Pet \ag${Me.Pet.Name}! 
+        /shout Engaging Target(${int_targetID}) with Charmed Pet ${Me.Pet.Name}! 
+        /call EngageTarget ${int_targetID}
+    } 
+/return
+    
+Sub CastCharm(string _charm, string _gem, int _maxTries, int _targetID, bool _forced)
+    /echo \aoCastCharm \aw_spell: \ag${_charm}\aw, _gem: \ag${_gem}\aw, _maxTries: \ag${_maxTries}\aw, _targetID: \ag${_targetID}\aw, _forced: \ag${_forced}
+	/declare	try		int		local	0
+	/declare    tgtID   int     local ${_targetID}
+	/declare 	rslt	string  local
+
+    /if (!${Target.ID} || (${Target.ID}  && (${Target.ID} != ${_targetID}))) {
+		/echo \aoWRONG TARGET\aw Re-target ${Spawn[npc id ${_targetID}]}(${_targetID})
+		/call TrueTarget ${_targetID}
+	} 
+
+    /declare 	tgtName string  local ${Target.CleanName}
+    :AttemptCharm 
+        /echo \aoAttempting Charm: \aw${_charm} on \ao${Spawn[id ${_targetID}].Name}
+		|/call chkTargetStatus
+		/if (${_targetID} == 0 && !${_forced}) {
+			/echo \ar Charm Failure\aw Target Already Dead
+			/varset rslt TARGET_ALREADY_DEAD
+			/goto :CharmFailure
+		}
+		|pre-check before attempt
+		/if (${Target.PctHPs} == 0 || !${Target.ID} || (${Target.ID} != ${tgtID}) || ${Target.Name.Find['s_corpse']} || ${Target.Type.Equal[corpse]} || ${Target.Type.Equal[pc]}) {
+			/echo \ar Charm Failure\aw Target Error
+			/varset rslt TARGET_ERROR
+			/goto :CharmFailure
+		}
+		/if (${try} > ${_maxTries}) {
+			/echo \ar Charm Failure\aw Max Tries reached
+			/varset rslt MAX_TRIES
+			/goto :CharmFailure
+		}				
+
+		|attempt
+		/call MQ2Cast "${_charm}" ${_gem} 5s
+		/varset rslt ${Macro.Return}
+		/varcalc try ${try}+1
+	
+		|handle result
+        /if (${rslt.Equal[CAST_RESIST]})        /goto :CharmShield
+		/if (${rslt.Equal[CAST_OUTOFRANGE]}) 	/goto :CharmFailure
+		/if (${rslt.Equal[CAST_OUTOFMANA]}) 	/goto :CharmFailure
+		/if (${rslt.Equal[CAST_NOTHOLD]}) 		/goto :CharmFailure
+		/if (${rslt.Equal[CAST_INVULNERABLE]}) 	/goto :CharmFailure
+		/if (${rslt.Equal[CAST_NOTARGET]}) 		/goto :CharmFailure
+		/if (${rslt.Equal[CAST_IMMUNE]}) 		/goto :CharmFailure
+		/if (${rslt.Equal[CAST_SUCCESS]}) 		/goto :CharmFailure
+		|retry
+		/goto :AttemptDebuff
+
+    :CharmShield 
+        /dge war /shield ${Me.Name}
+
+    :CharmFailure
+        /dgt CHARM_FAILURE::[${_charm}] ! ${tgtName} (result:${rslt})
+        /goto :return
+    :CharmSuccess
+        /dgt CHARM_SUCCESS::[${_charm}] -> ${tgtName} (try:${try})
+/return
+
+| Reloads entire charm lineup from INI
+| Note the method addSpellToLineup is found in the xiris_casting.inc
+Sub CreateCharmLineup
+    /declare i                      int     local
+    | Charms
+    /declare CHARM_Total            int     outer   ${Ini[INI_CHAR,CHARM,CHARM_Total,0]}
+    /declare CHARM_ChainCharming    bool    outer   FALSE       
+
+    /if (${Bool[${CHARM_Total}]}) {
+        /for i 1 to ${CHARM_Total}
+            /call addSpellToLineup CHARM ${i} ${Ini[INI_CHAR,CHARM,CHARM_${i}]} 
+            /declare CHARM_${i}_Trigger 	string	outer	${Ini[INI_CHAR,CHARM,CHARM_${i}_Trigger,#{Bool[1]}]}
+            /declare CHARM_${i}_Type  		string	outer	${Ini[INI_CHAR,CHARM,CHARM_${i}_Type,NORMAL]}
+    }
+
 
 Sub xbot_initialize_charming
     /echo \ao xbot_initialize_charming
     /call InitEvents_Charm
 
     |-- Charm Spell(s)
-    /declare bln_doCharm            bool    outer   ${Ini[INI_CHAR,Charm,bln_doCharm,FALSE]}
-    /declare bln_activeCharming     bool    outer   FALSE
+    /declare bln_useCharm           bool    outer   ${Ini[INI_CHAR,Charm,UseCharm,FALSE]}
+    /declare bln_activeCharming     bool    outer   TRUE
 
     /declare str_charm              string  outer   ${Ini[INI_CHAR,Charm,Charm_Spell,NULL]}
     /declare int_charmGem           int     outer   ${Ini[INI_CHAR,Charm,Charm_Gem,7]}    
     /declare int_charmMinLevel      int     outer   ${Ini[INI_CHAR,Charm,Charm_MinLevel,46]}
     /declare int_charmMaxLevel      int     outer   ${Ini[INI_CHAR,Charm,Charm_MaxLevel,69]}
+
+    /declare bln_useAncientCharm            bool    outer   ${Ini[INI_CHAR,Charm,UseAncientCharm,FALSE]}
+    /declare str_ancientCharm               string  outer   ${Ini[INI_CHAR,Charm,AncientCharm_Spell,Ancient Voice of Muram]}
+    /declare int_ancientCharmGem            int     outer   ${Ini[INI_CHAR,Charm,AncientCharm_Gem,7]}    
+    /declare int_ancientCharmMinLevel       int     outer   ${Ini[INI_CHAR,Charm,AncientCharm_MinLevel,46]}
+    /declare int_ancientCharmMaxLevel       int     outer   ${Ini[INI_CHAR,Charm,AncientCharm_MaxLevel,69]}
+
+    /declare timer_ancientCharmActive       timer   outer   1.5m
+    /declare timer_ancientCharmRefresh      timer   outer   2m
+
+    |-- Template
+    /declare CHARM_Template         string  outer   _Spell|_Gem|_MaxTries|_KeepAlive|_Resist|_RecastTimer
 /return 

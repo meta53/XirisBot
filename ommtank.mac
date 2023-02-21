@@ -32,25 +32,6 @@ Sub Main(string _type, string _tankPoint)
 
 	:ActiveLoop
 		/doevents
-		|------
-		| NPC/OMM Kills
-		|------
-
-		/varcalc markSeconds ${timer_mark_ae}/10
-		/echo timer: ${timer_mark_ae} seconds: ${markSeconds}
-		
-		| Mark of Death Run away!
-		/if (${markSeconds} <= 5 && !${bln_announcedRetreat}) {
-			/if (!${timer_announce_retreat}) /call commandRetreat
-		} 
-		
-		| Kill OMM
-		/if (${markSeconds} > 5) {
-			/if (!${timer_announce_kill}) /call commandAttack
-		}
-
-		/doevents
-		/call getAggro
 	/goto :ActiveLoop
 /return
 
@@ -63,26 +44,9 @@ Sub EVENT_OMMGaze
 
 
 
-Sub commandRetreat
-	/echo \ar${timer_mark_ae} ${markSeconds}s \awuntil OMM AE, \aoRETREAT
-	/rs OMMRetreat ${markSeconds}
-	/varset bln_announcedRetreat 	TRUE
-	/varset bln_announcedKill		FALSE
-	/varset timer_announce_retreat 50s
-/return 
-
-
-Sub commandAttack
-	/if (!${SpawnCount[npc guard]}) /rs OMMKill ${markSeconds}
-	/echo \artimer:${timer_mark_ae} seconds${markSeconds}s \awuntil OMM AE  (no guards), \agKILLOMM
-	/varset bln_announcedRetreat  FALSE
-	/varset bln_announcedKill	  TRUE
-	/varset timer_announce_kill 10s
-/return
-
-
 Sub Event_OMMEngage
 	/echo \aoEngaging OMM
+	/varset bln_OMMEngaged TRUE
 	:OMMTarget
 	/if (!${Target.ID}) {
 		/target Overlord
@@ -90,13 +54,13 @@ Sub Event_OMMEngage
 	}
 	/if (!${Target.Name.Find[Overlord]}) {
 		/echo \ar OMM not targetted. Try that again!
-		/return
+		/goto :OMMTarget
 	}
 	/if (${Target.Name.Find[Overlord]} && !${Target.Distance3D} > 100) {
 		/echo \ar OMM out of Range. Try that again!
-		/return
+		/goto :OMMTarget
 	}
-    /if (${Me.CombatAbilityReady[Stonewall Discipline]})  /doability "Stonewall Discipline"
+    |/if (${Me.CombatAbilityReady[Stonewall Discipline]})  /doability "Stonewall Discipline"
     /delay 5
 	/echo Hammering aggro
 	/if (${Me.CombatAbilityReady[Ancient: Chaos Cry]}) /doability "Ancient: Chaos Cry"

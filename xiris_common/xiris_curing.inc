@@ -714,6 +714,7 @@ Sub xbot_initialize_curing
 	/declare    str_myCurer				string	outer 	NULL
 	/declare	timer_cure_request		timer   outer
 	/declare  	bln_useCures			bool    outer   TRUE
+	/declare 	timer_cureCheck			timer 	outer 	10s
 
 	| Temporary work around
 	/if (!${Defined[bln_jelvanEngaged]}) /declare bln_jelvanEngaged bool outer FALSE

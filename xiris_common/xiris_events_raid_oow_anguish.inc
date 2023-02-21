@@ -52,14 +52,8 @@ Sub InitEvents_OOW_Anguish
 	/if (!${Defined[bln_amvEngaged]}) 		/declare bln_amvEngaged	   bool outer FALSE
 	/if (!${Defined[bln_OMMEngaged]}) 		/declare bln_OMMEngaged    bool outer FALSE
 
-	/declare eventTarget	   string outer JELVAN
+	/declare eventTarget	   	string outer NULL
 	
-	/declare timer_hanvar_ae   timer outer 0
-	/declare timer_hanvarDebuff timer outer 30s
-
-	/declare jelvanTarget 	   string outer Tantho
-	/declare jelvanResists     string outer Tanthi
-
 	/call RegisterRaidEvents Events_OOW_Anguish 15
 
 
@@ -98,9 +92,9 @@ Sub Events_OOW_Anguish
 	}
 
 	| OMM Events
-	/if (${Bool[${SpawnCount[npc Overlord]}]} && ${Spawn[npc Overlord].Distance3D} < 300) {
+	|/if ((${Bool[${SpawnCount[npc Overlord]}]} && ${Spawn[npc Overlord].Distance3D} < 600) || ${Zone.ShortName.Equal[thundercrest]}) {
 		/call chkOMMEvents
-	} 
+	|} 
 
 /return 
 
@@ -120,6 +114,8 @@ Sub Event_TureRampOn
 		/delay 10
 		/call chkNeedCure
 	} else /if (${Me.Class.ShortName.Equal[NEC]} || ${Me.Class.ShortName.Equal[MAG]}) {
+		/pet hold on
+		/pet back off
 		/pet hold on
 		/pet back off
 	}
@@ -311,6 +307,9 @@ Sub Event_HanvarStart
 Sub Event_HanvarSetup
 	/echo Hanvar Setup
 	/call SetResistTypes Cold,Poison,Magic
+	/declare timer_hanvar_ae   	timer outer 0
+	/declare timer_hanvarDebuff timer outer 30s
+
 	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
 		/nav wp hanvarSafe
 	} else /if (${str_classArchetype.Equal[CASTER]} || ${Me.Class.ShortName.Equal[SHM]} ||  ${Me.Class.ShortName.Equal[DRU]}) {
@@ -491,28 +490,55 @@ Sub Event_GazeYou
 	/echo \arGAZE OF MATA MURAM on ME!
 	/echo \a-w Clicking \agMirrored Mask
 	/if (!${FindItem[Mirrored Mask].ID}) {
-		/rs NO MIRRORED MASK! WE ARE DOOOOMED!
+		/shout NO MIRRORED MASK! WE ARE DOOOOMED!
 	} else {
+		
+		:gazeCastWait
+		/if (${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]}) {
+			/echo \arCasting, waiting to stop, then click!
+			/delay 5
+			/goto :gazeCastWait
+		}
+		/echo \ao Mask in Slot\aw ${FindItem[Mirrored Mask].InvSlot}
+		/if (${FindItem[Mirrored Mask].InvSlot} != 3) {
+			/echo \ag Swapping Mask to Face
+			/exchange "Mirrored Mask" face
+			/delay 10
+		}
 		/if (${Me.Class.ShortName.Equal[BRD]}) {
-		/call MQ2Medley ITEM "Mirrored Mask" ${Me.ID} TRUE
-	} else {
-		/if (!${Defined[interruptFlag]}) /declare interruptFlag bool outer FALSE	
-		/if (${Bool[${Me.Casting.ID}]}) /call Interrupt
-		/call MQ2Cast "Mirrored Mask" 
+			/echo \ar Clicking Mirrored Mask
+			/shout Clicking my Mirrored Mask
+			|/if (!${Defined[interruptFlag]}) /declare interruptFlag bool outer FALSE
+			|/medley queue "Mirrored Mask" -interrupt
+			/call MQ2Medley ITEM "Mirrored Mask" ${Target.ID} TRUE
+		} else {
+			/shout Clicking my Mirrored Mask
+			/if (!${Defined[interruptFlag]}) /declare interruptFlag bool outer FALSE	
+			/if (${Bool[${Me.Casting.ID}]}) /call Interrupt
+			/call MQ2Cast "Mirrored Mask" ITEM
+		}
+		/delay 20
+		/call RestoreFaceSlot
+		/doevents flush GazeYou
 	}
-	}
-	
-
 /return 
 
 Sub Event_GazeBurst
+	/echo \arGAZE BURST \aw${Time.Time24}
 /return 
 
 Sub Event_GazeDone
+/echo \arGAZE DONE \aw${Time.Time24}
 /return
 
 Sub Event_OMMStart 
 	/varset bln_OMMEngaged TRUE 
+	/if (${${Me.Class.ShortName.Equal[ENC]}}) /varset bln_activeCharming TRUE
+	/if (${${Me.Class.ShortName.Equal[WAR]}}) {
+		/varset bln_offTank TRUE
+		/varset int_offtankRadius 200
+	}
+
 	/varset eventTarget Overlord
 	/doevents flush OMMStart
 /return
@@ -521,12 +547,52 @@ Sub chkOMMEvents
 	/doevents OMMStart
 	/doevents GazeYou
 	/doevents GazeBurst
-	/doevents GazeDone
-	/if (${bln_OMMEngaged} || ${Spawn[npc Overlord].Distance3D} < 200) {
+	/doevents GazeDone 
+	/if (${Me.Class.ShortName.Equal[ENC]} || ${Me.Class.ShortName.Equal[CLR]} || ${Me.Class.ShortName.Equal[SHM]} || ${Me.Class.ShortName.Equal[PAL]} || ${Me.Class.ShortName.Equal[WAR]}) {
 		/if (${Me.Class.ShortName.Equal[CLR]} || ${Me.Class.ShortName.Equal[SHM]}  && !${bln_chChainMember}) /call chkGroupMarkedForDeath 
 		/if (${Me.Class.ShortName.Equal[PAL]}) /call chkSelfMarkedForDeath
+		/if (${Me.Class.ShortName.Equal[ENC]}) /call chkOMMCharm
+		/if (${Me.Class.ShortName.Equal[WAR]}) /call chkOMMAdds
 	}
+
+
 /return 
+
+
+Sub chkOMMCharm 
+	/if (!${Me.Pet.ID}) {
+		/if (${SpawnCount[npc Coerced]}) {
+			/echo \agCoerced Charm!
+			/shout Attempting Charm!
+			/if (${NearestSpawn[npc Coerced].Distance3D} < 200 && ${NearestSpawn[npc Coerced].LineOfSight}) {
+				/echo \ar CHARMING ${NearestSpawn[npc Coerced]} (${NearestSpawn[npc Coerced].ID}) ${NearestSpawn[npc Coerced].Distance3D}
+				/call CharmNPC ${NearestSpawn[npc Coerced].ID} TRUE TRUE ${Spawn[npc Overlord].ID}
+
+			}
+		}
+	} else {
+		/if (${Me.Pet.ID} && ${Me.Pet.Target.ID} != ${Spawn[npc Overlord].ID}) {
+			/call TrueTarget ${Spawn[npc Overlord].ID}
+			/squelch /pet attack
+		}
+	}
+/return
+
+Sub chkOMMAdds 
+	/call chkOffTanking
+	/declare i int local 
+	/for i 1 to ${SpawnCount[npc Coerced]}
+		/call TrueTarget ${NearestSpawn[${i}, npc Coerced].ID}
+		/if (${Me.TargetOfTarget.Class.ShortName.Equal[WAR]} || ${Me.TargetOfTarget.Class.ShortName.Equal[PAL]} || ${Me.TargetOfTarget.Class.ShortName.Equal[SHD]}) /goto :nextTarget
+		/if ((${Target.Distance3D} < ${int_offtankRadius})) {
+			/call aggroByID ${Target.ID}
+		} else {
+			/squelch /target clear
+		}
+
+	/goto :nextTarget	
+	/next i
+/return
 
 
 

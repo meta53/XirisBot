@@ -114,6 +114,7 @@ Sub CastDebuffsOnTarget(int _targetID, bool _forced)
 
 		| Trigger Check (triggers are stored as strings with $ replaced with #. Run this through a replace and check);
 		| This is usually a complex string such as DEBUFF_1_Trigger=(!${Target.Maloed.ID} || ${Target.Buff[${DEBUFF_1_Spell}].Duration.TotalSeconds} < 30)
+		/echo \aw ${DEBUFF_${db}_Trigger} ${DEBUFF_${db}_Trigger.Replace[#,$]}
 		/if (!${Bool[${DEBUFF_${db}_Trigger.Replace[#,$]}]}) {
 			/echo \ar ${DEBUFF_${db}_Spell} Failed use Check ${DEBUFF_${db}_Trigger}
 			/goto :nextDB
@@ -138,7 +139,7 @@ Sub CastDebuffsOnTarget(int _targetID, bool _forced)
 				/docommand /${cmdChannel} << ${Target.Name} >> ${DEBUFF_${db}_Spell} 
 				/echo \ag ${DEBUFF_${db}_Spell}   : DELAYING for \ay${debuffDuration}s \agrefresh	
 			} else {
-				/call CastDebuff "${DEBUFF_${db}_Spell}" ${DEBUFF_${db}_Gem} ${DEBUFF_${db}_MaxTries} ${Target.ID} ${_forced}
+				/call CastDebuff "${DEBUFF_${db}_Spell}" ${DEBUFF_${db}_Gem} ${DEBUFF_${db}_MaxTries} ${_targetID} ${_forced}
 			}
 	:nextDB
 		/call RunRaidEvents
@@ -199,11 +200,11 @@ Sub CastDebuff(string _debuff, string _gem,  int _maxTries, int _targetID, bool 
 		|retry
 		/goto :AttemptDebuff
 	:DebuffFailure
-		/dgt DEBUFF_FAILURE::[${_debuff}] ! ${tgtName} (${rslt})
-	/goto :return
+		/dgt DEBUFF_FAILURE::[${_debuff}] ! ${tgtName} (result:${rslt})
+		/goto :return
 	
 	:DebuffSuccess
-	/dgt DEBUFF_SUCCESS::[${_debuff}] -> ${tgtName} (${try})
+		/dgt DEBUFF_SUCCESS::[${_debuff}] -> ${tgtName} (try:${try})
 :return
 	/varset str_debuffedTargets "${str_debuffedTargets},${_targetID}"
 /return

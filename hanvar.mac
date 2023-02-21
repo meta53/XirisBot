@@ -1,7 +1,9 @@
 #Turbo 20
 Sub Main 
     | Move Clerics to Heal point
-    /dge clr /warp wp hanvarcleric
+    /dge priest /nav wp hanvarcleric
+    /dge melee /nav wp hanvarsafe
+    /dge caster /nav wp hanvarsafe
 
     | Set Xirin (OT-1) Healing
     /dt Xorael changeMT Xirin
