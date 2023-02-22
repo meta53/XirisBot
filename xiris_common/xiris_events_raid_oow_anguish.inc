@@ -590,7 +590,7 @@ Sub chkOMMAdds
 			/squelch /target clear
 		}
 
-	/goto :nextTarget	
+	:nextTarget	
 	/next i
 /return
 
