@@ -284,6 +284,7 @@ Sub MQ2Cast(string spellName,string spellType,timer giveUpTimer,string mySub,str
 		/if (${Cast.Result.Equal[CAST_NOTREADY]}) 		/goto :CastEnd
 		/if (${Cast.Result.Equal[CAST_NOCHARM]})		/goto :CastEnd
 		/if ( !${interruptFlag} && ${mySub.Length} ) 	/call ${mySub}
+		
 		/goto :cast_spell_pending
 	} else /if ( ${Cast.Result.Equal[CAST_RESIST]} ) {
 		/if ( ( ${FindItem[${spellName}].ID} && ${giveUpTimer} && !${FindItem[${spellName}].Timer} ) || ( ${Spell[${spellName}].ID} && ${giveUpTimer} > ${Spell[${spellName}].RecoveryTime} ) ) /goto :cast_spell
@@ -295,9 +296,9 @@ Sub MQ2Cast(string spellName,string spellType,timer giveUpTimer,string mySub,str
 
 
 Sub Interrupt
-	/echo \awInterrupting Cast! \ao${Time.Time24}
+	|/echo \awInterrupting Cast! \ao${Time.Time24}
 	/if (!${Defined[interruptFlag]}) /declare interruptFlag bool outer TRUE
-	/interrupt
+	/stopcast
 /return
 
 

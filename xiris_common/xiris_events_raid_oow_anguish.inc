@@ -92,9 +92,9 @@ Sub Events_OOW_Anguish
 	}
 
 	| OMM Events
-	|/if ((${Bool[${SpawnCount[npc Overlord]}]} && ${Spawn[npc Overlord].Distance3D} < 600) || ${Zone.ShortName.Equal[thundercrest]}) {
+	/if ((${Bool[${SpawnCount[npc Overlord]}]} && ${Spawn[npc Overlord].Distance3D} < 600)) {
 		/call chkOMMEvents
-	|} 
+	} 
 
 /return 
 
