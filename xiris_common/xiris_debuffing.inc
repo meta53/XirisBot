@@ -114,9 +114,10 @@ Sub CastDebuffsOnTarget(int _targetID, bool _forced)
 
 		| Trigger Check (triggers are stored as strings with $ replaced with #. Run this through a replace and check);
 		| This is usually a complex string such as DEBUFF_1_Trigger=(!${Target.Maloed.ID} || ${Target.Buff[${DEBUFF_1_Spell}].Duration.TotalSeconds} < 30)
-		/echo \aw ${DEBUFF_${db}_Trigger} ${DEBUFF_${db}_Trigger.Replace[#,$]}
+		|/echo \ag ${DEBUFF_${db}_Trigger} 
+		|/echo \ao ${DEBUFF_${db}_Trigger.Replace[#,$]}
 		/if (!${Bool[${DEBUFF_${db}_Trigger.Replace[#,$]}]}) {
-			/echo \ar ${DEBUFF_${db}_Spell} Failed use Check ${DEBUFF_${db}_Trigger}
+			/echo \ay ${DEBUFF_${db}_Spell} Failed use Check ${DEBUFF_${db}_Trigger}
 			/goto :nextDB
 		}
 
@@ -131,7 +132,7 @@ Sub CastDebuffsOnTarget(int _targetID, bool _forced)
 			} 
 
 		:debuffCast
-			/echo \agCastDebuff OnTarget:\ao"${DEBUFF_${db}_Spell}" \awID:\ay${_targetID}  \awisNamed:\ay${isNamed}  \awforcing?:\ay${_forced}
+			
 			/call TrueTarget ${_targetID}
 			/varset debuffDuration ${Spell[${DEBUFF_${db}_Spell} ].Duration.TotalSeconds}
 			/if (${Me.Class.ShortName.Equal[BRD]}) {
@@ -153,6 +154,7 @@ Sub CastDebuffsOnTarget(int _targetID, bool _forced)
 |-- Cast a Specific Debuff spell on the target
 Sub CastDebuff(string _debuff, string _gem,  int _maxTries, int _targetID, bool _forced)
 	/echo \aoCastDebuff \aw_spell: \ag${_debuff}\aw, _gem: \ag${_gem}\aw, _maxTries: \ag${_maxTries}\aw, _targetID: \ag${_targetID}\aw, _forced: \ag${_forced}
+	
 	/declare	try		int		local	0
 	/declare    tgtID   int     local ${_targetID}
 	/declare 	rslt	string  local
@@ -164,7 +166,7 @@ Sub CastDebuff(string _debuff, string _gem,  int _maxTries, int _targetID, bool 
 	
 	/declare 	tgtName string  local ${Target.CleanName}
 	:AttemptDebuff
-		/echo \aoAttempting Debuff: \aw${_debuff} on \ao${Spawn[id ${_targetID}].Name}
+		|/echo \aoAttempting Debuff: \aw${_debuff} on \ao${Spawn[id ${_targetID}].Name}
 		|/call chkTargetStatus
 		/if (${_targetID} == 0 && !${_forced}) {
 			/echo \ar Debuff Failure\aw Target Already Dead

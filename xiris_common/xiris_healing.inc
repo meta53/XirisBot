@@ -452,6 +452,7 @@ Sub listCelestialRegenCapable
 ----------------------------
 Check|Set the current heal spell
 Note: this now checks to see what healing mode we are in.
+Note: targetType is a key into the actual spell to set, ie: tank, group, self
 ----------------------------  
 **|	
 Sub setHealingSpell(int _hp, string _targetType, int _range, string _targetName, string _targetID)
@@ -465,33 +466,41 @@ Sub setHealingSpell(int _hp, string _targetType, int _range, string _targetName,
 	| SELF && MT use same point
 	
 
-	/echo \aoSetHealingSpell \aw${_hp} ${_targetType} ${_range} ${_targetName} ${_targetID} \ag${int_point_${targetType}_frantic} ${int_point_${targetType}_normal} ${int_point_${targetType}_HoT}
-
 	| FRANTIC
 	/if (${_hp} <= ${int_point_${targetType}_frantic}) {
 		/varset str_currentHeal ${str_heal_frantic}
 		/if (${str_healMode.Equal[EFFFICIENT]}) /varset str_currentHeal ${str_heal_frantic_efficient}
 		/echo  \aoFRANTIC \ag(${str_healMode})  \ar${str_currentHeal} \awon \ag ${_targetName}\aw(\ay${_targetID}\aw)
+		/varcalc	int_point_calcStopHeal ${Math.Calc[${int_point_${_targetType}_frantic}*1.2]}
 		/return CASTOK
 	| NORMAL
 	} else /if (${_hp} <= ${int_point_${targetType}_normal}) {
 		/varset str_currentHeal ${str_heal_normal}
 		/if (${str_healMode.Equal[EFFICIENT]}) /varset str_currentHeal ${str_heal_normal_efficient}
-		/echo \aoNORMAL \ag(${str_healMode})   \ay${str_currentHeal} \awon \ag ${_targetName}\aw(\ay${_targetName}\aw)
+		/echo \aoNORMAL \ag(${str_healMode})   \ay${str_currentHeal} \awon \ag ${_targetName}\aw(\ay${_targetID}\aw)
+		/varcalc	int_point_calcStopHeal ${Math.Calc[${int_point_${_targetType}_normal}*1.2]}
 		/return CASTOK
 	| HOT
 	} else /if (${_hp} <= ${int_point_${targetType}_HoT}) {
 		/if (!${use_heal_HoT}) /return CANTUSE
 		/if ((${Me.CurrentMana} < ${Spell[${str_heal_HoT}].Mana})) /return OUTOFMANA
-		/if (${Spawn[id ${memID}].Distance3D} > ${int_range_HoT}) /return OUTOFRANGE
+		/if (${Spawn[id ${_targetID}].Distance3D} > ${int_range_HoT}) /return OUTOFRANGE
 
-		/varset str_currentHeal ${str_heal_HoT}
+		
 		/dquery ${_targetName} -q "Me.SPA[100]"  -o perTick
 		/delay 120 ${DanNet.Q.Received}
-
+		/echo \aoPerTick(\ag${perTick}\ao) \ar< \ag${int_heal_HoT_perTick}
 		/if (${perTick} < ${int_heal_HoT_perTick}) {
-			/echo  \aoHoT \ag(${str_healMode})   \ay${str_currentHeal} \awon \ag ${memName}\aw(\ay${memID}\aw)
+			/varset str_currentHeal ${str_heal_HoT}
+			/echo  \aoHoT \ag(${str_healMode}) \ay${str_currentHeal} \awon \ag ${_targetName}\aw(\ay${_targetID}\aw)
+			/varcalc	int_point_calcStopHeal ${Math.Calc[${int_point_${_targetType}_HoT}*1.2]}
 			/return CASTOK
+		} else {
+			/varset str_currentHeal ${str_heal_normal}
+			/if (${str_healMode.Equal[EFFICIENT]}) /varset str_currentHeal ${str_heal_normal_efficient}
+			/echo  \aoHoT FAILED - ALREADY HAS HoT! \ag(${str_healMode}) \ag ${_targetName}\aw(\ay${_targetID}\aw)
+			/varcalc	int_point_calcStopHeal ${Math.Calc[${int_point_${_targetType}_normal}*1.2]}
+			/return ALREADY_HOT
 		}
 	}
 
@@ -574,8 +583,8 @@ Sub healSELF
  ----------------------------
  Healing Logic for the Group
  Determines which spell to cast, then casts it.
- 	int_point_group_HoT=95 
-	int_point_group_normal=65
+ 	int_point_group_HoT=90 
+	int_point_group_normal=70
 	int_point_group_frantic=40
 	arr_groupHP[${j},1] ${Group.Member[${i}].PctHPs}
 	arr_groupHP[${j},2] ${Group.Member[${i}].Distance3D}
@@ -587,13 +596,14 @@ Sub healGRP
 	/declare 	i 			 	int local	0
 	/declare    n				int local   1
 	/declare 	int_inRange		int local 	0
-	/varcalc	int_point_calcStopHeal ${Math.Calc[${int_point_group_normal}*1.1]}
+	/varcalc	int_point_calcStopHeal ${Math.Calc[${int_point_group_normal}*1.2]}
 	/declare 	memName 		string local 
-	/declare 	memID			int  local 0
+	/declare 	memID			string  local 0
 
 	/declare    franticRange    int local ${int_range_frantic}
 	/declare    normalRange  	int local ${int_range_normal}
 	/declare 	perTick			int local 0
+	/declare    castStatus		string local 
 
 	/if (${str_healMode.Equal[EFFICIENT]}) {
 		/varset franticRange	${int_range_frantic_efficient}
@@ -638,24 +648,34 @@ Sub healGRP
 	} 
 
 	:CastSingleTargetHeals
-	| Note the worst hurt will be the first in the list, and then run the heal checks again
+	| Note the worst hurt will be the first in the list, and then run the heal check with N incremented by 1
 	| This is so we heal 1 person, check tank, self, heal 1 person, check tank, self.
 	| The only time we skip to another person in group is if they are out of frantic range.
 	| Replaced the for loop with MQ2WorstHurt on 01/31/23
 	
 	/varset memID ${Spawn[${WorstHurt[group,${n},200,FALSE]}].ID}
-	/varset memName ${Spawn[id ${memID}].Name}
-
+	/varset memName ${Spawn[pc id ${memID}].Name}
+	
 	| not pet and corpse
 	/if (${Spawn[id ${memID}].Type.NotEqual[Pet]} && ${Spawn[id ${memID}].Type.NotEqual[Corpse]} && ${Spawn[id ${memID}].PctHPs} <= ${int_point_group_HoT}) {
 		| hp checks
+		|/echo \awCastSingleTargetHeals  \ag ${memName} \aw(\ay${memID}\aw)
 		|(int _hp, string _targetType, int _range, string _targetName, string _targetID)
-		/call setHealingSpell ${Spawn[id ${memID}].PctHPs} GROUP ${Spawn[id ${memID}].Distance3D} ${memName} ${memID}
-		/if (${Macro.Return.Equal[CASTOK]}) {
+		/call setHealingSpell ${Spawn[id ${memID}].PctHPs} group ${Spawn[id ${memID}].Distance3D} ${memName} ${memID}
+		/varset castStatus ${Macro.Return}
+		/echo \ao${castStatus}: \ag${str_currentHeal}
+		/if (${castStatus.Equal[CASTOK]}) {
+			/echo \awTrying to cast: \ag ${memName} \aw(\ay${memID}\aw) "${str_currentHeal}"
 			/call healCast ${memID} ${memName} "${str_currentHeal}" FALSE 
-		} else /if (${Macro.Return.Equal[OUTOFRANGE]}) {
-			/echo \ar${memName} is out of FRANTIC range! \aoIncrementing N, and checking next most damaged.
-			/varset n 2
+			/goto :return
+		} else /if (${castStatus.Equal[OUTOFRANGE]}) {
+			/varcalc n ${n}+1
+			/echo \ar${memName} OUTOFRANGE! \aoIncrementing N(=>${n}), and checking next most damaged.
+			/goto :CastSingleTargetHeals
+		} else {
+			/varcalc n ${n}+1
+			/echo \ar${memName} ${castStatus}! \aoIncrementing N(=>${n}), and checking next most damaged.
+			
 			/goto :CastSingleTargetHeals
 		}
 	}
@@ -698,8 +718,11 @@ Sub healCast(int _id, string _name, string _spell, bool _isGroup)
 		/echo \arHEAL NAME is NULL || ID is \ao${_id}\ar something is fucked;
 		/return
 	}
-	|/echo \aoHealCast \ayTarget:\ag${_name}(${_id}) \aydist: \ag${Target.Distance} \aycHP: \ag${Spawn[pc ${_name}].PctHPs} \aycSH: \ag${int_point_calcStopHeal} \ayspell: \ag"${_spell}"
-	/if (${_isGroup} || (${Spawn[pc ${_name}].PctHPs} < ${int_point_calcStopHeal} && (${Me.CurrentMana} > ${Spell[${_spell}].Mana}))) {
+	/echo \aoHealCast \ay:IsGroup:\ag${_isGroup} \ayTarget:\ag${_name}(${_id}) \aydist: \ag${Target.Distance} \aycHP: \ag${Spawn[pc ${_name}].PctHPs}\ao < \aycSH: \ag${int_point_calcStopHeal} \ayspell: \ag"${_spell}" \ayMyMana:\ag ${Me.CurrentMana}\ao > \ag${Spell[${_spell}].Mana}
+	/echo (hp:\ag${Spawn[pc ${_name}].PctHPs} \ao< \ag${int_point_calcStopHeal})?
+	/echo (${Me.CurrentMana} > ${Spell[${_spell}].Mana})
+	/if ((${_isGroup} || (${Spawn[pc ${_name}].PctHPs} < ${int_point_calcStopHeal}) && (${Me.CurrentMana} > ${Spell[${_spell}].Mana}))) {
+		/echo casting?
 		/if (${Target.ID} != ${_id}) /call TrueTarget ${_id}
 		/call chkSpellMemorized "${_spell}" TRUE 2
 		/call MQ2Cast "${_spell}" gem2 1s chkHP

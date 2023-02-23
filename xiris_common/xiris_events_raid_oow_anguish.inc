@@ -506,10 +506,7 @@ Sub Event_GazeYou
 			/delay 10
 		}
 		/if (${Me.Class.ShortName.Equal[BRD]}) {
-			/echo \ar Clicking Mirrored Mask
 			/shout Clicking my Mirrored Mask
-			|/if (!${Defined[interruptFlag]}) /declare interruptFlag bool outer FALSE
-			|/medley queue "Mirrored Mask" -interrupt
 			/call MQ2Medley ITEM "Mirrored Mask" ${Target.ID} TRUE
 		} else {
 			/shout Clicking my Mirrored Mask

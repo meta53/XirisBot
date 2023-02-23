@@ -202,7 +202,7 @@ Sub MQ2Medley(string _type, string _token, int _targetID, bool _interrupt)
 
 
 Sub MQ2Cast(string spellName,string spellType,timer giveUpTimer,string mySub,string MQ2Feature1,string MQ2Feature2,string MQ2Feature3,string MQ2Feature4,string MQ2Feature5,string MQ2Feature6,string MQ2Feature7,string MQ2Feature8)
-	/echo \aoMQ2Cast \ag${spellName} \aw ${spellType}
+	|/echo \aoMQ2Cast \ag${spellName} \aw ${spellType}
 	/if ( !${Defined[spellType]} )   /declare spellType   string local NULL
 	/if ( !${Defined[giveUpTimer]} ) /declare giveUpTimer timer  local 0
 	/if ( !${Defined[MQ2Feature1]} ) /declare MQ2Feature1 string local
