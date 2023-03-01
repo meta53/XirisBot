@@ -77,13 +77,60 @@ Sub SlowTarget(string _resist)
 Sub chkDebuffsOnSingleTarget(int _targetID)
 	/if (!${DEBUFF_Total} || !${_targetID} || ${Target.Name.Find[s_corpse]}) /return
 	/if (!${Spawn[id ${_targetID}].LineOfSight}) /return
-	/if ((${DEBUFF_Total} == 1 && !${Bool[${DEBUFF_1_Trigger.Replace[#,$]}]})) /return
+	/if (${DEBUFF_Total} == 1 && !${Bool[${DEBUFF_1_Trigger.Replace[#,$]}]}) /return
 	/call CastDebuffsOnTarget ${_targetID} FALSE
+	
 /return
 
 
 |-- Loop through all debuffs, and attempt to cast one at a time
 |   Will check to see if the target already has the debuff and if so has more than 30s left on it
+|**
+**|
+Sub debuffs_trigger
+	|putrid decay
+	/if ((!${Target.Maloed.ID} || ${Target.Maloed.Duration.TotalSeconds} < 30) && ${str_useResistTypes.Find[disease]})
+	|((!#{Target.Maloed.ID} && #{Target.Maloed.Duration.TotalSeconds} < 30) && #{str_useResistTypes.Find[disease]})
+
+	|malos
+	/if (!${Target.Maloed.ID} || ${Target.Maloed.Duration.TotalSeconds} < 30)
+	|(!#{Target.Maloed.ID} && #{Target.Maloed.Duration.TotalSeconds} < 30)
+
+	|turgur
+	/if ((!${Target.Slowed.ID} || ${Target.Slowed.Duration.TotalSeconds} < 10) && ${str_useResistTypes.Find[magic]} && ${Target.Maloed.ID})
+	|((!#{Target.Slowed.ID} || #{Target.Slowed.Duration.TotalSeconds} < 10) && #{str_useResistTypes.Find[magic]} && #{Target.Maloed.ID})
+
+	|balance of discord
+	/if ((!${Target.Slowed.ID} || ${Target.Slowed.Duration.TotalSeconds} < 10) && ${str_useResistTypes.Find[magic]} && ${Target.Maloed.ID})
+	|((!#{Target.Slowed.ID} || #{Target.Slowed.Duration.TotalSeconds} < 10) && #{str_useResistTypes.Find[magic]} && #{Target.Maloed.ID})
+	
+	|howl of tashan
+	/if (!${Target.Tashed.ID} || ${Target.Tashed.Duration.TotalSeconds} < 30)
+	|(!#{Target.Tashed.ID} && #{Target.Tashed.Duration.TotalSeconds} < 30)
+
+	| desolate deeds
+	/if ((!${Target.Slowed.ID} || ${Target.Slowed.Duration.TotalSeconds} < 10) && ${str_useResistTypes.Find[magic]} && ${Target.Maloed.ID})
+	|((!#{Target.Slowed.ID} || #{Target.Slowed.Duration.TotalSeconds} < 10) && #{str_useResistTypes.Find[magic]} && #{Target.Maloed.ID})
+
+	| cripple
+	/if ((!${Target.Crippled.ID} || ${Target.Crippled.Duration.TotalSeconds} < 10) && ${str_useResistTypes.Find[magic]} && ${Target.Maloed.ID} && ${Target.Tashed.ID})
+	|((!#{Target.Crippled.ID} || #{Target.Crippled.Duration.TotalSeconds} < 10) && #{str_useResistTypes.Find[magic]} && #{Target.Maloed.ID} && #{Target.Tashed.ID})
+
+	| sun's corona
+	/if ((!${Target.Buff[${DEBUFF_1_Spell}].ID} && ${Target.Buff[${DEBUFF_1_Spell}].Duration.TotalSeconds} < 20) && ${str_useResistTypes.Find[fire]} && ${Target.Maloed.ID})
+	|((!#{Target.Buff[#{DEBUFF_1_Spell}].ID} && #{Target.Buff[${DEBUFF_1_Spell}].Duration.TotalSeconds} < 20) && #{str_useResistTypes.Find[fire]} && #{Target.Maloed.ID})
+
+	| glacier breath
+	/if ((!${Target.Buff[${DEBUFF_2_Spell}].ID} && ${Target.Buff[${DEBUFF_2_Spell}].Duration.TotalSeconds} < 20) && ${str_useResistTypes.Find[cold]} && ${Target.Maloed.ID})
+	|((!#{Target.Buff[#{DEBUFF_2_Spell}].ID} || #{Target.Buff[#{DEBUFF_2_Spell}].Duration.TotalSeconds} < 20) && #{str_useResistTypes.Find[cold]} && #{Target.Maloed.ID})
+	
+
+	| hungry vines
+	/if ((!${Target.Buff[${DEBUFF_3_Spell}].ID} && ${Target.Buff[${DEBUFF_3_Spell}].Duration.TotalSeconds} < 20) && ${str_useResistTypes.Find[magic]} && ${Target.Maloed.ID} && ${Target.Tashed.ID})
+	|((!#{Target.Buff[#{DEBUFF_3_Spell}].ID} && #{Target.Buff[#{DEBUFF_3_Spell}].Duration.TotalSeconds} < 20) && #{str_useResistTypes.Find[magic]} && #{Target.Maloed.ID} && #{Target.Tashed.ID})
+
+/return
+
 Sub CastDebuffsOnTarget(int _targetID, bool _forced)
 	/if (!${Spawn[id ${_targetID}].LineOfSight}) /return
 	| Check if named, or we are forcing this
@@ -98,8 +145,8 @@ Sub CastDebuffsOnTarget(int _targetID, bool _forced)
 	|-- Mana Check Passed, Check individual debuffs now
 	:debuffTarget
 	/declare	db		int		local	${DEBUFF_Total}
-	/declare 	debuffDuration int local
 	/for db 1 to ${DEBUFF_Total}
+		/call RunRaidEvents
 		:debuffChecks
 
 		| Forcing Check - if this is forced, just cast the damn thing
@@ -114,8 +161,12 @@ Sub CastDebuffsOnTarget(int _targetID, bool _forced)
 
 		| Trigger Check (triggers are stored as strings with $ replaced with #. Run this through a replace and check);
 		| This is usually a complex string such as DEBUFF_1_Trigger=(!${Target.Maloed.ID} || ${Target.Buff[${DEBUFF_1_Spell}].Duration.TotalSeconds} < 30)
-		|/echo \ag ${DEBUFF_${db}_Trigger} 
-		|/echo \ao ${DEBUFF_${db}_Trigger.Replace[#,$]}
+		
+
+		/echo \ag ${DEBUFF_${db}_Trigger} 
+		/echo \ao ${DEBUFF_${db}_Trigger.Replace[#,$]}
+
+		
 		/if (!${Bool[${DEBUFF_${db}_Trigger.Replace[#,$]}]}) {
 			/echo \ay ${DEBUFF_${db}_Spell} Failed use Check ${DEBUFF_${db}_Trigger}
 			/goto :nextDB
@@ -134,16 +185,14 @@ Sub CastDebuffsOnTarget(int _targetID, bool _forced)
 		:debuffCast
 			
 			/call TrueTarget ${_targetID}
-			/varset debuffDuration ${Spell[${DEBUFF_${db}_Spell} ].Duration.TotalSeconds}
 			/if (${Me.Class.ShortName.Equal[BRD]}) {
 				/call MQ2Medley SONG "${DEBUFF_${db}_Spell}" ${_targetID} TRUE
 				/docommand /${cmdChannel} << ${Target.Name} >> ${DEBUFF_${db}_Spell} 
-				/echo \ag ${DEBUFF_${db}_Spell}   : DELAYING for \ay${debuffDuration}s \agrefresh	
 			} else {
 				/call CastDebuff "${DEBUFF_${db}_Spell}" ${DEBUFF_${db}_Gem} ${DEBUFF_${db}_MaxTries} ${_targetID} ${_forced}
 			}
 	:nextDB
-		/call RunRaidEvents
+		/call RunAllEvents
 		/next db
 	:return
 
@@ -240,7 +289,7 @@ Sub xbot_initialize_debuffing
 	|-- Templates
 	/declare DEBUFF_Template			string outer	_Spell|_Use|_Gem|_MaxTries|_NamedOnly|_StartHP|_StopHP|_Resist|_HasCastOnce|_RecastTimer
 	
-	|-- Misc Settings
+	|-- Debuff Settings/Misc
 	/declare str_debuffedTargets		string  outer   NULL
 
 	|-- Return out if not a caster
@@ -249,8 +298,10 @@ Sub xbot_initialize_debuffing
 	|-- Load the debuffs set in the INI file
 	/call CreateDebuffLineup
 
+	|-- Init Events
 	/call InitEvents_Debuffing
 	/echo \awDebuffs: \ag${DEBUFF_Total}
+	
 /return
 
 

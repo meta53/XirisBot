@@ -1,8 +1,11 @@
 #Turbo 20
-#EVENT OMMGaze              "#*#gaze of deadly power focusing on you"
+#EVENT GazeYou              "#*#gaze of deadly power focusing on you"
 #EVENT OMMEngage			"#*#OMMEngage#*#"
 
+#include xiris_common/xiris_spell_routines.inc
+
 Sub Main(string _type, string _tankPoint)
+	/call xbot_initialize_spellRoutines
 	/melee aggro=on
     /melee taunt=on
 	/declare bln_OMMEngaged 		bool 	outer FALSE
@@ -32,14 +35,21 @@ Sub Main(string _type, string _tankPoint)
 
 	:ActiveLoop
 		/doevents
+		/call getAggro
 	/goto :ActiveLoop
 /return
 
 
-Sub EVENT_OMMGaze
+Sub EVENT_GazeYou
+    /beep
+    /delay 5
+    /nav stop
+    /melee reset
     /echo \arGAZE OF MATA MURAM on ME!
 	/echo \a-w Clicking \agMirrored Mask
+    /shout Clicking my Mirrored Mask
     /call MQ2Cast "Mirrored Mask" item
+    /doevents flush GazeYou
 /return
 
 

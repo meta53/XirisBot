@@ -92,7 +92,7 @@ Sub Events_OOW_Anguish
 	}
 
 	| OMM Events
-	/if ((${Bool[${SpawnCount[npc Overlord]}]} && ${Spawn[npc Overlord].Distance3D} < 600)) {
+	/if ((${Bool[${SpawnCount[npc Overlord]}]} && ${Spawn[npc Overlord].Distance3D} < 300)) {
 		/call chkOMMEvents
 	} 
 
@@ -355,29 +355,6 @@ Sub chkHanvarCaster
 		/call TrueTarget ${Me.ID}
 		/casting "Purify Soul" alt
 	}
-
-	/if (${Me.Class.ShortName.Equal[DRU]} && !${timer_hanvarDebuff} && ${Spawn[npc Hanvar].LineOfSight}) {
-		| Check to make sure it's debuffed correctly
-		/call chkDebuffsOnSingleTarget ${Spawn[npc Hanvar].ID}
-		/varset timer_hanvarDebuff 30s
-	}
-
-	/if (${Me.Class.ShortName.Equal[SHM]} && !${timer_hanvarDebuff} && ${Spawn[npc Hanvar].LineOfSight}) {
-		| Check to make sure it's slowed|malod
-		/call chkDebuffsOnSingleTarget ${Spawn[npc Hanvar].ID}
-		/varset timer_hanvarDebuff 30s
-	}
-
-	/if (${Me.Class.ShortName.Equal[ENC]} && !${timer_hanvarDebuff} && ${Spawn[npc Hanvar].LineOfSight}) {
-		| Check to make sure it's slowed|tashed
-		/call chkDebuffsOnSingleTarget ${Spawn[npc Hanvar].ID}
-		/varset timer_hanvarDebuff 30s
-	}
-
-	/if (${Me.Class.ShortName.Equal[NEC]} || ${Me.Class.ShortName.Equal[WIZ]} && ${Target.ID} != ${Spawn[npc Hanvar].ID} && ${Spawn[npc Hanvar].LineOfSight}) {
-		/call TrueTarget ${Spawn[npc Hanvar].ID}
-		/if (${Target.PctHPs} <= 99 && !${bln_engaged}) /call EngageTarget ${Target.ID}
-	} 
 /return
 
 Sub chkHanvarMelee
@@ -494,6 +471,8 @@ Sub Event_GazeYou
 	} else {
 		
 		:gazeCastWait
+		/melee reset
+		/if (${Navigation.Active}) /nav stop
 		/if (${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]}) {
 			/echo \arCasting, waiting to stop, then click!
 			/delay 5
@@ -517,6 +496,8 @@ Sub Event_GazeYou
 		/delay 20
 		/call RestoreFaceSlot
 		/doevents flush GazeYou
+		/call TrueTarget ${Spawn[npc Overlord].ID}
+		/call EngageTarget ${Spawn[npc Overlord].ID}
 	}
 /return 
 
@@ -545,26 +526,31 @@ Sub chkOMMEvents
 	/doevents GazeYou
 	/doevents GazeBurst
 	/doevents GazeDone 
-	/if (${Me.Class.ShortName.Equal[ENC]} || ${Me.Class.ShortName.Equal[CLR]} || ${Me.Class.ShortName.Equal[SHM]} || ${Me.Class.ShortName.Equal[PAL]} || ${Me.Class.ShortName.Equal[WAR]}) {
-		/if (${Me.Class.ShortName.Equal[CLR]} || ${Me.Class.ShortName.Equal[SHM]}  && !${bln_chChainMember}) /call chkGroupMarkedForDeath 
-		/if (${Me.Class.ShortName.Equal[PAL]}) /call chkSelfMarkedForDeath
-		/if (${Me.Class.ShortName.Equal[ENC]}) /call chkOMMCharm
-		/if (${Me.Class.ShortName.Equal[WAR]}) /call chkOMMAdds
+	/if (${Me.Class.ShortName.Equal[ENC]}) {
+		/call chkOMMCharm
+	} else /if (${Me.Class.ShortName.Equal[CLR]} && !${bln_chChainMember}) {
+		/call chkGroupMarkedForDeath 
+	} else /if (${Me.Class.ShortName.Equal[SHM]}) {
+		/call chkGroupMarkedForDeath 
+	} else /if (${Me.Class.ShortName.Equal[PAL]}) {
+		/call chkOMMAdds
+		/call chkSelfMarkedForDeath
+	} else /if (${Me.Class.ShortName.Equal[WAR]}) {	
+		/call chkOMMAdds
+	} else /if (${Me.Class.ShortName.Equal[MAG]} || ${Me.Class.ShortName.Equal[WIZ]}) {
+		/call chkOMMFrenzied
 	}
-
-
 /return 
 
 
 Sub chkOMMCharm 
 	/if (!${Me.Pet.ID}) {
 		/if (${SpawnCount[npc Coerced]}) {
-			/echo \agCoerced Charm!
+			/echo \agAttempting Coerced Charm!
 			/shout Attempting Charm!
 			/if (${NearestSpawn[npc Coerced].Distance3D} < 200 && ${NearestSpawn[npc Coerced].LineOfSight}) {
 				/echo \ar CHARMING ${NearestSpawn[npc Coerced]} (${NearestSpawn[npc Coerced].ID}) ${NearestSpawn[npc Coerced].Distance3D}
 				/call CharmNPC ${NearestSpawn[npc Coerced].ID} TRUE TRUE ${Spawn[npc Overlord].ID}
-
 			}
 		}
 	} else {
@@ -575,19 +561,49 @@ Sub chkOMMCharm
 	}
 /return
 
+| Adds need to be AE DDd
+Sub chkOMMFrenzied
+
+	/if (${SpawnCount[npc lasher]}) {
+		/if (${NearestSpawn[1, npc lasher].Distance3D} < 100) {
+			/varset AENUKE_Active TRUE
+			/echo \arAENUKING THE FUCKERS
+			/call TrueTarget ${NearestSpawn[1, npc lasher].ID}
+			/call chkAENuke
+		}
+	} else {
+		/varset AENUKE_Active	FALSE
+		/if (${bln_engaged}) /call EngageTarget ${Spawn[npc Overlord].ID}
+	}
+/return
+
 Sub chkOMMAdds 
-	/call chkOffTanking
+	|
 	/declare i int local 
+	/if (!${SpawnCount[npc Coerced]} && !${SpawnCount[npc lasher]}) /return
+
+	| Lieutenants
 	/for i 1 to ${SpawnCount[npc Coerced]}
 		/call TrueTarget ${NearestSpawn[${i}, npc Coerced].ID}
 		/if (${Me.TargetOfTarget.Class.ShortName.Equal[WAR]} || ${Me.TargetOfTarget.Class.ShortName.Equal[PAL]} || ${Me.TargetOfTarget.Class.ShortName.Equal[SHD]}) /goto :nextTarget
-		/if ((${Target.Distance3D} < ${int_offtankRadius})) {
+		/if ((${Target.Distance3D} < 200)) {
 			/call aggroByID ${Target.ID}
 		} else {
 			/squelch /target clear
 		}
-
 	:nextTarget	
+	/next i
+
+	| Lashers
+	/for i 1 to ${SpawnCount[npc lasher]}
+		/call TrueTarget ${NearestSpawn[${i}, npc lasher].ID}
+		/if (${Me.TargetOfTarget.Class.ShortName.Equal[WAR]} || ${Me.TargetOfTarget.Class.ShortName.Equal[PAL]} || ${Me.TargetOfTarget.Class.ShortName.Equal[SHD]}) /goto :nextTarget2
+		/if ((${Target.Distance3D} < 200)) {
+			/call aggroByID ${Target.ID}
+		} else {
+			/squelch /target clear
+		}
+	:nextTarget2	
 	/next i
 /return
 
@@ -668,11 +684,10 @@ Sub chkGroupMarkedForDeath
 			/g Group Heal incoming, get close!
 			/for i 1 to 5
 				/if (${Group.Member[${i}].ID} != ${int_MTID} && ${Select[${Group.Member[${i}].Class.ShortName},${MeleeClasses}]}) {
-					/dex ${Group.Member[${i}]} /multiline ; /mqpause on ; /melee reset ; /nav wp amvCleric ; 
+					/dex ${Group.Member[${i}]} /multiline ; /melee reset ; /nav spawn id ${Me.ID}; 
 				}
 			/next i
 			/call MQ2Cast "${str_heal_group}" gem4 2s 
-			/dgge /mqpause off
 			/if (${Spawn[npc ${eventTarget}].PctHPs} <= 99) /gsay KillMob ${Spawn[npc ${eventTarget}].ID} "${Spawn[npc ${eventTarget}].Name}" ${Time.Time24}
 			/goto :CheckGroup
 		}
@@ -681,11 +696,10 @@ Sub chkGroupMarkedForDeath
 		/g Group Heal incoming, get close!
 		/for i 1 to 5
 			/if (${Group.Member[${i}].ID} != ${int_MTID} && ${Select[${Group.Member[${i}].Class.ShortName},${MeleeClasses}]}) {
-				/dex ${Group.Member[${i}]} /nav wp amvCleric
+				/dex ${Group.Member[${i}]} /multiline ; /melee reset ; /nav spawn id ${Me.ID}; 
 			}
 		/next i
 		/call MQ2Cast "${str_cure_disease}" gem7 8s
-		/dgge /mqpause off
 		/if (${Spawn[npc ${eventTarget}].PctHPs} <= 99) /gsay KillMob ${Spawn[npc ${eventTarget}].ID} "${Spawn[npc ${eventTarget}].Name}" ${Time.Time24}
 		/goto :CheckGroup
 		

@@ -429,9 +429,8 @@ Sub EngageTarget(int _targetID)
 	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]} || (${Me.Class.ShortName.Equal[CLR]} && ${bln_battleCleric})) {
 		/echo \awKilling Target \ag${Spawn[id ${_targetID}].Name} \ay(${_targetID})  \ao${Time.Time24}
 		/squelch /melee reset
-		/squelch /face fast
-		/squelch /killthis
-		/call StickToTarget
+		/varset int_maxStickDistance ${Target.MaxMeleeTo}
+		/call StickToTarget TRUE
 	}
 	| Stop Sticking if you are MT, cause it's annoying
 	/if (${Me.ID} == ${int_MTID} || ${bln_tanking}) /squelch /stick off

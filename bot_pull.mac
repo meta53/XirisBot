@@ -147,10 +147,13 @@ Sub getTarget
 		/echo SpawnCount: ${SpawnCount[npc radius ${int_campRadius} zradius 15]}
 		/echo Target.ID: ${Target.ID}
 		|----------If I am getting smacked in camp, kill it
-		/if (${SpawnCount[npc radius ${int_campRadius} zradius 15]} > 0 && (${Target.ID} && ${Target.Type.Equal[NPC]} && ${Me.TargetOfTarget.CleanName.Equal[${Me.CleanName}]})) {
-			/echo Something is hitting me, killing it!
-			/goto :return
-
+		/if (${SpawnCount[npc radius ${int_campRadius} zradius 15]} > 0) {
+			/call TrueTarget ${NearestSpawn[npc radius ${int_campRadius} zradius 15].ID} 
+			/if (${Target.ID} && ${Target.Type.Equal[NPC]} && ${Me.TargetOfTarget.ID}) {
+				/echo Something is hitting me, killing it!
+				/goto :return
+			}
+			
 		} else {
 			|----------Alert 1 is never target, Alert 2 is hunter targets--------
 			/if (${SpawnCount[npc radius ${int_campRadius} zradius 15 noalert 1]} > 0) {
@@ -386,9 +389,15 @@ Sub pullTarget
 
 		|-- Check to see if I don't yet have aggro
 		:AggroCheck
+		/echo minpull ${int_minPullCount}
+		/echo usePull ${bln_usePull}
+		/echo castDist ${int_castDistance}
+	| || (!${bln_usePull} && (${Target.Distance} > 25 && ${Target.LineOfSight}))
+		/if (!${Me.TargetOfTarget.ID} && (${Me.XTarget} < ${int_minPullCount})) {
+
 		
-		/if (!${Me.TargetOfTarget.ID} && (${Me.XTarget} < ${int_minPullCount}) && ((${bln_usePull} && (${Target.Distance} > ${int_castDistance})) || (!${bln_usePull} && (${Target.Distance} > 25 && ${Target.LineOfSight})))) {
 			| I do not yet have aggro;
+			/echo I do not have aggro, checking dist
 			:AggroDistCheck 
 			| Am I close enough to aggro?
 			/if ((${bln_usePull} && (${Target.Distance} < ${int_castDistance}) && ${Target.LineOfSight}) || (!${bln_usePull} && (${Target.Distance} < 25 && ${Target.LineOfSight}))) {
@@ -934,7 +943,7 @@ Sub variant_initialize(int _pull_dist, string _channel, string _campName, bool _
 	/echo \awvariant_initialize \ao ${_pull_dist} ${_channel} ${_campName} ${_useDownFlags} ${_usePull}
 
 	|--loot
-	/varset bln_looting				TRUE
+	/varset bln_looting				FALSE
 	/if (${bln_looting}) 			/call EnableLooting
 
 	|--downflags 
@@ -983,7 +992,7 @@ Sub variant_initialize(int _pull_dist, string _channel, string _campName, bool _
 	/declare int_pcCount			int 	outer   ${SpawnCount[PC]}
 	/if (!${Defined[int_campRadius]}) /declare int_campRadius			int		outer	85
 	/varset int_campRadius 85
-	/declare int_maxRadius			int		outer	75
+	/declare int_maxRadius			int		outer	550
 	/if (${Defined[_pull_dist]}) {
 		/varset int_maxRadius ${_pull_dist}
 	}
@@ -991,14 +1000,14 @@ Sub variant_initialize(int _pull_dist, string _channel, string _campName, bool _
 
 	|--how far we can go for alert 2 mobs (note, seperate from maxRadius)
 	/declare int_alert2Radius		int 	outer 	
-	/varcalc int_alert2Radius		${int_maxRadius}+1000
+	/varcalc int_alert2Radius		${int_maxRadius}+500
 
 	|-- use 40 for POFire
 	/declare int_minZHeight			int		outer 	0
 	/declare int_maxZHeight			int		outer	0
 	/declare int_zRadius			int     outer   0
-	/varcalc int_minZHeight			${Me.Z} - 50
-	/varcalc int_maxZHeight			${Me.Z} + 165
+	/varcalc int_minZHeight			${Me.Z} - 150
+	/varcalc int_maxZHeight			${Me.Z} + 200
 	/varcalc int_zRadius ${int_maxZHeight} - ${int_minZHeight}
 
 	|--target information
@@ -1220,6 +1229,7 @@ Sub setAlerts
 		/squelch /alert add 1 "Trelak" 
 		/squelch /alert add 1 "Verow"
 		/squelch /alert add 1 "Sandak"
+		/squelch /alert add 1 "Velitorkin"
  	}
 	/if (${Zone.ShortName.Equal[ssratemple]}) {
 		/squelch /alert add 1 "Rhag"
@@ -1341,8 +1351,8 @@ Sub setAlerts
 	} else /if (${Zone.ShortName.Equal[ssratemple]}) {
 		/squelch /alert add 2 "Shissar Assassin"
 	} else /if (${Zone.ShortName.Equal[chardok]}) {
-		/squelch /alert add 2 "overseer"
-		/squelch /alert add 2 "foreman"
+		|/squelch /alert add 2 "overseer"
+		|/squelch /alert add 2 "foreman"
 	} else /if (${Zone.ShortName.Equal[southkarana]} || ${Zone.ShortName.Equal[rathemtn]}) {
 		/if (${Me.Class.ShortName.Equal[BRD]}) {
 			/varset int_minTLevel 8

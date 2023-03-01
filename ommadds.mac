@@ -1,0 +1,29 @@
+#Turbo 20
+#EVENT GazeYou			"#*#gaze of deadly power focusing on you#*#" 
+
+#include xiris_common/xiris_spell_routines.inc
+
+Sub Main(string _type, string _tankPoint)
+    /call xbot_initialize_spellRoutines
+	/melee aggro=on
+    /melee taunt=on
+
+	:ActiveLoop
+		/doevents
+	/goto :ActiveLoop
+/return
+
+
+Sub EVENT_GazeYou
+    /beep
+    /delay 5
+    /nav stop
+    /melee reset
+    /echo \arGAZE OF MATA MURAM on ME!
+	/echo \a-w Clicking \agMirrored Mask
+    /shout Clicking my Mirrored Mask
+    /call MQ2Cast "Mirrored Mask" item
+    /doevents flush GazeYou
+/return
+
+

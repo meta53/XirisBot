@@ -20,20 +20,36 @@ Sub Main
     | Xiris
     /melee aggro=on
     /melee taunt=on 
+    /dt Xanshia dime
 
     | Set the offtanks
     /dt Xiria offtankON
+    /dex Xiria /nav wp ommTank
+    /dex Xiria /dt Deist dime
+
     /dt Xirea offtankON
-    /dt Xiris offtankON
+    /dex Xirea /nav wp ommCleric
+    /dex Xirea /dt Theist dime
+
+    /dt Xirin offtankON
+    /dex Xirin /nav wp ommTank
+    /dex Xirin /dt Xirael dime
+
+    /dt Sadelia offtankON
+    /dex Sadelia /nav wp ommCleric
+    /dex Sadelia /dt Xinshia dime
 
     | Xirin (SA) addtank needs heals
-    /dt xirael changeMT Xirin 
+    /dt Xirael changeMT Xiria
 
     | Xiria (OT) needs heals
-    /dt xorael changeMT Xiria
+    /dt Xinshia changeMT Xirea
 
     | Xirea (OT) needs heals
-    /dt deist  changeMT Xirin 
+    /dt Xenshia  changeMT Xirin 
+
+    | Sadelia (OT) needs heals
+    /dt Xurael changeMT Sadelia
 
     | Eurydice needs heals and DI 
     /dt Xinshia changeMT Eurydice 
@@ -61,6 +77,7 @@ Sub Main
     /dgt Hush
     /rs CharmON
     /rs OMMStart
+    /dex Xirin /mac ommadds
     /mac ommTank
 
 /return

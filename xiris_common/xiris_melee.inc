@@ -29,7 +29,7 @@ REVISION HISTORY
 |-- 
 #EVENT RESTICK			"#*#restick#*#"
 #EVENT AERAMP			"#*#aerampON#*#"
-#EVENT GETCLOSER		"Your target is too far away, get closer!"
+#EVENT GETCLOSER		"#*#Your target is too far away#*#"
 
 #EVENT NoDS				"#1# tells the group#*#'NoDS#*#'"
 #EVENT NoDS				"#1# tells you#*#'NoDS#*#'"
@@ -448,21 +448,26 @@ Sub chkComponents(string _component, int _count, string _type, string _summoner,
 
 
 Sub EVENT_GETCLOSER
+	
 	/if ((!${Target.ID} || ${Target.PctHPs} == 0 || !${bln_engaged}) && ${timer_getCloser}) /return 
 	/doevents flush GETCLOSER
 	/varset timer_getCloser ${timer_getCloser.OriginalValue}
 	| If the target is less than max stick distance, adjust the stick
-	/call StickToTarget
+	/call StickAdjust
 /return
 
-Sub StickToTarget
+Sub StickAdjust
+	/echo stickAdjust ${int_currentStickDistance} > ${int_minStickDistance}
+	/if (${int_currentStickDistance} > ${int_minStickDistance})  /varcalc int_currentStickDistance ${int_currentStickDistance} - 5
+/return
+
+Sub StickToTarget(bool _engageWhenInRange)
 	|/echo dist: ${Target.Distance} currentstick: ${int_currentStickDistance} minstick: ${int_minStickDistance} maxstick: ${int_maxStickDistance}
 	:tryStick
-	
 	/if (${Target.Distance} <= ${int_maxStickDistance} ) {
-		|/echo currentstick: ${int_currentStickDistance} minstick: ${int_minStickDistance} maxstick: ${int_maxStickDistance}
-		/if (${int_currentStickDistance} > ${int_minStickDistance})  /varcalc int_currentStickDistance ${int_currentStickDistance} - 5
 		/stick ${stickCmd} ${int_currentStickDistance}
+		/squelch /face fast
+		/if (${_engageWhenInRange}) /killthis
 	} else /if (${Target.Distance} > ${int_maxStickDistance} && ${Target.Distance} < ${int_maxNavDistance}) {
 		/declare navDelayWait int local 0
 		/stick off
@@ -476,6 +481,8 @@ Sub StickToTarget
 			/delay 1
 			/goto :navDelay
 		}
+		/squelch /face fast
+		/if (${_engageWhenInRange}) /killthis
 	} else {
 		/rs Target is too far away to get to!
 		/if (${Navigation.Active}) /nav stop
@@ -637,11 +644,11 @@ Sub chk_warProvoke(string _provokeDisc)
 Sub xbot_initialize_melee
 	/echo \ao xbot_initialize_melee
 	
-	/declare 	int_currentStickDistance		int		outer   25
-	/declare	int_maxStickDistance 	int 	outer 	30
+	/declare 	int_currentStickDistance		int		outer   35
+	/declare	int_maxStickDistance 	int 	outer 	40
 	/declare 	int_minStickDistance	int		outer 	10
 	/declare    int_maxNavDistance		int		outer   300
-	/declare	timer_getCloser			timer	outer	30
+	/declare	timer_getCloser			timer	outer	2s
 	/declare 	timer_check_downshits	timer	outer 	0
 
 	|-- ALL CLASSES COMMON
@@ -697,7 +704,7 @@ Sub xbot_initialize_melee
 	/declare 	MinStrikeEndurance 		int		outer	200
 	/declare 	MinBellowEndurance		int		outer	200
 	/declare    provokeTimer            timer   outer   0
-	/declare 	stickCmd				string	outer   ${Ini[INI_CHAR,Sticking,stickCmd,behindonce 35]}
+	/declare 	stickCmd				string	outer   ${Ini[INI_CHAR,Sticking,stickCmd,behind 35]}
 	/declare 	bln_chkComponents		bool	outer	TRUE
 	/declare 	bln_tgtDeadSoon			bool	outer	FALSE
 	/declare	timer_reAssist			timer	outer	5s

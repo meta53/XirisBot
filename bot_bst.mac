@@ -36,6 +36,10 @@ Sub InitEvents_Class
 	/call RegisterClassEvents Events_BST 1
 /return
 
+Sub Events_BST
+	/doevents PARAGON
+/return
+
 Sub Event_PARAGON
 	|Todo once I actually have a BST
 /return 

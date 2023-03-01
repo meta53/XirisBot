@@ -322,18 +322,19 @@ Sub chkQNuke
 Sub chkAENuke
 	/if (!${AENUKE_Active}) /return
 	/if (${AENUKE_DelayTimer} && ${AENUKE_HasCastOnce})	 	/return 
-	|-- AE Nuke is active, let's light them up!
-	/rs Lighting them up with ${int_AENukeTotal} AE Nukes!
+
 
 	/declare i int local
 	:AENukeLoop
-	/for i 1 to ${int_AENukeTotal}
+	/for i 1 to ${AENUKE_Total}
+		|-- AE Nuke is active, let's light them up!
+		/rs Lighting them up with ${AENUKE_Total} AE Nukes! ${AENUKE_${i}_Spell}
 		:AENukeStart 
 		|-- skip if not ready
 		/if (!${Me.SpellReady[${AENUKE_${i}_Spell}]}) /goto :NextAENuke
 
 		/if (${AENUKE_${i}_RecastTimer} > 0 && ${AENUKE_${i}_HasCastOnce}) {
-			/if (${i}<${int_AENukeTotal}) { 
+			/if (${i}<${AENUKE_Total}) { 
 				/echo \arTimer not ready for \ay${AENUKE_${i}_Spell} :: \ay${AENUKE_${i}_DelayTimer}
 				/goto :NextAENuke
 			}
