@@ -486,7 +486,7 @@ Sub setHealingSpell(int _hp, string _targetType, int _range, string _targetName,
 		/varset response CASTOK
 		/goto :return
 	| HOT TODO: Add a timer for the remaining HoT duration so as to not spam via dquery
-	} else /if (${_hp} <= ${int_point_${_targetType}_HoT}) {
+	} else /if (${_hp} <= ${int_point_${_targetType}_HoT} && ${use_heal_HoT}) {
 		/varset str_currentHeal ${str_heal_normal}
 		/if (${str_healMode.Equal[EFFICIENT]}) /varset str_currentHeal ${str_heal_normal_efficient}
 
@@ -735,7 +735,7 @@ Sub updateGroupRangeCount(int _range)
 **|
 Sub healCast(int _id, string _name, string _spell, bool _isGroup)
 	/if (${_name.Equal[NULL]} || ${_id} == 0) {
-		/echo \arHEAL NAME is NULL || ID is \ao${_id}\ar something is fucked;
+		/echo \arHEAL NAME is \ao${_name} \ar|| ID is \ao${_id}\ar something is fucked;
 		/return
 	}
 	/if ((${_isGroup} || (${Spawn[pc ${_name}].PctHPs} < ${int_point_calcStopHeal}) && (${Me.CurrentMana} > ${Spell[${_spell}].Mana}))) {
@@ -743,6 +743,7 @@ Sub healCast(int _id, string _name, string _spell, bool _isGroup)
 		/if (${Target.ID} != ${_id}) /call TrueTarget ${_id}
 		/call chkSpellMemorized "${_spell}" TRUE 2
 		/call MQ2Cast "${_spell}" gem2 1s chkHP
+		/delay 5
 		/if (${Macro.Return.Equal[CAST_SUCCESS]} && ${bln_annouce}) /${cmdChannel} ${_spell} > ${Target.Name} hp:${Target.PctHPs} m:${Me.PctMana} d:${Target.Distance}
 		/return ${Macro.Return}
 	}
@@ -1053,7 +1054,7 @@ Sub AERez(int _corpseCount)
 		/if (${int_rezIgnore}) {
 			/for x 1 to ${int_rezIgnore}
 				/if (${arr_corpses[${x}]} == ${arr_rezIgnore[${x}]}) {
-					/echo corpse #{x} ${arr_corpses[${x}]} == ${arr_rezIgnore[${x}]}
+					/echo corpse ${x} ${arr_corpses[${x}]} == ${arr_rezIgnore[${x}]}
 					/varset bln_skipCorpse TRUE
 				}
 			/next x

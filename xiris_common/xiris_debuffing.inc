@@ -77,7 +77,7 @@ Sub SlowTarget(string _resist)
 Sub chkDebuffsOnSingleTarget(int _targetID)
 	/if (!${DEBUFF_Total} || !${_targetID} || ${Target.Name.Find[s_corpse]}) /return
 	/if (!${Spawn[id ${_targetID}].LineOfSight}) /return
-	/if (${DEBUFF_Total} == 1 && !${Bool[${DEBUFF_1_Trigger.Replace[#,$]}]}) /return
+	/if (${DEBUFF_Total} == 1 && !${DEBUFF_1_Trigger}) /return
 	/call CastDebuffsOnTarget ${_targetID} FALSE
 	
 /return
@@ -136,6 +136,7 @@ Sub CastDebuffsOnTarget(int _targetID, bool _forced)
 	| Check if named, or we are forcing this
 	/call TargetNamedCheck ${_targetID}
 	/declare isNamed	bool	local	${Macro.Return}
+
 	/if (${_forced}) /varset isNamed TRUE
 
 	|-- Global Checking for mana 
@@ -165,9 +166,10 @@ Sub CastDebuffsOnTarget(int _targetID, bool _forced)
 
 		/echo \ag ${DEBUFF_${db}_Trigger} 
 		/echo \ao ${DEBUFF_${db}_Trigger.Replace[#,$]}
+		/echo \ar !${DEBUFF_${db}_Trigger}
 
 		
-		/if (!${Bool[${DEBUFF_${db}_Trigger.Replace[#,$]}]}) {
+		/if (!${DEBUFF_${db}_Trigger}) {
 			/echo \ay ${DEBUFF_${db}_Spell} Failed use Check ${DEBUFF_${db}_Trigger}
 			/goto :nextDB
 		}
@@ -275,7 +277,7 @@ Sub CreateDebuffLineup
 	/if (${Bool[${DEBUFF_Total}]}) {
 		/for i 1 to ${DEBUFF_Total} 
 			/call addSpellToLineup DEBUFF ${i} ${Ini[INI_CHAR,DEBUFF,DEBUFF_${i}]}
-			/declare DEBUFF_${i}_Trigger	string	outer	${Ini[INI_CHAR,DEBUFF,DEBUFF_${i}_Trigger,#{Bool[1]}]}
+			/declare DEBUFF_${i}_Trigger	string	outer	${Ini[INI_CHAR,DEBUFF,DEBUFF_${i}_Trigger,FALSE, noparse]}
 			/declare DEBUFF_${i}_Type		string	outer	${Ini[INI_CHAR,DEBUFF,DEBUFF_${i}_Type,RESIST_DEBUFF]}
 		/next i
 	}

@@ -83,7 +83,7 @@ Sub chkBagContents(int PackSlot)
 |- Modifiy this varset if you chose to have a different downshitif;
 Sub dsIfWriter
 	/declare a string local
-	/varset a #{If[(!#{Me.Moving} && (#{SpawnCount[npc radius 50]}==0) && !#{Me.Combat} && !#{Me.Invis}),1,0]}
+	/varset a ${If[(!${Me.Moving} && (${SpawnCount[npc radius 50]}==0) && !${Me.Combat} && !${Me.Invis}),1,0]}
 	/ini "hasteINI" ${Me.CleanName} "downshitif" "${a}"
 /return
 
@@ -93,8 +93,8 @@ Sub dsWriter(string itemName, string itemEffect, int itemID)
 	/declare ds string local downshit${flagcount}
 	
 	| a is the downshit (we used to use something like this to write all the downshit ifs)
-	/varset a /if (#{Spell[${itemEffect}].Stacks} && 
-	/varset a ${a}!#{Me.Buff[${itemEffect}].ID})
+	/varset a /if (${Spell[${itemEffect}].Stacks} && 
+	/varset a ${a}!${Me.Buff[${itemEffect}].ID})
 	/varset a ${a} /casting ${itemID} item
     |/echo ${a}
 	/echo "${Me.CleanName}" "${df}" "${itemName}(${itemID}) ${itemEffect}"

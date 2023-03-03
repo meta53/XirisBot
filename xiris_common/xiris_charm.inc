@@ -76,7 +76,7 @@ Sub CharmNPC(int _targetID, bool _forced, bool _attack, int _attackID)
         /call TrueTarget ${_targetID}
         | Trigger Check (triggers are stored as strings with $ replaced with #. Run this through a replace and check);
 		| This is usually a complex string such as CHARM_1_Trigger=(!${Target.Maloed.ID} || ${Target.Buff[${DEBUFF_1_Spell}].Duration.TotalSeconds} < 30)
-		/if (!${Bool[${CHARM_${i}_Trigger.Replace[#,$]}]}) {
+		/if (!${CHARM_${i}_Trigger}) {
 			/echo \ar ${CHARM_${i}_Spell} Failed use Check ${CHARM_${i}_Trigger}
 			/goto :nextCharm
 		}
@@ -186,7 +186,7 @@ Sub CreateCharmLineup
     /if (${Bool[${CHARM_Total}]}) {
         /for i 1 to ${CHARM_Total}
             /call addSpellToLineup CHARM ${i} ${Ini[INI_CHAR,CHARM,CHARM_${i}]} 
-            /declare CHARM_${i}_Trigger 	string	outer	${Ini[INI_CHAR,CHARM,CHARM_${i}_Trigger,#{Bool[1]}]}
+            /declare CHARM_${i}_Trigger 	string	outer	${Ini[INI_CHAR,CHARM,CHARM_${i}_Trigger,FALSE, noparse]}
             /declare CHARM_${i}_Type  		string	outer	${Ini[INI_CHAR,CHARM,CHARM_${i}_Type,NORMAL]}
         /next i
     }

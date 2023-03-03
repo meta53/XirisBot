@@ -83,7 +83,6 @@ Sub Events_GoD_Uqua
 /return
 
 Sub Events_GoD_Inktuta
-	
 	| Cursebearers
 
 	/doevents CC1

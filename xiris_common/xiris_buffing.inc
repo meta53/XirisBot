@@ -648,7 +648,7 @@ Sub RemoveBuff(_badBuff)
 		/if (${Bool[${Window[BuffWindow].Child[BW_Buff${i}_Button].Tooltip}]} && ${Window[BuffWindow].Child[BW_Buff${i}_Button].Tooltip.Find[${buffName}]}) {
 			/varset buffName ${Window[BuffWindow].Child[BW_Buff${i}_Button].Tooltip.Arg[1,(]}
 			/varset buffName ${buffName.Left[${Math.Calc[${buffName.Length}-1]}]}
-			/echo \awBuff \ao${buffName} \awfound. \agRemoving.
+			|/echo \awBuff \ao${buffName} \awfound. \agRemoving.
 			/if (${Bool[${buffName}]}) /nomodkey /notify BuffWindow Buff${Math.Calc[${Me.Buff[${buffName}].ID}-1].Int} leftmouseup
 		}
 		

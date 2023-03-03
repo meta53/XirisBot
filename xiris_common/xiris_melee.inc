@@ -100,8 +100,8 @@ Sub EVENT_NoDS(_line, _sender, _eventParams)
 	| check to see if I have a DS, and if so kill it
 	/declare ds int local 
 	/for ds 1 to ${dsSpellTotal} 
-		/call RemoveBuff ${dsSpells[${ds}]}
-		/delay 5
+		/call RemoveBuff "${dsSpells[${ds}]}"
+		/delay 2
 	/next ds
 	/if (${Me.Class.ShortName.Equal[BRD]}) {
 		/varset str_savedMedley ${str_currentMedley}

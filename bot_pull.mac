@@ -149,8 +149,9 @@ Sub getTarget
 		|----------If I am getting smacked in camp, kill it
 		/if (${SpawnCount[npc radius ${int_campRadius} zradius 15]} > 0) {
 			/call TrueTarget ${NearestSpawn[npc radius ${int_campRadius} zradius 15].ID} 
-			/if (${Target.ID} && ${Target.Type.Equal[NPC]} && ${Me.TargetOfTarget.ID}) {
+			/if (${Target.ID} && ${Target.Type.Equal[NPC]} || ${Target.Type.Equal[PET]}) {
 				/echo Something is hitting me, killing it!
+				/varset bln_validTGT	TRUE
 				/goto :return
 			}
 			
@@ -234,11 +235,22 @@ Sub getTarget
 **|
 Sub chkTargetValid
 	/echo chkTargetValid ${Target.Name}
-	/if (${Target.Type.NotEqual[NPC]}) /return
+	/if (${Target.Type.NotEqual[NPC]}) {
+		/echo INVALID Not NPC
+		/call setTGTAlert
+		/return
+	} 
 	
 	|--check if there is a path to the target
 	/if (!${Navigation.PathExists[target]}) {
 		/echo INVALID No Path to Target
+		/call setTGTAlert
+		/return
+	}
+
+	|--check to see if its a pet
+	/if (${Target.Name.Find[s_pet]}) { 
+		/echo INVALID Target a pet, next
 		/call setTGTAlert
 		/return
 	}
@@ -958,7 +970,7 @@ Sub variant_initialize(int _pull_dist, string _channel, string _campName, bool _
 	
 	|--melee plugin/aggro for the requester
 	/melee aggro=1
-	/speed 1.25
+	/speed 1.5
 	/declare useGroup	bool	outer	FALSE
 	
 	|--command channel setup
