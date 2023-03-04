@@ -87,49 +87,46 @@ Sub chkDebuffsOnSingleTarget(int _targetID)
 |   Will check to see if the target already has the debuff and if so has more than 30s left on it
 |**
 **|
-Sub debuffs_trigger
-	|putrid decay
-	/if ((!${Target.Maloed.ID} || ${Target.Maloed.Duration.TotalSeconds} < 30) && ${str_useResistTypes.Find[disease]})
-	|((!#{Target.Maloed.ID} && #{Target.Maloed.Duration.TotalSeconds} < 30) && #{str_useResistTypes.Find[disease]})
-
-	|malos
-	/if (!${Target.Maloed.ID} || ${Target.Maloed.Duration.TotalSeconds} < 30)
-	|(!#{Target.Maloed.ID} && #{Target.Maloed.Duration.TotalSeconds} < 30)
-
-	|turgur
-	/if ((!${Target.Slowed.ID} || ${Target.Slowed.Duration.TotalSeconds} < 10) && ${str_useResistTypes.Find[magic]} && ${Target.Maloed.ID})
-	|((!#{Target.Slowed.ID} || #{Target.Slowed.Duration.TotalSeconds} < 10) && #{str_useResistTypes.Find[magic]} && #{Target.Maloed.ID})
-
-	|balance of discord
-	/if ((!${Target.Slowed.ID} || ${Target.Slowed.Duration.TotalSeconds} < 10) && ${str_useResistTypes.Find[magic]} && ${Target.Maloed.ID})
-	|((!#{Target.Slowed.ID} || #{Target.Slowed.Duration.TotalSeconds} < 10) && #{str_useResistTypes.Find[magic]} && #{Target.Maloed.ID})
-	
-	|howl of tashan
-	/if (!${Target.Tashed.ID} || ${Target.Tashed.Duration.TotalSeconds} < 30)
-	|(!#{Target.Tashed.ID} && #{Target.Tashed.Duration.TotalSeconds} < 30)
-
-	| desolate deeds
-	/if ((!${Target.Slowed.ID} || ${Target.Slowed.Duration.TotalSeconds} < 10) && ${str_useResistTypes.Find[magic]} && ${Target.Maloed.ID})
-	|((!#{Target.Slowed.ID} || #{Target.Slowed.Duration.TotalSeconds} < 10) && #{str_useResistTypes.Find[magic]} && #{Target.Maloed.ID})
-
-	| cripple
-	/if ((!${Target.Crippled.ID} || ${Target.Crippled.Duration.TotalSeconds} < 10) && ${str_useResistTypes.Find[magic]} && ${Target.Maloed.ID} && ${Target.Tashed.ID})
-	|((!#{Target.Crippled.ID} || #{Target.Crippled.Duration.TotalSeconds} < 10) && #{str_useResistTypes.Find[magic]} && #{Target.Maloed.ID} && #{Target.Tashed.ID})
-
-	| sun's corona
-	/if ((!${Target.Buff[${DEBUFF_1_Spell}].ID} && ${Target.Buff[${DEBUFF_1_Spell}].Duration.TotalSeconds} < 20) && ${str_useResistTypes.Find[fire]} && ${Target.Maloed.ID})
-	|((!#{Target.Buff[#{DEBUFF_1_Spell}].ID} && #{Target.Buff[${DEBUFF_1_Spell}].Duration.TotalSeconds} < 20) && #{str_useResistTypes.Find[fire]} && #{Target.Maloed.ID})
-
-	| glacier breath
-	/if ((!${Target.Buff[${DEBUFF_2_Spell}].ID} && ${Target.Buff[${DEBUFF_2_Spell}].Duration.TotalSeconds} < 20) && ${str_useResistTypes.Find[cold]} && ${Target.Maloed.ID})
-	|((!#{Target.Buff[#{DEBUFF_2_Spell}].ID} || #{Target.Buff[#{DEBUFF_2_Spell}].Duration.TotalSeconds} < 20) && #{str_useResistTypes.Find[cold]} && #{Target.Maloed.ID})
-	
-
-	| hungry vines
-	/if ((!${Target.Buff[${DEBUFF_3_Spell}].ID} && ${Target.Buff[${DEBUFF_3_Spell}].Duration.TotalSeconds} < 20) && ${str_useResistTypes.Find[magic]} && ${Target.Maloed.ID} && ${Target.Tashed.ID})
-	|((!#{Target.Buff[#{DEBUFF_3_Spell}].ID} && #{Target.Buff[#{DEBUFF_3_Spell}].Duration.TotalSeconds} < 20) && #{str_useResistTypes.Find[magic]} && #{Target.Maloed.ID} && #{Target.Tashed.ID})
-
-/return
+Sub chkDebuffTrigger(string _key)
+	/echo \agDebuff Trigger \ao${_key}
+	/if (${_key.Equal[PUTRID_DECAY]}) {
+		|putrid decay
+		/if ((!${Target.Maloed.ID} || ${Target.Maloed.Duration.TotalSeconds} < 20) && ${str_useResistTypes.Find[disease]}) /return TRUE
+	} else /if (${_key.Equal[MALOS]}) { 
+		|malos
+		/if (!${Target.Maloed.ID} || ${Target.Maloed.Duration.TotalSeconds} < 30)
+	} else /if (${_key.Equal[TURGURS]}) { 
+		|turgur
+		/if ((!${Target.Slowed.ID} || ${Target.Slowed.Duration.TotalSeconds} < 10) && ${str_useResistTypes.Find[magic]} && ${Target.Maloed.ID}) /return TRUE
+	} else /if (${_key.Equal[BALANCE_DISCORD]}) { 
+		|balance of discord
+		/if ((!${Target.Slowed.ID} || ${Target.Slowed.Duration.TotalSeconds} < 10) && ${str_useResistTypes.Find[magic]} && ${Target.Maloed.ID}) /return TRUE
+	} else /if (${_key.Equal[TASHAN]}) { 
+		|howl of tashan
+		/if (!${Target.Tashed.ID} || ${Target.Tashed.Duration.TotalSeconds} < 30)
+	} else /if (${_key.Equal[DESOLATE_DEEDS]}) { 
+		| desolate deeds
+		/if ((!${Target.Slowed.ID} || ${Target.Slowed.Duration.TotalSeconds} < 10) && ${str_useResistTypes.Find[magic]} && ${Target.Maloed.ID}) /return TRUE
+	} else /if (${_key.Equal[CRIPPLE]}) { 
+		| cripple
+		/if ((!${Target.Crippled.ID} || ${Target.Crippled.Duration.TotalSeconds} < 10) && ${str_useResistTypes.Find[magic]} && ${Target.Maloed.ID} && ${Target.Tashed.ID}) /return TRUE
+	} else /if (${_key.Equal[DRUID_SUN]}) { 
+		| sun's corona
+		/if ((!${Target.Buff[${DEBUFF_1_Spell}].ID} && ${Target.Buff[${DEBUFF_1_Spell}].Duration.TotalSeconds} < 20) && ${str_useResistTypes.Find[fire]} && ${Target.Maloed.ID}) /return TRUE
+	} else /if (${_key.Equal[DRUID_GLACIER]}) { 
+		| glacier breath
+		/if ((!${Target.Buff[${DEBUFF_2_Spell}].ID} && ${Target.Buff[${DEBUFF_2_Spell}].Duration.TotalSeconds} < 20) && ${str_useResistTypes.Find[cold]} && ${Target.Maloed.ID}) /return TRUE
+	} else /if (${_key.Equal[DRUID_VINES]}) { 
+		| hungry vines
+		/if ((!${Target.Buff[${DEBUFF_3_Spell}].ID} && ${Target.Buff[${DEBUFF_3_Spell}].Duration.TotalSeconds} < 20) && ${str_useResistTypes.Find[magic]} && ${Target.Maloed.ID} && ${Target.Tashed.ID})  /return TRUE
+	} else /if (${_key.Equal[HARMONY]}) {
+		| harmony of sound 
+		/if (${Target.Buff[${DEBUFF_1_Spell}].Duration.TotalSeconds} < 30) /return TRUE
+	} else /if (${_key.Equal[REVERSE_DS]}) {
+		| mark of the blameless
+		/if ((!${Target.Buff[${DEBUFF_1_Spell}].ID} || ${Target.Buff[${DEBUFF_1_Spell}].Duration.TotalSeconds} < 10) && ${str_useResistTypes.Find[magic]}) /return TRUE
+	}
+/return FALSE
 
 Sub CastDebuffsOnTarget(int _targetID, bool _forced)
 	/if (!${Spawn[id ${_targetID}].LineOfSight}) /return
@@ -146,6 +143,7 @@ Sub CastDebuffsOnTarget(int _targetID, bool _forced)
 	|-- Mana Check Passed, Check individual debuffs now
 	:debuffTarget
 	/declare	db		int		local	${DEBUFF_Total}
+	/declare 	valid   bool    local   FALSE
 	/for db 1 to ${DEBUFF_Total}
 		/call RunRaidEvents
 		:debuffChecks
@@ -162,30 +160,20 @@ Sub CastDebuffsOnTarget(int _targetID, bool _forced)
 
 		| Trigger Check (triggers are stored as strings with $ replaced with #. Run this through a replace and check);
 		| This is usually a complex string such as DEBUFF_1_Trigger=(!${Target.Maloed.ID} || ${Target.Buff[${DEBUFF_1_Spell}].Duration.TotalSeconds} < 30)
-		
-
-		/echo \ag ${DEBUFF_${db}_Trigger} 
-		/echo \ao ${DEBUFF_${db}_Trigger.Replace[#,$]}
-		/echo \ar !${DEBUFF_${db}_Trigger}
-
-		
-		/if (!${DEBUFF_${db}_Trigger}) {
-			/echo \ay ${DEBUFF_${db}_Spell} Failed use Check ${DEBUFF_${db}_Trigger}
-			/goto :nextDB
-		}
+		/call chkDebuffTrigger ${DEBUFF_${db}_Trigger} 
+		/if (!${Macro.Return}) /goto :nextD
 
 		| Checks passed, check if the spell is memorized. Skip if not
 		:debuffSpellMemorized
-			/call chkSpellMemorized "${DEBUFF_${db}_Spell}" ${_forced} ${DEBUFF_${db}_Gem}
+		/call chkSpellMemorized "${DEBUFF_${db}_Spell}" ${_forced} ${DEBUFF_${db}_Gem}
 		:debuffSpellReadyWait 
-			| If this is a forced cast, wait for the spell to be ready
-			/if ((!${Me.SpellReady[${DEBUFF_${db}_Spell}]} && ${_forced}) || (${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]})) {
-				/delay 2
-				/goto :debuffSpellReadyWait
-			} 
+		| If this is a forced cast, wait for the spell to be ready
+		/if ((!${Me.SpellReady[${DEBUFF_${db}_Spell}]} && ${_forced}) || (${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]})) {
+			/delay 2
+			/goto :debuffSpellReadyWait
+		} 
 
 		:debuffCast
-			
 			/call TrueTarget ${_targetID}
 			/if (${Me.Class.ShortName.Equal[BRD]}) {
 				/call MQ2Medley SONG "${DEBUFF_${db}_Spell}" ${_targetID} TRUE
@@ -193,6 +181,9 @@ Sub CastDebuffsOnTarget(int _targetID, bool _forced)
 			} else {
 				/call CastDebuff "${DEBUFF_${db}_Spell}" ${DEBUFF_${db}_Gem} ${DEBUFF_${db}_MaxTries} ${_targetID} ${_forced}
 			}
+		
+
+		
 	:nextDB
 		/call RunAllEvents
 		/next db
