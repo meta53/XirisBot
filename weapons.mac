@@ -1,0 +1,220 @@
+|**
+----------------------------
+weapons.mac
+----------------------------
+This macro creats the an output file (weaponcheck.ini) with entries for each toon
+ordered by type
+______________________________________________
+REVISION HISTORY
+    03.05.23	xiris	INITIAL REVISION
+**|
+
+#define weaponINI hastecheck.ini
+
+Sub Main 
+    /declare arr1HBlunt[4,3]    string outer NULL
+    /declare arr2HBlunt[4,3]    string outer NULL
+    /declare arr1HSlash[4,3]    string outer NULL
+    /declare arr2HSlash[4,3]    string outer NULL
+    /declare arr1HPierce[4,3]   string outer NULL
+    /declare arr2hPierce[4,3]   string outer NULL
+    /declare arrH2H[4,3]        string outer NULL
+
+    /declare arrNOBLUNT[2,3]    string outer NULL
+    /declare arrNOSLASHING[2,3] string outer NULL
+    /declare arrNOPIERCEING[2,3] string outer NULL
+    /declare arrNOH2H[2,3]      string outer NULL
+    /declare arrDefault[2,3]     string outer NULL
+
+    /declare 1HBcount           int     outer 1
+    /declare 2HBcount           int     outer 1
+    /declare 1HScount           int     outer 1
+    /declare 2HScount           int     outer 1
+    /declare 1HPcount           int     outer 1
+    /declare 2HPcount           int     outer 1
+    /declare H2Hcount           int     outer 1
+
+    /call chkWorn
+    /call chkInventory
+    /call WriteMQ2Bandolier
+/return
+
+Sub chkWorn
+    /declare i      int     local 
+    /declare name   string  local
+    /declare wtype   string  local 
+    /declare id     int     local
+    /declare damage int     local
+    /declare delay  int     local
+
+    | note for worn we only want 13/14
+    /for i 1 to 22
+        /if (${Me.Inventory[${i}].ID} && ${Me.Inventory[${i}].Damage}) {
+            | We found a weapon
+            /varset name    ${Me.Inventory[${i}].Name}
+            /varset wtype    ${Me.Inventory[${i}].Type}
+            /varset id      ${Me.Inventory[${i}].ID}
+            /varset damage  ${Me.Inventory[${i}].Damage}
+            /varset delay   ${Me.Inventory[${i}].ItemDelay}
+            /echo \agWeapon Found: \ao${name}\aw(\ao${id}\aw) \ay${id} ${damage} ${delay} 
+            /call iniWriter "${name}" "${wtype}" ${id} ${damage} ${delay} 
+            /if (${i} == 13) {
+                /varset arrDefault[1,1] ${i}
+                /varset arrDefault[1,2] ${Me.Inventory[${i}].Name}
+                /varset arrDefault[1,3] ${Me.Inventory[${i}].ID}
+            } else /if (${i} == 14) {
+                /varset arrDefault[2,1] ${i}
+                /varset arrDefault[2,2] ${Me.Inventory[${i}].Name}
+                /varset arrDefault[2,3] ${Me.Inventory[${i}].ID}
+            }
+        }
+    /next i
+/return
+
+Sub chkInventory
+    /declare i      int     local 
+    /declare name   string  local
+    /declare wtype   string  local 
+    /declare id     int     local
+    /declare damage int     local
+    /declare delay  int     local
+
+    /for i 1 to 8
+        /if (${InvSlot[pack${i}].Item.Container}) {
+			/call chkBagContents ${i}
+		} else {
+            /if (${InvSlot[pack${i}].Item.ID} && ${InvSlot[pack${i}].Item.Damage}) {
+                | We found a weapon
+                /varset name    ${InvSlot[pack${i}].Item.Name}
+                /varset wtype   ${InvSlot[pack${i}].Item.Type}
+                /varset id      ${InvSlot[pack${i}].Item.ID}
+                /varset damage  ${InvSlot[pack${i}].Item.Damage}
+                /varset delay   ${InvSlot[pack${i}].Item.ItemDelay}
+                /echo \agWeapon Found: \ao${name}\aw(\ao${id}\aw) \ay${id} ${damage} ${delay} 
+                /call iniWriter "${name}" "${wtype}" ${id} ${damage} ${delay} 
+            }
+        }
+    /next i
+/return
+
+Sub chkBagContents(int PackSlot)
+    /declare i      int     local 
+    /declare name   string  local
+    /declare wtype   string  local 
+    /declare id     int     local
+    /declare damage int     local
+    /declare delay  int     local
+    /echo -------------------
+    /echo Pack ${PackSlot} ${InvSlot[pack${PackSlot}].Item.Name}
+
+    /for i 1 to ${InvSlot[pack${PackSlot}].Item.Container}
+
+        /if (${InvSlot[pack${PackSlot}].Item.Item[${i}].ID} && ${InvSlot[pack${PackSlot}].Item.Item[${i}].Damage}) {
+            | We found a weapon
+            /varset name    ${InvSlot[pack${PackSlot}].Item.Item[${i}].Name}
+            /varset wtype   ${InvSlot[pack${PackSlot}].Item.Item[${i}].Type}
+            /varset id      ${InvSlot[pack${PackSlot}].Item.Item[${i}].ID}
+            /varset damage  ${InvSlot[pack${PackSlot}].Item.Item[${i}].Damage}
+            /varset delay   ${InvSlot[pack${PackSlot}].Item.Item[${i}].ItemDelay}
+            /echo \agWeapon Found: \ao${name}\aw(\ao${id}\aw) \ay${id} ${damage} ${delay} 
+            /call iniWriter "${name}" "${wtype}" ${id} ${damage} ${delay} 
+        }
+        
+    /next i
+    /echo -------------------
+/return
+
+
+
+Sub iniWriter(string _name, string _type, int _id, int _damage, int _delay)
+
+    /declare key    string local NOTUSED
+    /declare index  string local
+    /declare val    string local
+    /declare ratio  float  local
+    /declare slot   int    local
+
+    /if (${_type.Equal[1H Slashing]}) {
+        /varset key 1HSlashing
+        /varset slot 14
+    } else /if (${_type.Equal[2H Slashing]}) {    
+        /varset key 2HSlashing
+        /varset slot 13
+    } else /if (${_type.Equal[Piercing]}) {
+        /varset key 1HPiercing
+        /varset slot 14
+    } else /if (${_type.Equal[2H Piercing]}) {    
+        /varset key 2HPiercing
+        /varset slot 14
+    } else /if (${_type.Equal[1H Blunt]}) {
+        /varset key 1HBlunt
+        /varset slot 14
+    } else /if (${_type.Equal[2H Blunt]}) {    
+        /varset key 2HBlunt
+    } else /if (${_type.Equal[Martial]}) {
+        /varset key H2H
+        /varset slot 13
+    }
+    /if (${key.Equal[NOTUSED]}) /return
+    
+
+    /varset key ${Me.Name}_${key}
+    /varcalc ratio ${_delay}/${_damage}
+    /varset index ${slot}_${ratio}
+    /varset val ${_id} ${_name} ${ratio}
+
+    /call AddToArray ${key} ${_id} "${_name}" ${_ratio}
+    /echo \ag[${key}]\ay${index}\ao${val}
+    /ini "weaponINI" "${key}" "${index}" "${val}"
+
+/return
+
+|**
+
+    /declare 1HBcount           int     outer 1
+    /declare 2HBcount           int     outer 1
+    /declare 1HScount           int     outer 1
+    /declare 2HScount           int     outer 1
+    /declare 1HPcount           int     outer 1
+    /declare 2HPcount           int     outer 1
+    /declare H2Hcount           int     outer 1
+
+    /declare arr1HBlunt[4,3]    string outer NULL
+    /declare arr2HBlunt[4,3]    string outer NULL
+    /declare arr1HSlash[4,3]    string outer NULL
+    /declare arr2HSlash[4,3]    string outer NULL
+    /declare arr1HPierce[4,3]   string outer NULL
+    /declare arr2hPierce[4,3]   string outer NULL
+    /declare arrH2H[4,3]        string outer NULL
+
+
+**|
+Sub AddToArray(string _type, int _id, string _name, int _ratio)
+    /if (${_type.Equal[1HBlunt]}) {
+        /varset arr1HBlunt[${1HBcount},1] ${_id}
+        /varset arr1HBlunt[${1HBcount},1] ${_name}
+        /varset arr1HBlunt[${1HBcount},1] ${_ratio}
+        /varcalc 1HBcount ${1HBcount}+1
+    } else /if (${_type.Equal[2HBlunt]}) {
+        /varset arr2HBlunt[${2HBcount},1] ${_id}
+        /varset arr2HBlunt[${2HBcount},1] ${_name}
+        /varset arr2HBlunt[${2HBcount},1] ${_ratio}
+        /varcalc 2HBcount ${2HBcount}+1
+    } else /if (${_type.Equal[1HSlashing]}) {
+
+    } else /if (${_type.Equal[2HSlashing]}) {
+
+    } else /if (${_type.Equal[2HPiercing]}) {
+
+    } else /if (${_type.Equal[1HPiercing]}) {
+
+    } else /if (${_type.Equal[H2H]}) {
+
+    }
+/return
+
+
+Sub WriteMQ2Bandolier
+
+
+/return

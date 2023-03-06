@@ -13,26 +13,24 @@ REVISION HISTORY
 
 Sub Main
 	/declare flagcount int outer 0
-	|- check inventory
-	|/call dsIfWriter
-	/call chkInventory
 	/call chkWorn
+	/call chkInventory
 	/call chkBagContents
 /return
 
 Sub chkWorn
-	/echo chkInventory
+	/echo chkWorn
 	/declare i int local
 	/declare name string local
 	/declare effect string local
 	/declare id int local
 	/for i 1 to 22
 		/if (${Me.Inventory[${i}].ID} && ${Me.Inventory[${i}].Haste} ) {
-					/varset name 	"${Me.Inventory[${i}].Name}"
-					/varset effect	"${Me.Inventory[${i}].Haste}"
-					/varset id 		${Me.Inventory[${i}].ID}
-					/echo Haste Item found : ${Me.Inventory[${i}].Name} (${Me.Inventory[${i}].ID}) 
-					/call dsWriter ${name} ${effect} ${id}
+			/varset name 	"${Me.Inventory[${i}].Name}"
+			/varset effect	"${Me.Inventory[${i}].Haste}"
+			/varset id 		${Me.Inventory[${i}].ID}
+			/echo Haste Item found : ${Me.Inventory[${i}].Name} (${Me.Inventory[${i}].ID}) 
+			/call dsWriter ${name} ${effect} ${id}
 					
 		}
 	/next i

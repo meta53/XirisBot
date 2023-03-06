@@ -72,6 +72,7 @@ Sub InitEvents_GoD_Inktuta
 Sub InitEvents_GoD_Tacvi
 	/call RegisterRaidEvents Events_GoD_Tacvi 9
 	/declare balanceRapeHeal bool outer FALSE
+	/declare bln_balancing bool outer FALSE
 /return
 
 Sub Events_GoD_Ikkinz
@@ -414,9 +415,9 @@ SUB EVENT_PIRIKACTIVE
 /return
 
 SUB EVENT_BALANCE
-	/if (!${Defined[bln_balancing]}) /declare bln_balancing bool outer TRUE
+	
 	/declare bpct	int	local	100
-	/varcalc bpct ${Spawn[npc Kvxe].PctHPs}+2
+	/varcalc bpct ${Spawn[npc Kvxe].PctHPs}+1
 	/if (${str_classArchetype.Equal[PRIEST]}) {
 		/echo PRIEST CLASS handling
 
@@ -484,19 +485,19 @@ SUB EVENT_BALANCE
 	|-- Melee Classes
 	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
 		|-- Balance of Speed	
-		/keypress esc
+		/squelch /melee reset
 		/call BalancerKillMelee "Balance of Speed" ${Spawn[npc radius 500 Speed].ID} ${bpct}
 
 		|-- Balance of Fury	
-		/keypress esc
+		/squelch /melee reset
 		/call BalancerKillMelee "Balance of Fury" ${Spawn[npc radius 500 Fury].ID} ${bpct}
 
 		|-- Balance of Rage
-		/keypress esc
+		/squelch /melee reset
 		/call BalancerKillMelee "Balance of Rage" ${Spawn[npc radius 500 Rage].ID} ${bpct}
 			
 		|-- Balance of Defense	
-		/keypress esc
+		/squelch /melee reset
 		/call BalancerKillMelee "Balance of Defense" ${Spawn[npc radius 500 Defense].ID} ${bpct}
 
 		|-- return
@@ -600,7 +601,8 @@ Sub BalancerReset
 
 		:returnBalance
 		/if (${Navigation.Active}) /nav stop
-		/stick 25 behind
+		/stick 35 behind
+		/delay 10
 		/call Disengage
 		
 		/if ((${Me.Class.ShortName.Equal[WAR]} || ${Me.Class.ShortName.Equal[SHD]} || ${Me.Class.ShortName.Equal[PAL]}) && ${int_MTID} != ${Me.ID}) /melee aggro=0

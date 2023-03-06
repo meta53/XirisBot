@@ -1,0 +1,24 @@
+#define weaponINI hastecheck.ini
+Sub Main
+	/declare i int local
+    /for i 1 to ${Raid.Members}
+        /echo ${Raid.Member[${i}].Spawn.Class.ShortName}
+        /if (${Raid.Member[${i}].Spawn.Class.ShortName.Equal[WAR]} || ${Raid.Member[${i}].Spawn.Class.ShortName.Equal[PAL]} || ${Raid.Member[${i}].Spawn.Class.ShortName.Equal[SHD]} ||  ${Raid.Member[${i}].Spawn.Class.ShortName.Equal[BRD]} || ${Raid.Member[${i}].Spawn.Class.ShortName.Equal[ROG]} || ${Raid.Member[${i}].Spawn.Class.ShortName.Equal[BER]} || ${Raid.Member[${i}].Spawn.Class.ShortName.Equal[RNG]} || ${Raid.Member[${i}].Spawn.Class.ShortName.Equal[MNK]} || ${Raid.Member[${i}].Spawn.Class.ShortName.Equal[BST]}) {
+            /echo ${Raid.Member[${i}]} => weapons
+            /ini "weaponINI" "${Raid.Member[${i}]}" " " " " 
+            /dex ${Raid.Member[${i}]} /mac weapons 
+            /delay 10
+        }
+        
+    /next i
+/return
+
+
+
+
+
+
+
+
+
+

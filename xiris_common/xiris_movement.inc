@@ -105,7 +105,7 @@ SUB EVENT_CreateCamp(_line, _chatSender, _eventParams)
 Sub StartFollowing(string _leader, string _followType)
 	/varset bln_following TRUE
 	/echo \ao Following \awLeader: \ag${_leader} \awFollowType: \ag${_followType}
-	
+	/if (!${Me.Standing}) /stand on
 	| -Check Range
 	/if (${Spawn[=${_leader}].Distance} > ${int_maxFollowDistance}) {
 		/docommand /${cmdChannel} [${str_followTarget}] is too far away.

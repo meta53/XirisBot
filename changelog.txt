@@ -1,3 +1,15 @@
+03.05.2023  Xiris   - A change to how debuffs works and minor things 
+        MAJOR
+        xiris_debuffing
+            The solution I had for triggers in the ini of each toon didnt work due to how strings are parsed.
+            no the trigger is a key into a list of debuffs that are enumerated in the debuffing inc file.
+            eg: DEBUFF_3_Trigger=CRIPPLE now will triggerr the check in Sub chkDebuffTrigger(string _key) 
+            if it returns true, then fires that debuff. This list can be updated if necessary.
+            Debuff KEYS are: 
+            [PUTRID_DECAY, MALOS, TURGURS, BALANCE_DISCORD, TASHAN, DESOLATE_DEEDS, CRIPPLE, 
+            DRUID_SUN, DRUID_GLACIER, DRUID_VINES, HARMONY, REVERSE_DS] 
+
+
 02.07.2023  Xiris   - Several large changes requiring find/replace.
         MAJOR
         bot_pull        

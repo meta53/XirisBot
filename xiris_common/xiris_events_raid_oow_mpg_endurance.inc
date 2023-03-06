@@ -32,6 +32,7 @@ Sub chkEnduranceMez
         /declare i int local 1
         /for i 1 to ${SpawnCount[npc defender]}
             /call TrueTarget ${NearestSpawn[${i}, npc defender].ID}
+
             /if (!${Target.Buff[${str_mezSingle}].ID}) {
                 /call MQ2Cast "${str_mezSingle}" ${int_mezSingleGem}
             }

@@ -11,6 +11,8 @@ ______________________________________________
 ______________________________________________
 REVISION HISTORY
 	04.26.22    xiris	INITIAL REVISION
+	03.06.23	xiris 	Commented out bandolier changes, can just brute force event at this point
+						and I don't want to have to update 30 or so ini files
 ______________________________________________
 **|	
 |-- Muramite Proving Grounds events
@@ -108,7 +110,7 @@ Sub handleSpecializationChange
 		/if (${str_classArchetype.Equal[CASTER]}) {
 			/call SetResistTypes Fire,Magic,Poison,Disease
 		} else /if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
-			/call doBandolier NOBLUNT
+			|/call doBandolier NOBLUNT
 			/if (${Me.Class.ShortName.Equal[MNK]}) /melee flyingkick=on	
 			/call EngageTarget
 		}
@@ -118,7 +120,7 @@ Sub handleSpecializationChange
 		/if (${str_classArchetype.Equal[CASTER]}) {
 			/call SetResistTypes Fire,Cold,Poison,Disease
 		} else /if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
-			/call doBandolier NOSLASHING
+			|/call doBandolier NOSLASHING
 			/if (${Me.Class.ShortName.Equal[MNK]}) /melee flyingkick=on	
 			/call EngageTarget
 		}
@@ -128,7 +130,7 @@ Sub handleSpecializationChange
 		/if (${str_classArchetype.Equal[CASTER]}) {
 			/call SetResistTypes Magic,Cold,Poison,Disease
 		} else /if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
-			/call doBandolier NOPIERCING
+			|/call doBandolier NOPIERCING
 			/if (${Me.Class.ShortName.Equal[MNK]}) /melee flyingkick=on	
 			/call EngageTarget
 		}
@@ -138,11 +140,11 @@ Sub handleSpecializationChange
 		/if (${str_classArchetype.Equal[CASTER]}) {
 			/call SetResistTypes Fire,Magic,Cold
 		} else /if (${Me.Class.ShortName.Equal[MNK]} || ${Me.Class.ShortName.Equal[BST]} ) {
-			/call doBandolier NOH2H
+			|/call doBandolier NOH2H
 			/if (${Me.Class.ShortName.Equal[MNK]}) /melee flyingkick=off	
 			/call EngageTarget
 		} else {
-			/call doBandolier default
+			|/call doBandolier default
 		}
 	} else /if (${str_currentMode.Equal[NORMAL]}) {
 		/echo NORMAL
@@ -150,7 +152,7 @@ Sub handleSpecializationChange
 		/if (${str_classArchetype.Equal[CASTER]}) {
 			/call SetResistTypes Fire,Cold,Poison,Disease
 		} else /if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
-			/call doBandolier default
+			|/call doBandolier default
 			/if (${Me.Class.ShortName.Equal[MNK]}) /melee flyingkick=on	
 			/call EngageTarget
 		}
