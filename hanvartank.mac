@@ -54,12 +54,12 @@ Sub Main(string _type, string _tankPoint)
 		} 
 		
 		| Run away!
-		/if (${chainSeconds} <= 5 && !${bln_announcedRetreat}) {
+		/if (${chainSeconds} <= 11 && !${bln_announcedRetreat}) {
 			/if (!${timer_announce_retreat}) /call commandRetreat
 		} 
 		
 		| Kill Hanvar
-		/if (!${SpawnCount[npc guard radius 150]} && ${chainSeconds} > 5) {
+		/if (!${SpawnCount[npc guard radius 150]} && ${chainSeconds} > 11) {
 			/if (!${timer_announce_kill}) /call commandAttackHanvar
 		}
 

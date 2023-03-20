@@ -448,7 +448,6 @@ Sub chkComponents(string _component, int _count, string _type, string _summoner,
 
 
 Sub EVENT_GETCLOSER
-	
 	/if ((!${Target.ID} || ${Target.PctHPs} == 0 || !${bln_engaged}) && ${timer_getCloser}) /return 
 	/doevents flush GETCLOSER
 	/varset timer_getCloser ${timer_getCloser.OriginalValue}
@@ -457,17 +456,27 @@ Sub EVENT_GETCLOSER
 /return
 
 Sub StickAdjust
-	/echo stickAdjust ${int_currentStickDistance} > ${int_minStickDistance}
-	/if (${int_currentStickDistance} > ${int_minStickDistance})  /varcalc int_currentStickDistance ${int_currentStickDistance} - 5
+	/echo \agStickAdjust \ao${int_currentStickDistance} \aw> \ao${int_minStickDistance}
+	
+	/if (${int_currentStickDistance} > ${int_minStickDistance}) {
+		/varcalc int_currentStickDistance ${int_currentStickDistance} - 5
+		/stick -5
+	} 
 /return
 
 Sub StickToTarget(bool _engageWhenInRange)
+	/if (${str_classArchetype.Equal[CASTER]} || ${str_classArchetype.Equal[PRIEST]}) /return
 	|/echo dist: ${Target.Distance} currentstick: ${int_currentStickDistance} minstick: ${int_minStickDistance} maxstick: ${int_maxStickDistance}
 	:tryStick
 	/if (${Target.Distance} <= ${int_maxStickDistance} ) {
 		/stick ${stickCmd} ${int_currentStickDistance}
 		/squelch /face fast
-		/if (${_engageWhenInRange}) /killthis
+		
+		/if (${mq2meleeEnabled}) {
+			/if (${_engageWhenInRange}) /killthis
+		} else {
+			/if (${_engageWhenInRange}) /attack on
+		}
 	} else /if (${Target.Distance} > ${int_maxStickDistance} && ${Target.Distance} < ${int_maxNavDistance}) {
 		/declare navDelayWait int local 0
 		/stick off
@@ -482,7 +491,11 @@ Sub StickToTarget(bool _engageWhenInRange)
 			/goto :navDelay
 		}
 		/squelch /face fast
-		/if (${_engageWhenInRange}) /killthis
+		/if (${mq2meleeEnabled}) {
+			/if (${_engageWhenInRange}) /killthis
+		} else {
+			/if (${_engageWhenInRange}) /attack on
+		}
 	} else {
 		/rs Target is too far away to get to!
 		/if (${Navigation.Active}) /nav stop
@@ -493,7 +506,7 @@ Sub StickToTarget(bool _engageWhenInRange)
 
 
 Sub EVENT_RESTICK
-	/if (${bln_engaged}) {
+	/if (${bln_engaged} && (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}))  {
 		/call StickToTarget
 	}
 	/doevents flush RESTICK

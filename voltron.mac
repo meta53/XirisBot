@@ -15,153 +15,13 @@ Sub Main(string _mode)
 	/dgt ResetGroupCurer
 /return
 
-
-|-- Normal setup with Berserkers in MT group for aggro
-Sub SetupGroupsRAID
-	/multiline ; /invite Xanshia;  /invite Ophidia; /invite Ophelia; /invite Ania; /invite Shinxia;
-	/dex Xiria /multiline ; /invite Xirea;  /invite Xirin; /invite Xirael; /invite Aergia; /invite Shynxia;
-	/dex Theist /multiline ; /invite Xurael;  /invite Xerael; /invite Xarael; /invite Xorael; /invite Xunshia;
-	/dex Cereborn /multiline ; /invite Xeixa;   /invite Xiexa; /invite Xeixi; /invite Xeqisa; /invite Dogmatist;
-	/dex Sadelia /multiline ; /invite Drexia;   /invite Mluian; /invite Xonshia; /invite Eurydice; /invite Tragic;
-	/dex Xaeliea /multiline ; /invite Ertres;  /invite Pantheon; /invite Opheoia; /invite Aidos; /invite Xenshia;
-	/dex Xaexa /multiline ; /invite Erinyes;  /invite Deist; /invite Ophexia; /invite Achos; /invite Xinshia;
-	/dex Xaia /multiline ; /invite Ertris;  /invite Ophemia; /invite Opheyia; /invite Achlys; /invite Nihilist;
-	/dex Xepatia /multiline ; /invite Erinyas;  /invite Ophenia; /invite Ophezia; /invite Adikia; /invite Empathic;
-/return
-
-Sub InviteGroupsToRAID
-	/echo Inviting Groups to Raid
-	/raidinvite Xiria
-	/delay 5
-	/raidinvite Theist
-	/delay 5
-	/raidinvite Cereborn
-	/delay 5
-	/raidinvite Sadelia
-	/delay 5
-	/raidinvite Xaeliea
-	/delay 5
-	/raidinvite Xaexa
-	/delay 5
-	/raidinvite Xaia
-	/delay 5
-	/raidinvite Xepatia
-
-	|/dga /notify LargeDialogWindow LDW_YesButton leftmouseup
-	|/dga /notify LargeDialogWindow LDW_OkButton leftmouseup
-/return
-
-
-
-|-- Hatred, where we primarily want to heal the group you are in, and the assist tank
-Sub SetupGroupsHATRED
-	/multiline ; /invite Xanshia;  /invite Deist; /invite Pantheon; /invite Ania; /invite Shinxia;
-	/dex Xiria /multiline ; /invite Xirael;  /invite Tragic; /invite Xirin; /invite Aergia; /invite Shynxia;
-	/dex Xirea /multiline ; /invite Theist;  /invite Xerael; /invite Xarael; /invite Xorael; /invite Xurael;
-	/dex Cereborn /multiline ; /invite Xeixa;   /invite Xiexa; /invite Xeixi; /invite Xeqisa; /invite Dogmatist;
-	/dex Sadelia /multiline ; /invite Drexia;   /invite Nihilist; /invite Mluian; /invite Eurydice; /invite Xinshia;
-	/dex Xaeliea /multiline ; /invite Ertres;  /invite Ophidia; /invite Opheoia; /invite Achlys; /invite Xenshia;
-	/dex Xaexa /multiline ; /invite Erinyes;  /invite Ophelia; /invite Ophexia; /invite Adikia; /invite Xunshia;
-	/dex Xaia /multiline ; /invite Ertris;  /invite Ophemia; /invite Opheyia; /invite Aidos; /invite Xonshia;
-	/dex Xepatia /multiline ; /invite Erinyas;  /invite Ophenia; /invite Ophezia; /invite Achos; /invite Empathic;
-/return
-
-Sub InviteGroupsToHATRED
-	/echo Inviting Groups to Raid
-	/raidinvite Xiria
-	/delay 5
-	/raidinvite Xirea
-	/delay 5
-	/raidinvite Cereborn
-	/delay 5
-	/raidinvite Sadelia
-	/delay 5
-	/raidinvite Xaeliea
-	/delay 5
-	/raidinvite Xaexa
-	/delay 5
-	/raidinvite Xaia
-	/delay 5
-	/raidinvite Xepatia
-
-	|/dga /notify LargeDialogWindow LDW_YesButton leftmouseup
-	|/dga /notify LargeDialogWindow LDW_OkButton leftmouseup
-/return
-
-
-|-- 3 Way split the raid
-Sub SetupGroupsTRIAD 
-	|-Raid 1
-	/multiline ; /invite Xanshia; /invite Pantheon; /invite Deist; /invite Ania; /invite Shinxia;
-	/dex Xirin 		/multiline ; /invite Xepatia; /invite Ophezia; /invite Xeixa; /invite Xurael; /invite Theist;	
-	/dex Xaeliea 	/multiline ; /invite Ertres; /invite Ophidia; /invite Opheoia; /invite Aergia; /invite Xenshia;
-
-	|-Raid 2
-	/dex Xiria 		/multiline ; /invite Xirael; /invite Tragic; /invite Xerael; /invite Achlys; /invite Shynxia;	
-	/dex Sadelia 	/multiline ; /invite Erinyas; /invite Xiexa; /invite Cereborn; /invite Eurydice; /invite Dogmatist;
-	/dex Xaexa		/multiline ; /invite Erinyes; /invite Ophelia; /invite Ophexia; /invite Adikia; /invite Xunshia;
-
-	|-Raid 3
-	/dex Xirea		/multiline ; /invite Xinshia; /invite Xarael; /invite Xorael; /invite Aidos; /invite Drexia;
-	/dex Mluian		/multiline ; /invite Ophenia; /invite Xeixi; /invite Xeqisa; /invite Nihilist; /invite Empathic;
-	/dex Xaia		/multiline ; /invite Ertris; /invite Ophemia; /invite Opheyia; /invite Achos; /invite Xonshia;
-/return 
-
-Sub InviteGroupsToTRIAD 
-	/raidinvite Xirin
-	/raidinvite Xaeliea
-
-	/dex Xiria /raidinvite Sadelia
-	/dex Xiria /raidinvite Xaexa
-
-	/dex Xirea /raidinvite Mluian
-	/dex Xirea /raidinvite Xaia
-/return
-
-
-|-- 3 Way split for Jelvan
-Sub SetupGroupsJELVAN
-	| West, 1
-	/dex Xiria /multiline ; /invite Xorael; /invite Xurael; /invite Xirael; /invite Achlys; /invite Shynxia
-	/dex Sadelia /multiline ; /invite Dogmatist; /invite Theist;
-
-	| South, 2 
-	/multiline ; /invite Xanshia; /invite Xerael; /invite Ophidia; /invite Opheoia; /invite Shinxia 
-	/dex Nihilist /multiline ; /invite Ophelia; /invite Ophexia; /invite Erinyas; /invite Xaeliea; /invite Aidos
-	/dex Xonshia /multiline ; /invite Ophemia; /invite Opheyia; /invite Erinyes; /invite Xaexa; /invite Achos
-	/dex Xinshia /multiline ; /invite Ophenia; /invite Ophezia; /invite Ertres; /invite Xaia; /invite Aergia
-	/dex Xarael /multiline ; /invite Cereborn; /invite Mluian; /invite Ertris; /invite Xepatia; /invite Ania
-	/dex Pantheon /multiline ; /invite Drexia; /invite Xeixi; /invite Xeixa; /invite Xiexa; /invite Xeqisa
-
-	| East, 3
-	/dex Xirea /multiline ; /invite Xenshia; /invite Empathic; /invite Xunshia; /invite Adikia; 
-	/dex Xirin /multiline ; /invite Deist; /invite Tragic; /invite Eurydice;
-
-/return
-
-Sub InviteGroupsToJELVAN
-	| West, 1
-	/dex Xiria /raidinvite Sadelia 
-
-	| South, 2
-	/raidinvite Nihilist 
-	/raidinvite Xonshia
-	/raidinvite Xinshia
-	/raidinvite Xarael 
-	/raidinvite Pantheon
-
-	| East, 3
-	/dex Xirea /raidinvite Xirin
-	 
-/return
-
-|-- Hatred, where we primarily want to heal the group you are in, and the assist tank
+|-- Default, where we primarily want to heal the group you are in, and the assist tank
 Sub SetupGroupsDEFAULT
 	/multiline ; /invite Xanshia;  /invite Tragic; /invite Empathic; /invite Ania; /invite Ophidia;
 	/dex Xiria /multiline ; /invite Xirael;  /invite Xerael; /invite Dogmatist; /invite Aergia; /invite Pantheon;
 	/dex Xirea /multiline ; /invite Xinshia; /invite Xurael; /invite Sadelia; /invite Eurydice; /invite Drexia;
 	/dex Xirin /multiline ; /invite Xenshia;  /invite Deist; /invite Cereborn; /invite Achos; /invite Xorael;
-	/dex Xeqisa /multiline ; /invite Xiexa;   /invite Xeixi; /invite Xeixa; /invite Aidos; /invite Nihilist;
+	/dex Xeqisa /multiline ; /invite Xiexa;   /invite Nessia; /invite Erisa; /invite Aidos; /invite Nihilist;
 	/dex Xaeliea /multiline ; /invite Ertres;  /invite Shinxia; /invite Opheoia; /invite Ophenia; /invite Theist;
 	/dex Xaexa /multiline ; /invite Erinyes;  /invite Shynxia; /invite Ophexia; /invite Ophelia; /invite Xarael;
 	/dex Xaia /multiline ; /invite Ertris;  /invite Ophemia; /invite Opheyia; /invite Adikia; /invite Xonshia;
@@ -190,9 +50,78 @@ Sub InviteGroupsToDEFAULT
 	|/dga /notify LargeDialogWindow LDW_OkButton leftmouseup
 /return
 
+
+
+|-- 3 Way split the raid
+Sub SetupGroupsTRIAD 
+	|-Raid 1
+	/multiline ; /invite Xanshia; /invite Pantheon; /invite Deist; /invite Ania; /invite Shinxia;
+	/dex Xirin 		/multiline ; /invite Xepatia; /invite Ophezia; /invite Nessia; /invite Xurael; /invite Theist;	
+	/dex Xaeliea 	/multiline ; /invite Ertres; /invite Ophidia; /invite Opheoia; /invite Aergia; /invite Xenshia;
+
+	|-Raid 2
+	/dex Xiria 		/multiline ; /invite Xirael; /invite Tragic; /invite Xerael; /invite Achlys; /invite Shynxia;	
+	/dex Sadelia 	/multiline ; /invite Erinyas; /invite Xiexa; /invite Cereborn; /invite Eurydice; /invite Dogmatist;
+	/dex Xaexa		/multiline ; /invite Erinyes; /invite Ophelia; /invite Ophexia; /invite Adikia; /invite Xunshia;
+
+	|-Raid 3
+	/dex Xirea		/multiline ; /invite Xinshia; /invite Xarael; /invite Xorael; /invite Aidos; /invite Drexia;
+	/dex Mluian		/multiline ; /invite Ophenia; /invite Erisa; /invite Xeqisa; /invite Nihilist; /invite Empathic;
+	/dex Xaia		/multiline ; /invite Ertris; /invite Ophemia; /invite Opheyia; /invite Achos; /invite Xonshia;
+/return 
+
+Sub InviteGroupsToTRIAD 
+	/raidinvite Xirin
+	/raidinvite Xaeliea
+
+	/dex Xiria /raidinvite Sadelia
+	/dex Xiria /raidinvite Xaexa
+
+	/dex Xirea /raidinvite Mluian
+	/dex Xirea /raidinvite Xaia
+/return
+
+
+|-- 3 Way split for Jelvan
+Sub SetupGroupsJELVAN
+	| West, 1
+	/dex Xiria /multiline ; /invite Xorael; /invite Xurael; /invite Xirael; /invite Achlys; /invite Shynxia
+	/dex Sadelia /multiline ; /invite Dogmatist; /invite Theist;
+
+	| South, 2 
+	/multiline ; /invite Xanshia; /invite Xerael; /invite Ophidia; /invite Opheoia; /invite Shinxia 
+	/dex Nihilist /multiline ; /invite Ophelia; /invite Ophexia; /invite Erinyas; /invite Xaeliea; /invite Aidos
+	/dex Xonshia /multiline ; /invite Ophemia; /invite Opheyia; /invite Erinyes; /invite Xaexa; /invite Achos
+	/dex Xinshia /multiline ; /invite Ophenia; /invite Ophezia; /invite Ertres; /invite Xaia; /invite Aergia
+	/dex Xarael /multiline ; /invite Cereborn; /invite Mluian; /invite Ertris; /invite Xepatia; /invite Ania
+	/dex Pantheon /multiline ; /invite Drexia; /invite Erisa; /invite Nessia; /invite Xiexa; /invite Xeqisa
+
+	| East, 3
+	/dex Xirea /multiline ; /invite Xenshia; /invite Empathic; /invite Xunshia; /invite Adikia; 
+	/dex Xirin /multiline ; /invite Deist; /invite Tragic; /invite Eurydice;
+
+/return
+
+Sub InviteGroupsToJELVAN
+	| West, 1
+	/dex Xiria /raidinvite Sadelia 
+
+	| South, 2
+	/raidinvite Nihilist 
+	/raidinvite Xonshia
+	/raidinvite Xinshia
+	/raidinvite Xarael 
+	/raidinvite Pantheon
+
+	| East, 3
+	/dex Xirea /raidinvite Xirin
+	 
+/return
+
+
 |-- Hatred, where we primarily want to heal the group you are in, and the assist tank
 Sub SetupGroupsTHIRTYSIX
-	/multiline ; /invite Ophidia;  /invite Xeixa; /invite Xanshia; /invite Xinshia; /invite Ania;
+	/multiline ; /invite Ophidia;  /invite Xiexa; /invite Xanshia; /invite Xinshia; /invite Ania;
 	/dex Xirin /multiline ; /invite Opheoia;  /invite Mluian; /invite Theist; /invite Tragic; /invite Aergia;
 	/dex Xaeliea /multiline ; /invite Ertres;  /invite Ophexia; /invite Shinxia; /invite Xerael; /invite Achlys;
 	/dex Xaexa /multiline ; /invite Erinyes;  /invite Ophelia; /invite Shynxia; /invite Xarael; /invite Adikia;
@@ -218,7 +147,7 @@ Sub InviteGroupsToTHIRTYSIX
 Sub SetupGroupsPOWERLEVEL 
 	/multiline ; /invite Ophenia; /invite Opheoia; /invite Achos; /invite Nessia; /invite Erisa ;
 	/dex Xanshia /multiline ; /invite Xiris; /invite Eurydice; /invite Mluian ;
-	/dex Xirael /multiline ; /invite Sadelia; /invite Xeixa; /invite Aidos ; 
+	/dex Xirael /multiline ; /invite Sadelia; /invite Xiexa; /invite Aidos ; 
 	/dex Xinshia /multiline ; /invite Ophidia; /invite Shinxia ;
 	/dex Xenshia /multiline ; /invite Ophelia; /invite Shynxia;
 	/dex Xonshia /multiline ; /invite Ophemia; /invite Xeqisa;

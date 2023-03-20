@@ -1085,7 +1085,7 @@ Sub EVENT_ChangeMT(_line, _sender, _eventParams)
 	/varset str_MTName ${name} 
 
 	/echo MTID: ${int_MTID} MTName: ${name}
-	/dgt [${Me.Class.ShortName}] ${Me.Name} ${str_action} >> ${Spawn[id ${int_MTID}].CleanName} <<  @ ${healPoint}
+	/if (${str_classArchetype.Equal[PRIEST]}) /dgt [${Me.Class.ShortName}] ${Me.Name} ${str_action} >> ${Spawn[id ${int_MTID}].CleanName} <<  @ ${healPoint}
 	/if (${Me.Class.ShortName.Equal[CLR]}) /call TrueTarget ${int_MTID}
 	/if (${Me.Name.Equal[${name}]}) {
 		/varset bln_tanking TRUE
@@ -1613,10 +1613,13 @@ Sub RemoveRingset
 	/echo \aoRemoving \ar${Ring_1_Name} \ayfrom leftfinger
 	/unequip leftfinger
 	/delay 10
+	/autoinventory
+
 	/echo \aoRemoving \ar${Ring_2_Name} \ayfrom rightfinger
 	/unequip rightfinger
 	/delay 10
 	/autoinventory
+	
 /return
 
 |-- method to load the saved rings from INI (primarily for Trial of Foresight)
@@ -1631,10 +1634,9 @@ Sub RestoreFaceSlot
 /return 
 
 Sub LoadRingset
-	/declare leftfinger string local ${Ini[INI_CHAR,SavedInventory,leftfinger]}
-	/declare rightfinger string local ${Ini[INI_CHAR,SavedInventory,rightfinger]}
+
 	/if (${Me.Class.ShortName.Equal[BRD]}) /medley stop
-	/echo ${leftfinger},  ${rightfinger}
+	/echo ${Ring_1_Name},  ${Ring_2_Name}
 
 	/declare notemptyCount int local 0
 	:notempty
@@ -1644,11 +1646,11 @@ Sub LoadRingset
 	/if (${Cursor.ID}) /goto :notempty
 
 	/if (${leftfinger.NotEqual[NULL]}) {
-		 /exchange "${leftfinger}" leftfinger
+		 /exchange "${Ring_1_Name}" leftfinger
 	}
 	/delay 10
 	/if (${rightfinger.NotEqual[NULL]}) {
-		/exchange "${rightfinger}" rightfinger
+		/exchange "${Ring_2_Name}" rightfinger
 	}
 	/echo \agSaved Ringset Equipped 
 	/autoinventory

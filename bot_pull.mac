@@ -955,7 +955,7 @@ Sub variant_initialize(int _pull_dist, string _channel, string _campName, bool _
 	/echo \awvariant_initialize \ao ${_pull_dist} ${_channel} ${_campName} ${_useDownFlags} ${_usePull}
 
 	|--loot
-	/varset bln_looting				FALSE
+	/varset bln_looting				TRUE
 	/if (${bln_looting}) 			/call EnableLooting
 
 	|--downflags 
@@ -1024,7 +1024,7 @@ Sub variant_initialize(int _pull_dist, string _channel, string _campName, bool _
 
 	|--target information
 	/declare int_minPullCount		int		outer   4
-	/declare int_minTLevel			int		outer	36
+	/declare int_minTLevel			int		outer	8
 	/declare int_maxTLevel			int		outer	75
 	/declare bln_validTGT			bool	outer	FALSE
 	/declare bln_TGTDead			bool	outer	FALSE

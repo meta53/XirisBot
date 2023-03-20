@@ -2,7 +2,7 @@
         MAJOR
         xiris_debuffing
             The solution I had for triggers in the ini of each toon didnt work due to how strings are parsed.
-            no the trigger is a key into a list of debuffs that are enumerated in the debuffing inc file.
+            now the trigger is a key into a list of debuffs that are enumerated in the debuffing inc file.
             eg: DEBUFF_3_Trigger=CRIPPLE now will triggerr the check in Sub chkDebuffTrigger(string _key) 
             if it returns true, then fires that debuff. This list can be updated if necessary.
             Debuff KEYS are: 

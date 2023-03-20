@@ -1,5 +1,7 @@
 #Turbo 20
 Sub Main 
+    | All Casters
+    /dge caster     /nav wp jelvanCaster
     | Jelvan W-S-E  1-2-3
     | West, 1 - Clerics that aren't doing DI/HoT move here, else, move south
     | Group 1

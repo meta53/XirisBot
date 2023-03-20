@@ -18,7 +18,8 @@ REVISION HISTORY
 	02.02.23	xiris 	Updated logic in chkDebuffsOnSingleTarget to call CastDebuffsOnTarget if we have more than 1 debuff, which then
 						will check if the other debuffs fufill requirements. This is to allow for toons with a single debuff to not
 						have to call the larger logic block of CastDebuffsOnTarget, as it will check inline for the total=1 && trigger logic
-
+	03.08.23	xiris	Removed Trigger parsing, now uses set method chkDebuffTrigger which has everything enumerated
+						based on a key _TYPE in the ini. THis is because parsing the trigger is a PITA, and didn't work well
 **|
 
 #EVENT DebuffTarget	"#1# tells you#*#'DebuffTarget #2#'"
@@ -189,9 +190,8 @@ Sub CastDebuffsOnTarget(int _targetID, bool _forced)
 		/call TrueTarget ${_targetID}
 		/if (${Target.PctHPs} > ${DEBUFF_${db}_StartHP} || ${Target.PctHPs} < ${DEBUFF_${db}_StopHP}) /goto :nextDB
 
-		| Trigger Check (triggers are stored as strings with $ replaced with #. Run this through a replace and check);
-		| This is usually a complex string such as DEBUFF_1_Trigger=(!${Target.Maloed.ID} || ${Target.Buff[${DEBUFF_1_Spell}].Duration.TotalSeconds} < 30)
-		/call chkDebuffTrigger ${DEBUFF_${db}_Trigger} 
+		| Trigger Check based on type (Calls chkCharmTrigger)
+		/call chkDebuffTrigger ${DEBUFF_${db}_Type} 
 		/if (!${Macro.Return}) /goto :nextDB
 
 		| Checks passed, check if the spell is memorized. Skip if not
@@ -298,7 +298,6 @@ Sub CreateDebuffLineup
 	/if (${Bool[${DEBUFF_Total}]}) {
 		/for i 1 to ${DEBUFF_Total} 
 			/call addSpellToLineup DEBUFF ${i} ${Ini[INI_CHAR,DEBUFF,DEBUFF_${i}]}
-			/declare DEBUFF_${i}_Trigger	string	outer	${Ini[INI_CHAR,DEBUFF,DEBUFF_${i}_Trigger,FALSE, noparse]}
 			/declare DEBUFF_${i}_Type		string	outer	${Ini[INI_CHAR,DEBUFF,DEBUFF_${i}_Type,RESIST_DEBUFF]}
 		/next i
 	}

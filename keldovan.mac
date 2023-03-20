@@ -3,6 +3,9 @@
 Sub Main 
     | Set Healmode efficient
     /dgt healmode efficient
+    /dgt changeMT Xiris
+
+    /delay 80 
     
     | Set Autocures (most of them!)
     /dt Tragic AutoCureMTOn
@@ -22,16 +25,20 @@ Sub Main
     | Set MT
     /dex Xiris /end
     /dex Xiris /melee aggro=on
+    /delay 10
     /dex Xiris /melee taunt=on
 
     | Set ST ()
     /dex Xiria /end 
     /dex Xiria /melee aggro=on
+    /delay 10
     /dex Xiria /melee taunt=on
 
     | Set Self
     /melee aggro=on
+    /delay 10
     /melee taunt=on
+    /dt Xenshia changeMT Xirin
 
     | Run raidcommands
     /dgt Hush

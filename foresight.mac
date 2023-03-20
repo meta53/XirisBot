@@ -1,0 +1,39 @@
+#Turbo 20
+Sub Main 
+    /dge priest /nav wp SafeCenterCaster
+    /dge melee /nav wp SafeCenterDPS 
+    /dge caster /nav wp SafeCenterCaster
+    
+    | Set Xiris (MT) Healing 
+    /dt Xanshia changeMT Xiris
+    /dt Xanshia changeHP 40
+
+    | Set Xiria (MT) Healing
+    /dt Xirael changeMT Xiria
+    /dt Xirael changeHP 40
+
+    | Set Xirin (OT-1) Healing
+    /dt Xenshia changeMT Xirin
+    /dt Xinshia changeMT Xirin 
+    /dt Xunshia changeMT Xirin
+    /dt Pantheon changeMT Xirin
+    
+
+    | Set Xirea (OT-2) Healing
+    /dt Nihilist changeMT Xirea
+
+    | Set Sadelia (OT-3) Healing
+    /dt Drexia changeMT Sadelia
+
+
+    | Set the mode to efficient
+    /dgt healMode EFFICIENT 
+
+    | Turn on preventspeed
+    /docrack preventspeed on
+
+    | Set Me (SK) to aggro and taunt and set the autostander mac
+    /melee aggro=1 
+    /melee taunt=1
+    /mac raidcmds
+/return

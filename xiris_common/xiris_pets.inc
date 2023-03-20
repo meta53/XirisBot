@@ -232,7 +232,7 @@ Sub chkPetHeal
 **|
 
 Sub chkPetAttack
-	/if (!${bln_engaged} || ${bln_petAttacking} || !${Bool[${Target.PctHPs}]} ) /return
+	/if (!${bln_engaged} || ${bln_petAttacking} || !${Target.PctHPs} ) /return
 	/if (${Me.Pet.ID} && !${Me.Pet.Combat} && ${Target.ID}==${int_targetID} && ${Target.PctHPs}<${int_petAttackHP} && ${Target.Distance}<=100) {
 		/echo \agSiccing Pet on \ay${Target.Name}
 		/varset bln_petAttacking TRUE

@@ -546,17 +546,26 @@ Sub chkOMMEvents
 Sub chkOMMCharm 
 	/if (!${Me.Pet.ID}) {
 		/if (${SpawnCount[npc Coerced]}) {
-			/echo \agAttempting Coerced Charm!
-			/shout Attempting Charm!
-			/if (${NearestSpawn[npc Coerced].Distance3D} < 200 && ${NearestSpawn[npc Coerced].LineOfSight}) {
-				/echo \ar CHARMING ${NearestSpawn[npc Coerced]} (${NearestSpawn[npc Coerced].ID}) ${NearestSpawn[npc Coerced].Distance3D}
-				/call CharmNPC ${NearestSpawn[npc Coerced].ID} TRUE TRUE ${Spawn[npc Overlord].ID}
+			| Eurydice (Charm 1)
+			/if (${NearestSpawn[npc Coerced_Lieutenant_].Distance3D} < 200 && ${NearestSpawn[npc Coerced_Lieutenant_].LineOfSight} && ${Me.Name.Equal[Eurydice]}) {
+				/shout Attempting Charm! ${NearestSpawn[npc Coerced_Lieutenant_]} (${NearestSpawn[npc Coerced_Lieutenant_].ID}) ${NearestSpawn[npc Coerced_Lieutenant_].Distance3D}
+				/echo \ar CHARMING ${NearestSpawn[npc Coerced_Lieutenant_]} (${NearestSpawn[npc Coerced_Lieutenant_].ID}) ${NearestSpawn[npc Coerced_Lieutenant_].Distance3D}
+				/call CharmNPC ${NearestSpawn[npc Coerced_Lieutenant_].ID} TRUE TRUE ${Spawn[npc Overlord].ID}
+				/delay 10
+			}
+			| Erisa (Charm 2)
+			/if (${NearestSpawn[npc Coerced_Lieutenant].Distance3D} < 200 && ${NearestSpawn[npc Coerced_Lieutenant].LineOfSight} && ${Me.Name.Equal[Erisa]}) {
+				/shout Attempting Charm! ${NearestSpawn[npc Coerced_Lieutenant]} (${NearestSpawn[npc Coerced_Lieutenant].ID}) ${NearestSpawn[npc Coerced_Lieutenant].Distance3D}
+				/echo \ar CHARMING ${NearestSpawn[npc Coerced_Lieutenant]} (${NearestSpawn[npc Coerced_Lieutenant].ID}) ${NearestSpawn[npc Coerced_Lieutenant].Distance3D}
+				/call CharmNPC ${NearestSpawn[npc Coerced_Lieutenant].ID} TRUE TRUE ${Spawn[npc Overlord].ID}
+				/delay 10
 			}
 		}
 	} else {
 		/if (${Me.Pet.ID} && ${Me.Pet.Target.ID} != ${Spawn[npc Overlord].ID}) {
 			/call TrueTarget ${Spawn[npc Overlord].ID}
 			/squelch /pet attack
+			/delay 10
 		}
 	}
 /return
@@ -567,7 +576,7 @@ Sub chkOMMFrenzied
 	/if (${SpawnCount[npc lasher]}) {
 		/if (${NearestSpawn[1, npc lasher].Distance3D} < 100) {
 			/varset AENUKE_Active TRUE
-			/echo \arAENUKING THE FUCKERS
+			|/echo \arAENUKING THE FUCKERS
 			/call TrueTarget ${NearestSpawn[1, npc lasher].ID}
 			/call chkAENuke
 		}

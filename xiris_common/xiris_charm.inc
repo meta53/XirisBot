@@ -8,6 +8,8 @@ ______________________________________________
 REVISION HISTORY
     06.24.22    xiris	INITIAL REVISION
     06.29.22	xiris 	Updated all events to only be either generic, or [/gsay, /rsay, /tell, MQ2DanNet(dgt, dt)] only	
+    03.08.23	xiris	Removed Trigger parsing, now uses set method chkCharmTrigger which has everything enumerated
+						based on a key _TYPE in the ini. This is because parsing the trigger is a PITA, and didn't work well
 **|
 
 
@@ -59,9 +61,24 @@ Sub EVENT_CharmNPCByName(_line, _chatSender,_eventParams)
     /call CharmNPC ${Spawn[npc ${_eventParams}].ID}
 /return 
 
-Sub chkCharmSpell
-
-/return
+Sub chkCharmTrigger(string _key)
+    /if (${_key.Equal[ANCIENT]}) {
+		|ancient: voice of muram
+        /if (((!${Me.Pet.ID} || ${Target.Charmed.Duration.TotalSeconds} < 6) && ${Me.SpellReady[${CHARM_1_Spell}]})) {
+			/return TRUE
+		}
+	} else /if (${_key.Equal[NORMAL]}) { 
+		|malos
+		/if ((!${Me.Pet.ID} || ${Target.Buff[${CHARM_1_SPELL}].Duration.TotalSeconds} < 5) && ${Me.SpellReady[${CHARM_2_Spell}]} && !${Me.SpellReady[${CHARM_1_Spell}]}) {
+			/return TRUE
+		}
+	} else /if (${_key.Equal[UNDEAD]}) { 
+		|malos
+		/if ((!${Me.Pet.ID} || ${Target.Buff[${CHARM_1_SPELL}].Duration.TotalSeconds} < 5) && ${Target.Body.Find[UNDEAD]}) {
+			/return TRUE
+		}
+	}
+/return FALSE
 
 Sub CharmNPC(int _targetID, bool _forced, bool _attack, int _attackID)
     /echo \aoCharmNPC\aw(\ag${_targetID}\aw ${bln_activeCharming})
@@ -74,12 +91,11 @@ Sub CharmNPC(int _targetID, bool _forced, bool _attack, int _attackID)
     /declare i int local ${CHARM_Total}
     /for i  1 to ${CHARM_Total}
         /call TrueTarget ${_targetID}
-        | Trigger Check (triggers are stored as strings with $ replaced with #. Run this through a replace and check);
-		| This is usually a complex string such as CHARM_1_Trigger=(!${Target.Maloed.ID} || ${Target.Buff[${DEBUFF_1_Spell}].Duration.TotalSeconds} < 30)
-		/if (!${CHARM_${i}_Trigger}) {
-			/echo \ar ${CHARM_${i}_Spell} Failed use Check ${CHARM_${i}_Trigger}
-			/goto :nextCharm
-		}
+       
+       | Trigger Check based on type (Calls chkCharmTrigger)		
+       /call chkCharmTrigger ${CHARM_${i}_Type}
+        /if (!${Macro.Return}) /goto :nextCharm
+       
         | Checks passed, check if the spell is memorized. Skip if not
 		:charmSpellMemorized
 			/call chkSpellMemorized "${CHARM_${i}_Spell}" ${_forced} ${CHARM_${i}_Gem}
@@ -186,7 +202,6 @@ Sub CreateCharmLineup
     /if (${Bool[${CHARM_Total}]}) {
         /for i 1 to ${CHARM_Total}
             /call addSpellToLineup CHARM ${i} ${Ini[INI_CHAR,CHARM,CHARM_${i}]} 
-            /declare CHARM_${i}_Trigger 	string	outer	${Ini[INI_CHAR,CHARM,CHARM_${i}_Trigger,FALSE, noparse]}
             /declare CHARM_${i}_Type  		string	outer	${Ini[INI_CHAR,CHARM,CHARM_${i}_Type,NORMAL]}
         /next i
     }

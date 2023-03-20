@@ -55,6 +55,10 @@ Sub Main
     /dt Xinshia changeMT Eurydice 
     /dex Eurydice /dt Xinshia dime
 
+    | Erisa needs heals and DI 
+    /dt Xorael changeMT Erisa 
+    /dex Xenshia /dt Xinshia dime
+
   
     | Healing Focus
     | So these clerics will not try to cure group
