@@ -450,34 +450,34 @@ SUB EVENT_BALANCE
 		|-post 70% have the casters help with defense
 		/if (${bpct} < 75 && ${bpct} >=65) {
 			|-- Balance of Defense	
-			/call BalancerKillCaster "Balance of Defense" ${Spawn[npc radius 5000 Defense].ID} ${bpct}
+			/call BalancerKillCaster "Balance of Defense" ${Spawn[npc radius 500 Defense].ID} ${bpct}
 			/call BalancerReset
 			
 		} 
 		|-post 60% have the casters help with rage
 		/if (${bpct} < 65 && ${bpct} >=55) {
 			|-- Balance of Defense	
-			/call BalancerKillCaster "Balance of Rage" 		${Spawn[npc radius 5000 Rage].ID} ${bpct}
-			/call BalancerKillCaster "Balance of Defense" 	${Spawn[npc radius 5000 Defense].ID} ${bpct}
+			/call BalancerKillCaster "Balance of Rage" 		${Spawn[npc radius 500 Rage].ID} ${bpct}
+			/call BalancerKillCaster "Balance of Defense" 	${Spawn[npc radius 500 Defense].ID} ${bpct}
 			/call BalancerReset
 		} 
 
 		|-post 50% have the casters help with fury
 		/if (${bpct} < 55 && ${bpct} >=45) {
 			|-- Balance of Defense	
-			/call BalancerKillCaster "Balance of Fury" 		${Spawn[npc radius 5000 Fury].ID} ${bpct}
+			/call BalancerKillCaster "Balance of Fury" 		${Spawn[npc radius 500 Fury].ID} ${bpct}
 			/call BalancerKillCaster "Balance of Rage" 		${Spawn[npc radius 500 Rage].ID} ${bpct}
-			/call BalancerKillCaster "Balance of Defense" 	${Spawn[npc radius 5000 Defense].ID} ${bpct}
+			/call BalancerKillCaster "Balance of Defense" 	${Spawn[npc radius 500 Defense].ID} ${bpct}
 			/call BalancerReset
 		} 
 
 		|-post 40% have the casters help with speed;
 		/if (${bpct} < 45) {
 			|-- Balance of Speed
-			/call BalancerKillCaster "Balance of Speed" 	${Spawn[npc radius 5000 Speed].ID} ${bpct}
-			/call BalancerKillCaster "Balance of Fury" 		${Spawn[npc radius 5000 Fury].ID} ${bpct}
-			/call BalancerKillCaster "Balance of Rage" 		${Spawn[npc radius 5000 Rage].ID} ${bpct}
-			/call BalancerKillCaster "Balance of Defense" 	${Spawn[npc radius 5000 Defense].ID} ${bpct}
+			/call BalancerKillCaster "Balance of Speed" 	${Spawn[npc radius 500 Speed].ID} ${bpct}
+			/call BalancerKillCaster "Balance of Fury" 		${Spawn[npc radius 500 Fury].ID} ${bpct}
+			/call BalancerKillCaster "Balance of Rage" 		${Spawn[npc radius 500 Rage].ID} ${bpct}
+			/call BalancerKillCaster "Balance of Defense" 	${Spawn[npc radius 500 Defense].ID} ${bpct}
 			/call BalancerReset
 		} 
 	}

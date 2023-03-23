@@ -138,10 +138,6 @@ Sub Event_cureReceived(_line, _sender, _eventParams)
 
 Sub Event_cureGroupPoison(_line, _sender, _eventParams)
 	/if (${Me.Class.ShortName.NotEqual[CLR]} && ${Me.Class.ShortName.NotEqual[DRU]} && ${Me.Class.ShortName.NotEqual[SHM]} && ${Me.Class.ShortName.NotEqual[PAL]}) /return
-	/echo EVT_CGPoison: _line:${_line}
-	/doevents flush
-	/echo _sender: ${_sender}
-	/echo _eventParams:${_eventParams}
 	/rs Curing Group of Poisons with: ${str_cure_poison}
 	/call cureGroup poison ${_eventParams}
 	/doevents flush cureGroupPoison
@@ -149,8 +145,6 @@ Sub Event_cureGroupPoison(_line, _sender, _eventParams)
 
 Sub Event_cureGroupDisease(_line, _sender, _eventParams)
 	/if (${Me.Class.ShortName.NotEqual[CLR]} && ${Me.Class.ShortName.NotEqual[DRU]} && ${Me.Class.ShortName.NotEqual[SHM]} && ${Me.Class.ShortName.NotEqual[PAL]}) /return
-	/echo EVT_CGDisease: _line:${_line}
-	/doevents flush
 	/rs Curing Group of Disease with: ${str_cure_disease}
 	/call cureGroup disease ${_eventParams}
 	/doevents flush cureGroupDisease
@@ -158,8 +152,6 @@ Sub Event_cureGroupDisease(_line, _sender, _eventParams)
 
 Sub Event_cureGroupCurse(_line, _sender, _eventParams)
 	/if (${Me.Class.ShortName.NotEqual[CLR]} &&${Me.Class.ShortName.NotEqual[DRU]} && ${Me.Class.ShortName.NotEqual[SHM]} && ${Me.Class.ShortName.NotEqual[PAL]}) /return
-	/echo EVT_CGCurse: _line:${_line}
-	/doevents flush
 	/rs Curing Group of Curses with: ${str_cure_curse}
 	/call cureGroup curse ${_eventParams}
 	/doevents flush cureGroupCurse
@@ -167,8 +159,6 @@ Sub Event_cureGroupCurse(_line, _sender, _eventParams)
 
 Sub Event_cureGroupCorruptiuon(_line, _sender, _eventParams)
 	/if (${Me.Class.ShortName.NotEqual[CLR]} &&${Me.Class.ShortName.NotEqual[DRU]} && ${Me.Class.ShortName.NotEqual[SHM]} && ${Me.Class.ShortName.NotEqual[PAL]}) /return
-	/echo EVT_CGCoruption: _line:${_line}
-	/doevents flush
 	/rs Curing Group of Corruption with: ${str_cure_corruption}
 	/call cureGroup corruption ${_eventParams}
 	/doevents flush Event_cureGroupCorruptiuon
