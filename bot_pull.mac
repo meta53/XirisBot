@@ -451,7 +451,7 @@ Sub pullTarget
 			:ReturnLoop
 				/delay 10
 				/varcalc dist ${Math.Distance[${Me.Y},${Me.X},${Me.Z}:${D1Y},${D1X},${D1Z}]}
-				/if (${dist} < 50) /nav stop
+				/if (${dist} < ${pulltocamp}) /nav stop
 				/if (${Navigation.Active})  /goto :ReturnLoop
 		}
 	:return
@@ -955,7 +955,7 @@ Sub variant_initialize(int _pull_dist, string _channel, string _campName, bool _
 	/echo \awvariant_initialize \ao ${_pull_dist} ${_channel} ${_campName} ${_useDownFlags} ${_usePull}
 
 	|--loot
-	/varset bln_looting				TRUE
+	/varset bln_looting				FALSE
 	/if (${bln_looting}) 			/call EnableLooting
 
 	|--downflags 
@@ -1021,6 +1021,7 @@ Sub variant_initialize(int _pull_dist, string _channel, string _campName, bool _
 	/varcalc int_minZHeight			${Me.Z} - 150
 	/varcalc int_maxZHeight			${Me.Z} + 200
 	/varcalc int_zRadius ${int_maxZHeight} - ${int_minZHeight}
+	/declare int_closeEnoughRadius	int		outer   50
 
 	|--target information
 	/declare int_minPullCount		int		outer   4
@@ -1259,6 +1260,7 @@ Sub setAlerts
 		/squelch /alert add 1 "Chizzlik"
 		/squelch /alert add 1 "Ukla"
 	}
+	
 
 
 	|=================================
@@ -1384,6 +1386,12 @@ Sub setAlerts
 	} else /if (${Zone.ShortName.Equal[burningwood]}) {
 		/squelch /alert add 2 "wurm"
 		/squelch /alert add 2 "Nezekezena"
+	} else /if (${Zone.ShortName.Equal[karnor]}) {
+		/varset int_minPullCount 20
+		/varset int_closeEnoughRadius 30
+		/squelch /alert add 2 "warlord"
+		/squelch /alert add 2 "bodyguard"
+		/squelch /alert add 2 "pawbuster"
 	}
 
 /return

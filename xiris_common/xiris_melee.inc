@@ -464,6 +464,13 @@ Sub StickAdjust
 	} 
 /return
 
+Sub EngageTargetMelee
+	/call StickToTarget TRUE
+	/varset timer_restick 15s
+	/killthis
+/return
+
+
 Sub StickToTarget(bool _engageWhenInRange)
 	/if (${str_classArchetype.Equal[CASTER]} || ${str_classArchetype.Equal[PRIEST]}) /return
 	|/echo dist: ${Target.Distance} currentstick: ${int_currentStickDistance} minstick: ${int_minStickDistance} maxstick: ${int_maxStickDistance}
@@ -663,6 +670,7 @@ Sub xbot_initialize_melee
 	/declare    int_maxNavDistance		int		outer   300
 	/declare	timer_getCloser			timer	outer	2s
 	/declare 	timer_check_downshits	timer	outer 	0
+	/declare    timer_restick			timer   outer   15s
 
 	|-- ALL CLASSES COMMON
 	|-- [Settings] : Downflags

@@ -151,6 +151,7 @@ Sub chkLoot
 			/return
 		}
 		|/echo count: ${SpawnCount[npc corpse radius ${int_lootRadius}]}
+		/nav recordwaypoint lootStart
 		/declare i int local
 		:lootCheck
 		/for i 1 to ${SpawnCount[npc corpse radius ${int_lootRadius}]}
@@ -161,6 +162,8 @@ Sub chkLoot
 		
 		/if (${SpawnCount[npc corpse radius 85]} > 0 ) /goto :lootCheck
 		/varset timer_check_loot 10s
+		| return to where I stated looting
+		/nav wp lootStart
     }
 	
 /return
@@ -286,8 +289,8 @@ Sub LootTarget(int _corpseID)
 	:corpse_nav
 		/varcalc nav_count ${nav_count}+1
 		/delay 5
-		/if (${nav_count} > 30) {
-			/echo Nav count too high returning
+		/if (${nav_count} > 30 || (${Target.Distance} > ${int_lootRadius})) {
+			/echo Nav count too high or, this ended up being too far returning
 			/goto :return
 		}
 		/if ((${Target.Distance} > 10) && !${Navigation.Active}) /navigate target

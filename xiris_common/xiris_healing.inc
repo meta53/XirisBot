@@ -459,22 +459,23 @@ Sub setHealingSpell(int _hp, string _targetType, int _range, string _targetName,
 	/varset str_currentHeal ${str_heal_normal}
 	/if (${str_healMode.Equal[EFFICIENT]}) /varset str_currentHeal ${str_heal_normal_efficient}
 
-	/declare pt int local ${int_point_${_targetType}_HoT}
+	/declare pt int local ${Math.Calc[${int_point_${_targetType}_HoT}*1.05]}
 	|/echo \awsetHealingSpell \ao${_targetType} \aw(\ag${_hp} \ao<> \ag${pt}\aw) \ar${Bool[${_hp}]} || ${Me.PctMana} == 0
-	/if (!${Bool[${_hp}]} || ${Me.PctMana} == 0) /return
-	/if (${_hp} > ${pt}) /return
-
-
-	/declare perTick int local 0
-	/declare response string local CASTOK
 	
+	/declare response string local CASTOK
+	/declare perTick int local 0
+	/if (!${Defined[timer_HoT_${_targetID}]}) /declare timer_HoT_${_targetID} timer outer 0
 
+	| NOT REQUIRED
+	/if (!${_hp} || ${Me.PctMana} == 0 || (${_hp} > ${pt}))  {
+		/varset response  NOHEAL
+		/goto :return
 	| FRANTIC
-	/if (${_hp} <= ${int_point_${_targetType}_frantic}) {
+	} else /if (${_hp} <= ${int_point_${_targetType}_frantic}) {
 		/varset str_currentHeal ${str_heal_frantic}
 		/if (${str_healMode.Equal[EFFICIENT]}) /varset str_currentHeal ${str_heal_frantic_efficient}
 		|/echo  \aoFRANTIC \ag(${str_healMode})  \ar${str_currentHeal} \awon \ag ${_targetName}\aw(\ay${_targetID}\aw)
-		/varcalc	int_point_calcStopHeal ${Math.Calc[${int_point_${_targetType}_frantic}*1.2]}
+		/varcalc	int_point_calcStopHeal ${Math.Calc[${int_point_${_targetType}_frantic}*1.1]}
 		/varset response  CASTOK
 		/goto :return
 	| NORMAL
@@ -482,11 +483,11 @@ Sub setHealingSpell(int _hp, string _targetType, int _range, string _targetName,
 		/varset str_currentHeal ${str_heal_normal}
 		/if (${str_healMode.Equal[EFFICIENT]}) /varset str_currentHeal ${str_heal_normal_efficient}
 		|/echo \aoNORMAL \ag(${str_healMode})   \ay${str_currentHeal} \awon \ag ${_targetName}\aw(\ay${_targetID}\aw)
-		/varcalc	int_point_calcStopHeal ${Math.Calc[${int_point_${_targetType}_normal}*1.2]}
+		/varcalc	int_point_calcStopHeal ${Math.Calc[${int_point_${_targetType}_normal}*1.1]}
 		/varset response CASTOK
 		/goto :return
 	| HOT TODO: Add a timer for the remaining HoT duration so as to not spam via dquery
-	} else /if (${_hp} <= ${int_point_${_targetType}_HoT} && ${use_heal_HoT}) {
+	} else /if (${_hp} <= ${int_point_${_targetType}_HoT} && ${use_heal_HoT} &&  !${timer_HoT_${_targetID}}) {
 		/varset str_currentHeal ${str_heal_normal}
 		/if (${str_healMode.Equal[EFFICIENT]}) /varset str_currentHeal ${str_heal_normal_efficient}
 
@@ -521,9 +522,11 @@ Sub setHealingSpell(int _hp, string _targetType, int _range, string _targetName,
 			/varset response ALREADY_HOT
 			/goto :return
 		}
+	} else {
+		/varset response  NOHEAL
 	}
 	:return 
-	/echo \aosetHealingSpell:\ag${response} \ao${str_currentHeal}
+	|/echo \aosetHealingSpell:\ag${response} \ao${str_currentHeal}
 /return ${response}
 
 
@@ -536,23 +539,20 @@ Sub setHealingSpell(int _hp, string _targetType, int _range, string _targetName,
  checksSELF	(and heals)
  checksGRP	(and heals)
  Healing type changes the index of int_healMode
- 0-Self (only) | 1-MT (and self) | 2-Group (and MT, includes self) | 3-GroupOnly (includes self) | 
+ 0-Self (only) | 1-MT (and self) | 2-Group (and MT, includes self) | 3-GroupOnly (includes self) 
  ----------------------------
 **|
 
 Sub chkHeal_MT
-	/if (${int_healMode}== 0 || ${int_healMode} == 3) /return
-	/if ((${Spawn[id ${int_MTID}].PctHPs} < ${int_point_tank_normal}) && (${Spawn[id ${int_MTID}].Distance} < ${int_range_normal})) /call healMAINTANK
+	/if ((${int_healMode} == 1 || ${int_healMode} == 2) && ${Spawn[id ${int_MTID}].PctHPs} < ${int_point_tank_HoT} && (${Spawn[id ${int_MTID}].Distance} <= ${int_range_normal})) /call healMAINTANK
 /return
-
 
 Sub chkHeal_Self
-	/if (${Me.PctHPs}<${int_point_self_normal}) /call healSELF
+	/if ((${int_healMode} == 0 || ${int_healMode} == 2) && ${Me.PctHPs} < ${int_point_self_HoT}) /call healSELF
 /return
 
-
 Sub chkHeal_Group
-	/if (${int_healMode}>=2) /call healGRP
+	/if ((${int_healMode} == 2 || ${int_healMode} == 3) && ${WorstHurt.PctHPs} < ${int_point_group_HoT}) /call healGRP
 /return
 
 |**
@@ -566,9 +566,7 @@ Sub chkHeal_Group
 **|
 
 Sub healMAINTANK
-	/varcalc int_point_calcStopHeal ${Math.Calc[${int_point_tank_normal}*1.1]}
 	/call chkMTAlive TRUE
-	/if (${Spawn[id ${int_MTID}].PctHPs} <= 0) /return
 	/call setHealingSpell ${Spawn[id ${int_MTID}].PctHPs} tank ${Spawn[id ${int_MTID}].Distance3D} ${Spawn[id ${int_MTID}].CleanName} ${int_MTID}
 	/echo \aghealMAINTANK:\ao${str_MTName}\aw(\ay${int_MTID}\aw) \aw=>\ag${Target.Name}  \ao${str_currentHeal}
 	/call healCast ${int_MTID} ${Target.Name} "${str_currentHeal}" FALSE
@@ -587,13 +585,9 @@ Sub healMAINTANK
 **|
 
 Sub healSELF
-	/varcalc 	int_point_calcStopHeal ${Math.Calc[${int_point_self_normal}*1.05]}
-	/if (${Target.ID} != ${Me.ID}) /call TrueTarget ${Me.ID}
-	|(_hp,  _targetType,  _range,  _targetName,  _targetID)
 	/call setHealingSpell ${Me.PctHPs} self 0 ${Me.Name} ${Me.ID}
 	/echo \aghealSELF:\ao${str_Me.Me.Name}\aw(\ay${Me.ID}\aw) \aw=>\ag${Target.Name}  \ao${str_currentHeal}
 	/call healCast ${Me.ID} ${Me.Name} "${str_currentHeal}" FALSE
-	/if (${Me.Class.ShortName.Equal[CLR]}) /call TrueTarget ${int_MTID}
 	/if (${Me.Class.ShortName.NotEqual[CLR]}) /call TrueTarget ${int_targetID}
 /return
 
@@ -683,8 +677,11 @@ Sub healGRP
 		|(int _hp, string _targetType, int _range, string _targetName, string _targetID)
 		/call setHealingSpell ${Spawn[id ${memID}].PctHPs} group ${Spawn[id ${memID}].Distance3D} ${memName} ${memID}
 		/varset castStatus ${Macro.Return}
-		/echo \ao${castStatus}: \ag${str_currentHeal}
-		/if (${castStatus.Equal[CASTOK]}) {
+		|/echo \ao${castStatus}: \ag${str_currentHeal}
+		/if (${castStatus.Equal[NOHEAL]}) {
+			|/echo \ar${memName} NOHEAL! \aoReturning.
+			/goto :return		
+		} else /if (${castStatus.Equal[CASTOK]}) {
 			/echo \awTrying to cast: \ag ${memName} \aw(\ay${memID}\aw) "${str_currentHeal}"
 			/call healCast ${memID} ${memName} "${str_currentHeal}" FALSE 
 			/goto :return
@@ -692,14 +689,17 @@ Sub healGRP
 			/varcalc n ${n}+1
 			/echo \ar${memName} OUTOFRANGE! \aoIncrementing N(=>${n}), and checking next most damaged.
 			/goto :CastSingleTargetHeals
+		} else /if (${castStatus.Equal[ALREADY_HOT]}) {
+			/varcalc n ${n}+1
+			/goto :CastSingleTargetHeals
 		} else {
 			/varcalc n ${n}+1
 			/echo \ar${memName} ${castStatus}! \aoIncrementing N(=>${n}), and checking next most damaged.
-			
 			/goto :CastSingleTargetHeals
 		}
 	}
 :return
+	/if (${Me.Class.ShortName.NotEqual[CLR]}) /call TrueTarget ${int_targetID}
 /return
 
 
@@ -733,7 +733,7 @@ Sub updateGroupRangeCount(int _range)
  Calls chkHP while being cast in case we need to change
  ----------------------------
 **|
-Sub healCast(int _id, string _name, string _spell, bool _isGroup)
+Sub healCast(int _id, string _name, string _spell, bool _isGroup, bool _isHoT)
 	/if (${_name.Equal[NULL]} || ${_id} == 0) {
 		/echo \arHEAL NAME is \ao${_name} \ar|| ID is \ao${_id}\ar something is fucked;
 		/return
@@ -742,8 +742,16 @@ Sub healCast(int _id, string _name, string _spell, bool _isGroup)
 		/echo \aoHealCast \ay:IsGroup:\ag${_isGroup} \ayTarget:\ag${_name}(${_id}) \aydist: \ag${Target.Distance} \aycHP: \ag${Spawn[pc ${_name}].PctHPs}\ao < \aycSH: \ag${int_point_calcStopHeal} \ayspell: \ag"${_spell}" \ayMyMana:\ag ${Me.CurrentMana}\ao > \ag${Spell[${_spell}].Mana}
 		/if (${Target.ID} != ${_id}) /call TrueTarget ${_id}
 		/call chkSpellMemorized "${_spell}" TRUE 2
-		/call MQ2Cast "${_spell}" gem2 1s chkHP
+		/if (${_isGroup}) {
+			| Don't check health on group spells or you will constantly duck out if cleric doesnt need to be healed!
+			/call MQ2Cast "${_spell}" gem2 1s
+		} else {
+			/call MQ2Cast "${_spell}" gem2 1s chkHP
+		}
+		
 		/delay 5
+		/if (!${Defined[timer_HoT_${_id}]}) /declare timer_HoT_${_id} timer outer 30s
+		/if (${Macro.Return.Equal[CAST_SUCCESS]}) /varset timer_HoT_${_id} 30s
 		/if (${Macro.Return.Equal[CAST_SUCCESS]} && ${bln_annouce}) /${cmdChannel} ${_spell} > ${Target.Name} hp:${Target.PctHPs} m:${Me.PctMana} d:${Target.Distance}
 		/return ${Macro.Return}
 	}
@@ -1219,6 +1227,7 @@ Sub chkDivineIntervention
 	/declare requestCount int local 0
 	/for i 1 to ${RaidDIClerics.Size}
 		/varset pcName ${RaidDIClerics[${i}]}
+		/if (!${Defined[timer_di_${i}]}) /declare timer_di_${i} timer outer 0
 		/echo \awChecking \ay${pcName} \aw for DI
 		/if (${timer_di_${i}} || !${Bool[${SpawnCount[pc ${pcName}]}]}) {
 			/echo \ar${pcName} \awhas a DI timer or is out of zone!
@@ -1453,7 +1462,6 @@ Sub xbot_initialize_healing(int _healPoint)
 	/declare    int_point_stopHeal    	int		outer   ${Ini[INI_CHAR,Heal_Points,int_point_stopHeal,90]}	
 	/declare	int_point_calcStopHeal	int		outer	100
 	/declare    use_interrupt_selfHeal  bool	outer   TRUE
-	/declare    int_point_interrupt		int		outer   ${Ini[INI_CHAR,Heal_Points,int_point_interrupt,50]}
 
 	|-- Celestial Regeneration Chain
 	/declare bln_hasCelRegen 				bool    outer   ${Me.Class.ShortName.Equal[CLR]}

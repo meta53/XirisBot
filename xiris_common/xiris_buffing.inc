@@ -272,11 +272,9 @@ Sub cmbtBuffGRP
 				/varset CMBTBUFF_${i}_Timer ${delay}s
 			}
 		:nextGroupMember
-		|/echo NextGroupMember ${g}
-		/next g
+			/next g
 	:nextCMBT
-	
-	/next i
+		/next i
 
 	/call RunRaidEvents
 	/call TrueTarget ${int_targetID}
@@ -656,64 +654,140 @@ Sub RemoveBuff(_badBuff)
 /return
 
 
+|**
+----------------------------
+Champion|Ferocity Attack Buff Checking
+Champion is 1500 mana, so we don't want to cast it unless the timer is up
+Ferocity of Irionu is 2 minute recast single target
+----------------------------  
+**|
+
+Sub chkATTKBuffs
+	/if (${ATTK_1_Timer}) /return
+	/if (!${Me.SpellReady[${ATTK_1_Spell}]}) /return
+
+	/declare bTarget 	string 	local
+	/declare bDuration	int		local 
+	/declare bTgtCnt	int     local
+	/declare i 			int     local
+
+	|-- Check to see if the Target has the buff
+	/for i 1 to ${ATTK_1_TargetCount} 
+		/varset bTarget ${ATTK_1_Targets.Token[${i},,]}
+		/if (${SpawnCount[pc ${bTarget}]} == 0 || ${Spawn[pc ${bTarget}].Distance3D} > 100) /goto :nextATTKTarget
+		/dquery ${bTarget} -q "Me.Buff[${ATTK_1_Spell}].Duration.TotalSeconds"
+		/delay 20 ${DanNet.Query.Received}
+		/varcalc bDuration ${DanNet.Q}
+		|/echo chkATTKBuffs: \aw${bTarget} -q \ag"Me.Buff[${ATTK_1_Spell}].Duration" == \ar ${bDuration} \awbool \ag${Bool[${bDuration}]}
+		/if (${Bool[${bDuration}]} ) {
+			/if (${bDuration} < 3 ) {
+				|/echo \arbDuration < 3! casting!
+				/goto :castATTKBuff
+			} else {
+				|/echo \aghas duration, skipping
+				/goto :nextATTKTarget
+			}
+		} else {
+			/goto :castATTKBuff
+		}
+
+	:nextATTKTarget
+	/next i
+	
+	
+	/goto :return
+
+	:castATTKBuff 
+	/echo castATTKBuff: \aw${bTarget} -q \ag"Me.Buff[${ATTK_1_Spell}].Duration" == \ar ${bDuration} \awbool \ag${Bool[${bDuration}]}
+	/call TrueTarget ${Spawn[pc =${bTarget}].ID}
+	/call MQ2Cast "${ATTK_1_Spell}"
+	/if (${Cast.Result.Equal[CAST_SUCCESS]}) {
+		/echo \ag ${ATTK_1_Spell} ${Cast.Result} : DELAYING for \ay ${ATTK_1_Recast}s \agrefresh
+		/varset ATTK_1_Timer ${ATTK_1_Recast}s
+	}
+
+:return
+/return
 
 
 Sub xbot_initialize_buffing
 	|/if (${str_classArchetype.Equal[MELEE_END]} || ${Me.Class.ShortName.Equal[WAR]}) /return
 	/echo \aoxbot_initialize_buffing
 
+	/declare i									int		local
+
 	|--OOC Buff(s)
-	/declare bln_doRaidBuff				bool	outer	${Ini[INI_CHAR,OOCBuffs,bln_doRaidBuff,FALSE]}
-	/declare bln_doGroupBuff			bool	outer	${Ini[INI_CHAR,OOCBuffs,bln_doGroupBuff,FALSE]}
-	/declare bln_doAutoBuff				bool	outer	${Ini[INI_CHAR,OOCBuffs,bln_doGroupBuff,FALSE]}
-	/declare int_oocBuffTotal			int		outer	${Ini[INI_CHAR,OOCBuffs,int_oocBuffTotal,0]}
+	/declare bln_doRaidBuff						bool	outer	${Ini[INI_CHAR,OOCBuffs,bln_doRaidBuff,FALSE]}
+	/declare bln_doGroupBuff					bool	outer	${Ini[INI_CHAR,OOCBuffs,bln_doGroupBuff,FALSE]}
+	/declare bln_doAutoBuff						bool	outer	${Ini[INI_CHAR,OOCBuffs,bln_doGroupBuff,FALSE]}
+	/declare int_oocBuffTotal					int		outer	${Ini[INI_CHAR,OOCBuffs,int_oocBuffTotal,0]}
 	
 	/if (${int_oocBuffTotal} > 0) {
-		/declare ooct						int		local
-		/for ooct 1 to ${int_oocBuffTotal} 
-			/declare OOCBUFF_${ooct} 				string	outer	${Ini[INI_CHAR,OOCBuffs,OOCBUFF_${ooct}]}
-			/declare OOCBUFF_${ooct}_Use 			bool	outer	${Ini[INI_CHAR,OOCBuffs,OOCBUFF_${ooct}_Use]}
-			/declare OOCBUFF_${ooct}_Gem 			string	outer	${Ini[INI_CHAR,OOCBuffs,OOCBUFF_${ooct}_Gem]}
-			/declare OOCBUFF_${ooct}_Active			bool	outer 	FALSE
-			/declare OOCBUFF_${ooct}_Timer	timer   outer   0
-		/next ooct
+		/for i 1 to ${int_oocBuffTotal} 
+			/declare OOCBUFF_${i} 				string	outer	${Ini[INI_CHAR,OOCBuffs,OOCBUFF_${i}]}
+			/declare OOCBUFF_${i}_Use 			bool	outer	${Ini[INI_CHAR,OOCBuffs,OOCBUFF_${i}_Use,FALSE]}
+			/declare OOCBUFF_${i}_Gem 			string	outer	${Ini[INI_CHAR,OOCBuffs,OOCBUFF_${i}_Gem]}
+			/declare OOCBUFF_${i}_Active		bool	outer 	FALSE
+			/declare OOCBUFF_${i}_Timer			timer   outer   0
+		/next i
 	}
 	
 	|--Single Target Buff(s)
 	|--eg: Divine Intervention, Mage Huge DS, Ranger AC Buff, Cleric AC buff (if no group version)
-	/declare bln_doSingleTargetBuff		bool	outer	${Ini[INI_CHAR,TargetBuffs,bln_doSingleTargetBuff,FALSE]}
-	/declare int_stBuffTotal			int		outer	${Ini[INI_CHAR,TargetBuffs,int_stBuffTotal,0]}
+	/declare bln_doSingleTargetBuff				bool	outer	${Ini[INI_CHAR,TargetBuffs,bln_doSingleTargetBuff,FALSE]}
+	/declare int_stBuffTotal					int		outer	${Ini[INI_CHAR,TargetBuffs,int_stBuffTotal,0]}
 	
 	/if (${int_stBuffTotal} > 0) {
-		/declare stbuff						int		local
-		/for stbuff 1 to ${int_stBuffTotal} 
-			/declare STBUFF_${stbuff} 				string	outer	${Ini[INI_CHAR,TargetBuffs,STBUFF_${stbuff}]}
-			/declare STBUFF_${stbuff}_Use 			bool	outer	${Ini[INI_CHAR,TargetBuffs,STBUFF_${stbuff}_Use]}
-			/declare STBUFF_${stbuff}_Gem 			string	outer	${Ini[INI_CHAR,TargetBuffs,STBUFF_${stbuff}_Gem]}
-			/declare STBUFF_${stbuff}_Targets		string	outer	${Ini[INI_CHAR,TargetBuffs,STBUFF_${stbuff}_Targets]}
-			/declare STBUFF_${stbuff}_Active		bool	outer 	FALSE
-			/declare STBUFF_${stbuff}_Timer	timer   outer   0
-		/next stbuff
+		/for i 1 to ${int_stBuffTotal} 
+			/declare STBUFF_${i} 				string	outer	${Ini[INI_CHAR,TargetBuffs,STBUFF_${i}]}
+			/declare STBUFF_${i}_Use 			bool	outer	${Ini[INI_CHAR,TargetBuffs,STBUFF_${i}_Use,FALSE]}
+			/declare STBUFF_${i}_Gem 			string	outer	${Ini[INI_CHAR,TargetBuffs,STBUFF_${i}_Gem]}
+			/declare STBUFF_${i}_Targets		string	outer	${Ini[INI_CHAR,TargetBuffs,STBUFF_${i}_Targets]}
+			/declare STBUFF_${i}_Active			bool	outer 	FALSE
+			/declare STBUFF_${i}_Timer			timer   outer   0
+		/next i
 	}
 	
 	|--Combat Buff(s)
 	|--eg: Spirit of the Jaguar
-	/declare bln_cmbtBuffUse			bool	outer	${Ini[INI_CHAR,CombatBuffs,bln_cmbtBuffUse,TRUE]}
-	/declare int_cmbtBuffTotal			int		outer	${Ini[INI_CHAR,CombatBuffs,int_cmbtBuffTotal,0]}
-	/declare cmbt						int		local
-	/declare cmbtG						int		local
+	/declare bln_cmbtBuffUse					bool	outer	${Ini[INI_CHAR,CombatBuffs,bln_cmbtBuffUse,FALSE]}
+	/declare int_cmbtBuffTotal					int		outer	${Ini[INI_CHAR,CombatBuffs,int_cmbtBuffTotal,0]}
+	/declare j									int		local
 
-	/for cmbt 1 to ${int_cmbtBuffTotal} 
-		/declare CMBTBUFF_${cmbt} 				string	outer	${Ini[INI_CHAR,CombatBuffs,CMBTBUFF_${cmbt}]}
-		/declare CMBTBUFF_${cmbt}_Use 			bool	outer	${Ini[INI_CHAR,CombatBuffs,CMBTBUFF_${cmbt}_Use]}
-		/declare CMBTBUFF_${cmbt}_Gem 			string	outer	${Ini[INI_CHAR,CombatBuffs,CMBTBUFF_${cmbt}_Gem]}
-		/declare CMBTBUFF_${cmbt}_Active		bool	outer 	FALSE
-		/declare CMBTBUFF_${cmbt}_Timer			timer   outer   ${Spell[CMBTBUFF_${cmbt}].Duration.TotalSeconds}
-		/for cmbtG 0 to ${Group}
-			/declare CMBTBUFF_${cmbt}_${cmbtG}_Timer	timer   outer   0
-		/next cmbtG
-	
-	/next cmbt
+	/if (${int_cmbtBuffTotal} > 0) {
+		/for i 1 to ${int_cmbtBuffTotal} 
+			/declare CMBTBUFF_${i} 					string	outer	${Ini[INI_CHAR,CombatBuffs,CMBTBUFF_${i}]}
+			/declare CMBTBUFF_${i}_Use 				bool	outer	${Ini[INI_CHAR,CombatBuffs,CMBTBUFF_${i}_Use,FALSE]}
+			/declare CMBTBUFF_${i}_Gem 				string	outer	${Ini[INI_CHAR,CombatBuffs,CMBTBUFF_${i}_Gem]}
+			/declare CMBTBUFF_${i}_Active			bool	outer 	FALSE
+			/declare CMBTBUFF_${i}_Timer			timer   outer   ${Spell[CMBTBUFF_${i}].Duration.TotalSeconds}
+			/for j 0 to ${Group}
+				/declare CMBTBUFF_${i}_${j}_Timer	timer   outer   0
+			/next j
+		/next i
+	}
+
+	|--ATTK Buff(s)
+	|--eg: Champion || Spirit of Irionu
+	|--Note: only 1 ATK buff is generally used, so no real looping here, but consistency
+	/declare bln_useAttackBuff					string	outer	${Ini[INI_CHAR,ATTK,bln_useAttackBuff,FALSE]}
+	/declare int_attkBuffTotal					int		outer   1
+
+	/if (${bln_useAttackBuff}) {
+		/for i 1 to ${int_attkBuffTotal} 
+			/declare ATTK_${i}_Spell 			string	outer	${Ini[INI_CHAR,ATTK,ATTK_${i}]}
+			/declare ATTK_${i}_Use 				string	outer	${Ini[INI_CHAR,ATTK,ATTK_${i}_Use,FALSE]}
+			/declare ATTK_${i}_Gem 				string	outer	${Ini[INI_CHAR,ATTK,ATTK_${i}_Gem]}
+			/declare ATTK_${i}_Type				string	outer	${Ini[INI_CHAR,ATTK,ATTK_${i}_Type,SINGLE]}
+			/declare ATTK_${i}_Targets 			string	outer	${Ini[INI_CHAR,ATTK,ATTK_${i}_Targets]}
+			/declare ATTK_${i}_Recast 			string	outer	${Ini[INI_CHAR,ATTK,ATTK_${i}_Recast]}
+			/declare ATTK_${i}_Timer			timer   outer   0
+			/declare ATTK_${i}_TargetCount  	int     outer   ${ATTK_${i}_Targets.Token[1,|]}
+			/varset  ATTK_${i}_Targets	${ATTK_${i}_Targets.Token[2,|]}
+		/next i
+	}
+
+	/echo \ar ATTK_1_TargetCount: \aw${ATTK_1_TargetCount} \aoATTK_1_Targets: \aw${ATTK_1_Targets}
 
 	/call InitEvents_Buffing
 	

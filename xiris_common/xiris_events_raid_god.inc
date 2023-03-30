@@ -429,22 +429,27 @@ SUB EVENT_BALANCE
 			/call InterruptON
 		}
 		/if (${bln_chChainMember}) /call heal_chPause 400
-		/return
+		/if (${Me.Class.ShortName.Equal[DRU]} || ${Me.Class.ShortName.Equal[SHM]}) /call Disengage
+		/goto :return
 	}
 	/keypress esc
 	|- determine percentage to run to based on Kvxe's Hitpoints
 	/varset bln_balancing TRUE
 	/if (${str_classArchetype.Equal[CASTER]}) {
+		
 		/echo CASTER CLASS checking
 		/varset bln_engaged FALSE
 		/call Disengage
 		/pet back off
 		/if (${Me.Class.ShortName.Equal[ENC]}) /call RuneSpamOff
 
+		| 03/24/2023 - XIRIS CREW DPS is very high, so high that we don't need casters helping, as it will just fuck them up.
+		/goto :return
+
 		|-pre 70% dont help with anything
 		/if (${bpct} >= 75) {
 			/call BalancerReset
-			/return
+			/goto :return
 		}
 
 		|-post 70% have the casters help with defense

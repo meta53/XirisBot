@@ -232,10 +232,9 @@ Sub chkPetHeal
 **|
 
 Sub chkPetAttack
-	/if (!${bln_engaged} || ${bln_petAttacking} || !${Target.PctHPs} ) /return
+	/if (!${bln_engaged} || !${Target.PctHPs} ) /return
 	/if (${Me.Pet.ID} && !${Me.Pet.Combat} && ${Target.ID}==${int_targetID} && ${Target.PctHPs}<${int_petAttackHP} && ${Target.Distance}<=100) {
 		/echo \agSiccing Pet on \ay${Target.Name}
-		/varset bln_petAttacking TRUE
 		/pet attack
 	}
 /return
@@ -251,7 +250,6 @@ Sub xbot_initialize_pets
 	|--Pet Information
 	/declare str_petReagent				string  outer	${Ini[INI_CHAR,Pet,str_petReagent,NULL]}
 	/declare bln_petUse					bool	outer	${Ini[INI_CHAR,Pet,bln_petUse,TRUE]}
-	/declare bln_petAttacking			bool	outer 	${Me.Pet.Combat}
 	/declare int_petAttackHP			int		outer	${Ini[INI_CHAR,Pet,int_petAttackHP,99]}
 	/declare bln_petDiscipline			bool	outer	${Ini[INI_CHAR,Pet,bln_petDiscipline,TRUE]}
 	

@@ -1,0 +1,1572 @@
+|**
+----------------------------
+LDON_DONOR.mac
+----------------------------
+This macro will request an zone start based LDON, accept it, and enter it
+Proceed to complete it, and exit. Re-request.
+Note: will load/unload other group members macros on enter/exit.
+Note: will run through lobby and request lobby buffs (EQTitan specific)
+
+Requries ACTIVE HACKS (mq2piggyzone & mq2mmoreachit)
+    
+Usage: /mac ldon_donor dgga gsay butcher TRUE TRUE
+______________________________________________
+REVISION HISTORY
+    09.24.2017	xiris	INITIAL REVISION
+	09.26.2017  xiris   MODIFIED to use an ini to define all mission criteria based on starting zone (butcher,everfrost,etc)
+	09.30.2017  xiris   Random code clean up
+	06.18.2020	xiris   Commented and cleaned up. Again.
+	12.08.2021	xiris	Aligned the puller part of the macro with bot_pull updates using MQ2Nav
+	12.27.2021	xiris	Changed completion routine to use Origin to go back to lobby instead of dealing with shitty trying to get to zone out
+	01.19.2022	xiris	Added support for mq2doors due to takish-hiz having retarded door mechanics
+						Added support to stop and ask for buffs in lobby since we run through anyway
+	03.04.2022  xiris   Added support for MQ2AdvPath pathing for NRO as test for turning off mq2nav after lobby magus
+						to NRO zone in.
+	03.06.22	xiris	Added support for high requesting high risk missions (bln_highRisk)			
+	03.28.23	xiris	Split this file from regular LDON since donor hall allows fast travel		
+______________________________________________
+REQUIRED PLUGINS
+    mq2melee
+    mq2cast
+    mq2eqbc
+    mq2debuffs
+	mq2doors
+    mq2moveutils
+	mq2nav
+	mq2piggyzone
+	mq2mmoreachit
+______________________
+REQUIRED INCLUDES 
+	xiris_common/spell_routines.inc
+	xiris_common/xiris_common.inc
+**|
+
+
+#include xiris_common/xiris_common.inc
+
+#Turbo 40
+
+#define INI_ldonInfo xiris_common/xiris_ldon_definitions.ini
+
+#event RageOff              "#*#is no longer enraged#*#"
+#event RageOn               "#*#has become ENRAGED#*#"
+#event Zoned                "You have entered#*#"
+#event Zoned                "LOADING, PLEASE WAIT..."
+#event EndMac				"#*#monkeybutter#*#"
+#event NoLOS				"#*#you cannot see your target#*#"
+#event TooClose				"#*#your target is too close#*#"
+#event MoveFail				"#*#Could not find path to destination#*#"
+#event UILocked				"#*#You can't use that command right now"
+
+
+Sub Main(string _channel, string _announce, string _theme, bool _useDownFlags, bool _highRisk)
+	/delay 5
+
+	|-- initialize common xbot variables
+	/call xbot_initialize ${Me.Name}
+	
+	|-- initialize variables specific to this macro
+	/call variant_initialize  ${_channel} ${_announce} ${_theme} ${_useDownFlags} ${_highRisk}
+	
+	|-- report status
+	/delay 10
+	/echo \agLDON Runner >> @${_channel}  >> Theme: ${_themee}
+
+	|-- Build Alert List
+	/call setAlerts
+
+	|-- remove yourself from any adventures that might be lingering
+	/echo Killing any previous LDON adventure that is active
+	/squelch /${cmdChannel} /notify AdventureRequestWnd AdvRqst_RequestButton leftmouseup
+	/delay 2s
+	/squelch /${cmdChannel} /notify ConfirmationDialogbox CD_Yes_Button leftmouseup
+	|**
+	 ----------------------------
+	 Setup Loop
+	 ----------------------------
+	 Set up the current LDON based on the start zone shortName.
+	 butcher|everfrost|nro|sro|ecommons
+	 ----------------------------
+	**|
+	:SetupLoop
+		/echo Main:SetupLoop
+
+		|-- check that the group is in zone
+		/call chkGroup
+
+		|-- request the LDON, kicking off the zoning to start logic
+		|   this will move entire group into LDON instance
+		|   requestLDON-> zoneLDON -> setupTask
+		/if (${Zone.ShortName.Equal[mmcj]}) {
+			/varset haveMission TRUE
+			/varset inMission   TRUE
+			/goto :MissionStart
+		} else {
+			/call requestLDON
+			| double check that I have one cause this fucks up now and then on this server
+			/if (${Window[AdventureRequestWnd].Child[AdvRqst_NPCText].Text.Find[You are not currently assigned]}) {
+				/goto :SetupLoop
+			}
+			/if (${haveMission}) /call zoneLDON
+			/doevents
+			/if (!${inMission} || !${haveMission}) /goto :SetupLoop
+		}
+
+		
+
+	|**
+	 ----------------------------
+	 Mission Loop
+	 ----------------------------
+	 Checks Completion
+	 Runs the bot_pull.mac functionality
+	 ----------------------------
+	**|
+	
+	:MissionStart	
+		/echo Main:MissionStart
+		|-- set up any melee buffs/delay and then go to camp inside the LDON zone;
+		/call chkGroup
+		/delay 5s
+		/varset int_currentCamp 1
+		/call moveCamp ${int_currentCamp}
+		/docommand /${announceChannel} doShrink
+	
+	:MissionLoop
+		/echo Main:MissionLoop
+		/if (${MacroQuest.GameState.Equal[CHARSELECT]} || ${MacroQuest.GameState.Equal[PRECHARSELECT]} ) /end
+		/if (${Me.Casting.ID} && ${Me.Hovering}||${Window[tradewnd].Open}||${Window[lootwnd].Open}) /goto :mainLoop
+		
+		/doevents
+		
+		|-- utility checking
+		/call chkUtils
+		/call chkDownshits
+		
+		|-- reset variables, and make sure I am in the zone still and in mission
+		/call setRSTVars
+		/call chkZone
+		/if (${Macro.Return.Equal[LOBBY]}) {
+			/dgt We seem to have gotten fucked up and are now in the lobby at ${Time.Time24}
+			/dgt Resetting everything and going again
+			/call OriginToThundercrest
+			/call ResetAtThundercrest
+			/delay 10s
+			/call chkGroup
+			/goto :SetupLoop
+		}
+		|-- check to see if I've finished the mission yet
+		/if (!${inMission} || !${haveMission})  /goto :SetupLoop
+		/if (${SpawnCount[NPC radius 100]} == 0 && ${Zone.ShortName.NotEqual[${SZ_shortName}]}) /call chkLDONCompletion	
+		/if (${Zone.ShortName.Equal[${SZ_shortName}]}) /goto :SetupLoop
+		
+		|-- reset group to camp spot (leash) if its empty
+		/if (${SpawnCount[npc radius ${int_campRadius} zradius 25]} == 0) {
+			/call resetCamp
+			/docommand /${announceChannel} RefreshXTarget
+		}
+		
+		|-- target hunter
+		/call getTarget
+		/if (${Target.Distance} > 20) /call pullTarget
+		/call killTarget
+
+		/varcalc int_killCount ${int_killCount}+1
+		/varcalc int_totalKills ${int_totalKills}+1
+		|-- am I still in mission?
+		/if (${inMission}) /goto :MissionLoop
+
+	
+	|-- adventure is over, start the setup of another, ad infinitem!
+	/goto :SetupLoop
+
+/return
+
+
+Sub requestLDON
+	/if (${inMission}) /return
+	/if (${haveMission}) /return
+	/echo requestLDON in zone ${zoneRequest} currently in: ${Zone.ShortName}
+	|-- this is anachronistic if we are phasing out piggyzone
+	/if (${Zone.ShortName.NotEqual[thundercrest]}) {
+		/echo Not in Thundercrest, not sure why. Ending
+		/end
+	}
+	
+	/declare requestCount int local 1
+	
+	|-- Get Adventure Loop, request the adventure from the giver.
+	:GetAdventure
+		/echo Getting adventure from ${adventureGiver} ${Time.Time24}
+
+		| Navigate to Adventurer
+		/docommand /${cmdChannel} /navigate spawn ${adventureGiver}
+		/delay 30
+		/call TrueTarget ${Spawn[npc ${adventureGiver}].ID}
+		
+		
+		:GetAdventureNavLoop
+			/if (${Navigation.Active}) {
+				/delay 20
+				/goto :GetAdventureNavLoop
+			} 
+
+
+		:GetAdventureClick
+			/face fast
+			/delay 10
+			/click right target
+			/delay 2s
+
+	|-- set the difficulty to Hard (defaulted to no)
+	/if (${bln_highRisk}) {
+		/echo Requesting a High Risk Mission
+		/notify AdventureRequestWnd AdvRqst_RiskCombobox listselect ${Window[AdventureRequestWnd].Child[AdvRqst_RiskCombobox].List[High]}
+	} 
+
+	|-- set the type to Kill examples: Note EqTitan code fix as of 1/1/22 allows for chain requesting missions
+	|   The only mission that will be required is the mob count since its the default.
+	|  ${Window[AdventureRequestWnd].Child[AdvRqst_typeCombobox].List[Single Boss]}
+	|  ${Window[AdventureRequestWnd].Child[AdvRqst_typeCombobox].List[Mob count]}
+
+
+	/delay 10
+		
+	/varset ldonType NOAVAIL
+	|-- First choice: Mob Count, see if this mission is available
+	/if (${Window[AdventureRequestWnd].Child[AdvRqst_typeCombobox].List[Mob count]} > 0) {
+		/notify AdventureRequestWnd AdvRqst_typeCombobox listselect ${Window[AdventureRequestWnd].Child[AdvRqst_typeCombobox].List[Mob count]} 
+		/delay 10
+		/notify AdventureRequestWnd AdvRqst_RequestButton leftmouseup
+		/delay 2s
+		/if (${Window[AdventureRequestWnd].Child[AdvRqst_NPCText].Text.Find[The number of adventures returned was zero]}) {
+			/echo Adventure type: "Mob Count" unavailable.
+		} else {
+			/echo Adventure type: "Mob Count" accepted.
+			/varset ldonType Mob Count
+			/goto :Accept
+		}
+	}
+	
+	/if (${zoneRequest.Equal[sro]}) {
+		/echo GUK LDON can only do the kill count, since GukA for boss mob is un-navigable
+		/goto :TryAgain
+	}
+	
+	|-- have to close window and try again now apparently. 
+	:GetAdventure2
+		/keypress esc
+		/keypress esc
+		/keypress esc
+		
+		/echo Getting adventure2 from ${adventureGiver} ${Time.Time24}
+		/call TrueTarget ${Spawn[NPC ${adventureGiver}].ID}
+		/face fast
+		/click right target
+		/delay 2s
+	
+	|-- Second choice: Single Boss, see if this mission is available
+	/if (${Window[AdventureRequestWnd].Child[AdvRqst_typeCombobox].List[Single Boss]} > 0) {
+		/notify AdventureRequestWnd AdvRqst_typeCombobox listselect ${Window[AdventureRequestWnd].Child[AdvRqst_typeCombobox].List[Single Boss]} 
+		/delay 10
+		/notify AdventureRequestWnd AdvRqst_RequestButton leftmouseup
+		/delay 2s
+		/if (${Window[AdventureRequestWnd].Child[AdvRqst_NPCText].Text.Find[The number of adventures returned was zero]}) {
+			/echo Adventure type: "Single Boss" unavailable.
+		} else {
+			/echo Adventure type: "Single Boss" accepted.
+			/varset ldonType Single Boss
+			/goto :Accept
+		}
+	}
+	/delay 2s
+
+
+	
+	/echo ldonType: ${ldonType}
+	|-- No satisfactory type is available, go back to :GetAdventure
+	/if (${ldonType.Equal[NOAVAIL]} || ${Window[AdventureRequestWnd].Child[AdvRqst_NPCText].Text.Find[You are not currently assigned]}) {
+		:TryAgain
+		/echo (${requestCount}) No satisafactory Adventure type available, delaying for 1m. ${Time.Time24}
+		/delay 1m
+		/varcalc requestCount ${requestCount}+1
+		/goto :GetAdventure
+	}
+	
+	|-- Found one, Accept the mission and start the zoning loop.
+	:Accept
+		/delay 10
+		|-- Set the variables that define which zone we are headed to.
+		|   note we no longer need to do this since donor hall handles this crap
+		|/call setEntranceVars
+		
+		|-- Accept the task
+		/notify AdventureRequestWnd AdvRqst_AcceptButton leftmouseup
+		/varset haveMission TRUE
+		/delay 3s
+/return
+
+Sub setEntranceVars
+
+	|-- determine the entrance for the mission you received
+	/if (${Window[AdventureRequestWnd].Child[AdvRqst_NPCText].Text.Find[unearthed grave in Lesser Faydark]}) /varset ldonEntrance unearthed_grave
+	/if (${Window[AdventureRequestWnd].Child[AdvRqst_NPCText].Text.Find[crypt in Lesser Faydark]}) /varset ldonEntrance crypt
+	/if (${Window[AdventureRequestWnd].Child[AdvRqst_NPCText].Text.Find[glimmering portal]}) /varset ldonEntrance glimmering
+	/if (${Window[AdventureRequestWnd].Child[AdvRqst_NPCText].Text.Find[snowy mine]}) /varset ldonEntrance snowy_mine
+	/if (${Window[AdventureRequestWnd].Child[AdvRqst_NPCText].Text.Find[quicksand pit]}) /varset ldonEntrance quicksand_pit
+	/if (${Window[AdventureRequestWnd].Child[AdvRqst_NPCText].Text.Find[through a cave in Southern Ro]}) /varset ldonEntrance sro_cave
+	/if (${Window[AdventureRequestWnd].Child[AdvRqst_NPCText].Text.Find[through a barricaded door in Upper Guk]}) /varset ldonEntrance barricaded_door
+	/if (${Window[AdventureRequestWnd].Child[AdvRqst_NPCText].Text.Find[through a rotting tree trunk in Innothule]}) /varset ldonEntrance rotting_tree
+	
+	/echo setting ${ldonEntrance} 
+	
+	|-- pull information determined by entrance from INI file (waypoint, doortarget and starting zone)
+	/varset wpIN  ${Ini[INI_ldonInfo,${ldonEntrance},wpIN]}
+	/varset dtIN  ${Ini[INI_ldonInfo,${ldonEntrance},dtIN]}
+	/varset zoneStart ${Ini[INI_ldonInfo,${ldonEntrance},zoneStart]}
+	/echo setting ${ldonEntrance} entrance vars --> ${zoneStart} ${wpIN} ${dtIN}
+	
+
+/return
+
+
+|**
+ ----------------------------
+ zoneLDON
+ ----------------------------
+ Zones everyone to the LDON start zone, and once in the start zone
+ runs everyone to the LDON zone entrance, and clicks the door
+ ----------------------------
+**|
+Sub zoneLDON
+	/declare waitForAllInLDON int local 0
+	| So much easier with Donor Hall insta porting
+	/call TrueTarget ${Spawn[npc ${adventureGiver}].ID}
+	/delay 10
+	/say Ready
+	/delay 10s
+	|-- loop to wait for everyone to zone in
+	:ZoneIntoLDONInstanceWait
+		/varcalc waitForAllInLDON ${waitForAllInLDON}+1
+		/echo Waiting for all to zone into LDON
+		/delay 10s
+
+		/if (${waitForAllInLDON} > 12) /call killMacro "Group failed to zone into at ${wpIN}"
+		/if (${Group.AnyoneMissing})  /goto :ZoneIntoLDONInstanceWait 
+		
+
+	
+	|-- Setup the task with INI Data
+	/varset inMission TRUE	
+	/echo DONE with zoneLDON
+	/call setupTask
+/return
+
+Sub killMacro(reason)
+	/echo Something failed [${reason}] at ${Time.Time24}
+	/docommand /${cmdChannel} /end
+/return
+
+|**
+ ----------------------------
+ setupTask
+ ----------------------------
+ Sets up the mission parameters once inside the LDON mission zone
+ ----------------------------
+**|
+
+Sub setupTask
+	/echo setupTask inMission:${inMission} haveMission:${haveMission} ${Zone.ShortName}
+	
+	/varset zoneMission ${Zone.ShortName}
+	/echo setupTask ${zoneMission} ${inMission} ${haveMission}
+	
+	|-- pulling zone data from INI
+	/varset dtOUT 			${Ini[INI_ldonInfo,${zoneMission},dtOUT]}
+	/varset killTarget 		${Ini[INI_ldonInfo,${zoneMission},killTarget,NULL]}
+	/varset int_campCount	${Ini[INI_ldonInfo,${zoneMission},campCount,6]}
+	/varset int_maxRadius	${Ini[INI_ldonInfo,${zoneMission},pullDist,350]}
+	/varset int_xOUT		${Ini[INI_ldonInfo,${zoneMission},xOUT,0]}
+	/varset int_yOUT		${Ini[INI_ldonInfo,${zoneMission},yOUT,0]}
+	/varset int_zOUT		${Ini[INI_ldonInfo,${zoneMission},zOUT,${Me.Z}]}
+	|-- If we are killboss type mission we need to add killboss to list 2
+	/if (${killTarget.NotEqual[NULL]}) /squelch /alert add 2 npc ${killTarget}
+	
+	/echo ------------
+	/echo setting ${zoneMission} zone vars:
+	/echo 	dtOUT: ${dtOUT}, killTarget: ${killTarget}, int_campCount ${int_campCount}
+	/echo 	int_maxRadius: ${int_maxRadius}, int_xOUT: ${int_xOUT}, int_yOUT: ${int_yOUT}, int_zOUT: ${int_zOUT}
+	/echo ------------
+	/delay 10
+	|-- Turn off the fucking doors
+	/docommand /${cmdChannel} /toggledoors on
+	
+	|-- Tell rest of group to load their normal macroset;
+	/echo In ${Zone.Name}, setting up bot_loader and delaying 5s
+	/docommand /${cmdChannelExcludingMe} /mac bot_loader ${Me.Name} Mluian NULL 70
+	/docommand /${announceChannel} healmode EFFICIENT
+	/delay 5s
+	|-- set up group variables, change here based on group makeup;
+	/call setGroupCommands
+	/echo DONE with setupTask
+	
+/return
+
+
+Sub zoneByMagus(_string zoneToRequest) 
+	/g Using Magus to zone ${zoneToRequest}
+	/docommand /${cmdChannel}  /tar npc magus
+	/delay 10
+	/docommand /${cmdChannel}  /nav target
+	:magusNavWait
+	/delay 10
+	/if (${Nav.Active}) /goto :magusNavWait
+
+
+	/delay 5s
+	|-- open up the magus's merchant window which fixes the rando desynch
+	/docommand /${cmdChannel} /click right target
+	/delay 10
+	/docommand /${cmdChannel} /keypress esc
+	/delay 10
+	/docommand /${cmdChannel} /tar npc magus
+	/delay 10
+	/docommand /${cmdChannel} /say ${zoneToRequest}
+	/delay 45s
+
+/return 
+
+Sub RequestRaidBuffs
+	/g Requesting Raid Buffs
+	/docommand /${cmdChannel} /toggledoors on
+	/docommand /${cmdChannel} /nav wp bank
+
+	:raid_run
+		/delay 20
+		/if (${Navigation.Active}) /goto :raid_run
+
+	:raid_ask
+		/dgt docharbuffs ${Me.Name}
+		/delay 30s
+/return
+
+
+Sub RequestLobbyBuffs
+	/g Requesting Lobby Buffs
+
+	|-- Phanti Buffs
+	:phanti_tar
+		/docommand /${cmdChannel} /tar npc phanti
+		/docommand /${cmdChannel} /nav target
+	:phanti_run
+		/delay 20
+		/if (${Navigation.Active}) /goto :phanti_run
+	:phanti_ask
+		/delay 20
+		/docommand /${cmdChannel} /say haste
+		/delay 10
+		/docommand /${cmdChannel} /say kei
+		/delay 20
+	
+	|-- Firiona Vie Buffs
+	:firi_tar
+		/docommand /${cmdChannel} /tar npc firi
+		/docommand /${cmdChannel} /nav target
+	:firi_run
+		/delay 20
+		/if (${Navigation.Active}) /goto :firi_run
+	:firi_ask
+		/delay 20
+		/docommand /${cmdChannel} /say virtue
+		/delay 20
+
+	|-- Fuzzy Buffs
+	:fuzzy_tar
+		/docommand /${cmdChannel} /tar npc fuzzy
+		/docommand /${cmdChannel} /nav target
+	:fuzzy_run
+		/delay 20
+		/if (${Navigation.Active}) /goto :fuzzy_run
+	:fuzzy_ask
+		/delay 20
+		/docommand /${cmdChannel} /say ds
+		/delay 10
+		/docommand /${cmdChannel} /say regen
+		/delay 20
+	
+	|-- Run to Magus
+	:magus_tar
+		/docommand /${cmdChannel} /tar npc magus
+		/docommand /${cmdChannel} /nav target
+	:magus_run
+		/delay 20
+		/if (${Navigation.Active}) /goto :magus_run
+	
+/return
+
+Sub chkZone
+	/if (${Zone.ShortName.NotEqual[${SZ_shortName}]}) {
+		/if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) {
+			/docommand /${announceChannel}  I died! GTFO! ${Time.Time24}/
+			/delay 5s
+			/return LOBBY
+		}
+	}
+/return
+
+Sub OriginToThundercrest
+	/declare originAttempt int local 0
+	/declare i int local 1
+	
+	:OriginDelay
+	/if (${Me.AltAbilityTimer[Origin]} == 0) {
+		/if (${Zone.ShortName.NotEqual[${Me.BoundLocation[0]}]}) {
+			/varcalc originAttempt ${originAttempt} + 1
+			|-- tell each group member that isn't a bard to cast origin, bard add origin to queue
+			/for i 0 to ${Group}
+				/if (${Group.Member[${i}].Class.ShortName.Equal[BRD]}) 	  /dex ${Group.Member[${i}]} /medley queue origin
+				/if (${Group.Member[${i}].Class.ShortName.NotEqual[BRD]}) /dex ${Group.Member[${i}]} /casting "Origin" alt
+			/next i
+			/casting origin alt
+			/delay 40s
+			/return
+		} else {
+			/return
+		}
+	} else {
+		/echo Origin not Ready, delaying 1m  ${Time.Time24}
+		/delay 1m
+		/goto :OriginDelay
+	}
+
+/return 
+
+Sub ResetAtThundercrest
+	/if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) {
+		/call RequestRaidBuffs
+		|/call RequestLobbyBuffs
+		|/call zoneByMagus ${zoneMagus}
+	} else {
+		/g Not at thundercrest, can't reset here, something went wrong at ${Time.Time24}
+		/return
+	}
+/return
+
+Sub setCamp
+	/echo Setting camp at camp${int_currentCamp} out of ${int_campCount}
+	/waypoint add camp${int_currentCamp} 
+	/if (${Plugin[mq2nav].Name.Length}) /navigate RecordWaypoint bot_pull_nav
+	/varset int_campX ${Me.X}
+	/varset int_campY ${Me.Y}
+	/varset int_campZ ${Me.Z}
+	/delay 1s
+/return
+
+|-- Moves the current camp to n+1
+|   If we cannot navigate (probably in a wall or geometry)
+|   We will warp back to the current camp and then continue.
+Sub moveCamp(int _campNumber) 
+	/declare prevCamp int local 1
+	/varcalc prevCamp ${_campNumber}-1
+	/echo \aoMoving to Camp \ag${_campNumber}
+	/nav wp camp${_campNumber}
+	/docommand /${cmdChannelExcludingMe} /mqpause on
+	/docommand /${cmdChannel} /nav wp camp${_campNumber}
+	/delay 10
+	/doevents MoveFail 
+	/if (${bln_moveFail}) {
+		/varset bln_moveFail FALSE
+		/docommand /${cmdChannel} /warp wp camp${prevCamp}
+		/delay 10
+		/docommand /${cmdChannel} /nav wp camp${_campNumber}
+	} 
+	:moveCampNavLoop
+		/echo Moving to Camp ${_campNumber}
+		/if (${Navigation.Active}) {
+			/delay 2s
+			/goto :moveCampNavLoop
+		} 
+	/docommand /${cmdChannelExcludingMe} /mqpause off
+	/call setCamp
+/return
+
+Sub Event_MoveFail
+	/varset bln_moveFail TRUE 
+	/doevents flush MoveFail
+/return 
+
+
+Sub setRSTVars
+	/varset	bln_validTGT	FALSE
+	/varset bln_TGTDead		TRUE
+	/varset bln_TGTLocal	FALSE
+	/alert clear 3
+	/target clear
+/return
+
+Sub setTGTAlert
+	/echo setTGTAlert ${Target.ID} ${Target.Name}
+	/alert add 3 id ${Target.ID}
+	/keypress esc
+/return
+
+
+|**
+ ----------------------------
+ getTarget
+ ----------------------------
+ Checks to see if there are any mobs within camp, if so, it targets them indiscriminately
+ otherwise, it attempts to target a NPC that does not fall in the alert list
+ Calls chkTargetValid once a target has been found, if that returns as valid, it continues
+ ----------------------------
+**|
+Sub getTarget
+	/echo getTarget
+	/if (${Me.Sitting}) /sit off
+	/if (${Zone.ShortName.Equal[${zoneRequest}]}) /return
+	:acquireLoop
+		/call setRSTVars
+		/squelch /target clear
+		/call chkLDONCompletion
+		|----------USE THIS FOR HUNTER (ALERT 2) and IGNORE ALERT 1, 3 --------
+		/if (${SpawnCount[npc radius ${int_campRadius} zradius 25]} > 0) {
+			/echo NPC in camp, killing
+			/target npc range ${int_minTLevel} ${int_maxTLevel} radius ${int_maxRadius} noalert 1
+			/delay 5
+		} else /if (${SpawnCount[npc alert 2 radius ${int_alert2Radius} range ${int_minTLevel} ${int_maxTLevel}]} > 0) {
+			/echo NPC on alert 2 is up, killing
+			/target npc alert 2
+			/delay 5
+		} else /if (${SpawnCount[npc alert 2 radius ${int_alert2Radius} range ${int_minTLevel} ${int_maxTLevel}]} == 0 && ${SpawnCount[npc noalert 1]} > 0) {
+			/echo No NPCs on the alert 2 list are up, trying random NPC
+			/target npc range ${int_minTLevel} ${int_maxTLevel} radius ${int_maxRadius} noalert 1 
+			/delay 5
+		} else {
+			/echo no NPCs around, delaying 1m
+			/delay 1m
+			/goto :AcquireLoop
+		}
+		
+		/if (${Target.ID} && (${Target.Distance} <= ${int_campRadius})) {
+			|--if it is close, its valid;
+			/varset bln_validTGT	TRUE
+		} else {
+			|--check the target
+			/if (${Target.ID}) /call chkTargetValid
+		}
+		
+		
+		|--restart
+		/if (!${bln_validTGT}) {
+			|-- if there is more than 1 camp in our dataset, we can start walking through the camps
+			/if (${int_campCount} > 1) {
+					/echo Checking on moving the camp
+					:MoveCamp
+					/if (${int_currentCamp} < ${int_campCount}) {
+						/varcalc int_currentCamp ${int_currentCamp} + 1
+					} else {
+						/varcalc int_currentCamp ${int_currentCamp} - 1
+					}
+					
+					/echo Moving Camp to ${int_currentCamp}
+					/call moveCamp ${int_currentCamp}
+					/delay 10
+			} else {
+				/echo no valid target delaying 5s
+				/delay 5s
+			}
+			/goto :acquireLoop
+		}
+		|--target is valid, continue
+		
+		/varset int_targetID ${Target.ID}
+		/varset bln_TGTDead		FALSE
+		/varset int_distTGT ${Int[${Target.Distance}]}
+		/echo Acquired ${Target.Name} at range ${Int[${Target.Distance}]} killed: (${int_killCount})
+/return
+
+|**
+ ----------------------------
+ chkTargetValid
+ ----------------------------
+ Checks to see if the current target passes the criteria
+ If it is a valid target, bln_validTGT is assigned TRUE
+ Returns to getTarget
+ ----------------------------
+**|
+Sub chkTargetValid
+	/echo chkTargetValid ${Target.Name}
+	/if (${Target.Type.NotEqual[NPC]}) /return
+	
+	|--check if there is a path to the target
+	/if (!${Navigation.PathExists[target]}) {
+		/echo INVALID No Path to Target
+		/call setTGTAlert
+		/return
+	}
+	
+	|--check my target is the apropriate level
+	/if ((${Target.ID}) && (${Target.Level} < ${int_minTLevel})) {
+		/echo target too low of a level
+		/call setTGTAlert
+		/return
+	}
+	/if (${Target.Underwater}) {
+		/echo target is underwater
+		/call setTGTAlert
+		/return
+	}
+	
+	|--check my target is the above the apropriate z-radius floor
+	/if ((${Target.ID}) && ${Int[${Target.Z}]}<${int_minZHeight}) { 
+		/echo target below z floor
+		/call setTGTAlert
+		/return
+	} 
+	|--check my target is the above the apropriate z-radius ceiling
+	/if ((${Target.ID}) &&${Int[${Target.Z}]}>${int_maxZHeight}) { 
+		/echo target below z ceiling
+		/call setTGTAlert
+		/return
+	}
+	
+	/varset bln_validTGT	TRUE
+/return 	
+
+
+
+
+|**
+ ----------------------------
+ pullTarget
+ ----------------------------
+ Checks to see if we need to pull target, if so, then we initiate the pulling mechanism
+ and then once aggro is established, drags the mob back to camp to be killed
+ Calls AggroTarget
+ Calls makecamp return
+ Returns to mainLoop if a valid pull has been achieved
+ ----------------------------
+**|
+Sub pullTarget
+	/echo pullTarget
+	/declare campDist int local
+	|--check to see if we have a valid target, or skip
+	/declare attempt int local 0
+	
+
+	
+	:pullLoop
+		/if (!${bln_validTGT}) 				/goto :return
+		/if (!${Target.ID}) 				/goto :return
+		/if (${Target.Type.NotEqual[NPC]}) 	/goto :return
+	
+		|-- start navigating if you havent
+		/if (!${Navigation.Active}) /navigate target
+		
+		|-- check to see if I have aggro
+		/if (${Me.TargetOfTarget.CleanName.Equal[${Me.CleanName}]} || ${Me.XTarget[1].ID} > 0) {
+			/echo I have aggro.
+			:returnStart
+				/echo Returning to camp.
+				/navigate waypoint bot_pull_nav
+			:returnLoop
+				/delay 1s
+				/if (${Navigation.Active}) /goto :returnLoop
+				/goto :return
+		} else {
+			|/echo I do not have aggro
+			|-- am I close enough to aggro?
+			/if (${Target.Distance} < ${int_castDistance} && ${Target.LineOfSight}) {
+				|/echo Calling aggro loop because dist is within castDist range
+				/goto :aggroLoop
+			}
+			
+		}
+		/goto :pullLoop
+		
+	:aggroLoop
+		/navigate stop
+		/face fast
+		/if (!${Target.ID}) 		  /goto :return
+		/if (${Me.TargetOfTarget.ID}) /goto :return
+		/if (!${Target.LineOfSight})  /goto :pullLoop
+
+		
+		|--attempt to aggro the mob
+		/if (${strPullType.Equal[RANGED]}) {
+			/ranged
+		} else {
+			/echo ${Me.SpellReady[${spell_hate}]} Cast "${spell_pull}" ${spell_pullGem} 5s
+			/call MQ2Cast "${spell_pull}" ${spell_pullGem}
+		}
+		/delay 5
+		/doevents NoLOS
+		/doevents TooClose
+		/delay 5
+		|-- Sometimes if we aren't spell casting and using range weapons we might be too close, and cannot hit them with it.
+		/if (${bln_tooClose}) {
+			/echo Too Close! Handling
+			/doability Bellow
+			/delay 1s
+			/doability Taunt
+			/varset bln_tooClose FALSE
+		}
+		
+		|-- Target.LineOfSight gets a little wonky sometimes with floor items (boxes, etc) in the way
+		/if (${bln_noLOS}) {
+			/echo NoLOS! Handling
+			/navigate target
+			/delay 2s
+			/varset bln_noLOS FALSE
+		}
+		/goto :pullLoop	
+		
+	:return
+/return	
+	
+|**
+ ----------------------------
+ Wait for the mob to be within kill/stick range, then issue
+ /killthis command to mq2melee
+ Calls chkCombatState while in the combatLoop
+ ----------------------------
+**|
+Sub killTarget
+	/echo killTarget
+	/if (${Zone.ShortName.Equal[${zoneRequest}]}) /return
+	/if (!${Target.ID} || ${Target.Type.Equal[PC]}) /return
+	/if (!${bln_validTGT}) /return
+	/if (${bln_TGTDead})   /return
+	/if (${Navigation.Active}) /navigate stop
+	
+	|--check camp distance
+	:campCheck
+	/if (${Math.Distance[${Me.Y},${Me.X}:${int_campY},${int_campX}]} > ${int_campRadius}) {
+		/if (!${Navigation.Active}) /navigate waypoint bot_pull_nav
+		|/echo moving back to camp
+		/delay 5
+		/goto :campCheck
+	}
+
+	|--check the distance, if its out of melee range/aggro range, lets wait a second
+	/face fast
+	/declare int_waited int local 0
+	:distanceWaitLoop
+		/varcalc int_waited ${int_waited}+1
+		/if (${int_waited} > 15) /return
+		/if (!${Target.ID}) 	 /return
+		/delay 5
+		/if (${Target.Distance} > ${int_campRadius}) {
+			/if (${SpawnCount[npc radius ${int_campRadius} range ${int_minTLevel} ${int_maxTLevel}]} > 0) {
+				/echo Something already in camp, changing target
+				/target npc radius ${int_campRadius} range ${int_minTLevel} ${int_maxTLevel}
+				/varset int_targetID ${Target.ID}
+				/delay 5
+				/goto :killMob
+			} else {
+				/echo Distance not covered! ${Target.Distance}::${int_waited} ${Target.Distance} > ${int_campRadius}
+				/delay 5
+				/goto :distanceWaitLoop
+			}
+		}
+		
+	:killMob
+	|--issue kill command
+	/docommand /${announceChannel} KillMob ${Target.ID} "${Target.Name}" ${Time.Time24}
+	
+	/if ((${SpawnCount[npc radius ${int_campRadius}]} > 1) && (${Me.Class.ShortName.Equal[SHD]}) && ${Me.SpellReady[${spell_aehate}]} ) {
+		|/echo ${Me.SpellReady[${spell_aehate}]} Cast ${spell_aehate} ${spell_aehateGem} 5s
+		/call MQ2Cast "${spell_aehate}" ${spell_aehateGem}
+	}
+	
+	/if ((${SpawnCount[npc radius ${int_campRadius}]} > 1) && ${Me.Class.ShortName.Equal[WAR]} && ${Me.CombatAbilityReady[Area Taunt]}) {
+		|/echo ${Me.CombatAbilityReady[Area Taunt]}
+		/doability "Area Taunt"
+	} else /if ((${SpawnCount[npc radius ${int_campRadius}]} > 1) && ${Me.Class.ShortName.Equal[WAR]} && ${Me.AltAbilityReady[Rampage]}) {
+		/call MQ2Cast "Rampage" alt
+	}
+	
+	/if (!${Me.Combat}) {
+		/killthis
+	}
+	
+	/doevents flush
+	
+	|--while in combat do these things
+:combatLoop
+		/call chkCombatState
+		/if (${int_targetID} != ${Target.ID}) /return
+		/if (${Target.Type.NotEqual[NPC]}) /return
+		/if (${Target.Distance} > ${int_campRadius}) /goto :distanceWaitLoop 
+
+		/if (!${bln_TGTDead}) {
+			/if ((${Me.TargetOfTarget.ID} != ${Me.ID}) && !${Target.Fleeing}) {
+				/if ((${Me.Class.ShortName.Equal[SHD]})  && ${Me.SpellReady[${spell_hate}]}) {
+					|/echo ${Me.SpellReady[${spell_hate}]} Cast ${spell_hate} ${spell_hateGem} 5s
+					/call MQ2Cast "${spell_pull}" ${spell_pullGem}
+				} else /if (${Me.Class.ShortName.Equal[WAR]} && (${Me.CombatAbilityReady[${war_ca_hate_1}]})) {
+					/doability "${war_ca_hate_1}"
+				} else /if (${Me.Class.ShortName.Equal[WAR]} && (${Me.CombatAbilityReady[${war_ca_hate_2}]})) {
+					/doability "${war_ca_hate_2}"
+
+				} 
+			} 
+			/goto :combatLoop
+		} else {
+			/echo \agTarget is dead, return
+			/return
+		}
+/return
+
+Sub chkLDONCompletion
+	/echo \archkLDONCompletion for \ag${ldonType} ${int_killCount}\aw dead \aw(\ao${int_totalKills}\aw)
+	|-- Make sure the Adventure window is open
+	/if (!${Window[AdventureRequestWnd].Open}) {
+		/keypress alt+v
+		/delay 1s
+	}
+
+	|-- Check if the Adventure is complete
+	/if (${Window[AdventureRequestWnd].Child[AdvRqst_NPCText].Text.Find[You are not currently]} > 0) /varset missionComplete TRUE
+	/if (${Window[AdventureRequestWnd].Child[AdvRqst_NPCText].Text.Find[The wicked immortals]} > 0)  /varset missionComplete TRUE
+	
+	/if (${SpawnCount[npc radius 100]} > 0) /return
+	
+	| Requires zoning back to ${zoneRequest}
+	/if (${missionComplete}) {
+		/echo Mission has been completed leaving zone
+		/declare i int local 1
+		/declare originAttempt int local 0
+		/declare zoneRequestAttempt int local 0
+		
+		/echo Mission has been completed zoning back to base zone ${zoneRequest} delaying 45s to finish looting etc
+		|-- kill all group member macros, end melee, and twisting
+		/delay 45s
+		/docommand /${announceChannel} HUSH
+		/delay 20
+		/squelch /docommand /${cmdChannelExcludingMe}  /end
+		/docommand /${cmdChannel} /keypress esc
+		/docommand /${cmdChannel} /keypress esc
+		/delay 10
+		/docommand /${cmdChannel} /stand on
+		/docommand /${cmdChannel} /nav stop
+		/delay 10
+		/docommand /${cmdChannel} /melee off
+		/delay 10
+		/delay 15s
+		
+		/varset missionComplete TRUE
+		/docommand /${cmdChannel} /keypress esc
+		/docommand /${cmdChannel} /keypress esc
+		
+		
+		|-- return to guild lobby
+		/g Returning to Thundercrest ${Time.Time24} Origin Ready: ${Me.AltAbilityReady[Origin]}
+		/call OriginToThundercrest
+		/call ResetAtThundercrest
+		
+	}
+	
+	
+	|-- Reset Adventure variables now that we are complete
+	/if (${missionComplete}) {
+		/g ${Time.Time24} Mission Complete, resetting variables, and starting this over again ${Time.Time24}
+		/varset inMission 		FALSE
+		/varset haveMission 	FALSE
+		/varset missionComplete FALSE
+		/varset int_killCount 		0
+	}
+		
+/return
+
+
+|**
+ ----------------------------
+ chkCombatState
+ ----------------------------
+ A determination call, to see if current target is dead, or otherwise not
+ a valid target anymore
+ ----------------------------
+**|
+Sub chkCombatState
+	/if (${Target.Type.NotEqual[NPC]}) 		 /varset bln_TGTDead TRUE
+	/if (${Target.Type.Equal[Item]})		 /varset bln_TGTDead TRUE
+	/if (!${Target.ID}) 					 /varset bln_TGTDead TRUE
+	|/if (${bln_TGTDead} && ${SpawnCount[npc radius ${int_campRadius}]} == 0 && ${bln_looting}) /call chkLoot
+/return
+
+|**
+ ----------------------------
+ chkUtils
+ ----------------------------
+ Here we check mana of the cleric & the puller
+ Here we check the endurance of the puller
+ Here we check the hitpoints of the puller
+
+ ----------------------------
+**|
+
+Sub chkUtils
+	/if (${SpawnCount[npc radius ${int_campRadius}]} > 0) /return
+	/varset bln_wait4Mana	FALSE
+	/varset	bln_wait4End	FALSE
+	/varset bln_wait4HP		FALSE
+
+	/echo chkUtils
+
+	:chkUtilLoop
+		
+		|/call chkBuffs
+		/call chkMana
+		/call chkEndurance
+		/call chkHP
+		/if (${strPullType.NotEqual[SPELL]}) {
+			| ${component} ${count} ${compType} ${summoner} ${reagent}
+			/call chkComponentsAll
+		}
+		/if (${bln_wait4Mana} || ${bln_wait4End} || ${bln_wait4HP}) {
+			/echo Waiting for : mana: ${bln_wait4Mana} endurance: ${bln_wait4End} hitpoints: ${bln_wait4HP}
+			/if (${SpawnCount[npc radius ${int_campRadius}]} > 0) /return
+			/if (!${Me.Sitting}) /sit on 
+			/delay 5s
+			/goto :chkUtilLoop
+		}
+		/if (${Me.Sitting}) /sit off
+/return
+
+Sub chkMana
+	/varset bln_wait4Mana FALSE
+	/if ((${int_groupCLRidx} != -1) && (${Group.Member[${int_groupCLRidx}].PctMana} < ${int_clrManaFloor})) {
+		/echo Cleric mana ${Group.Member[${int_groupCLRidx}].PctMana} < ${int_clrManaFloor}
+		/varset bln_wait4Mana TRUE
+	}
+	/if ( (${int_groupENCidx} != -1) &&  (${Group.Member[${int_groupENCidx}].PctMana} < ${int_encManaFloor})) {
+		/echo Enc mana ${Group.Member[${int_groupENCidx}].PctMana} < ${int_encManaFloor}
+		/varset bln_wait4Mana TRUE
+	}
+	
+	/if (${strPullType.Equal[SPELL]} && (${Me.PctMana} <  ${int_myManaFloor})) {
+		/echo  ${strPullType} My mana ${Me.PctMana} < ${int_myManaFloor}
+		/varset bln_wait4Mana TRUE
+	}
+	
+	
+/return
+
+
+Sub chkEndurance
+	/varset bln_wait4End FALSE
+	/if (${Me.PctEndurance} < ${int_myEnduranceFloor}) 	/varset bln_wait4End TRUE
+/return
+
+Sub chkHP
+	/varset bln_wait4HP FALSE
+	/if (${Me.PctHPs} < ${int_myHitpointFloor}) 	/varset bln_wait4HP TRUE
+/return
+
+
+Sub chkBuffs
+
+	/echo ----
+	/echo Checking Buffs
+	/echo IDs    ENC:${int_groupENCidx} CLR: ${int_groupCLRidx} DRU: ${int_groupDRUidx} SHM:${int_groupSHMidx}
+	/echo Timers ENC:${timer_buffENC} CLR: ${timer_buffCLR} DRU: ${timer_buffDRU} SHM:${timer_buffSHM}
+	/echo ----
+	/if (${SpawnCount[npc radius ${int_campRadius}]} > 0) /return
+	
+	/declare int_wait int local 0
+	
+	|-- check to see if there is an echanter
+	/if (${int_groupENCidx} != -1) {
+		/if (${timer_buffENC} == 0) {
+			|-- Check for Haste
+			/if (!${Me.Buff[Hastening of Salik].ID} || (${Me.Buff[Hastening of Salik].ID} && ${Me.Buff[Hastening of Salik].Duration.TotalSeconds} < 45)) {
+				/g Requesting Haste from ${str_groupENCname}
+				/dgt ${str_groupENCname} doSpecificBuffOnChar Hastening of Salik
+				/varset timer_buffENC 30s
+				/varset int_wait ${int_wait} + 5
+			}
+			|-- Check for Mana
+			|/if (!${Me.Buff[Voice of Clairvoyance].ID}) {
+			|	/g Requesting VOC from ${str_groupENCname}
+			|	/dgt ${str_groupENCname} doSpecificBuffOnChar Voice of Clairvoyance
+			|	/varset timer_buffENC 30s
+			|	/varset int_wait ${int_wait} + 5
+			|}
+
+		}
+	}
+	|-- check to see if there is a druid
+	/if (${int_groupDRUidx} != -1) {
+		/if (${timer_buffDRU} == 0) {
+			|-- Check for 9
+			/if (!${Me.Buff[Blessing of Steeloak].ID} || (${Me.Buff[Blessing of Steeloak].ID} && ${Me.Buff[Blessing of Steeloak].Duration.TotalSeconds} < 45)) {
+				/g Requesting Bo9 from ${str_groupDRUname}
+				/dgt ${str_groupDRUname} doSpecificBuffOnChar Blessing of Steeloak
+				/varset int_wait ${int_wait} + 5
+				/varset timer_buffDRU 30s
+			}
+			|-- Check for DS
+			/if (!${Me.Buff[Legacy of Nettles].ID} || (${Me.Buff[Legacy of Nettles].ID} && ${Me.Buff[Legacy of Nettles].Duration.TotalSeconds} < 45)) {
+				/g Requesting DS from ${str_groupDRUname}
+				/dgt ${str_groupDRUname} doSpecificBuffOnChar Legacy of Nettles
+				/varset int_wait ${int_wait} + 5
+				/varset timer_buffDRU 30s
+			}
+		}
+		
+	}
+	
+	|-- check to see if there is a cleric
+	/if (${int_groupCLRidx} != -1) {
+		/if (${timer_buffCLR} == 0) {
+			|-- if there is a druid, then we want the mark, else, virtue (well, whatever it should be)
+			/if (${int_groupDRUidx} != -1) {
+				/if (!${Me.Buff[Balikor's Mark].ID} || (${Me.Buff[Balikor's Mark].ID} && ${Me.Buff[Balikor's Mark].Duration.TotalSeconds} < 45)) {
+					/g Requesting Symbol from ${str_groupCLRname}
+					/dgt ${str_groupCLRname} doSpecificBuffOnChar Balikor's Mark
+					/varset int_wait ${int_wait} + 5
+					/varset timer_buffCLR 30s
+				}
+			} else {
+				/if ((!${Me.Buff[Hand of Virtue].ID} && !${Me.Buff[Blessing of Steeloak].ID}) || (${Me.Buff[Hand of Virtue].ID} && ${Me.Buff[Hand of Virtue].Duration.TotalSeconds} < 45)) {
+					/g Requesting Aegolism from ${str_groupCLRname}
+					/dgt ${str_groupCLRname} doSpecificBuffOnChar Hand of Virtue
+					/varset int_wait ${int_wait} + 5
+					/varset timer_buffCLR 30s
+				}
+			}
+			
+		}
+	}
+	
+	|-- check to see if there is a shaman
+	/if (${int_groupSHMidx} != -1) {
+		/if (${timer_buffSHM} == 0) {
+			|-- Check for Focus
+			/if (!${Me.Buff[Talisman of Wunshi].ID} || (${Me.Buff[Talisman of Wunshi].ID} && ${Me.Buff[Talisman of Wunshi].Duration.TotalSeconds} < 45)) {
+				/g Requesting Focus from ${str_groupSHMname}
+				/dgt ${str_groupSHMname} doSpecificBuffOnChar Talisman of Wunshi
+				/varset int_wait ${int_wait} + 5
+				/varset timer_buffSHM 30s
+			}
+			|-- Check for STR
+			|/if (!${Me.Buff[Talisman of Might].ID}) {
+			|	/g Requesting Might from ${str_groupSHMname}
+			|	/dgt ${str_groupSHMname} doSpecificBuffOnChar Talisman of Might
+			|	/varset int_wait ${int_wait} + 5
+			|	/varset timer_buffSHM 30s
+			|}
+			|-- Check for STA
+			/if (!${Me.Buff[Talisman of Fortitude].ID} || (!${Me.Buff[Talisman of Fortitude].ID} && ${Me.Buff[Talisman of Fortitude].Duration.TotalSeconds} < 45)) {
+				/g Requesting Fortitude from ${str_groupSHMname}
+				/dgt ${str_groupSHMname} doSpecificBuffOnChar Talisman of Fortitude
+				/varset int_wait ${int_wait} + 5
+				/varset timer_buffSHM 30s
+			}
+			|-- If there is no enchanter, we want haste too
+			/if ((${int_groupENCidx} == -1 && !${Me.Buff[Hastening of Salik].ID} && !${Me.Buff[Talisman of Celerity].ID}) || (${Me.Buff[Talisman of Celerity].ID} && ${Me.Buff[Talisman of Celerity].Duration.TotalSeconds} < 45)) {
+				/g Requesting Haste from ${str_groupSHMname}
+				/dgt ${str_groupSHMname} doSpecificBuffOnChar Talisman of Celerity
+				/varset int_wait ${int_wait} + 5
+				/varset timer_buffSHM 30s
+			}
+		}
+	}
+	
+	/echo Waiting ${int_wait}s for buffs
+	/delay ${int_wait}s
+	
+
+	
+/return
+
+|**
+ ----------------------------
+ setGroupCommands
+ ----------------------------
+ Check the group and set the members to singing, or whatever they
+ are supposed to be doing. Set the bard to sing and offtank
+ ----------------------------
+**|
+Sub setGroupCommands
+	/echo setGroupCommands
+	|-- find a bard and tell them to sing their normal setup (bound to key 2 usually)
+
+	/declare i int local 0
+	/for i 0 to ${Group}
+		/if (${Group.Member[${i}].Class.ShortName.Equal[BRD]}) /varset bard ${Group.Member[${i}].Name}
+		/if (${Group.Member[${i}].Class.ShortName.NotEqual[WAR]} && ${Group.Member[${i}].Class.ShortName.NotEqual[CLR]} && ${Group.Member[${i}].Class.ShortName.NotEqual[PAL]} && ${Group.Member[${i}].Class.ShortName.NotEqual[SHD]} && ${Group.Member[${i}].Class.ShortName.NotEqual[BRD]}) /varset looter ${Group.Member[${i}].Name}
+	/next i
+	|-- set the offtank 
+	|   if SK is the tank we dont need offtank really.
+	/if (${Me.Class.ShortName.NotEqual[SHD]}) {
+		/if (${offtank.Equal[NULL]}) {
+			/dex ${bard} offtankOn
+		} else {
+			/dex ${offtank} offtankOn
+		}
+		
+	}
+	|-- tell the bard to sing a song
+	/if (${bard.NotEqual[NOT_FOUND]})  /dex ${bard} /medley melee
+
+	|-- find not cleric/tank to loot
+	/if (${looter.NotEqual[NOT_FOUND]}) /dt ${looter} lootOn ALL
+	/delay 10
+	/varset bln_looting FALSE
+	|-- turn on melee and aggro
+	/squelch /dgga /melee on
+	/melee aggro=1
+	/varset bln_looting FALSE
+	
+/return
+
+|**
+ ----------------------------
+ setSupportIDs
+ ----------------------------
+ Here we set the id of the group's cleric and other support classes.
+ If we are in a raid setup, we handle that too as a 'local ID' instead of 'group ID'
+ ----------------------------
+**|
+sub setSupportIDs
+	/if (${bln_useGroup}) {
+		/declare gmember int local 0
+		/for gmember 0 to ${Group}
+			|-- Cleric
+			/if (${Group.Member[${gmember}].Class.ShortName.Equal[CLR]}) {
+				/echo Setting int_groupCLRidx to ${gmember}
+				/varset int_groupCLRidx ${gmember}
+				/varset str_groupCLRname ${Group.Member[${gmember}].Name}
+			} else /if (${Group.Member[${gmember}].Class.ShortName.Equal[ENC]}) {
+				/echo Setting int_groupENCidx to ${gmember}
+				/varset int_groupENCidx ${gmember}
+				/varset str_groupENCname ${Group.Member[${gmember}].Name}
+			} else /if (${Group.Member[${gmember}].Class.ShortName.Equal[DRU]}) {
+				/echo Setting int_groupDRUidx to ${gmember}
+				/varset int_groupDRUidx  ${gmember}
+				/varset str_groupDRUname ${Group.Member[${gmember}].Name}
+			} else /if (${Group.Member[${gmember}].Class.ShortName.Equal[SHM]}) {
+				/echo Setting int_groupSHMidx to ${gmember}
+				/varset int_groupSHMidx ${gmember}
+				/varset str_groupSHMname ${Group.Member[${gmember}].Name}
+			}
+		/next gmember
+		
+		|-- Friendly warning
+		/if (${int_groupCLRidx} == -1) {
+			/beep
+			/echo !! WARNING !! No Cleric Found, you are brave!
+		}
+	} else {
+		|-- Raid looping not implemented yet because I am lazy
+	}
+
+/return 
+
+|**
+ ----------------------------
+ UILocked
+ ----------------------------
+ The UI got locked up. need to fade and remake groups
+ ----------------------------  
+**|
+Sub EVENT_UILocked
+	/delay 20
+	/fade 
+	/delay 45s
+	/call chkGroup
+/return
+
+
+Sub chkGroup
+	/if (${Group.GroupSize} == 6) /return
+	/echo chkGroup: Group isn't formed
+	
+	/declare i int local 1
+	/for i 1 to 5
+		/invite ${groupMember_${i}}
+		/delay 1s
+	/next i
+/return
+
+
+
+|**
+ ----------------------------
+ resetCamp
+ ----------------------------
+ Before each pull session, tell everyone to go back to the current camp
+ ----------------------------
+**|
+
+Sub resetCamp
+	/docommand /${cmdChannel}	/nav wp camp${int_currentCamp}
+/return
+		
+
+|**
+ ----------------------------
+ Initialization
+ ----------------------------
+ Here we declare variables
+ Eventually this needs to be pulled from an INI per zone and per puller!
+ ----------------------------
+**|
+Sub variant_initialize(string _channel, string _announce, string _theme, bool _useDownFlags, bool _highRisk)
+	|-- variant specific vars
+	/declare inMission 				bool 	outer 	FALSE
+	/declare haveMission 			bool 	outer 	FALSE
+	/declare ldonType	 			string 	outer 	NOAVAIL
+	/declare ldonEntrance 			string 	outer 	unearthed_grave
+	/declare bln_useGroup			bool	outer	TRUE
+	/declare zoneRequest  			string  outer   ${_theme}
+	/declare adventureGiver         string  outer   ${Ini[INI_ldonInfo,${zoneRequest},adventureGiver]}
+	/declare zoneMagus         		string  outer   ${Ini[INI_ldonInfo,${zoneRequest},magus]}
+
+	/declare bard 					string 	outer NOT_FOUND
+	/declare looter 				string 	outer NOT_FOUND
+	
+
+	/echo \aoInitializing LDON Script (Donor Hall)
+	/echo \awLDON Setup \aozoneRequest: \ag${zoneRequest} \aoadventureGiver: \ag${adventureGiver}
+	/echo               \aozoneMagus:${zoneMagus}
+	
+	/declare zoneStart              string  outer   lfaydark
+	/declare zoneMission 			string 	outer 	mmcd
+	|--camp counts
+	/declare int_currentCamp		int		outer	1
+	/declare int_campCount			int 	outer	1
+
+	/declare missionComplete        bool	outer	FALSE
+
+	/declare dtIN                   int     outer   9999
+	/declare wpIN                   string  outer   notset
+	/declare dtOUT					int     outer   9999
+	/declare int_xOUT				int		outer 	0
+	/declare int_yOUT				int 	outer 	0
+	/declare int_zOUT				int		outer	0
+	/declare killTarget             string  outer   NULL
+	/declare int_killCount 			int 	outer 	0
+	/declare int_totalKills			int     outer 	0
+	
+	|--group members
+	/declare groupMember_0			string	outer  	${Group.Member[0].Name}
+	/declare groupMember_1			string	outer  	${Group.Member[1].Name}
+	/declare groupMember_2			string	outer  	${Group.Member[2].Name}
+	/declare groupMember_3			string	outer  	${Group.Member[3].Name}
+	/declare groupMember_4			string	outer  	${Group.Member[4].Name}
+	/declare groupMember_5			string	outer  	${Group.Member[5].Name}
+	|--loot
+	/varset bln_looting			FALSE
+	/if (${bln_looting}) 			/call EnableLooting
+	
+	|--offtank
+	/declare offtank string	outer   NULL
+	/if (${Defined[_offtank]} || ${_offtank.NotEqual[NULL]}) /varset offtank ${_offtank}
+	
+	|--highrisk?
+	/declare bln_highRisk			bool	outer	FALSE	
+	/if (${Defined[_highRisk]} || ${_highRisk} != FALSE) /varset bln_highRisk ${_highRisk}
+	
+	|--melee plugin/aggro for the requester
+	/melee aggro=1
+	
+	|--command channel setup
+	/if (!${Defined[cmdChannel]}) /declare cmdChannel string	outer	dgga
+	/declare cmdChannelExcludingMe string outer dgge
+	/varset cmdChannel dgga
+	/if (${Defined[_channel]}) /varset cmdChannel ${_channel}
+	/echo 	cmdChannel is ${cmdChannel}
+	/docommand /${cmdChannel}	/speed 1.4
+	
+	|--announce channel set
+	/if (!${Defined[announceChannel]}) /declare announceChannel string	outer	gsay
+	/varset announceChannel gsay
+	/if (${Defined[_announce]}) /varset announceChannel ${_announce}
+	/echo announceChannel is ${announceChannel}
+
+
+	|--downflags 
+	/declare useDownFlags	bool	outer	TRUE
+	/if (${Defined[_useDownFlags]} && !${_useDownFlags}) /varset useDownFlags FALSE
+	
+	|--radii
+	/declare int_pcCount			int 	outer   ${SpawnCount[PC]}
+	/varset int_campRadius			55
+	/declare int_alert2Radius		int 	outer 	350
+	/declare int_campPullRadius		int		outer	350
+	/declare int_maxRadius			int		outer	300
+	/declare int_minZHeight			int		outer 	-1500
+	
+	|-- use 40 for POFire
+	/declare int_maxZHeight			int		outer	4000
+	
+	|--target information
+	/declare int_minTLevel			int		outer	40
+	/declare int_maxTLevel			int		outer	75
+	/declare bln_validTGT			bool	outer	FALSE
+	/declare bln_TGTDead			bool	outer	FALSE
+	/declare bln_TGTLocal			bool	outer	FALSE
+	/declare int_distTGT			int		outer	0
+	/declare int_distTGTPredict		int		outer	0
+	/declare int_alertCount			int		outer	0
+	
+	|--utility floors
+	/declare int_myHitpointFloor	int		outer	60
+	/declare int_myEnduranceFloor	int		outer	0
+	|-- note my mana floor only matters if I am a spell casting puller
+	/declare int_myManaFloor		int		outer	20 
+	/declare int_clrManaFloor		int		outer	20
+	/declare int_encManaFloor		int		outer	0
+	/declare bln_wait4Mana			bool	outer	FALSE
+	/declare bln_wait4HP			bool	outer	FALSE
+	/declare bln_wait4End			bool	outer	FALSE
+	
+	|--spell & support definitions are declared in xiris_melee.inc
+	
+	|--set up the camp logic
+	/if (!${Defined[int_campX]}) /declare int_campX 				int outer ${Me.X}
+	/if (!${Defined[int_campY]}) /declare int_campY 				int outer ${Me.Y}
+	/if (!${Defined[int_campZ]}) /declare int_campZ 				int outer ${Me.Z}
+	
+	/declare timer_taunt            timer 	outer    3s
+
+	|--set the puller type 
+	/declare strPullType	string	outer	RANGED
+
+	| MELEE DPS CLASS ENUMERATION - Endurance Focus
+	/if (${Select[${Me.Class.ShortName},ROG,BER,MNK]}) {
+		/varset strPullType RANGED
+	}
+	
+	| MELEE DPS CLASS ENUMERATION - Mana Focus
+	/if (${Select[${Me.Class.ShortName},BST,RNG,BRD,PAL]}) {
+		/varset strPullType RANGED
+	}	
+	
+	| TANK CLASS ENUMERATION
+	/if (${Select[${Me.Class.ShortName},WAR]}) {
+		/varset strPullType RANGED
+	}		
+	
+	| TANK CASTER CLASS ENUMERATION
+		/if (${Select[${Me.Class.ShortName},SHD]}) {
+		/varset strPullType SPELL
+	}	
+
+	
+	/declare int_obstacleCNT		int 	outer 	0
+	/declare bln_noLOS				bool	outer	FALSE	
+	/declare bln_tooClose			bool	outer	FALSE
+	/declare bln_moveFail			bool    outer 	FALSE
+	
+	|--find the support members of the group for use in keeping up buffs
+	/declare int_groupCLRidx int outer -1
+	/declare int_localCLRid int outer -1
+	/declare str_groupCLRname string outer NULL
+	/declare timer_buffCLR timer	outer  1s
+
+	/declare int_groupENCidx int outer -1
+	/declare int_localENCid int outer -1
+	/declare str_groupENCname string outer NULL
+	/declare timer_buffENC timer	outer  1s
+	
+	/declare int_groupDRUidx int outer -1
+	/declare int_localDRUid int outer -1
+	/declare str_groupDRUname string outer NULL
+	/declare timer_buffDRU timer	outer  1s
+
+	/declare int_groupSHMidx int outer -1
+	/declare int_localSHMid int outer -1
+	/declare str_groupSHMname string outer NULL
+	/declare timer_buffSHM timer	outer 1s
+		
+	/call setSupportIDs
+/return
+
+
+
+
+
+Sub setAlerts
+	|=================================
+	|--- specific zone mobs to avoid;
+	|=================================
+	/squelch /alert clear 1
+	/squelch /alert add 1 "a bitten victim"
+	/squelch /alert add 1 "a petrified colossal tree"
+	/squelch /alert add 1 "a hollow tree"
+	/squelch /alert add 1 "a trap"
+	/squelch /alert add 1 "flavor text"
+	/squelch /alert add 1 "ten"
+	/squelch /alert add 1 "six"
+	/squelch /alert add 1 "two"
+	/squelch /alert add 1 "a hissing"
+	/squelch /alert add 1 "four"
+	/squelch /alert add 1 "eight"
+	/squelch /alert add 1 "three"
+	/squelch /alert add 1 "ten"
+	/squelch /alert add 1 "aedispellph"
+	/squelch /alert add 1 "aerainph"
+	/squelch /alert add 1 "from no where"
+	/squelch /alert add 1 "mini named controller"
+	/squelch /alert add 1 "the hair"
+	/squelch /alert add 1 "Keeper of Blood" |note spawns in spot you can't nav to
+	
+	|=================================
+	|--- specific zone mobs to hunt;
+	|=================================
+	/squelch /alert clear 2
+
+	|-- LDON Hunter
+	| /squelch /alert add 2 "Keeper of Blood" |note spawns in spot you can't nav to
+	/squelch /alert add 2 "Yavrin"
+	/squelch /alert add 2 "Jerranad"
+	
+	|-- etc--|
+	/squelch /alert add 2 "night watchman"
+	/squelch /alert add 2 "officiator"
+	/squelch /alert add 2 "Ulyist"
+	/squelch /alert add 2 "Keeper of Blood"
+	/squelch /alert add 2 "Yavrin"
+	/squelch /alert add 2 "Bial the Blade"
+	/squelch /alert add 2 "Jerrand"
+	/squelch /alert add 2 "Sikl"
+	/squelch /alert add 2 "Giddib"
+	/squelch /alert add 2 "officiator"
+	
+	
+	
+	/squelch /alert clear 3
+	/squelch /alert add 3 "All Powerful Gnome"
+
+/return
+
+Sub Event_TooClose
+	/echo Event_TooClose
+	/varset bln_tooClose TRUE
+/return
+
+Sub Event_NoLOS
+	/echo Event_NoLOS
+	/varset bln_noLOS TRUE
+/return
+
+
+Sub Event_EndMac
+	/bc Someone told me to end it! ${Time.Time24}
+	/g Someone told me to end it! ${Time.Time24}
+	/delay 1s
+	/docommand /${cmdChannel}  /melee off
+	/docommand /${cmdChannelExcludingMe}  /end
+	/delay 2m
+	/docommand /${cmdChannel}  /icampdesk
+	/end
+/return
+
+
+
+
+

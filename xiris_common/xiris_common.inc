@@ -430,7 +430,7 @@ Sub EngageTarget(int _targetID)
 		/echo \awKilling Target \ag${Spawn[id ${_targetID}].Name} \ay(${_targetID})  \ao${Time.Time24}
 		/squelch /melee reset
 		/varset int_maxStickDistance ${Target.MaxMeleeTo}
-		/call StickToTarget TRUE
+		/call EngageTargetMelee
 	}
 	| Stop Sticking if you are MT, cause it's annoying
 	/if (${Me.ID} == ${int_MTID} || ${bln_tanking}) /squelch /stick off
@@ -585,7 +585,6 @@ Sub Disengage
 		/squelch /target clear
 	} else /if (${str_classArchetype.Equal[CASTER]}) {
 		/if (${Me.Pet.ID}) {
-			/if (${Defined[bln_petAttacking]}) /varset bln_petAttacking FALSE
 			/squelch /pet back off
 			/squelch /pet hold on
 		}

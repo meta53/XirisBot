@@ -183,11 +183,12 @@ Sub chkNuke
 			|-- All this ready, check for LOS/Distance/Mana
 			/if (${Target.PctHPs}<=${NUKE_${i}_StartHP} && ${Target.PctHPs}>=${NUKE_${i}_StopHP}) {
 				/if (${Me.CurrentMana}>=${Spell[${NUKE_${i}_Spell}].Mana} && ${Target.Distance}<=${Spell[${NUKE_${i}_Spell}].Range} && ${Target.LineOfSight}) {
+					/varset int_temp_stopCastPoint ${NUKE_${i}_StopHP}
 					/if (${Me.Class.ShortName.Equal[BRD]}) {
 						/call MQ2Medley SONG "${NUKE_${i}}" ${int_targetID} TRUE
 						/echo \ag ${NUKE_${i}_Spell}  : DELAYING for \ay${NUKE_${i}_DelayTimer.OriginalValue}s \agrefresh	
 					} else {
-						/call MQ2Cast "${NUKE_${i}_Spell}"	
+						/call MQ2Cast "${NUKE_${i}_Spell}" ${NUKE_${i}_Gem} 1s chkCastTarget
 						/if (${Macro.Return.Equal[CAST_SUCCESS]}) {
 							/echo \ag ${NUKE_${i}_Spell} ${Macro.Return} : DELAYING for \ay${NUKE_${i}_DelayTimer.OriginalValue}s \agrefresh	
 						}
@@ -288,11 +289,12 @@ Sub chkQNuke
 			|-- All this ready, check for LOS/Distance/Mana
 			/if (${Target.PctHPs}<=${QNUKE_${i}_StartHP} && ${Target.PctHPs}>=${QNUKE_${i}_StopHP}) {
 				/if (${Me.CurrentMana}>=${Spell[${QNUKE_${i}_Spell}].Mana} && ${Target.Distance}<=${Spell[${QNUKE_${i}_Spell}].Range} && ${Target.LineOfSight}) {
+					/varset int_temp_stopCastPoint ${QNUKE_${i}_StopHP}
 					/if (${Me.Class.ShortName.Equal[BRD]}) {
 						/call MQ2Medley SONG "${QNUKE_${i}}" ${int_targetID} TRUE
 						/echo \ag ${QNUKE_${i}_Spell}  : DELAYING for \ay${QNUKE_${i}_DelayTimer.OriginalValue}s \agrefresh	
 					} else {
-						/call MQ2Cast "${QNUKE_${i}_Spell}"	
+						/call MQ2Cast "${QNUKE_${i}_Spell}" ${QNUKE_${i}_Gem} 1s chkCastTarget
 						/if (${Macro.Return.Equal[CAST_SUCCESS]}) {
 							/echo \ag ${QNUKE_${i}_Spell} ${Macro.Return} : DELAYING for \ay${QNUKE_${i}_DelayTimer.OriginalValue}s \agrefresh	
 						}
@@ -399,7 +401,8 @@ Sub chkStun(bool _memorize)
 			|-- All this ready, check for LOS/Distance/Mana
 			/if (${Target.PctHPs}<=${STUN_${i}_StartHP} && ${Target.PctHPs}>=${STUN_${i}_StopHP}) {
 				/if (${Me.CurrentMana}>=${Spell[${STUN_${i}_Spell}].Mana} && ${Target.Distance}<=${Spell[${STUN_${i}_Spell}].Range} && ${Target.LineOfSight}) {
-					/call MQ2Cast "${STUN_${i}_Spell}" ${STUN_${i}_Gem} 5s
+					/varset int_temp_stopCastPoint ${STUN_${i}_StopHP}
+					/call MQ2Cast "${STUN_${i}_Spell}" ${STUN_${i}_Gem} 5s chkCastTarget
 					/if (${Cast.Result.Equal[CAST_SUCCESS]}) {
 						/echo \ag ${STUN_${i}_Spell} ${Cast.Result}
 						/varset STUN_${i}_HasCastOnce TRUE
@@ -541,11 +544,12 @@ Sub chkDOT
 			/if (${Target.PctHPs}<=${DOT_${i}_StartHP} && ${Target.PctHPs}>=${DOT_${i}_StopHP}) {
 				/if (${Me.CurrentMana}>=${Spell[${DOT_${i}_Spell}].Mana} && (${Me.SpellReady[${DOT_${i}_Spell}]} || ${Me.Class.ShortName.Equal[BRD]}) && ${Target.Distance}<=${Spell[${DOT_${i}_Spell}].Range} && ${Target.LineOfSight} && (${DOT_${i}_RecastTimer} <= 0)) {
 					/varset dotDuration ${Spell[${DOT_${i}_Spell}].Duration.TotalSeconds}
+					/varset int_temp_stopCastPoint ${DOT_${i}_StopHP}
 					/if (${Me.Class.ShortName.Equal[BRD]}) {
 						/call MQ2Medley SONG "${DOT_${i}}" ${int_targetID} TRUE
 						/echo \ag ${DOT_${i}_Spell}  : DELAYING for \ay${dotDuration}s \agrefresh	
 					} else {
-						/call MQ2Cast "${DOT_${i}_Spell}"	
+						/call MQ2Cast "${DOT_${i}_Spell}" ${DOT_${i}_Gem} 1s chkCastTarget
 						/if (${Macro.Return.Equal[CAST_SUCCESS]}) {
 							/echo \ag ${DOT_${i}_Spell} ${Macro.Return} : DELAYING for \ay${dotDuration}s \agrefresh	
 						}
@@ -570,13 +574,15 @@ Sub chkDOT
  Snaring  
  ----------------------------
  Snare Spell is declared in the INI
+ Note apparently I have this disabled: TODO, actually use this again
  ----------------------------
 **|
 Sub chkSnare
 	/if (${Me.Invis}||${Me.Moving}|| ${Me.Song[${GoM}].ID}||${list_immuneSnare.Find[${Spawn[${Target.CleanName}]}]}||${ExcludeList.Find[${Spawn[${Target.CleanName}]}]}) /return
 	/if (${Target.PctHPs}<=${int_snareHP} && ${Target.ID} && ${Target.Type.Equal[NPC]} && !${bln_snareActive} && ${bln_snareUse} && ${SpawnCount[npc radius 50 zradius 10]}<=${int_snareLocalNPC}) {
 		/call chkSpellMemorized "${str_snareSpell}" TRUE ${str_snareGem} 
-		/call MQ2Cast "${str_snareSpell}"
+		/varset int_temp_stopCastPoint 10
+		/call MQ2Cast "${str_snareSpell}" gem5 1s chkCastTarget
 	}
 	
 	/if (${Cast.Result.Equal[CAST_SUCCESS]}) {
@@ -886,7 +892,7 @@ Sub CreateCastingLineup
 		/next i
 	}
 
-		|--Quick Nuke
+	|--Quick Nuke
 	/declare QNUKE_Total				int		outer	${Ini[INI_CHAR,QNUKE,QNUKE_Total,0]}	
 	/declare QNUKE_TotalIfNamed			int 	outer   ${Ini[INI_CHAR,QNUKE,QNUKE_Total,${QNUKE_Total}]}	
 	/declare QNUKE_DelayTimer			timer	outer	${Ini[INI_CHAR,QNUKE,QNUKE_DelayTimer,1s]}
@@ -952,6 +958,35 @@ Sub CreateCastingLineup
 /return
 
 
+|**
+ ----------------------------
+ Check Cast Target Subroutines
+ ----------------------------
+ This is called (looping) while a spell is being cast
+ This will verify if the target is still alive while casting nukes, etc 
+ allowing ducking out if npc is dead
+ ----------------------------
+**|
+Sub chkCastTarget
+	|/echo \awchkCastTarget corpse? \ag${Target.Name.Find[s_corpse]}  \awstop? \ag${int_temp_stopCastPoint}
+	| I'm no longer casting, or no longer need to stop it ie, target is MT
+	/if (!${Bool[${Me.Casting.ID}]}) /goto :return
+
+	| If the Target is Dead... stop
+	/if (${Target.Name.Find[s_corpse]}) /goto :interrupt
+
+	| If the Target has a Stop Cast HP setting (like... say balancer)
+	/if (${Target.PctHPs} <= ${int_temp_stopCastPoint}) /goto :interrupt
+
+	/goto :return
+
+	:interrupt
+	/stopcast
+
+    :return
+/return
+
+
 Sub xbot_initialize_casting
 	/echo \aoxbot_initialize_casting
 
@@ -965,6 +1000,7 @@ Sub xbot_initialize_casting
 	/if (${Zone.ShortName.Equal[pofire]}) /call SetResistTypes Cold,Magic,Poison,Disease
 	/declare bln_useFastOnly			bool	outer	FALSE
 	/declare int_concCount				int     outer 	0
+	/declare int_temp_stopCastPoint		int 	outer   0
 	
 	|-- Return out if not a caster
 	/if (${str_classArchetype.Equal[MELEE_END]} || ${Me.Class.ShortName.Equal[WAR]}) /return

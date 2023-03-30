@@ -697,7 +697,10 @@ Sub chkGroupMarkedForDeath
 				}
 			/next i
 			/call MQ2Cast "${str_heal_group}" gem4 2s 
-			/if (${Spawn[npc ${eventTarget}].PctHPs} <= 99) /gsay KillMob ${Spawn[npc ${eventTarget}].ID} "${Spawn[npc ${eventTarget}].Name}" ${Time.Time24}
+			/if (${Spawn[npc ${eventTarget}].PctHPs} <= 99) {
+				/gsay KillMob ${Spawn[npc ${eventTarget}].ID} "${Spawn[npc ${eventTarget}].Name}" ${Time.Time24}
+				/gsay restick
+			}
 			/goto :CheckGroup
 		}
 	} else /if (${Me.Class.ShortName.Equal[SHM]}) {
@@ -709,7 +712,10 @@ Sub chkGroupMarkedForDeath
 			}
 		/next i
 		/call MQ2Cast "${str_cure_disease}" gem7 8s
-		/if (${Spawn[npc ${eventTarget}].PctHPs} <= 99) /gsay KillMob ${Spawn[npc ${eventTarget}].ID} "${Spawn[npc ${eventTarget}].Name}" ${Time.Time24}
+		/if (${Spawn[npc ${eventTarget}].PctHPs} <= 99) {
+			/gsay KillMob ${Spawn[npc ${eventTarget}].ID} "${Spawn[npc ${eventTarget}].Name}" ${Time.Time24}
+			/gsay restick
+		}
 		/goto :CheckGroup
 		
 	}
@@ -751,7 +757,7 @@ Sub chkMarkedForDeathCureDist
 	:markLoop
 	/doevents
 	/if (${Me.Buff[Mark of Death].ID}) {
-		/echo \ar MARK OF DEATH \awis \ag${str_myCurer} \aw@ \ag${Spawn[pc ${str_myCurer}].Distance3D}
+		/echo \ar MARK OF DEATH \aw=>curer \ag${str_myCurer} \aw@ \ag${Spawn[pc ${str_myCurer}].Distance3D}
 		/echo \awMoving to Curer!
 		/call Disengage
 		/melee reset

@@ -36,8 +36,13 @@ REQUIRED INCLUDES
 
 #turbo 50
 
-#EVENT DOSHRINK "<#1#> doShrink#*#"
-#EVENT DOSHRINK "[#1#(msg)] doShrink#*#"
+#EVENT DOSHRINK 			"[#1#] doShrink#*#"
+#EVENT DOSHRINK 			"<#1#> doShrink#*#"
+#EVENT DOSHRINK				"#1# tells the group#*#'doShrink#*#'"
+#EVENT DOSHRINK				"#1# tells you#*#'doShrink#*#'"
+#EVENT DOSHRINK				"#1# tells the raid#*#'doShrink#*#'"
+#EVENT DOSHRINK				"#1# tell your raid#*#'doShrink#*#'"
+#EVENT DOSHRINK 			"[ #1# #*#]#*#doShrink#*#"
 
 Sub InitEvents_Class
 	/call RegisterClassEvents Events_SHM 1
@@ -91,6 +96,9 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 	
 		|-- Check Auto Assist if its on
 		/if (${bln_autoAssist}) /call chkAutoAssist
+
+		|-- Check ATTK Buffs with long recast
+		/call chkATTKBuffs
 		
 		|-- Start the Engagment subs
 		/if (${bln_engaged}) {
@@ -107,7 +115,6 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 			
 			|-- class specific
 			/call chkPetAttack	
-			/call chkChampion	
 			/call cmbtBuffGRP	
 			
 			|-- dps library (caster)
@@ -155,28 +162,6 @@ Sub chkManaConvert
 	}
 /return 
 
-|**
-----------------------------
-Champion Checking
-Champion is 1500 mana, so we don't want to cast it unless the timer is up
-----------------------------  
-**|
-
-Sub chkChampion
-	/if (!${bln_engaged}) 	/return
-	/if (${timer_champion}) /return
-
-	/call chkSpellMemorized "Champion" FALSE 7
-	/if (!${Me.SpellReady[Champion]} && ${Me.SpellInCooldown[Champion]}) {
-		| I must have just memmed champion, so uh, it takes 60s to be ready
-		/varset timer_champion 60s
-	} else {
-		/call MQ2Cast "Champion"
-		/varset timer_champion 510s
-	}
-/return
-
-
 
 |**
  ----------------------------
@@ -219,18 +204,6 @@ Sub variant_initialize
 	|-- set up default vars
 	/declare    str_action				string	outer	Shamanizing	
 	/memspellset ${str_spellset}
-
-	|-- Champion
-	/declare 	champ_groups 				string  outer   ${Ini[INI_CHAR,Champion,champ_groups]}
-	|/rs ${Me.Name} responsible for champion on ${champ_groups}
-
-	/declare 	timer_champion				timer   outer   60s
-	/declare 	timer_champion_1			timer   outer 	60s
-	/declare 	timer_champion_2			timer   outer 	60s
-	/declare 	timer_champion_3			timer   outer 	60s
-	/declare 	timer_champion_4			timer   outer 	60s
-
-
 
 	|-- Cannibalization
 	/declare	int_canniManaThreshold	int		outer 	${Ini[INI_CHAR,Cannibalize,int_canni_mana_threshold,80]}

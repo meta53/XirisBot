@@ -85,6 +85,9 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 		|-- Check Auto Assist if its on
 		/if (${bln_autoAssist}) /call chkAutoAssist
 
+		|-- Check ATTK Buffs with long recast
+		/call chkATTKBuffs
+
 		/if (${bln_engaged}) {
 			|-- check engaged events
 			/call RunRaidEvents
@@ -98,7 +101,6 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 
 			|-- class specific
 			/call chkPetAttack
-			/call cmbtBuffMT
 			
 			|-- dps library (casting hybrid)
 			/call RunRaidEvents
