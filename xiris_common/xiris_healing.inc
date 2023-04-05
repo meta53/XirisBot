@@ -568,9 +568,11 @@ Sub chkHeal_Group
 Sub healMAINTANK
 	/call chkMTAlive TRUE
 	/call setHealingSpell ${Spawn[id ${int_MTID}].PctHPs} tank ${Spawn[id ${int_MTID}].Distance3D} ${Spawn[id ${int_MTID}].CleanName} ${int_MTID}
-	/echo \aghealMAINTANK:\ao${str_MTName}\aw(\ay${int_MTID}\aw) \aw=>\ag${Target.Name}  \ao${str_currentHeal}
-	/call healCast ${int_MTID} ${Target.Name} "${str_currentHeal}" FALSE
-	/if (${Me.Class.ShortName.NotEqual[CLR]}) /call TrueTarget ${int_targetID}
+	/if (${Macro.Return.Equal[CASTOK]}) {
+		/echo \aghealMAINTANK:\ao${str_MTName}\aw(\ay${int_MTID}\aw) \aw=>\ag${Target.Name}  \ao${str_currentHeal}
+		/call healCast ${int_MTID} ${Target.Name} "${str_currentHeal}" FALSE
+	}
+	/if (${Me.Class.ShortName.NotEqual[CLR]} && (${Target.ID} != ${int_targetID})) /call TrueTarget ${int_targetID}
 /return
 
 
@@ -586,9 +588,11 @@ Sub healMAINTANK
 
 Sub healSELF
 	/call setHealingSpell ${Me.PctHPs} self 0 ${Me.Name} ${Me.ID}
-	/echo \aghealSELF:\ao${str_Me.Me.Name}\aw(\ay${Me.ID}\aw) \aw=>\ag${Target.Name}  \ao${str_currentHeal}
-	/call healCast ${Me.ID} ${Me.Name} "${str_currentHeal}" FALSE
-	/if (${Me.Class.ShortName.NotEqual[CLR]}) /call TrueTarget ${int_targetID}
+	/if (${Macro.Return.Equal[CASTOK]}) {
+		/echo \aghealSELF:\ao${Me.Name}\aw(\ay${Me.ID}\aw) \aw=>\ag${Target.Name}  \ao${str_currentHeal}
+		/call healCast ${Me.ID} ${Me.Name} "${str_currentHeal}" FALSE
+	}
+	/if (${Me.Class.ShortName.NotEqual[CLR]} && (${Target.ID} != ${int_targetID}))  /call TrueTarget ${int_targetID}
 /return
 
 |**
@@ -699,8 +703,8 @@ Sub healGRP
 		}
 	}
 :return
-	/if (${Me.Class.ShortName.NotEqual[CLR]}) /call TrueTarget ${int_targetID}
-/return
+	/if (${Me.Class.ShortName.NotEqual[CLR]} && (${Target.ID} != ${int_targetID})) /call TrueTarget ${int_targetID}
+/return ${castStatus}
 
 
 |-- Method to determine how many in the group need healing

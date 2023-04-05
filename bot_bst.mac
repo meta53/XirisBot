@@ -30,6 +30,14 @@ REQUIRED INCLUDES
 #Turbo 40
 
 #EVENT PARAGON 	"#*#paragonON"
+#EVENT DOSHRINK 			"[#1#] doShrink#*#"
+#EVENT DOSHRINK 			"<#1#> doShrink#*#"
+#EVENT DOSHRINK				"#1# tells the group#*#'doShrink#*#'"
+#EVENT DOSHRINK				"#1# tells you#*#'doShrink#*#'"
+#EVENT DOSHRINK				"#1# tells the raid#*#'doShrink#*#'"
+#EVENT DOSHRINK				"#1# tell your raid#*#'doShrink#*#'"
+#EVENT DOSHRINK 			"[ #1# #*#]#*#doShrink#*#"
+
 
 
 Sub InitEvents_Class
@@ -38,7 +46,12 @@ Sub InitEvents_Class
 
 Sub Events_BST
 	/doevents PARAGON
+	/doevents DOSHRINK
 /return
+
+Sub Events_SHM
+	
+/return 
 
 Sub Event_PARAGON
 	|Todo once I actually have a BST
@@ -142,6 +155,20 @@ Sub chkUtils
 	/call chkSit
 	/varset timer_check_utilities 20s
 
+/return
+
+
+Sub EVENT_DOSHRINK(_line, _chatSender, _eventParams)
+	/echo \ay doShrinkEventCalled
+	/memspellset shrink
+	/declare i int local 0
+	/for i 0 to 5
+		/call TrueTarget ${Group.Member[${i}].ID}
+		/delay 5
+		/call MQ2Cast "Shrink" gem1 5s
+		/delay 10
+	/next i
+	/memspellset default
 /return
 
 

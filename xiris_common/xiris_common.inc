@@ -1472,12 +1472,12 @@ SUB check_macroTimers
 |- Resets XTarget window 1-5 elements to auto		-|
 |----------------------------------------------------|
 Sub Event_RefreshXTarget
-
 	/call RefreshXTarget
 /return 
 
 
 SUB RefreshXTarget
+	/if (${timer_xtargetRefresh}) /return
 	/echo \aoRefreshing \aoXTarget \ay${timer_xtargetRefresh}
 	/declare i int local 1
 	/for i 1 to 5
@@ -1485,7 +1485,7 @@ SUB RefreshXTarget
 		/delay 1
 		/xtarget set ${i} autohater
 	/next i
-	/varset timer_xtargetRefresh 30s
+	/varset timer_xtargetRefresh 60s
 /return
 
 |--------------------------------------------------------|

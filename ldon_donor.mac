@@ -5,11 +5,16 @@ LDON_DONOR.mac
 This macro will request an zone start based LDON, accept it, and enter it
 Proceed to complete it, and exit. Re-request.
 Note: will load/unload other group members macros on enter/exit.
-Note: will run through lobby and request lobby buffs (EQTitan specific)
 
-Requries ACTIVE HACKS (mq2piggyzone & mq2mmoreachit)
+Requries NO Active Hacks unless stuck (warp)
+Requires MQ2Nav Support
     
-Usage: /mac ldon_donor dgga gsay butcher TRUE TRUE
+Usage: 
+/mac ldon_donor dgga gsay butcher TRUE TRUE
+/mac ldon_donor dgga gsay everfrost TRUE TRUE
+/mac ldon_donor dgga gsay nro TRUE TRUE
+/mac ldon_donor dgga gsay sro TRUE TRUE
+/mac ldon_donor dgga gsay ecommons TRUE TRUE
 ______________________________________________
 REVISION HISTORY
     09.24.2017	xiris	INITIAL REVISION
@@ -23,7 +28,8 @@ REVISION HISTORY
 	03.04.2022  xiris   Added support for MQ2AdvPath pathing for NRO as test for turning off mq2nav after lobby magus
 						to NRO zone in.
 	03.06.22	xiris	Added support for high requesting high risk missions (bln_highRisk)			
-	03.28.23	xiris	Split this file from regular LDON since donor hall allows fast travel		
+	03.28.23	xiris	Split this file from regular LDON since donor hall allows fast travel	
+						Donor hall trivialized the movement to the LDON entrance, etc so culled some code	
 ______________________________________________
 REQUIRED PLUGINS
     mq2melee
@@ -56,7 +62,8 @@ REQUIRED INCLUDES
 #event NoLOS				"#*#you cannot see your target#*#"
 #event TooClose				"#*#your target is too close#*#"
 #event MoveFail				"#*#Could not find path to destination#*#"
-#event UILocked				"#*#You can't use that command right now"
+#event UILocked				"#*#You can't use that command right now#*#"
+#event NavStuck				"#*#Could not locate starting point on navmesh#*#"
 
 
 Sub Main(string _channel, string _announce, string _theme, bool _useDownFlags, bool _highRisk)
@@ -75,11 +82,6 @@ Sub Main(string _channel, string _announce, string _theme, bool _useDownFlags, b
 	|-- Build Alert List
 	/call setAlerts
 
-	|-- remove yourself from any adventures that might be lingering
-	/echo Killing any previous LDON adventure that is active
-	/squelch /${cmdChannel} /notify AdventureRequestWnd AdvRqst_RequestButton leftmouseup
-	/delay 2s
-	/squelch /${cmdChannel} /notify ConfirmationDialogbox CD_Yes_Button leftmouseup
 	|**
 	 ----------------------------
 	 Setup Loop
@@ -97,11 +99,22 @@ Sub Main(string _channel, string _announce, string _theme, bool _useDownFlags, b
 		|-- request the LDON, kicking off the zoning to start logic
 		|   this will move entire group into LDON instance
 		|   requestLDON-> zoneLDON -> setupTask
-		/if (${Zone.ShortName.Equal[mmcj]}) {
+		|-- if already in the dungeon, you probably restarted it manually since something else fucked up. Skip task requesting...
+		/if (${Zone.ShortName.Equal[mmcj]} || ${Zone.ShortName.Equal[mmca]} || ${Zone.ShortName.Equal[mira]}) {
+			/call setupTask
+			/call setGroupCommands
+			/call setEntranceVars
+			/varset SZ_shortName thundercrest
 			/varset haveMission TRUE
 			/varset inMission   TRUE
 			/goto :MissionStart
 		} else {
+			
+			|-- remove yourself from any adventures that might be lingering
+			/echo Killing any previous LDON adventure that is active
+			/squelch /${cmdChannel} /notify AdventureRequestWnd AdvRqst_RequestButton leftmouseup
+			/delay 2s
+			/squelch /${cmdChannel} /notify ConfirmationDialogbox CD_Yes_Button leftmouseup
 			/call requestLDON
 			| double check that I have one cause this fucks up now and then on this server
 			/if (${Window[AdventureRequestWnd].Child[AdvRqst_NPCText].Text.Find[You are not currently assigned]}) {
@@ -129,8 +142,16 @@ Sub Main(string _channel, string _announce, string _theme, bool _useDownFlags, b
 		/call chkGroup
 		/delay 5s
 		/varset int_currentCamp 1
+		/if (${bln_hasSHM}) {
+			/docommand /${announceChannel} doShrink
+			/delay 10s
+		} else /if (${bln_hasBST}) {
+			/docommand /${announceChannel} doShrink
+			/delay 30s
+		}
+
 		/call moveCamp ${int_currentCamp}
-		/docommand /${announceChannel} doShrink
+		
 	
 	:MissionLoop
 		/echo Main:MissionLoop
@@ -166,6 +187,12 @@ Sub Main(string _channel, string _announce, string _theme, bool _useDownFlags, b
 			/docommand /${announceChannel} RefreshXTarget
 		}
 		
+		|-- UI lock check
+		/if (${bln_UILocked}) {
+			/echo \arUI Locked!\agZoning to clear
+			/call clearUILock
+		}
+
 		|-- target hunter
 		/call getTarget
 		/if (${Target.Distance} > 20) /call pullTarget
@@ -404,7 +431,7 @@ Sub setupTask
 	|-- Tell rest of group to load their normal macroset;
 	/echo In ${Zone.Name}, setting up bot_loader and delaying 5s
 	/docommand /${cmdChannelExcludingMe} /mac bot_loader ${Me.Name} Mluian NULL 70
-	/docommand /${announceChannel} healmode EFFICIENT
+	
 	/delay 5s
 	|-- set up group variables, change here based on group makeup;
 	/call setGroupCommands
@@ -524,11 +551,11 @@ Sub OriginToThundercrest
 			/varcalc originAttempt ${originAttempt} + 1
 			|-- tell each group member that isn't a bard to cast origin, bard add origin to queue
 			/for i 0 to ${Group}
-				/if (${Group.Member[${i}].Class.ShortName.Equal[BRD]}) 	  /dex ${Group.Member[${i}]} /medley queue origin
+				/if (${Group.Member[${i}].Class.ShortName.Equal[BRD]}) 	  /dex ${Group.Member[${i}]} /casting "Origin" alt
 				/if (${Group.Member[${i}].Class.ShortName.NotEqual[BRD]}) /dex ${Group.Member[${i}]} /casting "Origin" alt
 			/next i
 			/casting origin alt
-			/delay 40s
+			/delay 60s
 			/return
 		} else {
 			/return
@@ -570,6 +597,7 @@ Sub moveCamp(int _campNumber)
 	/varcalc prevCamp ${_campNumber}-1
 	/echo \aoMoving to Camp \ag${_campNumber}
 	/nav wp camp${_campNumber}
+	/delay 5s
 	/docommand /${cmdChannelExcludingMe} /mqpause on
 	/docommand /${cmdChannel} /nav wp camp${_campNumber}
 	/delay 10
@@ -762,7 +790,11 @@ Sub pullTarget
 	
 		|-- start navigating if you havent
 		/if (!${Navigation.Active}) /navigate target
-		
+		/doevents NavStuck
+		/delay 5
+		/if (${bln_navStuck}) /call clearNavStuck
+		/doevents flush 
+
 		|-- check to see if I have aggro
 		/if (${Me.TargetOfTarget.CleanName.Equal[${Me.CleanName}]} || ${Me.XTarget[1].ID} > 0) {
 			/echo I have aggro.
@@ -802,6 +834,7 @@ Sub pullTarget
 		/delay 5
 		/doevents NoLOS
 		/doevents TooClose
+		/doevents UILocked
 		/delay 5
 		|-- Sometimes if we aren't spell casting and using range weapons we might be too close, and cannot hit them with it.
 		/if (${bln_tooClose}) {
@@ -811,6 +844,8 @@ Sub pullTarget
 			/doability Taunt
 			/varset bln_tooClose FALSE
 		}
+
+		
 		
 		|-- Target.LineOfSight gets a little wonky sometimes with floor items (boxes, etc) in the way
 		/if (${bln_noLOS}) {
@@ -942,8 +977,7 @@ Sub chkLDONCompletion
 		/echo Mission has been completed zoning back to base zone ${zoneRequest} delaying 45s to finish looting etc
 		|-- kill all group member macros, end melee, and twisting
 		/delay 45s
-		/docommand /${announceChannel} HUSH
-		/delay 20
+		/squelch /docommand /${cmdChannelExcludingMe}  /medley stop
 		/squelch /docommand /${cmdChannelExcludingMe}  /end
 		/docommand /${cmdChannel} /keypress esc
 		/docommand /${cmdChannel} /keypress esc
@@ -1015,8 +1049,6 @@ Sub chkUtils
 	/echo chkUtils
 
 	:chkUtilLoop
-		
-		|/call chkBuffs
 		/call chkMana
 		/call chkEndurance
 		/call chkHP
@@ -1036,14 +1068,11 @@ Sub chkUtils
 
 Sub chkMana
 	/varset bln_wait4Mana FALSE
-	/if ((${int_groupCLRidx} != -1) && (${Group.Member[${int_groupCLRidx}].PctMana} < ${int_clrManaFloor})) {
-		/echo Cleric mana ${Group.Member[${int_groupCLRidx}].PctMana} < ${int_clrManaFloor}
+	/if ((${bln_hasCLR}) && (${Group.Member[${str_cleric}].PctMana} < ${int_clrManaFloor})) {
+		/echo Cleric mana ${Group.Member[${str_cleric}].PctMana} < ${int_clrManaFloor}
 		/varset bln_wait4Mana TRUE
 	}
-	/if ( (${int_groupENCidx} != -1) &&  (${Group.Member[${int_groupENCidx}].PctMana} < ${int_encManaFloor})) {
-		/echo Enc mana ${Group.Member[${int_groupENCidx}].PctMana} < ${int_encManaFloor}
-		/varset bln_wait4Mana TRUE
-	}
+	
 	
 	/if (${strPullType.Equal[SPELL]} && (${Me.PctMana} <  ${int_myManaFloor})) {
 		/echo  ${strPullType} My mana ${Me.PctMana} < ${int_myManaFloor}
@@ -1065,122 +1094,6 @@ Sub chkHP
 /return
 
 
-Sub chkBuffs
-
-	/echo ----
-	/echo Checking Buffs
-	/echo IDs    ENC:${int_groupENCidx} CLR: ${int_groupCLRidx} DRU: ${int_groupDRUidx} SHM:${int_groupSHMidx}
-	/echo Timers ENC:${timer_buffENC} CLR: ${timer_buffCLR} DRU: ${timer_buffDRU} SHM:${timer_buffSHM}
-	/echo ----
-	/if (${SpawnCount[npc radius ${int_campRadius}]} > 0) /return
-	
-	/declare int_wait int local 0
-	
-	|-- check to see if there is an echanter
-	/if (${int_groupENCidx} != -1) {
-		/if (${timer_buffENC} == 0) {
-			|-- Check for Haste
-			/if (!${Me.Buff[Hastening of Salik].ID} || (${Me.Buff[Hastening of Salik].ID} && ${Me.Buff[Hastening of Salik].Duration.TotalSeconds} < 45)) {
-				/g Requesting Haste from ${str_groupENCname}
-				/dgt ${str_groupENCname} doSpecificBuffOnChar Hastening of Salik
-				/varset timer_buffENC 30s
-				/varset int_wait ${int_wait} + 5
-			}
-			|-- Check for Mana
-			|/if (!${Me.Buff[Voice of Clairvoyance].ID}) {
-			|	/g Requesting VOC from ${str_groupENCname}
-			|	/dgt ${str_groupENCname} doSpecificBuffOnChar Voice of Clairvoyance
-			|	/varset timer_buffENC 30s
-			|	/varset int_wait ${int_wait} + 5
-			|}
-
-		}
-	}
-	|-- check to see if there is a druid
-	/if (${int_groupDRUidx} != -1) {
-		/if (${timer_buffDRU} == 0) {
-			|-- Check for 9
-			/if (!${Me.Buff[Blessing of Steeloak].ID} || (${Me.Buff[Blessing of Steeloak].ID} && ${Me.Buff[Blessing of Steeloak].Duration.TotalSeconds} < 45)) {
-				/g Requesting Bo9 from ${str_groupDRUname}
-				/dgt ${str_groupDRUname} doSpecificBuffOnChar Blessing of Steeloak
-				/varset int_wait ${int_wait} + 5
-				/varset timer_buffDRU 30s
-			}
-			|-- Check for DS
-			/if (!${Me.Buff[Legacy of Nettles].ID} || (${Me.Buff[Legacy of Nettles].ID} && ${Me.Buff[Legacy of Nettles].Duration.TotalSeconds} < 45)) {
-				/g Requesting DS from ${str_groupDRUname}
-				/dgt ${str_groupDRUname} doSpecificBuffOnChar Legacy of Nettles
-				/varset int_wait ${int_wait} + 5
-				/varset timer_buffDRU 30s
-			}
-		}
-		
-	}
-	
-	|-- check to see if there is a cleric
-	/if (${int_groupCLRidx} != -1) {
-		/if (${timer_buffCLR} == 0) {
-			|-- if there is a druid, then we want the mark, else, virtue (well, whatever it should be)
-			/if (${int_groupDRUidx} != -1) {
-				/if (!${Me.Buff[Balikor's Mark].ID} || (${Me.Buff[Balikor's Mark].ID} && ${Me.Buff[Balikor's Mark].Duration.TotalSeconds} < 45)) {
-					/g Requesting Symbol from ${str_groupCLRname}
-					/dgt ${str_groupCLRname} doSpecificBuffOnChar Balikor's Mark
-					/varset int_wait ${int_wait} + 5
-					/varset timer_buffCLR 30s
-				}
-			} else {
-				/if ((!${Me.Buff[Hand of Virtue].ID} && !${Me.Buff[Blessing of Steeloak].ID}) || (${Me.Buff[Hand of Virtue].ID} && ${Me.Buff[Hand of Virtue].Duration.TotalSeconds} < 45)) {
-					/g Requesting Aegolism from ${str_groupCLRname}
-					/dgt ${str_groupCLRname} doSpecificBuffOnChar Hand of Virtue
-					/varset int_wait ${int_wait} + 5
-					/varset timer_buffCLR 30s
-				}
-			}
-			
-		}
-	}
-	
-	|-- check to see if there is a shaman
-	/if (${int_groupSHMidx} != -1) {
-		/if (${timer_buffSHM} == 0) {
-			|-- Check for Focus
-			/if (!${Me.Buff[Talisman of Wunshi].ID} || (${Me.Buff[Talisman of Wunshi].ID} && ${Me.Buff[Talisman of Wunshi].Duration.TotalSeconds} < 45)) {
-				/g Requesting Focus from ${str_groupSHMname}
-				/dgt ${str_groupSHMname} doSpecificBuffOnChar Talisman of Wunshi
-				/varset int_wait ${int_wait} + 5
-				/varset timer_buffSHM 30s
-			}
-			|-- Check for STR
-			|/if (!${Me.Buff[Talisman of Might].ID}) {
-			|	/g Requesting Might from ${str_groupSHMname}
-			|	/dgt ${str_groupSHMname} doSpecificBuffOnChar Talisman of Might
-			|	/varset int_wait ${int_wait} + 5
-			|	/varset timer_buffSHM 30s
-			|}
-			|-- Check for STA
-			/if (!${Me.Buff[Talisman of Fortitude].ID} || (!${Me.Buff[Talisman of Fortitude].ID} && ${Me.Buff[Talisman of Fortitude].Duration.TotalSeconds} < 45)) {
-				/g Requesting Fortitude from ${str_groupSHMname}
-				/dgt ${str_groupSHMname} doSpecificBuffOnChar Talisman of Fortitude
-				/varset int_wait ${int_wait} + 5
-				/varset timer_buffSHM 30s
-			}
-			|-- If there is no enchanter, we want haste too
-			/if ((${int_groupENCidx} == -1 && !${Me.Buff[Hastening of Salik].ID} && !${Me.Buff[Talisman of Celerity].ID}) || (${Me.Buff[Talisman of Celerity].ID} && ${Me.Buff[Talisman of Celerity].Duration.TotalSeconds} < 45)) {
-				/g Requesting Haste from ${str_groupSHMname}
-				/dgt ${str_groupSHMname} doSpecificBuffOnChar Talisman of Celerity
-				/varset int_wait ${int_wait} + 5
-				/varset timer_buffSHM 30s
-			}
-		}
-	}
-	
-	/echo Waiting ${int_wait}s for buffs
-	/delay ${int_wait}s
-	
-
-	
-/return
-
 |**
  ----------------------------
  setGroupCommands
@@ -1190,80 +1103,45 @@ Sub chkBuffs
  ----------------------------
 **|
 Sub setGroupCommands
-	/echo setGroupCommands
+	/echo \aoSetGroupCommands
 	|-- find a bard and tell them to sing their normal setup (bound to key 2 usually)
 
 	/declare i int local 0
 	/for i 0 to ${Group}
-		/if (${Group.Member[${i}].Class.ShortName.Equal[BRD]}) /varset bard ${Group.Member[${i}].Name}
-		/if (${Group.Member[${i}].Class.ShortName.NotEqual[WAR]} && ${Group.Member[${i}].Class.ShortName.NotEqual[CLR]} && ${Group.Member[${i}].Class.ShortName.NotEqual[PAL]} && ${Group.Member[${i}].Class.ShortName.NotEqual[SHD]} && ${Group.Member[${i}].Class.ShortName.NotEqual[BRD]}) /varset looter ${Group.Member[${i}].Name}
+		/if (${Group.Member[${i}].Class.ShortName.NotEqual[ENC]} && ${Group.Member[${i}].Class.ShortName.NotEqual[WAR]} && ${Group.Member[${i}].Class.ShortName.NotEqual[CLR]} && ${Group.Member[${i}].Class.ShortName.NotEqual[PAL]} && ${Group.Member[${i}].Class.ShortName.NotEqual[SHD]} && ${Group.Member[${i}].Class.ShortName.NotEqual[BRD]}) /varset looter ${Group.Member[${i}].Name}
 	/next i
+
 	|-- set the offtank 
 	|   if SK is the tank we dont need offtank really.
 	/if (${Me.Class.ShortName.NotEqual[SHD]}) {
-		/if (${offtank.Equal[NULL]}) {
-			/dex ${bard} offtankOn
-		} else {
-			/dex ${offtank} offtankOn
+		/if (${offtank.Equal[NULL]} && ${bln_hasBRD}) {
+			/dex ${str_bard} offtankOn
 		}
-		
 	}
 	|-- tell the bard to sing a song
-	/if (${bard.NotEqual[NOT_FOUND]})  /dex ${bard} /medley melee
+	/if (${bln_hasBRD}) {
+		/dex ${str_bard} /memspellset melee
+		/delay 10
+		/dex ${str_bard} /medley melee
+	}  
 
 	|-- find not cleric/tank to loot
-	/if (${looter.NotEqual[NOT_FOUND]}) /dt ${looter} lootOn ALL
+	/if (${looter.NotEqual[NOT_FOUND]}) /squelch /dt ${looter} lootOn ALL
 	/delay 10
 	/varset bln_looting FALSE
+
 	|-- turn on melee and aggro
 	/squelch /dgga /melee on
 	/melee aggro=1
+
+	|-- set cleric healing to efficient
+	/if (${bln_hasCLR}) /dt ${str_cleric} healmode EFFICIENT
+	/doevents flush
+
+	|-- make sure tank is not looting
 	/varset bln_looting FALSE
-	
 /return
 
-|**
- ----------------------------
- setSupportIDs
- ----------------------------
- Here we set the id of the group's cleric and other support classes.
- If we are in a raid setup, we handle that too as a 'local ID' instead of 'group ID'
- ----------------------------
-**|
-sub setSupportIDs
-	/if (${bln_useGroup}) {
-		/declare gmember int local 0
-		/for gmember 0 to ${Group}
-			|-- Cleric
-			/if (${Group.Member[${gmember}].Class.ShortName.Equal[CLR]}) {
-				/echo Setting int_groupCLRidx to ${gmember}
-				/varset int_groupCLRidx ${gmember}
-				/varset str_groupCLRname ${Group.Member[${gmember}].Name}
-			} else /if (${Group.Member[${gmember}].Class.ShortName.Equal[ENC]}) {
-				/echo Setting int_groupENCidx to ${gmember}
-				/varset int_groupENCidx ${gmember}
-				/varset str_groupENCname ${Group.Member[${gmember}].Name}
-			} else /if (${Group.Member[${gmember}].Class.ShortName.Equal[DRU]}) {
-				/echo Setting int_groupDRUidx to ${gmember}
-				/varset int_groupDRUidx  ${gmember}
-				/varset str_groupDRUname ${Group.Member[${gmember}].Name}
-			} else /if (${Group.Member[${gmember}].Class.ShortName.Equal[SHM]}) {
-				/echo Setting int_groupSHMidx to ${gmember}
-				/varset int_groupSHMidx ${gmember}
-				/varset str_groupSHMname ${Group.Member[${gmember}].Name}
-			}
-		/next gmember
-		
-		|-- Friendly warning
-		/if (${int_groupCLRidx} == -1) {
-			/beep
-			/echo !! WARNING !! No Cleric Found, you are brave!
-		}
-	} else {
-		|-- Raid looping not implemented yet because I am lazy
-	}
-
-/return 
 
 |**
  ----------------------------
@@ -1273,12 +1151,29 @@ sub setSupportIDs
  ----------------------------  
 **|
 Sub EVENT_UILocked
-	/delay 20
-	/fade 
-	/delay 45s
-	/call chkGroup
+	/varset bln_UILocked TRUE
 /return
 
+Sub clearUILock
+	/if (${bln_UILocked}) {
+		/delay 20
+		/fade 
+		/delay 45s
+		/call chkGroup
+		/varset bln_UILocked FALSE
+	}
+/return 
+
+Sub EVENT_NavStuck
+	/varset bln_UILocked TRUE
+/return
+
+Sub clearNavStuck
+	/if (${bln_navStuck}) {
+		/warp wp camp${_campNumber}
+		/varset bln_navStuck FALSE
+	}
+/return
 
 Sub chkGroup
 	/if (${Group.GroupSize} == 6) /return
@@ -1324,17 +1219,14 @@ Sub variant_initialize(string _channel, string _announce, string _theme, bool _u
 	/declare zoneRequest  			string  outer   ${_theme}
 	/declare adventureGiver         string  outer   ${Ini[INI_ldonInfo,${zoneRequest},adventureGiver]}
 	/declare zoneMagus         		string  outer   ${Ini[INI_ldonInfo,${zoneRequest},magus]}
-
-	/declare bard 					string 	outer NOT_FOUND
-	/declare looter 				string 	outer NOT_FOUND
 	
-
 	/echo \aoInitializing LDON Script (Donor Hall)
 	/echo \awLDON Setup \aozoneRequest: \ag${zoneRequest} \aoadventureGiver: \ag${adventureGiver}
 	/echo               \aozoneMagus:${zoneMagus}
 	
-	/declare zoneStart              string  outer   lfaydark
+	/declare zoneStart              string  outer   thundercrest
 	/declare zoneMission 			string 	outer 	mmcd
+
 	|--camp counts
 	/declare int_currentCamp		int		outer	1
 	/declare int_campCount			int 	outer	1
@@ -1352,15 +1244,42 @@ Sub variant_initialize(string _channel, string _announce, string _theme, bool _u
 	/declare int_totalKills			int     outer 	0
 	
 	|--group members
+	/declare bln_hasBST				bool    outer   FALSE
+	/declare bln_hasSHM				bool  	outer 	FALSE
+	/declare bln_hasSHM				bool  	outer 	FALSE
+	/declare bln_hasBRD				bool  	outer 	FALSE
+	/declare str_beastlord			string  outer   NULL	
+	/declare str_shaman				string  outer   NULL	
+	/declare str_cleric				string  outer   NULL	
+	/declare str_bard 				string  outer   NULL		
+
+		/declare bard 					string 	outer NOT_FOUND
+	/declare looter 				string 	outer NOT_FOUND
+	
 	/declare groupMember_0			string	outer  	${Group.Member[0].Name}
 	/declare groupMember_1			string	outer  	${Group.Member[1].Name}
 	/declare groupMember_2			string	outer  	${Group.Member[2].Name}
 	/declare groupMember_3			string	outer  	${Group.Member[3].Name}
 	/declare groupMember_4			string	outer  	${Group.Member[4].Name}
 	/declare groupMember_5			string	outer  	${Group.Member[5].Name}
+
+	/declare i int local 0
+	/for i 0 to 5
+		/if (${Group.Member[${i}].Class.ShortName.Equal[SHM]}) {
+			/varset bln_hasSHM TRUE
+			/varset str_shaman ${Group.Member[${i}].CleanName}
+		} else /if (${Group.Member[${i}].Class.ShortName.Equal[BST]}) {
+			/varset bln_hasBST TRUE
+			/varset str_beastlord ${Group.Member[${i}].CleanName}
+		} else /if (${Group.Member[${i}].Class.ShortName.Equal[CLR]}) {
+			/varset bln_hasCLR TRUE
+			/varset str_cleric ${Group.Member[${i}].CleanName}
+		}
+	/next i
+
 	|--loot
 	/varset bln_looting			FALSE
-	/if (${bln_looting}) 			/call EnableLooting
+	/if (${bln_looting}) 		/call EnableLooting
 	
 	|--offtank
 	/declare offtank string	outer   NULL
@@ -1461,29 +1380,9 @@ Sub variant_initialize(string _channel, string _announce, string _theme, bool _u
 	/declare bln_noLOS				bool	outer	FALSE	
 	/declare bln_tooClose			bool	outer	FALSE
 	/declare bln_moveFail			bool    outer 	FALSE
-	
-	|--find the support members of the group for use in keeping up buffs
-	/declare int_groupCLRidx int outer -1
-	/declare int_localCLRid int outer -1
-	/declare str_groupCLRname string outer NULL
-	/declare timer_buffCLR timer	outer  1s
+	/declare bln_UILocked			bool 	outer 	FALSE
+	/declare bln_navStuck			bool    outer   FALSE
 
-	/declare int_groupENCidx int outer -1
-	/declare int_localENCid int outer -1
-	/declare str_groupENCname string outer NULL
-	/declare timer_buffENC timer	outer  1s
-	
-	/declare int_groupDRUidx int outer -1
-	/declare int_localDRUid int outer -1
-	/declare str_groupDRUname string outer NULL
-	/declare timer_buffDRU timer	outer  1s
-
-	/declare int_groupSHMidx int outer -1
-	/declare int_localSHMid int outer -1
-	/declare str_groupSHMname string outer NULL
-	/declare timer_buffSHM timer	outer 1s
-		
-	/call setSupportIDs
 /return
 
 
