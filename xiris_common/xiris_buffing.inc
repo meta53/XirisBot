@@ -206,9 +206,7 @@ Sub cmbtBuffMT
  ----------------------------
 **|
 Sub cmbtBuffGRP
-	/if (!${bln_engaged})     /return
-	/if (!${bln_cmbtBuffUse}) /return
-	/if (${int_cmbtBuffTotal} == 0 && ${CMBTBUFF_1_Timer}) /return
+	/if (${int_cmbtBuffTotal} == 0 || ${CMBTBUFF_1_Timer} || !${bln_cmbtBuffUse} || !${bln_engaged}) /return
 
 	|-- loop through group members that get combat buff
 	/declare i    		  int		local

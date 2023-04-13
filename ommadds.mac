@@ -5,25 +5,92 @@
 
 Sub Main(string _type, string _tankPoint)
     /call xbot_initialize_spellRoutines
+    /declare 	strFaceItem				string  outer   ${InvSlot[3].Item}
 	/melee aggro=on
     /melee taunt=on
 
 	:ActiveLoop
 		/doevents
+        | Check Charmable NPCs? Perhaps use this to tell the enchanters which NPC to charm?
+
+        | Check Frenzied Lashers?
+        /if (${SpawnCount[npc Frenzied radius 200]} && (${Target.ID} != ${NearestSpawn[npc Frenzied].ID})) {
+            /call TrueTarget ${NearestSpawn[npc Frenzied].ID}
+            /if (${Target.Name.Find[npc Frenzied]}) {
+                /dgt KillMob ${Target.ID} "${Target.Name}" ${Time.Time24}
+                /killthis
+                /rs Called Kill Mob ${Target.Name} ${Time.Time24}
+            }
+      
+        }
 	/goto :ActiveLoop
 /return
 
 
 Sub EVENT_GazeYou
     /beep
-    /delay 5
-    /nav stop
-    /melee reset
     /echo \arGAZE OF MATA MURAM on ME!
-	/echo \a-w Clicking \agMirrored Mask
-    /shout Clicking my Mirrored Mask
-    /call MQ2Cast "Mirrored Mask" item
-    /doevents flush GazeYou
+	/echo \a-w Attempting Clicking \agMirrored Mask \a-w${Time.Time24}
+	/if (!${FindItem[Mirrored Mask].ID} && ${Zone.ShortName.Equal[anguish]}) {
+		/shout NO MIRRORED MASK! WE ARE DOOOOMED!
+		/dgt FireTL
+		/shout Calling for TL!
+	} else {
+		:gazeCastWait
+		/melee reset
+		/if (${Navigation.Active}) /nav stop
+		/if (${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]}) {
+			/echo \arCasting, waiting to stop, then click!
+			/delay 5
+			/goto :gazeCastWait
+		}
+		/echo \ao Mask in Slot\aw ${FindItem[Mirrored Mask].InvSlot}
+		/if (${FindItem[Mirrored Mask].InvSlot} != 3) {
+			/echo \ag Swapping Mask to Face!
+			/exchange "Mirrored Mask" face
+			/delay 10
+		}
+		/if (${Me.Class.ShortName.Equal[BRD]}) {
+			/shout Clicking my Mirrored Mask!
+			/echo \ag Attempting Clicking \aoMirrored Mask \ag${Time.Time24}!
+			/call MQ2Medley ITEM "Mirrored Mask" ${Target.ID} TRUE
+		} else {
+			/shout Clicking my Mirrored Mask!
+			/echo \ag Attempting Clicking \aoMirrored Mask \ag${Time.Time24}!
+			/if (!${Defined[interruptFlag]}) /declare interruptFlag bool outer FALSE	
+			/if (${Bool[${Me.Casting.ID}]}) /call Interrupt
+			/call MQ2Cast "Mirrored Mask" ITEM
+		}
+		/delay 20
+		/call RestoreFaceSlot
+		/doevents flush GazeYou
+	}
 /return
 
+
+Sub RestoreFaceSlot
+	/exchange "${strFaceItem}" face
+	/delay 5
+/return 
+
+Sub TrueTarget(int _targetID)
+	|/echo TrueTarget(${_targetID})
+	| Check if the target is in zone.
+	/if (${Target.ID} == ${_targetID}) /return
+	/if (${SpawnCount[id ${_targetID}]}) {
+		/declare retryTimer timer local 30
+		:Target_Loop
+		|/echo targetting ${_targetID}
+		/squelch /target id ${_targetID}
+		/delay 2 ${Target.ID} == ${_targetID}
+		
+		/if (${Target.ID} != ${_targetID} && ${SpawnCount[id ${_targetID}]}) {
+			/if (${retryTimer}) {
+				/goto :Target_Loop
+			} else {
+				/echo Failed to target [${Spawn[id ${_targetID}].CleanName} - ${_targetID}]
+			}
+		}
+	}
+/return
 

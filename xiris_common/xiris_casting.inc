@@ -330,7 +330,7 @@ Sub chkAENuke
 	:AENukeLoop
 	/for i 1 to ${AENUKE_Total}
 		|-- AE Nuke is active, let's light them up!
-		/rs Lighting them up with ${AENUKE_Total} AE Nukes! ${AENUKE_${i}_Spell}
+		|/rs Lighting them up with ${AENUKE_Total} AE Nukes! ${AENUKE_${i}_Spell}
 		:AENukeStart 
 		|-- skip if not ready
 		/if (!${Me.SpellReady[${AENUKE_${i}_Spell}]}) /goto :NextAENuke

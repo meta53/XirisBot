@@ -144,16 +144,17 @@ Sub aggroByID(int _targetID)
 	} 
 	
 	:aggroSmack
+	/squelch /melee aggro=1
+	/squelch /melee taunt=1
+	/if (${Target.ID} != ${_targetID}) /call TrueTarget ${_targetID}
 
-	/if (!${Melee.Attack}) {
-		/squelch /melee aggro=1
-		/squelch /melee taunt=1
-		/squelch /stick off
-		/squelch /stick id ${_targetID}
-		/if (${Me.AbilityReady[Taunt]}) /taunt
-		/squelch /face fast
-		/squelch /killthis
-	}
+	/squelch /stick off
+	/squelch /stick id ${_targetID}
+	/if (${Me.AbilityReady[Taunt]}) /taunt
+	/squelch /face fast
+	/if (!${Melee.Attack}) /squelch /killthis
+	/delay 20
+
 	
 	/if (${Me.TargetOfTarget.Class.ShortName.Equal[WAR]} || ${Me.TargetOfTarget.Class.ShortName.Equal[PAL]} || ${Me.TargetOfTarget.Class.ShortName.Equal[SHD]}) /goto :return		
 	/if ((${Me.TargetOfTarget.ID} == ${Me.ID}) || (${Me.TargetOfTarget.ID} == ${int_MTID}) || !${Target.ID} || ${Target.Name.Find['s_corpse']} || ${Target.Type.Equal[corpse]}) /goto :return

@@ -1,4 +1,7 @@
 #Turbo 20
+|
+| Run this on XIRIS
+|
 Sub Main 
     | Move Clerics to Heal point
     /dge priest /nav wp ommCleric
@@ -62,20 +65,16 @@ Sub Main
   
     | Healing Focus
     | So these clerics will not try to cure group
-    /dt Xanshia FocusHealMTOn
     /dex Xanshia /varset DEBUFF_Total 0
-    /dt Xirael  FocusHealMTOn
-    /dt Xinshia FocusHealMTOn
-    /dt Xenshia FocusHealMTOn
-
-    | Turn off cures for pretty much everyone except clerics
-    /dge melee  /varset bln_useCures FALSE
-    /dge caster /varset bln_useCures FALSE
 
      | Set Self
     /melee aggro=on
     /melee taunt=on
     /dt deist dime
+
+    | Have enchanters set 0 nukes
+    /dex Erisa /varset NUKE_Total 0
+    /dex Eurydice /varset NUKE_Total 0
 
     | Run raidcommands
     /dgt Hush
@@ -83,5 +82,7 @@ Sub Main
     /rs OMMStart
     /dex Xirin /mac ommadds
     /mac ommTank
+    
+
 
 /return

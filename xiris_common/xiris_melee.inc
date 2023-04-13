@@ -30,6 +30,8 @@ REVISION HISTORY
 #EVENT RESTICK			"#*#restick#*#"
 #EVENT AERAMP			"#*#aerampON#*#"
 #EVENT GETCLOSER		"#*#Your target is too far away#*#"
+#EVENT CANTSEETARGET	"#*#You cannot see your target#*#"
+#EVENT CANTNAVTARGET	"#*#Could not locate#*#"
 
 #EVENT NoDS				"#1# tells the group#*#'NoDS#*#'"
 #EVENT NoDS				"#1# tells you#*#'NoDS#*#'"
@@ -64,13 +66,14 @@ Sub Events_Melee
 	/doevents ToggleMQ2Melee
 	/doevents Leashing
 	/doevents AutoAssist
-	
 /return
 
 Sub Events_Melee_Engaged
 	/doevents RESTICK
 	/doevents AERAMP
 	/doevents GETCLOSER
+	/doevents CANTSEETARGET
+	/doevents CANTNAVTARGET
 	/doevents RiposteDisc
 /return
 
@@ -448,19 +451,53 @@ Sub chkComponents(string _component, int _count, string _type, string _summoner,
 
 
 Sub EVENT_GETCLOSER
-	/if ((!${Target.ID} || ${Target.PctHPs} == 0 || !${bln_engaged}) && ${timer_getCloser}) /return 
+	/if (!${Target.ID} || ${Target.PctHPs} == 0 || !${bln_engaged} || ${timer_getCloser}) /return 
 	/doevents flush GETCLOSER
-	/varset timer_getCloser ${timer_getCloser.OriginalValue}
+	/varset timer_getCloser 4s
 	| If the target is less than max stick distance, adjust the stick
 	/call StickAdjust
 /return
 
+SUB EVENT_CANTSEETARGET
+	/if (!${Target.ID} || ${Target.PctHPs} == 0 || !${bln_engaged} || ${timer_cantSee}) /return 
+	/doevents flush CANTSEETARGET
+	/varset timer_cantSee 10s 
+
+	| If the target is less than 50 range
+	/if (${Select[${Me.Class.ShortName},BRD,BER,MNK,ROG,RNG,PAL,SHD,WAR]}) {
+		/if (${bln_tanking})  /warp f 10
+		/if (!${bln_tanking}) /warp loc ${Target.Y} ${Target.X} ${Target.Z}
+	}
+/return
+
+SUB EVENT_CANTNAVTARGET
+	/if (!${Target.ID} || ${Target.PctHPs} == 0 || !${bln_engaged} || ${timer_cantNav}) /return 
+	/doevents flush CANTNAVTARGET
+	/varset timer_cantNav 4s 
+	/echo \ar Cannot NAVTARGET ${bln_following}
+	| If the target is less than 50 range
+	/if (!${bln_following}) {
+		/if (${Select[${Me.Class.ShortName},BRD,BER,MNK,ROG,RNG,PAL,SHD,WAR]} && ${Target.ID}) {
+			/if (!${bln_tanking})  {
+				/warp loc ${Target.Y} ${Target.X} ${Target.Z}
+			} else {
+				/warp f 10
+			} 
+		}
+	} else {
+		/echo \aoFollowing ${str_followTarget}
+		/call TrueTarget ${Spawn[pc ${str_followTarget}].ID}
+		/delay 5
+		/warp loc ${Target.Y} ${Target.X} ${Target.Z}
+	}
+/return
+
 Sub StickAdjust
 	/echo \agStickAdjust \ao${int_currentStickDistance} \aw> \ao${int_minStickDistance}
-	
 	/if (${int_currentStickDistance} > ${int_minStickDistance}) {
 		/varcalc int_currentStickDistance ${int_currentStickDistance} - 5
-		/stick -5
+		/if (${int_currentStickDistance} < ${int_minStickDistance}) /varset ${int_currentStickDistance} ${int_minStickDistance} 
+		/stick ${int_currentStickDistance} ${stickCmd}
 	} 
 /return
 
@@ -473,42 +510,31 @@ Sub EngageTargetMelee
 
 Sub StickToTarget(bool _engageWhenInRange)
 	/if (${str_classArchetype.Equal[CASTER]} || ${str_classArchetype.Equal[PRIEST]}) /return
-	|/echo dist: ${Target.Distance} currentstick: ${int_currentStickDistance} minstick: ${int_minStickDistance} maxstick: ${int_maxStickDistance}
+	/echo \aoStickToTarget \awdist: \ag${Target.Distance} \awcurrentstick: \ag${int_currentStickDistance} \awminstick: \ag${int_minStickDistance} \awmaxstick: \ag${int_maxStickDistance}
+
 	:tryStick
-	/if (${Target.Distance} <= ${int_maxStickDistance} ) {
-		/stick ${stickCmd} ${int_currentStickDistance}
-		/squelch /face fast
-		
-		/if (${mq2meleeEnabled}) {
-			/if (${_engageWhenInRange}) /killthis
-		} else {
-			/if (${_engageWhenInRange}) /attack on
-		}
-	} else /if (${Target.Distance} > ${int_maxStickDistance} && ${Target.Distance} < ${int_maxNavDistance}) {
-		/declare navDelayWait int local 0
-		/stick off
-		/nav target
-		:navDelay
-		/varcalc navDelayWait ${navDelayWait}+1
-		/if (${Target.Distance} < ${int_maxStickDistance}) {
-			/nav stop
-			/goto :tryStick
-		} else /if (${navDelayWait} < 20) {
-			/delay 1
-			/goto :navDelay
-		}
-		/squelch /face fast
-		/if (${mq2meleeEnabled}) {
-			/if (${_engageWhenInRange}) /killthis
-		} else {
-			/if (${_engageWhenInRange}) /attack on
-		}
-	} else {
+	| Too Far, exit
+	/if (${Target.Distance3D} > ${int_maxNavDistance}) {
 		/rs Target is too far away to get to!
 		/if (${Navigation.Active}) /nav stop
 		/call Disengage
-		/return
+		/goto :return
+	| Navigate
+	} else /if (${Target.Distance3D} > ${int_maxStickDistance} && ${Target.Distance} < ${int_maxNavDistance}) {
+		/if (${Navigation.Active}) /nav stop 
+		/declare navDelayWait int local 0
+		:navStick
+		/multiline ; /melee reset ; /stick off ; /nav target ; /delay 10 ; /varcalc navDelayWait ${navDelayWait}+1
+		/doevents CANTNAVTARGET
+		/if (${Target.Distance3D} <= ${int_maxStickDistance}) /multiline ; /nav stop ; /goto :tryKill
+		/if (${navDelayWait} < 20) /goto :navStick
+	| Kill
+	} else /if (${Target.Distance3D} <= ${int_maxStickDistance}) {
+		:tryKill
+		/stick ${stickCmd} ${int_currentStickDistance}
+		/if (${_engageWhenInRange}) /killthis
 	}
+:return
 /return
 
 
@@ -666,11 +692,13 @@ Sub xbot_initialize_melee
 	
 	/declare 	int_currentStickDistance		int		outer   35
 	/declare	int_maxStickDistance 	int 	outer 	40
-	/declare 	int_minStickDistance	int		outer 	10
+	/declare 	int_minStickDistance	int		outer 	13
 	/declare    int_maxNavDistance		int		outer   300
-	/declare	timer_getCloser			timer	outer	2s
+	/declare	timer_getCloser			timer	outer	5s
 	/declare 	timer_check_downshits	timer	outer 	0
 	/declare    timer_restick			timer   outer   15s
+	/declare 	timer_cantSee			timer   outer   10s
+	/declare    timer_cantNav			timer   outer   10s
 
 	|-- ALL CLASSES COMMON
 	|-- [Settings] : Downflags

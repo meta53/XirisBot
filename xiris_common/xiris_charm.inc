@@ -61,24 +61,7 @@ Sub EVENT_CharmNPCByName(_line, _chatSender,_eventParams)
     /call CharmNPC ${Spawn[npc ${_eventParams}].ID}
 /return 
 
-Sub chkCharmTrigger(string _key)
-    /if (${_key.Equal[ANCIENT]}) {
-		|ancient: voice of muram
-        /if (((!${Me.Pet.ID} || ${Target.Charmed.Duration.TotalSeconds} < 6) && ${Me.SpellReady[${CHARM_1_Spell}]})) {
-			/return TRUE
-		}
-	} else /if (${_key.Equal[NORMAL]}) { 
-		|malos
-		/if ((!${Me.Pet.ID} || ${Target.Buff[${CHARM_1_SPELL}].Duration.TotalSeconds} < 5) && ${Me.SpellReady[${CHARM_2_Spell}]} && !${Me.SpellReady[${CHARM_1_Spell}]}) {
-			/return TRUE
-		}
-	} else /if (${_key.Equal[UNDEAD]}) { 
-		|malos
-		/if ((!${Me.Pet.ID} || ${Target.Buff[${CHARM_1_SPELL}].Duration.TotalSeconds} < 5) && ${Target.Body.Find[UNDEAD]}) {
-			/return TRUE
-		}
-	}
-/return FALSE
+
 
 Sub CharmNPC(int _targetID, bool _forced, bool _attack, int _attackID)
     /echo \aoCharmNPC\aw(\ag${_targetID}\aw ${bln_activeCharming})
@@ -88,42 +71,59 @@ Sub CharmNPC(int _targetID, bool _forced, bool _attack, int _attackID)
     | /declare CHARM_Template         string  outer   _Spell|_Gem|_MaxTries|_KeepAlive|_Resist|_RecastTimer
     | Check the logic in charm (ie: if we can use ancient if enc, etc)
     :charmTarget
-    /declare i int local ${CHARM_Total}
+    /declare i int local 2
     /for i  1 to ${CHARM_Total}
+        /if (${Me.Pet.ID}) /return
         /call TrueTarget ${_targetID}
+        /echo ${i}
        
        | Trigger Check based on type (Calls chkCharmTrigger)		
        /call chkCharmTrigger ${CHARM_${i}_Type}
-        /if (!${Macro.Return}) /goto :nextCharm
+       /echo \ayChkCharmTrigger: \ao${CHARM_${i}_Type} \ar${Macro.Return} "${CHARM_${i}_Spell}"
+        /if (!${Macro.Return}) {
+             /echo going to next charm since first failed!
+            /goto :nextCharm
+        }
        
         | Checks passed, check if the spell is memorized. Skip if not
 		:charmSpellMemorized
+            /echo \awChecking if \ao"${CHARM_${i}_Spell}" \aw is memorized
 			/call chkSpellMemorized "${CHARM_${i}_Spell}" ${_forced} ${CHARM_${i}_Gem}
         :charmSpellReadyWait 
 			| If this is a forced cast, wait for the spell to be ready
+             /echo \awWaiting for \ao"${CHARM_${i}_Spell}" \aw is memorized
 			/if ((!${Me.SpellReady[${CHARM_${i}_Spell}]} && ${_forced}) || (${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]})) {
 				/delay 2
 				/goto :charmSpellReadyWait
 			} 
         :charmCast
-			/echo \agCastDebuff OnTarget:\ao"${CHARM_${i}_Spell}" \awID:\ay${_targetID}  \awforcing?:\ay${_forced}
+			/echo \agCharmNPCOnTarget:\ao"${CHARM_${i}_Spell}" \awID:\ay${_targetID}  \awforcing?:\ay${_forced}
 			/call TrueTarget ${_targetID}
 
 			/if (${Me.Class.ShortName.Equal[BRD]}) {
 				/call MQ2Medley SONG "${CHARM_${i}_Spell}" ${_targetID} TRUE
 				/docommand /${cmdChannel} << ${Target.Name} >> ${CHARM_${i}_Spell} 
+                /varset bln_hasCharmedPet TRUE
+                /goto :return
 			} else {
 				/call CastCharm "${CHARM_${i}_Spell}" ${CHARM_${db}_Gem} ${CHARM_${i}_MaxTries} ${Target.ID} ${_forced}
                 /docommand /${cmdChannel} << ${Target.Name} >> ${CHARM_${i}_Spell} 
-            }    
+                /varset bln_hasCharmedPet TRUE
+                /goto :return
+            }  
+        /call RunRaidEvents      
     :nextCharm
-        /call RunRaidEvents
+        | I have no idea why I need a comment here
+        /echo Next ${i}
         /next i
     :return 
-    /if (${Me.Pet.ID} && ${Me.Pet.Target.ID} != ${_attackID} && ${_attack}) {
-        /echo \awEngaging Target(\ag${_targetID}\aw) with Charmed Pet \ag${Me.Pet.Name}! 
-        /shout Engaging Target(${_targetID}) with Charmed Pet ${Me.Pet.Name}! 
-        /call EngageTarget ${_targetID}
+
+    /if (${Me.Pet.ID} && ${_attack}) {
+        /echo \awEngaging Target(\ag${_attackID}\aw) with Charmed Pet \ag${Me.Pet.Name}! 
+        /shout Engaging Target(${_attackID}) with Charmed Pet ${Me.Pet.Name}! 
+        /call TrueTarget ${_attackID}
+        /squelch /pet attack
+        /call EngageTarget ${_attackID}
     } 
 /return
     
@@ -140,7 +140,7 @@ Sub CastCharm(string _charm, string _gem, int _maxTries, int _targetID, bool _fo
 
     /declare 	tgtName string  local ${Target.CleanName}
     :AttemptCharm 
-        /echo \aoAttempting Charm: \aw${_charm} on \ao${Spawn[id ${_targetID}].Name}
+        /echo \aoAttempting Charm: \aw"${_charm}" on \ao${Spawn[id ${_targetID}].Name}
 		|/call chkTargetStatus
 		/if (${_targetID} == 0 && !${_forced}) {
 			/echo \ar Charm Failure\aw Target Already Dead
@@ -209,16 +209,17 @@ Sub CreateCharmLineup
 /return 
 
 
-Sub charm_trigger
-    | true name
-    /if ((!${Me.Pet.ID} || ${Target.Buff[${CHARM_1_SPELL}].Duration.TotalSeconds} < 5) && ${Me.SpellReady[${CHARM_1_Spell}]} && !${Me.SpellReady[${CHARM_2_Spell}]} && ${Target.Tashed.ID})
-    |((!#{Me.Pet.ID} || #{Target.Buff[#{CHARM_1_SPELL}].Duration.TotalSeconds} < 5) && #{Me.SpellReady[#{CHARM_1_Spell}]} && !#{Me.SpellReady[#{CHARM_2_Spell}]} && #{Target.Tashed.ID})
+Sub chkCharmTrigger(string _key)
+    /if (${Me.Class.ShortName.Equal[ENC]}) {
+        | Charm 1 "Ancient: Voice of Muram"
+        /if (${_key.Equal[ANCIENT]} && (!${Me.Pet.ID} || ${Target.Charmed.Duration.TotalSeconds} < 6) && ${Me.SpellReady[${CHARM_1_Spell}]}) /return TRUE
+        | Charm 2 "True Name"
+        /if (${_key.Equal[NORMAL]} && (!${Me.Pet.ID} || ${Target.Buff[${CHARM_1_SPELL}].Duration.TotalSeconds} < 5) && ${Me.SpellReady[${CHARM_1_Spell}]})  /return TRUE
+    } else /if (${Me.Class.ShortName.Equal[BRD]}) {
+        /if (${_key.Equal[NORMAL]} && (!${Me.Pet.ID} || ${Target.Charmed.Duration.TotalSeconds} < 6) && ${Me.SpellReady[${CHARM_1_Spell}]})  /return TRUE
+    }
 
-    | ancient: voice of Muram
-    /if ((!${Me.Pet.ID} || ${Target.Charmed.Duration.TotalSeconds} < 6) && ${Me.SpellReady[${CHARM_2_Spell}]} && ${Target.Tashed.ID})
-    |((!#{Me.Pet.ID} || #{Target.Charmed.Duration.TotalSeconds} < 6) && #{Me.SpellReady[#{CHARM_2_Spell}]} && #{Target.Tashed.ID})
-
-/return
+/return FALSE
 
 Sub xbot_initialize_charming
     /echo \ao xbot_initialize_charming
@@ -229,9 +230,11 @@ Sub xbot_initialize_charming
     |-- Charm Settings/Misc
     /declare bln_useCharm           bool    outer   ${Ini[INI_CHAR,Charm,UseCharm,FALSE]}
     /declare bln_activeCharming     bool    outer   TRUE
+    /declare bln_hasCharmedPet      bool    outer   FALSE
 
     /declare timer_ancientCharmActive       timer   outer   1.5m
     /declare timer_ancientCharmRefresh      timer   outer   2m
+    /declare timer_charmAnnounce            timer   outer   10s
 
     |-- Load the charms set in the INI file
 	/call CreateCharmLineup

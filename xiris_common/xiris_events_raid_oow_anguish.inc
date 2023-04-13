@@ -60,6 +60,7 @@ Sub InitEvents_OOW_Anguish
 /return
 
 Sub Events_OOW_Anguish 
+
 	/if ((${Me.Class.ShortName.Equal[WAR]} || ${Me.Class.ShortName.Equal[SHD]}) && ${bln_engaged}) /call chkDivineIntervention
 
 	| Ture Events
@@ -92,7 +93,7 @@ Sub Events_OOW_Anguish
 	}
 
 	| OMM Events
-	/if ((${Bool[${SpawnCount[npc Overlord]}]} && ${Spawn[npc Overlord].Distance3D} < 300)) {
+	/if ((${Bool[${SpawnCount[npc Overlord]}]} && ${Spawn[npc Overlord].Distance3D} < 300) || ${Zone.ShortName.Equal[arena]}) {
 		/call chkOMMEvents
 	} 
 
@@ -465,9 +466,11 @@ Sub EVENT_AMVKill
 |----------------------------
 Sub Event_GazeYou 
 	/echo \arGAZE OF MATA MURAM on ME!
-	/echo \a-w Clicking \agMirrored Mask
-	/if (!${FindItem[Mirrored Mask].ID}) {
+	/echo \a-w Attempting Clicking \agMirrored Mask \a-w${Time.Time24}
+	/if (!${FindItem[Mirrored Mask].ID} && ${Zone.ShortName.Equal[anguish]}) {
 		/shout NO MIRRORED MASK! WE ARE DOOOOMED!
+		/dgt FireTL
+		/shout Calling for TL!
 	} else {
 		
 		:gazeCastWait
@@ -480,15 +483,17 @@ Sub Event_GazeYou
 		}
 		/echo \ao Mask in Slot\aw ${FindItem[Mirrored Mask].InvSlot}
 		/if (${FindItem[Mirrored Mask].InvSlot} != 3) {
-			/echo \ag Swapping Mask to Face
+			/echo \ag Swapping Mask to Face!
 			/exchange "Mirrored Mask" face
 			/delay 10
 		}
 		/if (${Me.Class.ShortName.Equal[BRD]}) {
-			/shout Clicking my Mirrored Mask
+			/shout Clicking my Mirrored Mask!
+			/echo \ag Attempting Clicking \aoMirrored Mask \ag${Time.Time24}!
 			/call MQ2Medley ITEM "Mirrored Mask" ${Target.ID} TRUE
 		} else {
-			/shout Clicking my Mirrored Mask
+			/shout Clicking my Mirrored Mask!
+			/echo \ag Attempting Clicking \aoMirrored Mask \ag${Time.Time24}!
 			/if (!${Defined[interruptFlag]}) /declare interruptFlag bool outer FALSE	
 			/if (${Bool[${Me.Casting.ID}]}) /call Interrupt
 			/call MQ2Cast "Mirrored Mask" ITEM
@@ -496,8 +501,13 @@ Sub Event_GazeYou
 		/delay 20
 		/call RestoreFaceSlot
 		/doevents flush GazeYou
-		/call TrueTarget ${Spawn[npc Overlord].ID}
-		/call EngageTarget ${Spawn[npc Overlord].ID}
+		/if (!${SpawnCount[npc frenzied]}) {
+			/call TrueTarget ${Spawn[npc Overlord].ID}
+			/call EngageTarget ${Spawn[npc Overlord].ID}
+		} else {
+
+		}
+		
 	}
 /return 
 
@@ -526,6 +536,7 @@ Sub chkOMMEvents
 	/doevents GazeYou
 	/doevents GazeBurst
 	/doevents GazeDone 
+	| TODO: Have Bards keep a charm memmed for OMM?
 	/if (${Me.Class.ShortName.Equal[ENC]}) {
 		/call chkOMMCharm
 	} else /if (${Me.Class.ShortName.Equal[CLR]} && !${bln_chChainMember}) {
@@ -545,29 +556,56 @@ Sub chkOMMEvents
 
 Sub chkOMMCharm 
 	/if (!${Me.Pet.ID}) {
+		/if (${bln_hasCharmedPet}) /varset bln_hasCharmedPet FALSE
 		/if (${SpawnCount[npc Coerced]}) {
 			| Eurydice (Charm 1)
-			/if (${NearestSpawn[npc Coerced_Lieutenant_].Distance3D} < 200 && ${NearestSpawn[npc Coerced_Lieutenant_].LineOfSight} && ${Me.Name.Equal[Eurydice]}) {
-				/shout Attempting Charm! ${NearestSpawn[npc Coerced_Lieutenant_]} (${NearestSpawn[npc Coerced_Lieutenant_].ID}) ${NearestSpawn[npc Coerced_Lieutenant_].Distance3D}
-				/echo \ar CHARMING ${NearestSpawn[npc Coerced_Lieutenant_]} (${NearestSpawn[npc Coerced_Lieutenant_].ID}) ${NearestSpawn[npc Coerced_Lieutenant_].Distance3D}
-				/call CharmNPC ${NearestSpawn[npc Coerced_Lieutenant_].ID} TRUE TRUE ${Spawn[npc Overlord].ID}
+			:Charm_1
+			/if (!${timer_charmAnnounce}) /echo \agCharm1 Attempt
+			/if (${NearestSpawn[1, npc Coerced Lieutenant].Distance3D} < 200 && ${NearestSpawn[1, npc Coerced Lieutenant].LineOfSight}) {
+				/call TrueTarget ${NearestSpawn[1, npc Coerced Lieutenant].ID}
+				/if (${Target.Charmed.ID}) /goto :Charm_2
+				/call CharmNPC ${NearestSpawn[1, npc Coerced Lieutenant].ID} TRUE TRUE ${Spawn[npc Overlord].ID}
+				/if (!${timer_charmAnnounce}) {
+					/shout Attempting Charm! ${NearestSpawn[1, npc Coerced Lieutenant]} (${NearestSpawn[1, npc Coerced Lieutenant].ID}) ${NearestSpawn[1, npc Coerced Lieutenant].Distance3D}
+					/echo \ar CHARMING ${NearestSpawn[1, npc Coerced Lieutenant]} (${NearestSpawn[1, npc Coerced Lieutenant].ID}) ${NearestSpawn[1, npc Coerced Lieutenant].Distance3D}
+					/varset timer_charmAnnounce 10s
+				}
 				/delay 10
 			}
 			| Erisa (Charm 2)
-			/if (${NearestSpawn[npc Coerced_Lieutenant].Distance3D} < 200 && ${NearestSpawn[npc Coerced_Lieutenant].LineOfSight} && ${Me.Name.Equal[Erisa]}) {
-				/shout Attempting Charm! ${NearestSpawn[npc Coerced_Lieutenant]} (${NearestSpawn[npc Coerced_Lieutenant].ID}) ${NearestSpawn[npc Coerced_Lieutenant].Distance3D}
-				/echo \ar CHARMING ${NearestSpawn[npc Coerced_Lieutenant]} (${NearestSpawn[npc Coerced_Lieutenant].ID}) ${NearestSpawn[npc Coerced_Lieutenant].Distance3D}
-				/call CharmNPC ${NearestSpawn[npc Coerced_Lieutenant].ID} TRUE TRUE ${Spawn[npc Overlord].ID}
+			:Charm_2
+			/if (!${timer_charmAnnounce}) /echo \agCharm1 Failed, Checking Charm2
+			/if (${NearestSpawn[2, npc Coerced Lieutenant].Distance3D} < 200 && ${NearestSpawn[2, npc Coerced Lieutenant].LineOfSight}) {
+				/call TrueTarget ${NearestSpawn[2, npc Coerced Lieutenant].ID}
+				/if (${Target.Charmed.ID}) /goto :petattack_check
+				/call CharmNPC ${NearestSpawn[2, npc Coerced Lieutenant].ID} TRUE TRUE ${Spawn[npc Overlord].ID}
+				/if (!${timer_charmAnnounce}) {
+					/shout Attempting Charm! ${NearestSpawn[2, npc Coerced Lieutenant]} (${NearestSpawn[2, npc Coerced Lieutenant].ID}) ${NearestSpawn[2, npc Coerced Lieutenant].Distance3D}
+					/echo \ar CHARMING ${NearestSpawn[2, npc Coerced Lieutenant]} (${NearestSpawn[2, npc Coerced Lieutenant].ID}) ${NearestSpawn[2, npc Coerced Lieutenant].Distance3D}
+					/varset timer_charmAnnounce 10s
+				}
 				/delay 10
 			}
 		}
 	} else {
+		:petattack_check
 		/if (${Me.Pet.ID} && ${Me.Pet.Target.ID} != ${Spawn[npc Overlord].ID}) {
+			/echo \agSiccing pet!
 			/call TrueTarget ${Spawn[npc Overlord].ID}
-			/squelch /pet attack
-			/delay 10
+			/pet attack
+			/if (!${Me.Pet.Buff[Speed of Salik]}) {
+				/target id ${Me.Pet.ID}
+				/call chkSpellMemorized "Speed of Salik" TRUE gem8
+				/call MQ2Cast "Speed of Salik" 
+			} 
+			/if (!${Me.Pet.Buff[Howl of Tashan]}) {
+				/target id ${Me.Pet.ID}
+				/call chkSpellMemorized "Howl of Tashan" TRUE gem8
+				/call MQ2Cast "Howl of Tashan" 
+			} 
 		}
 	}
+:return
 /return
 
 | Adds need to be AE DDd
@@ -592,27 +630,30 @@ Sub chkOMMAdds
 	/if (!${SpawnCount[npc Coerced]} && !${SpawnCount[npc lasher]}) /return
 
 	| Lieutenants
-	/for i 1 to ${SpawnCount[npc Coerced]}
+	/for i 1 to ${SpawnCount[npc Coerced radius 140]}
 		/call TrueTarget ${NearestSpawn[${i}, npc Coerced].ID}
 		/if (${Me.TargetOfTarget.Class.ShortName.Equal[WAR]} || ${Me.TargetOfTarget.Class.ShortName.Equal[PAL]} || ${Me.TargetOfTarget.Class.ShortName.Equal[SHD]}) /goto :nextTarget
-		/if ((${Target.Distance3D} < 200)) {
-			/call aggroByID ${Target.ID}
-		} else {
-			/squelch /target clear
-		}
+		/if (!${Target.Charmed.ID}) /call aggroByID ${Target.ID}
+		/squelch /target clear
 	:nextTarget	
+	| coerced test
 	/next i
 
 	| Lashers
-	/for i 1 to ${SpawnCount[npc lasher]}
+	/for i 1 to ${SpawnCount[npc lasher radius 200]}
 		/call TrueTarget ${NearestSpawn[${i}, npc lasher].ID}
 		/if (${Me.TargetOfTarget.Class.ShortName.Equal[WAR]} || ${Me.TargetOfTarget.Class.ShortName.Equal[PAL]} || ${Me.TargetOfTarget.Class.ShortName.Equal[SHD]}) /goto :nextTarget2
 		/if ((${Target.Distance3D} < 200)) {
 			/call aggroByID ${Target.ID}
+			/if (${Spawn[pc Xanshia].Distance3D} > 50) {
+				/nav wp ommCleric
+				/delay 20
+			}
 		} else {
 			/squelch /target clear
 		}
 	:nextTarget2	
+	|lasher test
 	/next i
 /return
 

@@ -413,23 +413,28 @@ Sub EngageTarget(int _targetID)
 	| If I am following, stop it!
 	/if (${bln_following}) /call StopFollowing
 	
-	| Target the NPC
+	| Set Target Flags
 	/varset int_targetID ${_targetID}
 	/varset str_targetName ${Spawn[id ${_targetID}].Name}
 	/varset bln_engaged TRUE
 	/echo \awEngaging Target \ag${Spawn[id ${_targetID}].Name} \ay(${_targetID}) \ao${Time.Time24}
-	/if (${Me.Class.ShortName.NotEqual[CLR]}) /call TrueTarget ${int_targetID}
+
+	| Priests don't need to do anything else
+	/if (${Select[${Me.Class.ShortName},CLR,DRU,SHM]} || (${Me.Class.ShortName.Equal[CLR]} && !${bln_battleCleric})) /return
+
 	| Stand Up
-	/if ((${Me.Feigning} && (${Me.PctHPs} > 75)) || !${Me.Standing}) /stand
+	/if ((${Me.Feigning} && (${Me.PctHPs} > 50))) /stand
 	| Reset recast timers (nukes, dots, etc)
 	/if (${str_classArchetype.NotEqual[MELEE_END]} || ${Me.Class.ShortName.NotEqual[WAR]}) /call ResetCastTimers
 	| Sicc Pet
-	/if (${Me.Pet.ID}) /call chkPetAttack
+	/if ((${Select[${Me.Class.ShortName},MAG,BST,NEC,ENC]}) && ${Me.Pet.ID}) /call chkPetAttack
 	| Start Swinging
-	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]} || (${Me.Class.ShortName.Equal[CLR]} && ${bln_battleCleric})) {
+	/call TrueTarget ${int_targetID}
+
+	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
 		/echo \awKilling Target \ag${Spawn[id ${_targetID}].Name} \ay(${_targetID})  \ao${Time.Time24}
 		/squelch /melee reset
-		/varset int_maxStickDistance ${Target.MaxMeleeTo}
+		/varset int_maxStickDistance 25
 		/call EngageTargetMelee
 	}
 	| Stop Sticking if you are MT, cause it's annoying
@@ -601,13 +606,9 @@ Sub chkMobDead
 /return
 
 Sub TrueTarget(int _targetID)
-	|/echo TrueTarget(${_targetID})
-	| Check if the target is in zone.
-	/if (${Target.ID} == ${_targetID}) /return
-	/if (${SpawnCount[id ${_targetID}]}) {
+	/if (${SpawnCount[id ${_targetID}]} && ${Target.ID} != ${_targetID} ) {
 		/declare retryTimer timer local 30
 		:Target_Loop
-		|/echo targetting ${_targetID}
 		/squelch /target id ${_targetID}
 		/delay 2 ${Target.ID} == ${_targetID}
 		
@@ -674,12 +675,13 @@ Sub chkMTAlive(bool _setAsTarget)
 		/melee aggro=1
 		/melee taunt=1
 	}
-	:return
+	
 	|-- If set as target, target the new MT immediately
 	/if (${_setAsTarget} && (${Target.ID} != ${int_MTID})) {
 		/if (${Bool[${Me.Casting.ID}]}) /call Interrupt
 		/call TrueTarget ${int_MTID}
 	}
+:return	
 /return
 
 
@@ -1026,12 +1028,7 @@ Sub doRefreshAlerts
 Set the MT to a specific NAME
 ----------------------------  
 **|
-Sub setMT(string _tankName)
-	/echo setMT(${_tankName}):: ${Spawn[${_tankName}].ID}
-	/varset str_MTName ${_tankName}
-	/varset int_MTID ${Spawn[${_tankName}].ID}
-/return
-	
+
 Sub getMTbyPrecedence
 	/echo getMTbyPrecedence
 
@@ -1079,14 +1076,13 @@ Sub EVENT_ChangeMT(_line, _sender, _eventParams)
 	/echo Changing the MT
 	/echo _sender: ${_sender}
 	/echo _eventParams:${_eventParams}
-	/declare name string local ${_eventParams.Arg[1, ]}
-	/varset	int_MTID ${Spawn[pc ${name}].ID}
-	/varset str_MTName ${name} 
+	/declare tankName string local ${_eventParams.Arg[1, ]}
+	/call setMT ${tankName}
 
 	/echo MTID: ${int_MTID} MTName: ${name}
 	/if (${str_classArchetype.Equal[PRIEST]}) /dgt [${Me.Class.ShortName}] ${Me.Name} ${str_action} >> ${Spawn[id ${int_MTID}].CleanName} <<  @ ${healPoint}
 	/if (${Me.Class.ShortName.Equal[CLR]}) /call TrueTarget ${int_MTID}
-	/if (${Me.Name.Equal[${name}]}) {
+	/if (${Me.Name.Equal[${tankName}]}) {
 		/varset bln_tanking TRUE
 		/varset bln_aggro 	TRUE
 		/melee aggro=1
@@ -1096,6 +1092,12 @@ Sub EVENT_ChangeMT(_line, _sender, _eventParams)
 		/varset bln_aggro 	FALSE
 	}
 	/doevents flush ChangeMT
+/return
+
+Sub setMT(string _tankName)
+	/echo \agSetMT(${_tankName}):: ${Spawn[${_tankName}].ID}
+	/varset str_MTName ${_tankName}
+	/varset int_MTID ${Spawn[${_tankName}].ID}
 /return
 
 Sub EVENT_ChangeSA(_line, _sender, _eventParams)

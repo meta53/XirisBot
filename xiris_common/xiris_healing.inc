@@ -262,12 +262,16 @@ Sub ChangeHealMode(string _strMode)
 		/varset str_spellset efficient
 		/varset use_heal_HoT FALSE
 		/varset str_healMode EFFICIENT
+		/varset int_range_current_frantic	${int_range_frantic_efficient}
+		/varset int_range_current_normal 	${int_range_normal_efficient}
 		/call InterruptON
 	} else {
 		/echo \a-wChanging healing \aoMODE \a-wto \agDEFAULT
 		/varset str_spellset default
 		/varset use_heal_HoT TRUE
 		/varset str_healMode DEFAULT
+		/varset int_range_current_frantic	${int_range_frantic_efficient}
+		/varset int_range_current_normal 	${int_range_normal_efficient}
 		/call InterruptOFF
 	}
 	/memspellset ${str_spellset}
@@ -544,7 +548,7 @@ Sub setHealingSpell(int _hp, string _targetType, int _range, string _targetName,
 **|
 
 Sub chkHeal_MT
-	/if ((${int_healMode} == 1 || ${int_healMode} == 2) && ${Spawn[id ${int_MTID}].PctHPs} < ${int_point_tank_HoT} && (${Spawn[id ${int_MTID}].Distance} <= ${int_range_normal})) /call healMAINTANK
+	/if ((${int_healMode} == 1 || ${int_healMode} == 2) && ${Spawn[id ${int_MTID}].PctHPs} < ${int_point_tank_HoT} && (${Spawn[id ${int_MTID}].Distance3D} <= ${int_range_current_normal})) /call healMAINTANK
 /return
 
 Sub chkHeal_Self
@@ -617,16 +621,9 @@ Sub healGRP
 	/varcalc	int_point_calcStopHeal ${Math.Calc[${int_point_group_normal}*1.2]}
 	/declare 	memName 		string local 
 	/declare 	memID			string  local 0
-
-	/declare    franticRange    int local ${int_range_frantic}
-	/declare    normalRange  	int local ${int_range_normal}
 	/declare 	perTick			int local 0
 	/declare    castStatus		string local 
 
-	/if (${str_healMode.Equal[EFFICIENT]}) {
-		/varset franticRange	${int_range_frantic_efficient}
-		/varset normalRange 	${int_range_normal_efficient}
-	}
 
 	:determineGroupDamage
 	| Method updates the group array, in order of HP, and counts the major/minor hurt
@@ -675,7 +672,7 @@ Sub healGRP
 	/varset memName ${Spawn[pc id ${memID}].Name}
 	
 	| not pet and corpse
-	/if (${Spawn[id ${memID}].Type.NotEqual[Pet]} && ${Spawn[id ${memID}].Type.NotEqual[Corpse]} && ${Spawn[id ${memID}].PctHPs} <= ${int_point_group_HoT}) {
+	/if (${Spawn[id ${memID}].Type.NotEqual[Pet]} && ${Spawn[id ${memID}].Type.NotEqual[Corpse]} && ${Spawn[id ${memID}].PctHPs} <= ${int_point_group_HoT} && ${Spawn[id ${memID}].Distance3D} < ${int_range_current_frantic}) {
 		| hp checks
 		|/echo \awCastSingleTargetHeals  \ag ${memName} \aw(\ay${memID}\aw)
 		|(int _hp, string _targetType, int _range, string _targetName, string _targetID)
@@ -744,7 +741,7 @@ Sub healCast(int _id, string _name, string _spell, bool _isGroup, bool _isHoT)
 	}
 	/if ((${_isGroup} || (${Spawn[pc ${_name}].PctHPs} < ${int_point_calcStopHeal}) && (${Me.CurrentMana} > ${Spell[${_spell}].Mana}))) {
 		/echo \aoHealCast \ay:IsGroup:\ag${_isGroup} \ayTarget:\ag${_name}(${_id}) \aydist: \ag${Target.Distance} \aycHP: \ag${Spawn[pc ${_name}].PctHPs}\ao < \aycSH: \ag${int_point_calcStopHeal} \ayspell: \ag"${_spell}" \ayMyMana:\ag ${Me.CurrentMana}\ao > \ag${Spell[${_spell}].Mana}
-		/if (${Target.ID} != ${_id}) /call TrueTarget ${_id}
+		/call TrueTarget ${_id}
 		/call chkSpellMemorized "${_spell}" TRUE 2
 		/if (${_isGroup}) {
 			| Don't check health on group spells or you will constantly duck out if cleric doesnt need to be healed!
@@ -1377,8 +1374,8 @@ Sub xbot_initialize_healing(int _healPoint)
 
 	/echo ---------------
 	/echo \ayHeal Spells: \awNormal:\ag${str_heal_normal}\aw  || Efficient:\ag${str_heal_frantic_efficient}\aw || CH:\ag${str_heal_complete}
-	/echo				 \awFrantic:\ag${str_heal_frantic}\aw || Frantic Efficient:\ag${str_heal_frantic_efficient}\aw || HOT:\ag${str_heal_HoT}
-	/echo               \awGroup:\ag${str_heal_group}\aw || GroupHoT:\ag${str_heal_groupHoT}\aw || Rez:\ag${str_rezSpell}
+	/echo				  \awFrantic:\ag${str_heal_frantic}\aw || Frantic Efficient:\ag${str_heal_frantic_efficient}\aw || HOT:\ag${str_heal_HoT}
+	/echo                 \awGroup:\ag${str_heal_group}\aw || GroupHoT:\ag${str_heal_groupHoT}\aw || Rez:\ag${str_rezSpell}
 	/echo ---------------
 
 	|-- Heal Use (note, if null, or cannot find, we cannot use (gotta figure out how to tell if I have that spell...)
@@ -1417,6 +1414,9 @@ Sub xbot_initialize_healing(int _healPoint)
 	/declare 	int_range_complete		int		outer 	${Spell[${str_heal_complete}].MyRange}
 	/declare	int_range_rez			int		outer	100
 	/declare 	int_range_divineArb		int		outer	100
+
+	/declare    int_range_current_frantic    		int 	outer ${int_range_frantic}
+	/declare    int_range_current_normal  			int 	outer ${int_range_normal}
 
 	
 	/echo \ayHeal Ranges: \awPatch:\ag${int_range_normal_efficient}\aw || Normal:\ag${int_range_normal}\aw || Group:\ag${int_range_group}\aw

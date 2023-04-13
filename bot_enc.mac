@@ -112,7 +112,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 			/call RunClassEvents
 
 			|-- verify target status
-			/call chkTargetStatus	
+			/if (!${bln_hasCharmedPet}) /call chkTargetStatus	
 
 			|-- debuff lib
 			/call chkDebuffsOnSingleTarget ${int_targetID}
@@ -122,10 +122,10 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 			/call cmbtBuffGRP
 		
 			|-- dps library (caster)
-			/call RunRaidEvents
-    		/call RunClassEvents
-			/call chkDOT
-			/call chkNuke
+			/if (!${bln_hasCharmedPet}) /call RunRaidEvents
+    		/if (!${bln_hasCharmedPet}) /call RunClassEvents
+			/if (!${bln_hasCharmedPet}) /call chkDOT
+			/if (!${bln_hasCharmedPet}) /call chkNuke
 			
 			|-- std library (burns/aa/clicks)
 			/call RunRaidEvents

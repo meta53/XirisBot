@@ -42,6 +42,7 @@ ______________________________________________
 #EVENT CreateCamp 	"[ #1# #*#]#*#CreateCamp #2#"
 
 
+
 Sub InitEvents_Movement
 	/call RegisterBackgroundEvents Events_Movement 5
 /return
@@ -159,7 +160,7 @@ SUB AquireFollow(string _type, string _leader)
 		| If the str_followTarget declares that you need to use MQ2Nav...
 		|-- We do not need to use LOS for MQ2Nav nor do we need to use target
 		/if (${_type.Equal[NAV]}) {
-			/squelch /nav spawn ${Spawn[pc =${_leader}]}
+			/nav spawn ${Spawn[pc =${_leader}]}
 		} else {
 			/if (${Spawn[pc ${_leader}].LineOfSight}) {
 				/call TrueTarget ${Spawn[pc ${_leader}].ID}
@@ -178,7 +179,7 @@ SUB AquireFollow(string _type, string _leader)
 	/call RunAllEvents
 	/if (${bln_following}) {
 		/if (${_type.Equal[NAV]} && !${Navigation.Active} && (${Spawn[pc =${_leader}].Distance3D} > ${distCheck} )) {
-			/squelch /nav spawn ${Spawn[pc =${_leader}]}
+			/nav spawn ${Spawn[pc =${_leader}]}
 			/delay 10
 		}
 		/goto :movingLoop
