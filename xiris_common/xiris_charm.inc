@@ -67,7 +67,8 @@ Sub CharmNPC(int _targetID, bool _forced, bool _attack, int _attackID)
     /echo \aoCharmNPC\aw(\ag${_targetID}\aw ${bln_activeCharming})
     /if (!${bln_activeCharming} && !${_forced}) /return
     /if (${Me.Pet.ID}) /return
-
+        
+    /varset bln_hasCharmedPet FALSE
     | /declare CHARM_Template         string  outer   _Spell|_Gem|_MaxTries|_KeepAlive|_Resist|_RecastTimer
     | Check the logic in charm (ie: if we can use ancient if enc, etc)
     :charmTarget
@@ -75,14 +76,19 @@ Sub CharmNPC(int _targetID, bool _forced, bool _attack, int _attackID)
     /for i  1 to ${CHARM_Total}
         /if (${Me.Pet.ID}) /return
         /call TrueTarget ${_targetID}
-        /echo ${i}
        
        | Trigger Check based on type (Calls chkCharmTrigger)		
        /call chkCharmTrigger ${CHARM_${i}_Type}
        /echo \ayChkCharmTrigger: \ao${CHARM_${i}_Type} \ar${Macro.Return} "${CHARM_${i}_Spell}"
         /if (!${Macro.Return}) {
-             /echo going to next charm since first failed!
-            /goto :nextCharm
+            /if (${i} < ${CHARM_Total}) {
+                /echo \aoGoing to next charm since first failed!
+                /goto :nextCharm
+            } else {
+                /echo \aoChkCharmTrigger FAILED
+                /goto :return
+            }
+           
         }
        
         | Checks passed, check if the spell is memorized. Skip if not
@@ -97,18 +103,14 @@ Sub CharmNPC(int _targetID, bool _forced, bool _attack, int _attackID)
 				/goto :charmSpellReadyWait
 			} 
         :charmCast
-			/echo \agCharmNPCOnTarget:\ao"${CHARM_${i}_Spell}" \awID:\ay${_targetID}  \awforcing?:\ay${_forced}
+			|/echo \agCasting Charm:\ao"${CHARM_${i}_Spell}" \awID:\ay${_targetID}  \awforcing?:\ay${_forced}
 			/call TrueTarget ${_targetID}
 
 			/if (${Me.Class.ShortName.Equal[BRD]}) {
 				/call MQ2Medley SONG "${CHARM_${i}_Spell}" ${_targetID} TRUE
-				/docommand /${cmdChannel} << ${Target.Name} >> ${CHARM_${i}_Spell} 
-                /varset bln_hasCharmedPet TRUE
                 /goto :return
 			} else {
 				/call CastCharm "${CHARM_${i}_Spell}" ${CHARM_${db}_Gem} ${CHARM_${i}_MaxTries} ${Target.ID} ${_forced}
-                /docommand /${cmdChannel} << ${Target.Name} >> ${CHARM_${i}_Spell} 
-                /varset bln_hasCharmedPet TRUE
                 /goto :return
             }  
         /call RunRaidEvents      
@@ -118,12 +120,15 @@ Sub CharmNPC(int _targetID, bool _forced, bool _attack, int _attackID)
         /next i
     :return 
 
-    /if (${Me.Pet.ID} && ${_attack}) {
-        /echo \awEngaging Target(\ag${_attackID}\aw) with Charmed Pet \ag${Me.Pet.Name}! 
-        /shout Engaging Target(${_attackID}) with Charmed Pet ${Me.Pet.Name}! 
-        /call TrueTarget ${_attackID}
-        /squelch /pet attack
-        /call EngageTarget ${_attackID}
+    /if (${Me.Pet.ID} ) {
+        /varset bln_hasCharmedPet TRUE
+        /if (${_attack}) {
+            /echo \awEngaging Target(\ag${_attackID}\aw) with Charmed Pet \ag${Me.Pet.Name}! 
+            /shout Engaging Target(${_attackID}) with Charmed Pet ${Me.Pet.Name}! 
+            /call TrueTarget ${_attackID}
+            /squelch /pet attack
+            /call EngageTarget ${_attackID}
+        }
     } 
 /return
     
@@ -165,7 +170,7 @@ Sub CastCharm(string _charm, string _gem, int _maxTries, int _targetID, bool _fo
 		/varcalc try ${try}+1
 	
 		|handle result
-        /if (${rslt.Equal[CAST_RESIST]})        /goto :CharmShield
+        /if (${rslt.Equal[CAST_RESIST]})        /goto :AttemptCharm
 		/if (${rslt.Equal[CAST_OUTOFRANGE]}) 	/goto :CharmFailure
 		/if (${rslt.Equal[CAST_OUTOFMANA]}) 	/goto :CharmFailure
 		/if (${rslt.Equal[CAST_NOTHOLD]}) 		/goto :CharmFailure
@@ -180,11 +185,11 @@ Sub CastCharm(string _charm, string _gem, int _maxTries, int _targetID, bool _fo
         /dge war /shield ${Me.Name}
         /goto :AttemptCharm
     :CharmFailure
-        /dgt CHARM_FAILURE::[${_charm}] ! ${tgtName} (result:${rslt})
+        /echo \arCHARM_FAILURE::[\aw${_charm}\ar] !! \ao${tgtName} \aw(result:\ao${rslt}\aw)
         /shout CHARM_FAILURE::[${_charm}] ! ${tgtName} (result:${rslt})
         /goto :return
     :CharmSuccess
-        /dgt CHARM_SUCCESS::[${_charm}] -> ${tgtName} (try:${try})
+        /echo \agCHARM_SUCCESS::[\aw${_charm}\ag] -> \ao${tgtName} \aw(try:\ao${try}\aw)
         /shout CHARM_SUCCESS::[${_charm}] -> ${tgtName} (try:${try})
     :return
 /return

@@ -3,6 +3,11 @@
 #EVENT MarkOfDeath			"#*#You have been marked for death#*#"
 #EVENT OMMEngage			"#*#OMMEngage#*#"
 
+#EVENT RootTankOn			"#*#RootTankOn#*#"
+#EVENT RootTankOff			"#*#RootTankOff#*#"
+
+#EVENT WarCry				"#*#OMMWarCry#*#"
+
 #include xiris_common/xiris_spell_routines.inc
 
 Sub Main(string _type, string _tankPoint)
@@ -11,17 +16,19 @@ Sub Main(string _type, string _tankPoint)
     /melee taunt=on
 	/declare bln_OMMEngaged 		bool 	outer FALSE
 	/declare bln_rootTank			bool	outer FALSE
+	/declare root_X					int	    outer 0
+	/declare root_Y					int	    outer 0
+	/declare root_Z					int	    outer 0
 
-	/declare timer_mark_ae 		    timer 	outer 	300s
-	/declare markSeconds			int 	outer 	300
-	/declare stunSeconds			int   	outer 	0	
-	/declare int_timeMarkInterval 	int 	outer   300
-
-
-	/declare bln_announcedRetreat   bool    outer FALSE
-	/declare bln_announcedKill 		bool	outer FALSE
-	/declare timer_announce_retreat	timer   outer 0
-	/declare timer_announce_kill 	timer  	outer 0
+	/declare arr_bersekerList[8]	string  outer 
+	/varset arr_bersekerList[1]	Ophidia 
+	/varset arr_bersekerList[2] Ophelia
+	/varset arr_bersekerList[3] Ophemia
+	/varset arr_bersekerList[4] Ophenia
+	/varset arr_bersekerList[5] Opheoia
+	/varset arr_bersekerList[6] Ophexia
+	/varset arr_bersekerList[7] Opheyia
+	/varset arr_bersekerList[8] Ophezia
 
 	/echo Calling OMM Setup
 	/dgt OMMSetup
@@ -30,11 +37,22 @@ Sub Main(string _type, string _tankPoint)
 	/doevents
 	/delay 5
 	/if (!${bln_OMMEngaged}) /goto :wait_loop
-
+	/target Overlord
 	| Announcing Engage
 	/rs OMMStart ${Time.Time24}
 
+	| Stonewall
+	/if (${Me.CombatAbilityReady[Stonewall Discipline]}) /doability Stonewall Discipline
+	
+	| Debuff, and start aggro
+	/rs DebuffTarget ${Target.ID}
+	/dgt singsongs
+	/killthis
 	:ActiveLoop
+		/if (${Zone.ShortName.Equal[thundercrest]}) {
+			/delay 10
+			/goto :ActiveLoop
+		}
 		/doevents
 		/call getAggro
 	/goto :ActiveLoop
@@ -59,27 +77,88 @@ Sub Event_OMMEngage
 		/echo \ar OMM out of Range. Try that again!
 		/goto :OMMTarget
 	}
-    /if (${Me.CombatAbilityReady[Stonewall Discipline]})  /doability "Stonewall Discipline"
+    /if (${Me.CombatAbilityReady[Stonewall Discipline]}) /doability "Stonewall Discipline"
     /delay 5
+	/attack on
 	/echo Hammering aggro
 	/if (${Me.CombatAbilityReady[Ancient: Chaos Cry]}) /doability "Ancient: Chaos Cry"
-	/delay 5
+	/delay 10
 	/if (${Me.CombatAbilityReady[Bazu Bellow]}) /doability "Bazu Bellow"
-	/delay 5
+	/delay 10
 
-
+	/dgt SingSongs
 	/face fast
 	/attack on
 	/killthis
 /return
 
+Sub EVENT_WarCry
+	/echo \ag WARCRY CALLED!
+	/declare bStatus 	string	local FALSE
+	/declare _berName 	string 	local NULL
+	/declare i			int 	local 1
+	:checkCoerced1
+	/for i 1 to ${arr_bersekerList.Size}
+		/varset _berName ${arr_bersekerList[${i}]}
+		/if (!${SpawnCount[pc ${_berName}]}) /goto :next1
+		/dquery ${_berName} -q "Me.CombatAbilityReady[Ancient: Cry of Chaos]"
+		/delay 20 ${DanNet.Query.Received}
+		/varset bStatus ${DanNet.Q}
+		/echo \aw ${_berName} Cry? ${bStatus}
+		/if (${bStatus.Equal[TRUE]}) /goto :CastCryOn1
+	:next1
+	/next i
+
+	:checkCoerced2
+	/delay 20
+	/for i 1 to ${arr_bersekerList.Size}
+		/varset _berName ${arr_bersekerList[${i}]}
+		/if (!${SpawnCount[pc ${_berName}]}) /goto :next2
+		/dquery ${_berName} -q "Me.CombatAbilityReady[Ancient: Cry of Chaos]"
+		/delay 20 ${DanNet.Query.Received}
+		/varset bStatus ${DanNet.Q}
+		/echo \aw ${_berName} Cry? ${bStatus}
+		/if (${bStatus.Equal[TRUE]}) /goto :CastCryOn2
+	:next2
+	/next i
+
+	:CastCryOn1
+	/echo \ao Calling Cry on \ag${Spawn[npc Coerced_Lieutenant_000].CleanName} \aw(\aG${Spawn[npc Coerced_Lieutenant_000].ID}\aw) from \a ${_berName}
+	/call CallBerserkerCry ${_berName} ${Spawn[npc Coerced_Lieutenant_000].ID}
+	/goto :checkCoerced2
+
+	:CastCryOn2
+	/echo \ao Calling Cry on \ag${Spawn[npc Coerced_Lieutenant000].CleanName} \aw(\aG${Spawn[npc Coerced_Lieutenant000].ID}\aw) from \a ${_berName}
+	/call CallBerserkerCry ${_berName} ${Spawn[npc Coerced_Lieutenant000].ID}
+:return	
+/doevents flush
+/return
+
+Sub CallBerserkerCry(string _berserker,  int _targetID)
+	/echo \aoAsking \ag${_berserker}\aw to cast \agAncient: Cry of Chaos\aw on ${_targetID}
+	/dex ${_berserker} /multiline ; /mqpause on ; /melee reset ; /tar id ${_targetID} ; /delay 5 ; /doability "Ancient: Cry of Chaos" ; /target npc overlord ; /killthis ; /mqpause off
+/return 
+
+
+
+Sub EVENT_RootTankOn
+	/varset root_X ${Me.X}
+	/varset root_Y ${Me.Y}
+	/varset root_Z ${Me.Z}
+	/varset bln_rootTank TRUE
+/return
+
+Sub EVENT_RootTankOff
+	/varset bln_rootTank FALSE
+/return
 
 Sub getAggro
 	:aggroLoop
-		/if (${Target.Distance} > 20 && ${bln_rootTank}) /warp f 15
+		/if (${Target.Distance} > 20 && ${bln_rootTank}) /warp loc ${root_Y} ${root_X} ${root_Z}
 		/if (${Me.TargetOfTarget.ID} != ${Me.ID}) {
 			/echo OMM NOT TARGETTING ME
             /if (${Me.CombatAbilityReady["Bellow of the Mastruq"]}) /doability "Bellow of the Mastruq"
+			/delay 20
 			/if (${Me.CombatAbilityReady["Bazu Bellow"]}) /doability "Bazu Bellow"
 			/delay 10
 			/goto :aggroLoop

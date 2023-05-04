@@ -106,7 +106,6 @@ Sub chkZone
 	/if (${Zone.ShortName.NotEqual[${SZ_shortName}]}) {
 		/if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) {
 			/docommand /${cmdChannel}  I died! GTFO! ${Time}
-			/docommand /${cmdChannel}  offtankon
 			/end
 		}
 	}
@@ -401,17 +400,20 @@ Sub pullTarget
 
 		|-- Check to see if I don't yet have aggro
 		:AggroCheck
-		/echo minpull ${int_minPullCount}
+		/echo minpull ${int_maxPullCount}
 		/echo usePull ${bln_usePull}
 		/echo castDist ${int_castDistance}
 	| || (!${bln_usePull} && (${Target.Distance} > 25 && ${Target.LineOfSight}))
-		/if (!${Me.TargetOfTarget.ID} && (${Me.XTarget} < ${int_minPullCount})) {
-
+		/if (!${Me.TargetOfTarget.ID} && ((${bln_usePull} && ${Me.XTarget} < ${int_maxPullCount}) || (!${bln_usePull}))) {
+ 
 		
 			| I do not yet have aggro;
 			/echo I do not have aggro, checking dist
 			:AggroDistCheck 
 			| Am I close enough to aggro?
+			/if (${Target.Distance3D} > 200 && ${bln_usePull}) /goto :RunningToTarget
+			/if (${Target.Distance3D} > 25 && !${bln_usePull}) /goto :RunningToTarget
+
 			/if ((${bln_usePull} && (${Target.Distance} < ${int_castDistance}) && ${Target.LineOfSight}) || (!${bln_usePull} && (${Target.Distance} < 25 && ${Target.LineOfSight}))) {
 				| I am, call aggro sub.
 				/echo \ao Attempting to Aggro Target
@@ -668,7 +670,7 @@ Sub chkUtils
 		/if (${useDownFlags}) /call chkDownshits
 		/call chkHP
 		/call chkComponentsAll
-		/if (!${timer_allBuffs}) {
+		/if (!${timer_allBuffs} && !${bln_usePull}) {
 			/echo \ayRequesting Buffs @${Time.Time24}
 			/docommand /${cmdChannel} DoHideCorpses
 			/delay 5s
@@ -957,6 +959,7 @@ Sub variant_initialize(int _pull_dist, string _channel, string _campName, bool _
 	|--loot
 	/varset bln_looting				FALSE
 	/if (${bln_looting}) 			/call EnableLooting
+	/if (!${_usePull})				/call EnableLooting
 
 	|--downflags 
 	/declare useDownFlags	bool	outer	TRUE
@@ -1024,7 +1027,7 @@ Sub variant_initialize(int _pull_dist, string _channel, string _campName, bool _
 	/declare int_closeEnoughRadius	int		outer   50
 
 	|--target information
-	/declare int_minPullCount		int		outer   4
+	/declare int_maxPullCount		int		outer   4
 	/declare int_minTLevel			int		outer	8
 	/declare int_maxTLevel			int		outer	75
 	/declare bln_validTGT			bool	outer	FALSE
@@ -1335,8 +1338,6 @@ Sub setAlerts
 	} else /if (${Zone.ShortName.Equal[provinggrounds]}) {
 		|/squelch /alert add 2 "Tactician"
 		/squelch /alert add 2 "noc"
-	} else /if (${Zone.ShortName.Equal[wallofslaughter]}) {
-		/squelch /alert add 2 "Mastermind"
 	} else /if (${Zone.ShortName.Equal[dranikhollowsa]} || ${Zone.ShortName.Equal[dranikhollowsb]} || ${Zone.ShortName.Equal[dranikhollowsc]} || ${Zone.ShortName.Equal[dranikhollowsd]} || ${Zone.ShortName.Equal[dranikhollowse]} || ${Zone.ShortName.Equal[dranikhollowsf]} || ${Zone.ShortName.Equal[dranikhollowsg]} || ${Zone.ShortName.Equal[dranikhollowsh]} || ${Zone.ShortName.Equal[dranikhollowsi]} || ${Zone.ShortName.Equal[dranikhollowsj]}) {
 		/squelch /alert add 2 "Shrewd"
 		| Note, this should be dranikhollowsa "Watering Hole"
@@ -1357,7 +1358,12 @@ Sub setAlerts
 
 	|--Epic Stuff
 	} else /if (${Zone.ShortName.Equal[povalor]}) {
-		/squelch /alert add 2 "a crystalline arachnae"
+		/squelch /alert add 2 "a valorian guard"
+		/squelch /alert add 2 "a valorian guardsman"
+		/squelch /alert add 2 "valorian watchman"
+		/squelch /alert add 2 "sergeant"
+		/squelch /alert add 2 "lieutenant"
+		/squelch /alert add 2 "a squad leader"
 	} else /if (${Zone.ShortName.Equal[poinnovation]}) {
 		/squelch /alert add 2  "a degrading guardian"
 		/squelch /alert add 2  "a weathered guardian"
@@ -1365,8 +1371,7 @@ Sub setAlerts
 	} else /if (${Zone.ShortName.Equal[ssratemple]}) {
 		/squelch /alert add 2 "Shissar Assassin"
 	} else /if (${Zone.ShortName.Equal[chardok]}) {
-		|/squelch /alert add 2 "overseer"
-		|/squelch /alert add 2 "foreman"
+		/squelch /alert add 2 "iksar betrayer"
 	} else /if (${Zone.ShortName.Equal[southkarana]} || ${Zone.ShortName.Equal[rathemtn]}) {
 		/if (${Me.Class.ShortName.Equal[BRD]}) {
 			/varset int_minTLevel 8
@@ -1378,20 +1383,37 @@ Sub setAlerts
 			/squelch /alert add 2 "Brother Zephyl"
 			/squelch /alert add 2 "Brother Qwinn"
 		}
-		
-		
 	} else /if (${Zone.ShortName.Equal[skyfire]}) {
 		/squelch /alert add 2 "a skyash drake"
 		/squelch /alert add 2 "Eldrig the Old"
+		/squelch /alert add 2 "a mature wurm"
+		/squelch /alert add 2 "a shadow drake"
+		/squelch /alert add 2 "a lava walker"
+		/squelch /alert add 2 "a soul devourer"
+		/squelch /alert add 2 "Black Scar"
 	} else /if (${Zone.ShortName.Equal[burningwood]}) {
 		/squelch /alert add 2 "wurm"
 		/squelch /alert add 2 "Nezekezena"
 	} else /if (${Zone.ShortName.Equal[karnor]}) {
-		/varset int_minPullCount 20
+		/varset int_maxPullCount 20
 		/varset int_closeEnoughRadius 30
 		/squelch /alert add 2 "warlord"
 		/squelch /alert add 2 "bodyguard"
 		/squelch /alert add 2 "pawbuster"
+	} else /if (${Zone.ShortName.Equal[causeway]}) {
+		/varset int_maxPullCount 10
+		/squelch /alert add 2 "battle-scarred"
+		/squelch /alert add 2 "mountain"
+		/squelch /alert add 2 "murkglider stalker"
+	} else /if (${Zone.ShortName.Equal[wallofslaughter]}) {
+		/varset int_maxPullCount 10
+		/squelch /alert add 2 "enchainer"
+		/squelch /alert add 2 "darkwarrior"
+		/squelch /alert add 2 "ireknight"
+		/squelch /alert add 2 "mastermind"
+	} else /if (${Zone.ShortName.Equal[gukbottom]}) {
+		/varset int_maxPullCount 20
+		
 	}
 
 /return

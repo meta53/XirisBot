@@ -175,13 +175,15 @@ Sub MQ2Medley(string _type, string _token, int _targetID, bool _interrupt)
     /if (${_interrupt}) /varset argstring "${_token}" -interrupt -targetid|${_targetID}
     /declare castTime int  local
 
-    /echo \aoMQ2Medley \ag${_type} \ay${argstring}
+    /echo \aoMQ2Medley \ag${_type}\aw,\ao ${_token}\aw, \ao${_targetID}\aw, \ao${_interrupt}  
+	/echo \at/medley queue \ay${argstring}
 
     /if (${_type.NotEqual[ITEM]}) {
         /varcalc castTime (${Spell[${_token}].CastTime} / 100)+20
         /medley queue ${argstring}
         /delay ${castTime}
     } else {
+		/if (${FindItem[${_token}].TimerReady} > 0) /return 'ITEM_NOTREADY'
         /autoinv
         /varcalc castTime (${FindItem[${_token}].CastTime} / 100)+20
         |/echo \awItem! "${_token}" ${FindItem[${_token}].CastTime} ${castTime}
@@ -198,7 +200,7 @@ Sub MQ2Medley(string _type, string _token, int _targetID, bool _interrupt)
             /if (${_interrupt}) /delay ${castTime}
         }
     }
-/return
+/return 'CAST_SUCCESS'
 
 
 Sub MQ2Cast(string spellName,string spellType,timer giveUpTimer,string mySub,string MQ2Feature1,string MQ2Feature2,string MQ2Feature3,string MQ2Feature4,string MQ2Feature5,string MQ2Feature6,string MQ2Feature7,string MQ2Feature8)

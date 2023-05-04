@@ -53,6 +53,11 @@ REVISION HISTORY
 #EVENT AutoAssist		"#1# tells the raid#*#'AutoAssist #2#'"
 #EVENT AutoAssist 		"[ #1# #*#]#*#AutoAssist #2#"
 
+#EVENT UpdateStickCMD	"#1# tells the group#*#'UpdateStick #2#'"
+#EVENT UpdateStickCMD	"#1# tells you#*#'UpdateStick #2#'"
+#EVENT UpdateStickCMD	"#1# tells the raid#*#'UpdateStick #2#'"
+#EVENT UpdateStickCMD	"[ #1# #*#]#*#UpdateStick #2#"
+
 #define dsINI xiris_common/xiris_damageshields.ini
 
 Sub InitEvents_Melee
@@ -66,6 +71,7 @@ Sub Events_Melee
 	/doevents ToggleMQ2Melee
 	/doevents Leashing
 	/doevents AutoAssist
+	/doevents UpdateStickCMD
 /return
 
 Sub Events_Melee_Engaged
@@ -97,6 +103,12 @@ Sub toggleMQ2Melee(bool _state)
 	}
 /return
 
+Sub Event_UpdateStickCMD(_line, _sender, _eventParams)
+	/echo updateStickCMD ${_sender}
+	/echo _eventParams	${_eventParams}
+
+	/doevents flush UpdateStickCMD
+/return
 
 Sub EVENT_NoDS(_line, _sender, _eventParams)
 	/varset bln_useDS FALSE
@@ -465,8 +477,8 @@ SUB EVENT_CANTSEETARGET
 
 	| If the target is less than 50 range
 	/if (${Select[${Me.Class.ShortName},BRD,BER,MNK,ROG,RNG,PAL,SHD,WAR]}) {
-		/if (${bln_tanking})  /warp f 10
-		/if (!${bln_tanking}) /warp loc ${Target.Y} ${Target.X} ${Target.Z}
+		|/if (${bln_tanking})  /warp f 10
+		|/if (!${bln_tanking}) /warp loc ${Target.Y} ${Target.X} ${Target.Z}
 	}
 /return
 
@@ -496,8 +508,8 @@ Sub StickAdjust
 	/echo \agStickAdjust \ao${int_currentStickDistance} \aw> \ao${int_minStickDistance}
 	/if (${int_currentStickDistance} > ${int_minStickDistance}) {
 		/varcalc int_currentStickDistance ${int_currentStickDistance} - 5
-		/if (${int_currentStickDistance} < ${int_minStickDistance}) /varset ${int_currentStickDistance} ${int_minStickDistance} 
-		/stick ${int_currentStickDistance} ${stickCmd}
+		/if (${int_currentStickDistance} < ${int_minStickDistance}) /varset int_currentStickDistance ${int_minStickDistance} 
+		/stick ${stickCmd} ${int_currentStickDistance}
 	} 
 /return
 
@@ -505,13 +517,14 @@ Sub EngageTargetMelee
 	/call StickToTarget TRUE
 	/varset timer_restick 15s
 	/killthis
+	/attack on
 /return
 
 
 Sub StickToTarget(bool _engageWhenInRange)
 	/if (${str_classArchetype.Equal[CASTER]} || ${str_classArchetype.Equal[PRIEST]}) /return
-	/echo \aoStickToTarget \awdist: \ag${Target.Distance} \awcurrentstick: \ag${int_currentStickDistance} \awminstick: \ag${int_minStickDistance} \awmaxstick: \ag${int_maxStickDistance}
-
+	/echo \aoStickToTarget \aw_engageWhenInRange:\ar ${_engageWhenInRange} \awdist: \ag${Target.Distance} \awcurrentstick: \ag${int_currentStickDistance} \awminstick: \ag${int_minStickDistance} \awmaxstick: \ag${int_maxStickDistance}
+	/echo \awStick Command String:\ag ${stickCmd} ${int_currentStickDistance}
 	:tryStick
 	| Too Far, exit
 	/if (${Target.Distance3D} > ${int_maxNavDistance}) {
@@ -523,17 +536,26 @@ Sub StickToTarget(bool _engageWhenInRange)
 	} else /if (${Target.Distance3D} > ${int_maxStickDistance} && ${Target.Distance} < ${int_maxNavDistance}) {
 		/if (${Navigation.Active}) /nav stop 
 		/declare navDelayWait int local 0
+		/melee reset
+
 		:navStick
-		/multiline ; /melee reset ; /stick off ; /nav target ; /delay 10 ; /varcalc navDelayWait ${navDelayWait}+1
+		/nav target
+		/delay 10
+		/varcalc navDelayWait ${navDelayWait}+1
 		/doevents CANTNAVTARGET
-		/if (${Target.Distance3D} <= ${int_maxStickDistance}) /multiline ; /nav stop ; /goto :tryKill
+		/if (${Target.Distance3D} <= ${int_maxStickDistance}) {
+			/nav stop
+			/goto :tryKill
+		}
+		
 		/if (${navDelayWait} < 20) /goto :navStick
-	| Kill
-	} else /if (${Target.Distance3D} <= ${int_maxStickDistance}) {
-		:tryKill
-		/stick ${stickCmd} ${int_currentStickDistance}
-		/if (${_engageWhenInRange}) /killthis
 	}
+	| Kill
+	
+	:tryKill
+	/stick ${stickCmd} ${int_currentStickDistance}
+	/if (${_engageWhenInRange}) /killthis
+	
 :return
 /return
 
@@ -690,7 +712,7 @@ Sub chk_warProvoke(string _provokeDisc)
 Sub xbot_initialize_melee
 	/echo \ao xbot_initialize_melee
 	
-	/declare 	int_currentStickDistance		int		outer   35
+	/declare 	int_currentStickDistance		int		outer   30
 	/declare	int_maxStickDistance 	int 	outer 	40
 	/declare 	int_minStickDistance	int		outer 	13
 	/declare    int_maxNavDistance		int		outer   300
@@ -753,7 +775,7 @@ Sub xbot_initialize_melee
 	/declare 	MinStrikeEndurance 		int		outer	200
 	/declare 	MinBellowEndurance		int		outer	200
 	/declare    provokeTimer            timer   outer   0
-	/declare 	stickCmd				string	outer   ${Ini[INI_CHAR,Sticking,stickCmd,behind 35]}
+	/declare 	stickCmd				string	outer   ${Ini[INI_CHAR,Sticking,stickCmd,snaproll rear]}
 	/declare 	bln_chkComponents		bool	outer	TRUE
 	/declare 	bln_tgtDeadSoon			bool	outer	FALSE
 	/declare	timer_reAssist			timer	outer	5s

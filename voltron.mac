@@ -145,15 +145,15 @@ Sub InviteGroupsToTHIRTYSIX
 
 |-- Powerleveling, where it is one group of DPS + newbs, and then single groups of healer/dps
 Sub SetupGroupsPOWERLEVEL 
-	/multiline ; /invite Ophenia; /invite Opheoia; /invite Achos; /invite Nessia; /invite Erisa ;
+	/multiline ; /invite Xaexa; /invite Xaia; /invite Eurydice; /invite Nessia; /invite Erisa ;
 	/dex Xanshia /multiline ; /invite Xiris; /invite Eurydice; /invite Mluian ;
 	/dex Xirael /multiline ; /invite Sadelia; /invite Xiexa; /invite Aidos ; 
 	/dex Xinshia /multiline ; /invite Ophidia; /invite Shinxia ;
 	/dex Xenshia /multiline ; /invite Ophelia; /invite Shynxia;
 	/dex Xonshia /multiline ; /invite Ophemia; /invite Xeqisa;
 	/dex Xunshia /multiline ; /invite Xaeliea; /invite Xiexa;
-	/dex Xarael /invite Xaexa
-	/dex Xerael /invite Xaia
+	/dex Xarael /invite Ophenia
+	/dex Xerael /invite Opheoia
 	/dex Theist /invite Xepatia
 	/dex Empathic /invite Erinyes
 	/dex Theist /invite Ertris

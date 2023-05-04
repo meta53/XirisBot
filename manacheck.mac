@@ -9,7 +9,7 @@ REVISION HISTORY
 	
 **|
 
-#define hasteINI hastecheck.ini
+#define manaINI hastecheck.ini
 
 Sub Main
 	/call WriteMana
@@ -17,8 +17,8 @@ Sub Main
 
 Sub WriteMana
     /echo writingMana:
-    /declare df  string local CurrentMana
-    /ini "hasteINI" "${Me.CleanName}" "${df}" "${Me.CurrentMana}"
+    /declare df  string local ${Me.CleanName}
+    /ini "manaINI" "Mana" "${Me.CleanName}" "${Me.CurrentMana}"
 /return 
 
 

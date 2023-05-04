@@ -156,13 +156,21 @@ Sub chkUtils
 Sub variant_initialize
 
 	|-- Set Common MQ2Melee settings
-	/melee backoff=25
+	|   because for whatever reason mqnext compile is overwriting... every fucking login
+	/melee backoff=50
 	/melee jolt=60
 	/melee nodown=on
 	/melee noholy=on
 	/melee range=on
 	/melee standup=on
-	/if (${Me.Class.ShortName.Equal[BER]}) /melee ragevolley=10
+	/melee enrage=on
+	/if (${Me.Class.ShortName.Equal[BER]}) {
+		/melee ragevolley=10
+		/melee cripple=0
+	} else /if (${Me.Class.ShortName.Equal[ROG]}) {
+		/melee hide=0
+		/melee sneak=0
+	}
 
 	/melee save
 	|-- set up default vars

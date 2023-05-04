@@ -363,8 +363,7 @@ Sub Event_CC6
 Sub Event_KeeperPosition
 	/if (${str_classArchetype.Equal[MELEE_END]} ||  ${str_classArchetype.Equal[TANK]} ||  ${str_classArchetype.Equal[MELEE_MANA]}) {
 		/echo Keeper punted me, re-positioning.
-		/nav Target
-		|/stick 10 behind
+		/nav target
 	} else /if (${str_classArchetype.Equal[CASTER]} ||  ${str_classArchetype.Equal[PRIEST]}) {
 		/if (${Cast.Status.NotEqual[C]}) {
 			/echo Keeper punted me, re-positioning.
@@ -606,7 +605,7 @@ Sub BalancerReset
 
 		:returnBalance
 		/if (${Navigation.Active}) /nav stop
-		/stick 35 behind
+		/stick ${stickCmd} ${int_currentStickDistance}
 		/delay 10
 		/call Disengage
 		

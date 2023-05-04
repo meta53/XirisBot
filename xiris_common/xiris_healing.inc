@@ -52,6 +52,11 @@ REVISION HISTORY
 #EVENT HealMode			"#1# tells the raid#*#'HealMode #2#'"
 #EVENT HealMode 		"[ #1# #*#]#*#HealMode #2#"
 
+#EVENT HealPoints		"#1# tells you#*#'SetHealPOINTS #2#'"
+#EVENT HealPoints		"#1# tells the group#*#'SetHealPOINTS #2#'"
+#EVENT HealPoints		"#1# tells the raid#*#'SetHealPOINTS #2#'"
+#EVENT HealPoints		"[ #1# #*#]#*#SetHealPOINTS #2#"
+
 |-- Heal type events
 #EVENT FocusHEALMT_ON 	"#1# tells you#*#'FocusHealMTOn#*#'"
 #EVENT FocusHEALMT_ON	"#1# tells the group#*#'FocusHealMTOn#*#'"
@@ -139,6 +144,7 @@ Sub Events_Healing
 	/doevents ChangeHPGroup
 	/doevents HealMode
 	/doevents HealType
+	/doevents HealPoints
 	/doevents InterruptON
 	/doevents InterruptOFF
 	/doevents FireTotem
@@ -272,9 +278,41 @@ Sub ChangeHealMode(string _strMode)
 		/varset str_healMode DEFAULT
 		/varset int_range_current_frantic	${int_range_frantic_efficient}
 		/varset int_range_current_normal 	${int_range_normal_efficient}
-		/call InterruptOFF
+		/call InterruptON
 	}
 	/memspellset ${str_spellset}
+/return
+
+Sub EVENT_HealPoints(_line, _chatSender, _eventParams)
+	/if (${Me.Class.ShortName.NotEqual[CLR]}) /return
+	/call ChangeHealPoints ${_eventParams}
+	/doevents flush HealMode
+/return
+
+Sub ChangeHealPoints(string _strHealPointKey)
+	/echo \a-wChanging healing \aoMODE \a-wto \ag${_strHealPointKey}
+	/if (${_strHealPointKey.Find[OMM]}) {
+		/varset int_point_self_normal 	50
+		/varset int_point_self_frantic	30
+		/varset int_point_self_HoT		90
+		/varset int_point_tank_normal	85
+		/varset int_point_tank_frantic	30
+		/varset int_point_tank_HoT		90
+		/varset int_point_group_normal	50
+		/varset int_point_group_frantic	30
+		/varset int_point_group_HoT		90
+		/varset use_heal_HoT FALSE
+	} else {
+		/varset int_point_self_normal 	${Ini[${healINI},Heal_Points,int_point_self_normal]}
+		/varset int_point_self_frantic	${Ini[${healINI},Heal_Points,int_point_self_frantic]}
+		/varset int_point_self_HoT		${Ini[${healINI},Heal_Points,int_point_self_HoT]}
+		/varset int_point_tank_normal	${Ini[${healINI},Heal_Points,int_point_tank_normal]}
+		/varset int_point_tank_frantic	${Ini[${healINI},Heal_Points,int_point_tank_normal]}
+		/varset int_point_tank_HoT		${Ini[${healINI},Heal_Points,int_point_tank_normal]}
+		/varset int_point_group_normal	${Ini[${healINI},Heal_Points,int_point_tank_normal]}
+		/varset int_point_group_frantic	${Ini[${healINI},Heal_Points,int_point_tank_normal]}
+		/varset int_point_group_HoT		${Ini[${healINI},Heal_Points,int_point_tank_normal]}
+	}
 /return
 
 |**
@@ -1251,9 +1289,11 @@ Sub chkDivineIntervention
 			/if (!${avail} && ${requestCount} < 2) {
 				/goto :query_loop
 			}
-		/if (${avail}) {
-			/goto :request_di
-		} 
+			/if (${avail}) {
+				/goto :request_di
+			} else {
+				/varset timer_di_${i} 30s
+			}
 	:next_cleric
 	/echo \ar${pcName} \awdoes not have DI ready!
 	/next i

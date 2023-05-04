@@ -190,6 +190,16 @@ Sub variant_initialize
 
 	/echo \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID}) HealPoint:${healPoint} ST: ${str_STName}(${int_STID})
 	/call InitEvents_Class
+
+	/if (${str_MTName.Equal[${Me.Name}]}) {	
+		/echo \agI am tanking, turning aggro on
+		/melee aggro=1
+		/melee taunt=1
+		/varset stickCmd front
+	} else {
+		/squelch /melee aggro=0
+		/squelch /melee taunt=0
+	}
 /return
 
 

@@ -10,12 +10,20 @@
 #EVENT HanvarStun			"#*#You resist the Wail of Anguish#*#"
 #EVENT HanvarEngage			"#*#HanvarEngage#*#"
 
+#EVENT RootTankOn			"#*#RootTankOn#*#"
+#EVENT RootTankOff			"#*#RootTankOff#*#"
+
+#include xiris_common/xiris_spell_routines.inc
+
 Sub Main(string _type, string _tankPoint)
+	/call xbot_initialize_spellRoutines
 	/melee aggro=on
     /melee taunt=on
 	/declare bln_hanvarEngaged 		bool 	outer FALSE
 	/declare bln_rootTank			bool	outer FALSE
-
+	/declare root_X					int	    outer 0
+	/declare root_Y					int	    outer 0
+	/declare root_Z					int	    outer 0
 
 	/declare timer_hanvar_stun 		timer 	outer 	85
 	/declare timer_hanvar_ae 		timer 	outer 	360s
@@ -153,9 +161,20 @@ Sub Event_HanvarStun
 	/doevents flush HanvarStun
 /return
 
+Sub EVENT_RootTankOn
+	/varset root_X ${Me.X}
+	/varset root_Y ${Me.Y}
+	/varset root_Z ${Me.Z}
+	/varset bln_rootTank TRUE
+/return
+
+Sub EVENT_RootTankOff
+	/varset bln_rootTank FALSE
+/return
+
 Sub getAggro
 	:aggroLoop
-		/if (${Target.Distance} > 20 && ${bln_rootTank}) /warp f 15
+		/if (${Target.Distance} > 20 && ${bln_rootTank}) /warp loc ${root_Y} ${root_X} ${root_Z}
 		/if (${Me.TargetOfTarget.ID} != ${Me.ID}) {
 			/echo Hanvar NOT TARGETTING ME
             /if (${Me.CombatAbilityReady["Bellow of the Mastruq"]}) /doability "Bellow of the Mastruq"

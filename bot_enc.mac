@@ -97,9 +97,6 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 		|-- Check all Events
 		/call RunAllEvents
 
-		|-- Check to make sure MT is still alive, if not, find another
-		/call chkMTAlive FALSE
-		
 		|-- Check to see if self needs to be cured (xiris_curing.inc)
 		/call chkNeedCure
 
@@ -112,7 +109,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 			/call RunClassEvents
 
 			|-- verify target status
-			/if (!${bln_hasCharmedPet}) /call chkTargetStatus	
+			/call chkTargetStatus	
 
 			|-- debuff lib
 			/call chkDebuffsOnSingleTarget ${int_targetID}

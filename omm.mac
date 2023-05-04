@@ -5,7 +5,7 @@
 Sub Main 
     | Move Clerics to Heal point
     /dge priest /nav wp ommCleric
-    /dge melee /nav wp ommMelee
+    /dge melee  /nav wp ommMelee
     /dge caster /nav wp ommCleric
     | Set Resist to Cold, Poison, Magic, Fire
     | MR: 300 (120%) 	CR: 325 (130%) 	FR: 300 (120%)
@@ -13,11 +13,10 @@ Sub Main
     /dgt ResistTypes cold|poison|magic|fire
 
     | Xiris (MT) Autocure
-    /dt Xanshia autoCureMTon
     /dt Xenshia autoCureMTon
 
-    | Set the mode to efficient
-    /dgt healMode EFFICIENT 
+    | Set the mode to normal (ahl)
+    /dgt healMode NORMAL 
     /dgt InterruptON
 
     | Xiris
@@ -27,7 +26,7 @@ Sub Main
 
     | Set the offtanks
     /dt Xiria offtankON
-    /dex Xiria /nav wp ommTank
+    /dex Xiria /nav wp ommCleric
     /dex Xiria /dt Deist dime
 
     /dt Xirea offtankON
@@ -40,19 +39,10 @@ Sub Main
 
     /dt Sadelia offtankON
     /dex Sadelia /nav wp ommCleric
-    /dex Sadelia /dt Xinshia dime
-
-    | Xirin (SA) addtank needs heals
-    /dt Xirael changeMT Xiria
-
-    | Xiria (OT) needs heals
-    /dt Xinshia changeMT Xirea
+    /dex Sadelia /dt Xanshia dime
 
     | Xirea (OT) needs heals
     /dt Xenshia  changeMT Xirin 
-
-    | Sadelia (OT) needs heals
-    /dt Xurael changeMT Sadelia
 
     | Eurydice needs heals and DI 
     /dt Xinshia changeMT Eurydice 
@@ -60,26 +50,35 @@ Sub Main
 
     | Erisa needs heals and DI 
     /dt Xorael changeMT Erisa 
-    /dex Xenshia /dt Xinshia dime
+    /dex Erisa /dt Xenshia dime
 
   
     | Healing Focus
     | So these clerics will not try to cure group
     /dex Xanshia /varset DEBUFF_Total 0
+    /dt Xanshia FocusHEALMT_ON
+    /dt Xirael  FocusHEALMT_ON
+    /dt Xinshia FocusHEALMT_ON
+    /dt Xenshia FocusHEALMT_ON
+
+    | Have a cleric autorez
+    /dt Theist combatrezon
 
      | Set Self
     /melee aggro=on
     /melee taunt=on
-    /dt deist dime
+
 
     | Have enchanters set 0 nukes
-    /dex Erisa /varset NUKE_Total 0
+    /dex Erisa    /varset NUKE_Total 0
     /dex Eurydice /varset NUKE_Total 0
 
     | Run raidcommands
     /dgt Hush
     /rs CharmON
     /rs OMMStart
+    /nav wp ommCleric
+    /dgt SetHealPOINTS OMM
     /dex Xirin /mac ommadds
     /mac ommTank
     

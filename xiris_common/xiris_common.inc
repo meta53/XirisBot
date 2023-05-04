@@ -269,7 +269,7 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/declare 	bln_ducking				bool	outer	FALSE
 	/declare	timer_naked 			timer   outer	0
 	/declare 	timer_hott				timer   outer   20s
-	/declare 	timer_xtargetRefresh	timer	outer 	30s
+	/declare 	timer_xtargetRefresh	timer	outer 	60s
 	| strFaceItem storage (for OMM event have to swap masks)
 	/declare 	strFaceItem				string  outer   ${InvSlot[3].Item}
 
@@ -392,12 +392,12 @@ Sub chkSit
 
 |--Engage Target EVENT, calls EngageTarget
 Sub EVENT_KillMob(_line, _sender, _eventParams)
-	/echo \ayKMCalled ${_sender} ${_eventParams}
+	|/echo \ayKMCalled ${_sender} ${_eventParams}
 	/if (${_eventParams.Arg[1, ].Equal[NULL]}) {
 		/echo \aoNULL Target, exiting!
 		/return
 	}
-	/if (${_sender.Equal[You]}) /varset _sender ${Me.Name}
+	|/if (${_sender.Equal[You]}) /varset _sender ${Me.Name}
 	|-> #EVENT KillMob "<#1#> KillMob #2#"
 	|-> Sender> == #1
 	|->_eventParams> == #2
@@ -417,10 +417,10 @@ Sub EngageTarget(int _targetID)
 	/varset int_targetID ${_targetID}
 	/varset str_targetName ${Spawn[id ${_targetID}].Name}
 	/varset bln_engaged TRUE
-	/echo \awEngaging Target \ag${Spawn[id ${_targetID}].Name} \ay(${_targetID}) \ao${Time.Time24}
 
 	| Priests don't need to do anything else
 	/if (${Select[${Me.Class.ShortName},CLR,DRU,SHM]} || (${Me.Class.ShortName.Equal[CLR]} && !${bln_battleCleric})) /return
+	/echo \awEngaging Target \ag${Spawn[id ${_targetID}].Name} \ay(${_targetID}) \ao${Time.Time24}
 
 	| Stand Up
 	/if ((${Me.Feigning} && (${Me.PctHPs} > 50))) /stand
@@ -451,9 +451,13 @@ Sub EngageTarget(int _targetID)
 
 Sub chkTargetStatus
 	/if (!${Bool[${Target.ID}]} && !${bln_engaged}) /goto :return
+	/declare reason string local NOREASON
 	| No target, or I am at my bound zone, if engaged, kill
 	/if (${int_targetID} == 0 || !${Bool[${Target.ID}]} || ${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) {
-		/if (${bln_engaged}) /goto :disengage
+		/if (${bln_engaged}) {
+			/varset reason NOTARGET_or_ATBIND
+			/goto :disengage
+		}
 		/goto :return
 	}
 	
@@ -462,24 +466,28 @@ Sub chkTargetStatus
 	| Check for target being corpse or non-existant
 	/if ((!${Bool[SpawnCount npc id ${int_targetID}]} || ${Spawn[id ${int_targetID}].Type.Equal[corpse]} || ${Spawn[id ${int_targetID}].Name.Find[s_corpse]})) {
 		/echo \awNo Targets with ID(\ay${int_targetID}\aw) or is a CORPSE \aoDisengaging!
+		/varset reason TARGET_IS_CORPSE
 		/goto :disengage
 	} 
 	
 	| Check to see if my target is NPC and there is no NPCs around
 	/if (${Bool[${Target.ID}]} && ${Target.ID} == ${int_MTID} && (!${SpawnCount[npc id ${int_targetID} radius 200]} || ${Zone.ShortName.Equal[${Me.BoundLocation[0]}]})) {
 		/echo \awTarget is MT, and No NPC in radius 200 (or at bind) \aoDisengaging!
+		/varset reason TARGETMT_or_ATBIND
 		/goto :disengage
 	}
 
 	| Check to see if there are any NPCs on XTarget and Radius
 	/if ((${Me.XTarget}==0 && !${SpawnCount[npc radius 200]})) {
 		/echo \awNo Targets within 200, or on XTarget \aoDisengaging!
+		/varset reason NOTARGETSWITHIN200_AND_NOXTARGET
 		/goto :disengage
 	} 
 
 	| If there is something on XTarget, and its over 400 away, ignore it.
 	/if (${Bool[${Me.XTarget}]} && (!${SpawnCount[npc radius 400]}  || ${Zone.ShortName.Equal[${Me.BoundLocation[0]}]})) {
 		/echo \awNo Targets within 400, even if they are on XTarget \aoDisengaging!
+		/varset reason NOTARGETWITHIN400_AND_HASXTARGET
 		/goto :disengage
 	}
 
@@ -529,9 +537,9 @@ Sub chkTargetStatus
 				/if (!${Me.Standing}) /stand
 			} else /if (${Me.Class.ShortName.Equal[BER]}) { 
 				/if (${use_riposte}) /call FireRiposteDisc
-				/if (${Me.CombatAbilityReady[Baffling Strike]} && ${FindItemCount[Axe of the Destroyer]}>0) /disc Baffling Strike
-				/if (${Me.CombatAbilityReady[Confusing Strike]} && ${FindItemCount[Rage Axe]}>0) 			/disc Confusing Strike
-				/if (${Me.CombatAbilityReady[Distracting Strike]} && ${FindItemCount[Bonesplicer Axe]}>0) 	/disc Distracting Strike
+				/if (${Me.CombatAbilityReady[Baffling Strike]} && ${FindItemCount[Axe of the Destroyer]}>0) /doability "Baffling Strike"
+				/if (${Me.CombatAbilityReady[Confusing Strike]} && ${FindItemCount[Rage Axe]}>0) 			/doability "Confusing Strike"
+				/if (${Me.CombatAbilityReady[Distracting Strike]} && ${FindItemCount[Bonesplicer Axe]}>0) 	/doability "Distracting Strike"
 			} else /if (${Me.Class.ShortName.Equal[ROG]}) { 
 				/if (${use_riposte}) /call FireRiposteDisc
 			} else /if (${Me.Class.ShortName.Equal[RNG]}) { 
@@ -547,6 +555,7 @@ Sub chkTargetStatus
 	/goto :return
 
 	:disengage
+		/echo \aoChkTargetStatus \awTriggering Disengage: \ag${reason}
 		/call Disengage
 		/goto :return
 	:retarget
@@ -1804,3 +1813,5 @@ Sub Event_SkillCheck(string _line, string _sender, string _eventParams)
 	/doevents flush SkillCheck
 
 /return
+
+

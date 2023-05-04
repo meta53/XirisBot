@@ -96,18 +96,18 @@ Sub chkBurn
 	/if (!${Target.ID} || ${Target.Type.NotEqual[NPC]}) /return
 	/if (${Me.Casting.ID} || ${Me.Moving} || ${Me.Invis} || ${Me.Feigning}) /return
 
-	/declare i int local
-	/echo BurnMode Activated! Total Burns: ${BURN_Total}
 
+
+	/declare i int local
 	/for i 1 to ${BURN_Total} 
-		
-		|/echo \awBurn_\ag${i} \ao${BURN_${i}} \awType:\ag${BURN_${i}_Type} \awUse:\ag${BURN_${i}_Use} \awAfter:\ag${BURN_${i}_AfterIndex} \awMGB:\ag${BURN_${i}_MGB} 
 		/if (${Target.ID} && ${Target.Type.Equal[NPC]}) {
+			
 			| ---------------
 			| Combat Ability
 			| Note: Run the DISC if it is a combat type, it is ready, and we aren't already discing
 			| ---------------
 			/if (${BURN_${i}_Type.Equal[combat]} && ${Me.CombatAbilityReady[${BURN_${i}}]} && ${BURN_${i}_Use} && !${Bool[${Melee.DiscID}]}) {
+				/echo \awBurn_\ag${i} \ao${BURN_${i}} \awType:\ag${BURN_${i}_Type} \awUse:\ag${BURN_${i}_Use} \awAfter:\ag${BURN_${i}_AfterIndex} \awMGB:\ag${BURN_${i}_MGB} 
 				/echo \aoBurn is combat type, trying ${BURN_${i}}
 				| Check to see if the burn Before disc/alt (0 if not) is already run
 				|/if (${BURN_${i}_AfterIndex} > 0) {
@@ -142,6 +142,8 @@ Sub chkBurn
 						/goto :doAltAbility
 					}
 				} else {
+					/echo \awBurn_\ag${i} \ao${BURN_${i}} \awType:\ag${BURN_${i}_Type} \awUse:\ag${BURN_${i}_Use} \awAfter:\ag${BURN_${i}_AfterIndex} \awMGB:\ag${BURN_${i}_MGB} 
+					/echo \aoBurn is altability type, trying ${BURN_${i}}
 					:doAltAbility
 						/if (${BURN_${i}_MGB}) {
 							/call MQ2Cast "Mass Group Buff" alt
@@ -162,22 +164,24 @@ Sub chkBurn
 			| Item
 			| Check to see if  burn == item &&  useable && (item in inventory && there is no timer) && (I am not Casting || I am a bard)
 			| ---------------
-			} else /if (${BURN_${i}_Type.Equal[item]} && ${BURN_${i}_Use} && (${Bool[${FindItem[${BURN_${i}}].ID}]} && !${Bool[${FindItem[=${BURN_${i}}].TimerReady}]}) && (!${Bool[${Me.Casting.ID}]} || ${Me.Class.ShortName.Equal[BRD]})) {
+			} else /if (${BURN_${i}_Type.Equal[item]} && ${BURN_${i}_Use} && (${Bool[${FindItem[${BURN_${i}}].ID}]} && ${FindItem[=${BURN_${i}}].TimerReady} == 0) && (!${Bool[${Me.Casting.ID}]} || ${Me.Class.ShortName.Equal[BRD]})) {
+				/echo \awBurn_\ag${i} \ao${BURN_${i}} \awType:\ag${BURN_${i}_Type} \awUse:\ag${BURN_${i}_Use} \awAfter:\ag${BURN_${i}_AfterIndex} \awMGB:\ag${BURN_${i}_MGB} 
+				/echo \aoBurn is item type, trying ${BURN_${i}}
 				:doItemClick
 					/if (${Me.Class.ShortName.Equal[BRD]}) {
                         /call MQ2Medley ITEM "${BURN_${i}}" ${int_targetID} TRUE
+						/echo \agITEM \ay${BURN_${i}} \agclicked!
 					} else {
 						/call MQ2Cast "${BURN_${i}}" item 2s
+						/if (${Macro.Return.NotEqual[CAST_SUCCESS]}) {
+							/echo \aoITEM \ay${BURN_${i}} \aofailed! \ar${Macro.Return}	
+						} else {
+							/dgt Item ${BURN_${i}} clicked!
+							/echo \agITEM \ay${BURN_${i}} \agclicked!
+						}
 					}
 					/delay 5
-					/if (${Macro.Return.NotEqual[CAST_SUCCESS]}) {
-						/echo \aoITEM \ay${BURN_${i}} \aofailed! \ar${Macro.Return}	
-					} else {
-						/dgt Item ${BURN_${i}} clicked!
-						/echo \agITEM \ay${BURN_${i}} \agclicked!
-					}
-					
-					/goto :nextBurn	
+				/goto :nextBurn	
 			}
 		}
 	:nextBurn
@@ -300,8 +304,8 @@ Sub chkClicky
     /declare isNamed bool local ${Macro.Return}
     /for i 1 to ${CLICKY_Total}
 		| If the timer isn't ready, skip
-		/if (${FindItem[${CLICKY_${i}}].TimerReady}) /goto :nextClicky
-
+		/if (${FindItem[${CLICKY_${i}}].TimerReady} > 0) /goto :nextClicky
+		
 		| If Offense, make sure we are engaged | If Defense, doesn't matter
 		/if ((${CLICKY_${i}_Type.Equal[OFFENSE]} && ${bln_engaged}) || ${CLICKY_${i}_Type.Equal[DEFENSE]} ) {
 			| Offense named-only check
@@ -365,7 +369,7 @@ Sub CreateBurnLineup
     |	BURN_1="Ancestral Aid"|alt|TRUE|0|FALSE
 
     /declare BURN_Total             int     outer   ${Ini[INI_CHAR,BURN,BURN_Total,0]}
-	/declare BURN_Group             int     outer   ${Ini[INI_CHAR,BURN,BURN_Group,ALL]}
+	/declare BURN_Group             int     outer   ${Ini[INI_CHAR,BURN,BURN_Group,2]}
 
 
     /declare i int local

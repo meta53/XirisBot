@@ -149,7 +149,7 @@ Sub aggroByID(int _targetID)
 	/if (${Target.ID} != ${_targetID}) /call TrueTarget ${_targetID}
 
 	/squelch /stick off
-	/squelch /stick id ${_targetID}
+	/squelch /stick front 20
 	/if (${Me.AbilityReady[Taunt]}) /taunt
 	/squelch /face fast
 	/if (!${Melee.Attack}) /squelch /killthis

@@ -785,8 +785,6 @@ Sub xbot_initialize_buffing
 		/next i
 	}
 
-	/echo \ar ATTK_1_TargetCount: \aw${ATTK_1_TargetCount} \aoATTK_1_Targets: \aw${ATTK_1_Targets}
-
 	/call InitEvents_Buffing
 	
 /return

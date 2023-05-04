@@ -74,14 +74,11 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 		|-- Check all Events
 		/call RunAllEvents
 
-		|-- Check to make sure MT is still alive, if not, find another
-		/call chkMTAlive FALSE
-
 		|-- Check to see if self needs to be cured (xiris_curing.inc)
 		/call chkNeedCure
 		
 		|-- Check the group for healing (xiris_healing.inc)
-		/call chkHeal_Group
+		/call chkHeal_Self
 
 		|-- Check Auto Assist if its on
 		/if (${bln_autoAssist}) /call chkAutoAssist
