@@ -5,7 +5,7 @@ BOT_SHD.mac
 This macro is configured for use by the SHADOWKNIGHT class
 Modify the BOT_CLS_CHARNAME.ini file for use by a specific toon
 This was written ground up for usage with xiris's bots.
-It heavily relies on mq2melee for specific class functionality.
+
 
 Usage: /mac bot_shd ${_tank1Name} ${_tank2Name} ${_healPoint} ${_assistArgs}
 
@@ -30,7 +30,8 @@ REQUIRED INCLUDES
 
 #include xiris_common/xiris_common.inc
 
-#Turbo 40
+#TURBO 120
+
 Sub InitEvents_Class
 	|/call RegisterClassEvents Events_SHD 0
 /return
@@ -73,7 +74,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 		/call chkMTAlive FALSE
 
 		|-- Check Offtanking Situation (xiris_offtanking.inc)
-		/call chkOffTanking
+		/if (${bln_offTank}) /call chkOffTanking
 		
 		|-- Check to see if self needs to be cured (xiris_curing.inc)
 		/call chkNeedCure
@@ -82,33 +83,34 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 		/if (${bln_autoAssist}) /call chkAutoAssist
 
 		/if (${bln_engaged}) {
-			|-- check engaged events
-			/call RunRaidEvents
-			/call RunClassEvents
-
-			|-- verify target status
-			/call chkTargetStatus	
-
-			|-- debuff lib
-			/call chkDebuffsOnSingleTarget ${int_targetID}
+			|-- check all events
+			/call RunAllEvents
 
 			|-- class specific
-			/call chkPetAttack	
-			/call chkLifetap
-			/call chkFeignDeath
+			/if (${Me.Pet.ID}) 		/call chkPetAttack	
+			/if (${bln_lifetapUse} && (${Me.PctHPs} <= ${int_lifetapHP}))	/call chkLifetap
+			/if (!${bln_tanking}) 	/call chkFeignDeath
 
-			|-- dps library (caster)
-			/call RunRaidEvents
-    		/call RunClassEvents
-			/call chkDOT
-			/call chkNuke
+			/call RunRapidEvents
+
+			|-- dps library (casting hybrid)
+			/if (!${bln_tanking}) {
+				/call chkDOT
+				/call chkNuke
+			}
+			
+
+			|-- melee library
+			/if (!${mq2meleeEnabled}) /call chkCA_${Me.Class.ShortName}
 			
 			|-- std library (burns/aa/clicks)
-			/call RunRaidEvents
-    		/call RunClassEvents
 			/call chkAA
 			/call chkBurn
 			/call chkClicky
+
+			|-- verify target status
+			/call chkTargetStatus
+
 		} else {
 			|-- check utilities, includes: sit,loot,leash (out of combat only) and only once every 10 seconds
 			/if (!${timer_check_utilities}) /call chkUtils
@@ -129,12 +131,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 **|
 
 Sub chkLifetap
-	/if (!${bln_engaged}) /return
-	/if (!${Target.ID}) /return
-	/if (${Target.PctHPs}<=${DOT_StartHP} && ${bln_lifetapUse} && ${Target.ID}==${int_targetID} && (${Me.PctHPs} <= ${int_lifetapHP})) {
-		/echo chkLifetap: Lifetapping
-		/call MQ2Cast "${str_lifetapSpell}" ${str_lifetapGem} 2s
-	}
+	/if (${Target.ID}==${int_targetID}) /call MQ2Cast "${str_lifetapSpell}" ${str_lifetapGem} 2s
 /return
 
 
@@ -226,12 +223,12 @@ Sub variant_initialize
 
 	/if (${str_MTName.Equal[${Me.Name}]}) {	
 		/echo \agI am tanking, turning aggro on
-		/melee aggro=1
-		/melee taunt=1
+		/varset bln_tanking TRUE
+		/varset bln_taunting TRUE
 		/varset stickCmd front
 	} else {
-		/squelch /melee aggro=0
-		/squelch /melee taunt=0
+		/varset bln_tanking		FALSE
+		/varset bln_taunting	FALSE
 	}
 /return
 

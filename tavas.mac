@@ -21,9 +21,9 @@ Sub Main
 
     | Turn of Offtanks
     /dex Xiria /mac stand
-    /dex Xiria /melee aggro=1
+    /dex Xiria /varset bln_tanking TRUE
 
-    /melee aggro=1
+    /varset bln_tanking TRUE
     /mac stand
 
     /dgt nods

@@ -25,7 +25,6 @@ REVISION HISTORY
 	03.06.22	xiris	Added support for high requesting high risk missions (bln_highRisk)					
 ______________________________________________
 REQUIRED PLUGINS
-    mq2melee
     mq2cast
     mq2eqbc
     mq2debuffs
@@ -47,14 +46,14 @@ REQUIRED INCLUDES
 
 #define INI_ldonInfo xiris_common/xiris_ldon_definitions.ini
 
-#event RageOff              "#*#is no longer enraged#*#"
-#event RageOn               "#*#has become ENRAGED#*#"
-#event Zoned                "You have entered#*#"
-#event Zoned                "LOADING, PLEASE WAIT..."
-#event EndMac				"#*#monkeybutter#*#"
-#event NoLOS				"#*#you cannot see your target#*#"
-#event TooClose				"#*#your target is too close#*#"
-#event MoveFail				"#*#Could not find path to destination#*#"
+#EVENT RageOff              "#*#is no longer enraged#*#"
+#EVENT RageOn               "#*#has become ENRAGED#*#"
+#EVENT Zoned                "You have entered#*#"
+#EVENT Zoned                "LOADING, PLEASE WAIT..."
+#EVENT EndMac				"#*#monkeybutter#*#"
+#EVENT NoLOS				"#*#you cannot see your target#*#"
+#EVENT TooClose				"#*#your target is too close#*#"
+#EVENT MoveFail				"#*#Could not find path to destination#*#"
 
 
 Sub Main(string _channel, string _announce, bool _useDownFlags, bool _highRisk)
@@ -931,8 +930,7 @@ Sub pullTarget
 	
 |**
  ----------------------------
- Wait for the mob to be within kill/stick range, then issue
- /killthis command to mq2melee
+ Wait for the mob to be within kill/stick range, then issue /attack on command
  Calls chkCombatState while in the combatLoop
  ----------------------------
 **|
@@ -992,7 +990,7 @@ Sub killTarget
 	}
 	
 	/if (!${Me.Combat}) {
-		/killthis
+		/attack on
 	}
 	
 	/doevents flush
@@ -1053,9 +1051,7 @@ Sub chkLDONCompletion
 		/delay 10
 		/docommand /${cmdChannel} //stand on
 		/docommand /${cmdChannel} //nav stop
-		/delay 10
-		/docommand /${cmdChannel} //melee off
-		/delay 10
+
 		/delay 15s
 		
 		/varset missionComplete TRUE
@@ -1318,9 +1314,8 @@ Sub setGroupCommands
 	/if (${looter.NotEqual[NOT_FOUND]}) /dgt ${looter} lootOn ALL
 	
 	|-- turn on melee and aggro
-	/squelch /dgga /melee on
-	/melee aggro=1
-
+	/varset bln_tanking		TRUE
+	/varset bln_taunting	TRUE
 	
 /return
 
@@ -1469,7 +1464,7 @@ Sub variant_initialize(string _channel, string _announce, bool _useDownFlags, bo
 	/if (${Defined[_highRisk]} || ${_highRisk} != FALSE) /varset bln_highRisk ${_highRisk}
 	
 	|--melee plugin/aggro for the requester
-	/melee aggro=1
+	/varset bln_tanking TRUE
 	
 	|--command channel setup
 	/if (!${Defined[cmdChannel]}) /declare cmdChannel string	outer	bcga
@@ -1782,7 +1777,6 @@ Sub Event_EndMac
 	/bc Someone told me to end it! ${Time.Time24}
 	/g Someone told me to end it! ${Time.Time24}
 	/delay 1s
-	/docommand /${cmdChannel}  //melee off
 	/docommand /${cmdChannel}  //end
 	/delay 2m
 	/docommand /${cmdChannel}  //icampdesk

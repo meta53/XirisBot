@@ -233,10 +233,7 @@ Sub chkPetHeal
 
 Sub chkPetAttack
 	/if (!${bln_engaged} || !${Target.PctHPs} ) /return
-	/if (${Me.Pet.ID} && !${Me.Pet.Combat} && ${Target.ID}==${int_targetID} && ${Target.PctHPs}<${int_petAttackHP} && ${Target.Distance}<=100) {
-		/echo \agSiccing Pet on \ay${Target.Name}
-		/pet attack
-	}
+	/if (${Me.Pet.ID} && !${Me.Pet.Combat} && ${Target.ID}==${int_targetID} && ${Target.PctHPs}<${int_petAttackHP} && ${Target.Distance}<=100) 	/squelch /pet attack
 /return
 
 

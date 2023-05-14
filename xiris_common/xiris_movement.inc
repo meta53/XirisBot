@@ -111,6 +111,7 @@ Sub StartFollowing(string _leader, string _followType)
 	/if (${Spawn[=${_leader}].Distance} > ${int_maxFollowDistance}) {
 		/docommand /${cmdChannel} [${str_followTarget}] is too far away.
 	} else {
+		/echo \ao StartFollowing, so call disengage
 		/call Disengage
 		| -Check LoS.
 		/if (${_followType.Equal[NAV]} || (${_followType.NotEqual[NAV]} && ${Spawn[=${_leader}].LineOfSight})) {
@@ -125,17 +126,6 @@ Sub StopFollowing
 	/varset bln_following 	 FALSE
 	/squelch /stick off
 	/if (${Navigation.Active}) 		/squelch /nav stop
-	/if (${Me.Class.ShortName.Equal[ROG]}) {
-		/if (${Me.AbilityReady["Hide"]}) {
-			/squelch /melee hide=1
-			/doability hide
-		}
-		/if (!${Me.Sneaking}) {
-			/squelch /melee sneak=1
-			/doability sneak
-		}
-		
-	}
 /return
 
 
@@ -146,16 +136,7 @@ SUB AquireFollow(string _type, string _leader)
 		/varset str_followTarget		${_leader}
 		/if (${Stick.Active}) 			/squelch /stick off
 		/if (${Navigation.Active}) 		/squelch /nav stop
-		/if (${Me.Class.ShortName.Equal[ROG]}) {
-			/if (${Me.Sneaking}) {
-				/squelch /melee sneak=0
-				/doability sneak
-			}
-			/if (!${Me.AbilityReady["Hide"]}) {
-				/squelch /melee hide=0
-				/doability hide
-			}
-		}
+		
 
 		| If the str_followTarget declares that you need to use MQ2Nav...
 		|-- We do not need to use LOS for MQ2Nav nor do we need to use target

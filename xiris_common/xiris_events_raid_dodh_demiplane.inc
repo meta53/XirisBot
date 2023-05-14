@@ -15,65 +15,65 @@ ______________________________________________
 |-- DEMI events
 
 |-- Hatchet The Torturer
-#event HatchetDuck			"#*#levels his axe at your upper#*#"
-#event HatchetStand			"#*#passes harmlessly overhead#*#"
-#event HatchetClose			"#*#lifts his axe high#*#"
-#event HatchetCloseEnd		"#*#darting between#*#"
-#event HatchetFar			"#*#hefts a weighted throwing#*#"
-#event HatchetFarEnd		"#*#outdistance the reach of the#*#"
-#event HatchetRun			"#*#about to charge directly at you#*#"
-#event HatchetRunEnd		"#*#stops to catch his breath#*#"
-#event HatchetBugged		"You are too distracted to use a skill"
+#EVENT HatchetDuck			"#*#levels his axe at your upper#*#"
+#EVENT HatchetStand			"#*#passes harmlessly overhead#*#"
+#EVENT HatchetClose			"#*#lifts his axe high#*#"
+#EVENT HatchetCloseEnd		"#*#darting between#*#"
+#EVENT HatchetFar			"#*#hefts a weighted throwing#*#"
+#EVENT HatchetFarEnd		"#*#outdistance the reach of the#*#"
+#EVENT HatchetRun			"#*#about to charge directly at you#*#"
+#EVENT HatchetRunEnd		"#*#stops to catch his breath#*#"
+#EVENT HatchetBugged		"You are too distracted to use a skill"
 
 |-- Tris Wallow III
-#event TrisStare			"#*#stares deeply into your eyes#*#"
-#event TrisStareEnd			"#*#averted your eyes from#*#"
-#event TrisHuman			"#*#claws retract as Tris reverts#*#"
-#event TrisWere				"#*#screams as her flesh peels#*#"
+#EVENT TrisStare			"#*#stares deeply into your eyes#*#"
+#EVENT TrisStareEnd			"#*#averted your eyes from#*#"
+#EVENT TrisHuman			"#*#claws retract as Tris reverts#*#"
+#EVENT TrisWere				"#*#screams as her flesh peels#*#"
 
 |-- Performer
-#event FailStats    "[MQ2] stat#*#"
+#EVENT FailStats    "[MQ2] stat#*#"
 
-#event Flawless      "#*#Your performance is flawless.  The skeletal musician nods their head approvingly.#*#"
-#event Failed        "The Performer says 'Come on, #1#, stay with us.  I'm counting on you to help perform this medley.  No more mistakes!'"
-
-
-#event Aelfric_0    "#*#Aelfric recites a line of his song and beckons for you to approach him and sing the next line.#*#"
-#event Aelfric_1    "#*#Touched tenderly.#*#"
-#event Aelfric_2    "#*#Where will you be?#*#"
-#event Aelfric_3    "#*#Dreaming with me.#*#"
-#event Aelfric_4    "#*#Please,#*#"
-#event Aelfric_5    "#*#everybody, hear the music.#*#"
+#EVENT Flawless      "#*#Your performance is flawless.  The skeletal musician nods their head approvingly.#*#"
+#EVENT Failed        "The Performer says 'Come on, #1#, stay with us.  I'm counting on you to help perform this medley.  No more mistakes!'"
 
 
-#event Britton_0    "#*#Britton recites a line of her song and beckons for you to approach her and sing the next line.#*#"
-#event Britton_1    "#*#When she and I split ways,#*#"
-#event Britton_2    "#*#it felt like the end of my days.#*#"
-#event Britton_3    "#*#Until I suddenly,#*#"
-#event Britton_4    "#*#suddenly realized#*#"
-#event Britton_5    "#*#this life was better off alone.#*#"
-#event Britton_6    "#*#Solitude was the best gift you ever gave me.#*#"
+#EVENT Aelfric_0    "#*#Aelfric recites a line of his song and beckons for you to approach him and sing the next line.#*#"
+#EVENT Aelfric_1    "#*#Touched tenderly.#*#"
+#EVENT Aelfric_2    "#*#Where will you be?#*#"
+#EVENT Aelfric_3    "#*#Dreaming with me.#*#"
+#EVENT Aelfric_4    "#*#Please,#*#"
+#EVENT Aelfric_5    "#*#everybody, hear the music.#*#"
 
 
-#event Randal_0     "#*#Randal recites a line of his song and beckons for you to approach him and sing the next line.#*#"
-#event Randal_1     "#*#Ol' Nilipus hailed from Misty Thicket.#*#"
-#event Randal_2     "#*#Where'er he smelled Jumjum he'd pick it.#*#"
-#event Randal_3     "#*#The halflings grew cross#*#"
-#event Randal_4     "#*#when their profits were lost,#*#"
-#event Randal_5     "#*#screamin', 'Where is that brownie?  I'll kick it!'#*#"
+#EVENT Britton_0    "#*#Britton recites a line of her song and beckons for you to approach her and sing the next line.#*#"
+#EVENT Britton_1    "#*#When she and I split ways,#*#"
+#EVENT Britton_2    "#*#it felt like the end of my days.#*#"
+#EVENT Britton_3    "#*#Until I suddenly,#*#"
+#EVENT Britton_4    "#*#suddenly realized#*#"
+#EVENT Britton_5    "#*#this life was better off alone.#*#"
+#EVENT Britton_6    "#*#Solitude was the best gift you ever gave me.#*#"
 
 
-#event Seth_0        "#*#Seth recites a line of his song and beckons for you to approach him and sing the next line#*#"
-#event Seth_1        "#*#Another night, in eternal darkness#*#"
-#event Seth_2        "#*#Time bleeds like a wound that's lost all meaning#*#"
-#event Seth_3        "#*#It's a long winter in the swirling chaotic void#*#"
-#event Seth_4        "#*#This is my torture#*#"
-#event Seth_5        "#*#my pain and suffering!#*#"
-#event Seth_6        "#*#Pinch me#*#"
+#EVENT Randal_0     "#*#Randal recites a line of his song and beckons for you to approach him and sing the next line.#*#"
+#EVENT Randal_1     "#*#Ol' Nilipus hailed from Misty Thicket.#*#"
+#EVENT Randal_2     "#*#Where'er he smelled Jumjum he'd pick it.#*#"
+#EVENT Randal_3     "#*#The halflings grew cross#*#"
+#EVENT Randal_4     "#*#when their profits were lost,#*#"
+#EVENT Randal_5     "#*#screamin', 'Where is that brownie?  I'll kick it!'#*#"
+
+
+#EVENT Seth_0        "#*#Seth recites a line of his song and beckons for you to approach him and sing the next line#*#"
+#EVENT Seth_1        "#*#Another night, in eternal darkness#*#"
+#EVENT Seth_2        "#*#Time bleeds like a wound that's lost all meaning#*#"
+#EVENT Seth_3        "#*#It's a long winter in the swirling chaotic void#*#"
+#EVENT Seth_4        "#*#This is my torture#*#"
+#EVENT Seth_5        "#*#my pain and suffering!#*#"
+#EVENT Seth_6        "#*#Pinch me#*#"
 
 
 |--Mayong
-#event MayongSlash	 "#*#The Master raises his sword#*#"
+#EVENT MayongSlash	 "#*#The Master raises his sword#*#"
 
 
 
@@ -162,7 +162,6 @@ Sub Events_DODH_Demiplane
 Sub Event_TrisStare
 	/if (${Zone.ShortName.NotEqual[dreadspire_raid]}) /return
 	/varset tStare	TRUE
-	/melee plugin=0
 	/stick off
 	/target Tris
 	/delay 1
@@ -175,7 +174,6 @@ Sub Event_TrisStare
 Sub Event_TrisStareEnd
 	/if (${Zone.ShortName.NotEqual[dreadspire_raid]}) /return
 	/varset tStare FALSE
-	/melee plugin=1
 	
 	/if (${strArchetype.Equal[MELEE]} || ${strArchetype.Equal[CASTER]}) {
 		/assist ${Spawn[id ${int_MTID}]}
@@ -231,13 +229,11 @@ Sub Event_TrisWere
 	/if (${strArchetype.Equal[MELEE]} || ${strArchetype.Equal[CASTER]}) {
 		:targetCheck
 		/if (${Target.Name.Equal[Tris Wallow III]} && ${Target.PctHPs} < 8) {
-			/melee plugin=0
 			/attack off
 			/assist ${Spawn[id ${int_MTID}]}
 			/goto :targetCheck
 		} else {
-			/melee plugin=1
-			/killthis
+			/attack on
 			/return
 		}
 	}
@@ -248,7 +244,6 @@ Sub Event_TrisWere
 Sub Event_HatchetDuck
 	/if (${Zone.ShortName.NotEqual[dreadspire_raid]}) /return
 	/varset hDuck	TRUE
-	/melee plugin=0
 	/stick off
 	/attack off
 	/if (!${Me.Ducking}) /keypress duck
@@ -262,7 +257,6 @@ Sub Event_HatchetDuck
 Sub Event_HatchetStand
 	/if (${Zone.ShortName.NotEqual[dreadspire_raid]}) /return
 	/varset hDuck	FALSE
-	/melee plugin=1
 	/if (${Me.Ducking}) /keypress duck
 /return
 
@@ -364,7 +358,6 @@ Sub PerformVerse
 	/if (${Select[${Me.Class.ShortName},NEC]}) 			/varset archetype CASTER
 	/declare	oldAssistID int local
 	/varset		oldAssistID ${Target.ID}
-	/melee plugin=0
 	/stick off
 	/attack off
 	/delay 10
@@ -373,13 +366,12 @@ Sub PerformVerse
 	/saytarget ${TriggerRespond}
 	/delay 10
 	/target ID ${oldAssistID}
-	/melee plugin=1
 	/if (${Target.ID} == ${oldAssistID}) {
 		/if (${archetype.Equal[MELEE]}) {
 			/if (${Select[${Target.Race},Skeleton]}) {
 				/keypress escape
 			} else {
-				/killthis
+				/attack on
 			}
 		}
 	} 

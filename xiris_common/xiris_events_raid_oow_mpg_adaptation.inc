@@ -74,7 +74,7 @@ Sub chkAdaptationAdds
             /say Aggroing dimunitive ${Target.Name} (${Target.ID})
             :aggroDimunitive
             /if ((${Me.TargetOfTarget.ID} != ${Me.ID}) && (${Me.TargetOfTarget.Class.ShortName.NotEqual[WAR]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[PAL]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[SHD]}) && ${Target.Distance3D} < 150) {
-                /killthis
+                /attack on
                 /delay 10
                 /goto :aggroDimunitive
             }
@@ -88,7 +88,7 @@ Sub chkAdaptationAdds
             /say Aggroing lick of flame ${Target.Name} (${Target.ID})
             :aggroLick
             /if ((${Me.TargetOfTarget.ID} != ${Me.ID}) && (${Me.TargetOfTarget.Class.ShortName.NotEqual[WAR]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[PAL]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[SHD]}) && ${Target.Distance3D} < 150) {
-                /killthis
+                /attack on
                 /delay 10
                 /goto :aggroLick
             }
@@ -103,7 +103,7 @@ Sub chkAdaptationAdds
             /say Aggroing mote of frost ${Target.Name} (${Target.ID})
             :aggroMote
             /if ((${Me.TargetOfTarget.ID} != ${Me.ID}) && (${Me.TargetOfTarget.Class.ShortName.NotEqual[WAR]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[PAL]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[SHD]}) && ${Target.Distance3D} < 150) {
-                /killthis
+                /attack on
                 /delay 10
                 /goto :aggroMote
             }

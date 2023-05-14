@@ -23,7 +23,7 @@ REVISION HISTORY
 
 
 |-- Settings and Triggers
-#event GroupHeal  		"#*#DoGroupHeal#*#"
+#EVENT GroupHeal  		"#*#DoGroupHeal#*#"
 #EVENT InterruptON 		"#*#InterruptON#*#"
 #EVENT InterruptOFF 	"#*#InterruptOFF#*#"
 
@@ -74,10 +74,10 @@ REVISION HISTORY
 #EVENT HealType 		"[ #1# #*#]#*#HealType #2#"
 
 |-- Rez Events
-#event CanRez     		"This corpse can be resurrected."
-#event CannotRez  		"This corpse cannot be resurrected."
-#event NotOnline  		"You told #1#, '#2# is not online at this time'"
-#event NotOnline  		"Your tell to #1# has been queued"
+#EVENT CanRez     		"This corpse can be resurrected."
+#EVENT CannotRez  		"This corpse cannot be resurrected."
+#EVENT NotOnline  		"You told #1#, '#2# is not online at this time'"
+#EVENT NotOnline  		"Your tell to #1# has been queued"
 
 |-- CHEvents should only be listened for in the class handlers (cleric, druid)
 #EVENT CHStart			"#1# tells you#*#'CHStart #2#'"
@@ -347,7 +347,7 @@ Sub PlaceTotem(int _totemKey)
 	/echo PlaceTotem ${_totemKey} ? ${int_totemKey}
 	/if (${_totemKey} == ${int_totemKey} || ${_totemKey} == 0) {
 		/call MQ2Cast "${str_totemName}" alt
-		/rs Totem: ${str_totemName} Placed
+		/docommand /${announceChannel} Totem: ${str_totemName} Placed
 	} 
 
 /return 
@@ -441,7 +441,7 @@ Sub chkCelRegen
 	}
 	
 	:FireCelRegen
-	/rs <FIRING CELESTIAL REGENERATION>
+	/docommand /${announceChannel} <FIRING CELESTIAL REGENERATION>
 	/call MQ2Cast "Mass Group Buff" alt 2s
 	/delay 10
 	/call MQ2Cast "Celestial Regeneration" alt 2s
@@ -1052,9 +1052,6 @@ Sub heal_chSwitch(int _chainID, string _targetName)
 |SUB: Check Resurrection
 |--------------------------------------------------------------------------------
 Sub chkRez
-	/if (!${bln_autoRez}) /return
-	/if (!${bln_combatRez} && ${bln_engaged}) /return
-
 	| find all corpses in range	
 	/if (${SpawnCount[corpse]}) /squelch /hidecorpse npc
 	/declare int_corpses int local ${SpawnCount[corpse radius ${int_range_rez}]}
@@ -1141,7 +1138,7 @@ Sub Ressurect(int _id)
 		/call MQ2Cast "Water Sprinkler of Nem Ankh" item
 		/if (${Macro.Return.Equal[CAST_SUCCESS]}) {
 			/call Add2RezIgnore ${Target.ID}
-			/rs Rezzed ${Target.Name}
+			/docommand /${announceChannel} Rezzed ${Target.Name}
 		}
 	} else {	
 	| No epic or not cleric, use spell
@@ -1149,7 +1146,7 @@ Sub Ressurect(int _id)
 		/call MQ2Cast ${str_rezSpell}
 		/if (${Macro.Return.Equal[CAST_SUCCESS]}) {
 			/call Add2RezIgnore ${Target.ID}
-			/rs Rezzed ${Target.Name}
+			/docommand /${announceChannel} Rezzed ${Target.Name}
 		}
 	}
 /return

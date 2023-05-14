@@ -125,7 +125,7 @@ Sub Events_GoD_Tacvi
 |SUB: Event_UquaKey
 |--------------------------------------------------------------------------------
 Sub Event_UquaKey(string line,string key)
-  /rs ${key}
+  /docommand /${announceChannel} ${key}
   /doevents flush UquaKey
 /return
 |--------------------------------------------------------------------------------
@@ -133,22 +133,22 @@ Sub Event_UquaKey(string line,string key)
 
 
 Sub Event_InkCurse
-	/rs ${Me.Name} is Running.
-	/call meleeReset
+	/docommand /${announceChannel} ${Me.Name} is Running.
+	/call MeleeReset
 	/varset inkRunning TRUE
 	/call InkCurseRun
 /return
 
 Sub Event_InkCurseSafe
 	/if (!${inkRunning}) /return
-	/rs ${Me.Name} is safe, returning.
+	/docommand /${announceChannel} ${Me.Name} is safe, returning.
 	/varset inkRunning FALSE
 	/maxfps bg 20
 	/play off
 /return
 
 Sub InkCurseDead
-	/rs ${Me.Name} is dead, resetting.
+	/docommand /${announceChannel} ${Me.Name} is dead, resetting.
 	/varset inkRunning FALSE
 	/play off
 	/maxfps bg 20
@@ -163,23 +163,24 @@ Sub InkCurseDead
 Sub Event_NoqCurse(_line, _chatSender, _eventParams)
 	
 	/if (${bln_tanking}) {
-		/rs I NEED TO RUN BUT TANKING!
+		/docommand /${announceChannel} I NEED TO RUN BUT TANKING!
 		/return
 	} 
 	/echo Event_NoqCurse ${_eventParams}
 	/declare curseID int local ${_eventParams.Arg[1]} 
 	/echo curseID: ${curseID}
-	/squelch /melee reset
+	/squelch /attack off 
+	/squelch /stick off
 	/call InkNoqRun ${curseID}
 	/doevents flush NoqCurse
 /return
 
 Sub InkNoqRun(int _curseID)
 	/if (${bln_tanking}) {
-		/rs I NEED TO RUN BUT TANKING!
+		/docommand /${announceChannel} I NEED TO RUN BUT TANKING!
 		/return
 	} 
-	/rs Running Noqufiel ${_curseID}
+	/docommand /${announceChannel} Running Noqufiel ${_curseID}
 	/doevents flush
 	/stick off
 	/call Disengage
@@ -289,7 +290,7 @@ Sub chkNoqCursebearers
 | Cursebearers
 |----------------------------
 Sub InkCurseRun
-    /rs Running Cursecallers
+    /docommand /${announceChannel} Running Cursecallers
 	/nav wp cc1
     /delay 3s
 	/maxfps bg 30
@@ -315,7 +316,7 @@ Sub InkCurseRun
 /return
 
 Sub InkDeath
-	/rs ${Me.Name} is dead, Resetting.
+	/docommand /${announceChannel} ${Me.Name} is dead, Resetting.
 	/varset inkRunning FALSE
 	/play off
 	/delay 30
@@ -390,10 +391,9 @@ Sub EVENT_VORBLUR
 	/if (${str_classArchetype.Equal[CASTER]} && ${Me.Casting.ID}) /call Interrupt
 	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]} && ${bln_engaged}) {
 		/if (!${bln_riposting}) {
-			/squelch /melee reset
-			/attack off
+			/squelch /attack off 
+			/squelch /stick off
 			/delay 30
-			/killthis
 			/attack on
 		}
 	}
@@ -489,19 +489,23 @@ SUB EVENT_BALANCE
 	|-- Melee Classes
 	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
 		|-- Balance of Speed	
-		/squelch /melee reset
+		/squelch /attack off 
+		/squelch /stick off
 		/call BalancerKillMelee "Balance of Speed" ${Spawn[npc radius 500 Speed].ID} ${bpct}
 
 		|-- Balance of Fury	
-		/squelch /melee reset
+		/squelch /attack off 
+		/squelch /stick off
 		/call BalancerKillMelee "Balance of Fury" ${Spawn[npc radius 500 Fury].ID} ${bpct}
 
 		|-- Balance of Rage
-		/squelch /melee reset
+		/squelch /attack off 
+		/squelch /stick off
 		/call BalancerKillMelee "Balance of Rage" ${Spawn[npc radius 500 Rage].ID} ${bpct}
 			
 		|-- Balance of Defense	
-		/squelch /melee reset
+		/squelch /attack off 
+		/squelch /stick off
 		/call BalancerKillMelee "Balance of Defense" ${Spawn[npc radius 500 Defense].ID} ${bpct}
 
 		|-- return
@@ -609,7 +613,7 @@ Sub BalancerReset
 		/delay 10
 		/call Disengage
 		
-		/if ((${Me.Class.ShortName.Equal[WAR]} || ${Me.Class.ShortName.Equal[SHD]} || ${Me.Class.ShortName.Equal[PAL]}) && ${int_MTID} != ${Me.ID}) /melee aggro=0
+		/if ((${Me.Class.ShortName.Equal[WAR]} || ${Me.Class.ShortName.Equal[SHD]} || ${Me.Class.ShortName.Equal[PAL]}) && ${int_MTID} != ${Me.ID}) /varset bln_tanking FALSE
 	}
 	/call RunRaidEvents	
 /return

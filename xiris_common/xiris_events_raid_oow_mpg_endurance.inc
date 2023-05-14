@@ -44,8 +44,8 @@ Sub chkEnduranceMez
 
 Sub chkEnduranceAdds
     /if (${SpawnCount[npc]} > 2) {
-        /squelch /melee aggro=1
-        /squelch /melee taunt=1
+        /squelch /varset bln_tanking TRUE
+        /squelch /varset bln_taunting TRUE
         /declare i int local 1
 
         | Frantic Discordling
@@ -55,7 +55,7 @@ Sub chkEnduranceAdds
                 /say Aggro Frantic ${Target.ID}
                 :aggroFrantic
                 /if ((${Me.TargetOfTarget.ID} != ${Me.ID}) && (${Me.TargetOfTarget.Class.ShortName.NotEqual[WAR]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[PAL]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[SHD]})) {
-                    /killthis
+                    /attack on
                     /delay 10
                     /goto :aggroFrantic
                 }
@@ -69,7 +69,7 @@ Sub chkEnduranceAdds
                 /call TrueTarget ${NearestSpawn[${i}, npc antagonist].ID}
                 :aggroAntagonist
                 /if ((${Me.TargetOfTarget.ID} != ${Me.ID}) && (${Me.TargetOfTarget.Class.ShortName.NotEqual[WAR]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[PAL]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[SHD]})) {
-                    /killthis
+                    /attack on
                     /delay 10
                     /goto :aggroAntagonist
                 }
@@ -83,7 +83,7 @@ Sub chkEnduranceAdds
                 /call TrueTarget ${NearestSpawn[${i}, npc sentinel].ID}
                 :aggroSentinel
                 /if ((${Me.TargetOfTarget.ID} != ${Me.ID}) && (${Me.TargetOfTarget.Class.ShortName.NotEqual[WAR]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[PAL]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[SHD]})) {
-                    /killthis
+                    /attack on
                     /delay 10
                     /goto :aggroSentinel
                 }
@@ -97,7 +97,7 @@ Sub chkEnduranceAdds
                 /call TrueTarget ${NearestSpawn[${i}, npc champion].ID}
                 :aggroChampion
                 /if ((${Me.TargetOfTarget.ID} != ${Me.ID}) && (${Me.TargetOfTarget.Class.ShortName.NotEqual[WAR]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[PAL]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[SHD]})) {
-                    /killthis
+                    /attack on
                     /delay 10
                     /goto :aggroChampion
                 }
@@ -106,7 +106,7 @@ Sub chkEnduranceAdds
         }
 
     } else {
-        /squelch /melee aggro=0
-        /squelch /melee taunt=0
+        /squelch /varset bln_tanking    FALSE
+        /squelch /varset bln_taunting   FALSE
     }
 /return

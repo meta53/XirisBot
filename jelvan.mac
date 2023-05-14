@@ -84,9 +84,9 @@ Sub Main
     /dex Xirea /rs changeMT Xirea
 
     | Have the 3 Tanks turn aggro on
-    /melee aggro=1
-    /dex Xiria /melee aggro=1
-    /dex Xirea /melee aggro=1
+    /varset bln_tanking TRUE
+    /dex Xiria /varset bln_tanking TRUE
+    /dex Xirea /varset bln_tanking TRUE
     /dex Xiria /echo changeMT Xiria
     /dex Xirea /echo changeMT Xirea
 
@@ -126,7 +126,7 @@ Sub Main
     /dga /docrack nostun on
 
     | Set raidcommands
-    /melee aggro=1
-    /melee taunt=1
+    /varset bln_tanking TRUE
+    /varset bln_taunting TRUE
     /mac bot_war xiris
 /return

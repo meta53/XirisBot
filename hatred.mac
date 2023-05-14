@@ -26,9 +26,9 @@ Sub Main
 
     | Set the mode to efficient
     /dgt healMode EFFICIENT 
-    /dex Xiris /melee aggro=1
-    /dex Xiria /melee aggro=1
-    /dex Xirin /melee aggro=1
+    /dex Xiris /varset bln_tanking TRUE
+    /dex Xiria /varset bln_tanking TRUE
+    /dex Xirin /varset bln_tanking TRUE
     /dt Xiria offtankON
     /dt Xirea offtankON
     /dt Sadelia offtankON

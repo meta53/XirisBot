@@ -18,16 +18,16 @@ ______________________________________________
 |-- Muramite Proving Grounds events
 |-- Mastery of Specialization
 
-#event RIGIDITY 	"#*#Your movements become rigid#*#"
-#event MISFORTUNE 	"#*#You feel very unlucky#*#"
-#event IMPRECISION  "#*#You are affected by imprecision#*#"
-#event IMPURITY     "#*#You lose your coordination#*#"
+#EVENT RIGIDITY 	"#*#Your movements become rigid#*#"
+#EVENT MISFORTUNE 	"#*#You feel very unlucky#*#"
+#EVENT IMPRECISION  "#*#You are affected by imprecision#*#"
+#EVENT IMPURITY     "#*#You lose your coordination#*#"
 
 Sub InitEvents_OOW_MPG_Specialization
 	/echo \ag Initializing MPG Specialization
 	/declare str_currentMode string outer NORMAL
 	/call RegisterRaidEvents Events_OOW_MPG_Specialization 1
-	/if (${str_classArchetype.NotEqual[PRIEST]} && ${str_classArchetype.NotEqual[CASTER]}) /call toggleMQ2Melee FALSE
+	/call toggleMQ2Melee FALSE
 /return
 
 Sub Events_OOW_MPG_Specialization
@@ -111,7 +111,6 @@ Sub handleSpecializationChange
 			/call SetResistTypes Fire,Magic,Poison,Disease
 		} else /if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
 			|/call doBandolier NOBLUNT
-			/if (${Me.Class.ShortName.Equal[MNK]}) /melee flyingkick=on	
 			/call EngageTarget
 		}
 	} else /if (${str_currentMode.Equal[MISFORTUNE]}) {
@@ -121,7 +120,6 @@ Sub handleSpecializationChange
 			/call SetResistTypes Fire,Cold,Poison,Disease
 		} else /if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
 			|/call doBandolier NOSLASHING
-			/if (${Me.Class.ShortName.Equal[MNK]}) /melee flyingkick=on	
 			/call EngageTarget
 		}
 	} else /if (${str_currentMode.Equal[IMPRECISION]}) {
@@ -131,7 +129,6 @@ Sub handleSpecializationChange
 			/call SetResistTypes Magic,Cold,Poison,Disease
 		} else /if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
 			|/call doBandolier NOPIERCING
-			/if (${Me.Class.ShortName.Equal[MNK]}) /melee flyingkick=on	
 			/call EngageTarget
 		}
 	} else /if (${str_currentMode.Equal[IMPURITY]}) {
@@ -140,8 +137,7 @@ Sub handleSpecializationChange
 		/if (${str_classArchetype.Equal[CASTER]}) {
 			/call SetResistTypes Fire,Magic,Cold
 		} else /if (${Me.Class.ShortName.Equal[MNK]} || ${Me.Class.ShortName.Equal[BST]} ) {
-			|/call doBandolier NOH2H
-			/if (${Me.Class.ShortName.Equal[MNK]}) /melee flyingkick=off	
+			|/call doBandolier NOH2H	
 			/call EngageTarget
 		} else {
 			|/call doBandolier default
@@ -153,7 +149,6 @@ Sub handleSpecializationChange
 			/call SetResistTypes Fire,Cold,Poison,Disease
 		} else /if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
 			|/call doBandolier default
-			/if (${Me.Class.ShortName.Equal[MNK]}) /melee flyingkick=on	
 			/call EngageTarget
 		}
 	}

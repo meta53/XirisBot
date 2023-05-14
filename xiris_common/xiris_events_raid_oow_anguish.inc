@@ -106,17 +106,16 @@ Sub Events_OOW_Anguish
 |----------------------------
 
 Sub Event_TureRampOn
-	/if (!${bln_engaged}) /return
+	/if (!${bln_engaged} || ${bln_tanking}) /return
 	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
-		/squelch /melee reset
-		/squelch /melee reset
-		/squelch /attack off
+		/squelch /attack off 
+		/squelch /stick off
 		/stand on
 		/stick off
 		/nav wp tureSafe
 		/delay 10
 		/call chkNeedCure
-	} else /if (${Me.Class.ShortName.Equal[NEC]} || ${Me.Class.ShortName.Equal[MAG]}) {
+	} else /if (${Me.Class.ShortName.Equal[NEC]} || ${Me.Class.ShortName.Equal[MAG]} || ${Me.Class.ShortName.Equal[BST]}) {
 		/pet hold on
 		/pet back off
 		/pet hold on
@@ -125,16 +124,15 @@ Sub Event_TureRampOn
 /return 
 
 Sub Event_TureRampOff 
-	/if (!${bln_engaged}) /return
+	/if (!${bln_engaged} || ${bln_tanking}) /return
 	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
 		/call TrueTarget ${int_targetID}
 		/nav wp tureDPS
 		:ture_run 
 		/if (${Target.Distance} < 50) /nav stop
 		/if (${Navigation.Active}) /goto :ture_run
-		/squelch /killthis
 		/squelch /attack on
-	} else /if (${Me.Class.ShortName.Equal[NEC]} || ${Me.Class.ShortName.Equal[MAG]}) {
+	} else /if (${Me.Class.ShortName.Equal[NEC]} || ${Me.Class.ShortName.Equal[MAG]} || ${Me.Class.ShortName.Equal[BST]}) {
 		/pet attack
 	}
 /return 
@@ -162,10 +160,11 @@ Sub Event_JelvanStart
 			/if (${SpawnCount[npc Tanthi]} == 1 && !${bln_jelvanEngaged}) {
 				/call TrueTarget ${Spawn[npc Tanthi].ID}
 				/varset bln_jelvanEngaged TRUE
-				/killthis
+				/attack on
 				/if (${Me.CombatAbilityReady[Stonewall Discipline]}) /doability "Stonewall Discipline"
-				/rs DebuffTarget ${Target.ID}
-				/rs singsongs
+				/docommand /${announceChannel} DebuffTarget ${Target.ID}
+				/docommand /${announceChannel} singsongs
+				/stick 10 front
 				/if (${Me.CombatAbilityReady[Bazu Bellow]}) /doability "Bazu Bellow"
 				/delay 20
 				/if (${Me.CombatAbilityReady[Ancient: Chaos Cry]}) /doability "Ancient: Chaos Cry"
@@ -175,7 +174,7 @@ Sub Event_JelvanStart
 			/if (${SpawnCount[npc Tanthi]} == 1 && !${bln_jelvanEngaged}) {
 				/call TrueTarget ${Spawn[npc Tanthi].ID}
 				/varset bln_jelvanEngaged TRUE
-				/killthis 
+				/attack on 
 			}
 	|-------------
 	| South, 2 MT
@@ -184,9 +183,10 @@ Sub Event_JelvanStart
 				/call TrueTarget ${Spawn[npc Tanthu].ID}
 				/varset bln_jelvanEngaged TRUE
 				/if (${Me.CombatAbilityReady[Stonewall Discipline]}) /doability "Stonewall Discipline"
-				/killthis 
-				/rs DebuffTarget ${Target.ID}
-				/rs singsongs
+				/attack on 
+				/docommand /${announceChannel} DebuffTarget ${Target.ID}
+				/docommand /${announceChannel} singsongs
+				/stick 10 front
 				/if (${Me.CombatAbilityReady[Bazu Bellow]}) /doability "Bazu Bellow"
 				/delay 20
 				/if (${Me.CombatAbilityReady[Ancient: Chaos Cry]}) /doability "Ancient: Chaos Cry"
@@ -197,7 +197,7 @@ Sub Event_JelvanStart
 			/if (${SpawnCount[npc Tanthu]} == 1 && !${bln_jelvanEngaged}) {
 				/call TrueTarget ${Spawn[npc Tanthu].ID}
 				/varset bln_jelvanEngaged TRUE
-				/killthis 
+				/attack on 
 			}
 
 	|-------------
@@ -208,9 +208,10 @@ Sub Event_JelvanStart
 				/call TrueTarget ${Spawn[npc Tantho].ID}
 				/varset bln_jelvanEngaged TRUE
 				/if (${Me.CombatAbilityReady[Stonewall Discipline]}) /doability "Stonewall Discipline"
-				/killthis 
-				/rs DebuffTarget ${Target.ID}
-				/rs singsongs
+				/attack on 
+				/docommand /${announceChannel} DebuffTarget ${Target.ID}
+				/docommand /${announceChannel} singsongs
+				/stick 10 front
 				/if (${Me.CombatAbilityReady[Bazu Bellow]}) /doability "Bazu Bellow"
 				/delay 20
 				/if (${Me.CombatAbilityReady[Ancient: Chaos Cry]}) /doability "Ancient: Chaos Cry"
@@ -221,7 +222,7 @@ Sub Event_JelvanStart
 			/if (${SpawnCount[npc Tantho]} == 1 && !${bln_jelvanEngaged}) {
 				/call TrueTarget ${Spawn[npc Tantho].ID}
 				/varset bln_jelvanEngaged TRUE
-				/killthis 
+				/attack on 
 			}
 		}
 
@@ -370,7 +371,8 @@ Sub chkHanvarMelee
 		/if (${Spawn[npc Hanvar].Distance} < 100 && !${Bool[${Target.Name.Find[guard]}]} ) {
 			/echo stopping melee! heading to safe point
 			/squelch /target clear
-			/squelch /melee reset
+			/squelch /attack off 
+			/squelch /stick off
 			/warp wp hanvarSafe
 		}
 	}
@@ -378,7 +380,8 @@ Sub chkHanvarMelee
 	/if (${SpawnCount[npc guard]}) {
 		/echo \aoGuard is UP, assisting Xirin
 		/squelch /target clear
-		/squelch /melee reset
+		/squelch /attack off 
+		/squelch /stick off
 		:waitForGuard
 		/dquery Xirin -q "Target.ID"
 		/delay 20 ${DanNet.Query.Received}
@@ -394,7 +397,8 @@ Sub chkHanvarMelee
 	} else {
 		/echo \agGuard is Down, assisting ${str_MTName}
 		/squelch /target clear
-		/squelch /melee reset
+		/squelch /attack off 
+		/squelch /stick off
 		/dquery  ${str_MTName} -q "Target.ID"
 		/delay 20 ${DanNet.Query.Received}
 		/varset targetToKill ${DanNet.Q}
@@ -478,7 +482,7 @@ Sub Event_GazeYou
 	} else {
 		
 		:gazeCastWait
-		/melee reset
+		/call MeleeReset
 		/if (${Navigation.Active}) /nav stop
 		/if (${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]}) {
 			/echo \arCasting, waiting to stop, then click!
@@ -743,8 +747,9 @@ Sub chkGroupMarkedForDeath
 			/echo \agGroupCuring with ${str_heal_group}
 			/g Group Heal incoming, get close!
 			/for i 1 to 5
-				/if (${Group.Member[${i}].ID} != ${int_MTID} && ${Select[${Group.Member[${i}].Class.ShortName},${MeleeClasses}]}) {
-					/dex ${Group.Member[${i}]} /multiline ; /melee reset ; /warp loc ${Me.Y} ${Me.X} ${Me.Z}
+				/if ((${Group.Member[${i}].ID} != ${int_MTID}) && (${Group.Member[${i}].ID} != ${str_tankName1}) && ${Select[${Group.Member[${i}].Class.ShortName},${MeleeClasses}]}) {
+					
+					/dex ${Group.Member[${i}]} /multiline ; /attack off ; /stick off ; /warp loc ${Me.Y} ${Me.X} ${Me.Z}
 				}
 			/next i
 			/call chkHeal_MT
@@ -755,8 +760,8 @@ Sub chkGroupMarkedForDeath
 		/echo \agGroupCuring with ${str_cure_disease}
 		/g Group Heal incoming, get close!
 		/for i 1 to 5
-			/if (${Group.Member[${i}].ID} != ${int_MTID} && ${Select[${Group.Member[${i}].Class.ShortName},${MeleeClasses}]}) {
-				/dex ${Group.Member[${i}]} /multiline ; /melee reset ; /warp loc ${Me.Y} ${Me.X} ${Me.Z} 
+			/if ((${Group.Member[${i}].ID} != ${int_MTID}) && (${Group.Member[${i}].ID} != ${str_tankName1})  && ${Select[${Group.Member[${i}].Class.ShortName},${MeleeClasses}]}) {
+				/dex ${Group.Member[${i}]} /multiline ;  /attack off ; /stick off  ; /warp loc ${Me.Y} ${Me.X} ${Me.Z} 
 			}
 		/next i
 		/call chkHeal_MT
@@ -773,7 +778,7 @@ Sub chkGroupMarkedForDeath
 		/call chkHeal_MT
 		/if (${gcount[${i}]} > 0) {
 			/if (${Group.Member[${gm}].ID} != ${int_MTID} && ${Select[${Group.Member[${gm}].Class.ShortName},${MeleeClasses}]}) {
-				/dex ${Group.Member[${gm}]} /multiline ; /melee reset ; /warp loc ${Me.Y} ${Me.X} ${Me.Z} 
+				/dex ${Group.Member[${gm}]} /multiline ; /attack off ; /stick off ; /warp loc ${Me.Y} ${Me.X} ${Me.Z} 
 				/call handleCureRequest ${Group.Member[${gm}].Name} ${Group.Member[${gm}].ID} disease ${gcount[${i}]} TRUE
 			}
 		}
@@ -816,8 +821,7 @@ Sub chkMarkedForDeathCureDist
 		/echo \ar MARK OF DEATH \aw=>curer \ag${str_myCurer} \aw@ \ag${Spawn[pc ${str_myCurer}].Distance3D}
 		/echo \awMoving to Curer!
 		/call Disengage
-		/melee reset
-		/melee reset
+		/call MeleeReset
 		/goto :markLoop
 	} 
 	/if (!${Target.Name.Find[${eventTarget}]}) {

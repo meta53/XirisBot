@@ -138,28 +138,28 @@ Sub Event_cureReceived(_line, _sender, _eventParams)
 
 Sub Event_cureGroupPoison(_line, _sender, _eventParams)
 	/if (${Me.Class.ShortName.NotEqual[CLR]} && ${Me.Class.ShortName.NotEqual[DRU]} && ${Me.Class.ShortName.NotEqual[SHM]} && ${Me.Class.ShortName.NotEqual[PAL]}) /return
-	/rs Curing Group of Poisons with: ${str_cure_poison}
+	/docommand /${announceChannel} Curing Group of Poisons with: ${str_cure_poison}
 	/call cureGroup poison ${_eventParams}
 	/doevents flush cureGroupPoison
 /return
 
 Sub Event_cureGroupDisease(_line, _sender, _eventParams)
 	/if (${Me.Class.ShortName.NotEqual[CLR]} && ${Me.Class.ShortName.NotEqual[DRU]} && ${Me.Class.ShortName.NotEqual[SHM]} && ${Me.Class.ShortName.NotEqual[PAL]}) /return
-	/rs Curing Group of Disease with: ${str_cure_disease}
+	/docommand /${announceChannel} Curing Group of Disease with: ${str_cure_disease}
 	/call cureGroup disease ${_eventParams}
 	/doevents flush cureGroupDisease
 /return
 
 Sub Event_cureGroupCurse(_line, _sender, _eventParams)
 	/if (${Me.Class.ShortName.NotEqual[CLR]} &&${Me.Class.ShortName.NotEqual[DRU]} && ${Me.Class.ShortName.NotEqual[SHM]} && ${Me.Class.ShortName.NotEqual[PAL]}) /return
-	/rs Curing Group of Curses with: ${str_cure_curse}
+	/docommand /${announceChannel} Curing Group of Curses with: ${str_cure_curse}
 	/call cureGroup curse ${_eventParams}
 	/doevents flush cureGroupCurse
 /return
 
 Sub Event_cureGroupCorruptiuon(_line, _sender, _eventParams)
 	/if (${Me.Class.ShortName.NotEqual[CLR]} &&${Me.Class.ShortName.NotEqual[DRU]} && ${Me.Class.ShortName.NotEqual[SHM]} && ${Me.Class.ShortName.NotEqual[PAL]}) /return
-	/rs Curing Group of Corruption with: ${str_cure_corruption}
+	/docommand /${announceChannel} Curing Group of Corruption with: ${str_cure_corruption}
 	/call cureGroup corruption ${_eventParams}
 	/doevents flush Event_cureGroupCorruptiuon
 /return
@@ -434,7 +434,7 @@ Sub getGroupCurer(string _cureType)
 		}
 	}
 	/if (${myCurer.Equal[NOTFOUND]} && !${timer_cure_complain}) {
-		/rs No curer found!
+		/docommand /${announceChannel} No curer found!
 		/varset timer_cure_complain 30s
 	} else {
 		/echo \aggetGroupCurer: \ao${myCurer}  \aw(Cure Type: \ag${_cureType}\aw)
@@ -688,7 +688,6 @@ Sub castCure(string _name, int _id, string _spell, int _castCount, string _cureT
 		/call TrueTarget ${_id}
 		/echo \aoCasting \aw${i} \ag${_spell}
 		/call MQ2Cast "${_spell}" gem7 8s
-		/delay 10
 	/next i 
 	/dt ${_name} I cured you ${_name}(${_id}) of ${_counters} ${_cureType} counters.
 /return

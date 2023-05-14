@@ -41,7 +41,7 @@ Sub chkCorruptionMez
 				/say Mezzing ${Target.Name}
                 /call MQ2Cast "${str_mezSingle}" ${int_mezSingleGem}
 				/if (${Macro.Return.Equal[CAST_SUCCESS]}) {
-					/rs ${Target.Name} MEZZED
+					/docommand /${announceChannel} ${Target.Name} MEZZED
 				}
             }
         :nextwizard
@@ -56,7 +56,7 @@ Sub chkCorruptionMez
 				/say Mezzing ${Target.Name}
                 /call MQ2Cast "${str_mezSingle}" ${int_mezSingleGem}
 				/if (${Macro.Return.Equal[CAST_SUCCESS]}) {
-					/rs ${Target.Name} MEZZED
+					/docommand /${announceChannel} ${Target.Name} MEZZED
 				}
             }
         :nextmage
@@ -71,7 +71,7 @@ Sub chkCorruptionMez
 				/say Mezzing ${Target.Name}
                 /call MQ2Cast "${str_mezSingle}" ${int_mezSingleGem}
 				/if (${Macro.Return.Equal[CAST_SUCCESS]}) {
-					/rs ${Target.Name} MEZZED
+					/docommand /${announceChannel} ${Target.Name} MEZZED
 				}
             }
         :nextnecro
@@ -82,8 +82,8 @@ Sub chkCorruptionMez
 Sub chkCorruptionAdds
     /if (!${bln_engaged}) /return
 	/if (${SpawnCount[npc]} > 2) {
-		/squelch /melee aggro=1
-        /squelch /melee taunt=1
+		/squelch /varset bln_tanking TRUE
+        /squelch /varset bln_taunting TRUE
         /declare i int local 1
 
 		| ROG
@@ -93,7 +93,7 @@ Sub chkCorruptionAdds
                 /say Aggroing Rogue ${Target.Name} (${Target.ID})
                 :aggroRogue
                 /if ((${Me.TargetOfTarget.ID} != ${Me.ID}) && (${Me.TargetOfTarget.Class.ShortName.NotEqual[WAR]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[PAL]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[SHD]}) && ${Target.Distance3D} < 150) {
-                    /killthis
+                    /attack on
                     /delay 10
                     /goto :aggroRogue
                 }
@@ -108,7 +108,7 @@ Sub chkCorruptionAdds
                 /say Aggroing Warrior ${Target.Name} (${Target.ID})
                 :aggroWarrior
                 /if ((${Me.TargetOfTarget.ID} != ${Me.ID}) && (${Me.TargetOfTarget.Class.ShortName.NotEqual[WAR]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[PAL]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[SHD]}) && ${Target.Distance3D} < 150) {
-                    /killthis
+                    /attack on
                     /delay 10
                     /goto :aggroWarrior
                 }
@@ -122,7 +122,7 @@ Sub chkCorruptionAdds
                 /say Aggroing Enchanter ${Target.Name} (${Target.ID})
                 :aggroEnchanter
                 /if ((${Me.TargetOfTarget.ID} != ${Me.ID}) && (${Me.TargetOfTarget.Class.ShortName.NotEqual[WAR]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[PAL]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[SHD]}) && ${Target.Distance3D} < 150) {
-                    /killthis
+                    /attack on
                     /delay 10
                     /goto :aggroEnchanter
                 }
@@ -131,8 +131,8 @@ Sub chkCorruptionAdds
         }
 
 	} else {
-        /squelch /melee aggro=0
-        /squelch /melee taunt=0
+        /squelch /varset bln_tanking    FALSE
+        /squelch /varset bln_taunting   FALSE
     }
 
 /return

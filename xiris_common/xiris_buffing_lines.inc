@@ -28,7 +28,7 @@ This works for several buff lines
 
 **|
 
-#event requestBuffLine "[#1#(msg)] requestBuffLine #2#,#3#,#4#"
+#EVENT requestBuffLine "[#1#(msg)] requestBuffLine #2#,#3#,#4#"
 
 Sub Event_requestBuffLine(_string _text, string _sender, string _buffLine, string _targetType, string _groupList)
 	/echo \ao rqstBuffLine

@@ -32,7 +32,6 @@ REVISION HISTORY
 						Donor hall trivialized the movement to the LDON entrance, etc so culled some code	
 ______________________________________________
 REQUIRED PLUGINS
-    mq2melee
     mq2cast
     mq2eqbc
     mq2debuffs
@@ -54,16 +53,16 @@ REQUIRED INCLUDES
 
 #define INI_ldonInfo xiris_common/xiris_ldon_definitions.ini
 
-#event RageOff              "#*#is no longer enraged#*#"
-#event RageOn               "#*#has become ENRAGED#*#"
-#event Zoned                "You have entered#*#"
-#event Zoned                "LOADING, PLEASE WAIT..."
-#event EndMac				"#*#monkeybutter#*#"
-#event NoLOS				"#*#you cannot see your target#*#"
-#event TooClose				"#*#your target is too close#*#"
-#event MoveFail				"#*#Could not find path to destination#*#"
-#event UILocked				"#*#You can't use that command right now#*#"
-#event NavStuck				"#*#Could not locate starting point on navmesh#*#"
+#EVENT RageOff              "#*#is no longer enraged#*#"
+#EVENT RageOn               "#*#has become ENRAGED#*#"
+#EVENT Zoned                "You have entered#*#"
+#EVENT Zoned                "LOADING, PLEASE WAIT..."
+#EVENT EndMac				"#*#monkeybutter#*#"
+#EVENT NoLOS				"#*#you cannot see your target#*#"
+#EVENT TooClose				"#*#your target is too close#*#"
+#EVENT MoveFail				"#*#Could not find path to destination#*#"
+#EVENT UILocked				"#*#You can't use that command right now#*#"
+#EVENT NavStuck				"#*#Could not locate starting point on navmesh#*#"
 
 
 Sub Main(string _channel, string _announce, string _theme, bool _useDownFlags, bool _highRisk)
@@ -77,7 +76,7 @@ Sub Main(string _channel, string _announce, string _theme, bool _useDownFlags, b
 	
 	|-- report status
 	/delay 10
-	/echo \agLDON Runner >> @${_channel}  >> Theme: ${_themee}
+	/echo \agLDON Runner \aw>> @\ao${_channel}  \aw>> \agTheme: \ao${_theme} \aw>> \agAdventure Request: \ao${adventureGiver}
 
 	|-- Build Alert List
 	/call setAlerts
@@ -179,7 +178,7 @@ Sub Main(string _channel, string _announce, string _theme, bool _useDownFlags, b
 		|-- check to see if I've finished the mission yet
 		/if (!${inMission} || !${haveMission})  /goto :SetupLoop
 		/if (${SpawnCount[NPC radius 100]} == 0 && ${Zone.ShortName.NotEqual[${SZ_shortName}]}) /call chkLDONCompletion	
-		/if (${Zone.ShortName.Equal[${SZ_shortName}]}) /goto :SetupLoop
+		/if (${Zone.ShortName.Equal[${SZ_shortName}]} || (!${inMission} || !${haveMission})) /goto :SetupLoop
 		
 		|-- reset group to camp spot (leash) if its empty
 		/if (${SpawnCount[npc radius ${int_campRadius} zradius 25]} == 0) {
@@ -656,6 +655,7 @@ Sub getTarget
 		/call setRSTVars
 		/squelch /target clear
 		/call chkLDONCompletion
+		/if (!${inMission} || !${haveMission}) /return
 		|----------USE THIS FOR HUNTER (ALERT 2) and IGNORE ALERT 1, 3 --------
 		/if (${SpawnCount[npc radius ${int_campRadius} zradius 25]} > 0) {
 			/echo NPC in camp, killing
@@ -862,7 +862,7 @@ Sub pullTarget
 |**
  ----------------------------
  Wait for the mob to be within kill/stick range, then issue
- /killthis command to mq2melee
+ /attack on command to mq2melee
  Calls chkCombatState while in the combatLoop
  ----------------------------
 **|
@@ -922,7 +922,8 @@ Sub killTarget
 	}
 	
 	/if (!${Me.Combat}) {
-		/killthis
+		/attack on
+		/stick front
 	}
 	
 	/doevents flush
@@ -984,9 +985,6 @@ Sub chkLDONCompletion
 		/delay 10
 		/docommand /${cmdChannel} /stand on
 		/docommand /${cmdChannel} /nav stop
-		/delay 10
-		/docommand /${cmdChannel} /melee off
-		/delay 10
 		/delay 15s
 		
 		/varset missionComplete TRUE
@@ -999,18 +997,16 @@ Sub chkLDONCompletion
 		/call OriginToThundercrest
 		/call ResetAtThundercrest
 		
-	}
-	
-	
-	|-- Reset Adventure variables now that we are complete
-	/if (${missionComplete}) {
+		|-- Reset Adventure variables now that we are complete
+
 		/g ${Time.Time24} Mission Complete, resetting variables, and starting this over again ${Time.Time24}
 		/varset inMission 		FALSE
 		/varset haveMission 	FALSE
 		/varset missionComplete FALSE
 		/varset int_killCount 		0
+
 	}
-		
+	
 /return
 
 
@@ -1128,11 +1124,11 @@ Sub setGroupCommands
 	|-- find not cleric/tank to loot
 	/if (${looter.NotEqual[NOT_FOUND]}) /squelch /dt ${looter} lootOn ALL
 	/delay 10
-	/varset bln_looting FALSE
+	/varset bln_looting		FALSE
 
 	|-- turn on melee and aggro
-	/squelch /dgga /melee on
-	/melee aggro=1
+	/varset bln_tanking		TRUE
+	/varset bln_taunting	TRUE
 
 	|-- set cleric healing to efficient
 	/if (${bln_hasCLR}) /dt ${str_cleric} healmode EFFICIENT
@@ -1246,8 +1242,8 @@ Sub variant_initialize(string _channel, string _announce, string _theme, bool _u
 	|--group members
 	/declare bln_hasBST				bool    outer   FALSE
 	/declare bln_hasSHM				bool  	outer 	FALSE
-	/declare bln_hasSHM				bool  	outer 	FALSE
 	/declare bln_hasBRD				bool  	outer 	FALSE
+	/declare bln_hasCLR				bool    outer   FALSE
 	/declare str_beastlord			string  outer   NULL	
 	/declare str_shaman				string  outer   NULL	
 	/declare str_cleric				string  outer   NULL	
@@ -1290,7 +1286,7 @@ Sub variant_initialize(string _channel, string _announce, string _theme, bool _u
 	/if (${Defined[_highRisk]} || ${_highRisk} != FALSE) /varset bln_highRisk ${_highRisk}
 	
 	|--melee plugin/aggro for the requester
-	/melee aggro=1
+	/varset bln_tanking TRUE
 	
 	|--command channel setup
 	/if (!${Defined[cmdChannel]}) /declare cmdChannel string	outer	dgga
@@ -1458,7 +1454,6 @@ Sub Event_EndMac
 	/bc Someone told me to end it! ${Time.Time24}
 	/g Someone told me to end it! ${Time.Time24}
 	/delay 1s
-	/docommand /${cmdChannel}  /melee off
 	/docommand /${cmdChannelExcludingMe}  /end
 	/delay 2m
 	/docommand /${cmdChannel}  /icampdesk

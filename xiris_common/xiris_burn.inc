@@ -27,13 +27,19 @@ REVISION HISTORY
 #EVENT ReportBurnKey        "#1#ReportBurnKey #2#"
 
 Sub InitEvents_Burn
-    /call RegisterBackgroundEvents Events_Burn 5
+    /call RegisterRaidEvents Events_Burn 5
+	/call RegisterBackgroundEvents Events_Burn_Background 2
 /return 
 
 Sub Events_Burn
     /doevents BurnOnALL
 	/doevents BurnOn1
 	/doevents BurnOn2
+
+
+/return 
+
+Sub Events_Burn_Background
 	/doevents BurnOff
 	/doevents ReportBurnKey
 /return 
@@ -46,6 +52,7 @@ Sub EVENT_BurnOn
 	/if (!${bln_engaged}) /return
 	/echo \agEnabling \arBurn \agMode
 	/varset bln_burning TRUE
+	/varset bln_checkForCry TRUE
 	/doevents flush BurnOn
 /return
 
@@ -54,6 +61,7 @@ Sub EVENT_BurnOnAll
 	/if (!${bln_engaged}) /return
 	/echo \agEnabling \arBurn ALL \agMode
 	/varset bln_burning TRUE
+	/varset bln_checkForCry TRUE
 	/doevents flush BurnOnAll
 /return
 
@@ -63,6 +71,7 @@ Sub EVENT_BurnOn1
 		/echo \agEnabling \arBurn \agMode on CoHort \ao1
 		/varset bln_burning TRUE
 	}
+	/varset bln_checkForCry TRUE
 	/doevents flush BurnOn1
 /return
 
@@ -72,12 +81,14 @@ Sub EVENT_BurnOn2
 		/echo \agEnabling \arBurn \agMode on CoHort \ao2
 		/varset bln_burning TRUE
 	}
+	/varset bln_checkForCry TRUE
 	/doevents flush BurnOn2
 /return
 
 Sub EVENT_BurnOff
 	/echo \agDisablig \ayBurn \agMode
 	/varset bln_burning FALSE
+	/varset bln_checkForCry FALSE
 	/doevents flush BurnOff
 /return
 
@@ -106,7 +117,7 @@ Sub chkBurn
 			| Combat Ability
 			| Note: Run the DISC if it is a combat type, it is ready, and we aren't already discing
 			| ---------------
-			/if (${BURN_${i}_Type.Equal[combat]} && ${Me.CombatAbilityReady[${BURN_${i}}]} && ${BURN_${i}_Use} && !${Bool[${Melee.DiscID}]}) {
+			/if (${BURN_${i}_Type.Equal[combat]} && ${Me.CombatAbilityReady[${BURN_${i}}]} && ${BURN_${i}_Use} && !${Me.ActiveDisc.ID}) {
 				/echo \awBurn_\ag${i} \ao${BURN_${i}} \awType:\ag${BURN_${i}_Type} \awUse:\ag${BURN_${i}_Use} \awAfter:\ag${BURN_${i}_AfterIndex} \awMGB:\ag${BURN_${i}_MGB} 
 				/echo \aoBurn is combat type, trying ${BURN_${i}}
 				| Check to see if the burn Before disc/alt (0 if not) is already run
@@ -185,8 +196,33 @@ Sub chkBurn
 			}
 		}
 	:nextBurn
+	/call RunRaidEvents
+	/call RunRapidEvents	
 	/next i
 /return
+
+
+| When the toon has warcry on, then we need to make sure
+| we are using 2handers on MNK/RNG/SHD/PAL
+|**
+[Weaponsets]
+	default=Flayed Flesh Handwraps|mainhand,Fangs of the Serpent|offhand
+	blunt=Mindreaper Club|mainhand,Death's Head Mace|offhand
+	h2h=Flayed Flesh Handwraps|mainhand,Fangs of the Serpent|offhand
+	2hander=Bone Staff of Wickedness|mainhand
+**|
+Sub checkForCry
+	/if (!${Select[${Me.Class.ShortName},MNK,RNG,SHD,PAL]}) /return
+	/if (${timer_cryCheck}) /return
+	/if (${Me.Song[Ancient: Cry of Chaos].ID} && !${bln_cry2Hander}) {
+		/call LoadWeaponset 2HANDER
+		/varset bln_cry2Hander TRUE
+	} else /if (!${Me.Song[Ancient: Cry of Chaos].ID} && ${bln_cry2Hander}) {
+		/call LoadWeaponset DEFAULT
+		/varset bln_cry2Hander FALSE
+	}
+	/varset timer_cryCheck 10s
+/return 
 
 
 Sub AddBurnToLineup(string _type, int _index, string _line)
@@ -262,6 +298,8 @@ Sub chkAA
         
 
     :nextAA
+	/call RunRaidEvents
+	/call RunRapidEvents	
     /next i
 /return
 
@@ -336,6 +374,8 @@ Sub chkClicky
         
 
     :nextClicky
+	/call RunRaidEvents
+	/call RunRapidEvents	
     /next i
 /return
 
@@ -413,6 +453,9 @@ Sub xbot_initialize_burns
     /echo \aoxbot_initialize_burns
     |- [Settings] : BurnMode
 	/declare bln_burning			bool	outer FALSE
+	/declare bln_checkForCry		bool    outer FALSE
+	/declare bln_cry2Hander			bool  	outer FALSE
+	/declare timer_cryCheck			timer   outer 0
 
     | Template
     /declare BURN_Template          string  outer _Burn|_Type|_Use|_AfterIndex|_MGB
@@ -432,6 +475,6 @@ Sub Event_ReportBurnKey(_line, _sender, _eventParams)
 	/declare _burnKey int local ${_eventParams.Arg[1,|]}
 	/echo ${_sender} checking burnKey:${_burnKey}
 	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} && ${BURN_Group} == ${_burnKey}) {
-		/rs ${_burnKey} ${Me.CleanName} ${Me.Class.ShortName}
+		/docommand /${announceChannel} ${_burnKey} ${Me.CleanName} ${Me.Class.ShortName}
 	}
 /return

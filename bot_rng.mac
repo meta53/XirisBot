@@ -29,10 +29,10 @@ REQUIRED INCLUDES
 
 #include xiris_common/xiris_common.inc
 
-#Turbo 40
+#TURBO 120
 
-#event AutoFireOn      		"#*#AutoFire on#*#"
-#event AutoFireOff     		"#*#AutoFire off#*#"
+#EVENT AutoFireOn      		"#*#AutoFire on#*#"
+#EVENT AutoFireOff     		"#*#AutoFire off#*#"
 
 Sub InitEvents_Class
 	|/call RegisterClassEvents Events_RNG 0
@@ -84,25 +84,26 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 		/if (${bln_autoAssist}) /call chkAutoAssist
 		
 		/if (${bln_engaged}) {
-			|-- check engaged events
-			/call RunRaidEvents
-			/call RunClassEvents
+			|-- check all events
+			/call RunAllEvents
 
-			|-- verify target status
-			/call chkTargetStatus	
+			|-- class specific
+			/if (${bln_concUse}) /call chkConcussion
 
-			|-- class specific Jolt is handled by mq2melee
-			|/call chkConcussion
-
+			|-- melee library
+			/if (!${mq2meleeEnabled}) /call chkCA_${Me.Class.ShortName}
+			
 			|-- dps library (casting hybrid)
 			/call chkNuke
-			
+
 			|-- std library (burns/aa/clicks)
-			/call RunRaidEvents
-    		/call RunClassEvents
 			/call chkAA
 			/call chkBurn
 			/call chkClicky
+
+			|-- verify target status
+			/call chkTargetStatus
+	
 		} else {
 			|-- check utilities, includes: sit,loot,leash (out of combat only) and only once every 10 seconds
 			/if (!${timer_check_utilities}) /call chkUtils

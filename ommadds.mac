@@ -6,22 +6,22 @@
 Sub Main(string _type, string _tankPoint)
     /call xbot_initialize_spellRoutines
     /declare 	strFaceItem				string  outer   ${InvSlot[3].Item}
-	/melee aggro=on
-    /melee taunt=on
+	/varset bln_tanking TRUE
+    /varset bln_taunting TRUE
 
 	:ActiveLoop
 		/doevents
         | Check Charmable NPCs? Perhaps use this to tell the enchanters which NPC to charm?
 
+		/if (${Target.Name.Find[Frenzied]}) /goto :ActiveLoop
         | Check Frenzied Lashers?
         /if (${SpawnCount[npc Frenzied radius 200]} && (${Target.ID} != ${NearestSpawn[npc Frenzied].ID})) {
             /call TrueTarget ${NearestSpawn[npc Frenzied].ID}
-            /if (${Target.Name.Find[npc Frenzied]}) {
-                /dgt KillMob ${Target.ID} "${Target.Name}" ${Time.Time24}
-                /killthis
+            /if (${Target.Name.Find[npc Frenzied]} && !${Me.Combat}) {
+                /attack on
+				/dgt KillMob ${Target.ID} "${Target.Name}" ${Time.Time24}
                 /rs Called Kill Mob ${Target.Name} ${Time.Time24}
             }
-      
         }
 	/goto :ActiveLoop
 /return
@@ -37,7 +37,8 @@ Sub EVENT_GazeYou
 		/shout Calling for TL!
 	} else {
 		:gazeCastWait
-		/melee reset
+		/attack off 
+		/stick off 
 		/if (${Navigation.Active}) /nav stop
 		/if (${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]}) {
 			/echo \arCasting, waiting to stop, then click!

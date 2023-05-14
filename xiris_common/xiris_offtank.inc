@@ -61,17 +61,20 @@ Sub ChangeOfftankRadius(_radius)
 
 Sub ToggleOfftanking(bool _blnOT)
 	|--Toggle Offtanking
+	/if (${bln_tanking}) /return
 	/if (${_blnOT}) {
 		/dgt ${Me.Name} is now OFF TANKING!
-		/varset  bln_offTank TRUE
-		/varset bln_aggro TRUE
+		/varset  bln_offTank	TRUE
+		/varset  bln_tanking		TRUE
+		/varset  bln_taunting 	TRUE
+		/varset  bln_tanking	TRUE
 	}
 	/if (!${_blnOT}) {
 		/dgt ${Me.Name} is ENDING OFF TANKING.
-		/varset  bln_offTank FALSE
-		/varset bln_aggro FALSE
-		/squelch /melee aggro=0
-		/squelch /melee taunt=0
+		/varset  bln_offTank	FALSE
+		/varset  bln_tanking		FALSE
+		/varset  bln_taunting 	FALSE
+		/varset  bln_tanking	FALSE
 	}
 	
 /return
@@ -79,8 +82,7 @@ Sub ToggleOfftanking(bool _blnOT)
 
 
 Sub chkOffTanking
-	/if (!${bln_offTank} || ${bln_following}) 	 /return
-	/if (${Zone.ID} == 340 || ${Zone.ID} == 344 || ${Zone.ID} == 345 || ${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /return
+	/if (${Zone.ID} == 340 || ${Zone.ID} == 344 || ${Zone.ID} == 345 || ${Zone.ShortName.Equal[${Me.BoundLocation[0]}]} || ${bln_following}) /return
 	/if (${bln_engaged}) /call chkDivineIntervention
 
 	| If there are no spawns within OT Distance, return
@@ -117,9 +119,9 @@ Sub chkOffTanking
 		/if (${SpawnCount[npc id ${int_targetID}]}) {
 			/call TrueTarget ${int_targetID}
 			/if (!${Bool[${Me.TargetOfTarget.ID}]}) /return
-			/squelch /melee aggro=0
-			/squelch /melee taunt=0
-			/if (${Target.PctHPs} <=99) /killthis
+			/varset bln_tanking		FALSE
+			/varset bln_taunting	FALSE
+			/if (${Target.PctHPs} <=99) /attack on
 		}
 	}
 /return
@@ -144,15 +146,15 @@ Sub aggroByID(int _targetID)
 	} 
 	
 	:aggroSmack
-	/squelch /melee aggro=1
-	/squelch /melee taunt=1
+	/squelch /varset bln_tanking TRUE
+	/squelch /varset bln_taunting TRUE
 	/if (${Target.ID} != ${_targetID}) /call TrueTarget ${_targetID}
 
 	/squelch /stick off
 	/squelch /stick front 20
 	/if (${Me.AbilityReady[Taunt]}) /taunt
 	/squelch /face fast
-	/if (!${Melee.Attack}) /squelch /killthis
+	/if (!${Me.Combat}) /squelch /attack on
 	/delay 20
 
 	
@@ -162,9 +164,9 @@ Sub aggroByID(int _targetID)
 	/goto :aggroLoop
 
 	:return
-	/squelch /melee aggro=0
-	/squelch /melee taunt=0
-	/squelch /melee reset
+	/varset bln_tanking		FALSE
+	/varset bln_taunting	FALSE
+	/call MeleeReset
 /return
 
 

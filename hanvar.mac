@@ -30,11 +30,9 @@ Sub Main
     | Turn off bard and SK
     /dex adikia /end
     /dex xirin /end
-    /dex xirin /melee aggro=1
-    /dex xirin /melee taunt=1
+    /dex xirin /varset bln_tanking TRUE
+    /dex xirin /varset bln_taunting TRUE
 
     | Set Me (WAR) to aggro and taunt
-    /melee aggro=1 
-    /melee taunt=1
     /mac hanvartank
 /return

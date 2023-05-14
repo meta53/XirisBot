@@ -28,9 +28,9 @@ Sub Main
 
     | Turn of Offtanks
     /dex Xiria /end
-    /dex Xiria /melee aggro=1
+    /dex Xiria /varset bln_tanking TRUE
     /dex Xirea /end
-    /dex Xirea /melee aggro=1
+    /dex Xirea /varset bln_tanking TRUE
     /dex Xirin/ end
-    /dex Xirin /melee aggro=1
+    /dex Xirin /varset bln_tanking TRUE
 /return

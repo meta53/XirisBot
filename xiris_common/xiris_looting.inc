@@ -47,7 +47,7 @@ REVISION HISTORY
 #EVENT LOOT_SELF  		"#*#LootYourself#*#"
 
 Sub InitEvents_Looting
-	/call RegisterBackgroundEvents Events_Looting 6
+	/call RegisterBackgroundEvents Events_Looting 7
 /return
 
 Sub Events_Looting
@@ -78,9 +78,9 @@ Sub EVENT_LOOT_SELF
 Sub LootSelf 
 	/echo \ao${Me.Name} is looting self
 	/if (${Me.Class.ShortName.Equal[MNK]} || ${Me.Class.ShortName.Equal[NEC]} ) {
-		/multiline ; /squelch /melee feigndeath=0 ; /stand ; /delay 2s; /tar ${Me.Name}'s ; /corpse ; /loot ; /delay 2s ; /notify LootWnd LW_LootAllButton leftmouseup ; /delay 10s ; /squelch /melee feigndeath=10 ; /memspellset default;
+		/multiline ; /stand ; /delay 2s; /tar ${Me.Name}'s ; /corpse ; /loot ; /delay 2s ; /notify LootWnd LW_LootAllButton leftmouseup ; /delay 10s ; /memspellset default;
 	} else {
-		/multiline ;  /delay 2s; /tar ${Me.Name}'s ; /corpse ; /loot ; /delay 2s ; /notify LootWnd LW_LootAllButton leftmouseup ; /delay 10s ; /memspellset default; /mqpause off
+		/multiline ; /delay 2s ; /target ${Me.Name}'s ; /corpse ; /loot ; /delay 2s ; /notify LootWnd LW_LootAllButton leftmouseup ; /delay 10s ; /memspellset default; /mqpause off
 	}
 /return
 

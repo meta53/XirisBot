@@ -14,58 +14,58 @@ ______________________________________________
 **|	
 |-- Muramite Proving Grounds events
 |-- Mastery of Foresight
-#event ForesightNorth		"#*#dramatically. The north side looks safe#*#"
-#event ForesightSouth		"#*#dramatically. The south side looks safe#*#"
-#event ForesightEast		"#*#dramatically. The east side looks safe.#*#"
-#event ForesightWest		"#*#dramatically. The west side looks safe.#*#"
-#event ForesightCenter		"#*#dramatically."
+#EVENT ForesightNorth		"#*#dramatically. The north side looks safe#*#"
+#EVENT ForesightSouth		"#*#dramatically. The south side looks safe#*#"
+#EVENT ForesightEast		"#*#dramatically. The east side looks safe.#*#"
+#EVENT ForesightWest		"#*#dramatically. The west side looks safe.#*#"
+#EVENT ForesightCenter		"#*#dramatically."
 
 
-#event ForesightAESafe		"#*#You escape the blast unscathed#*#"
-#event ForesightAESafe		"#*#The air around you ignites#*#"
+#EVENT ForesightAESafe		"#*#You escape the blast unscathed#*#"
+#EVENT ForesightAESafe		"#*#The air around you ignites#*#"
 
 
-#event ForesightReflect		"#*#developing an anti-magic aura#*#"
+#EVENT ForesightReflect		"#*#developing an anti-magic aura#*#"
 
 
-#event ForesightPlatform	"#*#You should find higher ground#*#"
-#event ForesightPlatformSafe  "#*#You escape the blast unscathed#*#"
-#event ForesightPlatformSafe "#*#The air around you ignites#*#"
+#EVENT ForesightPlatform	"#*#You should find higher ground#*#"
+#EVENT ForesightPlatformSafe  "#*#You escape the blast unscathed#*#"
+#EVENT ForesightPlatformSafe "#*#The air around you ignites#*#"
 
-#event ForesightAOEDPS		"#*#Doing enough damage to him might interrupt the process#*#"
-#event ForesightDS			"#*#before you is sprouting shard spikes#*#"
-#event ForesightDS			"#*#you are pierced by thorns"
+#EVENT ForesightAOEDPS		"#*#Doing enough damage to him might interrupt the process#*#"
+#EVENT ForesightDS			"#*#before you is sprouting shard spikes#*#"
+#EVENT ForesightDS			"#*#you are pierced by thorns"
 
-#event ForesightKyvMove		"#*#You should move#*#"
-#event ForesightKyvMoveSafe "#*#You are struck by a stray arrow#*#"
-#event ForesightKyvMoveSafe "#*#An arrow narrowly misses you#*#"
+#EVENT ForesightKyvMove		"#*#You should move#*#"
+#EVENT ForesightKyvMoveSafe "#*#You are struck by a stray arrow#*#"
+#EVENT ForesightKyvMoveSafe "#*#An arrow narrowly misses you#*#"
 
-#event ForesightKyvStill	"#*#You should stand still#*#"
-#event ForesightKyvStillSafe "#*#You are struck by a stray arrow#*#"
-#event ForesightKyvStillSafe "#*#An arrow narrowly misses you#*#"
+#EVENT ForesightKyvStill	"#*#You should stand still#*#"
+#EVENT ForesightKyvStillSafe "#*#You are struck by a stray arrow#*#"
+#EVENT ForesightKyvStillSafe "#*#An arrow narrowly misses you#*#"
 
-#event ForesightKyvDuck		"#*#You should duck#*#"
-#event ForesightKyvDuckSafe "#*#Your head is struck#*#"
-#event ForesightKyvDuckSafe "#*#An arrow narrowly misses you#*#"
+#EVENT ForesightKyvDuck		"#*#You should duck#*#"
+#EVENT ForesightKyvDuckSafe "#*#Your head is struck#*#"
+#EVENT ForesightKyvDuckSafe "#*#An arrow narrowly misses you#*#"
 
-#event ForesightWeapon		"#*#you should remove it#*#"
-#event ForesightWeaponSafe  "#*#Your weaponry cools down#*#"
-#event ForesightWeaponSafe  "#*#searing your hands#*#"
+#EVENT ForesightWeapon		"#*#you should remove it#*#"
+#EVENT ForesightWeaponSafe  "#*#Your weaponry cools down#*#"
+#EVENT ForesightWeaponSafe  "#*#searing your hands#*#"
 
-#event ForesightRing		"#*#bite into your fingers#*#"
-#event ForesightRingSafe	"#*#You regain the use of your fingers#*#"
-#event ForesightRingSafe	"#*#Your rings clamp down#*#"
+#EVENT ForesightRing		"#*#bite into your fingers#*#"
+#EVENT ForesightRingSafe	"#*#You regain the use of your fingers#*#"
+#EVENT ForesightRingSafe	"#*#Your rings clamp down#*#"
 
-#event ForesightAEClose		"#*#before you is preparing to cast a devastating close-range spell#*#"
-#event ForesightAECloseSafe	"#*#You escape the blast unscathed#*#"
-#event ForesightAECloseSafe	"#*#The air around you ignites#*#"
+#EVENT ForesightAEClose		"#*#before you is preparing to cast a devastating close-range spell#*#"
+#EVENT ForesightAECloseSafe	"#*#You escape the blast unscathed#*#"
+#EVENT ForesightAECloseSafe	"#*#The air around you ignites#*#"
 
-#event D1 					"#*#MD1#*#"
-#event D2					"#*#MD2#*#"
-#event D3 					"#*#MD3#*#"
-#event D4 					"#*#MD4#*#"
-#event D5 					"#*#MD5#*#"
-#event D6 					"#*#MD6#*#"
+#EVENT D1 					"#*#MD1#*#"
+#EVENT D2					"#*#MD2#*#"
+#EVENT D3 					"#*#MD3#*#"
+#EVENT D4 					"#*#MD4#*#"
+#EVENT D5 					"#*#MD5#*#"
+#EVENT D6 					"#*#MD6#*#"
 
 Sub InitEvents_OOW_MPG_Foresight
 	/echo \ag Initializing MPG Foresight
@@ -180,11 +180,10 @@ Sub ForesightNavigation(string _wp, string _watch, string _event)
 
 	|- turn off melee & movement
 	
-	/if (${Melee.Attack})   /varset atk TRUE
+	/if (${Me.Combat})   /varset atk TRUE
 
 	/call Disengage
-	/if (${Navigation.Active}) /nav stop
-	/if (${Melee.Sticking})    /stick off
+	/stick off
 
 	|- set the watch variable to TRUE
 	/varset ${_watch} TRUE
@@ -213,7 +212,7 @@ Sub ForesightNavigation(string _wp, string _watch, string _event)
 		/goto :returnDelay
 	}
 	/nav stop
-	/if (${atk}) /killthis
+	/if (${atk}) /attack on
 	
 /return
 
@@ -287,10 +286,10 @@ Sub EVENT_ForesightKyvStill
 	/declare atk bool local FALSE
 	/declare tid int local ${Target.ID}
 	/declare kyvstill timer local 30s
-	/if (${Melee.Attack})   	/varset atk TRUE
+	/if (${Me.Combat})   	/varset atk TRUE
 	/call Disengage
 	/if (${Navigation.Active}) 	/nav stop
-	/if (${Melee.Sticking})     /stick off
+	/stick off
 
 
 	|- set the watch variable to TRUE
@@ -328,10 +327,10 @@ Sub EVENT_ForesightKyvDuck
 	/declare atk bool local FALSE
 	/declare tid int local ${Target.ID}
 	/declare kyvduck timer local 30s
-	/if (${Melee.Attack})   	/varset atk TRUE
+	/if (${Me.Combat})   	/varset atk TRUE
 	/call Disengage
 	/if (${Navigation.Active}) 	/nav stop
-	/if (${Melee.Sticking})    	/stick off
+	/stick off
 	/if (${Me.Sitting}) 	 	/stand on
 
 	/if (${Me.Standing}) {
@@ -404,7 +403,7 @@ Sub EVENT_ForesightPlatformSafe
 /return 
 
 Sub EVENT_ForesightDS
-	/rs !!Evading DamageShield!!
+	/docommand /${announceChannel} !!Evading DamageShield!!
 	/doevents flush ForesightDS
 
 	| The dragorns will cast spell: 5698 Lacerating Aura 350pt DS
@@ -417,9 +416,9 @@ Sub EVENT_ForesightDS
 		/declare wait int local 1
 		| Melee need to stop attacking
 		|- turn off melee & movement
-		/if (${Melee.Attack})   /varset atk TRUE
+		/if (${Me.Combat})   /varset atk TRUE
 		/if (${Navigation.Active}) /nav stop
-		/if (${Melee.Sticking})    /stick off
+		/stick off
 		
 		|- movement & event waiting loop
 		:DSDelay
@@ -439,7 +438,7 @@ Sub EVENT_ForesightDS
 		/goto :returnDelay
 	}
 	/nav stop
-	/if (${atk}) /killthis
+	/if (${atk}) /attack on
 /return
 
 Sub EVENT_ForesightWeapon

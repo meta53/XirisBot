@@ -24,20 +24,20 @@ Sub Main
 
     | Set MT
     /dex Xiris /end
-    /dex Xiris /melee aggro=on
+    /dex Xiris /varset bln_tanking TRUE
     /delay 10
-    /dex Xiris /melee taunt=on
+    /dex Xiris /varset bln_taunting TRUE
 
     | Set ST ()
     /dex Xiria /end 
-    /dex Xiria /melee aggro=on
+    /dex Xiria /varset bln_tanking TRUE
     /delay 10
-    /dex Xiria /melee taunt=on
+    /dex Xiria /varset bln_taunting TRUE
 
     | Set Self
-    /melee aggro=on
+    /varset bln_tanking TRUE
     /delay 10
-    /melee taunt=on
+    /varset bln_taunting TRUE
     /dt Xenshia changeMT Xirin
 
     | Run raidcommands

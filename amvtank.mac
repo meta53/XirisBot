@@ -8,8 +8,8 @@
 
 Sub Main(string _type, string _tankPoint)
 	/call xbot_initialize_spellRoutines
-	/melee aggro=on
-    /melee taunt=on
+	/varset bln_tanking TRUE
+    /varset bln_taunting TRUE
 	/declare bln_amvEngaged 		bool 	outer FALSE
 	/declare bln_rootTank			bool	outer FALSE
 	/declare root_X					int	    outer 0
@@ -38,7 +38,7 @@ Sub Main(string _type, string _tankPoint)
 	| Debuff, and start aggro
 	/rs DebuffTarget ${Target.ID}
 	/dgt singsongs
-	/killthis
+	/attack on
 
 	:ActiveLoop
 		/doevents
@@ -95,6 +95,7 @@ Sub commandAttack
 
 Sub Event_AMVEngage
 	/echo \aoEngaging AMV
+	/target Vangl
 	:amvTarget
 	/if (!${Target.ID}) {
 		/target Vangl
@@ -102,11 +103,11 @@ Sub Event_AMVEngage
 	}
 	/if (!${Target.Name.Find[Vangl]}) {
 		/echo \ar AMV not targetted. Try that again!
-		/return
+		/goto :amvTarget
 	}
 	/if (${Target.Name.Find[Vangl]} && !${Target.Distance3D} > 100) {
 		/echo \ar AMV out of Range. Try that again!
-		/return
+		/goto :amvTarget
 	}
     /if (${Me.CombatAbilityReady[Stonewall Discipline]})  /doability "Stonewall Discipline"
     /delay 5
@@ -119,7 +120,7 @@ Sub Event_AMVEngage
 	/dgt SingSongs
 	/face fast
 	/attack on
-	/attack on
+	/stick 15 front
 /return
 
 Sub EVENT_RootTankOn
@@ -141,6 +142,7 @@ Sub getAggro
 			/echo AMV NOT TARGETTING ME
             /if (${Me.CombatAbilityReady["Bellow of the Mastruq"]}) /doability "Bellow of the Mastruq"
 			/if (${Me.CombatAbilityReady["Bazu Bellow"]}) /doability "Bazu Bellow"
+			/if (${Me.CombatAbilityReady["Taunt"]}) /doability "Taunt"
 			/delay 10
 			/goto :aggroLoop
 		} 

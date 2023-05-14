@@ -12,8 +12,8 @@
 
 Sub Main(string _type, string _tankPoint)
 	/call xbot_initialize_spellRoutines
-	/melee aggro=on
-    /melee taunt=on
+	/varset bln_tanking TRUE
+    /varset bln_taunting TRUE
 	/declare bln_OMMEngaged 		bool 	outer FALSE
 	/declare bln_rootTank			bool	outer FALSE
 	/declare root_X					int	    outer 0
@@ -47,7 +47,7 @@ Sub Main(string _type, string _tankPoint)
 	| Debuff, and start aggro
 	/rs DebuffTarget ${Target.ID}
 	/dgt singsongs
-	/killthis
+	/attack on
 	:ActiveLoop
 		/if (${Zone.ShortName.Equal[thundercrest]}) {
 			/delay 10
@@ -89,7 +89,7 @@ Sub Event_OMMEngage
 	/dgt SingSongs
 	/face fast
 	/attack on
-	/killthis
+	/attack on
 /return
 
 Sub EVENT_WarCry
@@ -123,20 +123,20 @@ Sub EVENT_WarCry
 	/next i
 
 	:CastCryOn1
-	/echo \ao Calling Cry on \ag${Spawn[npc Coerced_Lieutenant_000].CleanName} \aw(\aG${Spawn[npc Coerced_Lieutenant_000].ID}\aw) from \a ${_berName}
-	/call CallBerserkerCry ${_berName} ${Spawn[npc Coerced_Lieutenant_000].ID}
+	/echo \ao Calling Cry on \ag${Spawn[Coerced_Lieutenant_000].CleanName} \aw(\aG${Spawn[npc Coerced_Lieutenant_000].ID}\aw) from \a ${_berName}
+	/call CallBerserkerCry ${_berName} ${Spawn[Coerced_Lieutenant_000].ID}
 	/goto :checkCoerced2
 
 	:CastCryOn2
-	/echo \ao Calling Cry on \ag${Spawn[npc Coerced_Lieutenant000].CleanName} \aw(\aG${Spawn[npc Coerced_Lieutenant000].ID}\aw) from \a ${_berName}
-	/call CallBerserkerCry ${_berName} ${Spawn[npc Coerced_Lieutenant000].ID}
+	/echo \ao Calling Cry on \ag${Spawn[Coerced_Lieutenant000].CleanName} \aw(\aG${Spawn[npc Coerced_Lieutenant000].ID}\aw) from \a ${_berName}
+	/call CallBerserkerCry ${_berName} ${Spawn[Coerced_Lieutenant000].ID}
 :return	
 /doevents flush
 /return
 
 Sub CallBerserkerCry(string _berserker,  int _targetID)
 	/echo \aoAsking \ag${_berserker}\aw to cast \agAncient: Cry of Chaos\aw on ${_targetID}
-	/dex ${_berserker} /multiline ; /mqpause on ; /melee reset ; /tar id ${_targetID} ; /delay 5 ; /doability "Ancient: Cry of Chaos" ; /target npc overlord ; /killthis ; /mqpause off
+	/dex ${_berserker} /multiline ; /mqpause on ;  /attack off ; /stick off ; /tar id ${_targetID} ; /delay 5 ; /doability "Ancient: Cry of Chaos" ; /target npc overlord ; /attack on ; /mqpause off
 /return 
 
 
@@ -176,7 +176,8 @@ Sub EVENT_GazeYou
 	} else {
 		
 		:gazeCastWait
-		/melee reset
+		/attack off
+		/stick off 
 		/if (${Navigation.Active}) /nav stop
 		/if (${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]}) {
 			/echo \arCasting, waiting to stop, then click!

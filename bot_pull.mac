@@ -21,7 +21,6 @@ REVISION HISTORY
 	12.19.22	xiris   Tweaked the incamp target acquisition to ignore alert 1
 ______________________________________________
 REQUIRED PLUGINS
-    mq2melee
     mq2cast
     mq2eqbc
     mq2debuffs
@@ -36,14 +35,14 @@ REQUIRED INCLUDES
 
 #include xiris_common/xiris_common.inc
 
-#Turbo 40
+#TURBO 120
 
 #define INI_zoneInfo xiris_common/xiris_pull_zoneinfo.ini
 
-#event Zoned                "You have entered#*#"
-#event Zoned                "LOADING, PLEASE WAIT..."
-#event NoLOS				"#*#you cannot see your target#*#"
-#event TooClose				"#*#your target is too close#*#"
+#EVENT Zoned                "You have entered#*#"
+#EVENT Zoned                "LOADING, PLEASE WAIT..."
+#EVENT NoLOS				"#*#you cannot see your target#*#"
+#EVENT TooClose				"#*#your target is too close#*#"
 
 Sub Main(int _pull_dist, string _channel, string _campName, bool _useDownFlags,  bool _usePull)
 	/delay 5
@@ -58,7 +57,7 @@ Sub Main(int _pull_dist, string _channel, string _campName, bool _useDownFlags, 
 	/echo Pulling >> ${Zone.Name} @ ${int_maxRadius} Range<<
 
 
-	/melee aggro=1
+	/varset bln_tanking TRUE
 	
 	|**
 	 ----------------------------
@@ -475,7 +474,7 @@ Sub AggroTarget
 		| Need to aggro the mob somehow
 		:AttemptAggro
 		/if (!${bln_usePull}) {
-			/killthis
+			/attack on
 			/varset ret SUCCESS
 			/goto :return
 		}
@@ -520,8 +519,7 @@ Sub AggroTarget
 
 |**
  ----------------------------
- Wait for the mob to be within kill/stick range, then issue
- /killthis command to mq2melee
+ Wait for the mob to be within kill/stick range, then issue /attack on command
  Calls chkCombatState while in the combatLoop
  ----------------------------
 **|
@@ -576,7 +574,7 @@ Sub killTarget
 	|TODO: make kill command use cmd chanenl
 	/docommand /${cmdChannel} KillMob ${Target.ID} "${Target.Name}" ${Time.Time24}
 	/call ResetCastTimers
-	/killthis
+	/attack on
 	/attack on
 	/g Called Kill ${Target.ID} ${Target.Name} ${Time.Time24}
 	
@@ -591,7 +589,7 @@ Sub killTarget
 	}
 	
 	/if (!${Me.Combat}) {
-		/killthis
+		/attack on
 	}
 
 	
@@ -972,7 +970,7 @@ Sub variant_initialize(int _pull_dist, string _channel, string _campName, bool _
 	}
 	
 	|--melee plugin/aggro for the requester
-	/melee aggro=1
+	/varset bln_tanking TRUE
 	/speed 1.5
 	/declare useGroup	bool	outer	FALSE
 	

@@ -45,27 +45,23 @@ REQUIRED INCLUDES
 	xiris_common/xiris_common.inc
 **|
 
-#EVENT BattleCleric "#*#BattleOn#*#"
-
-#EVENT CelestialRegeneration "#*#celregen#*#"
-
-#EVENT AutoRezON "#*#AutoRezON#*#"
-
-#EVENT AutoRezOFF "#*#AutoRezOFF#*#"
-
-#EVENT CombatRezON "#*#CombatRezON#*#"
-
-#EVENT CombatRezOFF "#*#CombatRezOFF#*#"
-
-|-- Divine Intervention Events
-#EVENT DoDivineIntervention "#1# tells you#*#'dime#*#'"
-#EVENT DoDivineIntervention	"#1# tells the group#*#'dime#*#'"
-#EVENT DoDivineIntervention	"#1# tells the raid#*#'dime#*#'"
-#EVENT DoDivineIntervention "[ #1# #*#]#*#dime#*#"
 
 #include xiris_common/xiris_common.inc
 
-#Turbo 40
+#TURBO 120
+
+#EVENT BattleCleric					"#*#BattleOn#*#"
+#EVENT CelestialRegeneration		"#*#celregen#*#"
+#EVENT AutoRezON					"#*#AutoRezON#*#"
+#EVENT AutoRezOFF					"#*#AutoRezOFF#*#"
+#EVENT CombatRezON					"#*#CombatRezON#*#"
+#EVENT CombatRezOFF					"#*#CombatRezOFF#*#"
+
+|-- Divine Intervention Events
+#EVENT DivineInterventionRequest	"#1# tells you#*#'dime#*#'"
+#EVENT DivineInterventionRequest	"#1# tells the group#*#'dime#*#'"
+#EVENT DivineInterventionRequest	"#1# tells the raid#*#'dime#*#'"
+#EVENT DivineInterventionRequest	"[ #1# #*#]#*#dime#*#"
 
 Sub InitEvents_Class 
 	/call RegisterClassEvents Events_CLR 8
@@ -78,7 +74,7 @@ Sub Events_CLR
 	/doevents AutoRezOFF
 	/doevents CombatRezON
 	/doevents CombatRezOFF
-	/doevents DoDivineIntervention
+	/doevents DivineInterventionRequest
 /return 
 
 
@@ -128,43 +124,39 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 		/call chkHeal_Group
 		
 		|-- Check to see if we are autorezzing
-		/call chkRez
+		/if ((${bln_autoRez} && !${bln_engaged}) || (${bln_combatRez} && ${bln_engaged})) /call chkRez
 
 		|-- Check Divine Arbitration Flag
 		/if (!${bln_DARBReady}) /call chkDARBReady
 
 		|-- Check Auto Assist if its on
-		/if (${bln_autoAssist}) /call chkAutoAssist
+		/if (${bln_autoAssist} && ${bln_battleCleric}) /call chkAutoAssist
 		
 		|-- If Engaged run Raid Events
 		/if (${bln_engaged}) {
-			|-- check engaged events
-			/call RunRaidEvents
-			/call RunClassEvents
+			|-- check all events
+			/call RunAllEvents
 
 			|-- verify engagement status (Acts like chkTargetStatus, but for non meleeing)
 			/call chkMobDead
 
-			|-- class specific 
-			/call chkDebuffsOnSingleTarget ${int_targetID}
-			/call cmbtBuffMT
-			/call chkYaulp
+			|-- debuff lib
+			/if (${${DEBUFF_Total}}) /call chkDebuffsOnSingleTarget ${int_targetID}
+
+			|-- class specific
+			/if (${bln_cmbtBuffUse} && ${int_cmbtBuffTotal}) /call cmbtBuffMT
 
 			/if (${bln_battleCleric}) {
-				|-- dps library (caster)
-				/call RunRaidEvents
-				/call RunClassEvents
+				|-- dps library (priest)
 				/call chkNuke
-
-				|-- verify target status
-				/call chkTargetStatus
 				
 				|-- std library (burns/aa/clicks)
-				/call RunRaidEvents
-				/call RunClassEvents
 				/call chkAA
 				/call chkBurn
 				/call chkClicky
+
+				|-- verify target status
+				/call chkTargetStatus
 			}
 		} else {
 			|-- check utilities, includes: sit,loot,leash (out of combat only) and only once every 10 seconds
@@ -205,7 +197,7 @@ Sub MGBCelestialRegeneration
 
 /return
 
-Sub EVENT_DoDivineIntervention(_line, _sender, _eventParams) 
+Sub EVENT_DivineInterventionRequest(_line, _sender, _eventParams) 
 	/if (${Bool[${Me.Spell[Divine Intervention].ID}]}) {
 		/if (${Me.SpellReady[Divine Intervention]}) {
 			/declare tid int local ${Spawn[pc ${_sender}].ID}
@@ -214,11 +206,12 @@ Sub EVENT_DoDivineIntervention(_line, _sender, _eventParams)
 			}
 			/echo \agDivine Intervention\aw on \ay${Target.Name}(${tid})
 			/call MQ2Cast "Divine Intervention" gem6 8s
-			/rs DI >> ${Target.Name}
+			/docommand /${announceChannel} DI >> ${Target.Name}
 		} else {
-			/rs DI is NOT ready, ask someone else!
+			/docommand /${announceChannel} DI is NOT ready, ask someone else!
 		}
 	}
+	/doevents flush DivineInterventionRequest
 /return
 
 

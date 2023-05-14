@@ -17,8 +17,8 @@
 
 Sub Main(string _type, string _tankPoint)
 	/call xbot_initialize_spellRoutines
-	/melee aggro=on
-    /melee taunt=on
+	/varset bln_tanking TRUE
+    /varset bln_taunting TRUE
 	/declare bln_hanvarEngaged 		bool 	outer FALSE
 	/declare bln_rootTank			bool	outer FALSE
 	/declare root_X					int	    outer 0
@@ -97,8 +97,8 @@ Sub Event_HanvarChainsOff
 Sub commandAttackGuards
 	/if (!${SpawnCount[npc guard radius 150]}) /return
 	/echo \ar${SpawnCount[npc guard radius 150]} \aware spawned, \ayKILLGUARDS
-	/dex Xirin /target ${NearestSpawn[npc guard]}
-	/dex Xirin /casting "Terror of Discord"
+	|/dex Xirin /target ${NearestSpawn[npc guard]}
+	|/dex Xirin /casting "Terror of Discord"
 	/varset bln_announcedRetreat  FALSE
 	/varset bln_announcedKill	  FALSE
 	/varset timer_announce_guards 10s
@@ -151,6 +151,7 @@ Sub Event_HanvarEngage
 	}
 	/face fast
 	/attack on
+	/stick 10 front
 /return
 
 Sub Event_HanvarStun
@@ -179,6 +180,7 @@ Sub getAggro
 			/echo Hanvar NOT TARGETTING ME
             /if (${Me.CombatAbilityReady["Bellow of the Mastruq"]}) /doability "Bellow of the Mastruq"
 			/if (${Me.CombatAbilityReady["Bazu Bellow"]}) /doability "Bazu Bellow"
+			/if (${Me.CombatAbilityReady["Taunt"]}) /doability "Taunt"
 			/delay 10
 			/goto :aggroLoop
 		} 

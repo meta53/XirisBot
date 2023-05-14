@@ -29,7 +29,7 @@ REVISION HISTORY
 
 Sub InitEvents_Charm
     /if (${Me.Class.ShortName.NotEqual[BRD]} && ${Me.Class.ShortName.NotEqual[ENC]} && ${Me.Class.ShortName.NotEqual[NEC]}) /return
-    /call RegisterBackgroundEvents Events_Charm 4
+    /call RegisterRaidEvents Events_Charm 4
 /return 
 
 Sub Events_Charm 

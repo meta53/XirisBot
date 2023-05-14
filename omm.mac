@@ -15,13 +15,17 @@ Sub Main
     | Xiris (MT) Autocure
     /dt Xenshia autoCureMTon
 
+    | Turn off cures for pretty much everyone except clerics
+    /dga melee  /varset bln_useCures FALSE
+    /dga caster /varset bln_useCures FALSE
+
     | Set the mode to normal (ahl)
     /dgt healMode NORMAL 
     /dgt InterruptON
 
     | Xiris
-    /melee aggro=on
-    /melee taunt=on 
+    /varset bln_tanking TRUE
+    /varset bln_taunting TRUE
     /dt Xanshia dime
 
     | Set the offtanks
@@ -51,23 +55,17 @@ Sub Main
     | Erisa needs heals and DI 
     /dt Xorael changeMT Erisa 
     /dex Erisa /dt Xenshia dime
-
   
     | Healing Focus
     | So these clerics will not try to cure group
     /dex Xanshia /varset DEBUFF_Total 0
-    /dt Xanshia FocusHEALMT_ON
-    /dt Xirael  FocusHEALMT_ON
-    /dt Xinshia FocusHEALMT_ON
-    /dt Xenshia FocusHEALMT_ON
 
     | Have a cleric autorez
     /dt Theist combatrezon
 
      | Set Self
-    /melee aggro=on
-    /melee taunt=on
-
+    /varset bln_tanking TRUE
+    /varset bln_taunting TRUE
 
     | Have enchanters set 0 nukes
     /dex Erisa    /varset NUKE_Total 0

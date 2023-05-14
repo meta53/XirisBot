@@ -63,25 +63,27 @@ REVISION HISTORY
 Sub InitEvents_Melee
  	/call RegisterBackgroundEvents Events_Melee 15
 	/call RegisterRaidEvents Events_Melee_Engaged 4
+	/call RegisterRapidEvents Events_Melee_Rapid 1
 /return
 
 Sub Events_Melee
 	/doevents NoDS
 	/doevents YesDS
-	/doevents ToggleMQ2Melee
 	/doevents Leashing
 	/doevents AutoAssist
-	/doevents UpdateStickCMD
+	/doevents CANTNAVTARGET
 /return
 
 Sub Events_Melee_Engaged
-	/doevents RESTICK
 	/doevents AERAMP
 	/doevents GETCLOSER
 	/doevents CANTSEETARGET
-	/doevents CANTNAVTARGET
 	/doevents RiposteDisc
 /return
+
+Sub Events_Melee_Rapid 
+	/doevents RESTICK
+/return 
 
 Sub EVENT_ToggleMQ2Melee(string _pluginState)
 	/if (${_pluginState.Equal[ON]}) {
@@ -95,10 +97,10 @@ Sub EVENT_ToggleMQ2Melee(string _pluginState)
 Sub toggleMQ2Melee(bool _state) 
 	/varset mq2meleeEnabled ${_state}
 	/if (${state}) {
-		/rs MQ2MELEE ENABLED
+		/docommand /${announceChannel} MQ2MELEE ENABLED
 		/melee plugin=1
 	} else {
-		/rs MQ2MELEE DISABLED
+		/docommand /${announceChannel} MQ2MELEE DISABLED
 		/melee plugin=0
 	}
 /return
@@ -290,10 +292,14 @@ Sub chkDownshits
 					/next ds
 				}
 				/call RunAllEvents	
+				
+
 				/if (${bln_engaged}) /return
+			
 				|/echo BuffName: ${buffName} castArg: ${castArg} tgtID: ${tgtID} ready: ${Me.SpellReady[${buffName}]} dsType: ${dsType} ?: ${castArg.Find[item]}
 				|/echo Stacks? ${Spell[${buffName}].Stacks} && Do I have it? ${Bool[${Me.Buff[${buffName}].ID}]}
 				/if (${Spell[${buffName}].Stacks} && !${Bool[${Me.Buff[${buffName}].ID}]}) {
+					
 					/if (${dsType.Equal[SPELL]} && !${Me.SpellReady[${buffName}]}) {
 						/echo \ay${buffName} \awis \arNOT \awReady, Memorizing
 						| Spell is not ready, memorize it
@@ -310,13 +316,15 @@ Sub chkDownshits
 					| - Note mq2medley will not auto swap items!
 					/varset itemArgs ${downflag${df}.Token[2,|]}
 					/varset itemID ${itemArgs.Token[1, ]}
+					/varset itemName ${FindItem[${itemID}].Name}
 					/if (${dsType.Equal[ITEM]} && !${FindItem[${itemID}].ID}) {
 						/echo \arCannot find downflag_${df}: \aw${itemID}!
 						/goto :nextDF
 					}
 					/if (${Me.Class.ShortName.Equal[BRD]}) {
-						/if (${dsType.Equal[ITEM]}) {
-							/call MQ2Medley ITEM "${FindItem[${itemID}]}" ${Me.ID} TRUE
+						/echo ${FindItem[${itemName}].TimerReady} ?
+						/if (${dsType.Equal[ITEM]} && ${FindItem[${itemName}].TimerReady}==0) {
+							/call MQ2Medley ITEM "${itemName}" ${Me.ID} TRUE
 						} else /if (${dsType.Equal[SPELL]}) {
 							/call MQ2Medley SONG ${buffName} ${Me.ID} TRUE
 						} else /if (${dsType.Equal[ALT]}) {
@@ -362,12 +370,12 @@ Sub chkComponentsAll
 				/delay 10
 				/if (${Macro.Return.Equal[SUMMON_ITEM_NOT_FOUND]}) {
 					/echo SUMMON_ITEM_NOT_FOUND turning  this component OFF.
-					/rs SUMMON_ITEM_NOT_FOUND  ${summoner} turning  this component OFF.
+					/docommand /${announceChannel} SUMMON_ITEM_NOT_FOUND  ${summoner} turning  this component OFF.
 					/varset COMPONENT_${i}_Check FALSE
 				}
 				/if (${Macro.Return.Equal[OUT_OF_REAGENTS]}) {
 					/echo OUT_OF_REAGENTS turning  this component OFF.
-					/rs OUT_OF_REAGENTS  ${component} turning  this component OFF.
+					/docommand /${announceChannel} OUT_OF_REAGENTS  ${component} turning  this component OFF.
 					/varset COMPONENT_${i}_Check FALSE
 				}
 				
@@ -474,7 +482,7 @@ SUB EVENT_CANTSEETARGET
 	/if (!${Target.ID} || ${Target.PctHPs} == 0 || !${bln_engaged} || ${timer_cantSee}) /return 
 	/doevents flush CANTSEETARGET
 	/varset timer_cantSee 10s 
-
+	/face fast
 	| If the target is less than 50 range
 	/if (${Select[${Me.Class.ShortName},BRD,BER,MNK,ROG,RNG,PAL,SHD,WAR]}) {
 		|/if (${bln_tanking})  /warp f 10
@@ -505,8 +513,9 @@ SUB EVENT_CANTNAVTARGET
 /return
 
 Sub StickAdjust
-	/echo \agStickAdjust \ao${int_currentStickDistance} \aw> \ao${int_minStickDistance}
-	/if (${int_currentStickDistance} > ${int_minStickDistance}) {
+	
+	/if (${int_currentStickDistance} > ${int_minStickDistance} && ${Target.Distance} <= ${int_currentStickDistance}) {
+		/echo \agStickAdjust \ao${int_currentStickDistance} \aw> \ao${int_minStickDistance} \ay(\aw${Target.Distance})
 		/varcalc int_currentStickDistance ${int_currentStickDistance} - 5
 		/if (${int_currentStickDistance} < ${int_minStickDistance}) /varset int_currentStickDistance ${int_minStickDistance} 
 		/stick ${stickCmd} ${int_currentStickDistance}
@@ -514,47 +523,45 @@ Sub StickAdjust
 /return
 
 Sub EngageTargetMelee
-	/call StickToTarget TRUE
-	/varset timer_restick 15s
-	/killthis
-	/attack on
+	/call StickToTarget ${bln_engaged}
 /return
 
 
 Sub StickToTarget(bool _engageWhenInRange)
 	/if (${str_classArchetype.Equal[CASTER]} || ${str_classArchetype.Equal[PRIEST]}) /return
-	/echo \aoStickToTarget \aw_engageWhenInRange:\ar ${_engageWhenInRange} \awdist: \ag${Target.Distance} \awcurrentstick: \ag${int_currentStickDistance} \awminstick: \ag${int_minStickDistance} \awmaxstick: \ag${int_maxStickDistance}
-	/echo \awStick Command String:\ag ${stickCmd} ${int_currentStickDistance}
-	:tryStick
-	| Too Far, exit
+	/varset int_startStickDistance ${Spawn[id ${int_targetID}].MaxRangeTo}
+	/varset int_currentStickDistance ${int_startStickDistance}
+	/echo \aoStickToTarget \aw_engageWhenInRange:\ar ${_engageWhenInRange} \awdist: \ag${Target.Distance} \awcurrentstick: \ag${int_currentStickDistance} \awminstick: \ag${int_minStickDistance} \awmaxstick: \ag${int_startStickDistance} \n\awStick Command String:\ag ${stickCmd} ${int_currentStickDistance}
+	
+	:determineStick
 	/if (${Target.Distance3D} > ${int_maxNavDistance}) {
-		/rs Target is too far away to get to!
+		/docommand /${announceChannel} Target is too far away to get to!
 		/if (${Navigation.Active}) /nav stop
+		/echo \ao StickToTarget Target is too far, disengaging.
 		/call Disengage
 		/goto :return
-	| Navigate
 	} else /if (${Target.Distance3D} > ${int_maxStickDistance} && ${Target.Distance} < ${int_maxNavDistance}) {
+		/echo \ar StickToTarget Target is within nav range, navigating
 		/if (${Navigation.Active}) /nav stop 
 		/declare navDelayWait int local 0
-		/melee reset
+		/call MeleeReset
 
-		:navStick
+		:navToMeleeRange
 		/nav target
 		/delay 10
 		/varcalc navDelayWait ${navDelayWait}+1
 		/doevents CANTNAVTARGET
-		/if (${Target.Distance3D} <= ${int_maxStickDistance}) {
+		/if (${Target.Distance3D} <= ${int_startStickDistance}) {
 			/nav stop
-			/goto :tryKill
+			/goto :tryStick
 		}
-		
-		/if (${navDelayWait} < 20) /goto :navStick
+
+		/if (${navDelayWait} < 20) /goto :navToMeleeRange
 	}
-	| Kill
-	
-	:tryKill
+	:tryStick
 	/stick ${stickCmd} ${int_currentStickDistance}
-	/if (${_engageWhenInRange}) /killthis
+	:tryKill
+	/if (${_engageWhenInRange}) /attack on
 	
 :return
 /return
@@ -562,7 +569,7 @@ Sub StickToTarget(bool _engageWhenInRange)
 
 Sub EVENT_RESTICK
 	/if (${bln_engaged} && (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}))  {
-		/call StickToTarget
+		/call StickToTarget ${bln_engaged}
 	}
 	/doevents flush RESTICK
 /return
@@ -570,10 +577,8 @@ Sub EVENT_RESTICK
 
 Sub chkTargetDist
 	/if (!${bln_engaged} || !${Me.Combat}) /return
-	/if (!${Me.AutoFire} && (${Target.Distance} > ${Math.Calc[${int_currentStickDistance}*1.1].Int}  )) /call StickToTarget
+	/if (!${Me.AutoFire} && (${Target.Distance} > ${Math.Calc[${int_currentStickDistance}*1.1].Int}  )) /call StickToTarget ${bln_engaged}
 /return 
-
-
 
 
 Sub EVENT_AERAMP
@@ -617,36 +622,66 @@ Sub downshitInterrupt
 |-- Used 04/27/2022 due to mq2melee acting retarded in MPG: Specialization
 Sub chkCombatAbilities
 	/if (${mq2meleeEnabled}) /return
-	| Berserkers
-	/if (${Me.AbilityReady[Frenzy]} && ${Me.Class.ShortName.Equal[BER]} && ${Me.Combat} && ${Target.Distance}<=${Target.MaxRangeTo}) /doability "Frenzy"
-	/if (${Me.CombatAbilityReady[Rage Volley]} && ${Me.Class.ShortName.Equal[BER]} && ${Me.Combat} && ${Target.Distance}<=${Target.MaxRangeTo}) /doability "Rage Volley"
-
-	| Rogues
-	/if (${Me.AbilityReady[Backstab]} && ${Me.Class.ShortName.Equal[ROG]} && ${Me.Combat} && ${Target.Distance}<=${Target.MaxRangeTo}) /doability "Backstab"
-
-	| Monks
-	/if (${Me.AbilityReady[Tiger Claw]} && ${Me.Class.ShortName.Equal[MNK]} && ${Me.Combat} && ${Target.Distance}<=${Target.MaxRangeTo}) /doability "Tiger Claw"
-	/if (${Me.AbilityReady[Flying Kick]} && ${Me.Class.ShortName.Equal[MNK]} && ${Me.Combat} && ${Target.Distance}<=${Target.MaxRangeTo}) /doability "Flying Kick"
+	/call chkCA_${Me.Class.ShortName}
 /return
 
 Sub chkCA_BER
+	/if (${Me.AbilityReady[Frenzy]} && ${Me.Combat} && ${Target.Distance}<=${Target.MaxRangeTo}) /doability "Frenzy"
+	/if (${Me.CombatAbilityReady[Rage Volley]} && ${Me.Combat} && ${Target.Distance}<=${Target.MaxRangeTo}) /doability "Rage Volley"
 /return
 
-Sub chkCA_ROG
-	
+Sub chkCA_BRD
+/return 
+
+Sub chkCA_BST
+	/if (${Me.AbilityReady[Kick]}  && ${Me.Combat} && ${Target.Distance}<=${Target.MaxRangeTo}) /doability "Kick"
 /return
+
+Sub chkCA_MNK
+	/if (${Me.AbilityReady[Tiger Claw]} && ${Me.Combat} && ${Target.Distance}<=${Target.MaxRangeTo}) /doability "Tiger Claw"
+	/if (${Me.AbilityReady[Flying Kick]} && ${Me.Combat} && ${Target.Distance}<=${Target.MaxRangeTo}) /doability "Flying Kick"
+/return
+
+Sub chkCA_PAL
+	/if (${Me.AbilityReady[Bash]} && ${Me.Combat} && ${Target.Distance}<=${Target.MaxRangeTo}) /doability "Bash"
+	/call chkTaunt
+/return 
+
+Sub chkCA_RNG 
+	/if (${Me.AbilityReady[Slam]}  && ${Me.Combat} && ${Target.Distance}<=${Target.MaxRangeTo}) /doability "Slam"
+/return 
+
+Sub chkCA_ROG
+	/if (${Me.AbilityReady[Backstab]} && ${Me.Combat} && ${Target.Distance}<=${Target.MaxRangeTo}) /doability "Backstab"
+/return
+
+Sub chkCA_SHD
+	/if (${Me.AbilityReady[Bash]} && ${Me.Combat} && ${Target.Distance}<=${Target.MaxRangeTo}) /doability "Bash"
+	/call chkTaunt
+/return 
+
+Sub chkCA_WAR
+	/if (${Me.AbilityReady[Kick]} && ${Me.Combat} && ${Target.Distance}<=${Target.MaxRangeTo}) /doability "Kick"
+	/if (${Me.AbilityReady[Bash]} && ${Me.Combat} && ${Target.Distance}<=${Target.MaxRangeTo}) /doability "Bash"
+	/call chkTaunt
+/return 
+
 
 
 |-- Not Used
-Sub killthis
-	/squelch /killthis
+Sub KillThis
+	/squelch /attack on
 /return
 
 
-Sub meleeReset
-	/squelch /melee reset
+Sub MeleeReset
+	/squelch /attack off 
+	/squelch /stick off
 /return
 
+Sub chkTaunt 
+	/if (${bln_tanking} && ${bln_taunting} &&  ${Me.AbilityReady[Taunt]} && ${Me.Combat} && ${Target.Distance}<=${Target.MaxRangeTo}) /doability "Taunt"
+/return 
 
 
 Sub chk_casterProvoke(string _provokeSpell)
@@ -713,12 +748,13 @@ Sub xbot_initialize_melee
 	/echo \ao xbot_initialize_melee
 	
 	/declare 	int_currentStickDistance		int		outer   30
-	/declare	int_maxStickDistance 	int 	outer 	40
-	/declare 	int_minStickDistance	int		outer 	13
-	/declare    int_maxNavDistance		int		outer   300
+	/declare	int_startStickDistance 	int 	outer 	40 	| Base stick distance
+	/declare 	int_minStickDistance	int		outer 	10	| Minimum stick distance
+	/declare 	int_maxStickDistance	int     outer   100 | Maximum attempted stick distance
+	/declare    int_maxNavDistance		int		outer   300	| Maximum attempted nav distance
+
 	/declare	timer_getCloser			timer	outer	5s
 	/declare 	timer_check_downshits	timer	outer 	0
-	/declare    timer_restick			timer   outer   15s
 	/declare 	timer_cantSee			timer   outer   10s
 	/declare    timer_cantNav			timer   outer   10s
 

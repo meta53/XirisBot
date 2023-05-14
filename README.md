@@ -91,7 +91,7 @@ While there are *many* commands built into XirisBot, only a few are generally ne
 
 ### Attack
 Hotkey that is used on the MT to call assist on the MT's current target, and has the MT attack the target as well. 
-`/multiline ; /rs KillMob ${Target.ID} "${Target.Name}" ${Time.Time24} ; /killthis`
+`/multiline ; /rs KillMob ${Target.ID} "${Target.Name}" ${Time.Time24} ; /attack on`
 
 ### Buffing
 Hotkey or command that is used to tell all available buffers to walk through the raid buffing each group (and single target buff defined memembers with special buffs)

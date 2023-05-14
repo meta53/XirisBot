@@ -62,12 +62,10 @@ REVISION HISTORY
 #EVENT SetUseFastOnly 		"[ #1# #*#]#*#UseFastOnly #2#"
 
 Sub InitEvents_Casting
-	/call RegisterBackgroundEvents Events_Casting_Background 2
-	
-	/if (${Me.Class.ShortName.Equal[SHM]} || ${Me.Class.ShortName.Equal[ENC]} || ${Me.Class.ShortName.Equal[DRU]} || ${Me.Class.ShortName.Equal[NEC]}) {
-		/call RegisterClassEvents Events_Casting_DOT 12
+	/if (${str_classArchetype.Equal[CASTER]} || ${str_classArchetype.Equal[PRIEST]}) {
+		/call RegisterBackgroundEvents Events_Casting_Background 2
 	}
-
+	
 	/if (${Me.Class.ShortName.Equal[RNG]} || ${Me.Class.ShortName.Equal[DRU]} || ${Me.Class.ShortName.Equal[NEC]}) {
 		/call RegisterRaidEvents Events_Casting_Snare 3	
 	}
@@ -200,7 +198,8 @@ Sub chkNuke
 				}
 			}
 		:NextNuke
-		/call RunAllEvents	
+		/call RunRaidEvents
+		/call RunRapidEvents	
 		/next i
 	}
 	/varset NUKE_HasCastOnce TRUE
@@ -307,7 +306,8 @@ Sub chkQNuke
 				}
 			}
 		:NextQuickNuke
-		/call RunAllEvents
+		/call RunRaidEvents
+		/call RunRapidEvents	
 		/next i
 	}
 	/varset QNUKE_HasCastOnce TRUE
@@ -330,7 +330,7 @@ Sub chkAENuke
 	:AENukeLoop
 	/for i 1 to ${AENUKE_Total}
 		|-- AE Nuke is active, let's light them up!
-		|/rs Lighting them up with ${AENUKE_Total} AE Nukes! ${AENUKE_${i}_Spell}
+		|/docommand /${announceChannel} Lighting them up with ${AENUKE_Total} AE Nukes! ${AENUKE_${i}_Spell}
 		:AENukeStart 
 		|-- skip if not ready
 		/if (!${Me.SpellReady[${AENUKE_${i}_Spell}]}) /goto :NextAENuke
@@ -356,7 +356,8 @@ Sub chkAENuke
 		/varset AENUKE_${i}_RecastTimer	${AENUKE_${i}_RecastTimer.OriginalValue}
 		/varset AENUKE_${i}_HasCastOnce TRUE
 	:NextAENuke
-	/call RunAllEvents
+	/call RunRaidEvents
+	/call RunRapidEvents	
 	/next i
 	/if (${AENUKE_Active}) /goto :AENukeLoop
 	:Return
@@ -410,8 +411,8 @@ Sub chkStun(bool _memorize)
 				}
 			}
 		:NextStun
-		/call RunAllEvents
-			
+		/call RunRaidEvents
+		/call RunRapidEvents	
 		/next i
 	}
 	/varset STUN_HasCastOnce TRUE
@@ -432,7 +433,8 @@ Sub chkStunLock
 	/varset STUN_UseLocking TRUE
 	:stunLock
 		/call chkStun TRUE
-		/call RunAllEvents
+		/call RunRaidEvents
+		/call RunRapidEvents
 		/delay 10
 		/if (${STUN_UseLocking}) /goto :stunLock
 :return
@@ -526,9 +528,6 @@ Sub chkDOT
 				/goto :NextDot
 			}
 			
-			/call RunAllEvents
-			
-
 			|-- Ready Wait loop waits for the DOT to be ready to cast
 			|   Used due to lag on raids sometimes lagging gems
 			|   Additionally spell might not be memmed due to swapping
@@ -561,7 +560,8 @@ Sub chkDOT
 				}
 			}
 		:NextDot
-		/call RunAllEvents
+		/call RunRaidEvents
+		/call RunRapidEvents	
 		/next i
 	}
 	/varset DOT_HasCastOnce TRUE
@@ -596,8 +596,8 @@ Sub chkSnare
 		/varset list_immuneSnare ${Ini[${ignoreINI},"SnareImmunes.${Zone.ShortName}","SnareImmune"]}
 		/varset bln_snareActive TRUE
 	}
-	/call RunAllEvents
-			
+	/call RunRaidEvents
+	/call RunRapidEvents	
 /return
 
 
@@ -640,12 +640,12 @@ Sub chkSpellMemorized(string _spell, bool _wait, int _gem)
 			/varcalc waitCount ${waitCount}+1
 			/if (${Me.SpellReady[${_spell}]}) /goto :return
 			/if (${waitCount} > 10) {
-				/rs cannot memorize ${_spell}! Update INI
+				/docommand /${announceChannel} cannot memorize ${_spell}! Update INI
 				/goto :return
 			}
 			/goto :memwait
 :nullError 
-/rs There was a null error trying to memorize a spell; Check your scope!
+/docommand /${announceChannel} There was a null error trying to memorize a spell; Check your scope!
 :return
 /return 
 
@@ -661,7 +661,7 @@ Sub chkHasSpell(string _clz, string _spell)
 	/echo checking spell _clz: ${_clz} _spell:${_spell}
 	/if (${Me.Class.ShortName.Equal[${_clz}]}) {
 		/if (${Bool[${Me.Spell[${_spell}].ID}]}) {
-			/rs ${_spell} Found.
+			/docommand /${announceChannel} ${_spell} Found.
 		}
 	}
 /return

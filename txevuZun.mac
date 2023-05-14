@@ -22,8 +22,8 @@ Sub Main
     /dgt InterruptON
 
     | Xiris
-    /melee aggro=on
-    /melee taunt=on 
+    /varset bln_tanking TRUE
+    /varset bln_taunting TRUE
     /dt deist dime
 
    /delay 5s

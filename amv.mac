@@ -16,8 +16,8 @@ Sub Main
     /dgt InterruptON
 
     | Xiris
-    /melee aggro=on
-    /melee taunt=on 
+    /varset bln_tanking TRUE
+    /varset bln_taunting TRUE
   
 
     | Healing Focus
@@ -43,8 +43,8 @@ Sub Main
     /dt Xunshia     HealType 3
 
      | Set Self
-    /melee aggro=on
-    /melee taunt=on
+    /varset bln_tanking TRUE
+    /varset bln_taunting TRUE
     /dt deist dime
 
     | Run raidcommands

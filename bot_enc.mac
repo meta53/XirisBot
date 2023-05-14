@@ -36,6 +36,8 @@ REQUIRED INCLUDES
 
 #include xiris_common/xiris_common.inc
 
+#TURBO 120
+
 #EVENT RUNEON "<#1#> RuneOn#*#"
 #EVENT RUNEON "[#1#(msg)] RuneOn#*#"
 #EVENT RUNEON "#1# tells you,#*#'RuneOn#*#'"
@@ -53,8 +55,6 @@ REQUIRED INCLUDES
 #EVENT RUNEOFF "#1# tells you,#*#'RuneOff#*#'"
 #EVENT RUNEOFF "#1# tells the group#*#'RuneOff#*#'"
 #EVENT RUNEOFF "#1#tells the raid,#*#'RuneOff#*#'"
-
-#turbo 40
 
 Sub InitEvents_Class
 	/call RegisterClassEvents Events_ENC 2
@@ -104,32 +104,27 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 		/if (${bln_autoAssist}) /call chkAutoAssist
 		
 		/if (${bln_engaged}) {
-			|-- check engaged events
-			/call RunRaidEvents
-			/call RunClassEvents
-
-			|-- verify target status
-			/call chkTargetStatus	
+			|-- check all events
+			/call RunAllEvents
 
 			|-- debuff lib
-			/call chkDebuffsOnSingleTarget ${int_targetID}
+			/if (${${DEBUFF_Total}}) 	/call chkDebuffsOnSingleTarget ${int_targetID}
 
 			|-- class specific
-			/call chkPetAttack			
-			/call cmbtBuffGRP
+			/if (${Me.Pet.ID}) 			/call chkPetAttack	
+			/if (${int_cmbtBuffTotal})	/call cmbtBuffGRP
 		
 			|-- dps library (caster)
-			/if (!${bln_hasCharmedPet}) /call RunRaidEvents
-    		/if (!${bln_hasCharmedPet}) /call RunClassEvents
 			/if (!${bln_hasCharmedPet}) /call chkDOT
 			/if (!${bln_hasCharmedPet}) /call chkNuke
 			
 			|-- std library (burns/aa/clicks)
-			/call RunRaidEvents
-    		/call RunClassEvents
 			/call chkAA
 			/call chkBurn
 			/call chkClicky
+
+			|-- verify target status
+			/call chkTargetStatus
 		} else {
 			|-- check utilities, includes: sit,loot,leash (out of combat only) and only once every 10 seconds
 			/if (!${timer_check_utilities}) /call chkUtils

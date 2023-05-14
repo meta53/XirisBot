@@ -164,7 +164,6 @@ Sub doRaidBuffs
  ----------------------------
 **|
 Sub cmbtBuffMT
-	/if (!${bln_engaged})     /return
 	/if (!${bln_cmbtBuffUse} || !${int_cmbtBuffTotal}) /return
 
 
@@ -344,7 +343,7 @@ Sub doGroupBuffOnTarget(string tgt)
 				/goto :spellReadyWait
 			} else /if (${Cast.Result.Equal[CAST_OUTOFREAGENTS]}) {
 				/echo \ar ${buffSpell} ${Cast.Result} Disabling
-				/rs Out of reagents for ${buffSpell}
+				/docommand /${announceChannel} Out of reagents for ${buffSpell}
 				/varset OOCBUFF_${i}_Use FALSE
 			} else /if (${Cast.Result.Equal[CAST_SUCCESS]}) {
 				/echo \ag ${buffSpell} ${Cast.Result}

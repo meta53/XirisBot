@@ -15,6 +15,6 @@ Sub Main
     /dt Xanshia AutoCureMTOn
 
     | Set the aggro for Xirin
-    /melee aggro=1
-    /melee taunt=1
+    /varset bln_tanking TRUE
+    /varset bln_taunting TRUE
 /return

@@ -78,14 +78,8 @@ Sub SlowTarget(string _resist)
 Sub chkDebuffsOnSingleTarget(int _targetID)
 	/if (!${DEBUFF_Total} || !${_targetID} || ${Target.Name.Find[s_corpse]} || !${Spawn[id ${_targetID}].LineOfSight}) /return
 	/if (${timer_check_debuffs}) /return
-	| If we only cast 1 debuff, check that trigger, otherwise, check all the triggers
-	/if (${DEBUFF_Total} == 1) {
-		/call chkDebuffTrigger ${DEBUFF_${db}_Trigger} 
-		/if (${Macro.Return}) /call CastDebuffsOnTarget ${_targetID} FALSE
-	} else {
-		/call CastDebuffsOnTarget ${_targetID} FALSE
-	}
-
+	
+	/call CastDebuffsOnTarget ${_targetID} FALSE
 	:setTimer 
 	/varset timer_check_debuffs 10s
 /return
@@ -177,7 +171,6 @@ Sub CastDebuffsOnTarget(int _targetID, bool _forced)
 	/declare	db		int		local	${DEBUFF_Total}
 	/declare 	valid   bool    local   FALSE
 	/for db 1 to ${DEBUFF_Total}
-		/call RunRaidEvents
 		:debuffChecks
 
 		| Forcing Check - if this is forced, just cast the damn thing
@@ -216,7 +209,8 @@ Sub CastDebuffsOnTarget(int _targetID, bool _forced)
 
 		/doevents GazeYou
 	:nextDB
-		/call RunAllEvents
+		/call RunRaidEvents
+		/call RunRapidEvents
 		/next db
 	:return
 /return

@@ -12,8 +12,8 @@ Sub Event_KeldovanEngage
 Sub Main(string _type, string _tankPoint)
     /echo Running Keldovan
     /call xbot_initialize_spellRoutines
-	/melee aggro=on
-    /melee taunt=on
+	/varset bln_tanking TRUE
+    /varset bln_taunting TRUE
 	/declare bln_keldovanEngaged 	bool 	outer FALSE
     /declare spell_hate             string  outer Terror of Discord
     /declare spell_invl             string   outer Harmshield
@@ -63,7 +63,7 @@ Sub Main(string _type, string _tankPoint)
     :KeldovanKill
     /delay 10s
     /tar Keldovan
-    /killthis
+    /attack on
     /mac bot_shd xiris
 /return
 
@@ -88,9 +88,9 @@ Sub commandTankAggro
     /dgt SingSongs
     /rs  SingSongs
     /rs DebuffTarget ${Spawn[npc Keldovan].ID}
-    /melee reset
-    /melee aggro=off 
-    /melee taunt=off 
+    /attack off ; /stick off 
+    /varset bln_tanking		FALSE
+    /varset bln_taunting	FALSE
            
     /dex Xiria /shield Xiris
     /dex Xirea /shield Xiris

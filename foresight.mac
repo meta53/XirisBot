@@ -33,7 +33,7 @@ Sub Main
     /docrack preventspeed on
 
     | Set Me (SK) to aggro and taunt and set the autostander mac
-    /melee aggro=1 
-    /melee taunt=1
+    /varset bln_tanking TRUE 
+    /varset bln_taunting TRUE
     /mac raidcmds
 /return

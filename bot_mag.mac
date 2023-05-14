@@ -5,7 +5,6 @@ BOT_MAG.mac
 This macro is configured for use by any melee class
 Modify the BOT_CLS_CHARNAME.ini file for use by a specific toon
 This was written ground up for usage with xiris's bots.
-It heavily relies on mq2melee for specific class functionality
 
 Usage: /mac bot_mag ${_tank1Name} ${_tank2Name} ${_healPoint} ${_assistArgs}
 
@@ -34,7 +33,7 @@ REQUIRED INCLUDES
 
 #include xiris_common/xiris_common.inc
 
-#Turbo 40
+#TURBO 120
 
 #EVENT AEON 	"#*#aeNukeON"
 #EVENT AEOFF	"#*#aeNukeOFF"
@@ -87,23 +86,17 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 		/if (${bln_autoAssist}) /call chkAutoAssist
 
 		/if (${bln_engaged}) {
-			|-- check engaged events
-			/call RunRaidEvents
-			/call RunClassEvents
-
-			|-- verify target status
-			/call chkTargetStatus
+			|-- check all events
+			/call RunAllEvents
 
 			|-- debuff lib
-			/call chkDebuffsOnSingleTarget ${int_targetID}
+			/if (${${DEBUFF_Total}}) 	/call chkDebuffsOnSingleTarget ${int_targetID}
 
 			|-- class specific
-			/call chkPetAttack
-			/call cmbtBuffMT
+			/if (${Me.Pet.ID}) 			/call chkPetAttack	
+			/if (${bln_cmbtBuffUse} && ${int_cmbtBuffTotal}) /call cmbtBuffMT
 			
-			|-- dps library (caster)
-			/call RunRaidEvents
-    		/call RunClassEvents
+			|-- dps library (AE caster)
 			/call chkNuke
 			/call chkAENuke
 
@@ -113,6 +106,9 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 			/call chkAA
 			/call chkBurn
 			/call chkClicky
+
+			|-- verify target status
+			/call chkTargetStatus
 		} else {
 			|-- check utilities, includes: sit,loot,leash (out of combat only) and only once every 10 seconds
 			/if (!${timer_check_utilities}) /call chkUtils
