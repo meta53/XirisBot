@@ -696,6 +696,7 @@ Sub chkGroupMarkedForDeath
 	/declare tankIndex int local 10
 	/declare cureWaitCount int local 0
 	/declare gm int local 1
+	/declare secondCheck bool local FALSE
 
 	:CheckGroup
 	/varset haveMark 	0
@@ -715,12 +716,11 @@ Sub chkGroupMarkedForDeath
 			/call getCureCounters ${Group.Member[${gm}]} disease
 			/varset gcount[${i}] ${Int[${Macro.Return}]}
 		} 
-
-		
 	/next i
 	
 	| No Marks found? return
-	/if (!${foundMark}) /goto :return
+	/if (!${foundMark} && !${secondCheck})	/goto :Return
+	/if (!${foundMark} && ${secondCheck})	/goto :CommandAttack
 
 	/echo \ar${haveMark} \aoInstances of Mark of Death found!
 	| If Marks are less than 3, or I am a paladin then single target cure them
@@ -747,26 +747,31 @@ Sub chkGroupMarkedForDeath
 			/echo \agGroupCuring with ${str_heal_group}
 			/g Group Heal incoming, get close!
 			/for i 1 to 5
-				/if ((${Group.Member[${i}].ID} != ${int_MTID}) && (${Group.Member[${i}].ID} != ${str_tankName1}) && ${Select[${Group.Member[${i}].Class.ShortName},${MeleeClasses}]}) {
-					
-					/dex ${Group.Member[${i}]} /multiline ; /attack off ; /stick off ; /warp loc ${Me.Y} ${Me.X} ${Me.Z}
+				/if ((${Group.Member[${i}].ID} != ${int_MTID}) && (${Group.Member[${i}].Name.NotEqual[${str_MTName}]}) && ${Select[${Group.Member[${i}].Class.ShortName},${MeleeClasses}]}) {
+					/dt  ${Group.Member[${i}]} BackOff
+					/dex ${Group.Member[${i}]} /warp loc ${Me.Y} ${Me.X} ${Me.Z} 
+					/dt  ${Group.Member[${i}]} BackOff
 				}
 			/next i
-			/call chkHeal_MT
+			/if (${Me.Casting.ID}) /call Interrupt
 			/call MQ2Cast "${str_heal_group}" gem4 2s 
-			/goto :CommandAttack
+			/varset secondCheck TRUE
+			/goto :CheckGroup
 		}
 	} else /if (${Me.Class.ShortName.Equal[SHM]}) {
 		/echo \agGroupCuring with ${str_cure_disease}
 		/g Group Heal incoming, get close!
 		/for i 1 to 5
-			/if ((${Group.Member[${i}].ID} != ${int_MTID}) && (${Group.Member[${i}].ID} != ${str_tankName1})  && ${Select[${Group.Member[${i}].Class.ShortName},${MeleeClasses}]}) {
-				/dex ${Group.Member[${i}]} /multiline ;  /attack off ; /stick off  ; /warp loc ${Me.Y} ${Me.X} ${Me.Z} 
+			/if ((${Group.Member[${i}].ID} != ${int_MTID}) && (${Group.Member[${i}].Name.NotEqual[${str_MTName}]}) && ${Select[${Group.Member[${i}].Class.ShortName},${MeleeClasses}]}) {
+				/dt  ${Group.Member[${i}]} BackOff
+				/dex ${Group.Member[${i}]} /warp loc ${Me.Y} ${Me.X} ${Me.Z} 
+				/dt  ${Group.Member[${i}]} BackOff
 			}
 		/next i
-		/call chkHeal_MT
+		/if (${Me.Casting.ID}) /call Interrupt
 		/call MQ2Cast "${str_cure_disease}" gem7 8s
-		/goto :CommandAttack
+		/varset secondCheck TRUE
+		/goto :CheckGroup
 		
 	}
 
@@ -775,20 +780,23 @@ Sub chkGroupMarkedForDeath
 	/echo \awCureByCounters: \ag${str_cure_disease} \ayReady?${Me.SpellReady[${str_cure_disease}]} \aw(\ag${Me.PctMana}) \ay${haveMark}< 2
 	/for i 1 to 6
 		/varcalc gm ${i}-1
-		/call chkHeal_MT
+		/if (${Me.Casting.ID}) /call Interrupt
 		/if (${gcount[${i}]} > 0) {
 			/if (${Group.Member[${gm}].ID} != ${int_MTID} && ${Select[${Group.Member[${gm}].Class.ShortName},${MeleeClasses}]}) {
-				/dex ${Group.Member[${gm}]} /multiline ; /attack off ; /stick off ; /warp loc ${Me.Y} ${Me.X} ${Me.Z} 
+				/dt  ${Group.Member[${gm}]} BackOff
+				/dex ${Group.Member[${gm}]} /warp loc ${Me.Y} ${Me.X} ${Me.Z} 
+				/dt  ${Group.Member[${gm}]} BackOff
 				/call handleCureRequest ${Group.Member[${gm}].Name} ${Group.Member[${gm}].ID} disease ${gcount[${i}]} TRUE
 			}
 		}
 	/next i
 
 	:CommandAttack
+	/varset secondCheck FALSE
 	/if (${Spawn[npc ${eventTarget}].PctHPs} <= 98) {
 		/gsay KillMob ${Spawn[npc ${eventTarget}].ID} "${Spawn[npc ${eventTarget}].Name}" ${Time.Time24}
-		/gsay restick
-		/goto :CheckGroup
+		/gsay Restick!
+		/rsay Returning My Group to the Fight!
 	}
 	
 
@@ -805,7 +813,7 @@ Sub chkGroupMarkedForDeath
 			/call handleCureRequest ${Group.Member[${tankIndex}].Name} ${Group.Member[${tankIndex}].ID} disease ${Int[${Macro.Return}]} TRUE
 		}
 	}
-:return
+:Return
 /return
 
 

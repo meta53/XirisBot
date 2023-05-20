@@ -172,12 +172,8 @@ Sub chkNuke
 			|   Additionally spell might not be memmed due to swapping		
 			/call chkSpellMemorized "${NUKE_${i}_Spell}" TRUE ${NUKE_${i}_Gem}
 			:NukeCastWait
-			/if (!${Me.SpellReady[${NUKE_${i}_Spell}]} || (${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]})) {
-				/delay 2
-				/goto :NukeCastWait
-			}
+			/delay 5s (${Me.SpellReady[${NUKE_${i}_Spell}]} && (!${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]}))
 
-		
 			|-- All this ready, check for LOS/Distance/Mana
 			/if (${Target.PctHPs}<=${NUKE_${i}_StartHP} && ${Target.PctHPs}>=${NUKE_${i}_StopHP}) {
 				/if (${Me.CurrentMana}>=${Spell[${NUKE_${i}_Spell}].Mana} && ${Target.Distance}<=${Spell[${NUKE_${i}_Spell}].Range} && ${Target.LineOfSight}) {
@@ -279,11 +275,7 @@ Sub chkQNuke
 			|   Additionally spell might not be memmed due to swapping		
 			/call chkSpellMemorized "${QNUKE_${i}_Spell}" FALSE ${QNUKE_${i}_Gem}
 			:QnukeNukeCastWait
-			/if (!${Me.SpellReady[${QNUKE_${i}_Spell}]} || (${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]})) {
-				/delay 2
-				/goto :QnukeNukeCastWait
-			}
-			
+			/delay 5s (${Me.SpellReady[${QNUKE_${i}_Spell}]} && (!${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]}))
 			
 			|-- All this ready, check for LOS/Distance/Mana
 			/if (${Target.PctHPs}<=${QNUKE_${i}_StartHP} && ${Target.PctHPs}>=${QNUKE_${i}_StopHP}) {
@@ -343,10 +335,7 @@ Sub chkAENuke
 		}
 		/call chkSpellMemorized "${AENUKE_${i}_Spell}" TRUE ${AENUKE_${i}_Gem}
 		:AENukeCastWait
-		/if (!${Me.SpellReady[${AENUKE_${i}_Spell}]} || (${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]})) {
-			/delay 2
-			/goto :AENukeCastWait
-		}
+		/delay 5s (${Me.SpellReady[${AENUKE_${i}_Spell}]} && (!${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]}))
 
 		/call MQ2Cast "${AENUKE_${i}_Spell}"	
 		/if (${Macro.Return.Equal[CAST_SUCCESS]}) {
@@ -532,11 +521,9 @@ Sub chkDOT
 			|   Used due to lag on raids sometimes lagging gems
 			|   Additionally spell might not be memmed due to swapping
 			/call chkSpellMemorized "${DOT_${i}_Spell}" FALSE ${DOT_${i}_Gem}
+			
 			:DotReadyWait
-			/if ((!${Me.SpellReady[${DOT_${i}_Spell}]} || (${Me.Casting.ID}) && ${Me.Class.ShortName.NotEqual[BRD]})) {
-				/delay 2
-				/goto :DotReadyWait
-			}
+			/delay 5s (${Me.SpellReady[${DOT_${i}_Spell}]} && (!${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]}))
 
 			|-- All this ready, check for LOS/Distance/Mana
 			|-- Think about adding the named stop point here at some point in future

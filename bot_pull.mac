@@ -91,6 +91,7 @@ Sub Main(int _pull_dist, string _channel, string _campName, bool _useDownFlags, 
 		
 		|-- run the pull/kill segment
 		:getAndKill
+			/attack off
 			/call getTarget
 			/if (${Target.Distance} > 20) /call pullTarget
 			/if (!${Target.ID}) /goto :getAndKill
@@ -104,8 +105,16 @@ Sub Main(int _pull_dist, string _channel, string _campName, bool _useDownFlags, 
 Sub chkZone
 	/if (${Zone.ShortName.NotEqual[${SZ_shortName}]}) {
 		/if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) {
-			/docommand /${cmdChannel}  I died! GTFO! ${Time}
-			/end
+			/delay 30s
+			/if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) {
+				/docommand /${cmdChannel}  I died! GTFO! ${Time.Time24}
+				/docommand /${cmdChannel} firetl
+				/delay 45s
+				/dga /notify ConfirmationDialogBox CD_Yes_Button leftmouseup
+				/dga /notify LargeDialogWindow LDW_YesButton leftmouseup
+				/dga /notify LargeDialogWindow LDW_OkButton leftmouseup
+				/end
+			}
 		}
 	}
 /return
@@ -158,15 +167,12 @@ Sub getTarget
 			/if (${SpawnCount[npc radius ${int_campRadius} zradius 15 noalert 1]} > 0) {
 				/call TrueTarget ${NearestSpawn[npc radius ${int_campRadius} zradius 15 noalert 1].ID} 
 				/echo NPC in camp (R:${int_campRadius}), killing: Distance: ${Target.Distance3D}
-				/delay 5
 			} else /if (${SpawnCount[npc alert 2 radius ${int_alert2Radius} range ${int_minTLevel} ${int_maxTLevel} zradius ${int_zRadius} noalert 1]} > 0) {
 				/call TrueTarget ${NearestSpawn[npc alert 2 radius ${int_alert2Radius} range ${int_minTLevel} ${int_maxTLevel} zradius ${int_zRadius}  noalert 1].ID}
 				/echo NPC on alert 2 is up, killing: Distance: ${Target.Distance3D}
-				/delay 5
 			} else /if (${SpawnCount[npc noalert 1 radius ${int_maxRadius} range ${int_minTLevel} ${int_maxTLevel} zradius ${int_zRadius}]} > 0) {
 				/echo No NPCs on the alert 2 list are up, trying random NPC
 				/call TrueTarget ${NearestSpawn[npc noalert 1 radius ${int_maxRadius} range ${int_minTLevel} ${int_maxTLevel} zradius ${int_zRadius}].ID} 
-				/delay 5
 			}
 
 
@@ -203,7 +209,6 @@ Sub getTarget
 						}
 					
 						/call moveCamp ${int_currentCamp}
-						/delay 10
 				} else {
 					/if (${SpawnCount[npc noalert 1 radius ${int_maxRadius} range ${int_minTLevel} ${int_maxTLevel} zradius ${int_zRadius}]} == 0) {
 						/echo No valid targets delaying 5s
@@ -309,8 +314,6 @@ Sub setCamp
 
 	/varset int_campY ${Me.Y}
 	/varset int_campX ${Me.X}
-	/delay 1s
-	|/mqpause on
 /return
 
 Sub resetCamp
@@ -333,7 +336,6 @@ Sub resetCamp
 Sub moveCamp(int _campNumber) 
 	/echo \awMoving to Camp Number \ag${str_campName}
 	/docommand /${cmdChannel} NavToWP camp${_campNumber}
-	/delay 1
 	:moveCampNavLoop
 		/echo moveCampNavLoop
 		/if (${Navigation.Active}) {
@@ -372,7 +374,6 @@ Sub pullTarget
 		:RunningToTarget
 		/if (!${Navigation.Active}) /navigate target
 
-		/delay 20
 		| Target in LOS, and in distance, going to aggrocheck
 		/if (${Target.LineOfSight} && ${Target.Distance3D} < ${int_castDistance}) {
 			/echo Target in LOS, and in distance, going to aggrocheck
@@ -395,19 +396,10 @@ Sub pullTarget
 
 		/if (!${Target.ID}) /goto :return
 		
-		/delay 10
 
 		|-- Check to see if I don't yet have aggro
 		:AggroCheck
-		/echo minpull ${int_maxPullCount}
-		/echo usePull ${bln_usePull}
-		/echo castDist ${int_castDistance}
-	| || (!${bln_usePull} && (${Target.Distance} > 25 && ${Target.LineOfSight}))
 		/if (!${Me.TargetOfTarget.ID} && ((${bln_usePull} && ${Me.XTarget} < ${int_maxPullCount}) || (!${bln_usePull}))) {
- 
-		
-			| I do not yet have aggro;
-			/echo I do not have aggro, checking dist
 			:AggroDistCheck 
 			| Am I close enough to aggro?
 			/if (${Target.Distance3D} > 200 && ${bln_usePull}) /goto :RunningToTarget
@@ -537,7 +529,6 @@ Sub killTarget
 		/if (${Math.Distance[${Me.Y},${Me.X}:${int_campY},${int_campX}]} > ${int_campRadius}) {
 			/if (!${Navigation.Active}) /navigate waypoint ${str_campName}
 			/echo \agMoving back to \ao${str_campName}
-			/delay 5
 			/goto :campCheck
 		} else {
 			/if (${Navigation.Active}) /navigate stop
@@ -548,22 +539,23 @@ Sub killTarget
 
 	|--check the distance, if its out of melee range/aggro range, lets wait a second
 	/face fast
+
 	:distanceWaitLoop
 		/varcalc int_waited ${int_waited}+1
 		/if (${int_waited} > 15) /return
 		/if (!${Target.ID}) 	 /return
-		/delay 5
 		/if (${Target.Distance} > ${int_campRadius}) {
 			/if (${SpawnCount[npc radius ${int_campRadius}]} > 0) {
-				/echo Something already in camp, changing target
-				/target radius ${int_campRadius} npc
+				/echo \aySomething already in camp, changing target!
+				/call TrueTarget ${NearestSpawn[npc].ID}
 				/varset int_targetID ${Target.ID}
+				/varset str_targetName ${Spawn[id ${int_targetID}].Name}
+				/varset bln_engaged TRUE
 				/varset bln_validTGT	TRUE
-				/delay 5
 				/goto :killMob
 			} else {
 				/echo  Distance not covered! ${Target.Distance}::${int_waited} ${Target.Distance} > ${int_campRadius}
-				/delay 5
+				/delay 20 ${Target.Distance} < ${int_campRadius}
 				/goto :distanceWaitLoop
 			}
 		}
@@ -571,10 +563,10 @@ Sub killTarget
 	:killMob
 	|--issue kill command
 	/varcalc int_killCount ${int_killCount}+1
-	|TODO: make kill command use cmd chanenl
+
 	/docommand /${cmdChannel} KillMob ${Target.ID} "${Target.Name}" ${Time.Time24}
 	/call ResetCastTimers
-	/attack on
+	/face fast
 	/attack on
 	/g Called Kill ${Target.ID} ${Target.Name} ${Time.Time24}
 	
@@ -588,10 +580,6 @@ Sub killTarget
 		/call MQ2Cast "Rampage" alt
 	}
 	
-	/if (!${Me.Combat}) {
-		/attack on
-	}
-
 	
 	|--while in combat do these things
 	:combatLoop
@@ -668,21 +656,18 @@ Sub chkUtils
 		/if (${useDownFlags}) /call chkDownshits
 		/call chkHP
 		/call chkComponentsAll
-		/if (!${timer_allBuffs} && !${bln_usePull}) {
+		/if (!${timer_allBuffs} && ${bln_usePull}) {
 			/echo \ayRequesting Buffs @${Time.Time24}
 			/docommand /${cmdChannel} DoHideCorpses
 			/delay 5s
-			/docommand /${cmdChannel} DoHideLooted
- 			/docommand /${cmdChannel} Doraidbuffs ALL
+ 			/docommand /${cmdChannel} DoRaidBuffs ALL
 			/echo \awBuffs Requested, setting timer to 45m, and waiting 45s!
 			/varset timer_allBuffs 45m
 			:buffDelay
-			/if (${int_buffDelay} < 45) {
-				/delay 1s
-				/varcalc int_buffDelay ${int_buffDelay}+1 
-				/if (${SpawnCount[npc radius ${int_campRadius}]} > 0) /goto :return
-				/goto :buffDelay
-			}
+			/delay 60s ${SpawnCount[npc radius ${int_campRadius}]}
+
+			|--remove DS (summoning mobs will fuck you over)
+			/call RemoveDS
 		}
 			
 		/if (${bln_wait4Mana} || ${bln_wait4End} || ${bln_wait4HP}) {
@@ -958,6 +943,9 @@ Sub variant_initialize(int _pull_dist, string _channel, string _campName, bool _
 	/varset bln_looting				FALSE
 	/if (${bln_looting}) 			/call EnableLooting
 	/if (!${_usePull})				/call EnableLooting
+
+	|--remove DS (summoning mobs will fuck you over)
+	/call RemoveDS
 
 	|--downflags 
 	/declare useDownFlags	bool	outer	TRUE
@@ -1326,9 +1314,13 @@ Sub setAlerts
 	} else /if (${Zone.ShortName.Equal[qvic]} || ${Zone.ShortName.Equal[kodtaz]} || ${Zone.ShortName.Equal[txevu]}) {
 		/squelch /alert add 2 "ikaav"
 		/squelch /alert add 2 "ixt"
-	|-- Anguish Signets--|
+	|-- Anguish Signets & drops for armor--|
 	} else /if (${Zone.ShortName.Equal[riftseekers]}) {
-		/squelch /alert add 2 "Battlemaster"
+		|/squelch /alert add 2 "Battlemaster"
+		/squelch /alert add 2 "a commanded chimera"
+		/squelch /alert add 2 "a companion chimera"
+		/squelch /alert add 2 "a commanded feran"
+		/squelch /alert add 2 "a companion feran"
 	} else /if (${Zone.ShortName.Equal[draniksewersa]} || ${Zone.ShortName.Equal[draniksewersb]} || ${Zone.ShortName.Equal[draniksewersb]}) {
 		/squelch /alert add 2 "Cunning"
 	} else /if (${Zone.ShortName.Equal[dranikcatacombsa]} || ${Zone.ShortName.Equal[dranikcatacombsb]} || ${Zone.ShortName.Equal[dranikcatacombsc]}) {
@@ -1336,6 +1328,7 @@ Sub setAlerts
 	} else /if (${Zone.ShortName.Equal[provinggrounds]}) {
 		|/squelch /alert add 2 "Tactician"
 		/squelch /alert add 2 "noc"
+		/squelch /alert add 2 "lightning"
 	} else /if (${Zone.ShortName.Equal[dranikhollowsa]} || ${Zone.ShortName.Equal[dranikhollowsb]} || ${Zone.ShortName.Equal[dranikhollowsc]} || ${Zone.ShortName.Equal[dranikhollowsd]} || ${Zone.ShortName.Equal[dranikhollowse]} || ${Zone.ShortName.Equal[dranikhollowsf]} || ${Zone.ShortName.Equal[dranikhollowsg]} || ${Zone.ShortName.Equal[dranikhollowsh]} || ${Zone.ShortName.Equal[dranikhollowsi]} || ${Zone.ShortName.Equal[dranikhollowsj]}) {
 		/squelch /alert add 2 "Shrewd"
 		| Note, this should be dranikhollowsa "Watering Hole"

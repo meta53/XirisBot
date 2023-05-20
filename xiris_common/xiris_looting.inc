@@ -150,6 +150,7 @@ Sub chkLoot
 			/call DisableLooting
 			/return
 		}
+		/squelch /hidecorpse looted
 		|/echo count: ${SpawnCount[npc corpse radius ${int_lootRadius}]}
 		/nav recordwaypoint lootStart
 		/declare i int local

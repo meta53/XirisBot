@@ -118,12 +118,17 @@ REVISION HISTORY
 #EVENT CelRegenStop		"#1# tells the raid#*#'CRStop#*#'"
 #EVENT CelRegenStop 	"[ #1# #*#]#*#CRStop#*#"
 
-|-- Totem Events
-#Event FireTotem		"#1# tells you#*#'FireTotem #2#'"
+|-- Totem Events 
+#EVENT FireTotem		"#1# tells you#*#'FireTotem #2#'"
 #EVENT FireTotem		"#1# tells the group#*#'FireTotem #2#'"
 #EVENT FireTotem		"#1# tells the raid#*#'FireTotem #2#'"
 #EVENT FireTotem 		"[ #1# #*#]#*#FireTotem #2#"
 
+|-- Regen Events (Celestial Regen [CLR], Spirit of Wood [DRU], Ancestral Aid [SHM] )
+#EVENT FireRegen		"#1# tells you#*#'FireRegen #2#'"
+#EVENT FireRegen		"#1# tells the group#*#'FireRegen #2#'"
+#EVENT FireRegen		"#1# tells the raid#*#'FireRegen #2#'"
+#EVENT FireRegen 		"[ #1# #*#]#*#FireRegen #2#"
 
 #EVENT CheckHoTOnTarget "#*#CheckHoTOnTarget#*#"
 
@@ -148,6 +153,7 @@ Sub Events_Healing
 	/doevents InterruptON
 	/doevents InterruptOFF
 	/doevents FireTotem
+	/doevents FireRegen
 	/doevents CheckHoTOnTarget
 	/doevents FocusHEALMT_ON
 	/doevents FocusHEALMT_OFF
@@ -337,29 +343,77 @@ Sub ChangeHealType(int _type)
 	/if (${int_healMode}==3) /echo \a-wChanging healing \aoTYPE \a-wto \ag3-GroupOnly (includes self)
 /return
 
-
+|**
+ ----------------------------
+ TOTEM EVENT HANDLERS
+ ----------------------------
+	Handles firing groups of totems by key.
+	Totems includes: 
+	CLR	Exquisite Benediction
+	DRU	Nature's Boon
+	SHM	Call of the Ancients
+**|
 Sub EVENT_FireTotem(_line, _chatSender, _eventParams)
 	/if (!${bln_hasTotem}) /return
 	/call PlaceTotem ${Int[${_eventParams}]}
 /return
 
 Sub PlaceTotem(int _totemKey)
-	/echo PlaceTotem ${_totemKey} ? ${int_totemKey}
+	/echo \agPlaceTotem \ao${_totemKey} \aw? \ao${int_totemKey}
 	/if (${_totemKey} == ${int_totemKey} || ${_totemKey} == 0) {
 		/call MQ2Cast "${str_totemName}" alt
 		/docommand /${announceChannel} Totem: ${str_totemName} Placed
 	} 
-
 /return 
+
 
 |**
  ----------------------------
  CELESTIAL REGENERATION EVENT HANDLERS
  ----------------------------
 	Celestial Regen chain is nice to have for events with massive, consecutive AEs
-	such as Mastery of Specialization, etc. We cannot get the information we need
-	directly out of netbots, so we are going to try to write something for MQ2DanNet
+	such as Mastery of Specialization, etc. The chain events are generally unused
+	because I have found it better to just to fire regens via key like we do totems
+
+	AE Regen includes: 
+	CLR	Celestial Regeneration
+	DRU	Spirit of the Wood
+	SHM	Ancestral Aid
+
 **|
+
+Sub EVENT_FireRegen(_line, _chatSender, _eventParams)
+	/if (!${bln_hasRegen}) /return 
+	/call PlaceRegen ${Int[${_eventParams}]}
+/return
+
+Sub PlaceRegen(int _regenKey) 
+	/echo \agPlaceRegen \ao${_regenKey} \aw? \ao${int_regenKey}
+
+	/if (${Me.Class.ShortName.Equal[CLR]}) {
+			/varset bln_celRegenActive TRUE
+			/call chkCelRegen
+			/varset bln_celRegenActive FALSE
+		} else {
+		/if (${_regenKey} == ${int_regenKey} || ${_regenKey} == 0) {
+			/if (${Me.AltAbilityReady[Mass Group Buff]} && ${Me.AltAbilityReady[${str_regenName}]}) {
+				/call MQ2Cast "Mass Group Buff" alt
+				/delay 10
+				/call MQ2Cast "${str_regenName}" alt
+				/docommand /${announceChannel} AE Regen: ${str_regenName} Fired!
+				/return
+			}
+
+			/if (${Me.AltAbilityReady[${str_regenName}]}) {
+				/call MQ2Cast "${str_regenName}" alt
+				/docommand /${announceChannel} AE Regen: ${str_regenName} Fired!
+			}
+		} 
+		}
+/return
+
+
+
 
 Sub setCelRegenChain
 	/declare i int local 1
@@ -441,7 +495,7 @@ Sub chkCelRegen
 	}
 	
 	:FireCelRegen
-	/docommand /${announceChannel} <FIRING CELESTIAL REGENERATION>
+	/docommand /${announceChannel} AE Regen: Celestial Regeneration Fired!
 	/call MQ2Cast "Mass Group Buff" alt 2s
 	/delay 10
 	/call MQ2Cast "Celestial Regeneration" alt 2s
@@ -1505,24 +1559,30 @@ Sub xbot_initialize_healing(int _healPoint)
 	/declare    use_interrupt_selfHeal  bool	outer   TRUE
 
 	|-- Celestial Regeneration Chain
-	/declare bln_hasCelRegen 				bool    outer   ${Me.Class.ShortName.Equal[CLR]}
+	/declare bln_hasCelRegen 					bool    outer   ${Me.Class.ShortName.Equal[CLR]}
+	/declare int_celRegenPosition			int		outer   99
 	/if (${bln_hasCelRegen}) {
 		/declare bln_celRegenActive 			bool	outer	FALSE 
 		/declare int_celRegenTotal 				int 	outer	${Ini[${healINI},CelestialRegeneration,int_totalCR]}
 		/declare arr_celRegen[${int_celRegenTotal}] string outer
 		/declare timer_celregen					timer   outer	0
 		|   Parse the chain's character list to an array
-		/declare int_celRegenPosition			int		outer   1
+		/varset int_celRegenPosition			int		outer   1
 		/declare str_celRegenPPriest            string  outer   NONE
 		/call setCelRegenChain
 
-		/echo Celestial Regeneration:${bln_hasCelRegen} || Total Chars:${int_celRegenTotal} || Position:${int_celRegenPosition} || Previous::${str_celRegenPPriest}
-		/echo ---------------
+		/echo \a-w---------------
+		/echo \aoCelestial Regeneration:\ag${bln_hasCelRegen} \aw|| \aoTotal Chars:\ag${int_celRegenTotal} \aw|| \aoPosition:\ag${int_celRegenPosition} \aw|| \aoPrevious::\ag${str_celRegenPPriest}
+		/echo \a-w---------------
 	}
 
+	|-- AE Regens (DRU/SHM/CLR)
+	/declare    bln_hasRegen			bool    outer  ${Ini[INI_CHAR,AE_REGEN,bln_hasRegen,${Me.Class.ShortName.Equal[CLR]}]}
+	/declare	str_regenName			string  outer  ${Ini[INI_CHAR,AE_REGEN,str_regenName,NULL]}
+	/declare	int_regenKey			int 	outer  ${Ini[INI_CHAR,AE_REGEN,int_regenKey,${int_celRegenPosition}]}	
+
 	|-- Totems
-	/declare    bln_hasTotem		 	bool    outer  FALSE
-	/if (${str_classArchetype.Equal[PRIEST]}) /varset bln_hasTotem TRUE
+	/declare    bln_hasTotem			bool    outer  ${Ini[INI_CHAR,TOTEM,bln_hasTotem,${Me.Class.ShortName.Equal[CLR]}]}
 	/declare    str_totemName			string  outer  ${Ini[INI_CHAR,Totems,str_totemName,NULL]}	
 	/declare	int_totemKey			int 	outer  ${Ini[INI_CHAR,Totems,int_totemKey,99]}	
 

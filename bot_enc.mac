@@ -181,11 +181,7 @@ Sub RuneSpam(_name)
 	/call chkSpellMemorized "${str_rune}" TRUE ${str_runeGem}
 	:runeLoop
 		/call TrueTarget ${Spawn[pc ${_name}].ID}
-		:runeReadyWait
-		/if (!${Me.SpellReady[${str_rune}]}) {
-			/delay 2
-			/goto :runeLoop
-		}
+		/delay 30s ${Me.SpellReady[${str_rune}]}
 		/call MQ2Cast "${str_rune}" ${str_runeGem} 5s
 		/call RunAllEvents
 		/if (${bln_runeActive}) /goto :runeLoop

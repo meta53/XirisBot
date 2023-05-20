@@ -41,6 +41,17 @@ REVISION HISTORY
 #EVENT DOCHARBUFFS			"#1# tells the raid#*#'doCharBuffs #2#'"
 #EVENT DOCHARBUFFS 			"[ #1# #*#]#*#doCharBuffs #2#"
 
+#EVENT NoDS				"#1# tells the group#*#'NoDS#*#'"
+#EVENT NoDS				"#1# tells you#*#'NoDS#*#'"
+#EVENT NoDS				"#1# tells the raid#*#'NoDS#*#'"
+#EVENT NoDS 			"[ #1# #*#]#*#NoDS#*#"
+
+#EVENT YesDS			"#1# tells the group#*#'YesDS #*#'"
+#EVENT YesDS			"#1# tells you#*#'YesDS #*#'"
+#EVENT YesDS			"#1# tells the raid#*#'YesDS #*#'"
+#EVENT YesDS 			"[ #1# #*#]#*#YesDS#*#"
+
+
 #EVENT REMOVEBUFF			"#1# tells the group#*#REMOVEBUFF #2#'"
 #EVENT REMOVEBUFF			"#1# tells you#*#REMOVEBUFF #2#'"
 #EVENT REMOVEBUFF			"#1# tells the raid#*#REMOVEBUFF #2#'"
@@ -59,6 +70,8 @@ Sub InitEvents_Buffing
 /return
 
 Sub Events_Buffing
+	/doevents NoDS
+	/doevents YesDS
 	/doevents DORAIDBUFFS
 	/doevents DOSINGLETARGETBUFFS
 	/doevents DOCHARBUFFS
@@ -636,18 +649,47 @@ Sub RemoveBuff(_badBuff)
 	/declare buffName ${_badBuff.Replace[|,']}
 	/echo \agRemoving Buff \ao${buffName} (was ${_badBuff})
 	/for i 0 to 24
-		|/echo Remove_Buff ${i}
-		|/echo 1: ${Bool[${Window[BuffWindow].Child[BW_Buff${i}_Button].Tooltip}]}
-		|/echo 2: ${Window[BuffWindow].Child[BW_Buff${i}_Button].Tooltip}
-		|/echo 3: ${Window[BuffWindow].Child[BW_Buff${i}_Button].Tooltip.Find[${buffName}]}
 		/if (${Bool[${Window[BuffWindow].Child[BW_Buff${i}_Button].Tooltip}]} && ${Window[BuffWindow].Child[BW_Buff${i}_Button].Tooltip.Find[${buffName}]}) {
 			/varset buffName ${Window[BuffWindow].Child[BW_Buff${i}_Button].Tooltip.Arg[1,(]}
 			/varset buffName ${buffName.Left[${Math.Calc[${buffName.Length}-1]}]}
-			|/echo \awBuff \ao${buffName} \awfound. \agRemoving.
 			/if (${Bool[${buffName}]}) /nomodkey /notify BuffWindow Buff${Math.Calc[${Me.Buff[${buffName}].ID}-1].Int} leftmouseup
 		}
-		
 	/next i
+/return
+
+
+
+Sub EVENT_NoDS(_line, _sender, _eventParams)
+	/call RemoveDS
+/return
+
+Sub RemoveDS
+	/varset bln_useDS FALSE
+	| check to see if I have a DS, and if so kill it
+	/declare ds int local 
+	/for ds 1 to ${dsSpellTotal} 
+		/call RemoveBuff "${dsSpells[${ds}]}"
+	/next ds
+	/if (${Me.Class.ShortName.Equal[BRD]}) {
+		/varset str_savedMedley ${str_currentMedley}
+		/varset str_currentMedley nods
+		/medley ${str_currentMedley}
+	}	
+	:return
+	/doevents flush NoDS
+/return 
+
+
+Sub EVENT_YesDS(_line, _sender, _eventParams)s
+	/varset bln_useDS TRUE
+	/if (${Me.Class.ShortName.Equal[BRD]}) {
+		/echo \aoTurning on ${str_savedMedley} Medley
+		/memspellset ${str_savedMedley}
+		/delay 10
+		/medley ${str_savedMedley}
+	}
+	:return
+	/doevents flush YesDS
 /return
 
 

@@ -37,11 +37,11 @@ REQUIRED INCLUDES
 #TURBO 120
 
 Sub InitEvents_Class
-	|/call RegisterClassEvents Events_DRU 0
+	/call RegisterClassEvents Events_DRU 1
 /return
 
 Sub Events_DRU
-
+	/doevents CelestialRegeneration
 /return 
 
 Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint, string _assistArgs)
@@ -117,6 +117,31 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
     /goto :MainLoop
 /return	
 
+
+Sub EVENT_CelestialRegeneration
+	/call MGBCelestialRegeneration
+/return
+
+Sub chkMGBCelestialRotation
+	| loop through the MGB Celestial Rotation members
+	| if they have all fired before (me) and ! Celestial Regeneration, then fire mine.
+
+/return
+
+
+Sub MGBCelestialRegeneration
+	/if (${Me.AltAbilityReady[Mass Group Buff]} && ${Me.AltAbilityReady[Spirit of the Wood]}) {
+		/call MQ2Cast "Mass Group Buff" alt
+		/delay 10
+		/call MQ2Cast "Spirit of the Wood" alt
+		/return
+	}
+
+	/if (${Me.AltAbilityReady[Spirit of the Wood]}) {
+		/call MQ2Cast "Spirit of the Wood" alt
+	}
+
+/return
 
 
 |**

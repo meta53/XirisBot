@@ -70,8 +70,12 @@ ______________________________________________
 #EVENT Zoned				"LOADING, PLEASE WAIT..."
 #EVENT EndMac				"#*#end macro#*#"
 
-#EVENT BackOff				"<#1#> BackOff"
+#EVENT BackOff 				"[#1#] BackOff #2#"
+#EVENT BackOff 				"<#1#> BackOff #2#"
+#EVENT BackOff				"#1# tells the group#*#'BackOff#*#'"
+#EVENT BackOff				"#1# tells you#*#'BackOff#*#'"
 #EVENT BackOff				"#1# tells the raid#*#'BackOff#*#'"
+#EVENT BackOff				"#1# tell your raid#*#'BackOff#*#'"
 #EVENT BackOff 				"[ #1# #*#]#*#BackOff#*#"
 
 #EVENT QuitExpedition       "#*#DZQUIT#*#"
@@ -564,12 +568,6 @@ Sub Event_BackOff
 	/doevents flush BackOff
 	/call Disengage
 /return
-
-Sub EVENT_Disengage
-	/echo \ao Event Disengage Called
-	/doevents flush Disengage
-	/call Disengage
-/return 
 
 Sub Disengage 
 	/echo \awDisengaging \ao${Time.Time24}

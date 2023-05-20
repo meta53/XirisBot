@@ -30,6 +30,7 @@ REVISION HISTORY
 	03.06.22	xiris	Added support for high requesting high risk missions (bln_highRisk)			
 	03.28.23	xiris	Split this file from regular LDON since donor hall allows fast travel	
 						Donor hall trivialized the movement to the LDON entrance, etc so culled some code	
+	05.15.23	xiris   Added checks for being pushed out of navigable areas, will warp to point if there is an issue
 ______________________________________________
 REQUIRED PLUGINS
     mq2cast
@@ -49,7 +50,7 @@ REQUIRED INCLUDES
 
 #include xiris_common/xiris_common.inc
 
-#Turbo 40
+#Turbo 120
 
 #define INI_ldonInfo xiris_common/xiris_ldon_definitions.ini
 
@@ -62,7 +63,7 @@ REQUIRED INCLUDES
 #EVENT TooClose				"#*#your target is too close#*#"
 #EVENT MoveFail				"#*#Could not find path to destination#*#"
 #EVENT UILocked				"#*#You can't use that command right now#*#"
-#EVENT NavStuck				"#*#Could not locate starting point on navmesh#*#"
+#EVENT NavStuck				"#*#Could not locate starting point on navmesh (#1#)#*#"
 
 
 Sub Main(string _channel, string _announce, string _theme, bool _useDownFlags, bool _highRisk)
@@ -193,6 +194,7 @@ Sub Main(string _channel, string _announce, string _theme, bool _useDownFlags, b
 		}
 
 		|-- target hunter
+		/attack off
 		/call getTarget
 		/if (${Target.Distance} > 20) /call pullTarget
 		/call killTarget
@@ -580,8 +582,8 @@ Sub ResetAtThundercrest
 
 Sub setCamp
 	/echo Setting camp at camp${int_currentCamp} out of ${int_campCount}
-	/waypoint add camp${int_currentCamp} 
-	/if (${Plugin[mq2nav].Name.Length}) /navigate RecordWaypoint bot_pull_nav
+	|/waypoint add camp${int_currentCamp} 
+	/navigate RecordWaypoint bot_pull_nav
 	/varset int_campX ${Me.X}
 	/varset int_campY ${Me.Y}
 	/varset int_campZ ${Me.Z}
@@ -1161,7 +1163,7 @@ Sub clearUILock
 /return 
 
 Sub EVENT_NavStuck
-	/varset bln_UILocked TRUE
+	/varset bln_navStuck TRUE
 /return
 
 Sub clearNavStuck

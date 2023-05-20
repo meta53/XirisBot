@@ -33,16 +33,6 @@ REVISION HISTORY
 #EVENT CANTSEETARGET	"#*#You cannot see your target#*#"
 #EVENT CANTNAVTARGET	"#*#Could not locate#*#"
 
-#EVENT NoDS				"#1# tells the group#*#'NoDS#*#'"
-#EVENT NoDS				"#1# tells you#*#'NoDS#*#'"
-#EVENT NoDS				"#1# tells the raid#*#'NoDS#*#'"
-#EVENT NoDS 			"[ #1# #*#]#*#NoDS#*#"
-
-#EVENT YesDS			"#1# tells the group#*#'YesDS #*#'"
-#EVENT YesDS			"#1# tells you#*#'YesDS #*#'"
-#EVENT YesDS			"#1# tells the raid#*#'YesDS #*#'"
-#EVENT YesDS 			"[ #1# #*#]#*#YesDS#*#"
-
 #EVENT RiposteDisc		"#1# tells the group#*#'RiposteDisc#*#'"
 #EVENT RiposteDisc		"#1# tells you#*#'RiposteDisc#*#'"
 #EVENT RiposteDisc		"#1# tells the raid#*#'RiposteDisc#*#'"
@@ -67,8 +57,6 @@ Sub InitEvents_Melee
 /return
 
 Sub Events_Melee
-	/doevents NoDS
-	/doevents YesDS
 	/doevents Leashing
 	/doevents AutoAssist
 	/doevents CANTNAVTARGET
@@ -110,35 +98,6 @@ Sub Event_UpdateStickCMD(_line, _sender, _eventParams)
 	/echo _eventParams	${_eventParams}
 
 	/doevents flush UpdateStickCMD
-/return
-
-Sub EVENT_NoDS(_line, _sender, _eventParams)
-	/varset bln_useDS FALSE
-	| check to see if I have a DS, and if so kill it
-	/declare ds int local 
-	/for ds 1 to ${dsSpellTotal} 
-		/call RemoveBuff "${dsSpells[${ds}]}"
-		/delay 2
-	/next ds
-	/if (${Me.Class.ShortName.Equal[BRD]}) {
-		/varset str_savedMedley ${str_currentMedley}
-		/varset str_currentMedley nods
-		/medley ${str_currentMedley}
-	}	
-	:return
-	/doevents flush NoDS
-/return
-
-Sub EVENT_YesDS(_line, _sender, _eventParams)s
-	/varset bln_useDS TRUE
-	/if (${Me.Class.ShortName.Equal[BRD]}) {
-		/echo \aoTurning on ${str_savedMedley} Medley
-		/memspellset ${str_savedMedley}
-		/delay 10
-		/medley ${str_savedMedley}
-	}
-	:return
-	/doevents flush YesDS
 /return
 
 Sub EVENT_RiposteDisc(_line, _sender, _eventParams)
@@ -626,43 +585,43 @@ Sub chkCombatAbilities
 /return
 
 Sub chkCA_BER
-	/if (${Me.AbilityReady[Frenzy]} && ${Me.Combat} && ${Target.Distance}<=${Target.MaxRangeTo}) /doability "Frenzy"
-	/if (${Me.CombatAbilityReady[Rage Volley]} && ${Me.Combat} && ${Target.Distance}<=${Target.MaxRangeTo}) /doability "Rage Volley"
+	/if (${Me.AbilityReady[Frenzy]}) /doability "Frenzy"
+	/if (${Me.CombatAbilityReady[Rage Volley]}) /doability "Rage Volley"
 /return
 
 Sub chkCA_BRD
 /return 
 
 Sub chkCA_BST
-	/if (${Me.AbilityReady[Kick]}  && ${Me.Combat} && ${Target.Distance}<=${Target.MaxRangeTo}) /doability "Kick"
+	/if (${Me.AbilityReady[Kick]}) /doability "Kick"
 /return
 
 Sub chkCA_MNK
-	/if (${Me.AbilityReady[Tiger Claw]} && ${Me.Combat} && ${Target.Distance}<=${Target.MaxRangeTo}) /doability "Tiger Claw"
-	/if (${Me.AbilityReady[Flying Kick]} && ${Me.Combat} && ${Target.Distance}<=${Target.MaxRangeTo}) /doability "Flying Kick"
+	/if (${Me.AbilityReady[Tiger Claw]}) /doability "Tiger Claw"
+	/if (${Me.AbilityReady[Flying Kick]}) /doability "Flying Kick"
 /return
 
 Sub chkCA_PAL
-	/if (${Me.AbilityReady[Bash]} && ${Me.Combat} && ${Target.Distance}<=${Target.MaxRangeTo}) /doability "Bash"
+	/if (${Me.AbilityReady[Bash]}) /doability "Bash"
 	/call chkTaunt
 /return 
 
 Sub chkCA_RNG 
-	/if (${Me.AbilityReady[Slam]}  && ${Me.Combat} && ${Target.Distance}<=${Target.MaxRangeTo}) /doability "Slam"
+	/if (${Me.AbilityReady[Slam]} ) /doability "Slam"
 /return 
 
 Sub chkCA_ROG
-	/if (${Me.AbilityReady[Backstab]} && ${Me.Combat} && ${Target.Distance}<=${Target.MaxRangeTo}) /doability "Backstab"
+	/if (${Me.AbilityReady[Backstab]}) /doability "Backstab"
 /return
 
 Sub chkCA_SHD
-	/if (${Me.AbilityReady[Bash]} && ${Me.Combat} && ${Target.Distance}<=${Target.MaxRangeTo}) /doability "Bash"
+	/if (${Me.AbilityReady[Bash]}) /doability "Bash"
 	/call chkTaunt
 /return 
 
 Sub chkCA_WAR
-	/if (${Me.AbilityReady[Kick]} && ${Me.Combat} && ${Target.Distance}<=${Target.MaxRangeTo}) /doability "Kick"
-	/if (${Me.AbilityReady[Bash]} && ${Me.Combat} && ${Target.Distance}<=${Target.MaxRangeTo}) /doability "Bash"
+	/if (${Me.AbilityReady[Kick]}) /doability "Kick"
+	/if (${Me.AbilityReady[Bash]}) /doability "Bash"
 	/call chkTaunt
 /return 
 
@@ -680,7 +639,7 @@ Sub MeleeReset
 /return
 
 Sub chkTaunt 
-	/if (${bln_tanking} && ${bln_taunting} &&  ${Me.AbilityReady[Taunt]} && ${Me.Combat} && ${Target.Distance}<=${Target.MaxRangeTo}) /doability "Taunt"
+	/if (${bln_tanking} && ${bln_taunting} && ${Me.AbilityReady[Taunt]} && ${Me.TargetOfTarget.Name.NotEqual[${Me.Name}]}) /doability "Taunt"
 /return 
 
 
@@ -700,7 +659,7 @@ Sub chk_casterProvoke(string _provokeSpell)
 				|/echo |- attemptProvoke -| [${_provokeSpell}] is not ready.
 			} else {
 				/call MQ2Cast "${_provokeSpell}" ${spell_hateGem}
-				/if (${Spawn[${Me.TargetOfTarget}].CleanName.Equal[${Me}]}) /varset provokeTimer 600
+				/if (${Spawn[${Me.TargetOfTarget}].CleanName.Equal[${Me.Name}]}) /varset provokeTimer 600
 			}
 		}
 	}
