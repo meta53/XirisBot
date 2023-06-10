@@ -18,7 +18,6 @@ REVISION HISTORY
 
 #EVENT LOOT_REFRESH		"#*#lootrefresh#*#"
 
-
 #EVENT LOOT_ON			"#1# tells the group#*#'looton #2#'"
 #EVENT LOOT_ON			"#1# tells you#*#'looton #2#'"
 #EVENT LOOT_ON			"#1# tells the raid#*#looton #2#'"

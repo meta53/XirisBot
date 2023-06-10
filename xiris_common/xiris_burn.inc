@@ -90,6 +90,7 @@ Sub EVENT_BurnOff
 	/varset bln_burning FALSE
 	/varset bln_checkForCry FALSE
 	/doevents flush BurnOff
+	/call chkCryActive
 /return
 
 |**
@@ -176,10 +177,12 @@ Sub chkBurn
 			| Check to see if  burn == item &&  useable && (item in inventory && there is no timer) && (I am not Casting || I am a bard)
 			| ---------------
 			} else /if (${BURN_${i}_Type.Equal[item]} && ${BURN_${i}_Use} && (${Bool[${FindItem[${BURN_${i}}].ID}]} && ${FindItem[=${BURN_${i}}].TimerReady} == 0) && (!${Bool[${Me.Casting.ID}]} || ${Me.Class.ShortName.Equal[BRD]})) {
+				/if (${Spell[${FindItem[${BURN_${i}}].Clicky}].SpellType.Equal[BENEFICIAL]} && !${Me.FreeBuffSlots}) /goto :nextBurn
 				/echo \awBurn_\ag${i} \ao${BURN_${i}} \awType:\ag${BURN_${i}_Type} \awUse:\ag${BURN_${i}_Use} \awAfter:\ag${BURN_${i}_AfterIndex} \awMGB:\ag${BURN_${i}_MGB} 
 				/echo \aoBurn is item type, trying ${BURN_${i}}
 				:doItemClick
-					/if (${Me.Class.ShortName.Equal[BRD]}) {
+					
+					/if (${Me.Class.ShortName.Equal[BRD]} ) {
                         /call MQ2Medley ITEM "${BURN_${i}}" ${int_targetID} TRUE
 						/echo \agITEM \ay${BURN_${i}} \agclicked!
 					} else {
@@ -211,9 +214,9 @@ Sub chkBurn
 	h2h=Flayed Flesh Handwraps|mainhand,Fangs of the Serpent|offhand
 	2hander=Bone Staff of Wickedness|mainhand
 **|
-Sub checkForCry
-	/if (!${Select[${Me.Class.ShortName},MNK,RNG,SHD,PAL]}) /return
-	/if (${timer_cryCheck}) /return
+Sub chkCryActive
+	/if (!${Select[${Me.Class.ShortName},MNK,RNG,SHD,PAL]} || ${timer_cryCheck} || !${bln_checkForCry}) /return
+	/echo \aoChecking for Cry! \ag${Me.Song[Ancient: Cry of Chaos].ID} \ao2H Equipped? \ay${bln_cry2Hander}
 	/if (${Me.Song[Ancient: Cry of Chaos].ID} && !${bln_cry2Hander}) {
 		/call LoadWeaponset 2HANDER
 		/varset bln_cry2Hander TRUE
@@ -221,7 +224,7 @@ Sub checkForCry
 		/call LoadWeaponset DEFAULT
 		/varset bln_cry2Hander FALSE
 	}
-	/varset timer_cryCheck 10s
+	/varset timer_cryCheck 4s
 /return 
 
 
@@ -257,7 +260,6 @@ Sub chkAA
 	/if (!${Target.ID} || ${Target.Type.NotEqual[NPC]}) /return
 	/if ((${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]}) || ${Me.Moving} || ${Me.Invis} || ${Me.Feigning}) /return
 	
-
     | Check AA Type, if offensive we do the standard targetchecks
     | if defensive we check ourselves
 
@@ -282,13 +284,13 @@ Sub chkAA
            
         :castingAA
         /if (${Me.Class.ShortName.Equal[BRD]}) {
-            /if (${AA_${i}_Type.Equal[DEFENSE]}) {
+            /if (${AA_${i}_Type.Equal[DEFENSE]} && ${Me.FreeBuffSlots}) {
                 /call MQ2Medley ALT "${AA_${i}}" ${Me.ID} TRUE
             } else {
                 /call MQ2Medley ALT "${AA_${i}}" ${int_targetID} TRUE
             }
         } else {                
-            /if (${AA_${i}_Type.Equal[DEFENSE]}) {
+            /if (${AA_${i}_Type.Equal[DEFENSE]} && ${Me.FreeBuffSlots}) {
                 /target id ${Me.ID}
             } else {
                 /if (${Target.ID} != ${int_targetID}) /call TrueTarget ${int_targetID}

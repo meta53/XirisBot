@@ -10,11 +10,11 @@ Requries NO Active Hacks unless stuck (warp)
 Requires MQ2Nav Support
     
 Usage: 
-/mac ldon_donor dgga gsay butcher TRUE TRUE
-/mac ldon_donor dgga gsay everfrost TRUE TRUE
-/mac ldon_donor dgga gsay nro TRUE TRUE
-/mac ldon_donor dgga gsay sro TRUE TRUE
-/mac ldon_donor dgga gsay ecommons TRUE TRUE
+MMC:    /mac ldon_donor dgga gsay butcher TRUE TRUE
+MIRA:	/mac ldon_donor dgga gsay everfrost TRUE TRUE
+TAK:	/mac ldon_donor dgga gsay nro TRUE TRUE
+GUK:    /mac ldon_donor dgga gsay sro TRUE TRUE
+RUJ:    /mac ldon_donor dgga gsay ecommons TRUE TRUE
 ______________________________________________
 REVISION HISTORY
     09.24.2017	xiris	INITIAL REVISION

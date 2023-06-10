@@ -129,12 +129,9 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
  ----------------------------
 **|
 Sub chkUtils
-	/if (!${Me.Combat}) {
-		/if (${Me.ID} != ${int_MTID} || !${bln_tanking}) {
-			/call chkSit
-			/varset timer_check_utilities 20s
-		}
-	}
+	|-- Standard Methods
+	/if (!${bln_tanking}) /call chkSit
+	/varset timer_check_utilities 20s
 /return
 
 

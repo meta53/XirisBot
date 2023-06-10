@@ -77,11 +77,7 @@ Sub Events_CLR
 	/doevents DivineInterventionRequest
 /return 
 
-
-
-
 Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint, string _assistArgs)
-	
 	
 	/echo You are now in xiris_bot_${Me.Class.ShortName}.mac
 
@@ -124,10 +120,10 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 		/call chkHeal_Group
 		
 		|-- Check to see if we are autorezzing
-		/if ((${bln_autoRez} && !${bln_engaged}) || (${bln_combatRez} && ${bln_engaged})) /call chkRez
+		/if ((${bln_autoRez} && !${bln_engaged}) || (${bln_combatRez} && ${bln_engaged})) /call chkRessurection
 
 		|-- Check Divine Arbitration Flag
-		/if (!${bln_DARBReady}) /call chkDARBReady
+		/if (!${bln_ArbitrationReady}) /call chkArbitrationReady
 
 		|-- Check Auto Assist if its on
 		/if (${bln_autoAssist} && ${bln_battleCleric}) /call chkAutoAssist
@@ -260,9 +256,9 @@ Sub CombatRezOFF
 Check|Set to see if Divine Arbitration is Ready
 ----------------------------  
 **|
-Sub chkDARBReady
-	/varset bln_DARBReady	FALSE
-	/if (${Me.AltAbilityReady[divine arbitration]} || !${FindItem[${str_epicName}].Timer}) /varset bln_DARBReady TRUE
+Sub chkArbitrationReady
+	/varset bln_ArbitrationReady	FALSE
+	/if (${Me.AltAbilityReady[divine arbitration]} || !${FindItem[${str_epicName}].Timer}) /varset bln_ArbitrationReady TRUE
 /return
 
 
@@ -275,20 +271,6 @@ Sub chkDivineIntervention
 	/if (${FindItemCount[Emerald]} && ${Me.SpellReady[Divine Intervention]} && !${NetBots[${Target.Name}].Buff[Divine Intervention].Name.Equal[Divine Intervention]}) {
 		/say Casting Divine Intervention on ${Target.Name}!
 		/call MQ2Cast "Divine Intervention"
-	}
-/return
-
-
-|**
-----------------------------
-Check|Set whether I am in RAID or not
-----------------------------  
-**|
-
-Sub setRMode
-	/if (${Raid.Members} > 6) { 
-		/varset bln_RAID	TRUE
-		/varset str_RMode	RAID
 	}
 /return
 
@@ -348,7 +330,7 @@ Sub variant_initialize
 	/declare	int_CTGTID				int 	outer	0
 	/declare	int_currentFPoint		int		outer	30
 	/declare	bln_FHealReady			bool	outer	FALSE
-	/declare	bln_DARBReady			bool	outer	FALSE
+	/declare	bln_ArbitrationReady			bool	outer	FALSE
 	/declare    str_action				string	outer	Healing
 	/declare	str_currHeal			string	outer	NULL
 
@@ -365,7 +347,6 @@ Sub variant_initialize
 	/declare	str_epicName			string	outer	${Ini[INI_CHAR,Items,str_epicName,Aegis of Superior Divinity]}
 	/declare    bln_hasEpic				bool    outer   ${Ini[INI_CHAR,Items,bln_hasEpic,FALSE]}
 	/declare    bln_divineArb			bool    outer   ${Ini[INI_CHAR,Items,bln_divineArb,TRUE]}
-	/declare    int_interruptToDivineArb		int outer   ${Ini[INI_CHAR,Items,int_interruptToDivineArb,8]}
 	/declare 	bln_healAfterArb		bool	outer	${Ini[INI_CHAR,Items,bln_healAfterArb,TRUE]}
 
 	|-- Celestial MGB Rotation

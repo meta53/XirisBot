@@ -233,6 +233,7 @@ Sub chkDownshits
 				| downflag2=Legacy of Nettles|"Legacy of Nettles" gem 8 -targetid|${Me.ID}  
 				| downflag3=Fiery Might|28988 item
 				| downflag4=Eldritch Rune|Eldritch Rune alt
+				/if (!${Me.FreeBuffSlots}) /return
 				/varset buffName  ${downflag${df}.Token[1,|]}
 				/varset castArg   ${downflag${df}.Token[2,|]}|${downflag${df}.Token[3,|]}
 				/varset tgtID     ${downflag${df}.Token[3,|]}

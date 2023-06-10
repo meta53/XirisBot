@@ -529,6 +529,7 @@ Sub killTarget
 		/if (${Math.Distance[${Me.Y},${Me.X}:${int_campY},${int_campX}]} > ${int_campRadius}) {
 			/if (!${Navigation.Active}) /navigate waypoint ${str_campName}
 			/echo \agMoving back to \ao${str_campName}
+			/delay 20
 			/goto :campCheck
 		} else {
 			/if (${Navigation.Active}) /navigate stop
@@ -661,10 +662,10 @@ Sub chkUtils
 			/docommand /${cmdChannel} DoHideCorpses
 			/delay 5s
  			/docommand /${cmdChannel} DoRaidBuffs ALL
-			/echo \awBuffs Requested, setting timer to 45m, and waiting 45s!
+			/echo \awBuffs Requested, setting timer to 45m, and waiting 120s!
 			/varset timer_allBuffs 45m
 			:buffDelay
-			/delay 60s ${SpawnCount[npc radius ${int_campRadius}]}
+			/delay 120s ${SpawnCount[npc radius ${int_campRadius}]}
 
 			|--remove DS (summoning mobs will fuck you over)
 			/call RemoveDS
@@ -1221,6 +1222,7 @@ Sub setAlerts
 		/squelch /alert add 1 "Queen Pyrilonis"
 		/squelch /alert add 1 "Taromani"
 		/squelch /alert add 1 "portal"
+		/squelch /alert add 1 "a_companion_chimera_002"
 	} 
 	/if (${Zone.ShortName.Equal[wallofslaughter]}) {
 		/squelch /alert add 1 "Korshawn"
@@ -1405,6 +1407,14 @@ Sub setAlerts
 	} else /if (${Zone.ShortName.Equal[gukbottom]}) {
 		/varset int_maxPullCount 20
 		
+	} else /if (${Zone.ShortName.Equal[hohonora]}) {
+		/varset int_maxPullCount 20
+		/squelch /alert add 2 "A Wrulon Sentry"
+		/squelch /alert add 2 "A Wrulon Guard"
+		/squelch /alert add 2 "A Valorous Spirit"
+		/squelch /alert add 2 "A Valorian Guardian"
+		/squelch /alert add 2 "A Valorian Sentry"
+		/squelch /alert add 2 "A Valorian Guard"
 	}
 
 /return

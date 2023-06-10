@@ -74,10 +74,10 @@ REVISION HISTORY
 #EVENT HealType 		"[ #1# #*#]#*#HealType #2#"
 
 |-- Rez Events
-#EVENT CanRez     		"This corpse can be resurrected."
-#EVENT CannotRez  		"This corpse cannot be resurrected."
-#EVENT NotOnline  		"You told #1#, '#2# is not online at this time'"
-#EVENT NotOnline  		"Your tell to #1# has been queued"
+#EVENT REZZABLE     	"This corpse can be resurrected."
+#EVENT CANNOTREZ  		"This corpse cannot be resurrected."
+#EVENT NOTONLINE  		"You told #1#, '#2# is not online at this time'"
+#EVENT NOTONLINE  		"Your tell to #1# has been queued"
 
 |-- CHEvents should only be listened for in the class handlers (cleric, druid)
 #EVENT CHStart			"#1# tells you#*#'CHStart #2#'"
@@ -135,14 +135,12 @@ REVISION HISTORY
 
 Sub InitEvents_Healing
 	/if (${str_classArchetype.Equal[PRIEST]} || ${str_classArchetype.Equal[MELEE_MANA]} ) /call RegisterBackgroundEvents Events_Healing 6
-	/if (${str_classArchetype.Equal[PRIEST]}) /call RegisterBackgroundEvents Events_CH 7
+	/if (${str_classArchetype.Equal[PRIEST]}) 	/call RegisterRaidEvents Events_Healing_PriestsOnly 7
+	/if (${Me.Class.ShortName.Equal[CLR]})		/call RegisterRaidEvents Events_Healing_ClericsOnly 2
 /return
 
 Sub Events_Healing
 	/doevents GroupHeal
-	/doevents CanRez
-	/doevents CannotRez
-	/doevents NotOnline
 	/doevents ChangeHP
 	/doevents ChangeHPTank
 	/doevents ChangeHPSelf
@@ -159,17 +157,20 @@ Sub Events_Healing
 	/doevents FocusHEALMT_OFF
 /return
 
-Sub Events_CH 
-	/doevents CHStart
-	/doevents CHStop
-	/doevents CHPause
-	/doevents CHResume
-	/doevents CHSwitch
+Sub Events_Healing_ClericsOnly
 	/if (${bln_hasCelRegen}) {
 		/doevents CelRegenStart
 		/doevents CelRegenStop
 		/if (${bln_celRegenActive}) /call chkCelRegen
 	} 
+/return
+
+Sub Events_Healing_PriestsOnly
+	/doevents CHStart
+	/doevents CHStop
+	/doevents CHPause
+	/doevents CHResume
+	/doevents CHSwitch
 /return 
 
 Sub EVENT_FocusHEALMT_OFF
@@ -389,13 +390,15 @@ Sub EVENT_FireRegen(_line, _chatSender, _eventParams)
 
 Sub PlaceRegen(int _regenKey) 
 	/echo \agPlaceRegen \ao${_regenKey} \aw? \ao${int_regenKey}
-
+	
 	/if (${Me.Class.ShortName.Equal[CLR]}) {
+			/if (${Me.Song[Celestial Regeneration].Duration.TotalSeconds} > 10) /return
 			/varset bln_celRegenActive TRUE
 			/call chkCelRegen
 			/varset bln_celRegenActive FALSE
 		} else {
 		/if (${_regenKey} == ${int_regenKey} || ${_regenKey} == 0) {
+			/if (${Me.Song[${str_regenName}].Duration.TotalSeconds} > 10) /return
 			/if (${Me.AltAbilityReady[Mass Group Buff]} && ${Me.AltAbilityReady[${str_regenName}]}) {
 				/call MQ2Cast "Mass Group Buff" alt
 				/delay 10
@@ -844,7 +847,7 @@ Sub healCast(int _id, string _name, string _spell, bool _isGroup, bool _isHoT)
 		
 		/delay 5
 		/if (!${Defined[timer_HoT_${_id}]}) /declare timer_HoT_${_id} timer outer 30s
-		/if (${Macro.Return.Equal[CAST_SUCCESS]}) /varset timer_HoT_${_id} 30s
+		/if (${_isHoT} && ${Macro.Return.Equal[CAST_SUCCESS]}) /varset timer_HoT_${_id} 30s
 		/if (${Macro.Return.Equal[CAST_SUCCESS]} && ${bln_annouce}) /${cmdChannel} ${_spell} > ${Target.Name} hp:${Target.PctHPs} m:${Me.PctMana} d:${Target.Distance}
 		/return ${Macro.Return}
 	}
@@ -874,12 +877,12 @@ Sub chkHP
    	| -------------------------
  	| Check to see if I should cast Divine Arbitration
 	| Loop through group members to check to see if anyone needs Divine Arbitration
-	/if (${Me.Class.ShortName.NotEqual[CLR]} || !${use_heal_divineArb} || !${bln_DARBReady}) /goto :return
+	/if (${Me.Class.ShortName.NotEqual[CLR]} || !${use_heal_divineArb} || !${bln_ArbitrationReady}) /goto :return
 
 	:divine
 	/declare gmember int local 0
 	/for gmember 0 to ${Group.Members}
-		/if (${Group.Member[${gmember}].PctHPs}<=${int_point_divineArb}) {
+		/if (${Group.Member[${gmember}].PctHPs}<=${int_point_divineArb} && ${Group.Member[${gmember}].Present}) {
 			| add a check for member in group here
 			/dgt ${Group.Member[${gmember}].Name} triggered Divine Arbitration!
 			/call Interrupt
@@ -1105,86 +1108,55 @@ Sub heal_chSwitch(int _chainID, string _targetName)
 |-------------------------------------------------------------------------------- 
 |SUB: Check Resurrection
 |--------------------------------------------------------------------------------
-Sub chkRez
+Sub chkRessurection
 	| find all corpses in range	
 	/if (${SpawnCount[corpse]}) /squelch /hidecorpse npc
-	/declare int_corpses int local ${SpawnCount[corpse radius ${int_range_rez}]}
-	/if (!${int_corpses}) /return
+	/if (!${SpawnCount[corpse radius ${int_range_rez}]}) /return
 
 	| if corpses, then aerez
-	/call AERez ${int_corpses}
+	/call RessurectCorpses ${int_corpses}
 /return
 
-|-- TODO: Rework this. It's buggy
-Sub AERez(int _corpseCount)
 
-	
-	/declare arr_corpses[${_corpseCount}] int local 
-	/declare str_corpse		string local
+Sub RessurectCorpses 
+	/declare int_corpseCount 					int local ${SpawnCount[corpse radius ${int_range_rez}]}
+	/declare arr_corpses[${int_corpseCount}]	int	local 0
+	/declare i									int local 0
+	/declare id									int local 0
+	/declare charName							string local NULL
+	/declare online  							int local 0
 
-	/declare i 				int local
-	/declare x				int local
-	/declare id 			int local
-	/declare charID int local
+	| consider the corpses
+	/for i 1 to ${int_corpseCount}
+		/varset id 		 	${NearestSpawn[${i},corpse radius ${int_range_rez}].ID}
+		/varset charName 	${Spawn[id ${id}].CleanName.Token[1,']}
+		/varset online 		0
 
-	/for i 1 to ${_corpseCount}
-		/varset arr_corpses[${i}] ${NearestSpawn[${i},corpse radius ${int_range_rez}].ID}
-	/next i
-	
-	:consider 
-	/for i 1 to ${_corpseCount}
-		/varset id ${arr_corpses[${i}]}
-		/varset bln_skipCorpse FALSE
+		| check to see if the pc is online
+		/dquery ${charName} -q "Me.ID" -o online -t 20
+		/if (!${online}) /goto :nextCorpse
 
-		| get the name from corpse	
-		/varset str_corpse ${Spawn[id ${id}].CleanName.Token[1,']}
-		/if (!${Bool[${str_corpse}]}) /goto :next_corpse
-
-		| check corpse name 
-		/dquery ${str_corpse} -q "Me.ID"
-		/varset charID ${DanNet.Q}
-		| make sure the target is actually a corpse, and online
-		/if (${Spawn[id ${id}].CleanName.Find[corpse]} == NULL || !${charID}) /varset bln_skipCorpse TRUE
-		/if (${bln_skipCorpse}) /goto :next_corpse
-
-
-		| check ignore list
-		/if (${int_rezIgnore}) {
-			/for x 1 to ${int_rezIgnore}
-				/if (${arr_corpses[${x}]} == ${arr_rezIgnore[${x}]}) {
-					/echo corpse ${x} ${arr_corpses[${x}]} == ${arr_rezIgnore[${x}]}
-					/varset bln_skipCorpse TRUE
-				}
-			/next x
-		}
-		/echo bln_skipCorrpse? ${bln_skipCorpse}
-		/if (${bln_skipCorpse}) /goto :next_corpse
-
-		| check online
-		/call CheckOnline ${str_corpse}
-		/if (${bln_skipCorpse}) /goto :next_corpse
-
-		| consider the corpse
+		| target the corpse and check if cannot rez (conder and check result)
 		/call TrueTarget ${id}
 		/consider
-		/delay 10
-		/doevents CannotRez
-		/if (${bln_skipCorpse}) /goto :next_corpse
-			
+		/delay 5
+		/doevents CANNOTREZ 
+		/if (${bln_skipCorpse}) /goto :nextCorpse
+
 		| resurrect
 		/call Ressurect ${id}
+		/varset bln_skipCorpse FALSE
 
-	:next_corpse
+
+	:nextCorpse
 	/next i
+/return 
 
-	:clean_list
-	/call CleanRezIgnoreList
-/return
 
 Sub Ressurect(int _id)
 	/call TrueTarget ${_id}
 	/dex  ${Spawn[id ${_id}].CleanName.Arg[1,']} /consent ${Me.Name}
-	/delay 10
+	/delay 5
 	/corpse 
 
 	| Find my epic (if cleric)
@@ -1195,7 +1167,7 @@ Sub Ressurect(int _id)
 			/docommand /${announceChannel} Rezzed ${Target.Name}
 		}
 	} else {	
-	| No epic or not cleric, use spell
+		| No epic or not cleric, use spell
 		/call chkSpellMemorized ${str_rezSpell} TRUE ${str_rezGem}
 		/call MQ2Cast ${str_rezSpell}
 		/if (${Macro.Return.Equal[CAST_SUCCESS]}) {
@@ -1208,20 +1180,18 @@ Sub Ressurect(int _id)
 
 Sub CheckOnline(string _name)
 	/tell ${_name} Checking to see if you are online for rez....
-	/doevents NotOnline
+	/doevents NOTONLINE
 /return
 
-Sub Event_NotOnline(Line, Name)
+Sub Event_NOTONLINE(Line, Name)
 	| sent a tell on rez but got an offline message - interrupt cast
 	/if (${Target.CleanName.Arg[1,'].Equal[${Name}]}) /call Interrupt
-	/call Add2RezIgnore ${Target.ID}
 	/varset bln_skipCorpse TRUE
 /return
 
-Sub Event_CannotRez
+Sub Event_CANNOTREZ
 	/if (${Target.ID}) {
-		/echo Could not rez ${Target.CleanName}, adding to ignore list.
-		/call Add2RezIgnore ${Target.ID}
+		/echo Could not rez ${Target.CleanName}, skipping this time
 		/varset bln_skipCorpse TRUE
 	}
 /return

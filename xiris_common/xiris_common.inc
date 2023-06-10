@@ -1202,46 +1202,6 @@ Sub TargetNamedCheck(_id)
 /return FALSE
 	
 
-
-
-|-----------------------
-|- Counts ini entries and creates a corresponding array
-|-----------------------
-|- @param Ini_Key: The ini file, section, and entry to create an array from
-|- @param ArrayName: The name of the array you want to declare
-|- @param ArrayScope: The scope of the array to be declared
-|-----------------------
-|- Syntax: /call IniToArray IniKey ArrayName VariableScope
-|-	Ex: /call IniToArray "Settings.ini,General Settings,Debug Mode" Debug outer
-|-		/call IniToVar Bot_Killians.ini,Buffs,SelfBuffs MySelfBuffs local
-|-----------------------
-Sub IniToArray(Ini_Key, ArrayName, ArrayScope)
-	| Check for the specified ini key.
-	/if (!${Ini[${Ini_Key}1].Length}) {
-		/echo [${Ini_Key}] not found.
-	} else {
-	
-		| Count ini entries
-		/declare i int local 1
-		/declare count int local
-
-		:CountingLoop
-		/if (${Ini[${Ini_Key}${i}].Length}) {
-			/varset count ${i}
-			/varcalc i ${i} + 1
-			/goto :CountingLoop
-		}
-		
-		| Declare the array and copy ini entries
-		/if (${Defined[${ArrayName}]}) /deletevar ${ArrayName}
-		/declare ${ArrayName}[${count}] string ${If[${Defined[ArrayScope]},${ArrayScope},outer]}
-		
-		/for i 1 to ${${ArrayName}.Size}
-			/varset ${ArrayName}[${i}] ${Ini[${Ini_Key}${i}]}
-		/next i
-	}
-}
-/return ${ArrayName}
 | --------------------------------------------------------------------------------------------------------|
 | -- Determines if a bot is dead by the number of items of gear they have on 							 -|
 | -- 5 or more empty spots is "Dead"																	 -|
@@ -1284,11 +1244,6 @@ Sub chkNaked
 	}
 /return
 
-
-Sub findslot(string _commandtext)
-
-/return
-
 Sub Event_FixCorpses
 	/doevents flush FixCorpses
 	/hidecorpse all
@@ -1298,27 +1253,6 @@ Sub Event_FixCorpses
 	/hidecorpse looted
 /return
 
-
-Sub saveGroup
-
-/return
-
-Sub ClearCursor
-	/declare i int local
-	:auto_inv
-	/if (${Cursor.ID}) {
-	/if (${Cursor.Container}) {
-		|---- Inventory Bag Slots
-		/for i 1 to 10   
-		/if (!${InvSlot[pack${i}].Item.Container}) /nomodkey /itemnotify pack${i} leftmouseup
-		/next i
-		|---- Inventory Bag Slots   
-	} else {
-		/timed 5 /autoinventory
-	}
-	/goto :auto_inv
-	}
-/return
 
 SUB verifyEvent(sring _chatSender, string _eventParams)
 	/declare userValidated 	bool local FALSE
@@ -1413,50 +1347,6 @@ SUB argueString(WhatToFind, givenData)
 	}
 
 /return ${foundData}
-
-|------------------------------------------------------------------------------------|
-|- Creates timers, at the specified duration, and adds their names to timerArray.	-|
-|------------------------------------------------------------------------------------|
-|- @param timerName: Name of the timer you want to declare.							-|
-|- @param timerSetting: Setting of the timer you're declaring.						-|
-|---------------------------------BB---------------------------------------------------|
-SUB createTimer(timerName, timerSetting)
-	| Delete old timer.
-	/if (${Defined[${timerName}]}) /deletevar ${timerName}
-
-	| Declare new timer.
-	/declare ${timerName} timer global ${timerSetting}
-	
-	| Add the timer's name to the timerArray.
-	/call BuildArray timerArray ${timerName} global
-/return
-
-
-
-|----------------------------------------------------|
-|- Deletes spent timers made by 'SUB createTimer'.	-|
-|----------------------------------------------------|
-SUB check_macroTimers
-	/declare i int local
-	/declare SpentTimerCounter int local
-
-	| Check each entry of the timer array, count spent timers.	
-	/for i 1 to ${timerArray.Size}
-		/if (!${${timerArray[${i}]}}) {
-			/varcalc SpentTimerCounter ${SpentTimerCounter} + 1
-			/if (${Defined[${timerArray[${i}]}]}) {
-				/deletevar ${timerArray[${i}]}
-			}
-		}
-	/next i
-	
-	| If all the timers listed on timerArray are spent, delete timerArray.
-	/if (${SpentTimerCounter}==${timerArray.Size}) {
-		/deletevar timerArray
-	}
-/return
-
-
 
 |----------------------------------------------------|
 |- Resets XTarget window 1-5 elements to auto		-|

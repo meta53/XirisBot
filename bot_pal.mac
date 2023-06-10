@@ -123,6 +123,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 			|-- std library (burns/aa/clicks)
 			/call chkAA
 			/call chkBurn
+			/call chkCryActive
 			/call chkClicky
 
 			|-- verify target status
@@ -149,7 +150,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 **|
 Sub chkUtils
 	|-- Standard Methods
-	/call chkSit
+	/if (!${bln_tanking}) /call chkSit
 	/varset timer_check_utilities 20s
 /return
 
