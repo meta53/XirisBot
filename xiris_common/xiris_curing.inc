@@ -511,6 +511,7 @@ Sub cureMTAuto
 
 	| Check Conspecifics
 	| Packmaster's Curse
+	/varset c 0
 	/dquery ${str_MTName} -q "Me.Buff[Packmaster’s Curse].ID"
 	/delay 20 ${DanNet.Query.Received}
 	/varset c ${DanNet.Q}
@@ -520,6 +521,7 @@ Sub cureMTAuto
 	}
 
 	| Check Poison
+	/varset c 0
 	/dquery ${str_MTName} -q "Debuff.Poisoned"
 	/delay 20 ${DanNet.Query.Received}
 	/varset c ${DanNet.Q}
@@ -528,7 +530,9 @@ Sub cureMTAuto
 		/goto :return
 	}
 
+
 	| Check Curse
+	/varset c 0
 	/dquery ${str_MTName} -q "Debuff.Cursed"
 	/delay 20 ${DanNet.Query.Received}
 	/varset c ${DanNet.Q}
@@ -538,6 +542,7 @@ Sub cureMTAuto
 	}
 
 	| Check Disease
+	/varset c 0
 	/dquery ${str_MTName} -q "Debuff.Diseased"
 	/delay 20 ${DanNet.Query.Received}
 	/varset c ${DanNet.Q}
@@ -560,7 +565,7 @@ Sub handleCureRequest(string _name, int _id, string _cureType, int _counters, bo
 	/echo \ayhandleCureRequest: ${_name}, ${_id}, ${_cureType}, ${_counters}, ${_forced}
 	|-- if requester is not in zone, ignore it
 	/if (!${SpawnCount[pc ${_name}]}) {
-		/dt ${_name} I cured you ${_name}(${_id}) of ${_counters} ${_cureType} counters.
+		/dt ${_name} I cannot cure you, you are dead!
 		/return
 	}
 	|-- find cure spell string & counters it clears
@@ -680,7 +685,7 @@ Sub castCure(string _name, int _id, string _spell, int _castCount, string _cureT
 	/for i 1 to ${_castCount}
 		|Check for Death
 		/if (!${SpawnCount[pc ${_name}]}) {
-		/dt ${_name} I cured you ${_name}(${_id}) of ${_counters} ${_cureType} counters.
+			/dt ${_name} I cannot cure you, you are dead!
 			/return
 		}
 		| If I am a cleric and this is unforced, quickly check MT health

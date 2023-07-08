@@ -213,6 +213,7 @@ Sub EVENT_DivineInterventionRequest(_line, _sender, _eventParams)
 
 Sub Event_AutoRezOn
 	/call AutoRezON
+	/doevents flush AutoRezON
 /return
 
 Sub AutoRezON
@@ -222,6 +223,7 @@ Sub AutoRezON
 
 Sub Event_AutoRezOff
 	/call AutoRezOFF
+	/doevents flush AutoRezOFF
 /return 
 
 Sub AutoRezOFF
@@ -232,6 +234,7 @@ Sub AutoRezOFF
 
 Sub Event_CombatRezON
 	/call CombatRezON
+	/doevents flush CombatRezON
 /return
 
 Sub CombatRezON 
@@ -242,6 +245,7 @@ Sub CombatRezON
 
 Sub Event_CombatRezOFF
 	/call CombatRezOFF
+	/doevents flush CombatRezOFF
 /return 
 
 Sub CombatRezOFF

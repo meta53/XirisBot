@@ -288,7 +288,7 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/declare timer_medDelay			timer	outer ${Ini[INI_CHAR,Settings,medDelay,45s]}
 	/declare timer_sitDelay			timer	outer ${Ini[INI_CHAR,Settings,sitDelay,10s]}
 	/declare timer_check_utilities	timer   outer 0
-	
+
 	|-- [Settings] : Camp
 	/declare bln_useCAMP			bool	outer 	FALSE
 	/declare int_campX 				int 	outer 	${Me.X}
@@ -378,6 +378,7 @@ Sub chkGM
  ----------------------------
 **|
 Sub chkSit
+	/if (${Me.Moving} || ${Navigation.Active}) /return
 	|-- Mana Check
 	/if (${str_classArchetype.Equal[CASTER]} ||  ${str_classArchetype.Equal[PRIEST]}) {
 		| Sit my ass down
@@ -442,15 +443,19 @@ Sub EngageTarget(int _targetID)
 **|
 
 Sub chkTargetStatus
+	/declare reason string local TARGET_VALID
 	/if (!${bln_engaged}) /goto :return
-	/declare reason string local NOREASON
+
+	| Target doesnt exist
+	/if (!${SpawnCount[id ${int_targetID}]}) {
+		/varset reason TARGET_DOESNT_EXIST 
+		/goto :disengage
+	}
+
 	| No target, or I am at my bound zone, if engaged, kill
 	/if (${int_targetID} == 0 || !${Target.ID} || ${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) {
-		/if (${bln_engaged}) {
-			/varset reason NOTARGET_or_ATBIND
-			/goto :disengage
-		}
-		/goto :return
+		/varset reason NOTARGET_or_ATBIND
+		/goto :disengage
 	}
 	
 	:chkTargetValid
@@ -489,14 +494,16 @@ Sub chkTargetStatus
 	| I am engaged, check we are targetting correct NPC (not if we are tanking becausse that is annoying)
 	/if ((${Target.ID} != ${int_targetID}) && (${Spawn[id ${int_targetID}].PctHPs} >= 0 && !${Spawn[id ${int_targetID}].Name.Find[s_corpse]}) && !${bln_tanking}) {
 		| I am not targetting the correct NPC
-		/echo \aoCurrent Target \arNOT \ao${Spawn[id ${int_targetID}]}(${int_targetID})\aw, re-targetting
+		/echo \aoCurrent Target \arNOT \ao${Spawn[id ${int_targetID}].Name}(${int_targetID})\aw, re-targetting
 		/call TrueTarget ${int_targetID}
 	} else /if ((${Target.ID} != ${int_targetID}) && (${Target.PctHPs} >= 0 && !${Spawn[id ${int_targetID}].Name.Find[s_corpse]}) && ${bln_tanking}) {
 		/varset int_targetID ${Target.ID}
 	}
 	
 	:chkTargetTarget
-	/if (${Target.Type.Equal[NPC]} && ${Me.TargetOfTarget.CleanName.Equal[${Me.CleanName}]} && !${bln_tanking}) {
+	/call TargetNamedCheck ${int_targetID}
+    /declare isNamed bool local ${Macro.Return}
+	/if (${Target.Type.Equal[NPC]} && ${Me.TargetOfTarget.CleanName.Equal[${Me.CleanName}]} && !${bln_tanking} && ${isNamed}) {
 		| Priest/Caster (with some sort of a aggro dump ability)
 		/if (${str_classArchetype.Equal[PRIEST]} || ${str_classArchetype.Equal[CASTER]}) {
 			| Wizard
@@ -546,7 +553,6 @@ Sub chkTargetStatus
 			}
 		}
 	}
-
 	/goto :return
 
 	:disengage
@@ -556,6 +562,7 @@ Sub chkTargetStatus
 	:retarget
 	
 	:return
+	/if (${reason.NotEqual[TARGET_VALID]}) /call Disengage
 /return
 
 
@@ -583,7 +590,13 @@ Sub Disengage
 	/if (${Stick.Active}) /stick off
 
 	|-- class archetype resets
-	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) /attack off
+	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
+		/echo \ag Disengage: Attack Off
+		/attack off
+		/delay 10
+		/attack off
+		/stick off
+	}
 	/if (${str_classArchetype.Equal[CASTER]} && ${Me.Pet.ID}) /pet back off
 /return
 
@@ -943,7 +956,8 @@ Sub Event_RageOn(string line)
 /return
 
 Sub Event_RageOff(string line)
-	/if (!${mq2meleeEnabled} && (${line.Find[${Spawn[${int_targetID}].DisplayName}]} || ${line.Find[${Target.DisplayName}]}) && (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]})) {
+	/if (!${mq2meleeEnabled} && (${line.Find[${Spawn[${int_targetID}].DisplayName}]} || ${line.Find[${Target.DisplayName}]}) && (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) && ${Target.ID}) {
+		/echo  \awRageOff :tryKill \ag Attacking 
 		/attack on
 	}
 	/if ((${line.Find[${Spawn[${int_targetID}].DisplayName}]} || ${line.Find[${Target.DisplayName}]}) && ${Me.Pet.ID}) {

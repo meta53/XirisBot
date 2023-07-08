@@ -5,6 +5,10 @@ Sub Main(string _mode)
 	/if (!${Bool[${_mode}]}) /varset _mode DEFAULT
 	/if (${Mode.Equal[36]}) /varset _mode THIRTYSIX
 	/echo Forming Voltron Mode: ${_mode}
+	/dga /raiddisband 
+	/delay 10
+	/dga /keypress ctrl+d 
+	/delay 10
 	
 	/call SetupGroups${_mode}
 	/delay 5s
@@ -30,21 +34,21 @@ Sub SetupGroupsDEFAULT
 
 Sub InviteGroupsToDEFAULT
 	/echo Inviting Groups to Raid
-	/raidinvite Xiria
+	/if (${SpawnCount[pc Xiria]}) /raidinvite Xiria
 	/delay 5
-	/raidinvite Xirea
+	/if (${SpawnCount[pc Xirea]}) /raidinvite Xirea
 	/delay 5
-	/raidinvite Xirin
+	/if (${SpawnCount[pc Xirin]}) /raidinvite Xirin
 	/delay 5
-	/raidinvite Xeqisa
+	/if (${SpawnCount[pc Xeqisa]}) /raidinvite Xeqisa
 	/delay 5
-	/raidinvite Xaeliea
+	/if (${SpawnCount[pc Xaeliea]}) /raidinvite Xaeliea
 	/delay 5
-	/raidinvite Xaexa
+	/if (${SpawnCount[pc Xaexa]}) /raidinvite Xaexa
 	/delay 5
-	/raidinvite Xaia
+	/if (${SpawnCount[pc Xaia]}) /raidinvite Xaia
 	/delay 5
-	/raidinvite Xepatia
+	/if (${SpawnCount[pc Xepatia]}) /raidinvite Xepatia
 
 	|/dga /notify LargeDialogWindow LDW_YesButton leftmouseup
 	|/dga /notify LargeDialogWindow LDW_OkButton leftmouseup
@@ -85,16 +89,16 @@ Sub InviteGroupsToTRIAD
 |-- 3 Way split for Jelvan
 Sub SetupGroupsJELVAN
 	| West, 1
-	/dex Xiria /multiline ; /invite Xorael; /invite Xurael; /invite Xirael; /invite Achlys; /invite Shynxia
-	/dex Sadelia /multiline ; /invite Dogmatist; /invite Theist;
+	/dex Xiria /multiline ; /invite Xorael; /invite Xurael; /invite Xirael; /invite Achlys
+	/dex Sadelia /multiline ; /invite Dogmatist; /invite Theist; /invite Erisa
 
 	| South, 2 
-	/multiline ; /invite Xanshia; /invite Xerael; /invite Ophidia; /invite Opheoia; /invite Shinxia 
+	/multiline ; /invite Xanshia; /invite Xerael; /invite Xiexa; /invite Xeqisa; /invite Aergia 
 	/dex Nihilist /multiline ; /invite Ophelia; /invite Ophexia; /invite Erinyas; /invite Xaeliea; /invite Aidos
 	/dex Xonshia /multiline ; /invite Ophemia; /invite Opheyia; /invite Erinyes; /invite Xaexa; /invite Achos
-	/dex Xinshia /multiline ; /invite Ophenia; /invite Ophezia; /invite Ertres; /invite Xaia; /invite Aergia
-	/dex Xarael /multiline ; /invite Cereborn; /invite Mluian; /invite Ertris; /invite Xepatia; /invite Ania
-	/dex Pantheon /multiline ; /invite Drexia; /invite Erisa; /invite Nessia; /invite Xiexa; /invite Xeqisa
+	/dex Xinshia /multiline ; /invite Ophenia; /invite Ophezia; /invite Ertres; /invite Xaia; /invite Shynxia
+	/dex Xarael /multiline ; /invite Ophidia; /invite Opheoia; /invite Ertris; /invite Xepatia; /invite Shinxia
+	/dex Pantheon /multiline ; /invite Drexia; /invite Mluian; /invite Nessia; /invite Cereborn; /invite Ania
 
 	| East, 3
 	/dex Xirea /multiline ; /invite Xenshia; /invite Empathic; /invite Xunshia; /invite Adikia; 
@@ -145,7 +149,7 @@ Sub InviteGroupsToTHIRTYSIX
 
 |-- Powerleveling, where it is one group of DPS + newbs, and then single groups of healer/dps
 Sub SetupGroupsPOWERLEVEL 
-	/multiline ; /invite Xaexa; /invite Xaia; /invite Eurydice; /invite Nessia; /invite Erisa ;
+	/multiline ; /invite Xaexa; /invite Xaia; /invite Shanxia; /invite Shenxia; /invite Erisa ;
 	/dex Xanshia /multiline ; /invite Xiris; /invite Eurydice; /invite Mluian ;
 	/dex Xirael /multiline ; /invite Sadelia; /invite Xiexa; /invite Aidos ; 
 	/dex Xinshia /multiline ; /invite Ophidia; /invite Shinxia ;
@@ -169,4 +173,35 @@ Sub SetupGroupsPOWERLEVEL
 
 Sub InviteGroupsToPOWERLEVEL
 	/echo \agNo Raid for this format
+/return
+
+Sub SetupGroupsTEST
+	/multiline ; /invite Xanshia;  /invite Xunshia; /invite Empathic; /invite Nihilist; /invite Ania;
+	/dex Xiria /multiline ; /invite Xirael;  /invite Xonshia; /invite Xerael; /invite Xarael; /invite Eurydice;
+	/dex Xirea /multiline ; /invite Xinshia; /invite Theist; /invite Deist; /invite Xurael; /invite Erisa;
+	/dex Sadelia /multiline ; /invite Xenshia; /invite Tragic; /invite Cereborn; /invite Xiexa; /invite Nessia;
+	/dex Xirin /multiline ; /invite Mluian;  /invite Opheria; /invite Ophesia; /invite Shunxia; /invite Aergia;
+	/dex Xaeliea /multiline ; /invite Ertres;  /invite Ophenia; /invite Opheoia; /invite Shinxia; /invite Achlys;
+	/dex Xaexa /multiline ; /invite Erinyes;  /invite Ophelia; /invite Ophexia; /invite Shynxia; /invite Adikia;
+	/dex Xaia /multiline ; /invite Ertris;  /invite Ophemia; /invite Opheyia; /invite Shanxia; /invite Aidos;
+	/dex Xepatia /multiline ; /invite Erinyas;  /invite Ophidia; /invite Ophezia; /invite Shenxia; /invite Achos;
+/return
+
+Sub InviteGroupsToTEST
+	/if (${SpawnCount[pc Xiria]}) /raidinvite Xiria
+	/delay 5
+	/if (${SpawnCount[pc Xirea]}) /raidinvite Xirea
+	/delay 5
+	/if (${SpawnCount[pc Xirin]}) /raidinvite Sadelia
+	/delay 5
+	/if (${SpawnCount[pc Xeqisa]}) /raidinvite Xirin
+	/delay 5
+	/if (${SpawnCount[pc Xaeliea]}) /raidinvite Xaeliea
+	/delay 5
+	/if (${SpawnCount[pc Xaexa]}) /raidinvite Xaexa
+	/delay 5
+	/if (${SpawnCount[pc Xaia]}) /raidinvite Xaia
+	/delay 5
+	/if (${SpawnCount[pc Xepatia]}) /raidinvite Xepatia
+
 /return

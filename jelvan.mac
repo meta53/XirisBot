@@ -1,31 +1,32 @@
 #Turbo 20
 Sub Main 
     | All Casters
-    /dge caster     /nav wp jelvanCaster
+    /dge caster     /nav wp jelvan2Caster
+
     | Jelvan W-S-E  1-2-3
+    |-----------------------------------------
     | West, 1 - Clerics that aren't doing DI/HoT move here, else, move south
     | Group 1
     /dex Xiria      /nav wp jelvan1Tank
     /dex Xorael     /nav wp jelvan1Cleric
     /dex Xurael     /nav wp jelvan1Cleric
     /dex Xirael     /nav wp jelvan1Cleric
-    /dex Achlys     /nav wp jelvan1Cleric
-    /dex Shynxia    /nav wp jelvan2Caster
+    /dex Achlys     /nav wp jelvan1Tank
     | Group 2
     /dex Sadelia    /nav wp jelvan1Tank
     /dex Dogmatist  /nav wp jelvan1Cleric
     /dex Theist     /nav wp jelvan1Cleric
+    /dex Erisa      /nav wp jelvan2Caster
 
-
+    |-----------------------------------------
     | South, 2 - start and most of the Clerics here
     | Group 1
     /nav wp jelvan2Tank
     /dex Xanshia    /nav wp jelvan2Cleric
     /dex Xerael     /nav wp jelvan2Cleric
-    
-    /dex Ophidia    /nav wp jelvan2Tank
-    /dex Opheoia    /nav wp jelvan2Tank
-    /dex Shinxia    /nav wp jelvan2Caster
+    /dex Xiexa      /nav wp jelvan2Caster
+    /dex Xeqisa     /nav wp jelvan2Caster
+    /dex Aergia     /nav wp jelvan2Tank
     | Group 2
     /dex Nihilist   /nav wp jelvan2Cleric
     /dex Ophelia    /nav wp jelvan2Tank
@@ -46,29 +47,30 @@ Sub Main
     /dex Ophezia    /nav wp jelvan2Tank
     /dex Ertres     /nav wp jelvan2Tank
     /dex Xaia       /nav wp jelvan2Tank
-    /dex Aergia     /nav wp jelvan2Tank
+    /dex Shynxia    /nav wp jelvan2Caster
     | Group 5
     /dex Xarael     /nav wp jelvan2Cleric
-    /dex Cereborn   /nav wp jelvan2Caster
-    /dex Mluian     /nav wp jelvan2Tank
+    /dex Ophidia    /nav wp jelvan2Tank
+    /dex Opheoia    /nav wp jelvan2Tank
     /dex Ertris     /nav wp jelvan2Tank
     /dex Xepatia    /nav wp jelvan2Tank
-    /dex Ania       /nav wp jelvan2Cleric
+    /dex Shinxia    /nav wp jelvan2Caster
     | Group 6   
     /dex Pantheon   /nav wp jelvan2Cleric
     /dex Drexia     /nav wp jelvan2Caster
-    /dex Xeixi      /nav wp jelvan2Caster
-    /dex Xeixa      /nav wp jelvan2Caster   
-    /dex Xiexa      /nav wp jelvan2Caster 
-    /dex Xeqisa     /nav wp jelvan2Caster 
+    /dex Mluian     /nav wp jelvan2Tank
+    /dex Nessia     /nav wp jelvan2Tank   
+    /dex Cereborn   /nav wp jelvan2Caster 
+    /dex Ania       /nav wp jelvan2Tank 
 
+    |-----------------------------------------
     | East, 3 - Clerics that aren't doing DI/HoT move here, else, move south
     | Group 1
     /dex Xirea      /nav wp jelvan3Tank
     /dex Xenshia    /nav wp jelvan3Cleric
     /dex Empathic   /nav wp jelvan3Cleric
     /dex Xunshia    /nav wp jelvan3Cleric
-    /dex Adikia     /nav wp jelvan3Cleric
+    /dex Adikia     /nav wp jelvan3Tank
 
     | Group 2
     /dex Xirin      /nav wp jelvan3Tank
@@ -76,38 +78,28 @@ Sub Main
     /dex Tragic     /nav wp jelvan3Cleric
     /dex Eurydice   /nav wp jelvan3Tank
 
-    /delay 5s
+    /delay 20
     
     | Have the 3 Tanks change their raids to only heal them
     /rs changeMT Xiris
     /dex Xiria /rs changeMT Xiria
     /dex Xirea /rs changeMT Xirea
 
-    | Have the 3 Tanks turn aggro on
-    /varset bln_tanking TRUE
-    /dex Xiria /varset bln_tanking TRUE
-    /dex Xirea /varset bln_tanking TRUE
-    /dex Xiria /echo changeMT Xiria
-    /dex Xirea /echo changeMT Xirea
 
     | Change mode to efficient
     /dgt healMode EFFICIENT
     /dgt autointerrupton
 
     | Turn off any offtanking
-    /dt Xiria offtankoff
-    /dt Xirea offtankoff
-    /dt Xirin offtankoff
-    /dt Sadelia offtankoff
-    /dt Xiris offtankoff
+    /dgt offtankoff
 
     | Set resists
     | Tanthi (1)
-    /dex Xiria /rs ResistTypes cold|disease|fire 
+    |/dex Xiria /rs ResistTypes cold|disease|fire 
     | Tanthu (2)
-    /rs ResistTypes fire|magic 
+    |/rs ResistTypes fire|magic 
     | Tantho (3)
-    /dex Xirea /rs ResistTypes cold|magic 
+    |/dex Xirea /rs ResistTypes cold|magic 
 
     | Raid type setting
     /dgt SetupRaid JELVAN
@@ -118,15 +110,9 @@ Sub Main
     /dt Xirael autoCureMTOn
     | Tanthu (2) - Xiris
     /dt Xanshia autoCureMTOn 
-    | Tantho (3)
+    | Tantho (3) - Xirea
     /dt Xenshia autoCureMTOn 
 
-    | Turn on preventspeed
-    /dga /docrack preventspeed on
-    /dga /docrack nostun on
-
     | Set raidcommands
-    /varset bln_tanking TRUE
-    /varset bln_taunting TRUE
     /mac bot_war xiris
 /return

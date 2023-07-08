@@ -1109,12 +1109,18 @@ Sub heal_chSwitch(int _chainID, string _targetName)
 |SUB: Check Resurrection
 |--------------------------------------------------------------------------------
 Sub chkRessurection
-	| find all corpses in range	
-	/if (${SpawnCount[corpse]}) /squelch /hidecorpse npc
-	/if (!${SpawnCount[corpse radius ${int_range_rez}]}) /return
 
+	| find all corpses in range	
+	/if (${timer_rezCheck}) /return
+
+	/if (${SpawnCount[corpse]}) /squelch /hidecorpse npc
+	/delay 20
+	/if (!${SpawnCount[corpse radius ${int_range_rez}]}) /return
+	/echo \aoPerforming Rezzes
 	| if corpses, then aerez
 	/call RessurectCorpses ${int_corpses}
+	/varset timer_rezCheck 30s
+	/echo \agRessurections \awcomplete \ag${timer_rezCheck} \aountil recheck.
 /return
 
 
@@ -1128,10 +1134,13 @@ Sub RessurectCorpses
 
 	| consider the corpses
 	/for i 1 to ${int_corpseCount}
+		/squelch /hidecorpse npc
+		/delay 10
 		/varset id 		 	${NearestSpawn[${i},corpse radius ${int_range_rez}].ID}
 		/varset charName 	${Spawn[id ${id}].CleanName.Token[1,']}
 		/varset online 		0
-
+		/varset bln_skipCorpse FALSE
+		/echo \ag Checking on \ao${charName}\ag for Rez
 		| check to see if the pc is online
 		/dquery ${charName} -q "Me.ID" -o online -t 20
 		/if (!${online}) /goto :nextCorpse
@@ -1145,10 +1154,11 @@ Sub RessurectCorpses
 
 		| resurrect
 		/call Ressurect ${id}
-		/varset bln_skipCorpse FALSE
-
-
 	:nextCorpse
+	
+	/if (${SpawnCount[corpse]}) /squelch /hidecorpse npc
+	/delay 10
+	/echo \aw Checking on next corpse.
 	/next i
 /return 
 
@@ -1163,7 +1173,6 @@ Sub Ressurect(int _id)
 	/if (${FindItem[Water Sprinkler of Nem Ankh].ID}) {
 		/call MQ2Cast "Water Sprinkler of Nem Ankh" item
 		/if (${Macro.Return.Equal[CAST_SUCCESS]}) {
-			/call Add2RezIgnore ${Target.ID}
 			/docommand /${announceChannel} Rezzed ${Target.Name}
 		}
 	} else {	
@@ -1171,7 +1180,6 @@ Sub Ressurect(int _id)
 		/call chkSpellMemorized ${str_rezSpell} TRUE ${str_rezGem}
 		/call MQ2Cast ${str_rezSpell}
 		/if (${Macro.Return.Equal[CAST_SUCCESS]}) {
-			/call Add2RezIgnore ${Target.ID}
 			/docommand /${announceChannel} Rezzed ${Target.Name}
 		}
 	}
@@ -1196,58 +1204,6 @@ Sub Event_CANNOTREZ
 	}
 /return
 
-Sub Add2RezIgnore(int _id)
-	| ignore list is empty - create it with new id
-	/if (!${int_rezIgnore}) {
-		/varset int_rezIgnore 1
-		/if (${Defined[arr_rezIgnore]}) /deletevar arr_rezIgnore
-		/declare arr_rezIgnore[1] int outer
-		/varset arr_rezIgnore[1] ${_id}
-		/return
-	}
-	| copy existing list temp list, one entry larger
-	/declare arrTemp[${Math.Calc[${int_rezIgnore}+1]}] int local
-	/declare x int local
-	/for x 1 to ${int_rezIgnore}
-		| return if new idis already in the ignore list
-		/if (${_id} == ${arr_rezIgnore[${x}]}) /return
-		/varset arrTemp[${x}] ${arr_rezIgnore[${x}]}
-	/next x
-	/varset int_rezIgnore ${Math.Calc[${int_rezIgnore}+1]}
-	/varset arrTemp[${int_rezIgnore}] ${_id}
-	| delete old ignore list and copy temp list to new ignore list
-	/deletevar arr_rezIgnore
-	/declare arr_rezIgnore[${int_rezIgnore}] int outer
-	/for x 1 to ${int_rezIgnore}
-		/varset arr_rezIgnore[${x}] ${arrTemp[${x}]}
-	/next x
-/return
-
-Sub CleanRezIgnoreList
-	/if (!${Bool[${int_rezIgnore}]}) /return
-	| remove ids from ignore list that are no longer in zone
-	/declare x int local
-	/declare found int local 0
-	/declare arrTemp[${int_rezIgnore}] int local
-
-	/for x 1 to ${int_rezIgnore}
-		| skip corpse id if it's not in the zone spawn list any more
-		/if (!${Spawn[id ${arr_rezIgnore[${x}]}].ID}) /goto :nextIgnore
-		/varset found ${Math.Calc[${found}+1]}
-		/varset arrTemp[${found}] ${arr_rezIgnore[${x}]}
-	:nextIgnore
-	/next x
-	
-	| shrink ignore list
-	/if (${found} != ${int_rezIgnore} && ${int_rezIgnore} != -1) {
-		/deletevar arr_rezIgnore
-		/varset int_rezIgnore ${found}
-		/declare arr_rezIgnore[${int_rezIgnore}] int outer
-		/for x 1 to ${int_rezIgnore}
-			/varset arr_rezIgnore[${x}] ${arrTemp[${x}]}
-		/next x
-	}
-/return
 
 
 Sub EVENT_InterruptON
@@ -1432,6 +1388,7 @@ Sub xbot_initialize_healing(int _healPoint)
 	/declare 	bln_combatRez				bool	outer	FALSE
 	/declare	str_rezSpell				string	outer	${Ini[INI_CHAR,Healing_Spells,str_rezSpell,Reviviscence]}
 	/declare  	str_rezGem					string	outer	${Ini[INI_CHAR,Healing_Spells,str_rezGem,gem7]}
+	/declare	timer_rezCheck				timer   outer   30s
 
 	/echo ---------------
 	/echo \ayHeal Spells: \awNormal:\ag${str_heal_normal}\aw  || Efficient:\ag${str_heal_frantic_efficient}\aw || CH:\ag${str_heal_complete}

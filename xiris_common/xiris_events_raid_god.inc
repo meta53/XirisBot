@@ -134,7 +134,7 @@ Sub Event_UquaKey(string line,string key)
 
 Sub Event_InkCurse
 	/docommand /${announceChannel} ${Me.Name} is Running.
-	/call MeleeReset
+	/call Disengage
 	/varset inkRunning TRUE
 	/call InkCurseRun
 /return

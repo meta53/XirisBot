@@ -175,8 +175,6 @@ Sub getTarget
 				/call TrueTarget ${NearestSpawn[npc noalert 1 radius ${int_maxRadius} range ${int_minTLevel} ${int_maxTLevel} zradius ${int_zRadius}].ID} 
 			}
 
-
-
 			|----------Target Validation
 			/if (${Target.ID} && (${Target.Distance} <= ${int_campRadius}) && ${Target.DistanceZ} < 25) {
 				|--if it is close, its valid;
@@ -238,6 +236,7 @@ Sub getTarget
 **|
 Sub chkTargetValid
 	/echo chkTargetValid ${Target.Name}
+
 	/if (${Target.Type.NotEqual[NPC]}) {
 		/echo INVALID Not NPC
 		/call setTGTAlert
@@ -312,6 +311,8 @@ Sub setCamp
 	/varset D1Y int outer ${Me.Y}
 	/varset D1Z int outer ${Me.Z}
 
+	/waypoint update ${str_campName}
+
 	/varset int_campY ${Me.Y}
 	/varset int_campX ${Me.X}
 /return
@@ -372,7 +373,16 @@ Sub pullTarget
 	
 		| Start the pull by running to the target
 		:RunningToTarget
+		/if (${Navigation.PathExists[target]}) {
+			/if (!${Navigation.Active}) /navigate target
+			/delay 10
+		} else {
+			/docommand /${cmdChannel} warp wp ${str_campName}
+			/warp wp ${str_campName}
+			/goto :RunningToTarget
+		}
 		/if (!${Navigation.Active}) /navigate target
+		/delay 10
 
 		| Target in LOS, and in distance, going to aggrocheck
 		/if (${Target.LineOfSight} && ${Target.Distance3D} < ${int_castDistance}) {
@@ -406,7 +416,7 @@ Sub pullTarget
 			/if (${Target.Distance3D} > 25 && !${bln_usePull}) /goto :RunningToTarget
 
 			/if ((${bln_usePull} && (${Target.Distance} < ${int_castDistance}) && ${Target.LineOfSight}) || (!${bln_usePull} && (${Target.Distance} < 25 && ${Target.LineOfSight}))) {
-				| I am, call aggro sub.
+				| I am close enough, call aggro sub.
 				/echo \ao Attempting to Aggro Target
 				/call AggroTarget
 				/varcalc attempt ${attempt} + 1
@@ -433,7 +443,11 @@ Sub pullTarget
 			:ReturnWithPull
 			/if (${bln_usePull}) {
 				/echo \agReturning to Camp with \ay${Me.XTarget}+ \agmobs.
-				/navigate waypoint ${str_campName} 
+				/if (${Navigation.PathExists[waypoint ${str_campName}]}) {
+					/navigate waypoint ${str_campName} 
+				} else {
+					/warp wp ${str_campName} 
+				}
 				/goto :ReturnLoop
 			} else {
 				/if (!${Target.Aggressive}) /call AggroTarget
@@ -527,8 +541,13 @@ Sub killTarget
 	/if (${bln_usePull}) {
 		:campCheck
 		/if (${Math.Distance[${Me.Y},${Me.X}:${int_campY},${int_campX}]} > ${int_campRadius}) {
-			/if (!${Navigation.Active}) /navigate waypoint ${str_campName}
-			/echo \agMoving back to \ao${str_campName}
+			/if (${Navigation.PathExists[waypoint ${str_campName}]}) {
+				/echo \agMoving back to \ao${str_campName}
+				/if (!${Navigation.Active}) /navigate waypoint ${str_campName}
+			} else {
+				/echo \arNo Path to ${str_campName}! /awWarping
+				/warp wp ${str_campName}
+			}
 			/delay 20
 			/goto :campCheck
 		} else {
@@ -605,7 +624,7 @@ Sub killTarget
 			}
 			/goto :combatLoop
 		} else {
-			/echo target is dead, return
+			/echo \agTarget is dead, return
 		}
 /return
 
@@ -1008,7 +1027,7 @@ Sub variant_initialize(int _pull_dist, string _channel, string _campName, bool _
 	/declare int_minZHeight			int		outer 	0
 	/declare int_maxZHeight			int		outer	0
 	/declare int_zRadius			int     outer   0
-	/varcalc int_minZHeight			${Me.Z} - 150
+	/varcalc int_minZHeight			${Me.Z} - 50
 	/varcalc int_maxZHeight			${Me.Z} + 200
 	/varcalc int_zRadius ${int_maxZHeight} - ${int_minZHeight}
 	/declare int_closeEnoughRadius	int		outer   50
@@ -1135,6 +1154,7 @@ Sub setAlerts
 	/squelch /alert add 1 "mini named controller"
 	/squelch /alert add 1 "the hair"
 	/squelch /alert add 1 "a young dire wolf"
+	/squelch /alert add 1 "a creaking crate"
 
 	|-- Zone Specific Ignores
 	/if (${Zone.ShortName.Equal[dranik]}) {
@@ -1250,6 +1270,9 @@ Sub setAlerts
 		/squelch /alert add 1 "Guzzla"
 		/squelch /alert add 1 "Chizzlik"
 		/squelch /alert add 1 "Ukla"
+	} else /if (${Zone.ShortName.Equal[codecay]}) {
+		/varset int_maxPullCount 20
+		/squelch /alert add 2 "Barban"
 	}
 	
 
@@ -1400,9 +1423,9 @@ Sub setAlerts
 		/squelch /alert add 2 "murkglider stalker"
 	} else /if (${Zone.ShortName.Equal[wallofslaughter]}) {
 		/varset int_maxPullCount 10
-		/squelch /alert add 2 "enchainer"
-		/squelch /alert add 2 "darkwarrior"
-		/squelch /alert add 2 "ireknight"
+		|/squelch /alert add 2 "enchainer"
+		|/squelch /alert add 2 "darkwarrior"
+		|/squelch /alert add 2 "ireknight"
 		/squelch /alert add 2 "mastermind"
 	} else /if (${Zone.ShortName.Equal[gukbottom]}) {
 		/varset int_maxPullCount 20
@@ -1415,6 +1438,13 @@ Sub setAlerts
 		/squelch /alert add 2 "A Valorian Guardian"
 		/squelch /alert add 2 "A Valorian Sentry"
 		/squelch /alert add 2 "A Valorian Guard"
+	} else /if (${Zone.ShortName.Equal[fungusgrove]}) {
+		/varset int_maxPullCount 20
+		/squelch /alert add 2 "Shuddering Mushroom"
+	} else /if (${Zone.ShortName.Equal[codecay]}) {
+		/varset int_maxPullCount 20
+		/squelch /alert add 2 "Corrupted Knight"
+		/squelch /alert add 2 "Elite Corrupted Knight"
 	}
 
 /return

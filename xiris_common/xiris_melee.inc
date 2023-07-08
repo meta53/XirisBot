@@ -312,7 +312,7 @@ Sub chkDownshits
 /return
 
 Sub chkComponentsAll
-	/if (${bln_componentCheck}) {
+	/if (${bln_componentCheck} && !${timer_component}) {
 		/declare i 			int 	local	1
 		/declare component	string 	local   NULL
 		/declare compType	string  local   NULL
@@ -338,7 +338,6 @@ Sub chkComponentsAll
 					/docommand /${announceChannel} OUT_OF_REAGENTS  ${component} turning  this component OFF.
 					/varset COMPONENT_${i}_Check FALSE
 				}
-				
 			}
 			/autoinv
 		/next i
@@ -359,25 +358,26 @@ Sub chkComponents(string _component, int _count, string _type, string _summoner,
 		|/echo returning due to spawn
 		/return
 	} 
-	/if (${FindItemCount[=${_component}]}>=${_count}) {
-		|/echo returning due to count
-		/return
-	} 
-	/if (${strPullType.Equal[SPELL]}) {
-		|/echo returning due to pulltype as spell
-		/return
-	} 
-	/if (!${Defined[_reagent]}) /declare _reagent string local NULL
-	/if (!${Defined[message]}) /declare message string local SUCCCESS
+
+	/if (!${Defined[_reagent]})	/declare _reagent string local NULL
+	/if (!${Defined[message]})	/declare message string local SUCCCESS
+
 	:chkComponent
-		/echo checking components: desired:${_count} have: ${FindItemCount[=${_component}]}
+		/echo \awChecking components: \aodesired:\ay${_count} \aohave: \ag${FindItemCount[=${_component}]}
+
+		/if (${FindItemCount[=${_component}]} >= ${_count}) {
+			/varset message COUNT_REACHED
+			/echo \agReturning, have ${_count} ${_component}
+			/goto :return
+		} 
+
 		/autoinv
 
 		/if (${_type.Equal[ITEM]}) {
 			/echo ${_type}: ${_summoner} summoning ${_component} with ${_reagent} 
 			/echo summoner > 0 ? ${FindItemCount[=${_summoner}]}
 			/if (${FindItemCount[=${_summoner}]}>0) {
-				/echo gt10? (${FindItemCount[=${_reagent}]}>=10) || NULL? ${_reagent.Equal[NULL]]}
+				
 				/if (${_reagent.Equal[NULL]}) {
 						/echo ${FindItemCount[=${_summoner}]}
 						/echo ${_summoner} summoning ${_component}	
@@ -426,7 +426,9 @@ Sub chkComponents(string _component, int _count, string _type, string _summoner,
 					/goto :return
 				}
 		}
+		
 :return
+/varset timer_component 30s
 /return	${message}
 
 
@@ -501,27 +503,43 @@ Sub StickToTarget(bool _engageWhenInRange)
 		/call Disengage
 		/goto :return
 	} else /if (${Target.Distance3D} > ${int_maxStickDistance} && ${Target.Distance} < ${int_maxNavDistance}) {
-		/echo \ar StickToTarget Target is within nav range, navigating
-		/if (${Navigation.Active}) /nav stop 
-		/declare navDelayWait int local 0
-		/call MeleeReset
+		/if (${Navigation.PathExists[target]}) {
+			/echo \ar StickToTarget Target is within nav range, navigating
+			/if (${Navigation.Active}) /nav stop 
+			/declare navDelayWait int local 0
+			/call Disengage
 
-		:navToMeleeRange
-		/nav target
-		/delay 10
-		/varcalc navDelayWait ${navDelayWait}+1
-		/doevents CANTNAVTARGET
-		/if (${Target.Distance3D} <= ${int_startStickDistance}) {
-			/nav stop
-			/goto :tryStick
+			:navToMeleeRange
+				/nav target
+				/delay 10
+				/varcalc navDelayWait ${navDelayWait}+1
+				/doevents CANTNAVTARGET
+				/if (${Target.Distance3D} <= ${int_startStickDistance}) {
+					/nav stop
+					/goto :tryStick
+				}
+			/if (${navDelayWait} < 20) /goto :navToMeleeRange
+		} else {
+			/docommand /${announceChannel} NO PATH to target! Aborting!
+			/echo \arNO PATH\aw to target! Aborting!
+			/goto :return
 		}
-
-		/if (${navDelayWait} < 20) /goto :navToMeleeRange
+		
 	}
 	:tryStick
 	/stick ${stickCmd} ${int_currentStickDistance}
+
 	:tryKill
-	/if (${_engageWhenInRange}) /attack on
+	/if (${_engageWhenInRange}) {
+		/if (${Target.ID} && !${Target.Name.Find['s_corpse']} && ${Target.Type.Equal[NPC]}) {
+			/echo  \awStickToTarget :tryKill \ag Attacking 
+			/attack on
+		} 
+		/if (!${Target.ID} || ${Target.Name.Find['s_corpse']} || ${Target.Type.NotEqual[NPC]}) {
+			/echo \awStickToTarget :tryKill \ar Failed! \awID?\ao${Target.ID} \awCorpse?\ao${Target.Name.Find['s_corpse']} \awNPC?\ao${Target.Type.NotEqual[NPC]}
+			/call Disengage
+		}
+	}
 	
 :return
 /return
@@ -627,18 +645,6 @@ Sub chkCA_WAR
 /return 
 
 
-
-|-- Not Used
-Sub KillThis
-	/squelch /attack on
-/return
-
-
-Sub MeleeReset
-	/squelch /attack off 
-	/squelch /stick off
-/return
-
 Sub chkTaunt 
 	/if (${bln_tanking} && ${bln_taunting} && ${Me.AbilityReady[Taunt]} && ${Me.TargetOfTarget.Name.NotEqual[${Me.Name}]}) /doability "Taunt"
 /return 
@@ -717,6 +723,7 @@ Sub xbot_initialize_melee
 	/declare 	timer_check_downshits	timer	outer 	0
 	/declare 	timer_cantSee			timer   outer   10s
 	/declare    timer_cantNav			timer   outer   10s
+	/declare 	timer_component			timer   outer   30s
 
 	|-- ALL CLASSES COMMON
 	|-- [Settings] : Downflags

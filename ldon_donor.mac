@@ -58,12 +58,11 @@ REQUIRED INCLUDES
 #EVENT RageOn               "#*#has become ENRAGED#*#"
 #EVENT Zoned                "You have entered#*#"
 #EVENT Zoned                "LOADING, PLEASE WAIT..."
-#EVENT EndMac				"#*#monkeybutter#*#"
 #EVENT NoLOS				"#*#you cannot see your target#*#"
 #EVENT TooClose				"#*#your target is too close#*#"
-#EVENT MoveFail				"#*#Could not find path to destination#*#"
+#EVENT NavStuck				"#*#Could not find path to destination#*#"
+#EVENT NavStuck 			"#*#Could not locate starting point on navmesh#*#"
 #EVENT UILocked				"#*#You can't use that command right now#*#"
-#EVENT NavStuck				"#*#Could not locate starting point on navmesh (#1#)#*#"
 
 
 Sub Main(string _channel, string _announce, string _theme, bool _useDownFlags, bool _highRisk)
@@ -111,13 +110,26 @@ Sub Main(string _channel, string _announce, string _theme, bool _useDownFlags, b
 		} else {
 			
 			|-- remove yourself from any adventures that might be lingering
-			/echo Killing any previous LDON adventure that is active
-			/squelch /${cmdChannel} /notify AdventureRequestWnd AdvRqst_RequestButton leftmouseup
-			/delay 2s
-			/squelch /${cmdChannel} /notify ConfirmationDialogbox CD_Yes_Button leftmouseup
-			/call requestLDON
+			/echo \awKilling any previous LDON adventure that is active \ao${inMission} ${haveMission}
+			/if (${Window[ConfirmationDialogbox].Open}) {
+				/squelch /${cmdChannel} /notify ConfirmationDialogbox CD_Yes_Button leftmouseup
+				/delay 10
+			}
+			/if (${Window[AdventureRequestWnd].Child[AdvRqst_NPCText].Text.Find[You are not currently assigned]}) {
+				/echo \agCalling requestLDON
+				/call requestLDON
+			} else {
+				/squelch /${cmdChannel} /notify AdventureRequestWnd AdvRqst_RequestButton leftmouseup
+				/delay 10
+				/goto :SetupLoop
+			}
+			
+			/delay 5s
+			
+			
 			| double check that I have one cause this fucks up now and then on this server
 			/if (${Window[AdventureRequestWnd].Child[AdvRqst_NPCText].Text.Find[You are not currently assigned]}) {
+				/echo \arYou are not currently assigned...\ao Trying Again
 				/goto :SetupLoop
 			}
 			/if (${haveMission}) /call zoneLDON
@@ -212,9 +224,10 @@ Sub Main(string _channel, string _announce, string _theme, bool _useDownFlags, b
 
 
 Sub requestLDON
-	/if (${inMission}) /return
+	/echo \aorequestLDON \ag:inMission\ao${inMission}  \ag:haveMission\ao${haveMission}
+	/if (${inMission})   /return
 	/if (${haveMission}) /return
-	/echo requestLDON in zone ${zoneRequest} currently in: ${Zone.ShortName}
+	/echo \awrequestLDON in zone \ao${zoneRequest} \awcurrently in: \ao${Zone.ShortName}
 	|-- this is anachronistic if we are phasing out piggyzone
 	/if (${Zone.ShortName.NotEqual[thundercrest]}) {
 		/echo Not in Thundercrest, not sure why. Ending
@@ -226,25 +239,31 @@ Sub requestLDON
 	|-- Get Adventure Loop, request the adventure from the giver.
 	:GetAdventure
 		/echo Getting adventure from ${adventureGiver} ${Time.Time24}
-
+		/target id ${Spawn[npc ${adventureGiver}].ID}
 		| Navigate to Adventurer
-		/docommand /${cmdChannel} /navigate spawn ${adventureGiver}
-		/delay 30
-		/call TrueTarget ${Spawn[npc ${adventureGiver}].ID}
-		
+		/if (${Navigation.PathExists[spawn ${adventureGiver}]}) {
+			/docommand /${cmdChannel} /navigate spawn ${adventureGiver}
+		} else {
+			/docommand /${cmdChannelExcludingMe} /target id ${Spawn[npc ${adventureGiver}].ID}
+			/docommand /${cmdChannel} /warp target
+		}
 		
 		:GetAdventureNavLoop
+			/echo GetAdventureNavLoop
 			/if (${Navigation.Active}) {
 				/delay 20
 				/goto :GetAdventureNavLoop
 			} 
 
+		/delay 50
 
 		:GetAdventureClick
+			/echo GetAdventureClick
 			/face fast
 			/delay 10
 			/click right target
 			/delay 2s
+			/click right target
 
 	|-- set the difficulty to Hard (defaulted to no)
 	/if (${bln_highRisk}) {
@@ -259,6 +278,7 @@ Sub requestLDON
 
 
 	/delay 10
+	/call setCamp
 		
 	/varset ldonType NOAVAIL
 	|-- First choice: Mob Count, see if this mission is available
@@ -464,6 +484,40 @@ Sub zoneByMagus(_string zoneToRequest)
 
 /return 
 
+Sub MoveToBindFromOrigin
+	/docommand /${cmdChannel} /toggledoors on
+	/docommand /${cmdChannel} /nav spawn trans
+	
+	:translocate_run
+		/delay 20
+		/if (${Navigation.Active}) /goto :translocate_run
+
+	/delay 5s
+	:translocate_ask
+		/docommand /${cmdChannel} /tar trans
+		/delay 5s
+		/say East. Always... into the East.
+		/delay 30s
+
+/return
+
+Sub RequestRessurection
+	/docommand /${cmdChannel} /nav spawn summoner
+	:summoner_run
+		/delay 20
+		/if (${Navigation.Active}) /goto :summoner_run
+
+	:summoner_ask
+		/tar summoner
+		/delay 10
+		/say summon area
+		/delay 20
+		/tar Mila 
+		/delay 10
+		/say rez area
+		/delay 45s
+/return 
+
 Sub RequestRaidBuffs
 	/g Requesting Raid Buffs
 	/docommand /${cmdChannel} /toggledoors on
@@ -571,6 +625,8 @@ Sub OriginToThundercrest
 
 Sub ResetAtThundercrest
 	/if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) {
+		/call MoveToBindFromOrigin
+		/call RequestRessurection
 		/call RequestRaidBuffs
 		|/call RequestLobbyBuffs
 		|/call zoneByMagus ${zoneMagus}
@@ -582,11 +638,11 @@ Sub ResetAtThundercrest
 
 Sub setCamp
 	/echo Setting camp at camp${int_currentCamp} out of ${int_campCount}
-	|/waypoint add camp${int_currentCamp} 
-	/navigate RecordWaypoint bot_pull_nav
-	/varset int_campX ${Me.X}
-	/varset int_campY ${Me.Y}
-	/varset int_campZ ${Me.Z}
+
+	/varset D1X ${Me.X}
+	/varset D1Y ${Me.Y}
+	/varset D1Z ${Me.Z}
+
 	/delay 1s
 /return
 
@@ -597,32 +653,19 @@ Sub moveCamp(int _campNumber)
 	/declare prevCamp int local 1
 	/varcalc prevCamp ${_campNumber}-1
 	/echo \aoMoving to Camp \ag${_campNumber}
-	/nav wp camp${_campNumber}
-	/delay 5s
-	/docommand /${cmdChannelExcludingMe} /mqpause on
-	/docommand /${cmdChannel} /nav wp camp${_campNumber}
-	/delay 10
-	/doevents MoveFail 
-	/if (${bln_moveFail}) {
-		/varset bln_moveFail FALSE
-		/docommand /${cmdChannel} /warp wp camp${prevCamp}
-		/delay 10
+	/if (${Navigation.PathExists[wp camp${_campNumber}]}) {
+		/nav wp camp${_campNumber}
+		/delay 5s
 		/docommand /${cmdChannel} /nav wp camp${_campNumber}
-	} 
-	:moveCampNavLoop
-		/echo Moving to Camp ${_campNumber}
-		/if (${Navigation.Active}) {
-			/delay 2s
-			/goto :moveCampNavLoop
-		} 
-	/docommand /${cmdChannelExcludingMe} /mqpause off
+		/delay 60s !${Navigation.Active}
+	} else {
+		/call clearNavStuck
+	}
+
+	:resume
 	/call setCamp
 /return
 
-Sub Event_MoveFail
-	/varset bln_moveFail TRUE 
-	/doevents flush MoveFail
-/return 
 
 
 Sub setRSTVars
@@ -778,10 +821,11 @@ Sub chkTargetValid
  ----------------------------
 **|
 Sub pullTarget
-	/echo pullTarget
-	/declare campDist int local
+	/echo pullTarget ${bln_validTGT}
+	/declare campDist 	int local
+	/declare dist 		int local
 	|--check to see if we have a valid target, or skip
-	/declare attempt int local 0
+	/declare attempt 	int local 0
 	
 
 	
@@ -789,77 +833,142 @@ Sub pullTarget
 		/if (!${bln_validTGT}) 				/goto :return
 		/if (!${Target.ID}) 				/goto :return
 		/if (${Target.Type.NotEqual[NPC]}) 	/goto :return
-	
-		|-- start navigating if you havent
-		/if (!${Navigation.Active}) /navigate target
-		/doevents NavStuck
-		/delay 5
-		/if (${bln_navStuck}) /call clearNavStuck
-		/doevents flush 
+
+		| Start the pull by running to the target
+		:RunningToTarget
+		/if (${Navigation.PathExists[target]}) {
+			/if (!${Navigation.Active}) /navigate target
+			/delay 10
+		} else {
+			/call clearNavStuck
+			/goto :RunningToTarget
+		}
+
+
+		| Target in LOS, and in distance, going to aggrocheck
+		/if (${Target.LineOfSight} && ${Target.Distance3D} < ${int_castDistance}) {
+			/echo Target in LOS, and in distance, going to aggrocheck
+			/goto :AggroCheck
+		}
+
+		| Target has me as aggrod, and in range, going to returnWithPull
+		/if (${Me.TargetOfTarget.Name.Equal[${Me.Name}]} && (${Target.Distance3D} < ${int_castDistance})) {
+			/echo Target has me as aggrod, and in range, going to returnWithPull
+			/goto :ReturnWithPull
+		} 
+
+		| Too many attempts, returnwithpull
+		/if (${attempt} > 10) {
+			/echo Too many attempts, returnwithpull
+			/alert add 1 "${Target.ID}"
+			/target clear
+			/goto :ReturnWithPull
+		} 
+
+		/if (!${Target.ID}) /goto :return
 
 		|-- check to see if I have aggro
-		/if (${Me.TargetOfTarget.CleanName.Equal[${Me.CleanName}]} || ${Me.XTarget[1].ID} > 0) {
-			/echo I have aggro.
-			:returnStart
-				/echo Returning to camp.
-				/navigate waypoint bot_pull_nav
-			:returnLoop
-				/delay 1s
-				/if (${Navigation.Active}) /goto :returnLoop
-				/goto :return
-		} else {
-			|/echo I do not have aggro
-			|-- am I close enough to aggro?
-			/if (${Target.Distance} < ${int_castDistance} && ${Target.LineOfSight}) {
-				|/echo Calling aggro loop because dist is within castDist range
-				/goto :aggroLoop
+		:AggroCheck
+		/if (!${Me.TargetOfTarget.ID} && ((${Me.XTarget} <= ${int_maxPullCount}))) {
+			:AggroDistCheck 
+			| Am I close enough to aggro?
+			/if (${Target.Distance3D} > 200) /goto :RunningToTarget
+
+			/if ((${Target.Distance} < ${int_castDistance}) && ${Target.LineOfSight}) {
+				| I am close enough, call aggro sub.
+				/echo \ao Attempting to Aggro Target
+				/call AggroTarget
+				/varcalc attempt ${attempt} + 1
+				/echo \aoAggro Attempt return ${Macro.Return}
+				/if (${Me.TargetOfTarget.Name.Equal[${Me.Name}]}) 	/goto :ReturnWithPull
+				/if (${Macro.Return.Equal[NOLOS]})    				/goto :RunningToTarget
+				/if (${Macro.Return.Equal[CAST_FIZZLE]})    		/goto :AggroCheck
+				/if (${Macro.Return.Equal[NOTARGET]}) 				/goto :return
+				/if (${Macro.Return.Equal[NOMANA]})					/goto :RunningToTarget
+				/if (${Macro.Return.Equal[SUCCESS]})  {
+					/doevents NoLoS 
+					/if (${bln_noLOS}) {
+						/varset bln_noLOS FALSE
+						/goto :RunningToTarget
+					} else {
+						/goto :ReturnWithPull 
+					}
+				}
+			} else { 
+				/goto :RunningToTarget
 			}
-			
-		}
-		/goto :pullLoop
-		
-	:aggroLoop
-		/navigate stop
-		/face fast
-		/if (!${Target.ID}) 		  /goto :return
-		/if (${Me.TargetOfTarget.ID}) /goto :return
-		/if (!${Target.LineOfSight})  /goto :pullLoop
-
-		
-		|--attempt to aggro the mob
-		/if (${strPullType.Equal[RANGED]}) {
-			/ranged
 		} else {
-			/echo ${Me.SpellReady[${spell_hate}]} Cast "${spell_pull}" ${spell_pullGem} 5s
-			/call MQ2Cast "${spell_pull}" ${spell_pullGem}
+			| I have aggro, returning to camp
+			:ReturnWithPull
+				/echo \agReturning to Camp with \ay${Me.XTarget}+ \agmobs.
+				/if (${Navigation.PathExists[waypoint camp${int_currentCamp} ]}) {
+					/navigate waypoint camp${int_currentCamp} 
+				} else {
+					/call clearNavStuck
+				}
+				/goto :ReturnLoop
+			
+			:ReturnLoop
+				/delay 10
+				/varcalc dist ${Math.Distance[${Me.Y},${Me.X},${Me.Z}:${D1Y},${D1X},${D1Z}]}
+				/if (${dist} < ${pulltocamp}) /nav stop
+				/if (${Navigation.Active})  /goto :ReturnLoop
 		}
-		/delay 5
-		/doevents NoLOS
-		/doevents TooClose
-		/doevents UILocked
-		/delay 5
-		|-- Sometimes if we aren't spell casting and using range weapons we might be too close, and cannot hit them with it.
-		/if (${bln_tooClose}) {
-			/echo Too Close! Handling
-			/doability Bellow
-			/delay 1s
-			/doability Taunt
-			/varset bln_tooClose FALSE
-		}
-
-		
-		
-		|-- Target.LineOfSight gets a little wonky sometimes with floor items (boxes, etc) in the way
-		/if (${bln_noLOS}) {
-			/echo NoLOS! Handling
-			/navigate target
-			/delay 2s
-			/varset bln_noLOS FALSE
-		}
-		/goto :pullLoop	
-		
 	:return
 /return	
+	
+
+Sub AggroTarget 
+	/if (${Navigation.Active}) /navigate stop
+	/declare ret string local FAILED
+	:TargetAggroCheck
+	/if (!${Target.ID}) {
+		/varset ret NOTARGET
+	} else /if (!${Target.LineOfSight}) {
+		/varset ret NOLOS
+	} else /if (${Me.TargetOfTarget.Name.Equal[${Me.Name}]}) {
+		/varset ret SUCCESS
+	} else {
+		| Need to aggro the mob somehow
+		:AttemptAggro
+		/if (${strPullType.Equal[RANGED]}) {
+			/face fast
+			/delay 5
+			/ranged
+			/doevents TooClose
+			|-- Sometimes if we aren't spell casting and using range weapons we might be too close, and cannot hit them with it.
+			/if (${bln_tooClose}) {
+				/echo Too Close! Handling
+				/if (${Me.Class.ShortName.Equal[PAL]}) /call MQ2Cast "${spell_pull}" ${spell_pullGem} 2s
+				/if (${Me.Class.ShortName.Equal[WAR]}) /call chk_warProvoke "${war_ca_hate_1}"
+				/delay 1
+				/if (${Me.CombatAbilityReady[Taunt]}) /doability Taunt
+				/varset bln_tooClose FALSE
+				/goto :TargetAggroCheck
+			}
+			/delay 10
+			/goto :TargetAggroCheck
+		} else {
+			/if (${Me.PctMana} > 10) {
+				/call chkSpellMemorized "${spell_pull}" TRUE ${spell_pullGem}
+				/echo ${Me.SpellReady[${spell_pull}]} Cast "${spell_pull}" ${spell_pullGem} 2s
+				/call MQ2Cast "${spell_pull}" ${spell_pullGem} 2s
+				/doevents NoLOS
+			
+				
+				/if (${bln_noLOS}) /varset ret NOLOS
+				/if (${Macro.Return.Equal[CAST_SUCCESS]}) /varset ret SUCCESS
+				/if (${Macro.Return.Equal[CAST_CANNOTSEE]}) /varset ret NOLOS
+				/if (${Macro.Return.Equal[CAST_INTERRUPTED]}) /goto :AttemptAggro
+	
+				
+			} else {
+				/varset ret NOMANA
+			}
+		} 
+	}
+	:return
+/return ${ret}
 	
 |**
  ----------------------------
@@ -876,18 +985,21 @@ Sub killTarget
 	/if (${bln_TGTDead})   /return
 	/if (${Navigation.Active}) /navigate stop
 	
+	/declare int_waited int local 0
 	|--check camp distance
 	:campCheck
-	/if (${Math.Distance[${Me.Y},${Me.X}:${int_campY},${int_campX}]} > ${int_campRadius}) {
-		/if (!${Navigation.Active}) /navigate waypoint bot_pull_nav
-		|/echo moving back to camp
-		/delay 5
+	/if (${Math.Distance[${Me.Y},${Me.X}:${D1Y},${D1X}]} > ${int_campRadius}) {
+		/if (!${Navigation.Active}) /navigate waypoint camp${int_currentCamp}
+		/echo \agMoving back to \aocamp${int_currentCamp}
+		/delay 20
 		/goto :campCheck
+	} else {
+		/if (${Navigation.Active}) /navigate stop
 	}
 
 	|--check the distance, if its out of melee range/aggro range, lets wait a second
 	/face fast
-	/declare int_waited int local 0
+
 	:distanceWaitLoop
 		/varcalc int_waited ${int_waited}+1
 		/if (${int_waited} > 15) /return
@@ -899,39 +1011,39 @@ Sub killTarget
 				/target npc radius ${int_campRadius} range ${int_minTLevel} ${int_maxTLevel}
 				/varset int_targetID ${Target.ID}
 				/delay 5
+				/varset bln_validTGT	TRUE
 				/goto :killMob
 			} else {
-				/echo Distance not covered! ${Target.Distance}::${int_waited} ${Target.Distance} > ${int_campRadius}
-				/delay 5
+				/echo  Distance not covered! ${Target.Distance}::${int_waited} ${Target.Distance} > ${int_campRadius}
+				/delay 20 ${Target.Distance} < ${int_campRadius}
 				/goto :distanceWaitLoop
 			}
 		}
 		
 	:killMob
 	|--issue kill command
-	/docommand /${announceChannel} KillMob ${Target.ID} "${Target.Name}" ${Time.Time24}
+	/varcalc int_killCount ${int_killCount}+1
 	
+	/docommand /${announceChannel} KillMob ${Target.ID} "${Target.Name}" ${Time.Time24}
+	/call ResetCastTimers
+	/face fast
+	/attack on
+
 	/if ((${SpawnCount[npc radius ${int_campRadius}]} > 1) && (${Me.Class.ShortName.Equal[SHD]}) && ${Me.SpellReady[${spell_aehate}]} ) {
-		|/echo ${Me.SpellReady[${spell_aehate}]} Cast ${spell_aehate} ${spell_aehateGem} 5s
+		/echo ${Me.SpellReady[${spell_aehate}]} Cast ${spell_aehate} ${spell_aehateGem} 5s
 		/call MQ2Cast "${spell_aehate}" ${spell_aehateGem}
 	}
 	
 	/if ((${SpawnCount[npc radius ${int_campRadius}]} > 1) && ${Me.Class.ShortName.Equal[WAR]} && ${Me.CombatAbilityReady[Area Taunt]}) {
-		|/echo ${Me.CombatAbilityReady[Area Taunt]}
 		/doability "Area Taunt"
 	} else /if ((${SpawnCount[npc radius ${int_campRadius}]} > 1) && ${Me.Class.ShortName.Equal[WAR]} && ${Me.AltAbilityReady[Rampage]}) {
 		/call MQ2Cast "Rampage" alt
 	}
 	
-	/if (!${Me.Combat}) {
-		/attack on
-		/stick front
-	}
 	
-	/doevents flush
 	
 	|--while in combat do these things
-:combatLoop
+	:combatLoop
 		/call chkCombatState
 		/if (${int_targetID} != ${Target.ID}) /return
 		/if (${Target.Type.NotEqual[NPC]}) /return
@@ -939,20 +1051,21 @@ Sub killTarget
 
 		/if (!${bln_TGTDead}) {
 			/if ((${Me.TargetOfTarget.ID} != ${Me.ID}) && !${Target.Fleeing}) {
-				/if ((${Me.Class.ShortName.Equal[SHD]})  && ${Me.SpellReady[${spell_hate}]}) {
-					|/echo ${Me.SpellReady[${spell_hate}]} Cast ${spell_hate} ${spell_hateGem} 5s
-					/call MQ2Cast "${spell_pull}" ${spell_pullGem}
+				/if ((${Me.Class.ShortName.Equal[SHD]} || ${Me.Class.ShortName.Equal[PAL]}) && ${Me.SpellReady[${spell_hate}]}) {
+					/call MQ2Cast "${spell_hate}" ${spell_hateGem}
 				} else /if (${Me.Class.ShortName.Equal[WAR]} && (${Me.CombatAbilityReady[${war_ca_hate_1}]})) {
 					/doability "${war_ca_hate_1}"
 				} else /if (${Me.Class.ShortName.Equal[WAR]} && (${Me.CombatAbilityReady[${war_ca_hate_2}]})) {
 					/doability "${war_ca_hate_2}"
-
 				} 
 			} 
+			/if ((${SpawnCount[npc radius ${int_campRadius}]} > 1) && ${Me.Class.ShortName.Equal[SHD]}  && ${Me.SpellReady[${spell_aehate}]} ) {
+				/echo ${Me.SpellReady[${spell_aehate}]} Cast ${spell_aehate} ${spell_aehateGem} 5s
+				/call MQ2Cast "${spell_aehate}" ${spell_aehateGem}
+			}
 			/goto :combatLoop
 		} else {
 			/echo \agTarget is dead, return
-			/return
 		}
 /return
 
@@ -1150,6 +1263,7 @@ Sub setGroupCommands
 **|
 Sub EVENT_UILocked
 	/varset bln_UILocked TRUE
+	/doevents flush
 /return
 
 Sub clearUILock
@@ -1163,12 +1277,14 @@ Sub clearUILock
 /return 
 
 Sub EVENT_NavStuck
+	/echo \arNAVSTUCK Triggered
 	/varset bln_navStuck TRUE
+	/doevents flush
 /return
 
 Sub clearNavStuck
 	/if (${bln_navStuck}) {
-		/warp wp camp${_campNumber}
+		/docommand /${cmdChannel} /warp wp camp${int_currentCamp}
 		/varset bln_navStuck FALSE
 	}
 /return
@@ -1240,6 +1356,7 @@ Sub variant_initialize(string _channel, string _announce, string _theme, bool _u
 	/declare killTarget             string  outer   NULL
 	/declare int_killCount 			int 	outer 	0
 	/declare int_totalKills			int     outer 	0
+
 	
 	|--group members
 	/declare bln_hasBST				bool    outer   FALSE
@@ -1311,11 +1428,13 @@ Sub variant_initialize(string _channel, string _announce, string _theme, bool _u
 	
 	|--radii
 	/declare int_pcCount			int 	outer   ${SpawnCount[PC]}
+	/if (!${Defined[int_campRadius]}) /declare int_campRadius int outer 55
 	/varset int_campRadius			55
 	/declare int_alert2Radius		int 	outer 	350
 	/declare int_campPullRadius		int		outer	350
 	/declare int_maxRadius			int		outer	300
 	/declare int_minZHeight			int		outer 	-1500
+	/declare int_maxPullCount		int     outer   3
 	
 	|-- use 40 for POFire
 	/declare int_maxZHeight			int		outer	4000
@@ -1344,9 +1463,9 @@ Sub variant_initialize(string _channel, string _announce, string _theme, bool _u
 	|--spell & support definitions are declared in xiris_melee.inc
 	
 	|--set up the camp logic
-	/if (!${Defined[int_campX]}) /declare int_campX 				int outer ${Me.X}
-	/if (!${Defined[int_campY]}) /declare int_campY 				int outer ${Me.Y}
-	/if (!${Defined[int_campZ]}) /declare int_campZ 				int outer ${Me.Z}
+	/if (!${Defined[D1X]}) /declare D1X 				int outer ${Me.X}
+	/if (!${Defined[D1Y]}) /declare D1Y 				int outer ${Me.Y}
+	/if (!${Defined[D1Z]}) /declare D1Z 				int outer ${Me.Z}
 	
 	/declare timer_taunt            timer 	outer    3s
 
@@ -1377,7 +1496,6 @@ Sub variant_initialize(string _channel, string _announce, string _theme, bool _u
 	/declare int_obstacleCNT		int 	outer 	0
 	/declare bln_noLOS				bool	outer	FALSE	
 	/declare bln_tooClose			bool	outer	FALSE
-	/declare bln_moveFail			bool    outer 	FALSE
 	/declare bln_UILocked			bool 	outer 	FALSE
 	/declare bln_navStuck			bool    outer   FALSE
 
@@ -1411,7 +1529,8 @@ Sub setAlerts
 	/squelch /alert add 1 "mini named controller"
 	/squelch /alert add 1 "the hair"
 	/squelch /alert add 1 "Keeper of Blood" |note spawns in spot you can't nav to
-	
+	/squelch /alert add 1 "a creaking crate"
+
 	|=================================
 	|--- specific zone mobs to hunt;
 	|=================================
@@ -1450,19 +1569,6 @@ Sub Event_NoLOS
 	/echo Event_NoLOS
 	/varset bln_noLOS TRUE
 /return
-
-
-Sub Event_EndMac
-	/bc Someone told me to end it! ${Time.Time24}
-	/g Someone told me to end it! ${Time.Time24}
-	/delay 1s
-	/docommand /${cmdChannelExcludingMe}  /end
-	/delay 2m
-	/docommand /${cmdChannel}  /icampdesk
-	/end
-/return
-
-
 
 
 

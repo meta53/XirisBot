@@ -482,7 +482,7 @@ Sub Event_GazeYou
 	} else {
 		
 		:gazeCastWait
-		/call MeleeReset
+		/call Disengage
 		/if (${Navigation.Active}) /nav stop
 		/if (${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]}) {
 			/echo \arCasting, waiting to stop, then click!
@@ -794,6 +794,13 @@ Sub chkGroupMarkedForDeath
 	:CommandAttack
 	/varset secondCheck FALSE
 	/if (${Spawn[npc ${eventTarget}].PctHPs} <= 98) {
+		/for i 1 to 5
+				/if ((${Group.Member[${i}].ID} != ${int_MTID}) && (${Group.Member[${i}].Name.NotEqual[${str_MTName}]}) && ${Select[${Group.Member[${i}].Class.ShortName},${MeleeClasses}]}) {
+					/dex ${Group.Member[${i}]} /target ${eventTarget}
+					/dex ${Group.Member[${i}]} /warp loc ${${Spawn[npc ${eventTarget}].Y} ${Spawn[npc ${eventTarget}].X}  ${Spawn[npc ${eventTarget}].Z} 
+					/dt  ${Group.Member[${i}]} KillMob ${Spawn[npc ${eventTarget}].ID} "${Spawn[npc ${eventTarget}].Name}" ${Time.Time24} 
+				}
+			/next i
 		/gsay KillMob ${Spawn[npc ${eventTarget}].ID} "${Spawn[npc ${eventTarget}].Name}" ${Time.Time24}
 		/gsay Restick!
 		/rsay Returning My Group to the Fight!
@@ -822,16 +829,19 @@ Sub chkSelfMarkedForDeath
 /return
 
 Sub chkMarkedForDeathCureDist
-	/nav wp amvCleric
+	/echo \ar MARK OF DEATH \aw=>curer \ag${str_myCurer} \aw@ \ag${Spawn[pc ${str_myCurer}].Distance3D}
+	/echo \awMoving to Curer!
+	/nav spawn ${str_myCurer}
 	:markLoop
+	/delay 10
 	/doevents
-	/if (${Me.Buff[Mark of Death].ID}) {
-		/echo \ar MARK OF DEATH \aw=>curer \ag${str_myCurer} \aw@ \ag${Spawn[pc ${str_myCurer}].Distance3D}
-		/echo \awMoving to Curer!
+	/if (${Me.Buff[Mark of Death].ID} && ${Spawn[pc ${str_myCurer}].Distance3D} > 100) {
+
 		/call Disengage
-		/call MeleeReset
+		/delay 10
 		/goto :markLoop
 	} 
+
 	/if (!${Target.Name.Find[${eventTarget}]}) {
 		/call TrueTarget ${Spawn[npc ${eventTarget}].ID}
 	}

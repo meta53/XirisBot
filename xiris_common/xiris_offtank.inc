@@ -31,14 +31,27 @@ ______________________________________________
 #EVENT OFFTANKRADIUS		"#1# tells the raid#*#OfftankRadius #2#'"
 #EVENT OFFTANKRADIUS	 	"[ #1# #*#]#*#OfftankRadius #2#"
 
+#EVENT DION					"#1# tells the group#*#'DIOn#*#'"
+#EVENT DION					"#1# tells you#*#'DIOn#*#'"
+#EVENT DION					"#1# tells the raid#*#DIOn#*#'"
+#EVENT DION	 				"[ #1# #*#]#*#DIOn#*#"
+
+#EVENT DIOFF				"#1# tells the group#*#'DIOff#*#'"
+#EVENT DIOFF				"#1# tells you#*#'DIOff#*#'"
+#EVENT DIOFF				"#1# tells the raid#*#DIOff#*#'"
+#EVENT DIOFF	 			"[ #1# #*#]#*#DIOff#*#"
+
+
 Sub InitEvents_Offtanking 
-	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) /call RegisterBackgroundEvents Events_Offtanking 2
+	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) /call RegisterBackgroundEvents Events_Offtanking 5
 /return
 
 Sub Events_Offtanking 
 	/doevents OFFTANKON
 	/doevents OFFTANKOFF
 	/doevents OFFTANKRADIUS
+	/doevents DION
+	/doevents DIOFF
 /return
 
 Sub EVENT_OFFTANKON
@@ -57,6 +70,16 @@ Sub EVENT_OFFTANKRADIUS(_line, _chatSender, _eventParams)
 
 Sub ChangeOfftankRadius(_radius)
 	/varset int_offtankRadius ${Int[${_radius}]}
+/return
+
+SUB EVENT_DION
+	/varset bln_useDI TRUE
+	/doevents flush DION
+/return 
+
+Sub EVENT_DIOFF
+	/varset bln_useDI FALSE
+	/doevents flush DIOFF
 /return
 
 Sub ToggleOfftanking(bool _blnOT)
@@ -83,7 +106,7 @@ Sub ToggleOfftanking(bool _blnOT)
 
 Sub chkOffTanking
 	/if (${Zone.ID} == 340 || ${Zone.ID} == 344 || ${Zone.ID} == 345 || ${Zone.ShortName.Equal[${Me.BoundLocation[0]}]} || ${bln_following}) /return
-	/if (${bln_engaged}) /call chkDivineIntervention
+	/if (${bln_engaged} && ${bln_useDI}) /call chkDivineIntervention
 
 	| If there are no spawns within OT Distance, return
 	/if (!${SpawnCount[npc radius ${int_offtankRadius} range 46 80]}) {
@@ -121,7 +144,7 @@ Sub chkOffTanking
 			/if (!${Bool[${Me.TargetOfTarget.ID}]}) /return
 			/varset bln_tanking		FALSE
 			/varset bln_taunting	FALSE
-			/if (${Target.PctHPs} <=99) /attack on
+			/if (${Target.PctHPs} <=99  && ${Target.ID}) /attack on
 		}
 	}
 /return
@@ -154,7 +177,10 @@ Sub aggroByID(int _targetID)
 	/squelch /stick front 20
 	/if (${Me.AbilityReady[Taunt]}) /taunt
 	/squelch /face fast
-	/if (!${Me.Combat}) /squelch /attack on
+	/if (!${Me.Combat}  && ${Target.ID}) {
+		/echo  \awaggroByID \ag Attacking 
+		/attack on
+	} 
 	/delay 20
 
 	
@@ -166,7 +192,6 @@ Sub aggroByID(int _targetID)
 	:return
 	/varset bln_tanking		FALSE
 	/varset bln_taunting	FALSE
-	/call MeleeReset
 /return
 
 
@@ -194,6 +219,7 @@ Sub xbot_initialize_offtanking
 	|-- [Settings] : Off Tanking
 	/declare bln_offTank		 	bool 	outer FALSE
 	/declare int_offtankRadius		int     outer 85
+	/declare bln_useDI				bool    outer FALSE
 
 	/call InitEvents_Offtanking
 	/squelch /alert clear 5
