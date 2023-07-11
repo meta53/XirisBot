@@ -1,82 +1,82 @@
 #Turbo 20
 Sub Main 
     | All Casters
-    /dge caster     /nav wp jelvan2Caster
+    /dge caster     /nav wp jelvanCaster
 
     | Jelvan W-S-E  1-2-3
     |-----------------------------------------
     | West, 1 - Clerics that aren't doing DI/HoT move here, else, move south
     | Group 1
     /dex Xiria      /nav wp jelvan1Tank
-    /dex Xorael     /nav wp jelvan1Cleric
-    /dex Xurael     /nav wp jelvan1Cleric
-    /dex Xirael     /nav wp jelvan1Cleric
+    /dex Xorael     /nav wp jelvanCleric
+    /dex Xurael     /nav wp jelvanCleric
+    /dex Xirael     /nav wp jelvanCleric
     /dex Achlys     /nav wp jelvan1Tank
     | Group 2
     /dex Sadelia    /nav wp jelvan1Tank
-    /dex Dogmatist  /nav wp jelvan1Cleric
-    /dex Theist     /nav wp jelvan1Cleric
-    /dex Erisa      /nav wp jelvan2Caster
+    /dex Dogmatist  /nav wp jelvanCleric
+    /dex Theist     /nav wp jelvanCleric
+    /dex Erisa      /nav wp jelvanCaster
 
     |-----------------------------------------
     | South, 2 - start and most of the Clerics here
     | Group 1
     /nav wp jelvan2Tank
-    /dex Xanshia    /nav wp jelvan2Cleric
-    /dex Xerael     /nav wp jelvan2Cleric
-    /dex Xiexa      /nav wp jelvan2Caster
-    /dex Xeqisa     /nav wp jelvan2Caster
+    /dex Xanshia    /nav wp jelvanCleric
+    /dex Xerael     /nav wp jelvanCleric
+    /dex Xiexa      /nav wp jelvanCaster
+    /dex Xeqisa     /nav wp jelvanCaster
     /dex Aergia     /nav wp jelvan2Tank
     | Group 2
-    /dex Nihilist   /nav wp jelvan2Cleric
+    /dex Nihilist   /nav wp jelvanCleric
     /dex Ophelia    /nav wp jelvan2Tank
     /dex Ophexia    /nav wp jelvan2Tank
     /dex Erinyas    /nav wp jelvan2Tank
     /dex Xaeliea    /nav wp jelvan2Tank
     /dex Aidos      /nav wp jelvan2Tank
     | Group 3
-    /dex Xonshia    /nav wp jelvan2Cleric
+    /dex Xonshia    /nav wp jelvanCleric
     /dex Ophemia    /nav wp jelvan2Tank
     /dex Opheyia    /nav wp jelvan2Tank
     /dex Erinyes    /nav wp jelvan2Tank
     /dex Xaexa      /nav wp jelvan2Tank
     /dex Achos      /nav wp jelvan2Tank
     | Group 4
-    /dex Xinshia    /nav wp jelvan2Cleric
+    /dex Xinshia    /nav wp jelvanCleric
     /dex Ophenia    /nav wp jelvan2Tank
     /dex Ophezia    /nav wp jelvan2Tank
     /dex Ertres     /nav wp jelvan2Tank
     /dex Xaia       /nav wp jelvan2Tank
-    /dex Shynxia    /nav wp jelvan2Caster
+    /dex Shynxia    /nav wp jelvanCaster
     | Group 5
-    /dex Xarael     /nav wp jelvan2Cleric
+    /dex Xarael     /nav wp jelvanCleric
     /dex Ophidia    /nav wp jelvan2Tank
     /dex Opheoia    /nav wp jelvan2Tank
     /dex Ertris     /nav wp jelvan2Tank
     /dex Xepatia    /nav wp jelvan2Tank
-    /dex Shinxia    /nav wp jelvan2Caster
+    /dex Shinxia    /nav wp jelvanCaster
     | Group 6   
-    /dex Pantheon   /nav wp jelvan2Cleric
-    /dex Drexia     /nav wp jelvan2Caster
+    /dex Pantheon   /nav wp jelvanCleric
+    /dex Drexia     /nav wp jelvanCaster
     /dex Mluian     /nav wp jelvan2Tank
     /dex Nessia     /nav wp jelvan2Tank   
-    /dex Cereborn   /nav wp jelvan2Caster 
+    /dex Cereborn   /nav wp jelvanCaster 
     /dex Ania       /nav wp jelvan2Tank 
 
     |-----------------------------------------
     | East, 3 - Clerics that aren't doing DI/HoT move here, else, move south
     | Group 1
     /dex Xirea      /nav wp jelvan3Tank
-    /dex Xenshia    /nav wp jelvan3Cleric
-    /dex Empathic   /nav wp jelvan3Cleric
-    /dex Xunshia    /nav wp jelvan3Cleric
+    /dex Xenshia    /nav wp jelvanCleric
+    /dex Empathic   /nav wp jelvanCleric
+    /dex Xunshia    /nav wp jelvanCleric
     /dex Adikia     /nav wp jelvan3Tank
 
     | Group 2
     /dex Xirin      /nav wp jelvan3Tank
-    /dex Deist      /nav wp jelvan3Cleric
-    /dex Tragic     /nav wp jelvan3Cleric
-    /dex Eurydice   /nav wp jelvan3Tank
+    /dex Deist      /nav wp jelvanCleric
+    /dex Tragic     /nav wp jelvanCleric
+    /dex Eurydice   /nav wp jelvanCaster
 
     /delay 20
     

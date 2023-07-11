@@ -557,7 +557,6 @@ Sub chkTargetStatus
 
 	:disengage
 		/echo \aoChkTargetStatus \awTriggering Disengage: \ag${reason}
-		/call Disengage
 		/goto :return
 	:retarget
 	
@@ -592,9 +591,9 @@ Sub Disengage
 	|-- class archetype resets
 	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
 		/echo \ag Disengage: Attack Off
-		/attack off
-		/delay 10
-		/attack off
+		/squelch /attack off
+		/delay 5
+		/squelch /attack off
 		/stick off
 	}
 	/if (${str_classArchetype.Equal[CASTER]} && ${Me.Pet.ID}) /pet back off

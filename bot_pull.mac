@@ -322,15 +322,20 @@ Sub resetCamp
 	/docommand /${cmdChannel} NavToWP ${str_campName}
 	| -- don't run self back to camp its not necessary run to my pull spot instead
 	/declare int_returnCount int local 0
-	/nav wp ${str_campName}
-	:campReturn
-	/if (${Navigation.Active} && ${int_returnCount} < 30) {
-		/delay 20
-		/varcalc int_returnCount ${int_returnCount} +1
-		/goto :campReturn
+	/if (${Navigation.PathExists[wp ${str_campName}]}) {
+		/nav wp ${str_campName}
+		:campReturn
+		/if (${Navigation.Active} && ${int_returnCount} < 30) {
+			/delay 10
+			/varcalc int_returnCount ${int_returnCount} +1
+			/goto :campReturn
+		}
+		/nav stop
+		/warp wp ${str_campName}
+	} else {
+		/warp wp ${str_campName}
 	}
 	
-	/nav stop
 /return
 
 
@@ -373,16 +378,17 @@ Sub pullTarget
 	
 		| Start the pull by running to the target
 		:RunningToTarget
-		/if (${Navigation.PathExists[target]}) {
-			/if (!${Navigation.Active}) /navigate target
+			/echo RunningToTarget
+			/if (${Navigation.PathExists[target]}) {
+				/if (!${Navigation.Active}) /navigate target
+			} else {
+				/warp wp ${str_campName}
+			}
+			
+		/if (!${Target.LineOfSight} || ${Target.Distance3D} > ${int_castDistance}) {
 			/delay 10
-		} else {
-			/docommand /${cmdChannel} warp wp ${str_campName}
-			/warp wp ${str_campName}
 			/goto :RunningToTarget
 		}
-		/if (!${Navigation.Active}) /navigate target
-		/delay 10
 
 		| Target in LOS, and in distance, going to aggrocheck
 		/if (${Target.LineOfSight} && ${Target.Distance3D} < ${int_castDistance}) {
@@ -1445,6 +1451,10 @@ Sub setAlerts
 		/varset int_maxPullCount 20
 		/squelch /alert add 2 "Corrupted Knight"
 		/squelch /alert add 2 "Elite Corrupted Knight"
+		/squelch /alert add 2 "Deathbone"
+	} else /if (${Zone.ShortName.Equal[charasis]}) {
+		/varset int_maxPullCount 20
+		/squelch /alert add 2 "pulsating bile"
 	}
 
 /return

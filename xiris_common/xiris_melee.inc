@@ -445,11 +445,6 @@ SUB EVENT_CANTSEETARGET
 	/doevents flush CANTSEETARGET
 	/varset timer_cantSee 10s 
 	/face fast
-	| If the target is less than 50 range
-	/if (${Select[${Me.Class.ShortName},BRD,BER,MNK,ROG,RNG,PAL,SHD,WAR]}) {
-		|/if (${bln_tanking})  /warp f 10
-		|/if (!${bln_tanking}) /warp loc ${Target.Y} ${Target.X} ${Target.Z}
-	}
 /return
 
 SUB EVENT_CANTNAVTARGET
@@ -531,11 +526,10 @@ Sub StickToTarget(bool _engageWhenInRange)
 
 	:tryKill
 	/if (${_engageWhenInRange}) {
-		/if (${Target.ID} && !${Target.Name.Find['s_corpse']} && ${Target.Type.Equal[NPC]}) {
+		/if (${Target.ID} && !${Target.Name.Find['s_corpse']} && ${Target.Type.Equal[NPC]} && !${Me.Combat}) {
 			/echo  \awStickToTarget :tryKill \ag Attacking 
 			/attack on
-		} 
-		/if (!${Target.ID} || ${Target.Name.Find['s_corpse']} || ${Target.Type.NotEqual[NPC]}) {
+		} else /if (!${Target.ID} || ${Target.Name.Find['s_corpse']} || ${Target.Type.NotEqual[NPC]}) {
 			/echo \awStickToTarget :tryKill \ar Failed! \awID?\ao${Target.ID} \awCorpse?\ao${Target.Name.Find['s_corpse']} \awNPC?\ao${Target.Type.NotEqual[NPC]}
 			/call Disengage
 		}

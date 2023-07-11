@@ -93,12 +93,12 @@ Sub SetupGroupsJELVAN
 	/dex Sadelia /multiline ; /invite Dogmatist; /invite Theist; /invite Erisa
 
 	| South, 2 
-	/multiline ; /invite Xanshia; /invite Xerael; /invite Xiexa; /invite Xeqisa; /invite Aergia 
+	/multiline ; /invite Xanshia; /invite Xerael; /invite Ophidia; /invite Nessia; /invite Aergia 
 	/dex Nihilist /multiline ; /invite Ophelia; /invite Ophexia; /invite Erinyas; /invite Xaeliea; /invite Aidos
 	/dex Xonshia /multiline ; /invite Ophemia; /invite Opheyia; /invite Erinyes; /invite Xaexa; /invite Achos
 	/dex Xinshia /multiline ; /invite Ophenia; /invite Ophezia; /invite Ertres; /invite Xaia; /invite Shynxia
-	/dex Xarael /multiline ; /invite Ophidia; /invite Opheoia; /invite Ertris; /invite Xepatia; /invite Shinxia
-	/dex Pantheon /multiline ; /invite Drexia; /invite Mluian; /invite Nessia; /invite Cereborn; /invite Ania
+	/dex Xarael /multiline ; /invite Mluian; /invite Opheoia; /invite Ertris; /invite Xepatia; /invite Shinxia
+	/dex Pantheon /multiline ; /invite Drexia; /invite Xiexa; /invite Xeqisa; /invite Cereborn; /invite Ania
 
 	| East, 3
 	/dex Xirea /multiline ; /invite Xenshia; /invite Empathic; /invite Xunshia; /invite Adikia; 

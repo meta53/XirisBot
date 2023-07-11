@@ -12,7 +12,7 @@ Sub Main
     /dex Xunshia /varset DEBUFF_Total 0
 
     | Set the mode to efficient
-    /dgt healMode EFFICIENT 
+    |/dgt healMode EFFICIENT 
     /dgt InterruptON
 
     | Xiris
