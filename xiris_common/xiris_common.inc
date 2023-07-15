@@ -143,9 +143,9 @@ ______________________________________________
 #EVENT RefreshXTarget		"#*#RefreshXTarget#*#"
 
 Sub InitEvents_Common
-	/call RegisterBackgroundEvents 	Events_Common 5
-	/call RegisterRaidEvents 		Events_Raid 9
-	/call RegisterRapidEvents 		Events_Rapid 2
+	/call RegisterBackgroundEvents 	Events_Common	10
+	/call RegisterRaidEvents 		Events_Raid		10
+	/call RegisterPriorityEvents 		Events_Rapid	2
 /return
 
 Sub Events_Raid 
@@ -153,7 +153,7 @@ Sub Events_Raid
 	/doevents RageOff
 	/doevents BackOff
 	/doevents ChangeMT
-	|/doevents ChangeSA
+	/doevents ChangeSA
 	/doevents ChangeAP
 	/doevents UseStaunchRecovery
 	/doevents UseIntensity
@@ -164,14 +164,11 @@ Sub Events_Raid
 Sub Events_Common
 	/doevents Zoned	
 	/doevents CheckNaked
-	|/doevents LoadRingset
+	/doevents LoadRingset
 	/doevents LoadWeaponset
 	/doevents SaveWeaponset
-	|/doevents SaveCurrentWeaponset
-	|/doevents SaveRingset
-	|/doevents InvisOFF
-	|/doevents SkillCheck
-	|/doevents Disengage
+	/doevents SaveCurrentWeaponset
+	/doevents SaveRingset
 	/doevents SetupRaid
 	/doevents RefreshXTarget
 	/doevents FixCorpses
@@ -583,7 +580,7 @@ Sub Disengage
 	/varset str_targetName		NULL
 	/varset str_debuffedTargets NULL
 
-	/call RunRapidEvents
+	/call RunPriorityEvents
 	| Priests have nothing left to do here;
 	/if (${str_classArchetype.Equal[PRIEST]}) /return
 	/if (${Stick.Active}) /stick off

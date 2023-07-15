@@ -210,7 +210,6 @@ Sub CastDebuffsOnTarget(int _targetID, bool _forced)
 		/doevents GazeYou
 	:nextDB
 		/call RunRaidEvents
-		/call RunRapidEvents
 		/next db
 	:return
 /return
@@ -232,9 +231,11 @@ Sub CastDebuff(string _debuff, string _gem,  int _maxTries, int _targetID, bool 
 	
 	/declare 	tgtName string  local ${Target.CleanName}
 	:AttemptDebuff
-		/call RunRaidEvents
-		|/echo \aoAttempting Debuff: \aw${_debuff} on \ao${Spawn[id ${_targetID}].Name}
-		|/call chkTargetStatus
+		| Run the rapid events before we retry or anything else
+		/call RunPriorityEvents
+
+		/echo \aoAttempting Debuff: \aw${_debuff} on \ao${Spawn[id ${_targetID}].Name}
+
 		/if (${_targetID} == 0 && !${_forced}) {
 			/echo \ar Debuff Failure\aw Target Already Dead
 			/varset rslt TARGET_ALREADY_DEAD
@@ -253,11 +254,12 @@ Sub CastDebuff(string _debuff, string _gem,  int _maxTries, int _targetID, bool 
 		}				
 		|if I am a cleric, check MT health
 		/if (${Me.Class.ShortName.Equal[CLR]}) /call chkHeal_MT	
+
 		|attempt
-		/call MQ2Cast "${_debuff}" ${_gem} 5s
+		/call MQ2Cast "${_debuff}" ${_gem} 5s RunPriorityEvents
 		/varset rslt ${Macro.Return}
 		/varcalc try ${try}+1
-	
+
 		|handle result
 		/if (${rslt.Equal[CAST_OUTOFRANGE]}) 	/goto :DebuffFailure
 		/if (${rslt.Equal[CAST_OUTOFMANA]}) 	/goto :DebuffFailure
@@ -267,6 +269,7 @@ Sub CastDebuff(string _debuff, string _gem,  int _maxTries, int _targetID, bool 
 		/if (${rslt.Equal[CAST_IMMUNE]}) 		/goto :DebuffFailure
 		/if (${rslt.Equal[CAST_SUCCESS]}) 		/goto :DebuffSuccess
 		|retry
+		
 		/goto :AttemptDebuff
 	:DebuffFailure
 		/dgt DEBUFF_FAILURE::[${_debuff}] ! ${tgtName} (result:${rslt})

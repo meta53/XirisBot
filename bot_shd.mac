@@ -91,7 +91,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 			/if (${bln_lifetapUse} && (${Me.PctHPs} <= ${int_lifetapHP}))	/call chkLifetap
 			/if (!${bln_tanking}) 	/call chkFeignDeath
 
-			/call RunRapidEvents
+			/call RunPriorityEvents
 
 			|-- dps library (casting hybrid)
 			/if (!${bln_tanking}) {

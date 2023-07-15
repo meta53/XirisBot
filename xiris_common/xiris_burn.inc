@@ -200,7 +200,7 @@ Sub chkBurn
 		}
 	:nextBurn
 	/call RunRaidEvents
-	/call RunRapidEvents	
+	/call RunPriorityEvents	
 	/next i
 /return
 
@@ -301,7 +301,7 @@ Sub chkAA
 
     :nextAA
 	/call RunRaidEvents
-	/call RunRapidEvents	
+	/call RunPriorityEvents	
     /next i
 /return
 
@@ -377,7 +377,7 @@ Sub chkClicky
 
     :nextClicky
 	/call RunRaidEvents
-	/call RunRapidEvents	
+	/call RunPriorityEvents	
     /next i
 /return
 

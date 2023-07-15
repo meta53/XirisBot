@@ -38,8 +38,8 @@ Sub xbot_initialize_events
     /declare RaidEvents[0]              string outer NULL
     /declare ClassEventsRaw[50]         string outer NULL
     /declare ClassEvents[0]             string outer NULL
-    /declare RapidEventsRaw[10]         string outer NULL
-    /declare RapidEvents[0]             string outer NULL
+    /declare PriorityEventsRaw[10]         string outer NULL
+    /declare PriorityEvents[0]             string outer NULL
 
     |--Check for Special Events
 
@@ -71,8 +71,21 @@ Sub xbot_initialize_events
 
 /return
 
+Sub AddEventToExistingSet(string _EventSet, string _EventName)
+    /declare ExistingSet string local ${_EventSet}
+    /declare TempSet[100]   string outer NULL
+
+    |insert event at end
+    /declare i int local 1
+    /for i 1 to ${ExistingSet.Size}
+        /varset TempSet[${i}] ${_EventSet[${i}]}
+    /next i
+   
+
+/return
 
 Sub RegisterBackgroundEvents(string _EventSet, int _EventCount)
+    /if (${_EventCount} == 0) /return
     /declare i int local -1
     /declare bound int local 0
     /for i 1 to ${BackgroundEventsRaw.Size}
@@ -107,6 +120,7 @@ Sub TrimBackgroundEvents(int _count)
 
 
 Sub RegisterRaidEvents(string _EventSet, int _EventCount)
+    /if (${_EventCount} == 0) /return
     /declare i int local -1
     /declare bound int local 0
     /for i 1 to ${RaidEventsRaw.Size}
@@ -174,37 +188,37 @@ Sub TrimClassEvents(int _count)
     /next i
 /return
 
-Sub RegisterRapidEvents(string _EventSet, int _EventCount)
+Sub RegisterPriorityEvents(string _EventSet, int _EventCount)
     /if (${_EventCount} == 0) return
     /declare i int local -1
     /declare bound int local 0
-    /for i 1 to ${RapidEventsRaw.Size}
-        /if (${RapidEventsRaw[${i}].Equal[NULL]}) {
-            /varset RapidEventsRaw[${i}] ${_EventSet}
+    /for i 1 to ${PriorityEventsRaw.Size}
+        /if (${PriorityEventsRaw[${i}].Equal[NULL]}) {
+            /varset PriorityEventsRaw[${i}] ${_EventSet}
             /goto :postInsert
         }
     /next i
 
     :postInsert
-     /for i 1 to ${RapidEventsRaw.Size}
-        /if (${RapidEventsRaw[${i}].NotEqual[NULL]}) {
+     /for i 1 to ${PriorityEventsRaw.Size}
+        /if (${PriorityEventsRaw[${i}].NotEqual[NULL]}) {
             /varcalc bound ${bound} + 1
         }
     /next i
 
     :return
-    /call TrimRapidEvents ${bound}
+    /call TrimPriorityEvents ${bound}
 /return
 
-Sub TrimRapidEvents(int _count)
+Sub TrimPriorityEvents(int _count)
     /declare i int local -1
-    /if (${Defined[ClassEvents]}) /deletevar RapidEvents
-    /declare RapidEvents[${_count}] string outer
+    /if (${Defined[ClassEvents]}) /deletevar PriorityEvents
+    /declare PriorityEvents[${_count}] string outer
 
     /declare incr int local 1
-    /for i 1 to ${RapidEventsRaw.Size}
-        /if (${RapidEventsRaw[${i}].NotEqual[NULL]}) {
-            /varset RapidEvents[${incr}] ${RapidEventsRaw[${i}]}
+    /for i 1 to ${PriorityEventsRaw.Size}
+        /if (${PriorityEventsRaw[${i}].NotEqual[NULL]}) {
+            /varset PriorityEvents[${incr}] ${PriorityEventsRaw[${i}]}
             /varcalc incr ${incr} + 1
         }
     /next i
@@ -241,13 +255,13 @@ Sub RunClassEvents
     /next k
 /return
 
-Sub RunRapidEvents
-    /if (${RapidEvents.Size} == 0) /return
+Sub RunPriorityEvents
+    /if (${PriorityEvents.Size} == 0) /return
     /declare k int local 1
-    /for k 1 to ${RapidEvents.Size}
-        /if (${RapidEvents[${k}].Equal[NULL]})  /goto :nextClassEvent
-        /call ${RapidEvents[${k}]}
-    :nextClassEvent
+    /for k 1 to ${PriorityEvents.Size}
+        /if (${PriorityEvents[${k}].Equal[NULL]})  /goto :nextRunPriorityEvents
+        /call ${PriorityEvents[${k}]}
+    :nextRunPriorityEvents
     /next k
 /return
 
@@ -256,5 +270,5 @@ Sub RunAllEvents
     /call RunBackgroundEvents
     /call RunRaidEvents
     /call RunClassEvents
-    /call RunRapidEvents
+    /call RunPriorityEvents
 /return

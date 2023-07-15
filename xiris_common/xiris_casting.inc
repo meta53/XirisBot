@@ -195,7 +195,7 @@ Sub chkNuke
 			}
 		:NextNuke
 		/call RunRaidEvents
-		/call RunRapidEvents	
+		/call RunPriorityEvents	
 		/next i
 	}
 	/varset NUKE_HasCastOnce TRUE
@@ -299,7 +299,7 @@ Sub chkQNuke
 			}
 		:NextQuickNuke
 		/call RunRaidEvents
-		/call RunRapidEvents	
+		/call RunPriorityEvents	
 		/next i
 	}
 	/varset QNUKE_HasCastOnce TRUE
@@ -346,7 +346,7 @@ Sub chkAENuke
 		/varset AENUKE_${i}_HasCastOnce TRUE
 	:NextAENuke
 	/call RunRaidEvents
-	/call RunRapidEvents	
+	/call RunPriorityEvents	
 	/next i
 	/if (${AENUKE_Active}) /goto :AENukeLoop
 	:Return
@@ -401,7 +401,7 @@ Sub chkStun(bool _memorize)
 			}
 		:NextStun
 		/call RunRaidEvents
-		/call RunRapidEvents	
+		/call RunPriorityEvents	
 		/next i
 	}
 	/varset STUN_HasCastOnce TRUE
@@ -423,7 +423,7 @@ Sub chkStunLock
 	:stunLock
 		/call chkStun TRUE
 		/call RunRaidEvents
-		/call RunRapidEvents
+		/call RunPriorityEvents
 		/delay 10
 		/if (${STUN_UseLocking}) /goto :stunLock
 :return
@@ -548,7 +548,7 @@ Sub chkDOT
 			}
 		:NextDot
 		/call RunRaidEvents
-		/call RunRapidEvents	
+		/call RunPriorityEvents	
 		/next i
 	}
 	/varset DOT_HasCastOnce TRUE
@@ -584,7 +584,7 @@ Sub chkSnare
 		/varset bln_snareActive TRUE
 	}
 	/call RunRaidEvents
-	/call RunRapidEvents	
+	/call RunPriorityEvents	
 /return
 
 
@@ -593,9 +593,8 @@ Sub chkSnare
 |- Method will memorize a spell, to the optional attributed gem, and if wait is true, will wait until its ready to return
 |- note will call utility to string 'gem' from the gem # if found
 Sub chkSpellMemorized(string _spell, bool _wait, int _gem)
-	/if (${_spell.Equal[NULL]}) /goto :return
-	/if (${Me.Gem[${_spell}]}) /goto :return
-	/echo chkSpellMemorized: ${_spell} (${Me.Gem[${_spell}]}) 
+	/if (${_spell.Equal[NULL]} || ${Me.Gem[${_spell}]}) /goto :return
+	
 	/declare intGem int local 9
 	/if (${_gem} > 0) {
 		/echo integer
@@ -617,8 +616,9 @@ Sub chkSpellMemorized(string _spell, bool _wait, int _gem)
 			/varset intGem ${_gem}
 		}
 	}
+	/echo \arSpell Not Memorized: \ag"${_spell}" ${Time.Time24}
 	:mem
-		/echo memorizing "${_spell}" ${intGem} 
+		/echo \awMemorizing "${_spell}" ${intGem} 
 		/memorize "${_spell}" ${intGem} 
 		/if (!${_wait}) /goto :return
 		/declare waitCount int local 0
@@ -634,6 +634,7 @@ Sub chkSpellMemorized(string _spell, bool _wait, int _gem)
 :nullError 
 /docommand /${announceChannel} There was a null error trying to memorize a spell; Check your scope!
 :return
+/echo \agSpell Memorized: \ag"${_spell}" (${Me.Gem[${_spell}]})  ${Time.Time24}
 /return 
 
 Sub Event_ChkHasSpell(_line, _sender, _eventParams)
@@ -952,9 +953,11 @@ Sub CreateCastingLineup
  This is called (looping) while a spell is being cast
  This will verify if the target is still alive while casting nukes, etc 
  allowing ducking out if npc is dead
+ Additionally calls RunPriorityEvents for raid events that need immediate attention (Gaze, etc)
  ----------------------------
 **|
 Sub chkCastTarget
+	/call RunPriorityEvents
 	|/echo \awchkCastTarget corpse? \ag${Target.Name.Find[s_corpse]}  \awstop? \ag${int_temp_stopCastPoint}
 	| I'm no longer casting, or no longer need to stop it ie, target is MT
 	/if (!${Bool[${Me.Casting.ID}]}) /goto :return

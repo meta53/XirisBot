@@ -19,12 +19,11 @@ ______________________________________________
 |   Ture
 #EVENT TureRampOn       "#*#roars with fury#*#"
 #EVENT TureRampOff      "#*#calms and regains#*#"
-#EVENT TureWanton		"#*#dissolves into a landscape#*#"
 
 |	Jelvan
 #Event JelvanSetup		"#*#JelvanSetup#*#"
 #EVENT JelvanStart  	"#*#Hail, Jelvan#*#"
-#EVENT JelvanPhase2		"#*#JelvanP2#*#"
+
 
 |	Warden Hanvar
 #EVENT HanvarSetup  	"#*#HanvarSetup#*#"
@@ -56,12 +55,12 @@ Sub InitEvents_OOW_Anguish
 	/declare eventTarget	   	string outer NULL
 	
 	/call RegisterRaidEvents Events_OOW_Anguish 15
+	/call RegisterPriorityEvents Events_OOW_Anguish_Rapid 3
 
 
 /return
 
 Sub Events_OOW_Anguish 
-
 	/if ((${Me.Class.ShortName.Equal[WAR]} || ${Me.Class.ShortName.Equal[SHD]}) && ${bln_engaged}) /call chkDivineIntervention
 
 	| Ture Events
@@ -74,12 +73,7 @@ Sub Events_OOW_Anguish
 	/if (${Bool[${SpawnCount[npc Jelvan]}]} && ${Spawn[npc Jelvan].Distance3D} < 400) {
 		/if (!${bln_jelvanEngaged}) {
 			/doevents JelvanStart
-		} else {
-			/doevents JelvanPhase2
-			/if (${str_classArchetype.Equal[PRIEST]} || ${Me.Class.ShortName.Equal[PAL]}) /call chkJelvanCures
-			/if (${Me.Class.ShortName.Equal[SHM]} || ${str_classArchetype.Equal[CASTER]}) /call chkJelvanResists
-			/if (${Me.Class.ShortName.Equal[SHM]} || ${Me.Class.ShortName.Equal[ENC]}) /call chkJelvanSlows
-		} 
+		}
 	}
 
 	| Hanvar Events
@@ -94,11 +88,28 @@ Sub Events_OOW_Anguish
 	}
 
 	| OMM Events
-	/if ((${Bool[${SpawnCount[npc Overlord]}]} && ${Spawn[npc Overlord].Distance3D} < 300) || ${Zone.ShortName.Equal[arena]}) {
+	/if (${Bool[${SpawnCount[npc Overlord]}]} && ${Spawn[npc Overlord].Distance3D} < 300) {
 		/call chkOMMEvents
 	} 
 
 /return 
+
+Sub Events_OOW_Anguish_Rapid 
+	| Ture Events
+	/if (${Bool[${SpawnCount[npc Ture]}]} && ${Spawn[npc Ture].Distance3D} < 400) {
+		/doevents TureRampOn
+	}
+
+	| Vangl Events
+	/if (${Bool[${SpawnCount[npc Vangl]}]} && ${Spawn[npc Vangl].Distance3D} < 300) {
+		/call chkAMVEventsRapid
+	}
+
+	| OMM Events
+	/if (${Bool[${SpawnCount[npc Overlord]}]} && ${Spawn[npc Overlord].Distance3D} < 300) {
+		/call chkOMMEventsRapid
+	} 
+/return
 
 |----------------------------
 | Ture
@@ -397,17 +408,19 @@ Sub chkHanvarCaster
 |----------------------------
 | Arch Magus Vangl
 |----------------------------
+| Raid Events called consistently, but not inside other sub loops
 Sub chkAMVEvents
-	| AMV Events
 	/doevents AMVStart
 	/doevents AMVKill
-	
-	/if (${bln_amvEngaged} || ${Spawn[npc Vangl].Distance3D} < 200) {
-		/if (${Me.Class.ShortName.Equal[CLR]} || ${Me.Class.ShortName.Equal[SHM]}  && !${bln_chChainMember}) /call chkGroupMarkedForDeath 
-		/if (${Me.Class.ShortName.Equal[PAL]}) /call chkSelfMarkedForDeath
-	}
-
 /return 
+
+| Events that are constantly called, even inside loops like nuke/debuff/etc - ie: super important
+Sub chkAMVEventsRapid
+	/if (${Me.Class.ShortName.Equal[CLR]} || ${Me.Class.ShortName.Equal[SHM]}  && !${bln_chChainMember}) /call chkGroupMarkedForDeath 
+	/if (${Me.Class.ShortName.Equal[PAL]}) /call chkSelfMarkedForDeath
+/return
+
+
 Sub Event_AMVStart 
 	/varset bln_amvEngaged TRUE 
 	/varset eventTarget Vangl
@@ -432,12 +445,42 @@ Sub EVENT_AMVKill
 
 
 
-
-
-
 |----------------------------
 | Overlord Mata'Muram
 |----------------------------
+| Raid Events called consistently, but not inside other sub loops
+Sub chkOMMEvents
+	/doevents OMMStart
+	/doevents GazeDone 
+
+	| Face the nearest lasher if they are close! And kill if melee!
+	/call chkOMMLasherPositions
+
+	| TODO: Have Bards keep a charm memmed for OMM?
+	/if (${str_classArchetype.Equal[PRIEST]} || ${str_classArchetype.Equal[CASTER]}) {
+		/call chkOMMPositioning
+	}
+	/if (${Me.Class.ShortName.Equal[ENC]}) {
+		/call chkOMMCharm
+		/call chkDivineIntervention
+	} else /if (${Me.Class.ShortName.Equal[PAL]} || ${Me.Class.ShortName.Equal[WAR]}) {
+		/call chkOMMAdds
+	} 
+	| } else /if (${Me.Class.ShortName.Equal[MAG]} || ${Me.Class.ShortName.Equal[WIZ]}) {
+	| 	/call chkOMMFrenzied
+	| }
+/return 
+
+| Events that are constantly called, even inside loops like nuke/debuff/etc - ie: super important
+Sub chkOMMEventsRapid
+	/doevents GazeYou
+	/doevents GazeBurst
+	/if (${Me.Class.ShortName.Equal[CLR]} || ${Me.Class.ShortName.Equal[SHM]}  && !${bln_chChainMember}) /call chkGroupMarkedForDeath 
+	/if (${Me.Class.ShortName.Equal[PAL]}) /call chkSelfMarkedForDeath
+/return
+
+
+
 Sub Event_GazeYou 
 	/echo \arGAZE OF MATA MURAM on ME!
 	/echo \a-w Attempting Clicking \agMirrored Mask \a-w${Time.Time24}
@@ -446,20 +489,22 @@ Sub Event_GazeYou
 		/dgt FireTL
 		/shout Calling for TL!
 	} else {
-		
+		/if (${Bool[${Me.Casting.ID}]}) /stopcast
+		/if (${Bool[${Me.Casting.ID}]}) /stopcast
 		:gazeCastWait
 		/call Disengage
 		/if (${Navigation.Active}) /nav stop
 		/if (${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]}) {
 			/echo \arCasting, waiting to stop, then click!
-			/if (${Bool[${Me.Casting.ID}]}) /call Interrupt
+			/if (${Bool[${Me.Casting.ID}]}) /stopcast
+			/delay 1
 		}
 
 		/echo \ao Mask in Slot\aw ${FindItem[Mirrored Mask].InvSlot}
 		/if (${FindItem[Mirrored Mask].InvSlot} != 3) {
 			/echo \ag Swapping Mask to Face!
 			/exchange "Mirrored Mask" face
-			/delay 10
+			/delay 5
 		}
 		/if (${Me.Class.ShortName.Equal[BRD]}) {
 			/shout Clicking my Mirrored Mask!
@@ -501,31 +546,7 @@ Sub Event_OMMStart
 	/doevents flush OMMStart
 /return
 
-Sub chkOMMEvents
-	/doevents OMMStart
-	/doevents GazeYou
-	/doevents GazeBurst
-	/doevents GazeDone 
-	| TODO: Have Bards keep a charm memmed for OMM?
-	/if (${str_classArchetype.Equal[PRIEST]} || ${str_classArchetype.Equal[CASTER]}) {
-		/call chkOMMPositioning
-	}
-	/if (${Me.Class.ShortName.Equal[ENC]}) {
-		/call chkOMMCharm
-		/call chkDivineIntervention
-	} else /if (${Me.Class.ShortName.Equal[CLR]} && !${bln_chChainMember}) {
-		/call chkGroupMarkedForDeath 
-	} else /if (${Me.Class.ShortName.Equal[SHM]}) {
-		/call chkGroupMarkedForDeath 
-	} else /if (${Me.Class.ShortName.Equal[PAL]}) {
-		/call chkOMMAdds
-		/call chkSelfMarkedForDeath
-	} else /if (${Me.Class.ShortName.Equal[WAR]}) {	
-		/call chkOMMAdds
-	} else /if (${Me.Class.ShortName.Equal[MAG]} || ${Me.Class.ShortName.Equal[WIZ]}) {
-		/call chkOMMFrenzied
-	}
-/return 
+
 
 Sub chkOMMPositioning
 	/if (${Me.Casting.ID}) /return 
@@ -534,55 +555,62 @@ Sub chkOMMPositioning
 	}
 /return
 
+Sub chkOMMLasherPositions
+	/if (!${SpawnCount[npc lasher]}) /return
+	/if (${NearestSpawn[npc lasher].Distance3D} < 30) {
+		/face fast lasher
+		/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]}) /dt ${Me.Name} KillMob ${NearestSpawn[npc lasher].ID} ${NearestSpawn[npc lasher].Name} 
+	} else {
+		/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]}) /dt ${Me.Name} KillMob ${NearestSpawn[npc Overlord].ID} ${NearestSpawn[npc Overlord].Name} 
+	}
+/return
+
 
 Sub chkOMMCharm 
+	/if (${Zone.ShortName.Equal[${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}]}) /return
+	/call RunPriorityEvents
 	/if (!${Me.Pet.ID}) {
+		/declare charmTgtID		int		local 0
+		/declare charmTgtName	string	local NULL
 		/if (${bln_hasCharmedPet}) /varset bln_hasCharmedPet FALSE
+
+		| If I don't have a pet, and there are coerced up, charm them
 		/if (${SpawnCount[npc Coerced]}) {
 			| Eurydice (Charm 1)
 			/if (${Me.Name.Equal[Eurydice]}) {
-				:Charm_1
-				/if (!${timer_charmAnnounce}) /echo \agCoerced_Lieutenant_000 Charm Attempt
-				/if (${Spawn[npc Coerced_Lieutenant_000].Distance3D} < 200 && ${Spawn[npc Coerced_Lieutenant_000].LineOfSight}) {
-					/call TrueTarget ${Spawn[npc Coerced_Lieutenant_000].ID}
-					/if (${Target.Charmed.ID}) /goto :Charm_2
-					/call CharmNPC ${Target.ID} TRUE TRUE ${Spawn[npc Overlord].ID}
-					/if (!${timer_charmAnnounce}) {
-						/shout Attempting Charm! ${Target.Name} (${Target.ID}) d:${Target.Distance3D}
-						/echo \ar CHARMING ${Target.Name} (${Target.ID}) d:${Target.Distance3D}
-						/varset timer_charmAnnounce 10s
-					}
-					/delay 10
-				}
+				/varset charmTgtID 		${Spawn[npc Coerced_Lieutenant_000].ID}
+				/varset charmTgtName 	${Spawn[id ${charmTgtID}].Name}
 			}
+
 			| Erisa (Charm 2)
 			/if (${Me.Name.Equal[Erisa]}) {
-				:Charm_2
-				/if (!${timer_charmAnnounce}) /echo \agCoerced_Lieutenant000 Charm Attempt
-				/if (${Spawn[npc Coerced_Lieutenant000].Distance3D} < 200 && ${Spawn[npc Coerced_Lieutenant000].LineOfSight}) {
-					/call TrueTarget ${Spawn[npc Coerced_Lieutenant000].ID}
-					/if (${Target.Charmed.ID}) /goto :Charm_1
-					/call CharmNPC ${Target.ID} TRUE TRUE ${Spawn[npc Overlord].ID}
-					/if (!${timer_charmAnnounce}) {
-						/shout Attempting Charm! ${Target.Name} (${Target.ID}) d:${Target.Distance3D}
-						/echo \ar CHARMING ${Target.Name} (${Target.ID}) d:${Target.Distance3D}
-						/varset timer_charmAnnounce 10s
-					}
-					/delay 10
+				/varset charmTgtID 		${Spawn[npc Coerced_Lieutenant000].ID}
+				/varset charmTgtName 	${Spawn[id ${charmTgtID}].Name}
+			}
+
+			:Charm_Attempt
+			/if (${Spawn[id ${charmTgtID}].Distance3D} < 200 && ${Spawn[id ${charmTgtID}].LineOfSight}) {
+				/echo \ar CHARMING \ao${charmTgtName}\ag(\ao${charmTgtID}\ag) \agd:\ao${Spawn[id ${charmTgtID}].Distance3D} \atkga:\aoTRUE \ag@:\ao${Spawn[npc Overlord].Name}\ag(\ao${Spawn[npc Overlord].ID}\ag)
+				/if (!${timer_charmAnnounce}) {
+					/shout Attempting Charm! ${charmTgtName} (${charmTgtID}) d:${Spawn[id ${charmTgtID}].Distance3D} 
 				}
+				/call CharmNPC ${charmTgtID} TRUE TRUE ${Spawn[npc Overlord].ID}
+			} else {
+				/echo \ao Waiting \awfor \ao${charmTgtName}\ag(\ao${charmTgtID}\ag) to be in \aoDist:${Spawn[id ${charmTgtID}].Distance3D} \aw< 200 & \aoLOS:${Spawn[id ${charmTgtID}].LineOfSight}
 			}
 		}
 	} else {
+		/if (!${bln_hasCharmedPet}) /varset bln_hasCharmedPet TRUE
 		:petattack_check
-		/if (${Me.Pet.ID} && ${Me.Pet.Target.ID} != ${Spawn[npc Overlord].ID}) {
+		/if (${Me.Pet.ID} && !${Me.Pet.Target.ID}) {
 			/echo \agSiccing pet!
 			/call TrueTarget ${Spawn[npc Overlord].ID}
 			/pet attack
-			/if (!${Me.Pet.Buff[Speed of Salik]}) {
-				/target id ${Me.Pet.ID}
-				/call chkSpellMemorized "Speed of Salik" TRUE gem8
-				/call MQ2Cast "Speed of Salik" 
-			} 
+		}
+		/if (${Me.Pet.ID} && !${Me.Pet.Buff[Speed of Salik]}) {
+			/call TrueTarget ${Me.Pet.ID}
+			/call chkSpellMemorized "Speed of Salik" TRUE gem8
+			/call MQ2Cast "Speed of Salik" gem8 5s RunPriorityEvents
 		}
 	}
 :return
@@ -610,7 +638,7 @@ Sub chkOMMAdds
 	/if (!${SpawnCount[npc Coerced]} && !${SpawnCount[npc lasher]}) /return
 
 	| Lieutenants
-	/for i 1 to ${SpawnCount[npc Coerced radius 140]}
+	/for i 1 to ${SpawnCount[npc Coerced radius 160]}
 		/call TrueTarget ${NearestSpawn[${i}, npc Coerced].ID}
 		/if (${Me.TargetOfTarget.Class.ShortName.Equal[WAR]} || ${Me.TargetOfTarget.Class.ShortName.Equal[PAL]} || ${Me.TargetOfTarget.Class.ShortName.Equal[SHD]}) /goto :nextTarget
 		/if (!${Target.Charmed.ID}) /call aggroByID ${Target.ID}
@@ -644,7 +672,7 @@ Sub chkOMMAdds
 |----------------------------
 
 Sub EVENT_MarkOfDeath
-	/echo \aoMarked for Death!
+	/echo \arMarked for Death! \aw${Time.Time24}
 	/if (${bln_tanking}) /return
 	/if (!${bln_amvEngaged} && ${eventTarget.Equal[Vangl]}) /varset bln_amvEngaged TRUE
 	/if (!${bln_OMMEngaged} && ${eventTarget.Equal[Overlord]}) /varset bln_OMMEngaged TRUE
@@ -656,139 +684,112 @@ Sub EVENT_MarkOfDeath
 Sub chkGroupMarkedForDeath
 	/if (${Me.Class.ShortName.Equal[CLR]} && (${bln_chChainMember} || ${bln_focusHealMT})) /return
  
-	/declare i int local 0
-	/declare haveMark int local 0
-	/declare gcount[6]  int local 0
-	/declare foundMark bool local FALSE
-	/declare tankIndex int local 10
-	/declare cureWaitCount int local 0
-	/declare gm int local 1
-	/declare secondCheck bool local FALSE
+	/declare i 				int local 0
+	/declare haveMark		int local 0
+	/declare gcounters[6]		int local 0
+	/declare foundMark		bool local FALSE
+	/declare tankIndex		int local 10
+	/declare cureWaitCount 	int local 0
+	/declare gm 			int local 1
 
 	:CheckGroup
 	/varset haveMark 	0
 	/varset foundMark 	FALSE
 	
 	| Remember, Group.Member needs 0-5, whereas the array needs 1-6
-	/for i 1 to 6
-		/varcalc gm ${i}-1
-		/if (${Group.Member[${gm}].CleanName.Equal[${str_MTName}]}) /varset tankIndex ${gm}
+	/for i 0 to ${Group}
+		/varcalc arrLen ${i}+1
+		/if (${Group.Member[${i}].CleanName.Equal[${str_MTName}]}) /varset tankIndex ${i}
 		/dquery ${Group.Member[${gm}]} -q "Me.Buff[Mark of Death].ID"
-		/delay 20 ${DanNet.Query.Received}
+		/delay 15 ${DanNet.Query.Received}
 		/if (${Bool[${DanNet.Q}]}) {
-			/echo \ar${Group.Member[${gm}]} \awreply:${Bool[${DanNet.Q}]}
+			/echo \ar${Group.Member[${i}]} \awreply:${Bool[${DanNet.Q}]}
 			/echo \ar MARK OF DEATH FOUND
 			/varset  foundMark TRUE
 			/varcalc haveMark ${haveMark}+1
-			/call getCureCounters ${Group.Member[${gm}]} disease
-			/varset gcount[${i}] ${Int[${Macro.Return}]}
+			/call getCureCounters ${Group.Member[${i}]} disease
+			/varset gcounters[${arrLen}] ${Int[${Macro.Return}]}
 		} 
 	/next i
 	
 	| No Marks found? return
-	/if (!${foundMark} && !${secondCheck})	/goto :Return
-	/if (!${foundMark} && ${secondCheck})	/goto :CommandAttack
+	/if (!${foundMark})	/goto :return
 
 	/echo \ar${haveMark} \aoInstances of Mark of Death found!
+	/if (${Me.Silenced}) {
+		/shout SILENCED! I cannot cure Mark of Death!
+	}
 	| If Marks are less than 3, or I am a paladin then single target cure them
 	:SingleCure
-	/if (${Me.Class.ShortName.Equal[PAL]} || ${haveMark} < 2) /goto :CureByCounters
+	/if (${Me.Class.ShortName.Equal[PAL]} || ${haveMark} < 3) /goto :CureByCounters
 	
 	| If I am a cleric or shaman, cast group cure, and then recheck counters
 	:GroupCure 
-	/echo \awGroupCure: \ag${str_heal_group} \ay${Me.SpellReady[${str_heal_group}]} \aw(\ag${Me.PctMana}) \ay${haveMark}>=2
-	/if (${Me.Class.ShortName.Equal[CLR]} && ${Me.PctMana} > 30 && ${haveMark} >= 2) {
-		
+	/echo \awGroupCure: \ag${str_group_cure_disease} \ay${Me.SpellReady[${str_group_cure_disease}]} \aw(\ag${Me.PctMana}) \ay${haveMark}>2
+	/if ((${Me.Class.ShortName.Equal[CLR]} || ${Me.Class.ShortName.Equal[SHM]}) && ${Me.PctMana} > 10 && ${haveMark} > 2) {
 		:GroupCureWait 
 		/varcalc cureWaitCount ${cureWaitCount}+1
-		/if (!${Me.SpellReady[${str_heal_group}]}) {
+		/if (!${Me.SpellReady[${str_group_cure_disease}]}) {
 			/delay 5
 			/if (${cureWaitCount} > 10) {
 				/echo \arGroupCure failed due to wait, trying by counters
 				/goto :CureByCounters
 			} else {
-				/echo \arGroupCure waiting for ${str_heal_group} ${Me.SpellReady[${str_heal_group}]}
+				/echo \arGroupCure waiting for ${str_heal_group} ${Me.SpellReady[${str_group_cure_disease}]}
 				/goto :GroupCureWait
 			}
 		} else {
-			/echo \agGroupCuring with ${str_heal_group}
+			/echo \agGroupCuring with ${str_group_cure_disease}
 			/g Group Heal incoming, get close!
 			/delay 30
-			/for i 1 to 5
+			/declare groupMaxDisease 0
+			/for i 1 to ${Group}
+			/varcalc arrLen ${i}+1
+				/if (${gcounters[${arrLen}]} > ${groupMaxDisease}) /varset groupMaxDisease ${gcounters[${arrLen}]} 
 				/if ((${Group.Member[${i}].ID} != ${int_MTID}) && (${Group.Member[${i}].Name.NotEqual[${str_MTName}]}) && ${Select[${Group.Member[${i}].Class.ShortName},${MeleeClasses}]}) {
 					/dt  ${Group.Member[${i}]} BackOff
 					/dex ${Group.Member[${i}]} /nav loc ${Me.Y} ${Me.X} ${Me.Z} 
-					/dt  ${Group.Member[${i}]} BackOff
 				}
 			/next i
 			/if (${Me.Casting.ID}) /call Interrupt
-			/call MQ2Cast "${str_heal_group}" gem4 2s 
-			/varset secondCheck TRUE
+			/call cureGroup disease ${groupMaxDisease}
 			/goto :CheckGroup
-		}
-	} else /if (${Me.Class.ShortName.Equal[SHM]}) {
-		/echo \agGroupCuring with ${str_cure_disease}
-		/g Group Heal incoming, get close!
-		/delay 30
-		/for i 1 to 5
-			/if ((${Group.Member[${i}].ID} != ${int_MTID}) && (${Group.Member[${i}].Name.NotEqual[${str_MTName}]}) && ${Select[${Group.Member[${i}].Class.ShortName},${MeleeClasses}]}) {
-				/dt  ${Group.Member[${i}]} BackOff
-				/dex ${Group.Member[${i}]} /nav loc ${Me.Y} ${Me.X} ${Me.Z} 
-				/dt  ${Group.Member[${i}]} BackOff
-			}
-		/next i
-		/if (${Me.Casting.ID}) /call Interrupt
-		/call MQ2Cast "${str_cure_disease}" gem7 8s
-		/varset secondCheck TRUE
-		/goto :CheckGroup
-		
+		}	
 	}
 
 	| All else fails so cure anyone with a disease counter singly
 	:CureByCounters
-	/echo \awCureByCounters: \ag${str_cure_disease} \ayReady?${Me.SpellReady[${str_cure_disease}]} \aw(\ag${Me.PctMana}) \ay${haveMark}< 2
-	/for i 1 to 6
-		/varcalc gm ${i}-1
+	/echo \awCureByCounters: \ag${str_cure_disease} \awReady?\ay${Me.SpellReady[${str_cure_disease}]} \aw(\ag${Me.PctMana}\aw) \awHaveMark:\ay${haveMark}< 2
+	/declare diseaseCounters int local 0
+	/for i 0 to ${Group}
+		/varcalc arrLen ${i}+1
+		/call getCureCounters ${Group.Member[${i}]} disease
+		/varset diseaseCounters ${Int[${Macro.Return}]}
 		/if (${Me.Casting.ID}) /call Interrupt
-		/if (${gcount[${i}]} > 0) {
-			/if (${Group.Member[${gm}].ID} != ${int_MTID} && ${Select[${Group.Member[${gm}].Class.ShortName},${MeleeClasses}]}) {
-				|/dt  ${Group.Member[${gm}]} BackOff
-				|/dex ${Group.Member[${gm}]} /nav loc ${Me.Y} ${Me.X} ${Me.Z} 
-				|/dt  ${Group.Member[${gm}]} BackOff
-				/call handleCureRequest ${Group.Member[${gm}].Name} ${Group.Member[${gm}].ID} disease ${gcount[${i}]} TRUE
+		/if (${gcounters[${arrLen}]} > 0) {
+			/if (${Group.Member[${gm}].ID} != ${int_MTID} && ${Select[${Group.Member[${gm}].Class.ShortName},${MeleeClasses}]} && ${Group.Member[${gm}].Distance3D} > 100) {
+				/dt  ${Group.Member[${arrLen}]} BackOff
+				/dex ${Group.Member[${arrLen}]} /nav loc ${Me.Y} ${Me.X} ${Me.Z} 
+				/dt  ${Group.Member[${arrLen}]} BackOff
 			}
+			/call handleCureRequest ${Group.Member[${gm}].Name} ${Group.Member[${gm}].ID} disease ${diseaseCounters} TRUE
 		}
 	/next i
+	/goto :CheckGroup
 
 	:CommandAttack
-	/varset secondCheck FALSE
 	/if (${Spawn[npc ${eventTarget}].PctHPs} <= 98) {
-		/for i 1 to 5
-				/if ((${Group.Member[${i}].ID} != ${int_MTID}) && (${Group.Member[${i}].Name.NotEqual[${str_MTName}]}) && ${Select[${Group.Member[${i}].Class.ShortName},${MeleeClasses}]}) {
-					/dex ${Group.Member[${i}]} /target ${eventTarget}
-					/dex ${Group.Member[${i}]} /nav loc ${Spawn[npc ${eventTarget}].Y} ${Spawn[npc ${eventTarget}].X}  ${Spawn[npc ${eventTarget}].Z} 
-					/dt  ${Group.Member[${i}]} KillMob ${Spawn[npc ${eventTarget}].ID} "${Spawn[npc ${eventTarget}].Name}" ${Time.Time24} 
-				}
-			/next i
-		/gsay KillMob ${Spawn[npc ${eventTarget}].ID} "${Spawn[npc ${eventTarget}].Name}" ${Time.Time24}
+		/for i 1 to ${Group}
+			/if ((${Group.Member[${i}].ID} != ${int_MTID}) && (${Group.Member[${i}].Name.NotEqual[${str_MTName}]}) && ${Select[${Group.Member[${i}].Class.ShortName},${MeleeClasses}]}) {
+				/dt  ${Group.Member[${i}]} KillMob ${Spawn[npc ${eventTarget}].ID} "${Spawn[npc ${eventTarget}].Name}" ${Time.Time24} 
+				/rsay ${Group.Member[${i}]} returning to the Fight!
+			}
+		/next i
 		/gsay Restick!
-		/rsay Returning My Group to the Fight!
 	}
 	
 
-	:CheckMT
-	/if (${tankIndex}<10) {
-		/dquery ${Group.Member[${tankIndex}]} -q "Me.Buff[Mark of Death].ID"
-		/delay 20 ${DanNet.Query.Received}
-		
-		/if (${Bool[${DanNet.Q}]}) {
-			/echo \ar${Group.Member[${tankIndex}]} \awreply: ${DanNet.Q} ${Bool[${DanNet.Q}]}
-			/echo \ar MARK OF DEATH FOUND on TANK
-			/call getCureCounters ${Group.Member[${tankIndex}].Name} disease
-			/call handleCureRequest ${Group.Member[${tankIndex}].Name} ${Group.Member[${tankIndex}].ID} disease ${Int[${Macro.Return}]} TRUE
-		}
-	}
-:Return
+:return
 /return
 
 
@@ -797,21 +798,44 @@ Sub chkSelfMarkedForDeath
 /return
 
 Sub chkMarkedForDeathCureDist
-	/echo \ar MARK OF DEATH \aw=>curer \ag${str_myCurer} \aw@ \ag${Spawn[pc ${str_myCurer}].Distance3D}
-	/echo \awMoving to Curer!
-	/nav spawn ${str_myCurer}
-	:markLoop
-	/delay 10
-	/doevents
-	/if (${Me.Buff[Mark of Death].ID} && ${Spawn[pc ${str_myCurer}].Distance3D} > 100) {
-		/call Disengage
-		/delay 10
-		/goto :markLoop
-	} 
+	/if (${str_classArchetype.Equal[CASTER]} || ${str_classArchetype.Equal[PRIEST]}) /return 
+	/call Disengage
 
-	/if (!${Target.Name.Find[${eventTarget}]}) {
-		/call TrueTarget ${Spawn[npc ${eventTarget}].ID}
+	/if (${Spawn[pc ${str_myCurer}].Distance3D} > 100) {
+		:get_curer
+		/call getGroupCurer ${cureType}
+		/varset str_myCurer ${Macro.Return}
+		/if (${str_myCurer.Equal[NOTFOUND]}) {
+			/echo \ar I HAVE NO CURER!
+			/goto :return
+		}
+		/echo \ar MARK OF DEATH \aw=>curer \ag${str_myCurer} \aw@ \ag${Spawn[pc ${str_myCurer}].Distance3D}
+		/echo \awMoving to Curer!
+		
+		/nav spawn ${str_myCurer}
+		:run_loop
+			/delay 10
+			/call RunAllEvents
+			/if  (${Spawn[pc ${str_myCurer}].Distance3D} > 100) /goto :RunLoop
+		/nav stop
+	} else {
+		/if (${Navigation.Active}) /nav stop
 	}
-	/call EngageTarget ${Spawn[npc ${eventTarget}].ID}
+	
+	/call RunAllEvents
+
+	:mark_loop
+	/if (${Me.Buff[Mark of Death].ID}) {
+		/echo \arMARK OF DEATH \awCounters:\ao${Debuff.Diseased}) \aw${Time.Time24}
+		/delay 20
+		/goto :markLoop
+	} else {
+		/if (!${Target.Name.Find[${eventTarget}]}) {
+			/call TrueTarget ${Spawn[npc ${eventTarget}].ID}
+		}
+		/call EngageTarget ${Spawn[npc ${eventTarget}].ID}
+	}
+
+	
 	:return
 /return 

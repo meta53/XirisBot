@@ -164,6 +164,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 
 Sub SetupSongs
 	| Set Bard songs based on raid type and group leader
+	| Note: TODO: Set this as an INI driven setup
 	/if (${str_raidGroupMode.Equal[DEFAULT]}) {
 		/if (${Me.CleanName.Equal[Ania]}) 	/varset str_currentMedley TANK
 		/if (${Me.CleanName.Equal[Aergia]}) /varset str_currentMedley TANK

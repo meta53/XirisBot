@@ -13,14 +13,14 @@ Sub Main
     /dgt ResistTypes cold|poison|magic|fire
 
     | Xiris (MT) Autocure
-    /dt Xenshia autoCureMTon
+    /dt Xanshia autoCureMTon
 
     | Turn off cures for pretty much everyone except clerics
-    /dga melee  /varset bln_useCures FALSE
-    /dga caster /varset bln_useCures FALSE
+    |/dga melee  /varset bln_useCures FALSE
+    |/dga caster /varset bln_useCures FALSE
 
     | Set the mode to normal (ahl)
-    /dgt healMode NORMAL 
+    |/dgt healMode EFFICIENT 
     /dgt InterruptON
 
     | Xiris
@@ -50,10 +50,16 @@ Sub Main
 
     | Eurydice needs heals and DI 
     /dt Xinshia changeMT Eurydice 
+    /dt Xenshia changeMT Eurydice
+    /dt Xinshia autoCureMTon
+    /dt Xenshia autoCureMTon
     /dex Eurydice /dt Xinshia dime
 
     | Erisa needs heals and DI 
     /dt Xorael changeMT Erisa 
+    /dt Deist  changeMT Erisa
+    /dt Xorael autoCureMTon
+    /dt Deist  autoCureMTon
     /dex Erisa /dt Xenshia dime
   
     | Healing Focus
@@ -70,13 +76,25 @@ Sub Main
     | Have enchanters set 0 nukes
     /dex Erisa    /varset NUKE_Total 0
     /dex Eurydice /varset NUKE_Total 0
+    /dex Erisa    /varset DEBUFF_Total 1
+    /dex Eurydice /varset DEBUFF_Total 1
+    /dex Nessia   /varset DEBUFF_Total 0
 
     | Run raidcommands
     /dgt Hush
     /rs CharmON
     /rs OMMStart
-    /nav wp ommCleric
+    /nav wp ommTank
+    |-- healpoints
     /dgt SetHealPOINTS OMM
+    /dex Xorael /varset int_point_tank_normal	85
+	/dex Xorael	/varset int_point_tank_frantic	50
+    /dex Deist /varset int_point_tank_normal	85
+	/dex Deist	/varset int_point_tank_frantic	50
+    /dex Xinshia /varset int_point_tank_normal	85
+	/dex Xinshia	/varset int_point_tank_frantic	50
+    /dex Xenshia /varset int_point_tank_normal	85
+	/dex Xenshia	/varset int_point_tank_frantic	50 
     /dex Xirin /mac ommadds
     /mac ommTank
     

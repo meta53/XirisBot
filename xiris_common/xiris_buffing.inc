@@ -188,6 +188,8 @@ Sub cmbtBuffMT
 	/declare delay		int		local	0
 
 	/for i 1 to ${int_cmbtBuffTotal}
+		| Run the rapid events before we retry or anything else
+		/call RunPriorityEvents
 		/varset bSpell 	${CMBTBUFF_${i}}
 		/varset bGem 	${CMBTBUFF_${i}_Gem}
 		/call chkSpellMemorized "${bSpell}" FALSE ${bGem}
@@ -198,7 +200,7 @@ Sub cmbtBuffMT
 
 			/if (!${Bool[${bDuration}]} ) {
 				/call TrueTarget ${Spawn[pc =${str_MTName}].ID}
-				/call MQ2Cast "${bSpell}" ${bGem}
+				/call MQ2Cast "${bSpell}" ${bGem} RunPriorityEvents
 				/if (${Cast.Result.Equal[CAST_SUCCESS]}) {
 					/echo \ag ${bSpell} ${Cast.Result} : DELAYING for \ay ${Spell[${bSpell}].Duration.TotalSeconds}s \agrefresh
 				}
@@ -242,6 +244,9 @@ Sub cmbtBuffGRP
 		
 
 		/for g 0 to ${Group}
+			| Run the rapid events before we retry or anything else
+			/call RunPriorityEvents
+
 			|-- check group health
 			/if (${Me.Class.ShortName.Equal[SHM]}) /call healGRP
 

@@ -53,7 +53,7 @@ REVISION HISTORY
 Sub InitEvents_Melee
  	/call RegisterBackgroundEvents Events_Melee 15
 	/call RegisterRaidEvents Events_Melee_Engaged 4
-	/call RegisterRapidEvents Events_Melee_Rapid 1
+	/call RegisterPriorityEvents Events_Melee_Rapid 1
 /return
 
 Sub Events_Melee

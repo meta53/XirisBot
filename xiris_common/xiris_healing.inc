@@ -308,7 +308,7 @@ Sub ChangeHealPoints(string _strHealPointKey)
 		/varset int_point_group_normal	50
 		/varset int_point_group_frantic	30
 		/varset int_point_group_HoT		90
-		/varset use_heal_HoT FALSE
+		/varset use_heal_HoT TRUE
 	} else {
 		/varset int_point_self_normal 	${Ini[${healINI},Heal_Points,int_point_self_normal]}
 		/varset int_point_self_frantic	${Ini[${healINI},Heal_Points,int_point_self_frantic]}
@@ -1177,7 +1177,7 @@ Sub Ressurect(int _id)
 		}
 	} else {	
 		| No epic or not cleric, use spell
-		/call chkSpellMemorized ${str_rezSpell} TRUE ${str_rezGem}
+		/call chkSpellMemorized "${str_rezSpell}" TRUE ${str_rezGem}
 		/call MQ2Cast ${str_rezSpell}
 		/if (${Macro.Return.Equal[CAST_SUCCESS]}) {
 			/docommand /${announceChannel} Rezzed ${Target.Name}

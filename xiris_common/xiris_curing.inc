@@ -572,24 +572,36 @@ Sub handleCureRequest(string _name, int _id, string _cureType, int _counters, bo
 	/declare	str_spell	  	string		local	${str_cure_disease}
 	/declare    int_count     	int			local   ${_counters}
 	/declare    int_castCount 	float    	local   1
-	/declare    qstring  	  	string   	local
-	/declare 	c 				int 		local	0
+	
 
-	/if (${_cureType.Equal[disease]}) /varset qstring Debuff.Diseased
-	/if (${_cureType.Equal[curse]})   /varset qstring Debuff.Cursed
-	/if (${_cureType.Equal[poison]})  /varset qstring Debuff.Poisoned
+	| Check to see if I can actually cast this cure type
+	/if (!${bln_cure_${_cureType}}) {
+		/echo I cannot cure ${_cureType}}
+		/dt ${_name} I cannot cure you
+		/return
+	} else {
+		/varset str_spell 	${str_cure_${_cureType}}
+	}
+
+	| Create a query string
+	
 
 	|-- Sanity check their cure request with a query *(if we arent forced!)
 	/if (!${_forced}) {
+		/declare    qstring	string	local
+		/declare 	qresult	int		local	0
+		/if (${_cureType.Equal[disease]}) /varset qstring Debuff.Diseased
+		/if (${_cureType.Equal[curse]})   /varset qstring Debuff.Cursed
+		/if (${_cureType.Equal[poison]})  /varset qstring Debuff.Poisoned
 		/echo Verifying Need ${_name} "${qstring}"
 		/dquery ${_name} -q "${qstring}"
 		/delay 20 ${DanNet.Query.Received}
-		/varset c ${DanNet.Q}
-		/if (!${c}) {
+		/varset qresult ${DanNet.Q}
+		/if (!${qresult}) {
 			/echo \ao${_name} \agdid NOT need curing, returning
-			/goto :return
+			/return
 		} else {
-			/echo \ag${_name} \awNEEDS curing ${c}, continuing
+			/echo \ag${_name} \awNEEDS curing ${qresult}, continuing
 		}
 	}
 
@@ -610,43 +622,9 @@ Sub handleCureRequest(string _name, int _id, string _cureType, int _counters, bo
 		/return
 	}
 
-	/if (${_cureType.Equal[disease]}) {
-		/echo \aoDISEASE CURE selected.
-		/if (!${bln_hasDiseaseCure}) {
-			/echo I cannot cure Disease
-			/dt ${_name} I cannot cure you
-			/return
-		}
-		/varset str_spell 	${str_cure_disease}
-		/varset int_count 	${int_cure_disease}
-	} else /if (${_cureType.Equal[poison]}) {
-		/echo \agPOISON CURE selected.
-		/if (!${bln_hasPoisonCure}) {
-			/echo I cannot cure Poison
-			/dt ${_name} I cannot cure you
-			/return
-		}			
-		/varset str_spell 	${str_cure_poison}
-		/varset int_count 	${int_cure_poison}
-	} else /if (${_cureType.Equal[curse]}) {
-		/echo \ayCURSE CURE selected.
-		/if (!${bln_hasCurseCure}) {
-			/echo I cannot cure Curses
-			/dt ${_name} I cannot cure you
-			/return
-		}	
-		/varset str_spell 	${str_cure_curse}
-		/varset int_count 	${int_cure_curse}
-	} else /if (${_cureType.Equal[corruption]}) {
-		/echo \apCORRUPTION CURE selected.
-		/if (!${bln_hasCorruptionCure}) {
-			/echo I cannot cure Corruption
-			/dt ${_name} I cannot cure you
-			/return
-		}	
-		/varset str_spell 	${str_cure_corruption}
-		/varset int_count 	${int_cure_corruption}
-	}
+	
+
+	
 	
 	|-- calculate how many times we need to cast the cure counters: note MQ2 Natively does not have a round method
 	/varset int_castCount ${Math.Calc[${_counters} / ${int_count}]}
@@ -691,8 +669,8 @@ Sub castCure(string _name, int _id, string _spell, int _castCount, string _cureT
 		| If I am a cleric and this is unforced, quickly check MT health
 		/if (${Me.Class.ShortName.Equal[CLR]} && !${_isForced}) /call chkHeal_MT
 		/call TrueTarget ${_id}
-		/echo \aoCasting \aw${i} \ag${_spell}
-		/call MQ2Cast "${_spell}" gem7 8s
+		/echo \aoCasting \aw${i} \ag${_spell} \ao${i} \awof \ao${_castCount}
+		/call MQ2Cast "${_spell}" gem7 8s RunPriorityEvents
 	/next i 
 	/dt ${_name} I cured you ${_name}(${_id}) of ${_counters} ${_cureType} counters.
 /return

@@ -154,6 +154,7 @@ Sub EVENT_RootTankOff
 
 Sub getAggro
 	:aggroLoop
+		/if (${Zone.ShortName.Equal[${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}]}) /end
 		/if (${Target.Distance} > 20 && ${bln_rootTank}) /warp loc ${root_Y} ${root_X} ${root_Z}
 		/if (${Me.TargetOfTarget.ID} != ${Me.ID}) {
 			/echo OMM NOT TARGETTING ME

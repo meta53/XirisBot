@@ -65,59 +65,55 @@ Sub EVENT_CharmNPCByName(_line, _chatSender,_eventParams)
 
 Sub CharmNPC(int _targetID, bool _forced, bool _attack, int _attackID)
     /echo \aoCharmNPC\aw(\ag${_targetID}\aw ${bln_activeCharming})
-    /if (!${bln_activeCharming} && !${_forced}) /return
-    /if (${Me.Pet.ID}) /return
+    /if (!${bln_activeCharming} && !${_forced} || ${Me.Pet.ID} ) /return
+    /if (${Me.Casting.ID}) /stopcast
         
     /varset bln_hasCharmedPet FALSE
     | /declare CHARM_Template         string  outer   _Spell|_Gem|_MaxTries|_KeepAlive|_Resist|_RecastTimer
     | Check the logic in charm (ie: if we can use ancient if enc, etc)
     :charmTarget
-    /declare i int local 2
-    /for i  1 to ${CHARM_Total}
-        /if (${Me.Pet.ID}) /return
-        /call TrueTarget ${_targetID}
-       
-       | Trigger Check based on type (Calls chkCharmTrigger)		
-       /call chkCharmTrigger ${CHARM_${i}_Type}
-       /echo \ayChkCharmTrigger: \ao${CHARM_${i}_Type} \ar${Macro.Return} "${CHARM_${i}_Spell}"
-        /if (!${Macro.Return}) {
-            /if (${i} < ${CHARM_Total}) {
-                /echo \aoGoing to next charm since first failed!
-                /goto :nextCharm
-            } else {
-                /echo \aoChkCharmTrigger FAILED
-                /goto :return
-            }
-           
+    | Removed multiple charm spells, it got too fucky
+    /declare i int local 1
+    /call TrueTarget ${_targetID}
+    
+    | Trigger Check based on type (Calls chkCharmTrigger)		
+    |** /call chkCharmTrigger ${CHARM_${i}_Type}
+    /echo \ayChkCharmTrigger: \ao${CHARM_${i}_Type} \ar${Macro.Return} "${CHARM_${i}_Spell}"
+    /if (!${Macro.Return}) {
+        /if (${i} < ${CHARM_Total}) {
+            /echo \aoGoing to next charm since first failed!
+            /goto :nextCharm
+        } else {
+            /echo \aoChkCharmTrigger FAILED
+            /goto :return
         }
-       
-        | Checks passed, check if the spell is memorized. Skip if not
-		:charmSpellMemorized
-            /echo \awChecking if \ao"${CHARM_${i}_Spell}" \aw is memorized
-			/call chkSpellMemorized "${CHARM_${i}_Spell}" ${_forced} ${CHARM_${i}_Gem}
-        :charmSpellReadyWait 
-			| If this is a forced cast, wait for the spell to be ready
-             /echo \awWaiting for \ao"${CHARM_${i}_Spell}" \aw is memorized
-			/if ((!${Me.SpellReady[${CHARM_${i}_Spell}]} && ${_forced}) || (${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]})) {
-				/delay 2
-				/goto :charmSpellReadyWait
-			} 
-        :charmCast
-			|/echo \agCasting Charm:\ao"${CHARM_${i}_Spell}" \awID:\ay${_targetID}  \awforcing?:\ay${_forced}
-			/call TrueTarget ${_targetID}
+        
+    }
+    **|      
+    | Checks passed, check if the spell is memorized. Skip if not
+    :charmSpellMemorized
+        /echo \awChecking if \ao"${CHARM_${i}_Spell}" \aw is memorized
+        /call chkSpellMemorized "${CHARM_${i}_Spell}" ${_forced} ${CHARM_${i}_Gem}
+        /goto :charmCast
+    :charmSpellReadyWait 
+        | If this is a forced cast, wait for the spell to be ready
+        /echo \awWaiting for \ao"${CHARM_${i}_Spell}" \aw is memorized
+        /if ((!${Me.SpellReady[${CHARM_${i}_Spell}]} && ${_forced}) || (${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]})) {
+            /delay 5
+            /goto :charmSpellReadyWait
+        } 
+    :charmCast
+        |/echo \agCasting Charm:\ao"${CHARM_${i}_Spell}" \awID:\ay${_targetID}  \awforcing?:\ay${_forced}
+        /call TrueTarget ${_targetID}
 
-			/if (${Me.Class.ShortName.Equal[BRD]}) {
-				/call MQ2Medley SONG "${CHARM_${i}_Spell}" ${_targetID} TRUE
-                /goto :return
-			} else {
-				/call CastCharm "${CHARM_${i}_Spell}" ${CHARM_${db}_Gem} ${CHARM_${i}_MaxTries} ${Target.ID} ${_forced}
-                /goto :return
-            }  
+        /if (${Me.Class.ShortName.Equal[BRD]}) {
+            /call MQ2Medley SONG "${CHARM_${i}_Spell}" ${_targetID} TRUE
+            /goto :return
+        } else {
+            /call CastCharm "${CHARM_${i}_Spell}" ${CHARM_${db}_Gem} ${CHARM_${i}_MaxTries} ${Target.ID} ${_forced}
+            /goto :return
+        }  
         /call RunRaidEvents      
-    :nextCharm
-        | I have no idea why I need a comment here
-        /echo Next ${i}
-        /next i
     :return 
 
     /if (${Me.Pet.ID} ) {
@@ -145,8 +141,10 @@ Sub CastCharm(string _charm, string _gem, int _maxTries, int _targetID, bool _fo
 
     /declare 	tgtName string  local ${Target.CleanName}
     :AttemptCharm 
+        | Run the rapid events before we retry or anything else
+		/call RunPriorityEvents
         /echo \aoAttempting Charm: \aw"${_charm}" on \ao${Spawn[id ${_targetID}].Name}
-		|/call chkTargetStatus
+
 		/if (${_targetID} == 0 && !${_forced}) {
 			/echo \ar Charm Failure\aw Target Already Dead
 			/varset rslt TARGET_ALREADY_DEAD
@@ -165,7 +163,7 @@ Sub CastCharm(string _charm, string _gem, int _maxTries, int _targetID, bool _fo
 		}				
 
 		|attempt
-		/call MQ2Cast "${_charm}" ${_gem} 5s
+		/call MQ2Cast "${_charm}" ${_gem} 5s RunPriorityEvents
 		/varset rslt ${Macro.Return}
 		/varcalc try ${try}+1
 	
@@ -216,9 +214,7 @@ Sub CreateCharmLineup
 
 Sub chkCharmTrigger(string _key)
     /if (${Me.Class.ShortName.Equal[ENC]}) {
-        | Charm 1 "Ancient: Voice of Muram"
-        /if (${_key.Equal[ANCIENT]} && (!${Me.Pet.ID} || ${Target.Charmed.Duration.TotalSeconds} < 6) && ${Me.SpellReady[${CHARM_1_Spell}]}) /return TRUE
-        | Charm 2 "True Name"
+        | Charm 1 "True Name"
         /if (${_key.Equal[NORMAL]} && (!${Me.Pet.ID} || ${Target.Buff[${CHARM_1_SPELL}].Duration.TotalSeconds} < 5) && ${Me.SpellReady[${CHARM_1_Spell}]})  /return TRUE
     } else /if (${Me.Class.ShortName.Equal[BRD]}) {
         /if (${_key.Equal[NORMAL]} && (!${Me.Pet.ID} || ${Target.Charmed.Duration.TotalSeconds} < 6) && ${Me.SpellReady[${CHARM_1_Spell}]})  /return TRUE

@@ -174,7 +174,7 @@ Sub variant_initialize(string _strTankName, int _intAssistAt, int _intTankHealPo
 	|--Translocation
 	/declare bln_tlUse					bool	outer   ${Ini[INI_CHAR,Translocation,bln_tlUse,TRUE]}
 	/declare str_tlSpell				string	outer   ${Ini[INI_CHAR,Translocation,str_tlSpell,Teleport]}
-	/declare str_tlGem					string	outer   ${Ini[INI_CHAR,Translocation,str_tlGem,gem6]}
+	/declare str_tlGem					string	outer   ${Ini[INI_CHAR,Translocation,str_tlGem,gem9]}
 
 	|--Snaring
 	/declare bln_snareUse				bool	outer	${Ini[INI_CHAR,Snare,bln_snareUse,FALSE]}
