@@ -14,38 +14,6 @@ REVISION HISTORY
 	12.31.22	xiris	Changed Bards medley calls to use new method in spell_routines.inc
 **|
 
-
-
-|NECRO/DOT/DEBUFF class stuff
-#EVENT DotOff1				"#*#Your |${DOT_1}| spell has worn off#*#"
-#EVENT DotOff2				"#*#Your |${DOT_2}| spell has worn off#*#"
-#EVENT DotOff3				"#*#Your |${DOT_3}| spell has worn off#*#"
-#EVENT DotOff4				"#*#Your |${DOT_4}| spell has worn off#*#"
-#EVENT DotOff5				"#*#Your |${DOT_5}| spell has worn off#*#"
-#EVENT DotOff6				"#*#Your |${DOT_6}| spell has worn off#*#"
-#EVENT DotOff7				"#*#Your |${DOT_7}| spell has worn off#*#"
-#EVENT DotOff8				"#*#Your |${DOT_8}| spell has worn off#*#"
-#EVENT DotOff9				"#*#Your |${DOT_9}| spell has worn off#*#"
-#EVENT DotOff10				"#*#Your |${DOT_10}| spell has worn off#*#"
-#EVENT DotOff11				"#*#Your |${DOT_11}| spell has worn off#*#"
-#EVENT DotOff12				"#*#Your |${DOT_12}| spell has worn off#*#"
-
-#EVENT Slow					"#1#is hindered by a shackle of spirit#*#"
-#EVENT SlowResist			"#*#Your target resisted the |${str_slowSpell}|#*#"
-#EVENT Snareon				"#*#damage by your |${str_snareSpell}|#*#"
-#EVENT Snareon				"#*#engulfed by darkness#*#"
-#EVENT Snareon				"#*#engulfed in an embracing darkness#*#"
-#EVENT Snareon				"#*#is shackled to the ground#*#"
-#EVENT Snareon				"#*#has been ensnared#*#"
-#EVENT Snareon				"#*#movements slow as their feet are covered in tangling weeds#*#"
-#EVENT Snareon				"#*#has been entangled#*#"
-#EVENT Snareon				"#*#has been entrapped in living earth#*#"
-#EVENT Snareon				"#*##covered in coruscating black shadows#*#"
-#EVENT SnareResist			"#*#Your target resisted the |${Snare}|#*#"
-#EVENT SnareWornOff			"Your |${str_snareSpell}| spell has worn off#*#"
-#EVENT NoSnare         		"#*#is immune to changes in its#*#"
-#EVENT NoSnareHold     		"#*#Your spell did not take hold.#*#"
-
 |SPELL Checking stuff
 #EVENT ChkHasSpell           "#*#ChkHasSpell #2#"
 
@@ -1013,5 +981,313 @@ Sub xbot_initialize_casting
 /return
 	
 	
+
+
+
+
+
+
+
+|**
+
+07/15/23 Setup for New INI consistency
+
+**|
+
+Sub BuildDownflags
+	|; =_buff|_type|_itemId
+	|DOWNFLAG_1="Taelosian Guard"|ITEM|"Ring of Organic Darkness"
+
+	| Run a test to see if there are no entries
+	/declare bln_downflags bool	outer FALSE
+	/if (${Select["${Ini[INI_CHAR,DOWNFLAGS,DOWNFLAG_1]}",NULL]} == 1) {
+		/echo \aoBuildDownflags: \arNo downflags created!
+		/return
+	}
+
+	| create a temporary array so we can assign the DFs and then trim to final array
+	/varset bln_downflags TRUE
+	/declare arr_rawDF[10]	string	local 
+	/declare sizeDF 		int		local 1
+	/declare i 				int		local 1
+
+	/for i 1 to ${arr_rawDF.Size}
+		/varset arr_rawDF[${i}] ${Ini[INI_CHAR,DOWNFLAGS,DOWNFLAG_${i},NULL]} 
+		/if (${arr_rawDF[${i}].NotEqual[NULL]}) /varcalc sizeDF ${sizeDF}+1
+	/next i
+
+	| populate an array of downflags
+	/declare arr_downflags[${sizeDF}]	string outer
+	/for i 1 to ${sizeDF}
+		/varset arr_downflags[${i}] "${arr_rawDF[${i}]}"
+	/next i
+	/echo \aoBuildDownflags: \aw[\ag${sizeDF}\aw] \agcreated!
+/return
+
+
+Sub BuildComponents
+	|; =_component|_use|_type|_count|_summoner|_reagent
+	|COMPONENT_1="Shuriken of Eternity"|TRUE|ITEM|200|"Ton Po's Mystical Pouch"|NULL
+
+	| Run a test to see if there are no entries
+	/declare bln_components bool	outer FALSE
+	/if (${Select["${Ini[INI_CHAR,COMPONENTS,COMPONENT_1]}",NULL]} == 1) {
+		/echo \aoBuildComponents: \arNo components created!
+		/return
+	}
+
+	| create a temporary array so we can assign the DFs and then trim to final array
+	/varset bln_components TRUE
+	/declare arr_rawCO[10]	string	local 
+	/declare sizeCO 		int		local 1
+	/declare i 				int		local 1
+
+	/for i 1 to ${arr_rawCO.Size}
+		/varset arr_rawCO[${i}] ${Ini[INI_CHAR,COMPONENTS,COMPONENT_${i},FALSE]} 
+		/if (${arr_rawCO[${i}].NotEqual[FALSE]}) /varcalc sizeCO ${sizeCO}+1
+	/next i
 	
+	| populate an array of components
+	/declare arr_components[${sizeCO}]	string outer
+	/for i 1 to ${sizeCO}
+		/varset arr_components[${i}] "${arr_rawCO[${i}]}"
+	/next i
+	/echo \aoBuildComponents: \aw[\ag${sizeCO}\aw] \agcreated!
+/return  
+
+
+
+Sub BuildHP_Regen
+
+/return 
+
+Sub BuildMana_Regen
+
+/return 
+
+
+Sub BuildCures
+
+/return 
+
+
+Sub BuildBuffs_Default
+
+/return 
+
+Sub BuildBuffs_Combat
+
+/return
+
+Sub BuildDebuffs
+
+/return
+
+Sub BuildPets 
+
+/return 
+
+Sub BuildItems
+
+/return
+
+Sub BuildBurns
+
+/return
+
+
+
+Sub BuildHeals
+	| Heals/Cures are not laid out in INI like the rest of the elements.
+	| This is due to their complexity. We can however check for the 
+	| NULL settings element to bypass it all
+	/if (${Select["${Ini[INI_CHAR,HEALS,settings]}",NULL]} == 1 || ${Select[${Me.Class.ShortName},WAR,SHD,ROG,MNK,BER,NEC,WIZ,MAG]}) {
+		/echo \aoBuildHeals: \arNo heals created!
+		/return
+	}
+
+	| We have heals, since the settings is not NULL
+	| Create the setup values from the settings entry
+	| _mode|_useGroup|_useHoT|_announce|_autointerrupt|_defaultGem|_interruptToSaveSelf
+	/declare bln_heals 				bool	outer FALSE
+	/declare bln_divineArb			bool	outer FALSE
+	| Set up a default value for the spell set NORMAL|EFFICIENT
+	/declare str_heal_spellSet		string	outer NORMAL
+	| SETTINGS
+	/declare int_heal_mode 			int		outer ${Ini[INI_CHAR,HEALS,settings].Arg[1,|]}
+	/declare bln_heal_useGroup		bool 	outer ${Ini[INI_CHAR,HEALS,settings].Arg[2,|]}
+	/declare bln_heal_useHoT		bool 	outer ${Ini[INI_CHAR,HEALS,settings].Arg[3,|]}
+	/declare bln_heal_announce		bool 	outer ${Ini[INI_CHAR,HEALS,settings].Arg[4,|]}
+	/declare bln_heal_interrupt		bool 	outer ${Ini[INI_CHAR,HEALS,settings].Arg[5,|]}
+	/declare int_heal_defaultGem	int 	outer ${Ini[INI_CHAR,HEALS,settings].Arg[6,|]}
+	/declare int_heal_saveSelf		bool 	outer ${Ini[INI_CHAR,HEALS,settings].Arg[7,|]}
+
+	| HEAL POINT Declarations
+	| Default heal INI settings
+	/declare 	healINI					string  outer	xiris_common/xiris_healing.ini
+
+	|-- SELF (Defaults)
+	/declare 	int_def_self_normal		int     outer   ${Ini[${healINI},Heal_Points,int_point_self_normal]}
+	/declare 	int_def_self_frantic	int     outer   ${Ini[${healINI},Heal_Points,int_point_self_frantic]}
+	/declare 	int_def_self_HoT		int     outer   ${Ini[${healINI},Heal_Points,int_point_self_HoT]}
 	
+	|-- SELF (Overrides)
+	/declare	int_point_self_normal	int 	outer 	${int_def_self_normal}
+	/declare	int_point_self_frantic	int		outer	${int_def_self_frantic}
+	/declare	int_point_self_HoT		int		outer	${int_def_self_HoT}
+
+	|-- TANK (Defaults)
+	/declare 	int_def_tank_normal		int     outer   ${Ini[${healINI},Heal_Points,int_point_tank_normal]}
+	/declare 	int_def_tank_frantic	int     outer   ${Ini[${healINI},Heal_Points,int_point_tank_frantic]}
+	/declare 	int_def_tank_HoT		int     outer   ${Ini[${healINI},Heal_Points,int_point_tank_HoT]}
+
+	|-- TANK (Overrides)
+	/declare	int_point_tank_normal	int		outer	${int_def_tank_normal}
+	/declare	int_point_tank_frantic	int		outer	${int_def_tank_frantic}
+	/declare	int_point_tank_HoT		int		outer	${int_def_tank_HoT}
+
+	|-- Rest of Group (Defaults)
+	/declare 	int_def_group_normal	int     outer   ${Ini[${healINI},Heal_Points,int_point_group_normal]}
+	/declare 	int_def_group_frantic	int     outer   ${Ini[${healINI},Heal_Points,int_point_group_frantic]}
+	/declare 	int_def_group_HoT		int     outer   ${Ini[${healINI},Heal_Points,int_point_group_HoT]}
+	/declare 	int_def_group_groupHoT	int     outer   ${Ini[${healINI},Heal_Points,int_point_group_HoT]}
+
+	|-- Rest of Group (Overrides)
+	/declare	int_point_group_normal	int		outer	${int_def_group_normal}
+	/declare	int_point_group_frantic	int		outer	${int_def_group_frantic}
+	/declare	int_point_group_HoT		int		outer	${int_def_group_HoT}
+	/declare    int_point_group_groupHoT int	outer 	${int_def_group_groupHoT}
+
+ 
+	| Set each element based on the (8)_type keyes here, no loops required since the keys are unique
+	| NORMAL
+	/declare use_heal_normal	bool	outer	FALSE
+	/if (${Ini[INI_CHAR,HEALS,HEAL_normal].NotEqual[NULL]}) {
+		/varset 	use_heal_normal 			TRUE
+		/declare 	str_heal_normal				string outer ${Ini[INI_CHAR,HEALS,HEAL_normal].Arg[1,|]}
+		/declare 	str_heal_normal_efficient	string outer ${Ini[INI_CHAR,HEALS,HEAL_normal_efficient].Arg[1,|]}
+		/declare 	int_range_normal 			int	${Spell[${str_heal_normal}].MyRange}
+		/declare 	int_range_normal_efficient 	int	${Spell[${str_heal_normal_efficient}].MyRange}
+		/varset		int_point_self_normal	    ${Ini[INI_CHAR,HEALS,HEAL_normal].Arg[2,|]}
+		/varset		int_point_tank_normal	    ${Ini[INI_CHAR,HEALS,HEAL_normal].Arg[3,|]}
+		/varset		int_point_group_normal	    ${Ini[INI_CHAR,HEALS,HEAL_normal].Arg[4,|]}
+	} 
+
+	| FRANTIC
+	/declare  use_heal_frantic	bool	outer	FALSE
+	/if (${Ini[INI_CHAR,HEALS,HEAL_frantic].NotEqual[NULL]}) {
+		/varset 	use_heal_frantic 			TRUE
+		/declare 	str_heal_frantic			string outer ${Ini[INI_CHAR,HEALS,HEAL_frantic].Arg[1,|]}
+		/declare 	str_heal_frantic_efficient	string outer ${Ini[INI_CHAR,HEALS,HEAL_frantic_efficient].Arg[1,|]}
+		/declare 	int_range_frantic 			int	${Spell[${int_range_frantic}].MyRange}
+		/declare 	int_range_frantic_efficient int	${Spell[${int_range_frantic_efficient}].MyRange}
+		/varset		int_point_self_frantic	    ${Ini[INI_CHAR,HEALS,HEAL_frantic].Arg[2,|]}
+		/varset		int_point_tank_frantic	    ${Ini[INI_CHAR,HEALS,HEAL_frantic].Arg[3,|]}
+		/varset		int_point_group_frantic	    ${Ini[INI_CHAR,HEALS,HEAL_frantic].Arg[4,|]}
+	} 
+
+	| HEAL OVER TIME
+	| Note: even if HoT is enabled, we use dNet to query the target
+	| and check to see if our HoT is better than what is current
+	| /dquery ${Target.Name} -q "Me.SPA[100]" -o perTick
+	/declare  use_heal_HoT		bool	outer	${bln_heal_useHoT}
+	/if (${Ini[INI_CHAR,HEALS,HEAL_HoT].NotEqual[NULL]}) {
+		/varset 	use_heal_HoT 			TRUE
+		/declare 	str_heal_HoT			string outer ${Ini[INI_CHAR,HEALS,HEAL_HoT].Arg[1,|]}
+		/declare 	int_range_HoT 			int	${Spell[${str_heal_HoT}].MyRange}
+		/varset		int_point_self_HoT	    ${Ini[INI_CHAR,HEALS,HEAL_HoT].Arg[2,|]}
+		/varset		int_point_tank_HoT	    ${Ini[INI_CHAR,HEALS,HEAL_HoT].Arg[3,|]}
+		/varset		int_point_group_HoT	    ${Ini[INI_CHAR,HEALS,HEAL_HoT].Arg[4,|]}
+
+		| Can you believe that you cannot get the HoT amount from any TLO? I've looked.
+		/declare    int_heal_HoT_perTick	int 100
+		/if (${str_heal_HoT.Find[Pious Elixir]}) 		/varset int_heal_HoT_perTick 1170
+		/if (${str_heal_HoT.Find[Holy Elixir]}) 		/varset int_heal_HoT_perTick 900
+		/if (${str_heal_HoT.Find[Spiritual Serenity]}) 	/varset int_heal_HoT_perTick 820
+	} 
+
+	| GROUP 
+	| Group HoT, there are no good group HoTs at this point, so we don't really need this outside of a skeleton
+	|		   , if use hot is false, then group hot is false
+	|          , if use hot is true, and group hot is null, then it is false
+	/declare  use_heal_groupHoT		bool	outer	${bln_heal_useHoT}
+	/if (${Ini[INI_CHAR,HEALS,HEAL_groupHoT].NotEqual[NULL]} && ${bln_heal_useGroup} ) {
+		/declare	str_heal_groupHoT			string 	outer	${Ini[INI_CHAR,HEALS,HEAL_groupHoT].Arg[1,|]}
+		/declare    int_range_groupHoT			int		outer   ${Spell[${str_heal_groupHoT}].AERange}
+		/varset		int_point_group_groupHoT	int		outer	${Ini[INI_CHAR,HEALS,HEAL_groupHoT].Arg[2,|]}
+	} else {
+		/varset use_heal_groupHoT FALSE
+	}
+	| Group Heal, uses a lot of mana, but also cures some counters useful on raids with heavy AE or mark of death
+	/declare use_heal_group			bool	outer	${bln_heal_useGroup}
+	/if (${Ini[INI_CHAR,HEALS,HEAL_group].NotEqual[NULL]} && ${bln_heal_useGroup} ) {
+		/varset 	use_heal_group 			TRUE
+		/declare 	str_heal_group				string 	outer 	${Ini[INI_CHAR,HEALS,HEAL_group].Arg[1,|]}
+		/declare 	int_range_group 			int		outer 	${Spell[${str_heal_group}].AERange}
+		/declare	int_point_self_group	    int 	outer 	${Ini[INI_CHAR,HEALS,HEAL_group].Arg[2,|]}
+		/declare	int_point_tank_group	    int		outer	${Ini[INI_CHAR,HEALS,HEAL_group].Arg[3,|]}
+		/declare	int_point_group_group	    int		outer	${Ini[INI_CHAR,HEALS,HEAL_group].Arg[4,|]}
+	} else {
+		/varset use_heal_group FALSE
+	}
+	| COMPLETE
+	/declare use_heal_complete		bool	outer	FALSE
+	/if (${Ini[INI_CHAR,HEALS,HEAL_complete].NotEqual[NULL]}) {
+		/varset 	use_heal_complete 			TRUE
+		/declare	str_heal_complete			string	outer	${Ini[INI_CHAR,HEALS,HEAL_complete].Arg[1,|]}
+		/declare 	int_range_complete 			int 	outer	${Spell[${str_heal_complete}].MyRange}
+	}
+
+	|--- Cleric Specific
+	/if (${Me.Class.ShortName.NotEqual[CLR]}) /goto :Summary
+
+	| RESSURECTION
+	/declare use_heal_ressurection			bool	outer	FALSE
+	/if (${Ini[INI_CHAR,HEALS,RESSURECTION_1].NotEqual[NULL]}) {
+		/varset		use_heal_ressurection	TRUE
+		/declare	str_heal_ressurection	string	outer	${Ini[INI_CHAR,HEALS,RESSURECTION_1].Arg[1,|]}
+		/declare	int_range_ressurection	int		outer 	100
+	}
+
+	| DIVINE ARBITRATION
+	| If divine arbitration has an entry, add the values here
+	/declare use_heal_arbitration			bool 	outer 	FALSE
+	/declare int_heal_arbitrationCount		int		outer	0
+	/if (${Ini[INI_CHAR,HEALS,DIVINE_1].NotEqual[NULL]} && ${bln_heal_useGroup} ) {		
+		/declare	use_heal_arbitration_1			bool	outer	${Ini[INI_CHAR,HEALS,DIVINE_1].Arg[3,|]} 
+		/declare	str_heal_arbitration_1 			string	outer	${Ini[INI_CHAR,HEALS,DIVINE_1].Arg[1,|]}
+		/declare 	str_heal_arbitration_1_type		string	outer	${Ini[INI_CHAR,HEALS,DIVINE_1].Arg[2,|]}
+		/declare 	str_heal_arbitration_1_minHP	int		outer	${Ini[INI_CHAR,HEALS,DIVINE_1].Arg[4,|]}
+		/if (${use_heal_arbitration_1}) /varcalc int_heal_arbitrationCount ${int_heal_arbitrationCount}+1
+		
+		/if (${Ini[INI_CHAR,HEALS,DIVINE_2].NotEqual[NULL]} && ${bln_heal_useGroup} ) {
+			/varset  	int_heal_arbitrationCount	2
+			/declare	use_heal_arbitration_2			bool	outer	${Ini[INI_CHAR,HEALS,DIVINE_2].Arg[3,|]} 
+			/declare	str_heal_arbitration_2 			string	outer	${Ini[INI_CHAR,HEALS,DIVINE_2].Arg[1,|]}
+			/declare 	str_heal_arbitration_2_type		string	outer	${Ini[INI_CHAR,HEALS,DIVINE_2].Arg[2,|]}
+			/declare 	str_heal_arbitration_2_minHP	int		outer	${Ini[INI_CHAR,HEALS,DIVINE_2].Arg[4,|]}
+			/if (${use_heal_arbitration_2}) /varcalc int_heal_arbitrationCount ${int_heal_arbitrationCount}+1
+		}
+		/if (${use_heal_arbitration_1} || ${use_heal_arbitration_2}) /varset use_heal_arbitration TRUE
+	}
+
+
+	:Summary
+	| SUMMARY
+	/echo ---------------
+	/echo \ayHeal Settings: \awMode:\ag${int_heal_mode}\aw || UseGroup:\ag${use_heal_group}\aw || useHoT:\ag${use_heal_HoT}
+	/echo 					\awAnnounce:\ag${bln_heal_announce}\aw || Interrupt:\ag${bln_heal_interrupt}\aw || SaveSelf:\ag${int_heal_saveSelf}
+	/echo ---------------	 
+	/echo \ayHeal Spells: \awNormal:\ag${str_heal_normal}\aw  || Efficient:\ag${str_heal_frantic_efficient}\aw || CH:\ag${str_heal_complete}
+	/echo				  \awFrantic:\ag${str_heal_frantic}\aw || Frantic Efficient:\ag${str_heal_frantic_efficient}\aw || HOT:\ag${str_heal_HoT}
+	/echo                 \awGroup:\ag${str_heal_group}\aw || GroupHoT:\ag${str_heal_groupHoT}\aw || Rez:\ag${str_rezSpell}
+	/echo ---------------
+	/echo \ayHeal Usages:  \awNormal:\ag${use_heal_normal}\aw || Frantic:\ag${use_heal_frantic}\aw || HoT:\ag${use_heal_HoT}\aw || Group:\ag${use_heal_group}\aw || GroupHoT:\ag${use_heal_groupHoT}\aw || AutoRez:\ag${use_heal_ressurection}\aw
+	/echo ---------------
+	/echo \ayHeal Ranges: \awPatch:\ag${int_range_normal_efficient}\aw || Normal:\ag${int_range_normal}\aw || Group:\ag${int_range_group}\aw
+	/echo  			Frantic:\ag${int_range_frantic}\aw || FranticEfficient:\ag${int_range_frantic_efficient} 
+	/echo 				HoT:\ag${int_range_HoT}\aw || GroupHoT:\ag${int_range_groupHoT}\aw || Rez:\ag${int_range_rez}
+	/echo ---------------
+	/echo \ayDivine Arbitration: \awCount:\ag${int_heal_arbitrationCount}\aw
+	/echo ---------------
+/return 

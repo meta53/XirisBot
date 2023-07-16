@@ -338,7 +338,7 @@ Sub EVENT_HealType(_line, _chatSender, _eventParams)
 
 Sub ChangeHealType(int _type) 
 	/varset int_healMode ${Int[${_type}]}
-	/if (${int_healMode}==0) /echo \a-wChanging healing \aoTYPE \a-wto \ag0-Self (only)
+	/if (${int_healMode}==0) /echo \a-wChanging healing \aoTYPE \a-wto \ag0-Self
 	/if (${int_healMode}==1) /echo \a-wChanging healing \aoTYPE \a-wto \ag1-MT (and self)
 	/if (${int_healMode}==2) /echo \a-wChanging healing \aoTYPE \a-wto \ag2-Group (and MT, includes self)
 	/if (${int_healMode}==3) /echo \a-wChanging healing \aoTYPE \a-wto \ag3-GroupOnly (includes self)

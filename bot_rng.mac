@@ -45,7 +45,13 @@ Sub Events_RNG
 
 Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint, string _assistArgs)
 	
+
+	/call BuildDownflags
+	/call BuildComponents
+	/call BuildHeals
+
 	
+	/end
 	/echo You are now in xiris_bot_${Me.Class.ShortName}.mac
 
 	|-- initialize the common xbot libraries
