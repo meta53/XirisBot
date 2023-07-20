@@ -112,7 +112,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 
 			|-- class specific
 			/if (${Me.Pet.ID}) 			/call chkPetAttack	
-			/if (${int_cmbtBuffTotal})	/call cmbtBuffGRP
+			/if (${int_cmbtBuffTotal} && !${bln_hasCharmedPet})	/call cmbtBuffGRP
 		
 			|-- dps library (caster)
 			/if (!${bln_hasCharmedPet}) /call chkDOT

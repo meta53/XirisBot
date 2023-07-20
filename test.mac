@@ -1,0 +1,213 @@
+Sub Main 
+    /declare bln_autoCureMT     bool outer TRUE
+    /declare bln_autoCureSelf   bool outer TRUE
+    /declare bln_autoCureGroup  bool outer TRUE
+    /declare bln_chkLazyCures   bool outer FALSE
+
+    /declare int_MTID       int outer ${Me.ID}
+
+    /call DefineCureSpells
+    /call DefineRequiredCures
+    | note here we call the request. the 45 is just a testing placeholder, we will need to know the counters
+    |/call handleCureRequestV2 "${Me.Name}" ${Me.ID} ${arr_requiredCures[1]} 45 TRUE
+    /call chkCures
+/return 
+
+
+| This will be populated via INI file entriess
+Sub DefineCureSpells
+    /declare str_cure_disease       string outer "Pure Blood"|18
+    /declare str_cure_curse         string outer "Remove Greater Curse"|45
+    /declare str_cure_poison        string outer "Antidote"|64
+
+    /declare bln_hasCure_disease    bool outer TRUE 
+    /declare bln_hasCure_curse      bool outer TRUE 
+    /declare bln_hasCure_poison     bool outer TRUE 
+    /declare bln_hasCure_corruption bool outer FALSE
+
+    /declare int_defaultSpellGem    int  outer 7
+/return 
+
+| This will be populated by INI file entries
+Sub DefineRequiredCures 
+    | Debuffs that must be cured as soon as possible
+    /declare    arr_immediateCures[2] string  outer NULL
+    /varset     arr_immediateCures[1] "Mark of Death"|disease|ALL
+	/varset     arr_immediateCures[2] "Packmaster's Curse"|curse|WAR,SHD,PAL
+
+    | Debuffs that must be cured eventually
+	/declare    arr_requiredCures[10] 	string	outer	NULL
+	/varset     arr_requiredCures[1] "Wanton Destruction"|curse|ALL
+	/varset     arr_requiredCures[2] "Gaze of Anguish"|disease|CLR,DRU,SHM
+	/varset     arr_requiredCures[3] "Torment of Body"|curse|CLR,DRU,SHM,ENC
+	/varset     arr_requiredCures[4] "Feedback Dispersion"|curse|CLR,DRU,SHM,ENC
+	/varset     arr_requiredCures[5] "Fulmination"|poison|CLR,DRU,SHM,ENC,NEC,MAG,WIZ
+    /varset     arr_requiredCures[6] "Vergalid's Breath"|corruption|CLR,DRU,SHM
+
+/return 
+
+| Check Cures, we can bln_engaged as a good proxy for _lazy cures.
+Sub chkCures(bool _lazy)
+	/if (${bln_autoCureMT}) 	/call chkCure_MT    ${_lazy}
+	/if (${bln_autoCureSelf}) 	/call chkCure_Self  ${_lazy}
+	/if (${bln_autoCureGroup})  /call chkCure_Group ${_lazy}
+/return
+
+Sub chkCure_MT(bool _lazy)
+    /call chkCureOnID ${int_MTID} ${_lazy}
+/return 
+
+Sub chkCure_Self(bool _lazy)
+    /call chkCureOnID ${Me.ID} ${_lazy}
+/return 
+
+Sub chkCure_Group(bool _lazy)
+
+/return 
+
+Sub chkCureOnID(int _id, bool _lazy)
+    /echo \aochkCureOnId\aw(\ag${_id}\aw) Lazy? \ag${_lazy}
+	| Check if MT needs cure
+	| Specific items that need force cure
+	/declare i 				int 	local	0
+	/declare foundCounters	int		local	0
+	/declare debuffName     string 	local NULL
+    /declare victimName     string  local ${Spawn[pc id ${_id}].Name}
+    
+	| Immediate Cures
+	:immediateCures
+	/for i 1 to ${arr_requiredCures.Size}
+		/varset foundCounters 0
+		/varset debuffName ${arr_immediateCures[${i}].Arg[|,1]}
+		/dquery ${victimName} -q "Me.Buff[${debuffName}]" -o foundCounters
+		/delay 20 ${DanNet.Q.Received}
+		/if (${foundCounters}) {
+			/call handleCureRequestV2 ${victimName} ${_id} ${arr_immediateCures[${i}]} ${foundCounters} TRUE
+            | If we cured something from immediate cures, we want to bail out of this to continue our checks on others
+			/return
+		}
+		/if (${arr_immediateCures[${i}].Equal[NULL]}) /goto :requiredCures
+	/next i
+
+
+	| Required Cures
+	:requiredCures
+	/for i 1 to ${arr_requiredCures.Size}
+		/varset foundCounters 0
+		/varset debuffName ${arr_requiredCures[${i}].Arg[|,1]}
+		/dquery ${victimName} -q "Me.Buff[${debuffName}]" -o foundCounters
+		/delay 20 ${DanNet.Q.Received}
+		/if (${foundCounters}) {
+			/call handleCureRequestV2 ${victimName} ${_id} ${arr_requiredCures[${i}]} ${foundCounters} TRUE
+            | If we cured something from required cures, we want to bail out of this to continue our checks on others
+			/return
+		}
+		/if (${arr_requiredCures[${i}].Equal[NULL]}) /goto :lazyCures
+	/next i
+
+	:lazyCures 
+    /if (!${_lazy}) /return
+    | Check Disease
+    /varset foundCounters 0
+    /dquery ${victimName} -q "Debuff.Diseased" -o foundCounters
+    /if (${foundCounters}) {
+        /call handleCureRequestV2 ${victimName} ${_id} ${arr_requiredCures[${i}]} ${foundCounters} FALSE
+        /return
+    }
+
+    | Check Poison
+    /varset foundCounters 0
+    /dquery ${victimName} -q "Debuff.Poisoned" -o foundCounters
+    /if (${foundCounters}) {
+        /call handleCureRequestV2 ${victimName} ${_id} ${arr_requiredCures[${i}]} ${foundCounters} FALSE
+        /return
+    }
+
+    | Check Curse
+    /varset foundCounters 0
+    /dquery ${victimName} -q "Debuff.Cursed" -o foundCounters
+    /if (${foundCounters}) {
+        /call handleCureRequestV2 ${victimName} ${_id} ${arr_requiredCures[${i}]} ${foundCounters} FALSE
+        /return
+    }
+	
+
+/return 
+
+
+| note: curestring looks like "Wanton Destruction"|curse|ALL
+| note: str_cure_curse looks like "Remove Greater Curse"|45 <= this is due to not being able to programmatically retrieve the amount of counters cured
+Sub handleCureRequestV2(string _name, int _id, string _cureString, int _counters, bool _forced)
+	/echo \ayhandleCureRequestV2: \ag${_name}\ao, \ag${_id}\ao, \ag${_cureString}\ao, \ag${_counters}\ao, \ag${_forced}
+	| Verify I can actually cure this
+	/if (!${bln_hasCure_${_cureString.Arg[2,|]}}) {
+		/echo \ar Cannot cure ${_cureString.Arg[2,|]} due to lack of available cure.
+        /return
+	}
+
+    | Debug information
+    /echo _cureString.Arg[1,|] =>${_cureString.Arg[1,|]} == "Wanton Destruction"
+    /echo _cureString.Arg[2,|] =>${_cureString.Arg[2,|]} == "Curse"
+    /echo ${str_cure_${_cureString.Arg[2,|]}}            == "Remove Greater Curse|45"
+    /echo ${str_cure_${_cureString.Arg[2,|]}.Arg[2,|]}   == 45
+
+    | this string will look like "Remove Greater Curse"
+	/declare cureSpell string local ${str_cure_${_cureString.Arg[2,|]}.Arg[1,|]}
+	/if (!${SpawnCount[pc ${_name}]} || ${Spawn[pc ${_name}].Distance3D} > ${Spell[${cureSpell}].MyRange}) {
+		/echo \arCannot cure ${_name} due to out of zone or out of range.
+        /return
+	}
+
+	| Determine cast counts
+	/declare countersToCure	int 	local ${_counters}
+	/declare countersCured	int		local ${str_cure_${_cureString.Arg[2,|]}.Arg[2,|]}
+	/declare castCount 		int 	local ${Math.Calc[${Math.Calc[${Math.Calc[${countersToCure}+${countersCured}]}-1]} / ${countersCured} ]}
+
+    | Is the spell ready?
+    /call chkSpellMemorized "${cureSpell}" TRUE ${int_defaultSpellGem}
+    | Cast the spell
+    /call castCureV2 ${_name} ${_id} "${cureSpell}" ${castCount} ${_forced}
+/return
+
+
+Sub castCureV2(string _name, int _id, string _spell, int _castCount, bool _forced)
+    /echo \ayCastCureV2: \ag${_name}\ao(\ag${_id}\ao) => \ag${_spell}\ao, \ag${_castCount}x\ao, \ag${_forced}
+    /declare i int local 0
+    /for i 1 to ${_castCount}
+        /if (!${SpawnCount[pc ${_name}]}) /return
+        /if (!${_forced} && (${int_healMode} > 0 && ${int_healMode} < 3) ) /call chkHeal_MT 
+        /call TrueTarget ${_id}
+        /call MQ2Cast "${_spell}" ${int_defaultSpellGem} RunRapidEvents
+     /next i
+/return 
+
+
+|- Method will memorize a spell, to the optional attributed gem, and if wait is true, will wait until its ready to return
+|- note will convert "gem7" to an integer 7 for gem slot
+Sub chkSpellMemorized(string _spell, bool _wait, string _gem)
+	/if (${_spell.Equal[NULL]}) {
+       /docommand /${announceChannel} Ther was an error trying to memorize a NULL spell!;
+       /return
+    }
+	/if (${Me.Gem[${_spell}]})  /return
+
+    /declare int_gem int local ${int_defaultSpellGem}
+    /if (${_gem.NotEqual[NULL]}) {
+         /if (${_gem.Length} > 1) {
+            /varset int_gem ${_gem.Right[1]}
+         }
+    } else {
+        /varset int_gem ${_gem}
+    } 
+   
+	:mem
+	    /echo \aochkSpellMemorized\ag "${_spell}" \awgem:\ao${int_gem} \awwait?:\ao${_wait}
+		/memspell ${int_gem} "${_spell}" 
+		/if (!${_wait}) /return
+
+        /echo Waiting for ${_spell}
+        /delay 50 ${Me.SpellReady[${_spell}]}
+        /echo Spell Memorized
+        /if (${Me.SpellReady[${_spell}]}) /return
+        /docommand /${announceChannel} There was a timeout error trying to memorize "${_spell}"
+/return 

@@ -568,6 +568,7 @@ Sub handleCureRequest(string _name, int _id, string _cureType, int _counters, bo
 		/dt ${_name} I cannot cure you, you are dead!
 		/return
 	}
+	
 	|-- find cure spell string & counters it clears
 	/declare	str_spell	  	string		local	${str_cure_disease}
 	/declare    int_count     	int			local   ${_counters}
@@ -616,15 +617,51 @@ Sub handleCureRequest(string _name, int _id, string _cureType, int _counters, bo
 	| Get the range of this cure
 	/call setCureRange ${_cureType}
 
+
+	/if (${_cureType.Equal[disease]}) {
+		/echo \aoDISEASE CURE selected.
+		/if (!${bln_hasDiseaseCure}) {
+			/echo I cannot cure Disease
+			/dt ${_name} I cannot cure you
+			/return
+		}
+		/varset str_spell 	${str_cure_disease}
+		/varset int_count 	${int_cure_disease}
+	} else /if (${_cureType.Equal[poison]}) {
+		/echo \agPOISON CURE selected.
+		/if (!${bln_hasPoisonCure}) {
+			/echo I cannot cure Poison
+			/dt ${_name} I cannot cure you
+			/return
+		}			
+		/varset str_spell 	${str_cure_poison}
+		/varset int_count 	${int_cure_poison}
+	} else /if (${_cureType.Equal[curse]}) {
+		/echo \ayCURSE CURE selected.
+		/if (!${bln_hasCurseCure}) {
+			/echo I cannot cure Curses
+			/dt ${_name} I cannot cure you
+			/return
+		}	
+		/varset str_spell 	${str_cure_curse}
+		/varset int_count 	${int_cure_curse}
+	} else /if (${_cureType.Equal[corruption]}) {
+		/echo \apCORRUPTION CURE selected.
+		/if (!${bln_hasCorruptionCure}) {
+			/echo I cannot cure Corruption
+			/dt ${_name} I cannot cure you
+			/return
+		}	
+		/varset str_spell 	${str_cure_corruption}
+		/varset int_count 	${int_cure_corruption}
+	}
+
 	| If cure target is out of range, return
-	/if (${Spawn[pc ${_name}].Distance} > ${cureRange}) {
+	/if (${Spawn[pc ${_name}].Distance} > ${Spell[${str_spell}].MyRange}) {
 		/echo \ar ${_name} \awis out of cure range! \ao${Spawn[pc ${_name}].Distance} > ${cureRange}
 		/return
 	}
 
-	
-
-	
 	
 	|-- calculate how many times we need to cast the cure counters: note MQ2 Natively does not have a round method
 	/varset int_castCount ${Math.Calc[${_counters} / ${int_count}]}
@@ -674,6 +711,8 @@ Sub castCure(string _name, int _id, string _spell, int _castCount, string _cureT
 	/next i 
 	/dt ${_name} I cured you ${_name}(${_id}) of ${_counters} ${_cureType} counters.
 /return
+
+
 
 
 Sub xbot_initialize_curing

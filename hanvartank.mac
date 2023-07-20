@@ -175,7 +175,7 @@ Sub EVENT_RootTankOff
 
 Sub getAggro
 	:aggroLoop
-		/if (${Math.Distance3D[${Me.Y},${Me.X},${Me.Z}:${root_Y} ${root_X} ${root_Z}]} > 20 && ${bln_rootTank}) /warp loc ${root_Y} ${root_X} ${root_Z}
+		/if (${Math.Distance[${Me.Y},${Me.X},${Me.Z}:${root_Y} ${root_X} ${root_Z}]} > 20 && ${bln_rootTank}) /warp loc ${root_Y} ${root_X} ${root_Z}
 		/if (${Me.TargetOfTarget.ID} != ${Me.ID}) {
 			/echo Hanvar NOT TARGETTING ME
             /if (${Me.CombatAbilityReady["Bellow of the Mastruq"]}) /doability "Bellow of the Mastruq"
