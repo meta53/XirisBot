@@ -12,13 +12,15 @@
 
 Sub Main(string _type, string _tankPoint)
 	/call xbot_initialize_spellRoutines
-	/varset bln_tanking TRUE
-    /varset bln_taunting TRUE
 	/declare bln_OMMEngaged 		bool 	outer FALSE
 	/declare bln_rootTank			bool	outer FALSE
 	/declare root_X					int	    outer 0
 	/declare root_Y					int	    outer 0
 	/declare root_Z					int	    outer 0
+	/declare target_X				int 	outer 0
+	/declare target_Y				int 	outer 0
+	/declare target_Z				int 	outer 0
+	/declare rootDist				int		outer 0
 
 	/declare arr_bersekerList[8]	string  outer 
 	/varset arr_bersekerList[1]	Ophidia 
@@ -36,8 +38,9 @@ Sub Main(string _type, string _tankPoint)
 	:wait_loop
 	/doevents
 	/delay 5
+	
 	/if (!${bln_OMMEngaged}) /goto :wait_loop
-	/target Overlord
+	
 	| Announcing Engage
 	/rs OMMStart ${Time.Time24}
 
@@ -53,6 +56,8 @@ Sub Main(string _type, string _tankPoint)
 			/delay 10
 			/goto :ActiveLoop
 		}
+		/if (${Math.Distance[${target_Y},${target_X},${target_Z}:${root_Y} ${root_X} ${root_Z}]} > ${rootDist} && ${bln_rootTank}) /warp loc ${root_Y} ${root_X} ${root_Z}
+		/face fast
 		/doevents
 		/call getAggro
 	/goto :ActiveLoop
@@ -71,12 +76,10 @@ Sub Event_OMMEngage
 	}
 	/if (!${Target.Name.Find[Overlord]}) {
 		/echo \ar OMM not targetted. Try that again!
+		/target Overlord
 		/goto :OMMTarget
 	}
-	/if (${Target.Name.Find[Overlord]} && !${Target.Distance3D} > 100) {
-		/echo \ar OMM out of Range. Try that again!
-		/goto :OMMTarget
-	}
+
     /if (${Me.CombatAbilityReady[Stonewall Discipline]}) /doability "Stonewall Discipline"
     /delay 5
 	/attack on
@@ -95,41 +98,42 @@ Sub Event_OMMEngage
 Sub EVENT_WarCry
 	/echo \ag WARCRY CALLED!
 	/declare bStatus 	string	local FALSE
-	/declare _berName 	string 	local NULL
+	/declare berTest 	string  local NULL
+	/declare berName1 	string 	local NULL
+	/declare berName2	string  local NULL
 	/declare i			int 	local 1
+	/declare foundCount int 	local 0
 	:checkCoerced1
 	/for i 1 to ${arr_bersekerList.Size}
-		/varset _berName ${arr_bersekerList[${i}]}
-		/if (!${SpawnCount[pc ${_berName}]}) /goto :next1
-		/dquery ${_berName} -q "Me.CombatAbilityReady[Ancient: Cry of Chaos]"
+		/varset berTest ${arr_bersekerList[${i}]}
+		/if (!${SpawnCount[pc ${berTest}]}) /goto :next_berserker
+		/dquery ${berTest} -q "Me.CombatAbilityReady[Ancient: Cry of Chaos]"
 		/delay 20 ${DanNet.Query.Received}
 		/varset bStatus ${DanNet.Q}
-		/echo \aw ${_berName} Cry? ${bStatus}
-		/if (${bStatus.Equal[TRUE]}) /goto :CastCryOn1
-	:next1
-	/next i
-
-	:checkCoerced2
-	/delay 20
-	/for i 1 to ${arr_bersekerList.Size}
-		/varset _berName ${arr_bersekerList[${i}]}
-		/if (!${SpawnCount[pc ${_berName}]}) /goto :next2
-		/dquery ${_berName} -q "Me.CombatAbilityReady[Ancient: Cry of Chaos]"
-		/delay 20 ${DanNet.Query.Received}
-		/varset bStatus ${DanNet.Q}
-		/echo \aw ${_berName} Cry? ${bStatus}
-		/if (${bStatus.Equal[TRUE]}) /goto :CastCryOn2
-	:next2
+		/echo \aw ${berTest} Cry? ${bStatus}
+		/if (${bStatus.Equal[TRUE]}) {
+			/varcalc foundCount ${foundCount}+1
+			/varset berName${foundCount} ${berTest}
+		}
+		/if (${foundCount} == 2) /goto :CastCryOn1
+	:next_berserker
 	/next i
 
 	:CastCryOn1
-	/echo \ao Calling Cry on \ag${Spawn[Coerced_Lieutenant_000].CleanName} \aw(\aG${Spawn[npc Coerced_Lieutenant_000].ID}\aw) from \a ${_berName}
-	/call CallBerserkerCry ${_berName} ${Spawn[Coerced_Lieutenant_000].ID}
-	/goto :checkCoerced2
+	/if (!${SpawnCount[Coerced_Lieutenant_000]}) {
+		/echo \ar No Coerced_Lieutenant_000 Found! Trying Next one!
+		/goto :CastCryOn2
+	}
+	/echo \ao Calling Cry on \ag${Spawn[Coerced_Lieutenant_000].CleanName} \aw(\aG${Spawn[npc Coerced_Lieutenant_000].ID}\aw) from \a ${berName1}
+	|/call CallBerserkerCry ${berName} ${Spawn[Coerced_Lieutenant_000].ID}
 
 	:CastCryOn2
-	/echo \ao Calling Cry on \ag${Spawn[Coerced_Lieutenant000].CleanName} \aw(\aG${Spawn[npc Coerced_Lieutenant000].ID}\aw) from \a ${_berName}
-	/call CallBerserkerCry ${_berName} ${Spawn[Coerced_Lieutenant000].ID}
+	/if (!${SpawnCount[Coerced_Lieutenant000]}) {
+		/echo \ar No Coerced_Lieutenant000 Found! Exiting
+		/goto :return
+	}
+	/echo \ao Calling Cry on \ag${Spawn[Coerced_Lieutenant000].CleanName} \aw(\aG${Spawn[npc Coerced_Lieutenant000].ID}\aw) from \a ${berName2}
+	|/call CallBerserkerCry ${berName} ${Spawn[Coerced_Lieutenant000].ID}
 :return	
 /doevents flush
 /return
@@ -145,23 +149,28 @@ Sub EVENT_RootTankOn
 	/varset root_X ${Me.X}
 	/varset root_Y ${Me.Y}
 	/varset root_Z ${Me.Z}
+	/varset target_X ${Target.X}
+	/varset target_X ${Target.Y}
+	/varset target_X ${Target.Z}
+	/varset rootDist ${Target.Distance}
+	/echo \awRooting Myself\ao${root_Y},${root_X},${root_Z} \awdist:\ao${rootDist}
 	/varset bln_rootTank TRUE
+	/doevents flush RootTankOn
 /return
 
 Sub EVENT_RootTankOff
+	/echo \aoUn-rooting myself!
 	/varset bln_rootTank FALSE
+	/doevents flush RootTankOff
 /return
 
 Sub getAggro
 	:aggroLoop
-		/if (${Target.Distance} > 20 && ${bln_rootTank}) /warp loc ${root_Y} ${root_X} ${root_Z}
-		/if (${Me.TargetOfTarget.ID} != ${Me.ID}) {
-			/echo OMM NOT TARGETTING ME
+		/if (${Me.TargetOfTarget.ID} != ${Me.ID} && ${Zone.ShortName.NotEqual[${Me.BoundLocation[0]}]}) {
             /if (${Me.CombatAbilityReady["Bellow of the Mastruq"]}) /doability "Bellow of the Mastruq"
 			/delay 20
 			/if (${Me.CombatAbilityReady["Bazu Bellow"]}) /doability "Bazu Bellow"
-			/delay 10
-			/goto :aggroLoop
+			/doevents
 		} 
 /return
 

@@ -12,9 +12,6 @@ Sub Main
     | PR: 200 (80%) 	DR: 600 (240%)
     /dgt ResistTypes cold|poison|magic|fire
 
-    | Xiris (MT) Autocure
-    /dt Xenshia autoCureMTon
-
     | Turn off cures for pretty much everyone except clerics
     /dga melee  /varset bln_useCures FALSE
     /dga caster /varset bln_useCures FALSE
@@ -22,17 +19,27 @@ Sub Main
     | Set the mode to normal (ahl)
     /dgt healMode NORMAL 
     /dgt InterruptON
+    /dgt SetHealPOINTS OMM
 
     | Xiris
-    /varset bln_tanking TRUE
-    /varset bln_taunting TRUE
     /dt Xanshia dime
+    /nav wp ommTank
+
+    /dt Empathic changeMT xiris 
+    /dt Xanshia changeMT xiris
+    /dt Tragic changeMT xiris 
+    /dt Xenshia changeMT xiris 
+
+    | Xiria
+    /dex Xiria /dt Deist dime
+    /dex Xiria /nav wp ommTank
+
+    /dt dogmatist changeMT xiria 
+    /dt Xirael changeMT xiria
+    /dt Xerael changeMT xiria
+    /dt Xinshia changeMT xiria
 
     | Set the offtanks
-    /dt Xiria offtankON
-    /dex Xiria /nav wp ommCleric
-    /dex Xiria /dt Deist dime
-
     /dt Xirea offtankON
     /dex Xirea /nav wp ommCleric
     /dex Xirea /dt Theist dime
@@ -49,19 +56,15 @@ Sub Main
     /dt Xenshia  changeMT Xirin 
 
     | Eurydice needs heals and DI 
-    /dt Xinshia changeMT Eurydice 
     /dex Eurydice /dt Xinshia dime
 
     | Erisa needs heals and DI 
-    /dt Xorael changeMT Erisa 
     /dex Erisa /dt Xenshia dime
   
     | Healing Focus
     | So these clerics will not try to cure group
-    /dex Xanshia /varset DEBUFF_Total 0
+    /dge clr /varset DEBUFF_Total 0
 
-    | Have a cleric autorez
-    /dt Theist combatrezon
 
      | Set Self
     /varset bln_tanking TRUE
@@ -75,9 +78,13 @@ Sub Main
     /dgt Hush
     /rs CharmON
     /rs OMMStart
-    /nav wp ommCleric
-    /dgt SetHealPOINTS OMM
-    /dex Xirin /mac ommadds
+    /nav wp ommTank
+    
+
+    /dex Xirin /mac ommAdds
+    /dex Xiria /target Overlord
+    /dex Xiria /mac ommTank
+    /target Overlord
     /mac ommTank
     
 

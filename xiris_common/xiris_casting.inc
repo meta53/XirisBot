@@ -592,48 +592,41 @@ Sub chkSnare
 
 |- Method will memorize a spell, to the optional attributed gem, and if wait is true, will wait until its ready to return
 |- note will call utility to string 'gem' from the gem # if found
-Sub chkSpellMemorized(string _spell, bool _wait, int _gem)
-	/if (${_spell.Equal[NULL]}) /goto :return
-	/if (${Me.Gem[${_spell}]}) /goto :return
-	/echo chkSpellMemorized: ${_spell} (${Me.Gem[${_spell}]}) 
-	/declare intGem int local 9
-	/if (${_gem} > 0) {
-		/echo integer
-		/varset intGem ${_gem}
-		/goto :mem
-	} else /if (${_gem} == 0) {
-		/goto :mem
-	}
-	/if (${_gem.Length} == 0) {
-		| gem is undefined so default 9
-		/varset intGem  9
-	} else {
-		/if (${_gem.Find[gem]}) {
-			| gem was given as a string
-			/call StripGem ${_gem}
-			/varset intGem ${Macro.Return}
-		} else {
-			| gem was given as an integer
-			/varset intGem ${_gem}
-		}
-	}
+|- Method will memorize a spell, to the optional attributed gem, and if wait is true, will wait until its ready to return
+|- note will call utility to string 'gem' from the gem # if found
+Sub chkSpellMemorized(string _spell, bool _wait, string _gem)
+	/if (${_spell.Equal[NULL]}) /goto :nullSpell
+	/if (${Me.Gem[${_spell}]})  /return
+
+    /declare int_gem int local 9
+    /if (${_gem.NotEqual[NULL]}) {
+         /if (${_gem.Length} > 1) {
+            | this has to be a string, strip "gem" from it
+            /varset int_gem ${_gem.Right[1]}
+         }
+    } else {
+        | this has to be an integer
+        /varset int_gem ${_gem}
+    } 
+   
 	:mem
-		/echo memorizing "${_spell}" ${intGem} 
-		/memorize "${_spell}" ${intGem} 
-		/if (!${_wait}) /goto :return
+	    /echo \aochkSpellMemorized\ag "${_spell}" \awgem:\ao${int_gem} \awwait?:\ao${_wait}
+		/memspell ${int_gem} "${_spell}" 
+		/if (!${_wait}) /return
 		/declare waitCount int local 0
 		:memwait
-			/delay 10
-			/varcalc waitCount ${waitCount}+1
-			/if (${Me.SpellReady[${_spell}]}) /goto :return
-			/if (${waitCount} > 10) {
-				/docommand /${announceChannel} cannot memorize ${_spell}! Update INI
-				/goto :return
-			}
-			/goto :memwait
-:nullError 
-/docommand /${announceChannel} There was a null error trying to memorize a spell; Check your scope!
-:return
+            /echo Waiting for ${_spell}
+			/delay 50 ${Me.SpellReady[${_spell}]}
+            /echo Spell Memorized
+			/if (${Me.SpellReady[${_spell}]}) {
+                /return
+            } else {
+                /docommand /${announceChannel} There was a timeout error trying to memorize "${_spell}"
+                /return
+            }
+		
+:nullSpell 
+	/docommand /${announceChannel} Ther was an error trying to memorize a NULL spell!;
 /return 
 
 Sub Event_ChkHasSpell(_line, _sender, _eventParams)
@@ -957,6 +950,7 @@ Sub CreateCastingLineup
 Sub chkCastTarget
 	|/echo \awchkCastTarget corpse? \ag${Target.Name.Find[s_corpse]}  \awstop? \ag${int_temp_stopCastPoint}
 	| I'm no longer casting, or no longer need to stop it ie, target is MT
+	/call RunRapidEvents
 	/if (!${Bool[${Me.Casting.ID}]}) /goto :return
 
 	| If the Target is Dead... stop

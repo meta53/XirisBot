@@ -6,8 +6,6 @@
 Sub Main(string _type, string _tankPoint)
     /call xbot_initialize_spellRoutines
     /declare 	strFaceItem				string  outer   ${InvSlot[3].Item}
-	/varset bln_tanking TRUE
-    /varset bln_taunting TRUE
 
 	:ActiveLoop
 		/doevents
