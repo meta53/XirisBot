@@ -43,7 +43,7 @@ REQUIRED INCLUDES
 
 #TURBO 120
 
-Sub InitEvents_Class
+Sub initEvents_Class
 	|/call RegisterClassEvents Events_WAR 0
 /return
 
@@ -146,7 +146,7 @@ Sub variant_initialize
 	|-- set up default vars
 	/declare    str_action				string	outer	Assisting	
 	/echo \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID}) HealPoint:${healPoint} ST: ${str_STName}(${int_STID}) Aggro? ${bln_tanking}
-	/call InitEvents_Class
+	/call initEvents_Class
 
 	/if (${str_MTName.Equal[${Me.Name}]}) {	
 		/echo \agI am tanking, turning aggro on

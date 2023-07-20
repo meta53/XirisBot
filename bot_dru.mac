@@ -36,7 +36,7 @@ REQUIRED INCLUDES
 
 #TURBO 120
 
-Sub InitEvents_Class
+Sub initEvents_Class
 	/call RegisterClassEvents Events_DRU 1
 /return
 
@@ -173,7 +173,7 @@ Sub variant_initialize
 	|-- set up class vars
 
 	/echo \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID}) HealPoint:${healPoint} ST: ${str_STName}(${int_STID})
-	/call InitEvents_Class
+	/call initEvents_Class
 /return
 
 

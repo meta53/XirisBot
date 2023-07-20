@@ -43,7 +43,7 @@ REQUIRED INCLUDES
 
 #EVENT BardSlow			"#*#BardSlow#*#"
 
-Sub InitEvents_Class
+Sub initEvents_Class
 	/call RegisterClassEvents Events_BRD 2
 /return
 
@@ -255,7 +255,7 @@ Sub variant_initialize
 	/declare bln_bardSlow				bool	outer	FALSE
 	/declare str_bardSlow	            string	outer   "Zuriki's Song of Shenanigans"
 
-	/call InitEvents_Class
+	/call initEvents_Class
 /return
 
 

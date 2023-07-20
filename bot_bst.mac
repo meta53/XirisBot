@@ -37,7 +37,7 @@ REQUIRED INCLUDES
 #EVENT DOSHRINK				"#1# tell your raid#*#'doShrink#*#'"
 #EVENT DOSHRINK 			"[ #1# #*#]#*#doShrink#*#"
 
-Sub InitEvents_Class
+Sub initEvents_Class
 	/call RegisterClassEvents Events_BST 1
 /return
 
@@ -182,7 +182,7 @@ Sub variant_initialize
 	
 	/memspellset ${str_spellset}
 	/echo \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID}) HealPoint:${healPoint} ST: ${str_STName}(${int_STID})
-	/call InitEvents_Class
+	/call initEvents_Class
 /return
 
 

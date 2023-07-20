@@ -56,7 +56,7 @@ REQUIRED INCLUDES
 #EVENT RUNEOFF "#1# tells the group#*#'RuneOff#*#'"
 #EVENT RUNEOFF "#1#tells the raid,#*#'RuneOff#*#'"
 
-Sub InitEvents_Class
+Sub initEvents_Class
 	/call RegisterClassEvents Events_ENC 2
 /return
 
@@ -230,7 +230,7 @@ Sub variant_initialize
 
 	/memspellset ${str_spellset}
 	/echo \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID}) HealPoint:${healPoint} ST: ${str_STName}(${int_STID})
-	/call InitEvents_Class
+	/call initEvents_Class
 /return
 	
 	

@@ -63,7 +63,7 @@ REQUIRED INCLUDES
 #EVENT DivineInterventionRequest	"#1# tells the raid#*#'dime#*#'"
 #EVENT DivineInterventionRequest	"[ #1# #*#]#*#dime#*#"
 
-Sub InitEvents_Class 
+Sub initEvents_Class 
 	/call RegisterClassEvents Events_CLR 8
 /return
 
@@ -358,5 +358,5 @@ Sub variant_initialize
 
 	/memspellset default
 	/echo \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID})  HealPoint:${healPoint} ST: ${str_STName}(${int_STID})
-	/call InitEvents_Class
+	/call initEvents_Class
 /return

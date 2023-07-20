@@ -44,7 +44,7 @@ REQUIRED INCLUDES
 #EVENT DOSHRINK				"#1# tell your raid#*#'doShrink#*#'"
 #EVENT DOSHRINK 			"[ #1# #*#]#*#doShrink#*#"
 
-Sub InitEvents_Class
+Sub initEvents_Class
 	/call RegisterClassEvents Events_SHM 1
 /return
 
@@ -206,6 +206,6 @@ Sub variant_initialize
 	/declare	str_canniSpell			string	outer 	${Ini[INI_CHAR,Cannibalize,str_canni_spell,Ancient:Chaotic Pain]}
 	
 	/echo \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID}) HealPoint:${healPoint} ST: ${str_STName}(${int_STID})
-	/call InitEvents_Class
+	/call initEvents_Class
 /return
 

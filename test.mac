@@ -1,21 +1,151 @@
+#define INI_CHAR        xiris_character_settings/BOT_${Me.Class.ShortName}_${Me.CleanName}.ini
+#define INI_SETTINGS    xiris_global_settings/BOT_Settings.ini
+#include xiris_common/xiris_spell_routines.inc
 Sub Main 
+    /declare int_MTID       int     outer   ${Me.ID}
+    /declare bln_engaged    bool    outer   FALSE
+
+    /call xbot_initialize_spellRoutines
+    /call xbot_initialize_buffing
+    /call xbot_initialize_curing
+
+    :MainLoop
+		/if (${Me.Hovering} || ${Window[tradewnd].Open} || ${Window[lootwnd].Open}) /goto :MainLoop
+        /call chkCures ${bln_engaged}
+
+        /if (${bln_engaged}) {
+            
+        } else {
+            /call chkSelfBuffs
+            |/if (!${timer_check_utilities}) /call chkUtils
+			|/if (!${timer_check_selfBuffs}) /call chkSelfBuffs
+			|/if (!${timer_check_loot} && ${bln_looting}) /call chkLoot
+
+        }
+            
+        |/goto :MainLoop
+/return 
+
+
+
+|**
+BUFFING V2
+**|
+Sub xbot_initialize_buffing
+
+    /call initEvents_Buffing
+    /call processSelfBuffs
+    
+/return 
+
+Sub initEvents_Buffing
+/return
+
+
+| Note int_selfBuffs_total is set here, as well as the list of selfbuffs
+Sub ProcessSelfBuffs
+    /echo \awprocessSelfBuffs-------------------------
+	/declare raw_selfBuffs[100]		string 	local NULL
+	/declare sbLength				int		local 0
+	/declare i						int 	local 0
+	/declare sz 					int     local 0
+    /declare test                   string  local NULL
+   
+	|BUFF_1="Reyfin's Racing Thoughts"|ITEM|"Xxeric's Matted-Fur Mask"
+	/for i 1 to ${raw_selfBuffs.Size}
+        /varset test "${Ini[INI_CHAR,BUFFS_SELF,BUFF_${i}]}"
+        /if (${test.Arg[1,|].Equal[NULL]}) {
+            /declare int_selfBuffs_total int    outer ${sz}
+            /return
+        } 
+        | Not null, set the values for the buffs
+		/varcalc sz	${sz}+1
+		/declare BUFFSELF_${i}		string	outer   ${test.Arg[1,|]}
+		/declare BUFFSELF_${i}_Type	string  outer   ${test.Arg[2,|]}
+		/declare BUFFSELF_${i}_Name	string  outer   ${test.Arg[3,|]}
+        /echo \aoBuff Processed[\ag${i}\ao]:\ag${BUFFSELF_${i}}\ao|\ag${BUFFSELF_${i}_Type}\ao|\ag${BUFFSELF_${i}_Name}
+	/next i
+/return
+
+
+
+Sub chkSelfBuffs
+    /if ((${Target.ID} && ${Target.Type.Equal[NPC]}) || ${bln_engaged} || ${timer_check_selfBuffs}) /return
+    | handle like downflags used to be (we just reconfigured/renamed things)
+    /echo \aochkSelfBuffs\aw(\ag${int_selfBuffs_total}\aw)
+    /declare i  int                 local 0
+    /declare ds int                 local 0
+    /declare brdCastingArgs string  local NULL
+    /declare allCastingArgs string  local NULL
+    | We need to target ourselves since this is a self buff
+    /target id ${Me.ID}
+
+    /for i 1 to ${int_selfBuffs_total}
+        | Check to see if the buff is a DS and if bln_useDS if FALSE, skip the buff
+        /if (!${bln_useDS}) {
+            /for ds 1 to ${int_damageShieldList_total}
+                /if (${buffName.Equal[${dsSpells[${ds}]}]}) /goto :next_buff
+            /next ds
+        }
+
+        | Check the events for enagement to stop this sub
+        |/call RunAllEvents
+        /if (${bln_engaged}) /return
+
+        | Check to see if the buff is already applied
+        /echo ${BUFFSELF_${i}} ${Spell[${BUFFSELF_${i}}].Stacks} && !${Me.Buff[${BUFFSELF_${i}}].ID}
+        /if (${Spell[${BUFFSELF_${i}}].Stacks} && !${Me.Buff[${BUFFSELF_${i}}].ID}) {
+            /echo casting? TYPE: ${BUFFSELF_${i}_Type}
+            | Handle the item type buff check
+            |BUFF_1="Reyfin's Racing Thoughts"|ITEM|"Xxeric's Matted-Fur Mask"
+            /varset brdCastingArgs "${BUFFSELF_${i}_Name}" TRUE ${int_defaultSpellGem}
+            /varset allCastingArgs ${BUFFSELF_${i}_Name}
+            /if (${BUFFSELF_${i}_Type.Equal[ITEM]}) {
+                /if (!${FindItem[=${BUFFSELF_${i}_Name}].ID})  /goto :next_buff
+                /varset brdCastingArgs ITEM ${brdCastingArgs} ${Me.ID} TRUE
+                
+            } else /if (${BUFFSELF_${i}_Type.Equal[SPELL]}) {
+                /call chkSpellMemorized "${BUFFSELF_${i}_Name}" TRUE ${int_defaultSpellGem}
+                /varset brdCastingArgs SONG "${BUFFSELF_${i}_Name}" ${Me.ID} TRUE
+
+            } else /if (${BUFFSELF_${i}_Type.Equal[ALT]})  {
+                /varset brdCastingArgs ALT "${BUFFSELF_${i}_Name}" ${Me.ID} TRUE
+            }
+
+            /if (${Me.Class.ShortName.Equal[BRD]})  /call MQ2Medley ${brdCastingArgs}
+            /if (!${Me.Class.ShortName.Equal[BRD]}) /call MQ2Cast "${allCastingArgs}"
+             :dfcast
+            /if (${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]}) {
+                /echo waiting to cast
+                /goto :dfcast
+            }
+        }
+    :next_buff
+    /echo next_buff
+    /next i
+/return
+
+
+|**
+CURING V2
+**|
+
+Sub xbot_initialize_curing
+    | Pull these values from the INI_CHAR file
     /declare bln_autoCureMT     bool outer TRUE
     /declare bln_autoCureSelf   bool outer TRUE
     /declare bln_autoCureGroup  bool outer TRUE
     /declare bln_chkLazyCures   bool outer FALSE
 
-    /declare int_MTID       int outer ${Me.ID}
-
-    /call DefineCureSpells
-    /call DefineRequiredCures
-    | note here we call the request. the 45 is just a testing placeholder, we will need to know the counters
-    |/call handleCureRequestV2 "${Me.Name}" ${Me.ID} ${arr_requiredCures[1]} 45 TRUE
-    /call chkCures
+    /call processCureSpells
+    /call processRequiredCures
+    /call initEvents_Curing
 /return 
 
 
 | This will be populated via INI file entriess
-Sub DefineCureSpells
+Sub processCureSpells
+    /echo \awDefineCureSpells-------------------------
     /declare str_cure_disease       string outer "Pure Blood"|18
     /declare str_cure_curse         string outer "Remove Greater Curse"|45
     /declare str_cure_poison        string outer "Antidote"|64
@@ -29,7 +159,8 @@ Sub DefineCureSpells
 /return 
 
 | This will be populated by INI file entries
-Sub DefineRequiredCures 
+Sub processRequiredCures 
+    /echo \awDefineRequiredCures-------------------------
     | Debuffs that must be cured as soon as possible
     /declare    arr_immediateCures[2] string  outer NULL
     /varset     arr_immediateCures[1] "Mark of Death"|disease|ALL
@@ -45,6 +176,11 @@ Sub DefineRequiredCures
     /varset     arr_requiredCures[6] "Vergalid's Breath"|corruption|CLR,DRU,SHM
 
 /return 
+
+Sub initEvents_Curing
+/return
+
+
 
 | Check Cures, we can bln_engaged as a good proxy for _lazy cures.
 Sub chkCures(bool _lazy)
@@ -62,7 +198,7 @@ Sub chkCure_Self(bool _lazy)
 /return 
 
 Sub chkCure_Group(bool _lazy)
-
+    |TODO Write group curing function
 /return 
 
 Sub chkCureOnID(int _id, bool _lazy)

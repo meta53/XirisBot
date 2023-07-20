@@ -55,7 +55,7 @@ REQUIRED INCLUDES
 #EVENT STUNSTOP "#1#tells the raid,#*#'stunStop#*#'"
 
 
-Sub InitEvents_Class
+Sub initEvents_Class
 	/call RegisterClassEvents Events_PAL 3
 /return
 
@@ -188,7 +188,7 @@ Sub variant_initialize
 	/memspellset ${str_spellset}
 
 	/echo \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID}) HealPoint:${healPoint} ST: ${str_STName}(${int_STID})
-	/call InitEvents_Class
+	/call initEvents_Class
 
 	/if (${str_MTName.Equal[${Me.Name}]}) {	
 		/echo \agI am tanking, turning aggro on

@@ -1,0 +1,619 @@
+|**
+----------------------------
+xiris_looting.inc
+----------------------------
+This includes the looting setup (INI READ)
+and sub routines as necessary
+______________________________________________
+REVISION HISTORY
+    03.24.16    xiris	INITIAL REVISION
+	06.29.22	xiris 	Updated all events to only be either generic, or [/gsay, /rsay, /tell, MQ2DanNet(dgt, dt)] only
+	07.29.22	xiris 	Updated to allow for 'beeping' if the item is lore and the looter already has it (useful for manual loots like mirrored mask)
+**|
+
+
+#EVENT NotYourKill		"Someone is already looting that corpse."
+#EVENT NotYourKill		"You may not loot this corpse at this time."
+#Event LootTooFar		"Corpse too far away"
+
+#EVENT LOOT_REFRESH		"#*#lootrefresh#*#"
+
+#EVENT LOOT_ON			"#1# tells the group#*#'looton #2#'"
+#EVENT LOOT_ON			"#1# tells you#*#'looton #2#'"
+#EVENT LOOT_ON			"#1# tells the raid#*#looton #2#'"
+#EVENT LOOT_ON 			"[ #1# #*#]#*#looton #2#"
+
+#EVENT LOOT_OFF			"#1# tells the group#*#'lootoff#*#'"
+#EVENT LOOT_OFF			"#1# tells you#*#'lootoff#*#'"
+#EVENT LOOT_OFF			"#1# tells the raid#*#lootoff#*#'"
+#EVENT LOOT_OFF 		"[ #1# #*#]#*#lootoff#*#"
+
+#EVENT SELL_VENDOR		"#1# tells the group#*#'selltovendor#*#'"
+#EVENT SELL_VENDOR		"#1# tells you#*#'selltovendor#*#'"
+#EVENT SELL_VENDOR		"#1# tells the raid#*#selltovendor#*#'"
+#EVENT SELL_VENDOR 		"[ #1# #*#]#*#selltovendor#*#"
+
+#EVENT HIDE_CORPSES		"#1# tells the group#*#'DoHideCorpses#*#'"
+#EVENT HIDE_CORPSES		"#1# tells you#*#'DoHideCorpses#*#'"
+#EVENT HIDE_CORPSES		"#1# tells the raid#*#DoHideCorpses#*#'"
+#EVENT HIDE_CORPSES 	"[ #1# #*#]#*#DoHideCorpses#*#"
+
+#EVENT HIDE_LOOTED		"#1# tells the group#*#'DoHideLooted#*#'"
+#EVENT HIDE_LOOTED		"#1# tells you#*#'DoHideLooted#*#'"
+#EVENT HIDE_LOOTED		"#1# tells the raid#*#DoHideLooted#*#'"
+#EVENT HIDE_LOOTED 		"[ #1# #*#]#*#DoHideLooted#*#"
+
+#EVENT LOOT_SELF  		"#*#LootYourself#*#"
+
+Sub initEvents_Looting
+	/call RegisterBackgroundEvents Events_Looting 7
+/return
+
+Sub Events_Looting
+	/doevents LOOT_ON
+	/doevents SELL_VENDOR
+	/doevents HIDE_CORPSES
+	/doevents HIDE_LOOTED
+	/doevents LOOT_SELF
+	|- Only need to run these events if you are looting
+	/if (${bln_looting}) {	
+		/doevents LOOT_REFRESH
+		/doevents LOOT_OFF
+	}
+/return
+
+Sub EVENT_LOOT_ON(_line, _chatSender, _eventParams)
+	/call EnableLooting "${_eventParams}"
+	/doevents flush LOOT_ON
+/return 
+
+Sub EVENT_LOOT_SELF
+	/if (${bln_naked}) {
+		/call LootSelf
+	}
+	
+/return
+
+Sub LootSelf 
+	/echo \ao${Me.Name} is looting self
+	/if (${Me.Class.ShortName.Equal[MNK]} || ${Me.Class.ShortName.Equal[NEC]} ) {
+		/multiline ; /stand ; /delay 2s; /tar ${Me.Name}'s ; /corpse ; /loot ; /delay 2s ; /notify LootWnd LW_LootAllButton leftmouseup ; /delay 10s ; /memspellset default;
+	} else {
+		/multiline ; /delay 2s ; /target ${Me.Name}'s ; /corpse ; /loot ; /delay 2s ; /notify LootWnd LW_LootAllButton leftmouseup ; /delay 10s ; /memspellset default; /mqpause off
+	}
+/return
+
+Sub EnableLooting(string _eventParams)
+	| Announce
+	/hidecorpse looted
+	/varset bln_onlyQuest FALSE
+	/if (${_eventParams.Arg[1, ].Equal[QUEST]}) /varset bln_onlyQuest TRUE
+	/if (${_eventParams.Arg[2, ].Equal[RS]}) 	/varset str_lootChannel rs
+	/if (${_eventParams.Arg[2, ].Equal[DGT]}) 	/varset str_lootChannel dgt
+	/if (${_eventParams.Arg[2, ].Equal[G]}) 	/varset str_lootChannel gsay
+	/varset bln_looting TRUE
+	/if (${bln_onlyQuest}) {
+		/docommand /${str_lootChannel} ${Me.Name} is now Looting QUEST items
+	} else {
+		/docommand /${str_lootChannel} ${Me.Name} is now Looting ALL items
+	}
+	/call ParseLootINI 
+	/if (!${Plugin[MQ2Nav].Name.Length}) /plugin mq2nav
+/return
+
+Sub EVENT_LOOT_OFF
+	/call DisableLooting
+	/doevents flush LOOT_OFF
+/return
+
+Sub DisableLooting
+	| Annnounce
+	/docommand /${str_lootChannel} ${Me.Name} is no longer Looting
+	/hidecorpse npc
+	/varset bln_looting FALSE
+/return 
+
+Sub EVENT_LOOT_REFRESH
+	/call RefreshLoot 
+	/doevents flush LOOT_REFRESH
+/return
+
+Sub RefreshLoot
+	| Announce
+	/docommand /${str_lootChannel} ${Me.Name} is refreshing the loot ini file
+	/call ParseLootINI xiris_common/xiris_loot.ini
+/return
+
+Sub EVENT_SELL_VENDOR
+	/call SellVendor
+	/doevents flush SELL_VENDOR
+/return
+
+
+Sub EVENT_HIDE_CORPSES
+	/hidecorpse npc
+/return 
+
+Sub EVENT_HIDE_LOOTED 
+	/hidecorpse looted
+/return
+
+|-------------------------------------------------------------------------------- 
+|SUB: Checking available corpses 
+|-------------------------------------------------------------------------------- 
+Sub chkLoot
+	 /if (${bln_looting} && !${timer_check_loot} && ${SpawnCount[npc radius ${int_sitRadius} zradius 15]} == 0 && ${SpawnCount[npc corpse radius 85]} > 0 ) {
+		|-- check to see if I even have room to loot
+		/if (${Me.FreeInventory} <= 2) {
+			/docommand /${str_lootChannel} out of bagspace
+			/call DisableLooting
+			/return
+		}
+		/squelch /hidecorpse looted
+		|/echo count: ${SpawnCount[npc corpse radius ${int_lootRadius}]}
+		/nav recordwaypoint lootStart
+		/declare i int local
+		:lootCheck
+		/for i 1 to ${SpawnCount[npc corpse radius ${int_lootRadius}]}
+			/if (${SpawnCount[npc radius ${int_sitRadius} zradius 15]} > 0) /return
+			/call LootTarget ${NearestSpawn[${i},corpse radius ${int_lootRadius}].ID}
+			/delay 5
+		/next i
+		
+		/if (${SpawnCount[npc corpse radius 85]} > 0 ) /goto :lootCheck
+		/varset timer_check_loot 10s
+		| return to where I stated looting
+		/nav wp lootStart
+    }
+	
+/return
+
+
+Sub EVENT_NotYourKill
+	/echo NotYourKill: skipping loot;
+	/declare corpseName string 	local ${Spawn[id ${Target.ID}]}
+	/echo ${corpseName} ${Target.ID}
+/return LOOT_NO_RIGHTS
+
+
+Sub EVENT_LootTooFar
+	/echo LootTooFar: corpse too far away;
+/return LOOT_TOO_FAR
+
+
+
+
+
+|-------------------------------------------------------------------------------- 
+|SUB: Parsing the loot ini file (xiris_common/xiris_loot.ini)
+|-------------------------------------------------------------------------------- 
+Sub ParseLootINI 
+	/echo \agParseLootINI \aw${lootINIFile}
+
+	|-- determine the count of the 3 major type QUEST|TRADE|VENDOR
+	/declare int_total  int local ${Ini[${lootINIFile},Settings,Total]}
+	/declare int_vendor	int	local ${Ini[${lootINIFile},Settings,Vendor]}
+	/declare int_trade  int local ${Ini[${lootINIFile},Settings,Trade]}
+	/declare int_quest	int	local ${Ini[${lootINIFile},Settings,Quest]}
+	
+	|-- kill the arrays if they already exist so we can rebuild them
+	/if (${Defined[loot_ALL]})		/deletevar loot_ALL
+	/if (${Defined[loot_VENDOR]}) 	/deletevar loot_VENDOR
+	/if (${Defined[loot_TRADE]}) 	/deletevar loot_TRADE
+	/if (${Defined[loot_QUEST]}) 	/deletevar loot_QUEST
+	
+	/echo \awTotal Loot: \ag${int_total} \ayvendor: \ag${int_vendor} \aotrade: \ag${int_trade} \arquest: \ag${int_quest}
+
+	|-- create new 2D arrays 
+	|	[1] item
+	|	[2] TYPE 
+	|	[3] Count|* 
+	|	[4] Class|*
+	|   [5] CharExclusion|Xiris, etc or..
+	|   [6] CharOnly|Xiris, etc or...
+	|   [7] Beep|T,F
+	/declare loot_ALL[${int_total},7]		string  outer
+	/declare loot_VENDOR[${int_vendor},7]	string	outer
+	/declare loot_TRADE[${int_trade},7]		string	outer
+	/declare loot_QUEST[${int_quest},7]		string	outer
+	
+	/declare n int local 1
+	/declare item_loot string local
+	/declare vc int local 0
+	/declare qc int local 0
+	/declare tc int local 0
+	
+	
+	|-- populate the 3 loot array types
+	
+	/for n 1 to ${int_total}
+		/varset item_loot ${Ini[${lootINIFile},Loot,Loot${n}]}
+		/if (${item_loot.Arg[2,|].Equal[VENDOR]}) {
+			/varcalc vc ${vc}+1
+			/varset loot_VENDOR[${vc},1] ${item_loot.Arg[1,|]} 
+			/varset loot_VENDOR[${vc},2] ${item_loot.Arg[2,|]}
+			/varset loot_VENDOR[${vc},3] ${item_loot.Arg[3,|]} 
+			/varset loot_VENDOR[${vc},4] ${item_loot.Arg[4,|]} 
+			/varset loot_VENDOR[${vc},5] ${item_loot.Arg[5,|]} 
+			/varset loot_VENDOR[${vc},6] ${item_loot.Arg[6,|]} 
+			/varset loot_VENDOR[${vc},7] ${item_loot.Arg[7,|]}
+		} else /if (${item_loot.Arg[2,|].Equal[TRADE]}) {
+			/varcalc tc ${tc}+1
+			/varset loot_TRADE[${tc},1] ${item_loot.Arg[1,|]} 
+			/varset loot_TRADE[${tc},2] ${item_loot.Arg[2,|]}
+			/varset loot_TRADE[${tc},3] ${item_loot.Arg[3,|]} 
+			/varset loot_TRADE[${tc},4] ${item_loot.Arg[4,|]} 
+			/varset loot_TRADE[${tc},5] ${item_loot.Arg[5,|]} 
+			/varset loot_TRADE[${tc},6] ${item_loot.Arg[6,|]} 
+			/varset loot_TRADE[${tc},7] ${item_loot.Arg[7,|]} 
+		} else /if (${item_loot.Arg[2,|].Equal[QUEST]} && !${item_loot.Arg[5,|].Find[${Me.Name}]}) {
+			/varcalc qc ${qc}+1
+			/varset loot_QUEST[${qc},1] ${item_loot.Arg[1,|]} 
+			/varset loot_QUEST[${qc},2] ${item_loot.Arg[2,|]}
+			/varset loot_QUEST[${qc},3] ${item_loot.Arg[3,|]} 
+			/varset loot_QUEST[${qc},4] ${item_loot.Arg[4,|]} 
+			/varset loot_QUEST[${qc},5] ${item_loot.Arg[5,|]} 
+			/varset loot_QUEST[${qc},6] ${item_loot.Arg[6,|]} 
+			/varset loot_QUEST[${qc},7] ${item_loot.Arg[7,|]} 
+		}
+
+		/varset loot_ALL[${n},1] ${item_loot.Arg[1,|]} 
+		/varset loot_ALL[${n},2] ${item_loot.Arg[2,|]}
+		/varset loot_ALL[${n},3] ${item_loot.Arg[3,|]} 
+		/varset loot_ALL[${n},4] ${item_loot.Arg[4,|]} 
+		/varset loot_ALL[${n},5] ${item_loot.Arg[5,|]} 
+		/varset loot_ALL[${n},6] ${item_loot.Arg[6,|]} 
+		/varset loot_ALL[${n},7] ${item_loot.Arg[7,|]} 
+	/next n
+
+/return
+
+|-------------------------------------------------------------------------------- 
+|SUB: NPC Corpse looting
+|   - Validates against the parsed loot ini
+|	- Loots if count < max, my class is a looter on the list
+|-------------------------------------------------------------------------------- 
+Sub LootTarget(int _corpseID)
+	/echo \awLootTarget: \ag${_corpseID}
+	/call TrueTarget ${_corpseID}
+
+	
+	/declare nav_count int local 0
+	|-corpse validation
+	:corpse_validation
+	/if (${Target.Distance} > ${int_lootRadius} || ${Target.DistanceZ} > ${int_lootRadius}) {
+		/echo Corpse too far, returning
+		/goto :return
+	}
+	|-corpse movement
+	:corpse_nav
+		/varcalc nav_count ${nav_count}+1
+		/delay 5
+		/if (${nav_count} > 30 || (${Target.Distance} > ${int_lootRadius})) {
+			/echo Nav count too high or, this ended up being too far returning
+			/goto :return
+		}
+		/if ((${Target.Distance} > 10) && !${Navigation.Active}) /navigate target
+		/if ((${Target.Distance} < 10) && !${Navigation.Active}) /goto :corpse_loot
+		/if (${Navigation.Active}) /goto :corpse_validation
+
+	|-corpse looting
+	:corpse_loot
+		/if (${Navigation.Active}) /navigate stop
+		/loot
+		/delay 10
+		|-corpse loot attempt/validation
+		/doevents LootTooFar
+		/if (${Macro.Return.Equal[LOOT_TOO_FAR]}) /goto :corpse_nav
+		/doevents NotYourKill
+		/delay 20 ${Window[LootWnd].Open} || ${Macro.Return.Equal[SKIP_LOOT]}
+		/if (${Macro.Return.Equal[LOOT_NO_RIGHTS]}) /goto :return
+		/delay 10
+		/if (!${Corpse.Items}) {
+			/echo \arEmpty Corpse
+			|/squelch /target clear
+			/notify LootWnd DoneButton leftmouseup
+			/keypress esc
+			/goto :return
+		}
+
+		|-corpse looting
+		/declare n 						int 	local
+		/declare i 						int 	local
+		/declare keep  					bool 	local 	TRUE
+		/declare lootName 				string 	local 
+		/declare lootType 				string 	local
+		/declare int_numberToLoot		int		local	1000
+		/declare bln_includedByClass	bool 	local 	TRUE    | my class can loot
+		/declare bln_excludedByCharName	bool    local   TRUE	| do not loot on this character [if found, dont loot]
+		/declare bln_includedByCharName	bool	local	FALSE	| loot only on this character
+		/declare bln_useBeep			bool    local   FALSE 	| should I beep if I can't loot this item?
+		/declare reason					string  local   <no reason>
+		/declare fCount 				int  	local   0
+
+		/for n 1 to ${Corpse.Items}
+			|-check to see if I want the item
+			| [item][1] Name [2] type|* [3] count|* [4] class|*
+			/varset bln_includedByClass 	FALSE
+			/varset bln_excludedByCharName 	FALSE 
+			/varset bln_includedByCharName	TRUE
+			/echo Slot ${n}: ${Corpse.Item[${n}].Name}
+			/if (!${bln_onlyQuest}) {
+				/for i 1 to ${loot_ALL.Size[1]}
+					|/echo ${i} ${loot_ALL[${i},1]}
+					/if (${loot_ALL[${i},1].Equal[${Corpse.Item[${n}].Name}]}) {
+
+						/varset lootName  ${Corpse.Item[${n}].Name}
+						/varset lootType  ${loot_ALL[${i},2]}
+						/varset bln_useBeep  ${If[${loot_ALL[${i},7].Find[T]}, TRUE,FALSE]}
+						/echo Item: ${lootName} Type: ${lootType} Beep: ${bln_useBeep}
+
+						|- count to keep
+						/if (${loot_ALL[${i},3].NotEqual[*]}) /varset int_numberToLoot ${loot_ALL[${i},3]}
+
+						|- classes to loot
+						/if (${loot_ALL[${i},4].Find[${Me.Class.ShortName}]} || ${loot_ALL[${i},4].Equal[*]} ) /varset bln_includedByClass TRUE
+
+						|- characters that shouldn't loot
+						/if (${loot_ALL[${i},5].Find[${Me.Name}]}) /varset bln_excludedByCharName TRUE
+
+						|- characters that should loot
+						/if (!${bln_excludedByCharName} && (${loot_ALL[${i},6].Find[${Me.Name}]} || ${loot_ALL[${i},6].Equal[*]})) /varset bln_includedByCharName TRUE
+
+						/goto :loot_validation
+					} 
+				/next i
+			} else {
+				|----------------------
+				|  Only items flagged QUEST in the INI will be validated as loot
+ 				|----------------------
+				/for i 1 to ${loot_QUEST.Size}
+					/if (${loot_QUEST[${i},1].Equal[${Corpse.Item[${n}].Name}]}) {
+
+						/varset lootName  ${Corpse.Item[${n}].Name}
+						/varset lootType  ${loot_QUEST[${i},2]}
+						/varset bln_useBeep  ${If[${loot_QUEST[${i},7].Find[T]}, TRUE,FALSE]}
+						/echo Item: ${lootName} Type: ${lootType} Beep: ${bln_useBeep}
+
+						|- count to keep
+						/if (${loot_QUEST[${i},3].NotEqual[*]}) /varset int_numberToLoot ${loot_QUEST[${i},3]}
+
+						|- classes to loot
+						/if (${loot_QUEST[${i},4].Find[${Me.Class.ShortName}]} ||${loot_QUEST[${i},4].Equal[*]} ) /varset bln_includedByClass TRUE
+
+						|- characters that shouldn't loot
+						/if (${loot_QUEST[${i},5].Find[${Me.Name}]}) /varset bln_excludedByCharName TRUE
+
+						|- characters that should loot
+						/if (!${bln_excludedByCharName} && (${loot_QUEST[${i},6].Find[${Me.Name}]} || ${loot_QUEST[${i},6].Equal[*]})) /varset bln_includedByCharName TRUE
+						
+						/goto :loot_validation
+					} 
+				/next i
+			}
+			/goto :nextItem
+			
+
+
+			|-check to see if item is lore
+			:loot_validation
+			/echo ${lootName} \awCount in Inventory: \ay${FindItemCount[${lootName}]} \awMaximum: \ay${int_numberToLoot} \awClass Lootable?: \ay${bln_includedByClass} \awExcluded by Name: \ay${bln_excludedByCharName} \awLoot By Me|*|Only? \ay${bln_includedByCharName} \awBeep? \ay${bln_useBeep}
+			
+			|- My character name is in the exclusion list
+			/if (${bln_excludedByCharName} || !${bln_includedByClass}) {
+				/echo \arI shouldn't keep this (ex name: ${bln_excludedByCharName}, class: !${bln_includedByClass})
+				/varset keep FALSE
+				/varset reason EXCLUDED CHARACTER||CLASS
+				/goto :loot_gank
+			}
+
+			/if (${bln_includedByClass} && ${bln_includedByCharName}) {
+				| My character can loot this provisionally. More checks to follow
+				/echo \awI may be able to keep this item
+
+				| Check to see if its lore and I already have one
+				/if (${Corpse.Item[${n}].Lore} && ${FindItemCount[${lootName}]} == 1) {
+					/echo \arItem is lore, and we have 1
+					/varset keep FALSE
+					/varset reason LORE
+					/goto :loot_gank
+				} else /if (${FindItemCount[${lootName}]} >= ${int_numberToLoot}) {
+					/echo \arI already have more than what I need of this item. (${FindItemCount[${lootName}]} >= ${int_numberToLoot})
+					/varset keep FALSE
+					/varset reason LOOTCOUNT >= ${int_numberToLoot}
+					/goto :loot_gank
+				} else {
+					/echo \agI should keep this. All checks passed.
+					/varset keep TRUE
+					/goto :loot_gank
+				}
+			}
+
+
+		
+
+			:loot_gank
+			/if (${keep}) {
+				/varcalc fCount ${FindItemCount[${lootName}]} + 1
+				/echo \agKeeping ${lootName} ${lootType} ${fCount} of ${int_numberToLoot}
+				/docommand /${str_lootChannel} Keeping ${lootName} ${lootType} ${fCount} of ${int_numberToLoot}
+				/itemnotify loot${n} leftmouseup
+				/delay 5 ${Cursor.ID} || ${Window[ConfirmationDialogBox].Open} || ${Window[QuantityWnd].Open}
+				/if (${Cursor.ID}) {
+					/delay 1
+					/autoinv
+				}
+			} else {
+				/docommand /${str_lootChannel} ${Target.Name}(${Target.ID}) has ${lootName} and I cannot loot it  ${reason}.
+			}
+			/if (${bln_useBeep}) /beep
+			:nextItem
+			/next n
+
+	:return
+	|/target clear
+	/if (${Corpse.Open}) /notify LootWnd DoneButton leftmouseup 
+	/keypress esc
+	/if (${Cursor.ID}) {
+		/delay 1
+		/autoinv
+	}
+/return
+
+
+Sub SellVendor
+	/call ParseLootINI
+	/echo Told to sell to vendor.
+	|target merchant
+	/tar npc merchant
+	/nav target
+	:merchant_run
+		/delay 5
+		/if (${Navigation.Active}) /goto  :merchant_run
+	
+	:merchant_open
+		/click right target
+		/delay 1
+		/if (${Cursor.ID}) /autoinv
+	:check_inventory
+	/call openBags
+	/declare i int local
+	/for i 1 to ${loot_VENDOR.Size}
+		/if (${FindItemCount[${loot_VENDOR[${i},1]}]}) {
+			/call Sell "${loot_VENDOR[${i},1]}"
+			/delay 10
+		}
+
+	:next_item
+	/next i
+/return
+
+Sub Sell(string _item)
+	| find the item
+	/declare i int local
+	/declare e int local 
+	/declare retryTimer timer local 
+	/declare packItem string local 
+
+	/for i 1 to 8 
+		/if (${Bool[${Me.Inventory[pack${i}]}]}) {
+			
+
+
+			| Look at each bag slot for items to sell
+			/for e 1 to ${Me.Inventory[pack${i}].Container}
+				| Get the loot setting for the item in pack slot 'i' slot 'e'
+				/varset packItem ${Me.Inventory[pack${i}].Item[${e}]}
+				/echo packItem: ${packItem}
+				/if (${packItem.NotEqual[${_item}]}) {
+					/echo ${packItem} is not the same as ${_item} next!
+					/goto :next_item_in_pack
+				}
+				| Select the item to sell
+				/varset retryTimer 30
+
+				:retrySelect_Pack
+				/echo |- sellItems -| :retrySelect_Pack
+				/itemnotify in pack${i} ${e} leftmouseup
+				/delay 10
+				/delay ${retryTimer} ${Window[MerchantWnd].Child[MW_SelectedItemLabel].Text.Equal[${Me.Inventory[pack${i}].Item[${e}]}]}
+
+				| If the item was not selected
+				/if (!${Window[MerchantWnd].Child[MW_SelectedItemLabel].Text.Equal[${Me.Inventory[pack${i}].Item[${e}]}]}) {
+					
+					| If I have time, retry to select the item
+					/if (${retryTimer}) {
+						/goto :retrySelect_Pack
+					} else {
+						/echo ERROR: Failed to select [${Me.Inventory[pack${i}].Item[${e}]}], skipping.
+					}
+				} else {
+					| Sell the item
+					/varset retryTimer 30
+					/echo Selling [${Me.Inventory[pack${i}].Item[${e}]}].
+					
+					:SellItem_Pack
+					/notify MerchantWnd MW_Sell_Button leftmouseup
+					/delay 5
+					/delay ${retryTimer} ${Window[QuantityWnd].Open} || !${Bool[${Me.Inventory[pack${i}].Item[${e}]}]}
+	
+					| Close the quantity window
+					/if (${Window[QuantityWnd].Open}) {
+						/notify QuantityWnd QTYW_Accept_Button leftmouseup
+						/delay ${retryTimer} !${Window[QuantityWnd].Open}
+						/delay ${retryTimer} !${Bool[${Me.Inventory[pack${i}]}]}
+					}
+	
+					| If the item is still in my inventory
+					/if (${Bool[${Me.Inventory[pack${i}].Item[${e}]}]} && ${retryTimer}) {
+						/goto :SellItem
+					} else {
+						/echo ERROR: Failed to sell [${Me.Inventory[pack${i}].Item[${e}]}], skipping.
+					}
+				}
+			:next_item_in_pack
+			/delay 5
+			/next e
+		}
+	:next_pack
+	/next i
+/return
+
+
+|----------------------------------------|
+|- Opens all containers in inventory.	-|
+|----------------------------------------|
+SUB openBags
+	| Open all bags in inventory.
+	/declare i int local
+	/declare retryTimer timer local
+	/declare miscTimer timer local
+	
+	/for i 1 to 8
+		
+		/varset miscTimer 30
+		/if (${Me.Inventory[pack${i}].Container}) {
+			
+			:openBag
+			| Open container
+			/if (!${Window[pack${i}].Open}) {
+				/itemnotify pack${i} rightmouseup
+				/delay 5 ${Window[pack${i}].Open} || ${Window[TradeSkillWnd].Open}
+				/if (!${Window[pack${i}].Open} && !${Window[TradeSkillWnd].Open} && ${miscTimer}) /goto :openBag
+				
+				| Open tradeskill container.
+				/if (${Window[TradeSkillWnd].Open}) {
+					:openExperimentWnd
+					/notify TradeSkillWnd ExperimentButton leftmouseup
+					/delay 5 !${Window[TradeSkillWnd].Open}
+					/if (${Window[TradeSkillWnd].Open} && ${miscTimer}) /goto :openExperimentWnd
+				}
+			}
+		}
+	/next i
+/RETURN
+
+
+
+
+Sub xbot_initialize_looting
+
+	/declare bln_looting			bool	outer 	${Ini[INI_CHAR,Settings,lootUse,FALSE]}
+	/declare str_lootChannel		string  outer   rs
+	/declare bln_onlyQuest			bool 	outer	FALSE
+	/declare bln_lootAttuneable		bool	outer 	TRUE
+	/declare int_lootRadius			int 	outer 	100
+
+	/declare list_lootedCorpses		string	outer
+	/declare list_lootItemsForClass string  outer
+	/declare timer_check_loot		timer   outer   0
+
+	/declare lootINIFile			string  outer	xiris_common/xiris_loot.ini
+
+	|-- turn on looting by default if the Bot's INI is set to true (unlikely)
+	|/if (${bln_looting}) /call EnableLooting
+
+	/echo \aoxbot_initialize_looting
+	/call initEvents_Looting 
+/return
+	

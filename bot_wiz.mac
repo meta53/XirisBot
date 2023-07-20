@@ -38,7 +38,7 @@ REQUIRED INCLUDES
 #EVENT AEOFF	"#*#aeNukeOFF"
 #EVENT FIRETL 	"#*#firetl#*#"
 
-Sub InitEvents_Class
+Sub initEvents_Class
 	/call RegisterClassEvents Events_WIZ 4
 /return
 
@@ -189,7 +189,7 @@ Sub variant_initialize(string _strTankName, int _intAssistAt, int _intTankHealPo
 
 	/memspellset ${str_spellset}
 	/echo \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID}) HealPoint:${healPoint} ST: ${str_STName}(${int_STID})
-	/call InitEvents_Class
+	/call initEvents_Class
 /return
 
 
