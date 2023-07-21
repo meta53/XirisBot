@@ -3,6 +3,7 @@
 **.log
 *.mac
 test.mac
+yafm2.ini
 
 #Ignore the old class ini folder
 xiris_class_ini/
