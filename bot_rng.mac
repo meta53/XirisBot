@@ -208,7 +208,7 @@ Sub variant_initialize
 	/declare int_snareCounter			int		outer	0
 	
 	
-	/memspellset ${str_spellset}
+	/memspellset ${str_currentSpellSet}
 	/echo \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID}) HealPoint:${healPoint} ST: ${str_STName}(${int_STID})
 	/call initEvents_Class
 /return

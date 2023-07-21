@@ -745,7 +745,7 @@ Sub GetResistTypes
 
 Sub SetSpellSet(string _type)
 	/memspellset ${_type}
-	/varset str_spellset ${_type}
+	/varset str_currentSpellSet ${_type}
 /return 
 
 | Create the ability to pass a CSV|CSV list of new spells to cast for a type
@@ -943,7 +943,7 @@ Sub xbot_initialize_casting
 
 	|- [Settings] : Casting 
 	|-- Initial Spellset
-	/declare	str_spellset				string  outer 	default
+	/declare	str_currentSpellSet				string  outer 	default
 
 	|-- Misc (resist types, fast only, etc)
 	/declare str_defaultResistTypes	string	outer	Chromatic,Corruption,Cold,Disease,Fire,Magic,Poison,Prismatic

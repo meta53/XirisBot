@@ -300,7 +300,7 @@ Sub chkDownshits
 			:nextDF
 			/next df
 			|- return existing spellset
-			/if (${hadToMemBuffs}) /memspellset ${str_spellset}
+			/if (${hadToMemBuffs}) /memspellset ${str_currentSpellSet}
 			|- return existing target
 			/if (${Bool[${svdTGTID}]}) /call TrueTarget ${svdTGTID}
 

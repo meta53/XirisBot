@@ -202,7 +202,7 @@ Sub SetupSongs
 		/if (${Me.CleanName.Equal[Achos]}) 	/varset str_currentMedley MELEE
 	}
 
-	/varset str_spellset ${str_currentMedley}
+	/varset str_currentSpellSet ${str_currentMedley}
 	/memspellset ${str_currentMedley}	
 	/call SingSongs ${str_currentMedley}
 /return

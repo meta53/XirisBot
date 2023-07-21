@@ -1,6 +1,20 @@
-#define INI_CHAR        xiris_character_settings/BOT_${Me.Class.ShortName}_${Me.CleanName}.ini
-#define INI_SETTINGS    xiris_global_settings/BOT_Settings.ini
-#include xiris_common/xiris_spell_routines.inc
+#define INI_CHAR        xiris_settings_character/BOT_${Me.Class.ShortName}_${Me.CleanName}.ini
+#define INI_SETTINGS    xiris_settings_global/BOT_settings_global.ini
+#include                xiris_includes/xiris_spell_routines.inc
+
+#turbo 5
+
+
+#EVENT DoBuffsOnRAID		"#1# tells the group#*#'doRaidBuffs #2#'"
+#EVENT DoBuffsOnRAID		"#1# tells you#*#'doRaidBuffs #2#'"
+#EVENT DoBuffsOnRAID		"#1# tells the raid#*#'doRaidBuffs #2#'"
+#EVENT DoBuffsOnRAID		"[ #1# #*#]#*#doRaidBuffs #2#"
+
+#EVENT DoBuffsOnCHARACTER	"#1# tells the group#*#'doCharBuffs #2#'"
+#EVENT DoBuffsOnCHARACTER	"#1# tells you#*#'doCharBuffs #2#'"
+#EVENT DoBuffsOnCHARACTER	"#1# tells the raid#*#'doCharBuffs #2#'"
+#EVENT DoBuffsOnCHARACTER	"[ #1# #*#]#*#doCharBuffs #2#"
+
 Sub Main 
     /declare int_MTID       int     outer   ${Me.ID}
     /declare bln_engaged    bool    outer   FALSE
@@ -11,19 +25,32 @@ Sub Main
 
     :MainLoop
 		/if (${Me.Hovering} || ${Window[tradewnd].Open} || ${Window[lootwnd].Open}) /goto :MainLoop
-        /call chkCures ${bln_engaged}
+
+        | Always check cures, and set lazy to be TRUE when not engaged
+        |/call chkCures !${bln_engaged}
+
+        | Check targetted buffs if they are set to automatic
+        /if (${bln_targetedBuffs_automatic}) /call chkTargetedBuffs
+
+        | Debug check the buffing events
+        /doevents DoBuffsOnRAID
+	    /doevents DoBuffsOnCHARACTER
 
         /if (${bln_engaged}) {
             
         } else {
-            /call chkSelfBuffs
+            | Check self buffs and clickies
+            /if (!${timer_check_selfBuffs})     /call chkSelfBuffs
+
+            | Check targetted buffs if they are set to automatic
+            /if (${bln_targetedBuffs_automatic} && !${timer_check_targetedBuffs}) /call chkTargetedBuffs
+
             |/if (!${timer_check_utilities}) /call chkUtils
-			|/if (!${timer_check_selfBuffs}) /call chkSelfBuffs
 			|/if (!${timer_check_loot} && ${bln_looting}) /call chkLoot
 
         }
             
-        |/goto :MainLoop
+        /goto :MainLoop
 /return 
 
 
@@ -32,30 +59,54 @@ Sub Main
 BUFFING V2
 **|
 Sub xbot_initialize_buffing
+    /echo \agInitialize: \aoBuffing \aw-------------------------
 
-    /call initEvents_Buffing
+    | self buffs
+    /declare timer_check_selfBuffs          timer   outer   0
+    /declare int_selfBuffs_total            int     outer   0
+
+    | targeted buffs
+    /declare timer_check_targetedBuffs      timer   outer   0
+    /declare int_targetedBuffs_total        int     outer   0
+    /declare bln_targetedBuffs_enabled      bool    outer   TRUE
+    /declare bln_targetedBuffs_allowRaid    bool    outer   TRUE
+    /declare bln_targetedBuffs_allowGroup   bool    outer   TRUE 
+    /declare bln_targetedBuffs_automatic    bool    outer   TRUE
+
+    | combat buffs
+    /declare timer_check_combatBuffs        timer   outer   0
+    /declare int_combatBuffs_total          int     outer   0
+    /declare bln_combatBuffs_enabled        bool    outer   TRUE
+    /declare bln_combatBuffs_allowRaid      bool    outer   TRUE
+    /declare bln_combatBuffs_allowGroup     bool    outer   TRUE 
+
+
+    /call initEvents_buffing
     /call processSelfBuffs
+    /call processTargetedBuffs
+    /call processCombatBuffs
     
 /return 
 
-Sub initEvents_Buffing
+Sub initEvents_buffing
 /return
 
 
 | Note int_selfBuffs_total is set here, as well as the list of selfbuffs
-Sub ProcessSelfBuffs
-    /echo \awprocessSelfBuffs-------------------------
+Sub processSelfBuffs
+    /echo \awprocessSelfBuffs
 	/declare raw_selfBuffs[100]		string 	local NULL
-	/declare sbLength				int		local 0
 	/declare i						int 	local 0
 	/declare sz 					int     local 0
     /declare test                   string  local NULL
    
+    |; =_buff|_type|_itemName
 	|BUFF_1="Reyfin's Racing Thoughts"|ITEM|"Xxeric's Matted-Fur Mask"
 	/for i 1 to ${raw_selfBuffs.Size}
+        | if the value of the entry ends with a quoted string, we need to wrap it all in quotes again.
         /varset test "${Ini[INI_CHAR,BUFFS_SELF,BUFF_${i}]}"
         /if (${test.Arg[1,|].Equal[NULL]}) {
-            /declare int_selfBuffs_total int    outer ${sz}
+            /varset int_selfBuffs_total ${sz}
             /return
         } 
         | Not null, set the values for the buffs
@@ -63,23 +114,93 @@ Sub ProcessSelfBuffs
 		/declare BUFFSELF_${i}		string	outer   ${test.Arg[1,|]}
 		/declare BUFFSELF_${i}_Type	string  outer   ${test.Arg[2,|]}
 		/declare BUFFSELF_${i}_Name	string  outer   ${test.Arg[3,|]}
-        /echo \aoBuff Processed[\ag${i}\ao]:\ag${BUFFSELF_${i}}\ao|\ag${BUFFSELF_${i}_Type}\ao|\ag${BUFFSELF_${i}_Name}
+        /echo \aoBuff Processed[\ag${i}\ao]: \awBuff:\ag${BUFFSELF_${i}} \awType:\ag${BUFFSELF_${i}_Type} \awName:\ag${BUFFSELF_${i}_Name}
 	/next i
+/return
+
+Sub processTargetedBuffs
+    /echo \awprocessTargetedBuffs
+    /declare raw_targetedBuffs[100]		string 	local NULL
+	/declare i						    int 	local 0
+	/declare sz 					    int     local 0
+    /declare test                       string  local NULL
+
+    |; = _enabled|_allowRaid|_allowGroup|_automatic
+    |settings=TRUE|TRUE|TRUE|FALSE
+    /if (!${Ini[INI_CHAR,BUFFS_TARGETED,settings].Arg[1,|]})  /varset bln_targetedBuffs_enabled    FALSE
+    /if (!${Ini[INI_CHAR,BUFFS_TARGETED,settings].Arg[2,|]})  /varset bln_targetedBuffs_allowRaid  FALSE
+    /if (!${Ini[INI_CHAR,BUFFS_TARGETED,settings].Arg[3,|]})  /varset bln_targetedBuffs_allowGroup FALSE
+    /if (!${Ini[INI_CHAR,BUFFS_TARGETED,settings].Arg[4,|]})  /varset bln_targetedBuffs_automatic  FALSE
+
+    /echo \ao    Settings Processed: \awEnabled:\ag${bln_targetedBuffs_enabled} \awAllowRaid:\ag${bln_targetedBuffs_allowRaid} \awAllowGroup:\ag${bln_targetedBuffs_allowGroup} \awAutomatic:\ag${bln_targetedBuffs_automatic}
+    
+    |;=_buff|_use|_targetType|_gem|_classes
+    |BUFF_1="Balikor's Mark"|TRUE|GROUP|5|ALL
+    /for i 1 to ${raw_targetedBuffs.Size}
+        /varset test ${Ini[INI_CHAR,BUFFS_TARGETED,BUFF_${i}]}
+        /if (${test.Arg[1,|].Equal[NULL]}) {
+            /varset  int_targetedBuffs_total ${sz}
+            /return
+        } 
+        | Not null, set the values for the buffs
+		/varcalc sz	${sz}+1
+		/declare BUFFTARGETED_${i}		    string	outer   ${test.Arg[1,|]}
+        /declare BUFFTARGETED_${i}_Use	    string  outer   ${test.Arg[2,|]}
+		/declare BUFFTARGETED_${i}_Type	    string  outer   ${test.Arg[3,|]}
+		/declare BUFFTARGETED_${i}_Gem	    string  outer   ${test.Arg[4,|]}
+        /declare BUFFTARGETED_${i}_Targets	string  outer   ${test.Arg[5,|]}
+        /echo \ao    Buff Processed[\ag${i}\ao]: \awBuff:\ag${BUFFTARGETED_${i}} \awUse:\ag${BUFFTARGETED_${i}_Use} \awType:\ag${BUFFTARGETED_${i}_Type} \awGem:\ag${BUFFTARGETED_${i}_Gem} \awTargets:\ag${BUFFTARGETED_${i}_Targets}
+    /next i
+
+/return
+
+Sub processCombatBuffs
+    /echo \awprocesCombatBuffs
+    /declare raw_combatBuffs[100]		string 	local NULL
+	/declare i						    int 	local 0
+	/declare sz 					    int     local 0
+    /declare test                       string  local NULL
+
+    |; = _enabled|_allowRaid|_allowGroup|_automatic
+    |settings=TRUE|TRUE|TRUE|FALSE
+    /if (!${Ini[INI_CHAR,BUFFS_COMBAT,settings].Arg[1,|]})  /varset bln_combatBuffs_enabled         FALSE
+    /if (!${Ini[INI_CHAR,BUFFS_COMBAT,settings].Arg[2,|]})  /varset bln_combatBuffs_allowRaid       FALSE
+    /if (!${Ini[INI_CHAR,BUFFS_COMBAT,settings].Arg[3,|]})  /varset bln_combatBuffs_allowGroup      FALSE
+
+    /echo \ao    Settings Processed: \awEnabled:\ag${bln_combatBuffs_enabled} \awAllowRaid:\ag${bln_combatBuffs_allowRaid} \awAllowGroup:\ag${bln_combatBuffs_allowGroup}
+    |;=_buff|_use|_targetType|_gem|_classes
+    |BUFF_1="Panoply of Vie"|TRUE|SINGLE|5|MT
+   
+    /for i 1 to ${raw_combatBuffs.Size}
+        /varset test ${Ini[INI_CHAR,BUFFS_COMBAT,BUFF_${i}]}
+        /if (${test.Arg[1,|].Equal[NULL]}) {
+            /varset  int_combatBuffs_total ${sz}
+            /return
+        } 
+        | Not null, set the values for the buffs
+		/varcalc sz	${sz}+1
+		/declare BUFFCOMBAT_${i}		    string	outer   ${test.Arg[1,|]}
+        /declare BUFFCOMBAT_${i}_Use	    string  outer   ${test.Arg[2,|]}
+		/declare BUFFCOMBAT_${i}_Type	    string  outer   ${test.Arg[3,|]}
+		/declare BUFFCOMBAT_${i}_Gem	    string  outer   ${test.Arg[4,|]}
+        /declare BUFFCOMBAT_${i}_Targets	string  outer   ${test.Arg[5,|]}
+        /echo \ao    Buff Processed[\ag${i}\ao]: \awBuff:\ag${BUFFCOMBAT_${i}} \awUse:\ag${BUFFCOMBAT_${i}_Use} \awType:\ag${BUFFCOMBAT_${i}_Type} \awGem:\ag${BUFFCOMBAT_${i}_Gem} \awTargets:\ag${BUFFCOMBAT_${i}_Targets}
+    /next i
+
 /return
 
 
 
 Sub chkSelfBuffs
-    /if ((${Target.ID} && ${Target.Type.Equal[NPC]}) || ${bln_engaged} || ${timer_check_selfBuffs}) /return
     | handle like downflags used to be (we just reconfigured/renamed things)
     /echo \aochkSelfBuffs\aw(\ag${int_selfBuffs_total}\aw)
     /declare i  int                 local 0
     /declare ds int                 local 0
     /declare brdCastingArgs string  local NULL
     /declare allCastingArgs string  local NULL
+    /declare bln_buffsCast  bool    local FALSE
     | We need to target ourselves since this is a self buff
     /target id ${Me.ID}
-
     /for i 1 to ${int_selfBuffs_total}
         | Check to see if the buff is a DS and if bln_useDS if FALSE, skip the buff
         /if (!${bln_useDS}) {
@@ -93,9 +214,8 @@ Sub chkSelfBuffs
         /if (${bln_engaged}) /return
 
         | Check to see if the buff is already applied
-        /echo ${BUFFSELF_${i}} ${Spell[${BUFFSELF_${i}}].Stacks} && !${Me.Buff[${BUFFSELF_${i}}].ID}
+        /echo \aw    Checking \ag${BUFFSELF_${i}} \aoStacks?\ag${Spell[${BUFFSELF_${i}}].Stacks}  \aoCurrently Have? \ag${Bool[${Me.Buff[${BUFFSELF_${i}}].ID}]}
         /if (${Spell[${BUFFSELF_${i}}].Stacks} && !${Me.Buff[${BUFFSELF_${i}}].ID}) {
-            /echo casting? TYPE: ${BUFFSELF_${i}_Type}
             | Handle the item type buff check
             |BUFF_1="Reyfin's Racing Thoughts"|ITEM|"Xxeric's Matted-Fur Mask"
             /varset brdCastingArgs "${BUFFSELF_${i}_Name}" TRUE ${int_defaultSpellGem}
@@ -111,26 +231,75 @@ Sub chkSelfBuffs
             } else /if (${BUFFSELF_${i}_Type.Equal[ALT]})  {
                 /varset brdCastingArgs ALT "${BUFFSELF_${i}_Name}" ${Me.ID} TRUE
             }
-
+            /varset bln_buffsCast TRUE
             /if (${Me.Class.ShortName.Equal[BRD]})  /call MQ2Medley ${brdCastingArgs}
-            /if (!${Me.Class.ShortName.Equal[BRD]}) /call MQ2Cast "${allCastingArgs}"
-             :dfcast
-            /if (${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]}) {
-                /echo waiting to cast
-                /goto :dfcast
+            /if (!${Me.Class.ShortName.Equal[BRD]}) {
+                /call MQ2Cast "${allCastingArgs}"
+                /delay 50 (!${Me.Casting.ID})
             }
         }
     :next_buff
-    /echo next_buff
     /next i
+    /if (${bln_buffsCast}) /memspellset ${str_currentSpellSet}
+    /varset timer_check_selfBuffs 300
 /return
 
+Sub chkTargetedBuffs(string _targetType,string _targetName, bool _forced)
+    | handle like downflags used to be (we just reconfigured/renamed things)
+    /echo \aochkTargetedBuffs\aw(\ag${int_targetedBuffs_total}\aw)
+    /declare i  int                 local 0
+    /declare r  int                 local 0
+    /declare allCastingArgs string  local NULL
+
+    | mem the buff spellset
+    /memspellset buff
+    /delay 30
+
+    |;=_buff|_use|_targetType|_gem|_classes
+    /for i 1 to ${int_targetedBuffs_total}
+        /if (!${BUFFTARGETED_${i}_Use}) /goto :next_buff
+        | Verify that the spell is memorized
+        /call chkSpellMemorized "${BUFFTARGETED_${i}}" TRUE ${BUFFTARGETED_${i}_Gem}
+        | Character Buffing, this will only cast the buff on a single target
+        /if (${_targetType.Equal[CHARACTER]}) {
+            /if (${Target.Name.NotEqual[${_target.Name}]}) /call TrueTarget ${Spawn[pc ${_targetName}].ID}
+            | This is a character buff, so just cast this once
+            /call MQ2Cast "${BUFFTARGETED_${i}}"
+            /delay 50 (!${Me.Casting.ID})
+        } else /if (${_targetType.Equal[RAID]}) {
+            /if (${BUFFTARGETED_${i}_Type.Equal[GROUP]}) {
+                | Raid Buffing, this will walk through raid
+                /for r 1 to ${RaidGroupLeaders.Size}
+                    /if (${RaidGroupLeaders[${r}].NotEqual[NULL]}) {
+                        /echo Casting group buff on ${RaidGroupLeaders[${r}].Name}
+                        /if (${Target.Name.NotEqual[${RaidGroupLeaders[${r}].Name}]}) /call TrueTarget ${Spawn[pc ${RaidGroupLeaders[${r}].Name}].ID}
+                        /call MQ2Cast "${BUFFTARGETED_${i}}"
+                        /delay 50 (!${Me.Casting.ID})
+                    }       
+                /next r
+            } else  /if (${BUFFTARGETED_${i}_Type.Equal[SINGLE]}) {
+                | Single Target Buffing in the raid, look at groups and see if a target is in each
+                | Note it is probably unlikely that a SINGLE type buff will apply to ALL, but instead likely to be MT
+                | or a subset of classes
+                /for r 1 to ${Raig}
+            }
+        }
+       
+
+    /goto :next_buff
+    /next i
+
+    /memspellset ${str_currentSpellSet}
+    /varset timer_check_targetedBuffs 300
+/return
 
 |**
 CURING V2
 **|
 
 Sub xbot_initialize_curing
+
+    /echo \agInitialize: \aoCuring \aw-------------------------
     | Pull these values from the INI_CHAR file
     /declare bln_autoCureMT     bool outer TRUE
     /declare bln_autoCureSelf   bool outer TRUE
@@ -139,13 +308,15 @@ Sub xbot_initialize_curing
 
     /call processCureSpells
     /call processRequiredCures
-    /call initEvents_Curing
+    /call initEvents_curing
 /return 
 
+Sub initEvents_curing
+/return
 
 | This will be populated via INI file entriess
 Sub processCureSpells
-    /echo \awDefineCureSpells-------------------------
+    /echo \awprocessCureSpells
     /declare str_cure_disease       string outer "Pure Blood"|18
     /declare str_cure_curse         string outer "Remove Greater Curse"|45
     /declare str_cure_poison        string outer "Antidote"|64
@@ -160,7 +331,7 @@ Sub processCureSpells
 
 | This will be populated by INI file entries
 Sub processRequiredCures 
-    /echo \awDefineRequiredCures-------------------------
+    /echo \awprocessRequiredCures
     | Debuffs that must be cured as soon as possible
     /declare    arr_immediateCures[2] string  outer NULL
     /varset     arr_immediateCures[1] "Mark of Death"|disease|ALL
@@ -176,11 +347,6 @@ Sub processRequiredCures
     /varset     arr_requiredCures[6] "Vergalid's Breath"|corruption|CLR,DRU,SHM
 
 /return 
-
-Sub initEvents_Curing
-/return
-
-
 
 | Check Cures, we can bln_engaged as a good proxy for _lazy cures.
 Sub chkCures(bool _lazy)
@@ -266,8 +432,6 @@ Sub chkCureOnID(int _id, bool _lazy)
         /call handleCureRequestV2 ${victimName} ${_id} ${arr_requiredCures[${i}]} ${foundCounters} FALSE
         /return
     }
-	
-
 /return 
 
 
@@ -347,3 +511,20 @@ Sub chkSpellMemorized(string _spell, bool _wait, string _gem)
         /if (${Me.SpellReady[${_spell}]}) /return
         /docommand /${announceChannel} There was a timeout error trying to memorize "${_spell}"
 /return 
+
+Sub TrueTarget(int _targetID)
+	/if (${SpawnCount[id ${_targetID}]} && ${Target.ID} != ${_targetID} ) {
+		/declare retryTimer timer local 30
+		:Target_Loop
+		/squelch /target id ${_targetID}
+		/delay 2 ${Target.ID} == ${_targetID}
+		
+		/if (${Target.ID} != ${_targetID} && ${SpawnCount[id ${_targetID}]}) {
+			/if (${retryTimer}) {
+				/goto :Target_Loop
+			} else {
+				/echo Failed to target [${Spawn[id ${_targetID}].CleanName} - ${_targetID}]
+			}
+		}
+	}
+/return

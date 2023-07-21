@@ -139,7 +139,7 @@ Sub Events_SpellRoutines
 
 
 Sub xbot_initialize_spellRoutines
-	/echo \aoxbot_initialize_spellRoutines
+	/echo \agInitialize: \aoSpell Routines \aw-------------------------
 	|-- Default values for xiris_spell_routines.inc
 	/declare noInvis 			bool 	outer 	TRUE
 	/declare noFeigning 		bool 	outer 	TRUE

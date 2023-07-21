@@ -267,12 +267,12 @@ Sub ChangeHealMode(string _strMode)
 	|- Mem the appropriate spell set
 	/if (${_strMode.Find[CHCHAIN]}) {
 		/echo \a-wChanging healing \aoMODE \a-wto \agDEFAULT
-		/varset str_spellset default
+		/varset str_currentSpellSet default
 		/varset str_healMode CHCHAIN
 		/call InterruptOFF
 	} else /if (${_strMode.Find[EFFICIENT]}) {
 		/echo \a-wChanging healing \aoMODE \a-wto \agEFFICIENT
-		/varset str_spellset efficient
+		/varset str_currentSpellSet efficient
 		/varset use_heal_HoT FALSE
 		/varset str_healMode EFFICIENT
 		/varset int_range_current_frantic	${int_range_frantic_efficient}
@@ -280,14 +280,14 @@ Sub ChangeHealMode(string _strMode)
 		/call InterruptON
 	} else {
 		/echo \a-wChanging healing \aoMODE \a-wto \agDEFAULT
-		/varset str_spellset default
+		/varset str_currentSpellSet default
 		/varset use_heal_HoT TRUE
 		/varset str_healMode DEFAULT
 		/varset int_range_current_frantic	${int_range_frantic_efficient}
 		/varset int_range_current_normal 	${int_range_normal_efficient}
 		/call InterruptON
 	}
-	/memspellset ${str_spellset}
+	/memspellset ${str_currentSpellSet}
 /return
 
 Sub EVENT_HealPoints(_line, _chatSender, _eventParams)

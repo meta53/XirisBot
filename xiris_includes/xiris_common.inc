@@ -264,7 +264,7 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/echo \ayAuto Assist settings: \awAuto?\ag${bln_autoAssist} \awAt?\ag${int_assistAt} \awArgs:\ag${_assistArgs}
 
 	|-- [Settings] : Miscellaneous Defaults
-	/declare	str_spellSet			string	outer	${Ini[INI_CHAR,Settings,str_spellSet,default]}
+	/declare	str_currentSpellSet			string	outer	${Ini[INI_CHAR,Settings,str_currentSpellSet,default]}
 	/declare	bln_engaged				bool	outer	FALSE
 	/declare	bln_enraged				bool	outer	FALSE
 	/declare    bln_pulling		    	bool    outer   FALSE

@@ -56,7 +56,7 @@ Sub chkPetBuffs
 				/call MQ2Cast "${petBuff_${i}}" 
 			}
 		/next i
-		/memspellset ${str_spellset}
+		/memspellset ${str_currentSpellSet}
 	}
 	/if (${Target.ID}==${Me.Pet.ID}) /squelch /target clear
 	/if (!${timer_petBuffRecheck})	 /varset timer_petBuffRecheck 30s
@@ -124,7 +124,7 @@ Sub chkPetWeaps
 	|-- Weapon 2
 	/call SummonItemForPet "Summoned: ${str_petWeap2}" "Summon ${str_petWeap2}" ${Me.Pet.ID}
 	
-	/memspellset ${str_spellset}
+	/memspellset ${str_currentSpellSet}
 	/autoinv
 	/varset bln_petWeaponized TRUE
 

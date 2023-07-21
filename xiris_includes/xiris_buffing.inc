@@ -26,31 +26,25 @@ REVISION HISTORY
 	01.03.23	xiris	Reworked buffing slightly (naming convention mostly)
 **|
 
-#EVENT DORAIDBUFFS			"#1# tells the group#*#'doRaidBuffs #2#'"
-#EVENT DORAIDBUFFS			"#1# tells you#*#'doRaidBuffs #2#'"
-#EVENT DORAIDBUFFS			"#1# tells the raid#*#'doRaidBuffs #2#'"
-#EVENT DORAIDBUFFS 			"[ #1# #*#]#*#doRaidBuffs #2#"
+#EVENT DoBuffsOnRAID		"#1# tells the group#*#'doRaidBuffs #2#'"
+#EVENT DoBuffsOnRAID		"#1# tells you#*#'doRaidBuffs #2#'"
+#EVENT DoBuffsOnRAID		"#1# tells the raid#*#'doRaidBuffs #2#'"
+#EVENT DoBuffsOnRAID		"[ #1# #*#]#*#doRaidBuffs #2#"
 
-#EVENT DOSINGLETARGETBUFFS	"#1# tells the group#*#'doSingleTargetBuffs #2#'"
-#EVENT DOSINGLETARGETBUFFS	"#1# tells you#*#'doSingleTargetBuffs #2#'"
-#EVENT DOSINGLETARGETBUFFS	"#1# tells the raid#*#'doSingleTargetBuffs #2#'"
-#EVENT DOSINGLETARGETBUFFS 	"[ #1# #*#]#*#doSingleTargetBuffs #2#"
+#EVENT DoBuffsOnCHARACTER	"#1# tells the group#*#'doCharBuffs #2#'"
+#EVENT DoBuffsOnCHARACTER	"#1# tells you#*#'doCharBuffs #2#'"
+#EVENT DoBuffsOnCHARACTER	"#1# tells the raid#*#'doCharBuffs #2#'"
+#EVENT DoBuffsOnCHARACTER	"[ #1# #*#]#*#doCharBuffs #2#"
 
-#EVENT DOCHARBUFFS			"#1# tells the group#*#'doCharBuffs #2#'"
-#EVENT DOCHARBUFFS			"#1# tells you#*#'doCharBuffs #2#'"
-#EVENT DOCHARBUFFS			"#1# tells the raid#*#'doCharBuffs #2#'"
-#EVENT DOCHARBUFFS 			"[ #1# #*#]#*#doCharBuffs #2#"
+#EVENT DisableDamageShields	"#1# tells the group#*#'NoDS#*#'"
+#EVENT DisableDamageShields	"#1# tells you#*#'NoDS#*#'"
+#EVENT DisableDamageShields	"#1# tells the raid#*#'NoDS#*#'"
+#EVENT DisableDamageShields	"[ #1# #*#]#*#NoDS#*#"
 
-#EVENT NoDS				"#1# tells the group#*#'NoDS#*#'"
-#EVENT NoDS				"#1# tells you#*#'NoDS#*#'"
-#EVENT NoDS				"#1# tells the raid#*#'NoDS#*#'"
-#EVENT NoDS 			"[ #1# #*#]#*#NoDS#*#"
-
-#EVENT YesDS			"#1# tells the group#*#'YesDS #*#'"
-#EVENT YesDS			"#1# tells you#*#'YesDS #*#'"
-#EVENT YesDS			"#1# tells the raid#*#'YesDS #*#'"
-#EVENT YesDS 			"[ #1# #*#]#*#YesDS#*#"
-
+#EVENT EnableDamageShields	"#1# tells the group#*#'YesDS #*#'"
+#EVENT EnableDamageShields	"#1# tells you#*#'YesDS #*#'"
+#EVENT EnableDamageShields	"#1# tells the raid#*#'YesDS #*#'"
+#EVENT EnableDamageShields	"[ #1# #*#]#*#YesDS#*#"
 
 #EVENT REMOVEBUFF			"#1# tells the group#*#REMOVEBUFF #2#'"
 #EVENT REMOVEBUFF			"#1# tells you#*#REMOVEBUFF #2#'"
@@ -65,53 +59,52 @@ REVISION HISTORY
 
 
 
-Sub initEvents_Buffing
+Sub initEvents_buffing
 	/call RegisterBackgroundEvents Events_Buffing 6
 /return
 
 Sub Events_Buffing
 	/doevents NoDS
-	/doevents YesDS
-	/doevents DORAIDBUFFS
-	/doevents DOSINGLETARGETBUFFS
-	/doevents DOCHARBUFFS
+	/doevents YesDs
+
+	/doevents DoBuffsOnRAID
+	/doevents DoBuffsOnCHARACTER
+
 	/doevents REMOVEBUFF
 	/doevents REMOVEALLBUFFS
 /return
 
 
-Sub EVENT_DORAIDBUFFS(_line, _chatSender, _eventParams)
-	/if (!${bln_doRaidBuff} && !${bln_doSingleTargetBuff}) /return
+Sub EVENT_DoBuffsOnRAID(_line, _chatSender, _eventParams)
+	/if (!${bln_doRaidBuff}) /return
 	/echo Doing Raid Buffs on ${_eventParams}
 	/memspellset buff
 	/delay 3s
-	/if (${bln_doRaidBuff}) 		/call doRaidBuffs
-	/if (${bln_doSingleTargetBuff}) /call doSingleTargetBuffOnRaid
+	/if (${bln_doRaidBuff}) /call doRaidBuffs
 	/dgt ${Me.Class.Name} RAID BUFF [${_eventParams}] COMPLETE
 	/delay 10
 	| Restore the previous spellset
-	/memspellset ${str_spellset}
-
-	/doevents flush DORAIDBUFFS
+	/memspellset ${str_currentSpellSet}
+	| Flush the event
+	/doevents flush DoBuffsOnRAID
 /return
 
-Sub EVENT_DOCHARBUFFS(_line, _chatSender, _eventParams)
-	/if (!${bln_doRaidBuff} && !${bln_doSingleTargetBuff}) /return
+Sub EVENT_DoBuffsOnCHARACTER(_line, _chatSender, _eventParams)
+	/if (!${bln_doRaidBuff} && !${bln_doGroupBuff}) /return
 	/echo Doing Char Buffs on ${_eventParams}
 	/memspellset buff
 	/delay 3s
-	/call doGroupBuffOnTarget ${_eventParams}
-	/call doSingleTargetBuffOnChar ${_eventParams}
+	/call chkTargetedBuffs CHARACTER ${_eventParams} TRUE
 	/dgt ${Me.Class.Name} CHAR BUFF [${_eventParams}] COMPLETE
 	/delay 10
 	| Restore the previous spellset
-	/memspellset ${str_spellset}
-	
-	/doevents flush DOCHARBUFFS
+	/memspellset ${str_currentSpellSet}
+	| Flush the event
+	/doevents flush DoBuffsOnCHARACTER
 /return
 
 
-Sub EVENT_DOSINGLETARGETBUFFS(_line, _chatSender, _eventParams)
+Sub EVENT_DOBUFFSONTARGET(_line, _chatSender, _eventParams)
 	/if (!${bln_doSingleTargetBuff}) /return
 
 	/memspellset buff
@@ -120,7 +113,7 @@ Sub EVENT_DOSINGLETARGETBUFFS(_line, _chatSender, _eventParams)
 	} else {
 		/call doSingleTargetBuffOnChar ${_eventParams}
 	}
-	/memspellset ${str_spellset}
+	/memspellset ${str_currentSpellSet}
 	
 	/doevents flush DOSINGLETARGETBUFFS
 /return
@@ -137,7 +130,7 @@ Sub EVENT_DOSPECIFICBUFFONCHAR(string _text, string _sender, string _buffer, str
 	
 	/memspellset buff
 	/call doSpecificBuffOnChar ${_sender} "${_spell}"
-	/memspellset ${str_spellset}
+	/memspellset ${str_currentSpellSet}
 	/doevents flush DOSPECIFICBUFFONCHAR
 /return
 
@@ -664,7 +657,7 @@ Sub RemoveBuff(_badBuff)
 
 
 
-Sub EVENT_NoDS(_line, _sender, _eventParams)
+Sub EVENT_DisableDamageShields(_line, _sender, _eventParams)
 	/call RemoveDS
 /return
 
@@ -681,11 +674,11 @@ Sub RemoveDS
 		/medley ${str_currentMedley}
 	}	
 	:return
-	/doevents flush NoDS
+	/doevents flush DisableDamageShields
 /return 
 
 
-Sub EVENT_YesDS(_line, _sender, _eventParams)s
+Sub EVENT_EnableDamageShields(_line, _sender, _eventParams)s
 	/varset bln_useDS TRUE
 	/if (${Me.Class.ShortName.Equal[BRD]}) {
 		/echo \aoTurning on ${str_savedMedley} Medley
@@ -694,7 +687,7 @@ Sub EVENT_YesDS(_line, _sender, _eventParams)s
 		/medley ${str_savedMedley}
 	}
 	:return
-	/doevents flush YesDS
+	/doevents flush EnableDamageShields
 /return
 
 
@@ -869,7 +862,7 @@ Sub xbot_initialize_buffing
 		/next i
 	}
 
-	/call initEvents_Buffing
+	/call initEvents_buffing
 	
 /return
 

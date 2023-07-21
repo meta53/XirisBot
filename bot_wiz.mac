@@ -187,7 +187,7 @@ Sub variant_initialize(string _strTankName, int _intAssistAt, int _intTankHealPo
 	/declare int_snareCounter			int		outer	0
 	
 
-	/memspellset ${str_spellset}
+	/memspellset ${str_currentSpellSet}
 	/echo \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID}) HealPoint:${healPoint} ST: ${str_STName}(${int_STID})
 	/call initEvents_Class
 /return
@@ -215,7 +215,7 @@ SUB EVENT_FIRETL
 	/dgt Firing TL
 	/call MQ2Cast "${str_tlSpell}" ${str_tlGem}
 	/delay 1m
-	/memspellset ${str_spellset}
+	/memspellset ${str_currentSpellSet}
 /return
 
 
