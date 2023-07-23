@@ -16,3 +16,17 @@ xiris_class_ini/
 !xiris_settings/character/*
 !xiris_settings/global/*
 
+aa.inc
+alert.inc
+bazaar.inc
+common.inc
+MQ2Cast_Spell_Routines.inc
+MQ2Cast.inc
+NinjaAdvLoot.inc
+Spell_routines.inc
+Utilities.inc
+common/buy.inc
+common/cleanpacks.inc
+common/CommonSubs.inc
+common/packs.inc
+common/sell.inc

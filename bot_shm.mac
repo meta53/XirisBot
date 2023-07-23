@@ -29,10 +29,10 @@ REQUIRED PLUGINS
     
 ______________________________________________
 REQUIRED INCLUDES  
-	xiris_common/xiris_common.inc
+	xiris_includes/xiris_common.inc
 **|
 
-#include xiris_common/xiris_common.inc
+#include xiris_includes/xiris_common.inc
 
 #TURBO 120
 

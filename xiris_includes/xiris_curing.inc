@@ -67,10 +67,6 @@ REVISION HISTORY
 #EVENT AutoCureMTOn		"#*#AutoCureMTOn#*#"
 #EVENT AutoCureMTOn		"#*#AutoCureMTOff#*#"
 
-Sub initEvents_Curing
-	/if (${str_classArchetype.Equal[PRIEST]} || ${Me.Class.ShortName.Equal[PAL]}) /call RegisterClassEvents Events_Curing 5
-	/call RegisterBackgroundEvents Events_Curing_Background 3
-/return
 
 Sub Events_Curing
 	/doevents cureMe
@@ -87,6 +83,67 @@ Sub Events_Curing_Background
 	/doevents cureRejected
 	/doevents ResetGroupCurer
 /return
+
+Sub xbot_initialize_curing
+	/echo \ao xbot_initialize_curing
+	/declare 	int_manadrain_threshold int		outer 	100
+	/declare	int_hpdrain_threshold	int		outer	300
+	/declare 	bln_needsCure 			bool	outer	FALSE
+	/declare    bln_askedForCure        bool    outer   FALSE
+	/declare 	bln_autoCureMT			bool    outer   FALSE
+	/declare    str_myCurer				string	outer 	NULL
+	/declare	timer_cure_request		timer   outer
+	/declare  	bln_useCures			bool    outer   TRUE
+	/declare 	timer_cureCheck			timer 	outer 	10s
+
+	
+	/declare 	cureRange     			int   	outer   100
+	/declare    bln_navCure   			bool    outer   FALSE
+	/declare    str_navCureStart  		string  outer 
+	/declare 	timer_cure_complain		timer   outer   0
+
+	/declare    str_cure_curse			string  outer   ${Ini[INI_CHAR,Curing,str_cure_curse,"Remove Greater Curse"]}
+	/declare    int_cure_curse			string  outer   ${Ini[INI_CHAR,Curing,int_cure_curse,36]}
+	/declare    is_curse_group          bool    outer   ${Ini[INI_CHAR,Curing,is_curse_group, FALSE]}
+	
+	/declare    str_cure_corruption		string  outer   ${Ini[INI_CHAR,Curing,str_cure_corruption,"NULL"]}
+	/declare    int_cure_corruption		string  outer   ${Ini[INI_CHAR,Curing,int_cure_corruption,36]}
+	/declare    is_corr_group           bool    outer   ${Ini[INI_CHAR,Curing,is_corr_group, FALSE]}
+	
+	/declare    str_cure_poison			string  outer   ${Ini[INI_CHAR,Curing,str_cure_poison,"Antidote"]}
+	/declare    int_cure_poison			string  outer   ${Ini[INI_CHAR,Curing,int_cure_poison,64]}
+	/declare    is_poison_group         bool    outer   ${Ini[INI_CHAR,Curing,is_poison_group, FALSE]}
+	
+	/declare    str_cure_disease		string  outer   ${Ini[INI_CHAR,Curing,str_cure_disease,"Pure Blood"]}
+	/declare    int_cure_disease		string  outer   ${Ini[INI_CHAR,Curing,int_cure_disease,18]}
+	/declare    is_disease_group        bool    outer   ${Ini[INI_CHAR,Curing,is_disease_group, FALSE]}
+	
+	/declare    str_secondary_radiant	string	outer   ${Ini[INI_CHAR,Curing,str_secondary_radiant,"NULL"]} 
+	
+
+	/declare	bln_hasDiseaseCure		bool	outer	TRUE
+	/declare	bln_hasPoisonCure		bool	outer	TRUE
+	/declare 	bln_hasCurseCure		bool	outer	TRUE
+	/declare 	bln_hasCorruptionCure	bool	outer	FALSE 
+	
+	
+	/if (${str_cure_curse.Equal[NULL]}) 	/varset bln_hasCurseCure 	FALSE
+	/if (${str_cure_poison.Equal[NULL]}) 	/varset bln_hasPoisonCure 	FALSE
+	/if (${str_cure_disease.Equal[NULL]}) 	/varset bln_hasDiseaseCure 	FALSE
+	
+	/call 		getGroupCurer DEFAULT
+	/varset 	str_myCurer ${Macro.Return}
+	
+	/call initEvents_Curing
+	
+/return
+
+
+Sub initEvents_Curing
+	/if (${str_classArchetype.Equal[PRIEST]} || ${Me.Class.ShortName.Equal[PAL]}) /call RegisterClassEvents Events_Curing 5
+	/call RegisterBackgroundEvents Events_Curing_Background 3
+/return
+
 
 Sub Event_AutoCureMTOn
 	/echo \agNow Automatically Curing MT
@@ -715,58 +772,3 @@ Sub castCure(string _name, int _id, string _spell, int _castCount, string _cureT
 
 
 
-Sub xbot_initialize_curing
-	/echo \ao xbot_initialize_curing
-	/declare 	int_manadrain_threshold int		outer 	100
-	/declare	int_hpdrain_threshold	int		outer	300
-	/declare 	bln_needsCure 			bool	outer	FALSE
-	/declare    bln_askedForCure        bool    outer   FALSE
-	/declare 	bln_autoCureMT			bool    outer   FALSE
-	/declare    str_myCurer				string	outer 	NULL
-	/declare	timer_cure_request		timer   outer
-	/declare  	bln_useCures			bool    outer   TRUE
-	/declare 	timer_cureCheck			timer 	outer 	10s
-
-	| Temporary work around
-	/if (!${Defined[bln_jelvanEngaged]}) /declare bln_jelvanEngaged bool outer FALSE
-	
-	/declare 	cureRange     			int   	outer   100
-	/declare    bln_navCure   			bool    outer   FALSE
-	/declare    str_navCureStart  		string  outer 
-	/declare 	timer_cure_complain		timer   outer   0
-
-	/declare    str_cure_curse			string  outer   ${Ini[INI_CHAR,Curing,str_cure_curse,"Remove Greater Curse"]}
-	/declare    int_cure_curse			string  outer   ${Ini[INI_CHAR,Curing,int_cure_curse,36]}
-	/declare    is_curse_group          bool    outer   ${Ini[INI_CHAR,Curing,is_curse_group, FALSE]}
-	
-	/declare    str_cure_corruption		string  outer   ${Ini[INI_CHAR,Curing,str_cure_corruption,"NULL"]}
-	/declare    int_cure_corruption		string  outer   ${Ini[INI_CHAR,Curing,int_cure_corruption,36]}
-	/declare    is_corr_group           bool    outer   ${Ini[INI_CHAR,Curing,is_corr_group, FALSE]}
-	
-	/declare    str_cure_poison			string  outer   ${Ini[INI_CHAR,Curing,str_cure_poison,"Antidote"]}
-	/declare    int_cure_poison			string  outer   ${Ini[INI_CHAR,Curing,int_cure_poison,64]}
-	/declare    is_poison_group         bool    outer   ${Ini[INI_CHAR,Curing,is_poison_group, FALSE]}
-	
-	/declare    str_cure_disease		string  outer   ${Ini[INI_CHAR,Curing,str_cure_disease,"Pure Blood"]}
-	/declare    int_cure_disease		string  outer   ${Ini[INI_CHAR,Curing,int_cure_disease,18]}
-	/declare    is_disease_group        bool    outer   ${Ini[INI_CHAR,Curing,is_disease_group, FALSE]}
-	
-	/declare    str_secondary_radiant	string	outer   ${Ini[INI_CHAR,Curing,str_secondary_radiant,"NULL"]} 
-	
-
-	/declare	bln_hasDiseaseCure		bool	outer	TRUE
-	/declare	bln_hasPoisonCure		bool	outer	TRUE
-	/declare 	bln_hasCurseCure		bool	outer	TRUE
-	/declare 	bln_hasCorruptionCure	bool	outer	FALSE 
-	
-	
-	/if (${str_cure_curse.Equal[NULL]}) 	/varset bln_hasCurseCure 	FALSE
-	/if (${str_cure_poison.Equal[NULL]}) 	/varset bln_hasPoisonCure 	FALSE
-	/if (${str_cure_disease.Equal[NULL]}) 	/varset bln_hasDiseaseCure 	FALSE
-	
-	/call 		getGroupCurer DEFAULT
-	/varset 	str_myCurer ${Macro.Return}
-	
-	/call initEvents_Curing
-	
-/return

@@ -121,7 +121,7 @@ Sub EVENT_LOOT_REFRESH
 Sub RefreshLoot
 	| Announce
 	/docommand /${str_lootChannel} ${Me.Name} is refreshing the loot ini file
-	/call ParseLootINI xiris_common/xiris_loot.ini
+	/call ParseLootINI xiris_includes/xiris_loot.ini
 /return
 
 Sub EVENT_SELL_VENDOR
@@ -185,7 +185,7 @@ Sub EVENT_LootTooFar
 
 
 |-------------------------------------------------------------------------------- 
-|SUB: Parsing the loot ini file (xiris_common/xiris_loot.ini)
+|SUB: Parsing the loot ini file (xiris_includes/xiris_loot.ini)
 |-------------------------------------------------------------------------------- 
 Sub ParseLootINI 
 	/echo \agParseLootINI \aw${lootINIFile}
@@ -608,7 +608,7 @@ Sub xbot_initialize_looting
 	/declare list_lootItemsForClass string  outer
 	/declare timer_check_loot		timer   outer   0
 
-	/declare lootINIFile			string  outer	xiris_common/xiris_loot.ini
+	/declare lootINIFile			string  outer	xiris_includes/xiris_loot.ini
 
 	|-- turn on looting by default if the Bot's INI is set to true (unlikely)
 	|/if (${bln_looting}) /call EnableLooting

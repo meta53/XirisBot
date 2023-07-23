@@ -42,6 +42,9 @@
     "yafm2.ini": true,
     "yafm2.mac": true,
     "common": true,
-    "archived": true
+    "archived": true,
+    "adaptation.mac": true,
+    "amv.mac": true,
+    "anguish.mac": true
   }
 }

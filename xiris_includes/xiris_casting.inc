@@ -1117,7 +1117,7 @@ Sub BuildHeals
 
 	| HEAL POINT Declarations
 	| Default heal INI settings
-	/declare 	healINI					string  outer	xiris_common/xiris_healing.ini
+	/declare 	healINI					string  outer	xiris_includes/xiris_healing.ini
 
 	|-- SELF (Defaults)
 	/declare 	int_def_self_normal		int     outer   ${Ini[${healINI},Heal_Points,int_point_self_normal]}

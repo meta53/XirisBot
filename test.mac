@@ -1,23 +1,27 @@
 #define INI_CHAR        xiris_settings_character/BOT_${Me.Class.ShortName}_${Me.CleanName}.ini
-#define INI_SETTINGS    xiris_settings_global/BOT_settings_global.ini
+#define INI_COMMON      xiris_settings_global/xiris_settings_common.ini
 #include                xiris_includes/xiris_spell_routines.inc
+#include                xiris_includes/xiris_buffing.inc
 
-#turbo 5
-
-
-#EVENT DoBuffsOnRAID		"#1# tells the group#*#'doRaidBuffs #2#'"
-#EVENT DoBuffsOnRAID		"#1# tells you#*#'doRaidBuffs #2#'"
-#EVENT DoBuffsOnRAID		"#1# tells the raid#*#'doRaidBuffs #2#'"
-#EVENT DoBuffsOnRAID		"[ #1# #*#]#*#doRaidBuffs #2#"
-
-#EVENT DoBuffsOnCHARACTER	"#1# tells the group#*#'doCharBuffs #2#'"
-#EVENT DoBuffsOnCHARACTER	"#1# tells you#*#'doCharBuffs #2#'"
-#EVENT DoBuffsOnCHARACTER	"#1# tells the raid#*#'doCharBuffs #2#'"
-#EVENT DoBuffsOnCHARACTER	"[ #1# #*#]#*#doCharBuffs #2#"
 
 Sub Main 
     /declare int_MTID       int     outer   ${Me.ID}
     /declare bln_engaged    bool    outer   FALSE
+    /declare str_currentSpellSet string outer default
+
+    /declare arr_raidLeaders[9] string outer NULL
+
+    | we might find this by looping through ${Raid.Member[${i}].GroupLeader} where i is 1-> ${Raid.Members} 
+    | determining if if GroupLeader is true, and if so, add them to arr_raidLeaders
+    /varset arr_raidLeaders[1] Xiris
+    /varset arr_raidLeaders[2] Xiria
+    /varset arr_raidLeaders[3] Xirea
+    /varset arr_raidLeaders[4] Xirin
+    /varset arr_raidLeaders[5] Xeqisa
+    /varset arr_raidLeaders[6] Xaeliea
+    /varset arr_raidLeaders[7] Xaexa
+    /varset arr_raidLeaders[8] Xaia
+    /varset arr_raidLeaders[9] Xepatia
 
     /call xbot_initialize_spellRoutines
     /call xbot_initialize_buffing
@@ -27,23 +31,26 @@ Sub Main
 		/if (${Me.Hovering} || ${Window[tradewnd].Open} || ${Window[lootwnd].Open}) /goto :MainLoop
 
         | Always check cures, and set lazy to be TRUE when not engaged
-        |/call chkCures !${bln_engaged}
+        /if (!${timer_check_cures}) /call chkCures !${bln_engaged}
 
         | Check targetted buffs if they are set to automatic
         /if (${bln_targetedBuffs_automatic}) /call chkTargetedBuffs
 
         | Debug check the buffing events
-        /doevents DoBuffsOnRAID
-	    /doevents DoBuffsOnCHARACTER
+        /call Events_Buffing
+
+        | Debug check the curing events
+        /call Events_Curing
 
         /if (${bln_engaged}) {
+            /if (!${timer_check_combatBuffs}) /call chkCombatBuffs
             
         } else {
             | Check self buffs and clickies
             /if (!${timer_check_selfBuffs})     /call chkSelfBuffs
 
-            | Check targetted buffs if they are set to automatic
-            /if (${bln_targetedBuffs_automatic} && !${timer_check_targetedBuffs}) /call chkTargetedBuffs
+            | Check targetted buffs if they are set to automatic (only set up for self right now)
+            /if (${bln_targetedBuffs_automatic} && !${timer_check_targetedBuffs}) /call chkTargetedBuffs SELF ${Me.Name} FALSE
 
             |/if (!${timer_check_utilities}) /call chkUtils
 			|/if (!${timer_check_loot} && ${bln_looting}) /call chkLoot
@@ -56,295 +63,150 @@ Sub Main
 
 
 |**
-BUFFING V2
+CURING V2
 **|
-Sub xbot_initialize_buffing
-    /echo \agInitialize: \aoBuffing \aw-------------------------
 
-    | self buffs
-    /declare timer_check_selfBuffs          timer   outer   0
-    /declare int_selfBuffs_total            int     outer   0
+#EVENT cureRequest		"#1# tells the group#*#'cureRequest #2#'"
+#EVENT cureRequest		"#1# tells you#*#'cureRequest #2#'"
+#EVENT cureRequest		"#1# tells the raid#*#'cureRequest #2#'"
+#EVENT cureRequest  	"[ #1# #*#]#*#cureRequest #2#"
 
-    | targeted buffs
-    /declare timer_check_targetedBuffs      timer   outer   0
-    /declare int_targetedBuffs_total        int     outer   0
-    /declare bln_targetedBuffs_enabled      bool    outer   TRUE
-    /declare bln_targetedBuffs_allowRaid    bool    outer   TRUE
-    /declare bln_targetedBuffs_allowGroup   bool    outer   TRUE 
-    /declare bln_targetedBuffs_automatic    bool    outer   TRUE
+#EVENT cureGroup	    "#1# tells the group#*#'cureGroup #2#'"
+#EVENT cureGroup        "#1# tells you#*#'cureGroup #2#'"
+#EVENT cureGroup        "#1# tells the raid#*#'cureGroup #2#'"
+#EVENT cureGroup        "[ #1# #*#]#*#cureGroup #2#"
 
-    | combat buffs
-    /declare timer_check_combatBuffs        timer   outer   0
-    /declare int_combatBuffs_total          int     outer   0
-    /declare bln_combatBuffs_enabled        bool    outer   TRUE
-    /declare bln_combatBuffs_allowRaid      bool    outer   TRUE
-    /declare bln_combatBuffs_allowGroup     bool    outer   TRUE 
+#EVENT autoCure         "#1# tells the group#*#'autoCure #2#'"
+#EVENT autoCure         "#1# tells you#*#'autoCure #2#'"
+#EVENT autoCure         "#1# tells the raid#*#'autoCure #2#'"
+#EVENT autoCure         "[ #1# #*#]#*#autoCure #2#"
 
+Sub Events_Buffing
+	/doevents cureRequest
+	/doevents cureGroup
 
-    /call initEvents_buffing
-    /call processSelfBuffs
-    /call processTargetedBuffs
-    /call processCombatBuffs
-    
-/return 
-
-Sub initEvents_buffing
-/return
-
-
-| Note int_selfBuffs_total is set here, as well as the list of selfbuffs
-Sub processSelfBuffs
-    /echo \awprocessSelfBuffs
-	/declare raw_selfBuffs[100]		string 	local NULL
-	/declare i						int 	local 0
-	/declare sz 					int     local 0
-    /declare test                   string  local NULL
-   
-    |; =_buff|_type|_itemName
-	|BUFF_1="Reyfin's Racing Thoughts"|ITEM|"Xxeric's Matted-Fur Mask"
-	/for i 1 to ${raw_selfBuffs.Size}
-        | if the value of the entry ends with a quoted string, we need to wrap it all in quotes again.
-        /varset test "${Ini[INI_CHAR,BUFFS_SELF,BUFF_${i}]}"
-        /if (${test.Arg[1,|].Equal[NULL]}) {
-            /varset int_selfBuffs_total ${sz}
-            /return
-        } 
-        | Not null, set the values for the buffs
-		/varcalc sz	${sz}+1
-		/declare BUFFSELF_${i}		string	outer   ${test.Arg[1,|]}
-		/declare BUFFSELF_${i}_Type	string  outer   ${test.Arg[2,|]}
-		/declare BUFFSELF_${i}_Name	string  outer   ${test.Arg[3,|]}
-        /echo \aoBuff Processed[\ag${i}\ao]: \awBuff:\ag${BUFFSELF_${i}} \awType:\ag${BUFFSELF_${i}_Type} \awName:\ag${BUFFSELF_${i}_Name}
-	/next i
-/return
-
-Sub processTargetedBuffs
-    /echo \awprocessTargetedBuffs
-    /declare raw_targetedBuffs[100]		string 	local NULL
-	/declare i						    int 	local 0
-	/declare sz 					    int     local 0
-    /declare test                       string  local NULL
-
-    |; = _enabled|_allowRaid|_allowGroup|_automatic
-    |settings=TRUE|TRUE|TRUE|FALSE
-    /if (!${Ini[INI_CHAR,BUFFS_TARGETED,settings].Arg[1,|]})  /varset bln_targetedBuffs_enabled    FALSE
-    /if (!${Ini[INI_CHAR,BUFFS_TARGETED,settings].Arg[2,|]})  /varset bln_targetedBuffs_allowRaid  FALSE
-    /if (!${Ini[INI_CHAR,BUFFS_TARGETED,settings].Arg[3,|]})  /varset bln_targetedBuffs_allowGroup FALSE
-    /if (!${Ini[INI_CHAR,BUFFS_TARGETED,settings].Arg[4,|]})  /varset bln_targetedBuffs_automatic  FALSE
-
-    /echo \ao    Settings Processed: \awEnabled:\ag${bln_targetedBuffs_enabled} \awAllowRaid:\ag${bln_targetedBuffs_allowRaid} \awAllowGroup:\ag${bln_targetedBuffs_allowGroup} \awAutomatic:\ag${bln_targetedBuffs_automatic}
-    
-    |;=_buff|_use|_targetType|_gem|_classes
-    |BUFF_1="Balikor's Mark"|TRUE|GROUP|5|ALL
-    /for i 1 to ${raw_targetedBuffs.Size}
-        /varset test ${Ini[INI_CHAR,BUFFS_TARGETED,BUFF_${i}]}
-        /if (${test.Arg[1,|].Equal[NULL]}) {
-            /varset  int_targetedBuffs_total ${sz}
-            /return
-        } 
-        | Not null, set the values for the buffs
-		/varcalc sz	${sz}+1
-		/declare BUFFTARGETED_${i}		    string	outer   ${test.Arg[1,|]}
-        /declare BUFFTARGETED_${i}_Use	    string  outer   ${test.Arg[2,|]}
-		/declare BUFFTARGETED_${i}_Type	    string  outer   ${test.Arg[3,|]}
-		/declare BUFFTARGETED_${i}_Gem	    string  outer   ${test.Arg[4,|]}
-        /declare BUFFTARGETED_${i}_Targets	string  outer   ${test.Arg[5,|]}
-        /echo \ao    Buff Processed[\ag${i}\ao]: \awBuff:\ag${BUFFTARGETED_${i}} \awUse:\ag${BUFFTARGETED_${i}_Use} \awType:\ag${BUFFTARGETED_${i}_Type} \awGem:\ag${BUFFTARGETED_${i}_Gem} \awTargets:\ag${BUFFTARGETED_${i}_Targets}
-    /next i
-
-/return
-
-Sub processCombatBuffs
-    /echo \awprocesCombatBuffs
-    /declare raw_combatBuffs[100]		string 	local NULL
-	/declare i						    int 	local 0
-	/declare sz 					    int     local 0
-    /declare test                       string  local NULL
-
-    |; = _enabled|_allowRaid|_allowGroup|_automatic
-    |settings=TRUE|TRUE|TRUE|FALSE
-    /if (!${Ini[INI_CHAR,BUFFS_COMBAT,settings].Arg[1,|]})  /varset bln_combatBuffs_enabled         FALSE
-    /if (!${Ini[INI_CHAR,BUFFS_COMBAT,settings].Arg[2,|]})  /varset bln_combatBuffs_allowRaid       FALSE
-    /if (!${Ini[INI_CHAR,BUFFS_COMBAT,settings].Arg[3,|]})  /varset bln_combatBuffs_allowGroup      FALSE
-
-    /echo \ao    Settings Processed: \awEnabled:\ag${bln_combatBuffs_enabled} \awAllowRaid:\ag${bln_combatBuffs_allowRaid} \awAllowGroup:\ag${bln_combatBuffs_allowGroup}
-    |;=_buff|_use|_targetType|_gem|_classes
-    |BUFF_1="Panoply of Vie"|TRUE|SINGLE|5|MT
-   
-    /for i 1 to ${raw_combatBuffs.Size}
-        /varset test ${Ini[INI_CHAR,BUFFS_COMBAT,BUFF_${i}]}
-        /if (${test.Arg[1,|].Equal[NULL]}) {
-            /varset  int_combatBuffs_total ${sz}
-            /return
-        } 
-        | Not null, set the values for the buffs
-		/varcalc sz	${sz}+1
-		/declare BUFFCOMBAT_${i}		    string	outer   ${test.Arg[1,|]}
-        /declare BUFFCOMBAT_${i}_Use	    string  outer   ${test.Arg[2,|]}
-		/declare BUFFCOMBAT_${i}_Type	    string  outer   ${test.Arg[3,|]}
-		/declare BUFFCOMBAT_${i}_Gem	    string  outer   ${test.Arg[4,|]}
-        /declare BUFFCOMBAT_${i}_Targets	string  outer   ${test.Arg[5,|]}
-        /echo \ao    Buff Processed[\ag${i}\ao]: \awBuff:\ag${BUFFCOMBAT_${i}} \awUse:\ag${BUFFCOMBAT_${i}_Use} \awType:\ag${BUFFCOMBAT_${i}_Type} \awGem:\ag${BUFFCOMBAT_${i}_Gem} \awTargets:\ag${BUFFCOMBAT_${i}_Targets}
-    /next i
-
+	/doevents autoCure
 /return
 
 
 
-Sub chkSelfBuffs
-    | handle like downflags used to be (we just reconfigured/renamed things)
-    /echo \aochkSelfBuffs\aw(\ag${int_selfBuffs_total}\aw)
-    /declare i  int                 local 0
-    /declare ds int                 local 0
-    /declare brdCastingArgs string  local NULL
-    /declare allCastingArgs string  local NULL
-    /declare bln_buffsCast  bool    local FALSE
-    | We need to target ourselves since this is a self buff
-    /target id ${Me.ID}
-    /for i 1 to ${int_selfBuffs_total}
-        | Check to see if the buff is a DS and if bln_useDS if FALSE, skip the buff
-        /if (!${bln_useDS}) {
-            /for ds 1 to ${int_damageShieldList_total}
-                /if (${buffName.Equal[${dsSpells[${ds}]}]}) /goto :next_buff
-            /next ds
-        }
 
-        | Check the events for enagement to stop this sub
-        |/call RunAllEvents
-        /if (${bln_engaged}) /return
+Sub EVENT_cureRequest(string _line, string _sender,  string _eventParams)
 
-        | Check to see if the buff is already applied
-        /echo \aw    Checking \ag${BUFFSELF_${i}} \aoStacks?\ag${Spell[${BUFFSELF_${i}}].Stacks}  \aoCurrently Have? \ag${Bool[${Me.Buff[${BUFFSELF_${i}}].ID}]}
-        /if (${Spell[${BUFFSELF_${i}}].Stacks} && !${Me.Buff[${BUFFSELF_${i}}].ID}) {
-            | Handle the item type buff check
-            |BUFF_1="Reyfin's Racing Thoughts"|ITEM|"Xxeric's Matted-Fur Mask"
-            /varset brdCastingArgs "${BUFFSELF_${i}_Name}" TRUE ${int_defaultSpellGem}
-            /varset allCastingArgs ${BUFFSELF_${i}_Name}
-            /if (${BUFFSELF_${i}_Type.Equal[ITEM]}) {
-                /if (!${FindItem[=${BUFFSELF_${i}_Name}].ID})  /goto :next_buff
-                /varset brdCastingArgs ITEM ${brdCastingArgs} ${Me.ID} TRUE
-                
-            } else /if (${BUFFSELF_${i}_Type.Equal[SPELL]}) {
-                /call chkSpellMemorized "${BUFFSELF_${i}_Name}" TRUE ${int_defaultSpellGem}
-                /varset brdCastingArgs SONG "${BUFFSELF_${i}_Name}" ${Me.ID} TRUE
-
-            } else /if (${BUFFSELF_${i}_Type.Equal[ALT]})  {
-                /varset brdCastingArgs ALT "${BUFFSELF_${i}_Name}" ${Me.ID} TRUE
-            }
-            /varset bln_buffsCast TRUE
-            /if (${Me.Class.ShortName.Equal[BRD]})  /call MQ2Medley ${brdCastingArgs}
-            /if (!${Me.Class.ShortName.Equal[BRD]}) {
-                /call MQ2Cast "${allCastingArgs}"
-                /delay 50 (!${Me.Casting.ID})
-            }
-        }
-    :next_buff
-    /next i
-    /if (${bln_buffsCast}) /memspellset ${str_currentSpellSet}
-    /varset timer_check_selfBuffs 300
-/return
-
-Sub chkTargetedBuffs(string _targetType,string _targetName, bool _forced)
-    | handle like downflags used to be (we just reconfigured/renamed things)
-    /echo \aochkTargetedBuffs\aw(\ag${int_targetedBuffs_total}\aw)
-    /declare i  int                 local 0
-    /declare r  int                 local 0
-    /declare allCastingArgs string  local NULL
-
-    | mem the buff spellset
-    /memspellset buff
-    /delay 30
-
-    |;=_buff|_use|_targetType|_gem|_classes
-    /for i 1 to ${int_targetedBuffs_total}
-        /if (!${BUFFTARGETED_${i}_Use}) /goto :next_buff
-        | Verify that the spell is memorized
-        /call chkSpellMemorized "${BUFFTARGETED_${i}}" TRUE ${BUFFTARGETED_${i}_Gem}
-        | Character Buffing, this will only cast the buff on a single target
-        /if (${_targetType.Equal[CHARACTER]}) {
-            /if (${Target.Name.NotEqual[${_target.Name}]}) /call TrueTarget ${Spawn[pc ${_targetName}].ID}
-            | This is a character buff, so just cast this once
-            /call MQ2Cast "${BUFFTARGETED_${i}}"
-            /delay 50 (!${Me.Casting.ID})
-        } else /if (${_targetType.Equal[RAID]}) {
-            /if (${BUFFTARGETED_${i}_Type.Equal[GROUP]}) {
-                | Raid Buffing, this will walk through raid
-                /for r 1 to ${RaidGroupLeaders.Size}
-                    /if (${RaidGroupLeaders[${r}].NotEqual[NULL]}) {
-                        /echo Casting group buff on ${RaidGroupLeaders[${r}].Name}
-                        /if (${Target.Name.NotEqual[${RaidGroupLeaders[${r}].Name}]}) /call TrueTarget ${Spawn[pc ${RaidGroupLeaders[${r}].Name}].ID}
-                        /call MQ2Cast "${BUFFTARGETED_${i}}"
-                        /delay 50 (!${Me.Casting.ID})
-                    }       
-                /next r
-            } else  /if (${BUFFTARGETED_${i}_Type.Equal[SINGLE]}) {
-                | Single Target Buffing in the raid, look at groups and see if a target is in each
-                | Note it is probably unlikely that a SINGLE type buff will apply to ALL, but instead likely to be MT
-                | or a subset of classes
-                /for r 1 to ${Raig}
-            }
-        }
-       
-
-    /goto :next_buff
-    /next i
-
-    /memspellset ${str_currentSpellSet}
-    /varset timer_check_targetedBuffs 300
 /return
 
 |**
-CURING V2
+ ----------------------------
+ CURING Routines Initialization
+ ----------------------------
+ Will process the cure spells buffs defined in character INI
+ Will process the debuffs defined in the global INI
+
+ Sets default variables, and initializes the event listeners
+ ----------------------------
 **|
 
 Sub xbot_initialize_curing
 
     /echo \agInitialize: \aoCuring \aw-------------------------
     | Pull these values from the INI_CHAR file
-    /declare bln_autoCureMT     bool outer TRUE
-    /declare bln_autoCureSelf   bool outer TRUE
-    /declare bln_autoCureGroup  bool outer TRUE
-    /declare bln_chkLazyCures   bool outer FALSE
+    /declare bln_autoCureMT     bool    outer   TRUE
+    /declare bln_autoCureSelf   bool    outer   TRUE
+    /declare bln_autoCureGroup  bool    outer   TRUE
+    /declare bln_chkLazyCures   bool    outer   TRUE
+    /declare timer_check_cures  timer   outer   0
 
-    /call processCureSpells
+    /declare int_immediateDebuffCures_total int outer 0
+    /declare int_requiredDebuffCures_total  int outer 0
+
+    /call processCureSettings
     /call processRequiredCures
     /call initEvents_curing
 /return 
 
 Sub initEvents_curing
+    /if (${bln_hasCure_disease} || ${bln_hasCure_curse} || ${bln_hasCure_poison} || ${bln_hasCure_corruption}) /call RegisterBackgroundEvents Events_Buffing 3
 /return
 
 | This will be populated via INI file entriess
-Sub processCureSpells
-    /echo \awprocessCureSpells
-    /declare str_cure_disease       string outer "Pure Blood"|18
-    /declare str_cure_curse         string outer "Remove Greater Curse"|45
-    /declare str_cure_poison        string outer "Antidote"|64
+Sub processCureSettings
+    /echo \awprocessCureSettings
+    /declare bln_curing_enabled       bool outer  TRUE
 
-    /declare bln_hasCure_disease    bool outer TRUE 
-    /declare bln_hasCure_curse      bool outer TRUE 
-    /declare bln_hasCure_poison     bool outer TRUE 
-    /declare bln_hasCure_corruption bool outer FALSE
+    /declare bln_hasCure_radiant        bool    outer  FALSE
+    /declare bln_useCure_radiant        bool    outer  FALSE
+    /declare str_cure_radiant           string  outer "Radiant Cure"
+    /declare str_cure_radiant_counters  string  outer 25
 
-    /declare int_defaultSpellGem    int  outer 7
+    /declare bln_hasCure_disease    bool outer  TRUE 
+    /declare bln_hasCure_curse      bool outer  TRUE 
+    /declare bln_hasCure_poison     bool outer  TRUE 
+    /declare bln_hasCure_corruption bool outer  FALSE
+
+    
+    /declare str_cure_disease       string outer "Pure Blood"|TRUE|18
+    /declare str_cure_curse         string outer "Remove Greater Curse"|TRUE|45
+    /declare str_cure_poison        string outer "Antidote"|TRUE|64
+    /declare str_cure_corruption    string outer "NULL"|TRUE|64
+
+
+    /declare int_defaultCureGem     int  outer 7
+    |; _enabled|_hasRadiant
+	|  settings=TRUE
+    /if (!${Ini[INI_CHAR,CURES,settings].Arg[1,|]})     /varset bln_curing_enabled    FALSE
+    /echo \ao    Settings Processed: \awEnabled:\ag${bln_curing_enabled} 
+
+    |; _radiant|_use|_type
+    /if (${Ini[INI_CHAR,CURES,CURE_radiant].Arg[1,|]})  /varset bln_hasCure_radiant TRUE
+    /if (${Ini[INI_CHAR,CURES,CURE_radiant].Arg[1,|]})  /varset str_cure_radiant    ${Ini[INI_CHAR,CURES,CURE_radiant].Arg[1,|]}  
+    /if (${Ini[INI_CHAR,CURES,CURE_radiant].Arg[2,|]})  /varset bln_useCure_radiant TRUE  
+    /if (${Ini[INI_CHAR,CURES,CURE_radiant].Arg[3,|]})  /varset bln_useCure_radiant ${Ini[INI_CHAR,CURES,CURE_radiant].Arg[3,|]}    
+
+    /echo \ao    Settings Processed: \awEnabled:\ag${bln_targetedBuffs_enabled} \awAllowRaid:\ag${bln_targetedBuffs_allowRaid} \awAllowGroup:\ag${bln_targetedBuffs_allowGroup} \awAutomatic:\ag${bln_targetedBuffs_automatic}
+
 /return 
 
 | This will be populated by INI file entries
 Sub processRequiredCures 
     /echo \awprocessRequiredCures
     | Debuffs that must be cured as soon as possible
-    /declare    arr_immediateCures[2] string  outer NULL
-    /varset     arr_immediateCures[1] "Mark of Death"|disease|ALL
-	/varset     arr_immediateCures[2] "Packmaster's Curse"|curse|WAR,SHD,PAL
+    | [CURING_DEBUFF_IMMEDIATE]
+    | ;_name|_cureType[disease||poison||curse||corruption]|_targets[ALL|MT|Class.ShortName CSV]
+    /declare raw_immediateCures[20] string  local NULL
+    /declare raw_requiredCures[20]  string  local NULL
+    /declare i                      int     local 0
+    /declare sz                     int     local 0 
+    /declare test                   string  local NULL
 
-    | Debuffs that must be cured eventually
-	/declare    arr_requiredCures[10] 	string	outer	NULL
-	/varset     arr_requiredCures[1] "Wanton Destruction"|curse|ALL
-	/varset     arr_requiredCures[2] "Gaze of Anguish"|disease|CLR,DRU,SHM
-	/varset     arr_requiredCures[3] "Torment of Body"|curse|CLR,DRU,SHM,ENC
-	/varset     arr_requiredCures[4] "Feedback Dispersion"|curse|CLR,DRU,SHM,ENC
-	/varset     arr_requiredCures[5] "Fulmination"|poison|CLR,DRU,SHM,ENC,NEC,MAG,WIZ
-    /varset     arr_requiredCures[6] "Vergalid's Breath"|corruption|CLR,DRU,SHM
+    /for i 1 to ${raw_immediateCures.Size}
+        | if the value of the entry ends with a quoted string, we need to wrap it all in quotes again.
+        /varset test "${Ini[INI_COMMON,CURING_DEBUFF_IMMEDIATE,DEBUFF_${i}]}"
+        /if (${test.Arg[1,|].Equal[NULL]}) {
+            /varset int_immediateDebuffCures_total ${sz}
+            /return
+        }
+        | Not null, set the values for the debuffs to be cured
+        /varcalc sz ${sz}+1
+        /declare DEBUFF_IMMEDIATE_${i}          string  outer   ${test.Arg[1,|]}
+        /declare DEBUFF_IMMEDIATE_${i}_Type     string  outer   ${test.Arg[2,|]}
+        /declare DEBUFF_IMMEDIATE_${i}_Targets  string  outer   ${test.Arg[3,|]}
+        /echo \aoDebuff Processed[\ag${i}\ao]: \awDebuff:\ag${DEBUFF_IMMEDIATE_${i}} \awType:\ag${DEBUFF_IMMEDIATE_${i}_Type} \awTargets:\ag${DEBUFF_IMMEDIATE_${i}_Name}
+    /next i
+
+    /for i 1 to ${raw_requiredCures.Size}
+        | if the value of the entry ends with a quoted string, we need to wrap it all in quotes again.
+        /varset test "${Ini[INI_COMMON,CURING_DEBUFF_REQUIRED,DEBUFF_${i}]}"
+        /if (${test.Arg[1,|].Equal[NULL]}) {
+            /varset int_requiredDebuffCures_total ${sz}
+            /return
+        }
+        | Not null, set the values for the debuffs to be cured
+        /varcalc sz ${sz}+1
+        /declare DEBUFF_REQUIRED_${i}          string   outer   ${test.Arg[1,|]}
+        /declare DEBUFF_REQUIRED_${i}_Type     string   outer   ${test.Arg[2,|]}
+        /declare DEBUFF_REQUIRED_${i}_Targets  string   outer   ${test.Arg[3,|]}
+        /echo \aoDebuff Processed[\ag${i}\ao]: \awDebuff:\ag${DEBUFF_REQUIRED_${i}} \awType:\ag${DEBUFF_REQUIRED_${i}_Type} \awTargets:\ag${DEBUFF_REQUIRED_${i}_Name}
+    /next i    
 
 /return 
 
@@ -363,28 +225,41 @@ Sub chkCure_Self(bool _lazy)
     /call chkCureOnID ${Me.ID} ${_lazy}
 /return 
 
-Sub chkCure_Group(bool _lazy)
-    |TODO Write group curing function
+Sub chkCure_Group(bool _lazy, bool _forced, string _cureType)
+    /call chkCureOnGroup ${_lazy} ${_forced} ${_cureType}
 /return 
 
+Sub chkCureOnGroup(bool _lazy, bool _forced, string _cureType)
+
+/return
+
+
 Sub chkCureOnID(int _id, bool _lazy)
+    /if (${_lazy}) /varset timer_check_cures 50
     /echo \aochkCureOnId\aw(\ag${_id}\aw) Lazy? \ag${_lazy}
 	| Check if MT needs cure
 	| Specific items that need force cure
 	/declare i 				int 	local	0
 	/declare foundCounters	int		local	0
 	/declare debuffName     string 	local NULL
+    /declare debuffType     string  local NULL
     /declare victimName     string  local ${Spawn[pc id ${_id}].Name}
-    
-	| Immediate Cures
+
+    | If no counters, return out
+    /varset foundCounters 0
+    /dquery ${victimName} -q "Debuff.Counters" -o foundCounters
+    /delay 20 ${DanNet.Q.Received}
+    /if (!${foundCounters}) /return
+
+	| Immediate Cures  "Mark of Death"|disease|ALL
 	:immediateCures
-	/for i 1 to ${arr_requiredCures.Size}
+	/for i 1 to ${int_immediateDebuffCures_total}
 		/varset foundCounters 0
-		/varset debuffName ${arr_immediateCures[${i}].Arg[|,1]}
-		/dquery ${victimName} -q "Me.Buff[${debuffName}]" -o foundCounters
+        /echo \aoDebuffName \ag${DEBUFF_IMMEDIATE_${i}} \aoDebuffType \ag${DEBUFF_IMMEDIATE_${i}_Type}
+		/dquery ${victimName} -q "Me.Buff[${DEBUFF_IMMEDIATE_${i}}.TotalCounters]" -o foundCounters
 		/delay 20 ${DanNet.Q.Received}
 		/if (${foundCounters}) {
-			/call handleCureRequestV2 ${victimName} ${_id} ${arr_immediateCures[${i}]} ${foundCounters} TRUE
+			/call handleCureRequestV2 ${victimName} ${_id} ${DEBUFF_REQUIRED_${i}} ${DEBUFF_REQUIRED_${i}_Type} ${foundCounters} TRUE
             | If we cured something from immediate cures, we want to bail out of this to continue our checks on others
 			/return
 		}
@@ -397,18 +272,20 @@ Sub chkCureOnID(int _id, bool _lazy)
 	/for i 1 to ${arr_requiredCures.Size}
 		/varset foundCounters 0
 		/varset debuffName ${arr_requiredCures[${i}].Arg[|,1]}
-		/dquery ${victimName} -q "Me.Buff[${debuffName}]" -o foundCounters
+		/dquery ${victimName} -q "Me.Buff[${DEBUFF_REQUIRED_${i}}.TotalCounters]" -o foundCounters
 		/delay 20 ${DanNet.Q.Received}
 		/if (${foundCounters}) {
-			/call handleCureRequestV2 ${victimName} ${_id} ${arr_requiredCures[${i}]} ${foundCounters} TRUE
+			/call handleCureRequestV2 ${victimName} ${_id} ${DEBUFF_REQUIRED_${i}} ${DEBUFF_REQUIRED_${i}_Type} ${foundCounters} TRUE
             | If we cured something from required cures, we want to bail out of this to continue our checks on others
 			/return
 		}
 		/if (${arr_requiredCures[${i}].Equal[NULL]}) /goto :lazyCures
 	/next i
 
+    | Lazy cures: Out of Combat
 	:lazyCures 
-    /if (!${_lazy}) /return
+    /if (!${_lazy} || !${bln_chkLazyCures}) /return
+
     | Check Disease
     /varset foundCounters 0
     /dquery ${victimName} -q "Debuff.Diseased" -o foundCounters
@@ -437,7 +314,7 @@ Sub chkCureOnID(int _id, bool _lazy)
 
 | note: curestring looks like "Wanton Destruction"|curse|ALL
 | note: str_cure_curse looks like "Remove Greater Curse"|45 <= this is due to not being able to programmatically retrieve the amount of counters cured
-Sub handleCureRequestV2(string _name, int _id, string _cureString, int _counters, bool _forced)
+Sub handleCureRequestV2(string _name, int _id, string _cureType, int _counters, bool _forced)
 	/echo \ayhandleCureRequestV2: \ag${_name}\ao, \ag${_id}\ao, \ag${_cureString}\ao, \ag${_counters}\ao, \ag${_forced}
 	| Verify I can actually cure this
 	/if (!${bln_hasCure_${_cureString.Arg[2,|]}}) {
@@ -446,10 +323,11 @@ Sub handleCureRequestV2(string _name, int _id, string _cureString, int _counters
 	}
 
     | Debug information
-    /echo _cureString.Arg[1,|] =>${_cureString.Arg[1,|]} == "Wanton Destruction"
-    /echo _cureString.Arg[2,|] =>${_cureString.Arg[2,|]} == "Curse"
-    /echo ${str_cure_${_cureString.Arg[2,|]}}            == "Remove Greater Curse|45"
-    /echo ${str_cure_${_cureString.Arg[2,|]}.Arg[2,|]}   == 45
+    |/echo _cureString                                == "[debuff name]"|curse|ALL =>${_cureString}          
+    |/echo _cureString.Arg[1,|]                       == "[debuff name]"=>${_cureString.Arg[1,|]}
+    |/echo _cureString.Arg[2,|]                       == "[disease||poison||curse"]=>${_cureString.Arg[2,|]} 
+    |/echo {str_cure_{_cureString.Arg[2,|]}}          == "Remove Greater Curse|45"=> ${str_cure_${_cureString.Arg[2,|]}}
+    |/echo {str_cure_{_cureString.Arg[2,|]}.Arg[2,|]} == 45 =>${str_cure_${_cureString.Arg[2,|]}.Arg[2,|]}   
 
     | this string will look like "Remove Greater Curse"
 	/declare cureSpell string local ${str_cure_${_cureString.Arg[2,|]}.Arg[1,|]}
@@ -464,7 +342,7 @@ Sub handleCureRequestV2(string _name, int _id, string _cureString, int _counters
 	/declare castCount 		int 	local ${Math.Calc[${Math.Calc[${Math.Calc[${countersToCure}+${countersCured}]}-1]} / ${countersCured} ]}
 
     | Is the spell ready?
-    /call chkSpellMemorized "${cureSpell}" TRUE ${int_defaultSpellGem}
+    /call chkSpellMemorized "${cureSpell}" TRUE ${int_defaultCureGem}
     | Cast the spell
     /call castCureV2 ${_name} ${_id} "${cureSpell}" ${castCount} ${_forced}
 /return
@@ -477,7 +355,7 @@ Sub castCureV2(string _name, int _id, string _spell, int _castCount, bool _force
         /if (!${SpawnCount[pc ${_name}]}) /return
         /if (!${_forced} && (${int_healMode} > 0 && ${int_healMode} < 3) ) /call chkHeal_MT 
         /call TrueTarget ${_id}
-        /call MQ2Cast "${_spell}" ${int_defaultSpellGem} RunRapidEvents
+        /call MQ2Cast "${_spell}" ${int_defaultCureGem} RunPriorityEvents
      /next i
 /return 
 
@@ -491,7 +369,7 @@ Sub chkSpellMemorized(string _spell, bool _wait, string _gem)
     }
 	/if (${Me.Gem[${_spell}]})  /return
 
-    /declare int_gem int local ${int_defaultSpellGem}
+    /declare int_gem int local ${int_defaultCureGem}
     /if (${_gem.NotEqual[NULL]}) {
          /if (${_gem.Length} > 1) {
             /varset int_gem ${_gem.Right[1]}

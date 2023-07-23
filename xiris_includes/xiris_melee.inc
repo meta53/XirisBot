@@ -48,7 +48,7 @@ REVISION HISTORY
 #EVENT UpdateStickCMD	"#1# tells the raid#*#'UpdateStick #2#'"
 #EVENT UpdateStickCMD	"[ #1# #*#]#*#UpdateStick #2#"
 
-#define dsINI xiris_common/xiris_damageshields.ini
+#define dsINI xiris_includes/xiris_damageshields.ini
 
 Sub initEvents_Melee
  	/call RegisterBackgroundEvents Events_Melee 15

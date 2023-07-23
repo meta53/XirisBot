@@ -36,25 +36,25 @@ ______________________________________________
 **|
 
 #define INI_CHAR xiris_class_ini/BOT_${Me.Class.ShortName}_${Me.CleanName}.ini
-#define INI_RAID xiris_common/xiris_common.ini
+#define INI_RAID xiris_settings_gobal/xiris_common.ini
 
-#include xiris_common/xiris_dannet.inc
-#include xiris_common/xiris_buffing.inc
-#include xiris_common/xiris_burn.inc
-#include xiris_common/xiris_casting.inc
-#include xiris_common/xiris_charm.inc
-#include xiris_common/xiris_curing.inc
-#include xiris_common/xiris_debuffing.inc
-#include xiris_common/xiris_events.inc 
-#include xiris_common/xiris_exclude.inc
-#include xiris_common/xiris_healing.inc
-#include xiris_common/xiris_looting.inc
-#include xiris_common/xiris_melee.inc
-#include xiris_common/xiris_offtank.inc
-#include xiris_common/xiris_pets.inc
-#include xiris_common/xiris_movement.inc
+#include xiris_includes/xiris_dannet.inc
+#include xiris_includes/xiris_buffing.inc
+#include xiris_includes/xiris_burn.inc
+#include xiris_includes/xiris_casting.inc
+#include xiris_includes/xiris_charm.inc
+#include xiris_includes/xiris_curing.inc
+#include xiris_includes/xiris_debuffing.inc
+#include xiris_includes/xiris_events.inc 
+#include xiris_includes/xiris_exclude.inc
+#include xiris_includes/xiris_healing.inc
+#include xiris_includes/xiris_looting.inc
+#include xiris_includes/xiris_melee.inc
+#include xiris_includes/xiris_offtank.inc
+#include xiris_includes/xiris_pets.inc
+#include xiris_includes/xiris_movement.inc
 
-#include xiris_common/xiris_spell_routines.inc
+#include xiris_includes/xiris_spell_routines.inc
 
 |COMMON
 #EVENT KillMob 				"[#1#] KillMob #2#"
@@ -209,7 +209,7 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/declare 	CasterClasses 			string	outer	ENC,MAG,NEC,WIZ
 	/declare 	RangedClasses			string	outer	RNG
 	/declare 	str_raidGroupMode		string  outer   DEFAULT
-	/declare 	RaidGroupLeaders[9] 	string  outer 	NULL 
+	/declare 	arr_raidLeaders[9] 	string  outer 	NULL 
 	/declare 	RaidDIClerics[6] 		string  outer 	NULL
 
 	/call SetupRaid ${str_raidGroupMode}
@@ -321,21 +321,22 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/call xbot_initialize_dannet
 	/call xbot_initialize_spellRoutines
 	/call xbot_initialize_buffing
-	/call xbot_initialize_burns
-	/call xbot_initialize_casting
-	/call xbot_initialize_charming
+	|/call xbot_initialize_burns
+	|/call xbot_initialize_casting
+	|/call xbot_initialize_charming
 	/call xbot_initialize_curing
-	/call xbot_initialize_debuffing
-	/call xbot_initialize_exclusions
-	/call xbot_initialize_healing ${_healPoint}
-	/call xbot_initialize_looting
-	/call xbot_initialize_melee
-	/call xbot_initialize_offtanking
-	/call xbot_initialize_pets
-	/call xbot_initialize_movement
+	|/call xbot_initialize_debuffing
+	|/call xbot_initialize_exclusions
+	|/call xbot_initialize_healing ${_healPoint}
+	|/call xbot_initialize_looting
+	|/call xbot_initialize_melee
+	|/call xbot_initialize_offtanking
+	|/call xbot_initialize_pets
+	|/call xbot_initialize_movement
 
 	|-- report that the common things are initialized
 	/echo \agXBOT_INITIALIZE COMPLETE
+	/end
 /return
 
 
@@ -788,7 +789,7 @@ Sub SetupRaid(string _mode)
 
 	
 
-	/deletevar RaidGroupLeaders 
+	/deletevar arr_raidLeaders 
 	/deletevar RaidDIClerics
 	
 	|[RaidBuilder]
@@ -798,7 +799,7 @@ Sub SetupRaid(string _mode)
 	/if (!${keys.Find[${_mode}]}) {
 		/echo \awSetting Raid Group Mode \arERROR: 
 		/echo \aw   Unable to find \ay${_mode} in \ao${keys}
-		/declare RaidGroupLeaders[1] string outer NULL
+		/declare arr_raidLeaders[1] string outer NULL
 		/declare RaidDIClerics[1] string outer NULL
 		/goto :return
 	}
@@ -825,13 +826,13 @@ Sub SetupRaid(string _mode)
 			/varset leaderIndex ${i}
 			/varset groupCount ${groupCountCSV.Arg[${i},,]}
 			| Set the group leaders
-			/declare RaidGroupLeaders[${groupCount}] string outer NULL
+			/declare arr_raidLeaders[${groupCount}] string outer NULL
 			/varset leaderList ${Ini[INI_RAID,${settingsGroup},Raid_${i}_Leaders]}
 			/echo \awFound my membership in Raid \ao${i}
 			/echo \aySetting Raid Group mode to \ao${_mode}
 			/for j 1 to ${groupCount}
-				/varset	RaidGroupLeaders[${j}]  ${leaderList.Arg[${j},|]}
-				/echo \ag Raid Group Leader \aw[\ag${j}\aw] \ay${RaidGroupLeaders[${j}]}
+				/varset	arr_raidLeaders[${j}]  ${leaderList.Arg[${j},|]}
+				/echo \ag Raid Group Leader \aw[\ag${j}\aw] \ay${arr_raidLeaders[${j}]}
 			/next j
 
 			| Set the Divine Intervention Information
@@ -850,7 +851,7 @@ Sub SetupRaid(string _mode)
 	:fail_noGroup
 		/echo \awSetting Raid Group Mode \arERROR
 		/echo \aw   Unable to find our raid leader in the leader list for the \ao${_mode} \awraid type.
-		/declare RaidGroupLeaders[1] string outer NULL
+		/declare arr_raidLeaders[1] string outer NULL
 		/declare RaidDIClerics[1] string outer NULL
 		/goto :return
 	:return

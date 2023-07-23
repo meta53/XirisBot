@@ -1352,7 +1352,7 @@ Sub xbot_initialize_healing(int _healPoint)
 	}
 
 
-	/declare 	healINI				string  outer	xiris_common/xiris_healing.ini
+	/declare 	healINI				string  outer	xiris_includes/xiris_healing.ini
 	|-- Set spellset to default so we can probe the properties of these
 	/if (${str_classArchetype.Equal[PRIEST]} || ${str_classArchetype.Equal[CASTER]} || ${str_classArchetype.Equal[MELEE_MANA]}) /memspellset default
 
