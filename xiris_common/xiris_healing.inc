@@ -836,7 +836,7 @@ Sub healCast(int _id, string _name, string _spell, bool _isGroup, bool _isHoT)
 	}
 	/if ((${_isGroup} || (${Spawn[pc ${_name}].PctHPs} < ${int_point_calcStopHeal}) && (${Me.CurrentMana} > ${Spell[${_spell}].Mana}))) {
 		/echo \aoHealCast \ay:IsGroup:\ag${_isGroup} \ayTarget:\ag${_name}(${_id}) \aydist:\ag${Target.Distance} \aytargetHP:\ag${Spawn[pc ${_name}].PctHPs}\ao < \ayStopHP:\ag${int_point_calcStopHeal} \ayspell:\ag"${_spell}" \ayMyMana:\ag ${Me.CurrentMana}\ao > \ag${Spell[${_spell}].Mana}
-		/g HealCast Target:${_name}(${_id}) dist:${Target.Distance} targetHP:${Spawn[pc ${_name}].PctHPs} < StopHP:${int_point_calcStopHeal} spell:"${_spell}" MyMana:${Me.CurrentMana} SpellCost:${Spell[${_spell}].Mana}
+		|/g HealCast Target:${_name}(${_id}) dist:${Target.Distance} targetHP:${Spawn[pc ${_name}].PctHPs} < StopHP:${int_point_calcStopHeal} spell:"${_spell}" MyMana:${Me.CurrentMana} SpellCost:${Spell[${_spell}].Mana}
 		/call TrueTarget ${_id}
 		/call chkSpellMemorized "${_spell}" TRUE 2
 		/if (${_isGroup}) {

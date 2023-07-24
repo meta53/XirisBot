@@ -65,10 +65,10 @@ Sub Events_OOW_Anguish
 	/if ((${Me.Class.ShortName.Equal[WAR]} || ${Me.Class.ShortName.Equal[SHD]}) && ${bln_engaged}) /call chkDivineIntervention
 
 	| Ture Events
-	/if (${Bool[${SpawnCount[npc Ture]}]} && ${Spawn[npc Ture].Distance3D} < 400) {
+	|/if (${Bool[${SpawnCount[npc Ture]}]} && ${Spawn[npc Ture].Distance3D} < 400) {
 		/doevents TureRampOn
 		/doevents TureRampOff
-	}
+	|}
 
 	| Jelvan Events
 	/if (${Bool[${SpawnCount[npc Jelvan]}]} && ${Spawn[npc Jelvan].Distance3D} < 400) {
@@ -106,9 +106,10 @@ Sub Events_OOW_Anguish
 
 Sub Event_TureRampOn
 	/echo \ao TURE RAMPAGE: \awengaged?\ag${bln_engaged} \awtanking?\ag${bln_tanking}
-	/if (!${bln_engaged} || ${bln_tanking}) /return
+	/if (${bln_tanking}) /return
 	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
 		/echo \arTURE RAMPAGE
+		/call Disengage
 		/squelch /attack off 
 		/squelch /stick off
 		/stand on
@@ -122,26 +123,30 @@ Sub Event_TureRampOn
 		/pet hold on
 		/pet back off
 	}
+	/doevents flush TureRampOn
 /return 
 
 Sub Event_TureRampOff 
-	/if (!${bln_engaged} || ${bln_tanking}) /return
+	/if (${bln_tanking}) /return
 	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
 		/echo \arTURERAMPAGE
 		/call TrueTarget ${int_targetID}
 		/nav wp tureDPS
 		:ture_run 
-		/if (${Target.Distance} < 50) /nav stop
+		/if (${Target.Distance} < 35) /nav stop
 		/if (${Navigation.Active}) /goto :ture_run
+		/call EngageTarget ${int_targetID}
 		/squelch /attack on
 	} else /if (${Me.Class.ShortName.Equal[NEC]} || ${Me.Class.ShortName.Equal[MAG]} || ${Me.Class.ShortName.Equal[BST]}) {
 		/pet attack
 	}
+	/doevents flush TureRampOn
 /return 
 
 Sub Event_TureWanton 
 	/echo \aw Warning! \arWanton Destruction \awon me!
 	/call chkNeedCure
+	/doevents flush TureWanton
 /return
 
 |----------------------------
