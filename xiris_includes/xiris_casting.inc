@@ -559,21 +559,20 @@ Sub chkSnare
 
 
 |- Method will memorize a spell, to the optional attributed gem, and if wait is true, will wait until its ready to return
-|- note will call utility to string 'gem' from the gem # if found
-|- Method will memorize a spell, to the optional attributed gem, and if wait is true, will wait until its ready to return
-|- note will call utility to string 'gem' from the gem # if found
+|- note will convert "gem7" to an integer 7 for gem slot
 Sub chkSpellMemorized(string _spell, bool _wait, string _gem)
-	/if (${_spell.Equal[NULL]}) /goto :nullSpell
+	/if (${_spell.Equal[NULL]}) {
+       /docommand /${announceChannel} Ther was an error trying to memorize a NULL spell!;
+       /return
+    }
 	/if (${Me.Gem[${_spell}]})  /return
 
-    /declare int_gem int local 9
+    /declare int_gem int local ${int_defaultCureGem}
     /if (${_gem.NotEqual[NULL]}) {
          /if (${_gem.Length} > 1) {
-            | this has to be a string, strip "gem" from it
             /varset int_gem ${_gem.Right[1]}
          }
     } else {
-        | this has to be an integer
         /varset int_gem ${_gem}
     } 
    
@@ -581,21 +580,14 @@ Sub chkSpellMemorized(string _spell, bool _wait, string _gem)
 	    /echo \aochkSpellMemorized\ag "${_spell}" \awgem:\ao${int_gem} \awwait?:\ao${_wait}
 		/memspell ${int_gem} "${_spell}" 
 		/if (!${_wait}) /return
-		/declare waitCount int local 0
-		:memwait
-            /echo Waiting for ${_spell}
-			/delay 50 ${Me.SpellReady[${_spell}]}
-            /echo Spell Memorized
-			/if (${Me.SpellReady[${_spell}]}) {
-                /return
-            } else {
-                /docommand /${announceChannel} There was a timeout error trying to memorize "${_spell}"
-                /return
-            }
-		
-:nullSpell 
-	/docommand /${announceChannel} Ther was an error trying to memorize a NULL spell!;
+
+        /echo Waiting for ${_spell}
+        /delay 50 ${Me.SpellReady[${_spell}]}
+        /echo Spell Memorized
+        /if (${Me.SpellReady[${_spell}]}) /return
+        /docommand /${announceChannel} There was a timeout error trying to memorize "${_spell}"
 /return 
+
 
 Sub Event_ChkHasSpell(_line, _sender, _eventParams)
 	/echo line: ${_line} sender: ${_sender} params:${_eventParams}

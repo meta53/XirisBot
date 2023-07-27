@@ -23,752 +23,753 @@ REVISION HISTORY
 	06.13.22	xiris	Restored events for Group/Party/Raid due to need to split raids sometimes (multiple camp pulling, jelvan balancing etc)	
 						Added 'simple' cureMe request handler for manual entry (usually by MT)
 	06.29.22	xiris 	Updated all events to only be either generic, or [/gsay, /rsay, /tell, MQ2DanNet(dgt, dt)] only			
-	07.28.22	xiris   Updated the chkNeedCure request to have more must cure spells		
+	07.28.22	xiris   Updated the chkNeedCure request to have more must cure spells
+	07.24.23	xiris	Rewrote majority of code to handle new INI implementations		
 **|
 
-|-- Single PC Cure Request eg: /g cureme poison
-#EVENT cureMe			"#1# tells the group#*#'cureMe #2#'"
-#EVENT cureMe			"#1# tells you#*#'cureMe #2#'"
-#EVENT cureMe			"#1# tells the raid#*#'cureMe #2#'"
-#EVENT cureMe  			"[ #1# #*#]#*#cureMe #2#"
 
-|-- Macro generated cure requests/rejections
+| Request a Cure by TYPE[IMMEDIATE|REQUIRED|LAZY|ALL]
+#EVENT cureRequest		"#1# tells the group#*#'cureRequest #2#'"
+#EVENT cureRequest		"#1# tells you#*#'cureRequest #2#'"
+#EVENT cureRequest		"#1# tells the raid#*#'cureRequest #2#'"
 #EVENT cureRequest  	"[ #1# #*#]#*#cureRequest #2#"
-#EVENT cureReceived  	"[ #1# #*#]#*#I cured you#*#(#2#)#*#"
-#EVENT cureRejected  	"[ #1# #*#]#*#I cannot cure you#*#"
 
-|-- Poison
-#EVENT cureGroupPoison	"#1# tells the group#*#'cureGroupPoison #2#'"
-#EVENT cureGroupPoison	"#1# tells you#*#'cureGroupPoison #2#'"
-#EVENT cureGroupPoison	"#1# tells the raid#*#'cureGroupPoison #2#'"
-#EVENT cureGroupPoison 	"[ #1# #*#]#*#cureGroupPoison #2#"
+| Request checking a group for a cure with LAZY[TRUE|FALSE]
+#EVENT cureGroup	    "#1# tells the group#*#'cureGroup #2#'"
+#EVENT cureGroup        "#1# tells you#*#'cureGroup #2#'"
+#EVENT cureGroup        "#1# tells the raid#*#'cureGroup #2#'"
+#EVENT cureGroup        "[ #1# #*#]#*#cureGroup #2#"
 
-|-- Disease
-#EVENT cureGroupDisease	"#1# tells the group#*#'cureGroupDisease #2#'"
-#EVENT cureGroupDisease	"#1# tells you#*#'cureGroupDisease #2#'"
-#EVENT cureGroupDisease	"#1# tells the raid#*#'cureGroupDisease #2#'"
-#EVENT cureGroupDisease "[ #1# #*#]#*#cureGroupDisease #2#"
+| Request an IMMEDIATE cure TYPE
+#EVENT cureImmediate     "#1# tells the group#*#'cureImmediate#*#'"
+#EVENT cureImmediate     "#1# tells you#*#'cureImmediate#*#'"
+#EVENT cureImmediate     "#1# tells the raid#*#'cureImmediate#*#'"
+#EVENT cureImmediate     "[ #1# #*#]#*#cureImmediate#*#"
 
-|-- Curse
-#EVENT cureGroupCurse	"#1# tells the group#*#'cureGroupCurse #2#'"
-#EVENT cureGroupCurse	"#1# tells you#*#'cureGroupCurse #2#'"
-#EVENT cureGroupCurse	"#1# tells the raid#*#'cureGroupCurse #2#'"
-#EVENT cureGroupCurse 	"[ #1# #*#]#*#cureGroupCurse #2#"
+| Request a REQUIRED cure TYPE
+#EVENT cureRequired     "#1# tells the group#*#'cureRequired#*#'"
+#EVENT cureRequired     "#1# tells you#*#'cureRequired#*#'"
+#EVENT cureRequired     "#1# tells the raid#*#'cureRequired#*#'"
+#EVENT cureRequired     "[ #1# #*#]#*#cureRequired#*#"
 
-|-- Corruption (N/A until TSS)
+| Request a LAZY cure TYPE
+#EVENT cureLazy         "#1# tells the group#*#'cureLazy#*#'"
+#EVENT cureLazy         "#1# tells you#*#'cureLazy#*#'"
+#EVENT cureLazy         "#1# tells the raid#*#'cureLazy#*#'"
+#EVENT cureLazy         "[ #1# #*#]#*#cureLazy#*#"
 
+| Toggle autoCuring for MT [TRUE|FALSE]
+#EVENT autoCureMT       "#1# tells the group#*#'autoCureMT #2#'"
+#EVENT autoCureMT       "#1# tells you#*#'autoCureMT #2#'"
+#EVENT autoCureMT       "#1# tells the raid#*#'autoCureMT #2#'"
+#EVENT autoCureMT       "[ #1# #*#]#*#autoCureMT #2#"
 
-|-- Other Events
-#EVENT ResetGroupCurer	"#1# tells you#*#'ResetGroupCurer#*#'"
-#EVENT ResetGroupCurer	"#1# tells the group#*#'ResetGroupCurer#*#'"
-#EVENT ResetGroupCurer	"#1# tells the raid#*#'ResetGroupCurer#*#'"
-#EVENT ResetGroupCurer	"[ #1# #*#]#*#ResetGroupCurer#*#"
-
-#EVENT AutoCureMTOn		"#*#AutoCureMTOn#*#"
-#EVENT AutoCureMTOn		"#*#AutoCureMTOff#*#"
 
 
 Sub Events_Curing
-	/doevents cureMe
 	/doevents cureRequest
-	/doevents cureGroupPoison
-	/doevents cureGroupDisease
-	/doevents cureGroupCurse
-	/doevents AutoCureMTOn
-	/doevents AutoCureMTOff
+	/doevents cureGroup
+	/doevents cureImmediate
+    /doevents cureRequired 
+
 /return
 
 Sub Events_Curing_Background
-	/doevents cureReceived
-	/doevents cureRejected
-	/doevents ResetGroupCurer
+    /doevents autoCureMT
+    /doevents cureLazy
 /return
+
+Sub EVENT_cureRequest(string _line, string _sender,  string _eventParams)
+    /call chkCureType_${_eventParams} ${_sender} ${Spawn[pc ${_sender}].ID}
+    /doevents flush cureRequest
+/return
+
+Sub EVENT_cureGroup(string _line, string _sender, string _eventParams)
+    /call chkCure_Group ${_eventParams}
+    /doevents flush cureGroup
+/return 
+
+Sub EVENT_cureImmediate(string _line, string _sender,  string _eventParams)
+    /call chkCureType_IMMEDIATE ${_sender} ${Spawn[pc ${_sender}].ID}
+    /doevents flush cureImmediate
+/return
+
+Sub EVENT_cureRequired(string _line, string _sender,  string _eventParams)
+    /call chkCureType_REQUIRED ${_sender} ${Spawn[pc ${_sender}].ID}
+    /doevents flush cureRequired
+/return
+
+Sub EVENT_cureLazy(string _line, string _sender,  string _eventParams)
+    /call chkCureType_LAZY ${_sender} ${Spawn[pc ${_sender}].ID}
+    /doevents flush cureLazy
+/return
+
+Sub EVENT_autoCureMT(string _line, string _sender, string _eventParams)
+    /varset bln_autoCureMT ${_eventParams}
+    /doevents flush autoCureMT
+/return 
+
 
 Sub xbot_initialize_curing
-	/echo \ao xbot_initialize_curing
-	/declare 	int_manadrain_threshold int		outer 	100
-	/declare	int_hpdrain_threshold	int		outer	300
-	/declare 	bln_needsCure 			bool	outer	FALSE
-	/declare    bln_askedForCure        bool    outer   FALSE
-	/declare 	bln_autoCureMT			bool    outer   FALSE
-	/declare    str_myCurer				string	outer 	NULL
-	/declare	timer_cure_request		timer   outer
-	/declare  	bln_useCures			bool    outer   TRUE
-	/declare 	timer_cureCheck			timer 	outer 	10s
+    /echo \agInitialize: \aoCuring \aw-------------------------
 
-	
-	/declare 	cureRange     			int   	outer   100
-	/declare    bln_navCure   			bool    outer   FALSE
-	/declare    str_navCureStart  		string  outer 
-	/declare 	timer_cure_complain		timer   outer   0
-
-	/declare    str_cure_curse			string  outer   ${Ini[INI_CHAR,Curing,str_cure_curse,"Remove Greater Curse"]}
-	/declare    int_cure_curse			string  outer   ${Ini[INI_CHAR,Curing,int_cure_curse,36]}
-	/declare    is_curse_group          bool    outer   ${Ini[INI_CHAR,Curing,is_curse_group, FALSE]}
-	
-	/declare    str_cure_corruption		string  outer   ${Ini[INI_CHAR,Curing,str_cure_corruption,"NULL"]}
-	/declare    int_cure_corruption		string  outer   ${Ini[INI_CHAR,Curing,int_cure_corruption,36]}
-	/declare    is_corr_group           bool    outer   ${Ini[INI_CHAR,Curing,is_corr_group, FALSE]}
-	
-	/declare    str_cure_poison			string  outer   ${Ini[INI_CHAR,Curing,str_cure_poison,"Antidote"]}
-	/declare    int_cure_poison			string  outer   ${Ini[INI_CHAR,Curing,int_cure_poison,64]}
-	/declare    is_poison_group         bool    outer   ${Ini[INI_CHAR,Curing,is_poison_group, FALSE]}
-	
-	/declare    str_cure_disease		string  outer   ${Ini[INI_CHAR,Curing,str_cure_disease,"Pure Blood"]}
-	/declare    int_cure_disease		string  outer   ${Ini[INI_CHAR,Curing,int_cure_disease,18]}
-	/declare    is_disease_group        bool    outer   ${Ini[INI_CHAR,Curing,is_disease_group, FALSE]}
-	
-	/declare    str_secondary_radiant	string	outer   ${Ini[INI_CHAR,Curing,str_secondary_radiant,"NULL"]} 
-	
-
-	/declare	bln_hasDiseaseCure		bool	outer	TRUE
-	/declare	bln_hasPoisonCure		bool	outer	TRUE
-	/declare 	bln_hasCurseCure		bool	outer	TRUE
-	/declare 	bln_hasCorruptionCure	bool	outer	FALSE 
-	
-	
-	/if (${str_cure_curse.Equal[NULL]}) 	/varset bln_hasCurseCure 	FALSE
-	/if (${str_cure_poison.Equal[NULL]}) 	/varset bln_hasPoisonCure 	FALSE
-	/if (${str_cure_disease.Equal[NULL]}) 	/varset bln_hasDiseaseCure 	FALSE
-	
-	/call 		getGroupCurer DEFAULT
-	/varset 	str_myCurer ${Macro.Return}
-	
-	/call initEvents_Curing
-	
-/return
+    /if (${Select[${Me.Class.ShortName},CLR,DRU,SHM,PAL]}) /call processCureSpellSettings
+    /call processCureDebuffList
+    
+    /call initEvents_curing
+/return 
 
 
 Sub initEvents_Curing
-	/if (${str_classArchetype.Equal[PRIEST]} || ${Me.Class.ShortName.Equal[PAL]}) /call RegisterClassEvents Events_Curing 5
+	/if (${Select[${Me.Class.ShortName},CLR,DRU,SHM,PAL]}) /call RegisterClassEvents Events_Curing 3
 	/call RegisterBackgroundEvents Events_Curing_Background 3
 /return
 
 
-Sub Event_AutoCureMTOn
-	/echo \agNow Automatically Curing MT
-	/varset bln_autoCureMT TRUE
+| Set up the cure spells for priest classes
+Sub processCureSpellSettings
+    /echo \awprocessCureSettings
+     /declare timer_check_cures  timer   outer   0
+    
+    /declare int_defaultCureGem             int     outer   7
+    /declare bln_hasCure_radiant            bool    outer   FALSE
+    /declare bln_useCure_radiant            bool    outer   FALSE
+    /declare str_cure_radiant               string  outer   "Radiant Cure"
+    /declare str_cure_radiant_counters      string  outer   25
+
+    /declare bln_hasCure_corruption         bool    outer   FALSE
+    /declare bln_hasCure_corruption_group   bool    outer   FALSE 
+    /declare bln_hasCure_curse              bool    outer   FALSE 
+    /declare bln_hasCure_curse_group        bool    outer   FALSE 
+    /declare bln_hasCure_disease            bool    outer   FALSE 
+    /declare bln_hasCure_disease_group      bool    outer   FALSE 
+    /declare bln_hasCure_poison             bool    outer   FALSE 
+    /declare bln_hasCure_poison_group       bool    outer   FALSE 
+    
+    /declare str_cure_disease               string  outer   NULL
+    /declare str_cure_disease_group         string  outer   NULL
+    /declare str_cure_curse                 string  outer   NULL
+    /declare str_cure_curse_group           string  outer   NULL
+    /declare str_cure_poison                string  outer   NULL
+    /declare str_cure_poison_group          string  outer   NULL
+    /declare str_cure_corruption            string  outer   NULL
+    /declare str_cure_corruption_group      string  outer   NULL
+
+    /declare bln_curing_enabled             bool    outer  TRUE
+    /declare bln_autoCureMT                 bool    outer  TRUE
+    /declare bln_autoCureSelf               bool    outer  TRUE
+    /declare bln_autoCureGroup              bool    outer  TRUE
+    /declare bln_autoCureLazy               bool    outer  TRUE
+
+
+    |; _enabled|_autoCureMT|_autoCureSelf|_autoCureGroup|_checkLazyCures
+	| settings=TRUE|TRUE|TRUE|TRUE|TRUE
+    /if (!${Ini[INI_CHAR,CURES,settings].Arg[1,|]})  /varset bln_curing_enabled     FALSE
+    /if (!${Ini[INI_CHAR,CURES,settings].Arg[2,|]})  /varset bln_autoCureMT         FALSE
+    /if (!${Ini[INI_CHAR,CURES,settings].Arg[3,|]})  /varset bln_autoCureSelf       FALSE
+    /if (!${Ini[INI_CHAR,CURES,settings].Arg[4,|]})  /varset bln_autoCureGroup      FALSE
+    /if (!${Ini[INI_CHAR,CURES,settings].Arg[5,|]})  /varset bln_autoCureLazy       FALSE
+
+
+    |; _radiant|_use|_type
+    /if (${Ini[INI_CHAR,CURES,CURE_radiant].Arg[1,|].NotEqual[NULL]})  /varset bln_hasCure_radiant TRUE
+    /if (${Ini[INI_CHAR,CURES,CURE_radiant].Arg[1,|].NotEqual[NULL]})  /varset str_cure_radiant    ${Ini[INI_CHAR,CURES,CURE_radiant].Arg[1,|]}  
+    /if (${Ini[INI_CHAR,CURES,CURE_radiant].Arg[2,|]})  /varset bln_useCure_radiant TRUE  
+    /if (${Ini[INI_CHAR,CURES,CURE_radiant].Arg[3,|]})  /varset bln_useCure_radiant ${Ini[INI_CHAR,CURES,CURE_radiant].Arg[3,|]}    
+
+    /echo \ao    Settings Processed: \awEnabled:\ag${bln_curing_enabled} \awAllowMT:\ag${bln_autoCureMT} \awAllowSelf:\ag${bln_autoCureSelf} \awAllowGroup:\ag${bln_autoCureGroup} \awLazy:\ag${bln_autoCureLazy}
+
+    |;CURE_poison="Antidote"|TRUE|64
+    |CURE_curse="Remove Greater Curse"|TRUE|45 
+    | curse
+    /echo \ap test: ${Ini[INI_CHAR,CURES,CURE_curse]}
+    /if (${Ini[INI_CHAR,CURES,CURE_curse].NotEqual[NULL]}) {
+        /varset bln_hasCure_curse           TRUE 
+        /varset str_cure_curse ${Ini[INI_CHAR,CURES,CURE_curse]}
+    }        
+    /if (${Ini[INI_CHAR,CURES,CURE_curse_group].NotEqual[NULL]}) {
+        /varset bln_hasCure_curse_group     TRUE 
+        /varset str_cure_curse_group ${Ini[INI_CHAR,CURES,CURE_curse_group]}
+    }
+
+    | disease
+    /if (${Ini[INI_CHAR,CURES,CURE_disease].NotEqual[NULL]}) {
+        /varset bln_hasCure_disease         TRUE 
+        /varset str_cure_disease ${Ini[INI_CHAR,CURES,CURE_disease]}
+    }     
+    /if (${Ini[INI_CHAR,CURES,CURE_disease_group].NotEqual[NULL]}) {
+        /varset bln_hasCure_disease_group   TRUE 
+        /varset str_cure_disease_group ${Ini[INI_CHAR,CURES,CURE_disease_group]}
+    }
+
+    | poison
+    /if (${Ini[INI_CHAR,CURES,CURE_poison].NotEqual[NULL]}) {
+        /varset bln_hasCure_poison          TRUE    
+        /varset str_cure_poison ${Ini[INI_CHAR,CURES,CURE_poison]}
+    }
+    /if (${Ini[INI_CHAR,CURES,CURE_poison_group].NotEqual[NULL]}) { 
+        /varset bln_hasCure_poison_group    TRUE    
+        /varset str_cure_poison_group ${Ini[INI_CHAR,CURES,CURE_poison_group]}
+    }
+
+    | Group Cure settings (for use with chkCure_Group)
+    /declare groupCurseCured    int     outer ${str_cure_curse_group.Arg[3,|]}
+    /declare groupDiseaseCured  int     outer ${str_cure_disease_group.Arg[3,|]}
+    /declare groupPoisonCured   int     outer ${str_cure_poison_group.Arg[3,|]}
+
+    /declare maxGroupCurseCured int outer ${groupCurseCured}
+    /varcalc maxGroupCurseCured ${groupCurseCured} * 2
+
+    /declare maxGroupDiseaseCured int outer ${groupDiseaseCured}
+    /varcalc maxGroupDiseaseCured ${groupDiseaseCured} * 2
+
+    /declare maxGroupPoisonCured int outer ${groupPoisonCured}
+    /varcalc maxGroupPoisonCured ${groupPoisonCured} * 2
+
+
+    /echo \ao    Settings Processed: \aySINGLE\awCurse:\ag${bln_hasCure_curse}:\ao${str_cure_curse} \awDisease:\ag${bln_hasCure_disease}:\ao${str_cure_disease} \awPoison:\ag${bln_hasCure_poison}:\ao${str_cure_poison}
+    /echo \ao    Settings Processed: \ayGROUP \awCurse:\ag${bln_hasCure_curse_group}:\ao${str_cure_curse_group} \awDisease:\ag${bln_hasCure_disease_group}:\ao${str_cure_disease_group} \awPoison:\ag${bln_hasCure_poison_group}:\ao${str_cure_poison_group}
 /return 
 
-Sub Event_AutoCureMTOff
-	/echo \awNo Longer Automatically Curing MT
-	/varset bln_autoCureMT FALSE
-/return
+| Set up the cure requiremmments for all classes (for their inner loop checks) 
+Sub processCureDebuffList
+    /echo \awprocessCureDebuffList
+    /declare int_immediateDebuffCures_total int outer 0
+    /declare int_requiredDebuffCures_total  int outer 0
 
-|-- Single target cure, simple syntax (for manual entry)
-|   Counters determined by Dannet query
-Sub Event_cureMe(_line, _sender, _eventParams)
-	/echo EVENT_CUREME ${_sender} type: ${_eventParams}
-	|string _pcName, string _type
-	/declare name string local ${_sender}
-	/declare curetype string local ${_eventParams}
-	/call getCureCounters ${name} ${curetype}
-	/declare counters int local ${Macro.Return}
-	/call handleCureRequest ${_sender} ${Spawn[pc ${pcName}].ID} ${curetype} ${counters} FALSE
-	/doevents flush cureMe
-/return
+    | Debuffs that must be cured as soon as possible
+    | [CURING_DEBUFF_IMMEDIATE]
+    | ;_name|_cureType[disease||poison||curse||corruption]|_targets[ALL|MT|Class.ShortName CSV]
+    /declare raw_immediateCures[20]     string  local NULL
+    /declare raw_requiredCures[20]      string  local NULL
+    /declare i                          int     local 0
+    /declare sz                         int     local 0 
+    /declare test                       string  local NULL
 
 
-|-- Single target cure, generated syntax (for macro call)
-|   Counters determined by DanNet query
-Sub Event_cureRequest(_line, _sender, _eventParams)	
-	/declare name string local ${_eventParams.Arg[1, ]}
-	/declare id int local ${_eventParams.Arg[2, ]}
-	/declare curetype string local  ${_eventParams.Arg[3, ]}
-	/call getCureCounters ${name} ${curetype}
-	/declare counters int local  ${_eventParams.Arg[4, ]}
-	/declare forced bool local ${_eventParams.Arg[5, ]}
+    | Tracking information for all classes
+    | Immediate Cure Requirments, clients keep a list of /counters per type
+    | We can then more quickly query them and determine if use group
+    /declare str_queryCurable           string  outer   NULL
+    /declare has_immediate              bool    outer   NULL
+    /declare int_immediate_curse        int     outer   NULL
+    /declare int_immediate_disease      int     outer   NULL
+    /declare int_immediate_poison       int     outer   NULL
 
-	/if (${counters} == 0) /varset counters ${Macro.Return}
-	/echo \awCure Request \ayname: \ag${name}(${id}) \aytype: \ag${curetype} \aycounters: \ag${counters} \ayforced: \ag${forced}
-	/doevents flush cureRequest
+    /declare has_required               bool    outer   NULL
+    /declare int_required_curse         int     outer   NULL
+    /declare int_required_disease       int     outer   NULL
+    /declare int_required_poison        int     outer   NULL
 
-	/call handleCureRequest ${name} ${id} ${curetype} ${counters} ${forced}
-	
-/return
+    /declare str_debuffQueryResult      string outer NULL
+    /declare int_IMMEDIATE_total        int outer 0
+    /declare int_IMMEDIATE_curse        int outer 0
+    /declare int_IMMEDIATE_disease      int outer 0
+    /declare int_IMMEDIATE_poison       int outer 0
 
-Sub Event_cureReceived(_line, _sender, _eventParams)
-	/declare id int local ${Int[${_eventParams}]}
-	/if (${id} == ${Me.ID}) /call resetCureState
-	/doevents flush cureReceived
-/return
+    /declare int_REQUIRED_total         int outer 0
+    /declare int_REQUIRED_curse         int outer 0
+    /declare int_REQUIRED_disease       int outer 0
+    /declare int_REQUIRED_poison        int outer 0
 
-Sub Event_cureGroupPoison(_line, _sender, _eventParams)
-	/if (${Me.Class.ShortName.NotEqual[CLR]} && ${Me.Class.ShortName.NotEqual[DRU]} && ${Me.Class.ShortName.NotEqual[SHM]} && ${Me.Class.ShortName.NotEqual[PAL]}) /return
-	/docommand /${announceChannel} Curing Group of Poisons with: ${str_cure_poison}
-	/call cureGroup poison ${_eventParams}
-	/doevents flush cureGroupPoison
-/return
+    /declare str_queryTF                string outer NULL
+    /declare str_queryDetails           string outer NULL
 
-Sub Event_cureGroupDisease(_line, _sender, _eventParams)
-	/if (${Me.Class.ShortName.NotEqual[CLR]} && ${Me.Class.ShortName.NotEqual[DRU]} && ${Me.Class.ShortName.NotEqual[SHM]} && ${Me.Class.ShortName.NotEqual[PAL]}) /return
-	/docommand /${announceChannel} Curing Group of Disease with: ${str_cure_disease}
-	/call cureGroup disease ${_eventParams}
-	/doevents flush cureGroupDisease
-/return
+    :immediate
+    /for i 1 to ${raw_immediateCures.Size}
+        /varset test ${Ini[INI_COMMON,CURING_DEBUFF_IMMEDIATE,DEBUFF_${i}]}
+        /if (${test.Arg[1,|].Equal[NULL]}) {
+            /varset int_immediateDebuffCures_total ${sz}
+            /goto :required
+        }
+        | Not null, set the values for the debuffs to be cured
+        /varcalc sz ${sz}+1
+        /declare DEBUFF_IMMEDIATE_${i}          string  outer   ${Ini[INI_COMMON,CURING_DEBUFF_IMMEDIATE,DEBUFF_${i}].Arg[1,|]}
+        /declare DEBUFF_IMMEDIATE_${i}_Type     string  outer   ${Ini[INI_COMMON,CURING_DEBUFF_IMMEDIATE,DEBUFF_${i}].Arg[2,|]}
+        /declare DEBUFF_IMMEDIATE_${i}_Targets  string  outer   ${Ini[INI_COMMON,CURING_DEBUFF_IMMEDIATE,DEBUFF_${i}].Arg[3,|]}
+        /echo \ao   [CURING_DEBUFF_IMMEDIATE][\ag${i}\ao]: \awDebuff:\ag${DEBUFF_IMMEDIATE_${i}} \awType:\ag${DEBUFF_IMMEDIATE_${i}_Type} \awTargets:\ag${DEBUFF_IMMEDIATE_${i}_Targets}
+    /next i
 
-Sub Event_cureGroupCurse(_line, _sender, _eventParams)
-	/if (${Me.Class.ShortName.NotEqual[CLR]} &&${Me.Class.ShortName.NotEqual[DRU]} && ${Me.Class.ShortName.NotEqual[SHM]} && ${Me.Class.ShortName.NotEqual[PAL]}) /return
-	/docommand /${announceChannel} Curing Group of Curses with: ${str_cure_curse}
-	/call cureGroup curse ${_eventParams}
-	/doevents flush cureGroupCurse
-/return
+    :required
+    /varset sz 0
+    /for i 1 to ${raw_requiredCures.Size}
+        | if the value of the entry ends with a quoted string, we need to wrap it all in quotes again.
+        /varset test ${Ini[INI_COMMON,CURING_DEBUFF_REQUIRED,DEBUFF_${i}]}
+        /if (${test.Arg[1,|].Equal[NULL]}) {
+            /varset int_requiredDebuffCures_total ${sz}
+            /return
+        }
+        | Not null, set the values for the debuffs to be cured
+        /varcalc sz ${sz}+1
+        /declare DEBUFF_REQUIRED_${i}          string   outer   ${Ini[INI_COMMON,CURING_DEBUFF_REQUIRED,DEBUFF_${i}].Arg[1,|]}
+        /declare DEBUFF_REQUIRED_${i}_Type     string   outer   ${Ini[INI_COMMON,CURING_DEBUFF_REQUIRED,DEBUFF_${i}].Arg[2,|]}
+        /declare DEBUFF_REQUIRED_${i}_Targets  string   outer   ${Ini[INI_COMMON,CURING_DEBUFF_REQUIRED,DEBUFF_${i}].Arg[3,|]}
+        /echo \ao   CURING_DEBUFF_REQUIRED[\ag${i}\ao]: \awDebuff:\ag${DEBUFF_REQUIRED_${i}} \awType:\ag${DEBUFF_REQUIRED_${i}_Type} \awTargets:\ag${DEBUFF_REQUIRED_${i}_Targets}
+    /next i    
+/return 
 
-Sub Event_cureGroupCorruptiuon(_line, _sender, _eventParams)
-	/if (${Me.Class.ShortName.NotEqual[CLR]} &&${Me.Class.ShortName.NotEqual[DRU]} && ${Me.Class.ShortName.NotEqual[SHM]} && ${Me.Class.ShortName.NotEqual[PAL]}) /return
-	/docommand /${announceChannel} Curing Group of Corruption with: ${str_cure_corruption}
-	/call cureGroup corruption ${_eventParams}
-	/doevents flush Event_cureGroupCorruptiuon
-/return
+| RUN on everytoon, in their loop, so the DQUERY from curer can check the bools for each type instead of querying each type?
+| Since we want the immediate debuffs here already counted by the clients
+| So we can determine in the curegroup function if we use group cures
+Sub determineMyCureCounters
+    /declare i int local
+    /declare bln_MTApplies           bool local TRUE
 
-Sub resetCureState
-	/echo \agCure State Reset
-	/varset bln_askedForCure 	FALSE
-	/varset bln_needsCure		FALSE
-	/varset timer_cure_request  10s
-	/varset bln_navCure			FALSE
+    /varset has_immediate           FALSE
+    /varset int_immediate_curse     0
+    /varset int_immediate_disease   0
+    /varset int_immediate_poison    0 
+    
+    /varset has_required            FALSE
+    /varset int_required_curse      0
+    /varset int_required_disease    0
+    /varset int_required_poison     0 
+
+    /varset str_queryCurable        NULL
+
+    /for i 1 to ${int_immediateDebuffCures_total}
+        |/echo IMMEDIATE: ${DEBUFF_IMMEDIATE_${i}} ${Me.Buff[${DEBUFF_IMMEDIATE_${i}}].ID} 
+        /if (${DEBUFF_IMMEDIATE_${i}_Targets.Equal[MT]} && (${Me.ID} != ${int_MTID})) /varset bln_MTApplies FALSE
+        /if (!${Select[${Me.Class.ShortName},${DEBUFF_REQUIRED_${i}_Targets} ]} && !${DEBUFF_IMMEDIATE_${i}_Targets.Equal[ALL]} && (${bln_MTApplies})) {
+            |/echo not a spell my class needs to cure
+            /goto :nextImmediate
+        }
+        /if (${Me.Buff[${DEBUFF_IMMEDIATE_${i}}].ID}) {
+            /if (${DEBUFF_IMMEDIATE_${i}_Type.Equal[curse]})    /varset int_immediate_curse    ${Debuff.Cursed}
+            /if (${DEBUFF_IMMEDIATE_${i}_Type.Equal[disease]})  /varset int_immediate_disease  ${Debuff.Diseased}
+            /if (${DEBUFF_IMMEDIATE_${i}_Type.Equal[poison]})   /varset int_immediate_poison   ${Debuff.Poisoned}
+            /varset has_immediate TRUE
+        }
+    :nextImmediate
+    /next i
+
+    | We don't care as much about required buffs, so we dont need their counters
+    /for i 1 to ${int_requiredDebuffCures_total}
+        /if (${DEBUFF_REQUIRED_${i}_Targets.Equal[MT]} && (${Me.ID} != ${int_MTID})) /varset bln_MTApplies FALSE
+        /if (!${Select[${Me.Class.ShortName},${DEBUFF_REQUIRED_${i}_Targets} ]} && !${DEBUFF_REQUIRED_${i}_Targets.Equal[ALL]} && (${bln_MTApplies})) {
+            |/echo not a spell my class needs to cure
+            /goto :nextRequired
+        }
+        /if (${Me.Buff[${DEBUFF_REQUIRED_${i}}].ID}) {
+            /if (${DEBUFF_REQUIRED_${i}_Type.Equal[curse]})    /varset int_required_curse    ${Debuff.Cursed}
+            /if (${DEBUFF_REQUIRED_${i}_Type.Equal[disease]})  /varset int_required_disease  ${Debuff.Diseased}
+            /if (${DEBUFF_REQUIRED_${i}_Type.Equal[poison]})   /varset int_required_poison   ${Debuff.Poisoned}
+            /varset has_required TRUE
+        }
+    :nextRequired
+    /next i
+
+    /varset str_queryCurable ${has_immediate}~${int_immediate_curse},${int_immediate_disease},${int_immediate_poison}|${has_required}~${int_required_curse},${int_required_disease},${int_required_poison}
+    /echo \ag ${str_queryCurable}
+   
 /return 
 
 
 
+| Check Cures, we can use !bln_engaged as a determination for _lazy cures.
+| Note this is generally disabled, since only a few priests are ever assigned to autocure MT
+Sub chkCures
+    /declare lazy bool local TRUE
+    /if (${bln_engaged}) /varset lazy FALSE
 
-|-- Check if I need a cure (all classes)
-Sub chkNeedCure
-	|-- If I have bln_autoCureMT Set to TRUE, always check if the MT needs cure and do it proactively
-	/if (${bln_autoCureMT}) /call cureMTAuto
-	|-- Verify that I actually have debuffs even if it says i need to cure, reset that
-	/if ((!${Debuff} && ${bln_needsCure})) /call resetCureState
-	|-- Verify need if I havent asked and recently
-	/if (${Debuff.Count} == 0 || ${Debuff.Counters} > 200 || ${timer_cure_request}) 	/return
-	|-- Skip if nocure mode is on
-	/if (!${bln_useCures} && ${Me.Class.ShortName.NotEqual[CLR]} || ${Me.Class.ShortName.NotEqual[SHM]}) /return
-	
-	|-- Force the cure?
-	/declare forceCure		bool 	local	FALSE
-	/declare cureType 		string 	local 	NOTSET
-	/declare counters 		int 	local
-	/declare debuffName		string  local   NOTSET
-
-	|-- Check for Forcings
-	|-- If I am tanking, and I have under 100 counters (some debuffs are uncureable) or we aren't engaged, then force the cure request
-	/if (${bln_tanking} && (${Debuff.Counters} < 100 && ${Debuff.Count}) || !${bln_engaged}) /varset bln_needsCure TRUE
-	
-	|-- Mana Drains (casting classes)
-	/if ((${str_classArchetype.Equal[PRIEST]} || ${str_classArchetype.Equal[CASTER]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${Me.Class.ShortName.Equal[PAL]} || ${Me.Class.ShortName.Equal[SHD]}) && (${Debuff.ManaDrain} >= ${int_manadrain_threshold}) ) /varset bln_needsCure TRUE
-
-	|-- HP Drains
-	/if  (${Debuff.HPDrain} >= ${int_hpdrain_threshold}) /varset bln_needsCure TRUE
-
-	|-- Slows (melee)
-	/if ((${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[MELEE_END]}) && ${Debuff.Slowed} && (${Debuff.Counters} < 100 )) /varset bln_needsCure TRUE
-
-	|-- Slows (caster)
-	/if ((${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[PRIEST]} || ${str_classArchetype.Equal[CASTER]}) && ${Debuff.SpellSlowed} && (${Debuff.Counters} < 100 )) /varset bln_needsCure TRUE
-
-
-	|-- Debuffs that CANNOT be removed || Need to let our healer specific events handle it
-	/if ((${Me.Buff[Gaze of Anguish].ID} && (${bln_jelvanEngaged} || ${bln_amvEngaged}))  || ${Me.Buff[Test of Efficiency].ID} || ${Me.Buff[Chains of Anguish].ID} || ${Me.Buff[Aura of Destruction].ID} || ${Me.Buff[Rigidity].ID} || ${Me.Buff[Curse of Misfortune].ID} || ${Me.Buff[Imprecision].ID} || ${Me.Buff[Impurity].ID} || ${Me.Buff[Ressurection Sickness].ID} || ${Me.Buff[Clockwork Doom]}) {
-		/call resetCureState
-		/goto :return
-
-	|-- Debuffs that MUST be removed (DISEASE)
-	|  Force cure these in all case
-	} else /if ((${Me.Buff[Gaze of Anguish].ID})) {
-		|-- Gaze of Anguish must be cured!
-		/varset cureType disease
-		/varset counters ${Debuff.Diseased}
-		/varset forceCure TRUE
-		/varset debuffName "GazeOfAnguish"
-		/goto :get_curer
-
-	|-- Debuffs that MUST be removed (CURSE)	
-	|   Only force cure these if we are a priest or caster
-	} else /if ((${Me.Buff[Torment of Body].ID} || ${Me.Buff[Wanton Destruction].ID} || (${Me.Buff[Feedback Dispersion].ID}) && (${str_classArchetype.Equal[PRIEST]} || ${str_classArchetype.Equal[CASTER]}))) {
-		/varset cureType curse
-		/varset counters ${Debuff.Cursed}
-		/varset forceCure TRUE
-		/varset debuffName "TormentOfBody|Wanton Destruction|Feedback Dispersion"
-		/goto :get_curer
-		
-	|-- Debuffs that MUST be removed (POISON)
-	|   Only force cure these if we are a priest or caster
-	} else /if ((${Me.Buff[Fulmination].ID}) && (${str_classArchetype.Equal[PRIEST]} || ${str_classArchetype.Equal[CASTER]})) {
-		/varset cureType poison
-		/varset counters ${Debuff.Poisoned}
-		/varset forceCure TRUE
-		/varset debuffName "Fulmination"
-		/goto :get_curer
-
-	}  
-
-	
-	:cure_determine
-	/if ( ${forceCure} || ${bln_needsCure}) {
-		/varset bln_needsCure TRUE
-
-		| Get the required cureType
-		/if (${Debuff.Diseased} >= 1 && ${cureType.Equal[NOTSET]}) {
-			|-- Handle Disease
-			/varset cureType disease
-			/varset counters ${Debuff.Diseased}
-		} else /if (${Debuff.Poisoned} >= 1 && ${cureType.Equal[NOTSET]}) {
-			|-- Handle Posion
-			/varset cureType poison
-			/varset counters ${Debuff.Poisoned}
-		} else /if (${Debuff.Cursed} >= 1 && ${cureType.Equal[NOTSET]}) {
-			|-- Handle Curse
-			/varset cureType curse
-			/varset counters ${Debuff.Cursed}
-		} else /if (${Debuff.Corrupted} >= 1 && ${cureType.Equal[NOTSET]}) {
-			|-- Handle Corruption
-			/varset cureType corruption
-			/varset counters ${Debuff.Corrupted}
-		}
-
-		| Return if we can't figure out what cure type
-		/if (${cureType.Equal[NOTSET]}) /return
-
-		| Get my curer for this type
-		:get_curer
-		/call getGroupCurer ${cureType}
-		/varset str_myCurer ${Macro.Return}
-		/if (${str_myCurer.Equal[NOTFOUND]}) {
-			/echo \ar I HAVE NO CURER!
-			/call resetCureState
-			/varset timer_cure_request 60s
-			/varset bln_askedForCure TRUE
-			/goto :return
-		}
-
-		:get_cureRange
-		| Get the range of this cure
-		|/call setCureRange ${cureType}
-
-		| Start asking for cure
-		:request_cure
-		/echo \arCURE REQUIRED:\ay Counters:\ag${counters} \ayType:\ag${cureType} \ayRange:\ag${cureRange} \aoName:${debuffName}
-		/if (${str_myCurer.Equal[${Me.Name}]}) {
-			/call handleCureRequest ${Me.Name} ${Me.ID} ${cureType} ${counters} ${forceCure}
-		} else {
-			/if (${Bool[${Spawn[pc ${str_myCurer}].ID}]}) {
-				/echo \aoCurer:\ag${str_myCurer} \aoDist:\ag${Spawn[pc ${str_myCurer}].Distance3D} \aoRange:\ag${cureRange}
-				/if (${Spawn[pc ${str_myCurer}].Distance3D} < ${cureRange}) {
-					/echo \aoCURE REQUESTED:\ay Counters:\ag${counters} \ayType:\ag${cureType} \ayForced:\ag${forceCure}
-					/call requestCure ${cureType} ${counters} ${forceCure}
-|} else /if (${Spawn[pc ${str_myCurer}].Distance3D} > ${cureRange} && ${Spawn[pc ${str_myCurer}].Distance3D} < 250 && !${bln_tanking} && !${bln_jelvanEngaged}) {
-|					/varset str_navCureStart ${Me.X} ${Me.Y} ${Me.Z}
-|					/echo \ayNavigating to Curer because range is too far for cure
-|					/varset bln_navCure TRUE
-|					/navigate spawn ${str_myCurer}
-|					:nav_curer
-|					/if (${Spawn[pc ${str_myCurer}].Distance3D} < ${cureRange}) /nav stop
-|					/if (${Navigation.Active}) /goto :nav_curer
-|					/echo \arCURE REQUESTING:\ay Counters:\ag${counters} \ayType:\ag${cureType} \ayForced:\ag${forceCure}
-|					/call requestCure ${cureType} ${counters} ${forceCure}
-				} else {
-					/echo \arMy Curer is too far away
-					/varset timer_cure_request 10s
-					/varset bln_askedForCure TRUE
-					/goto :return
-				}
-			} else {
-				/echo \arMy Curer is dead or not in zone
-				/varset timer_cure_request 10s
-				/varset bln_askedForCure TRUE
-				/goto :return
-			}
-		}
-		/varset timer_cure_request 30s
-		/varset bln_askedForCure TRUE
-	}
-	
-:return
+    /echo chkCures MT: ${bln_autoCureMT} Self:${bln_autoCureSelf} Group: ${bln_autoCureGroup} Lazy:${lazy} Engaged?:${bln_engaged}
+	/if (${bln_autoCureMT}) 	/call chkCure_MT    ${lazy}
+ 	/if (${bln_autoCureSelf}) 	/call chkCure_Self  ${lazy}
+	/if (${bln_autoCureGroup})  /call chkCure_Group ${lazy}
+    /varset timer_check_cures 10s
 /return
 
-Sub requestCure(string _type, int _counters, bool _force) 
-	|/shout REQUESTED CURE from ${str_myCurer} ${_type} ${_counters} ${_force}
-	/dt ${str_myCurer} cureRequest ${Me.Name} ${Me.ID} ${_type} ${_counters} ${_force}
-	/declare waitCounter int local 0
-	/if (${bln_navCure}) {
-		/echo \awWaiting for cure since my initial spot is outside of cure range - \ag${cureRange}
-		:wait_loop
-		/doevents cureReceived
-		/varcalc waitCounter ${waitCounter}+1
-		/delay 10
-		/if (${waitCounter}<30 && ${bln_needsCure}) /goto :wait_loop
-		/nav loc ${str_navCureStart}
-	}
-/return
-
-Sub EVENT_ResetGroupCurer 
-	/call getGroupCurer DEFAULT
-	/varset str_myCurer ${Macro.Return}
+| Check Cures for the MT. Optionally pass in TRUE for Lazy if you want to check LAZY cures as well.
+| Note this is generally disabled, since "/dt CLERICNAME autocure TRUE" sets MT checking for priests
+Sub chkCure_MT(bool _lazyMT)
+    /echo \awchkCure_MT(\ao${_lazyMT}\aw)
+    | Check Immediate Cures
+    /call chkCureType_IMMEDIATE ${Spawn[id ${int_MTID}]} ${int_MTID}
+    | Check Required Cures
+    /call chkCureType_REQUIRED ${Spawn[id ${int_MTID}]} ${int_MTID}
+    | Check Lazy Cures 
+    /if (${_lazyMT} && ${bln_autoCureLazy}) /call chkCureType_LAZY ${Spawn[id ${int_MTID}]} ${int_MTID}
 /return 
 
-|-- Will get your curer, prefers shaman -> cleric -> druid -> paladin
-Sub getGroupCurer(string _cureType)
-	/echo \aggetGroupCurer \ao ${_cureType}
-	/if (${_cureType.Equal[NULL]}) /varset  _cureType NOTSET
-	/declare 	myCurer			string	local	NOTFOUND
-	/declare	gmember			int 	local	0
-	/declare 	groupShaman		string 	local 	NOTFOUND
-	/declare 	groupCleric     string  local 	NOTFOUND
-	/declare 	groupPaladin    string  local 	NOTFOUND
-	/declare 	groupDruid    	string  local 	NOTFOUND
-	/if (${str_classArchetype.Equal[PRIEST]} || ${Me.Class.ShortName.Equal[PAL]}) {
-		/varset myCurer ${Me.Name}
-	} else {
-		/for gmember 0 to ${Group} 
-		/if (${Group.Member[${gmember}].Class.ShortName.Equal[SHM]} && ${SpawnCount[pc ${Group.Member[${gmember}]}]} > 0) /varset groupShaman  ${Group.Member[${gmember}]}
-		/if (${Group.Member[${gmember}].Class.ShortName.Equal[CLR]} && ${SpawnCount[pc ${Group.Member[${gmember}]}]} > 0) /varset groupCleric  ${Group.Member[${gmember}]}
-		/if (${Group.Member[${gmember}].Class.ShortName.Equal[PAL]} && ${SpawnCount[pc ${Group.Member[${gmember}]}]} > 0) /varset groupPaladin ${Group.Member[${gmember}]}
-		/if (${Group.Member[${gmember}].Class.ShortName.Equal[DRU]} && ${SpawnCount[pc ${Group.Member[${gmember}]}]} > 0) /varset groupDruid   ${Group.Member[${gmember}]}
-		/next gmember
-	}
-	
-	/echo \awSHM:\ag${groupShaman} \awCLR:\ag${groupCleric} \awPAL:\ag${groupPaladin} \awDRU:\ag${groupDruid}
-
-	/if (${_cureType.Equal[DEFAULT]}) {
-		/if (${Me.Class.ShortName.Equal[CLR]} || ${Me.Class.ShortName.Equal[DRU]} || ${Me.Class.ShortName.Equal[SHM]} || ${Me.Class.ShortName.Equal[PAL]}) {
-			/varset myCurer ${Me.Name}
-		} else {
-			| Order of precedence for default curing SHM,DRU,PAL,CLR
-			/if (${groupShaman.NotEqual[NOTFOUND]}) {
-				/varset myCurer ${groupShaman}
-			} else /if (${groupDruid.NotEqual[NOTFOUND]}) {
-				/varset myCurer ${groupDruid}
-			} else /if (${groupPaladin.NotEqual[NOTFOUND]}) {
-				/varset myCurer ${groupPaladin}
-			} else /if (${groupCleric.NotEqual[NOTFOUND]}) {
-				/varset myCurer ${groupCleric}
-			}
-		}
-
-	} else /if (${_cureType.Equal[poison]}) {
-		/if (${Me.Class.ShortName.Equal[CLR]} || ${Me.Class.ShortName.Equal[DRU]} || ${Me.Class.ShortName.Equal[SHM]} || ${Me.Class.ShortName.Equal[PAL]}) {
-			/varset myCurer ${Me.Name}
-		} else {
-			| Order of precedence for default curing CLR,PAL,DRU,SHM
-			/if (${groupCleric.NotEqual[NOTFOUND]}) {
-				/varset myCurer ${groupCleric}
-			} else /if (${groupPaladin.NotEqual[NOTFOUND]}) {
-				/varset myCurer ${groupPaladin}
-			} else /if (${groupDruid.NotEqual[NOTFOUND]}) {
-				/varset myCurer ${groupDruid}
-			} else /if (${groupShaman.NotEqual[NOTFOUND]}) {
-				/varset myCurer ${groupShaman}
-			}
-		}
-	} else /if (${_cureType.Equal[disease]}) {
-		/if (${Me.Class.ShortName.Equal[CLR]} || ${Me.Class.ShortName.Equal[DRU]} || ${Me.Class.ShortName.Equal[SHM]} || ${Me.Class.ShortName.Equal[PAL]}) {
-			/varset myCurer ${Me.Name}
-		} else {
-			| Order of precedence for default curing SHM,PAL,DRU,CLR
-			/if (${groupShaman.NotEqual[NOTFOUND]}) {
-				/varset myCurer ${groupShaman}
-			} else /if (${groupPaladin.NotEqual[NOTFOUND]}) {
-				/varset myCurer ${groupPaladin}
-			} else /if (${groupDruid.NotEqual[NOTFOUND]}) {
-				/varset myCurer ${groupDruid}
-			} else /if (${groupCleric.NotEqual[NOTFOUND]}) {
-				/varset myCurer ${groupCleric}
-			}
-		}
-	} else /if (${_cureType.Equal[curse]}) {
-		/if (${Me.Class.ShortName.Equal[CLR]} || ${Me.Class.ShortName.Equal[DRU]} || ${Me.Class.ShortName.Equal[SHM]} || ${Me.Class.ShortName.Equal[PAL]}) {
-			/varset myCurer ${Me.Name}
-		} else {
-			| Order of precedence for default curing NO precedence since everyon has RGC, make the druid do it though!
-			/if (${groupDruid.NotEqual[NOTFOUND]}) {
-				/varset myCurer ${groupDruid}
-			} else /if (${groupPaladin.NotEqual[NOTFOUND]}) {
-				/varset myCurer ${groupPaladin}
-			} else /if (${groupDruid.NotEqual[NOTFOUND]}) {
-				/varset myCurer ${groupDruid}
-			} else /if (${groupCleric.NotEqual[NOTFOUND]}) {
-				/varset myCurer ${groupCleric}
-			}
-		}
-	}
-	/if (${myCurer.Equal[NOTFOUND]} && !${timer_cure_complain}) {
-		/docommand /${announceChannel} No curer found!
-		/varset timer_cure_complain 30s
-	} else {
-		/echo \aggetGroupCurer: \ao${myCurer}  \aw(Cure Type: \ag${_cureType}\aw)
-	}
-
-	
-	
-/return ${myCurer}
-
-Sub setCureRange(string _cureType) 
-	/if (${_cureType.Equal[poison]}) {]
-		/varset cureRange ${Spell[${str_cure_poison}].MyRange}
-	} else /if (${_cureType.Equal[curse]}) { 
-		/varset cureRange ${Spell[${str_cure_curse}].MyRange}
-	} else /if (${_cureType.Equal[disease]}) { 
-		/varset cureRange ${Spell[${str_cure_disease}].MyRange}
-	} else /if (${_cureType.Equal[corruption]}) {
-		/varset cureRange ${Spell[${str_cure_corruption}].MyRange} 
-	}
-
+| Check Cures for SELF. Optionally pass in TRUE for Lazy if you want to check LAZY cures as well.
+| Note this is generally disabled, since GROUP checks self
+Sub chkCure_Self(bool _lazySelf)
+    /echo \awchkCure_Self(\ao${_lazySelf}\aw)
+    | Check Immediate Cures
+    /call chkCureType_IMMEDIATE ${Me.Name} ${Me.ID}
+    | Check Required Cures
+    /call chkCureType_REQUIRED  ${Me.Name} ${Me.ID}
+    | Check Lazy Cures 
+    /if (${_lazySelf} && ${bln_autoCureLazy}) /call chkCureType_LAZY ${Me.Name} ${Me.ID}
 /return 
 
-|-- Use DanNet to get the counters required
-|   Query via Dannet
-Sub getCureCounters(string _pcName, string _type) 
-	/declare c int local 0
-	/if (${_type.Equal[poison]}) {
-		/dquery ${_pcName} -q "Debuff.Poisoned"
-	} else /if (${_type.Equal[curse]}) {
-		/dquery ${_pcName} -q "Debuff.Cursed"
-	} else /if (${_type.Equal[disease]}) {
-		/dquery ${_pcName} -q "Debuff.Diseased"
-	}
-	/delay 20 ${DanNet.Query.Received}
-	/varset c ${DanNet.Q}
-	/echo getCureCounters(${_pcName}, ${_type}) == ${c}
-/return ${c}
+| Check Cures for GROUP. Optionally pass in TRUE for Lazy if you want to check LAZY cures as well.
+| This is usually the only check a group priest will use.
+Sub chkCure_Group(bool _lazyGroup)
+    /echo \awchkCure_Group(\ao${_lazyGroup}\aw)
 
-Sub cureGroup(string _cureType, int _counters)
-	/if (${bln_chChainMember} || ${bln_focusHealMT}) /return
-	/if (${Me.Class.ShortName.NotEqual[CLR]} && ${Me.Class.ShortName.NotEqual[DRU]} && ${Me.Class.ShortName.NotEqual[SHM]} && ${Me.Class.ShortName.NotEqual[PAL]}) /return
-	/g Curing Group ${_cureType} ${_counters}
-	| Cure Group with Group Cure
-	/declare ct string local ${_cureType}
-	/declare cnt int local ${_counters}
-	/if (${_cureType.Equal[disease]} && ${is_disease_group}) {
-		/call handleCureRequest ${Me.Name} ${Me.ID} ${ct} ${cnt}
-	} else /if (${_cureType.Equal[posion]} && ${is_poison_group}) {
-		/call handleCureRequest ${Me.Name} ${Me.ID} ${ct} ${cnt}
-	} else /if (${_cureType.Equal[curse]} && ${is_curse_group}) {
-		/call handleCureRequest ${Me.Name} ${Me.ID} ${ct} ${cnt}
-	} else /if (${_cureType.Equal[corruption]} && ${is_corruption_group}) {
-		/call handleCureRequest ${Me.Name} ${Me.ID} ${ct} ${cnt}
-	} else {
-		| Cure Group by Each
-		/declare	gmember			int local	0
-		/declare    counter         int local   0
-		/for gmember 0 to ${Group}
-			/echo handling: ${Group.Member[${gmember}].Name} ${Group.Member[${gmember}].ID} ${ct} ${cnt}
-			| If I am a cleric, quickly check MT health
-			/if (${Me.Class.ShortName.Equal[CLR]} ) /call chkHeal_MT
-			| Check to see if the toon actually needs to be cured, else skip
-			/call getCureCounters ${Group.Member[${gmember}].Name} ${_cureType}
-			/varset counter ${Int[${Macro.Return}]}
-			/if (${counter}>0) /call handleCureRequest ${Group.Member[${gmember}].Name} ${Group.Member[${gmember}].ID} ${ct} ${cnt}
-			/call RunRaidEvents
-		/next gmember
-	}
+    | Create local vars for processing
+    /declare r int local 0
+    /declare g int local ${Group.GroupSize}
+    /varcalc g (${Group.GroupSize} - 1)
+    /declare sz int local 0
+    /declare useGroupCure               bool    local FALSE
+    /declare castCount                  int     local 0
+    /declare cureType                   string  local disease
+    /declare arr_IMMEDIATE_list[10]      string local NULL
+    /declare arr_REQUIRED_list[10]       string local NULL
+
+    | Reset processing vars
+    /varset str_debuffQueryResult       NULL
+    /varset str_queryTF                 NULL
+    /varset str_queryDetails            NULL
+    /varset int_IMMEDIATE_total         0
+    /varset int_IMMEDIATE_curse         0
+    /varset int_IMMEDIATE_disease       0
+    /varset int_IMMEDIATE_poison        0
+
+    /varset int_REQUIRED_total          0
+    /varset int_REQUIRED_curse          0
+    /varset int_REQUIRED_disease        0
+    /varset int_REQUIRED_poison         0
+
+    | ------
+    | IMMEDIATE/REQUIRED Debuff Determination
+    | Looka at the queryCurable which every toon sets in a loop with determineMyCureCounters()
+    | If found, += the current counters for each curetype
+    | ------
+
+    /for r 1 to ${g}
+        /varcalc sz ${r}-1
+        /dquery ${Group.Member[${sz}].Name} -q "str_queryCurable" -o str_debuffQueryResult
+        /delay 20 ${DanNet.Q.Received}
+        
+        |Process the immediate results
+        /echo \apstr_debuffQueryResult \ao${Group.Member[${sz}].Name} \ag ${str_debuffQueryResult}
+        /varset str_queryTF         ${str_debuffQueryResult.Arg[1,|].Arg[1,~]}
+        /varset str_queryDetails    ${str_debuffQueryResult.Arg[1,|].Arg[2,~]}
+        /echo \ao ${Group.Member[${sz}].Name} IMMEDIATE \apstr_debuffQueryParsed:: \ao${str_queryTF} \apRaw:: \ao${str_queryDetails}
+        /if (${str_queryTF.Equal[TRUE]}) {
+            /echo \ar${Group.Member[${sz}].Name} has IMMEDIATE!
+            /varset arr_IMMEDIATE_list[${sz}] ${Group.Member[${sz}].Name} 
+            /varcalc  int_IMMEDIATE_total    ${int_IMMEDIATE_total} + 1
+            /if (${Int[${str_queryDetails.Arg[1,,]}]} > ${int_IMMEDIATE_curse})   /varset int_IMMEDIATE_curse      ${Int[${str_queryDetails.Arg[1,,]}]}
+            /if (${Int[${str_queryDetails.Arg[2,,]}]} > ${int_IMMEDIATE_disease}) /varset int_IMMEDIATE_disease    ${Int[${str_queryDetails.Arg[2,,]}]}
+            /if (${Int[${str_queryDetails.Arg[3,,]}]} > ${int_IMMEDIATE_poison})  /varset int_IMMEDIATE_poison     ${Int[${str_queryDetails.Arg[3,,]}]}
+            /echo \ap    curse:\aw${int_IMMEDIATE_curse} \apdisease:\aw${int_IMMEDIATE_disease} \appoison: \aw${int_IMMEDIATE_poison}
+        }
+
+        /varset str_queryTF         ${str_debuffQueryResult.Arg[2,|].Arg[1,~]}
+        /varset str_queryDetails    ${str_debuffQueryResult.Arg[2,|].Arg[2,~]}
+        /echo  \ao ${Group.Member[${sz}].Name} REQUIRED \apstr_debuffQueryParsed:: \ao${str_queryTF} \apRaw:: \ao${str_queryDetails}
+        /if (${str_queryTF.Equal[TRUE]}) {
+            /echo \ar${Group.Member[${sz}].Name} has REQUIRED! ${r}
+            /varset arr_REQUIRED_list[${r}] ${Group.Member[${sz}].Name} 
+            /varcalc  int_REQUIRED_total    ${int_REQUIRED_total} + 1
+            /if (${Int[${str_queryDetails.Arg[1,,]}]} > ${int_REQUIRED_curse})   /varset int_REQUIRED_curse    ${Int[${str_queryDetails.Arg[1,,]}]}
+            /if (${Int[${str_queryDetails.Arg[2,,]}]} > ${int_REQUIRED_disease}) /varset int_REQUIRED_disease  ${Int[${str_queryDetails.Arg[2,,]}]}
+            /if (${Int[${str_queryDetails.Arg[3,,]}]} > ${int_REQUIRED_poison})  /varset int_REQUIRED_poison   ${Int[${str_queryDetails.Arg[3,,]}]}
+            /echo \ap    curse:\aw${int_REQUIRED_curse} \apdisease:\aw${int_REQUIRED_disease} \appoison: \aw${int_REQUIRED_poison}
+        }
+        /echo --------------------
+    /next r
+
+    | ------
+    | DETERMINE the IMMEDIATE requirements/counters
+    | ------
+    /if (${int_IMMEDIATE_total} > 2) {
+        /echo \awint_IMMEDIATE_curse:\ag${int_IMMEDIATE_curse} \awint_IMMEDIATE_disease:\ag${int_IMMEDIATE_disease} \awint_IMMEDIATE_poison:\ag${int_IMMEDIATE_poison}
+        /echo   \awgroupCurseCured:\ag${groupCurseCured} \awmaxGroupCurseCured:\ag${maxGroupCurseCured}
+        /echo   \awgroupDiseaseCured:\ag${groupDiseaseCured} \awmaxGroupDiseaseCured:\ag${maxGroupDiseaseCured}
+        /echo   \awgroupPoisonCured:\ag${groupPoisonCured} \awmaxGroupPoisonCured:\ag${maxGroupPoisonCured}
+        /if (${int_IMMEDIATE_curse} > 0 &&  ${int_IMMEDIATE_curse} <= ${maxGroupCurseCured}) {
+            /varcalc castCount ${Math.Calc[${Math.Calc[${Math.Calc[${int_IMMEDIATE_curse}+${groupCurseCured}]}-1]} / ${groupCurseCured} ]}
+            /echo curseCastCount ${castCount}
+            /varset cureType curse
+            /varset useGroupCure TRUE
+        } else /if (${int_IMMEDIATE_disease} > 0 &&  ${int_IMMEDIATE_disease} <= ${maxGroupDiseaseCured}) {
+            /varcalc castCount ${Math.Calc[${Math.Calc[${Math.Calc[${int_IMMEDIATE_disease}+${groupDiseaseCured}]}-1]} / ${groupDiseaseCured} ]}
+            /echo diseaseCastCount ${castCount}
+            /varset useGroupCure TRUE
+            /varset cureType disease
+        } else /if (${int_IMMEDIATE_poison} > 0 &&  ${int_IMMEDIATE_poison} <= ${maxGroupPoisonCured}) {
+            /varcalc castCount ${Math.Calc[${Math.Calc[${Math.Calc[${int_IMMEDIATE_poison}+${groupPoisonCured}]}-1]} / ${groupPoisonCured} ]}
+            /echo poisonCastCount ${castCount}
+            /varset useGroupCure TRUE
+            /varset cureType poison
+        }
+    }
+    | ------
+    | CAST the GROUP/SOLO IMMEDIATE Cures
+    | We had immediate! and we have group cure! fire it!
+    | ------
+    /if (${int_IMMEDIATE_total} && ${useGroupCure}) {
+        | We determined to use group cure here
+        /echo \arCURING GROUP!
+        /call castCureV2 ${Me.Name} ${Me.ID} "${str_cure_${cureType}_group.Arg[1,|]}" ${castCount} TRUE
+    } else /if (${int_IMMEDIATE_total} && !${useGroupCure}) {
+        | No group cure, cure by single, cure until all are cured
+        /echo \aoCURING SINGLE GROUP MEMBERS!
+        /for r 1 to ${arr_IMMEDIATE_list.Size}
+            /if ( ${arr_IMMEDIATE_list[${r}].NotEqual[NULL]}) /call chkCureType_IMMEDIATE ${Group.Member[${r}].Name} ${Group.Member[${r}].ID}
+        /next r
+    }
+
+
+    | We had to have cured some immediates, lets return out so we can recheck
+    /if (${int_IMMEDIATE_total}) {
+        /echo \arWE Had Immediates
+    } 
+
+    | ------
+    | DETERMINE the IMMEDIATE requirements/counters
+    | ------
+    /if (${int_REQUIRED_total} > 2) {
+        /echo \awint_REQUIRED_curse:\ag${int_REQUIRED_curse} \awint_REQUIRED_disease:\ag${int_REQUIRED_disease} \awint_REQUIRED_poison:\ag${int_REQUIRED_poison}
+        /echo   \awgroupCurseCured:\ag${groupCurseCured} \awmaxGroupCurseCured:\ag${maxGroupCurseCured}
+        /echo   \awgroupDiseaseCured:\ag${groupDiseaseCured} \awmaxGroupDiseaseCured:\ag${maxGroupDiseaseCured}
+        /echo   \awgroupPoisonCured:\ag${groupPoisonCured} \awmaxGroupPoisonCured:\ag${maxGroupPoisonCured}
+        /if (${int_REQUIRED_curse} > 0 &&  ${int_REQUIRED_curse} <= ${maxGroupCurseCured}) {
+            /varcalc castCount ${Math.Calc[${Math.Calc[${Math.Calc[${int_REQUIRED_curse}+${groupCurseCured}]}-1]} / ${groupCurseCured} ]}
+            /echo curseCastCount ${castCount}
+            /varset cureType curse
+            /varset useGroupCure TRUE
+        } else /if (${int_REQUIRED_disease} > 0 &&  ${int_REQUIRED_disease} <= ${maxGroupDiseaseCured}) {
+            /varcalc castCount ${Math.Calc[${Math.Calc[${Math.Calc[${int_REQUIRED_disease}+${groupDiseaseCured}]}-1]} / ${groupDiseaseCured} ]}
+            /echo diseaseCastCount ${castCount}
+            /varset useGroupCure TRUE
+            /varset cureType disease
+        } else /if (${int_REQUIRED_poison} > 0 &&  ${int_REQUIRED_poison} <= ${maxGroupPoisonCured}) {
+            /varcalc castCount ${Math.Calc[${Math.Calc[${Math.Calc[${int_REQUIRED_poison}+${groupPoisonCured}]}-1]} / ${groupPoisonCured} ]}
+            /echo poisonCastCount ${castCount}
+            /varset useGroupCure TRUE
+            /varset cureType poison
+        }
+    }
+
+     | We had required! and we have group cure! fire it!
+    /if (${int_REQUIRED_total} && ${useGroupCure}) {
+        | We determined to use group cure here
+        /echo \arCURING GROUP!
+        /call castCureV2 ${Me.Name} ${Me.ID} "${str_cure_${cureType}_group.Arg[1,|]}" ${castCount} TRUE
+    } else /if (${int_REQUIRED_total} && !${useGroupCure}) {
+        | No group cure, cure by single, if someone is cured, exit and recheck since required asrent as important as immediates
+        /echo \aoCURING SINGLE GROUP MEMBERS!
+        /for r 1 to ${arr_REQUIRED_list.Size}
+            /varcalc sz ${r}-1
+            /if ( ${arr_REQUIRED_list[${r}].NotEqual[NULL]}) /call chkCureType_REQUIRED ${Group.Member[${sz}].Name} ${Group.Member[${sz}].ID}
+            /echo \arUSED REQUIRED CURE ?${Macro.Return}
+            /if (${Macro.Return.Equal[CURED]}) /return
+        /next r
+    }
+
+    | We had to have cured some required, lets return out so we can recheck
+    /if (${int_REQUIRED_total}) /return 
+
+    | Check the lazy debuffs, ie: we are out of combat and have the time
+    /if (${_lazyGroup} && ${bln_autoCureLazy}) {
+        /for r 1 to ${g}
+            /varcalc sz ${r}-1
+            /call chkCureType_REQUIRED ${Group.Member[${sz}].Name} ${Group.Member[${sz}].ID}
+        /next r
+    }
 /return 
 
-Sub cureMTAuto
-	| Specifically for a cleric or other curer to constantly watch the MT and auto cure them
-	/declare c int local 0
+| Utility method, returns the correct TLO property for the Debuff.TLO - annoyingly they are adjectives
+Sub getMQ2DebuffCounterString(string _cureType)
+    /declare q string local Diseased
+    /if (${_cureType.Equal[poison]}) {
+        /varset q Poisoned
+    } else /if (${_cureType.Equal[curse]}) {
+        /varset q Cursed
+    }
+/return  ${q}
 
-	| Check Conspecifics
-	| Packmaster's Curse
-	/varset c 0
-	/dquery ${str_MTName} -q "Me.Buff[Packmaster’s Curse].ID"
-	/delay 20 ${DanNet.Query.Received}
-	/varset c ${DanNet.Q}
-	/if (${c}) {
-		/call handleCureRequest ${str_MTName} ${int_MTID} curse 16 TRUE
-		/goto :return
-	}
+| Direct call from EVENT cureRequest(_TYPE[ALL|IMMEDIATE|REQUIRED|LAZY]) not generally used
+Sub chkCureType_ALL(string _victimName, int _id)
+    /call chkCureType_IMMEDIATE ${_victimName} ${_id}
+    /call chkCureType_REQUIRED  ${_victimName} ${_id}
+/return 
 
-	| Check Poison
-	/varset c 0
-	/dquery ${str_MTName} -q "Debuff.Poisoned"
-	/delay 20 ${DanNet.Query.Received}
-	/varset c ${DanNet.Q}
-	/if (${c}) {
-		/call handleCureRequest ${str_MTName} ${int_MTID} poison ${c} TRUE
-		/goto :return
-	}
+| Since we want the immediate debuffs here already counted by the clients
+| So we can determine in the curegroup function if we use group cures
+sub chkCureType_IMMEDIATE(string _victimName, int _id)
+    /echo \awchkCureType_IMMEDIATE(\ao${_victimName}) 
+    /declare i 				    int 	local	0
+    /declare foundCounters	    int		local	0
+    /declare foundDebuff        bool    local   FALSE
+    /declare qImmediateString   string  local  FALSE
+    /declare dCounterString     string  local NULL
 
+    | Check if the victim has any immediates
+    /dquery ${_victimName} -q "has_immediate" -o foundDebuff
+    /delay 10 ${DanNet.Q.Received}
+    /if (!${foundDebuff}) /return 
 
-	| Check Curse
-	/varset c 0
-	/dquery ${str_MTName} -q "Debuff.Cursed"
-	/delay 20 ${DanNet.Query.Received}
-	/varset c ${DanNet.Q}
-	/if (${c}) {
-		/call handleCureRequest ${str_MTName} ${int_MTID} curse ${c} TRUE
-		/goto :return
-	}
-
-	| Check Disease
-	/varset c 0
-	/dquery ${str_MTName} -q "Debuff.Diseased"
-	/delay 20 ${DanNet.Query.Received}
-	/varset c ${DanNet.Q}
-	/if (${c}) {
-		/call handleCureRequest ${str_MTName} ${int_MTID} disease ${c} TRUE
-		/goto :return
-	}
-	:return
-/return
-
-Sub cureSelf(string _cureType, int _counters)
-	/g Curing Self ${_cureType} ${_counters}
-	| Cure Self
-	/call handleCureRequest ${Me.CleanName} ${Me.ID} ${_cureType} ${_counters}
-/return
-
-| Handle Incoming cure request.
-| TODO: If cleric, check MT hp before healing unless FORCED is true.
-Sub handleCureRequest(string _name, int _id, string _cureType, int _counters, bool _forced) 
-	/echo \ayhandleCureRequest: ${_name}, ${_id}, ${_cureType}, ${_counters}, ${_forced}
-	|-- if requester is not in zone, ignore it
-	/if (!${SpawnCount[pc ${_name}]}) {
-		/dt ${_name} I cannot cure you, you are dead!
-		/return
-	}
-	
-	|-- find cure spell string & counters it clears
-	/declare	str_spell	  	string		local	${str_cure_disease}
-	/declare    int_count     	int			local   ${_counters}
-	/declare    int_castCount 	float    	local   1
-	
-
-	| Check to see if I can actually cast this cure type
-	/if (!${bln_cure_${_cureType}}) {
-		/echo I cannot cure ${_cureType}}
-		/dt ${_name} I cannot cure you
-		/return
-	} else {
-		/varset str_spell 	${str_cure_${_cureType}}
-	}
-
-	| Create a query string
-	
-
-	|-- Sanity check their cure request with a query *(if we arent forced!)
-	/if (!${_forced}) {
-		/declare    qstring	string	local
-		/declare 	qresult	int		local	0
-		/if (${_cureType.Equal[disease]}) /varset qstring Debuff.Diseased
-		/if (${_cureType.Equal[curse]})   /varset qstring Debuff.Cursed
-		/if (${_cureType.Equal[poison]})  /varset qstring Debuff.Poisoned
-		/echo Verifying Need ${_name} "${qstring}"
-		/dquery ${_name} -q "${qstring}"
-		/delay 20 ${DanNet.Query.Received}
-		/varset qresult ${DanNet.Q}
-		/if (!${qresult}) {
-			/echo \ao${_name} \agdid NOT need curing, returning
-			/return
-		} else {
-			/echo \ag${_name} \awNEEDS curing ${qresult}, continuing
-		}
-	}
-
-	/if (!${Bool[${_counters}]}) {
-		/dt ${_name} I cannot cure you, you sent no counters!
-		/return
-	}
-
-	| If I am a cleric and this is unforced, quickly check MT health
-	/if (${Me.Class.ShortName.Equal[CLR]} && !${_forced}) /call chkHeal_MT
-
-	| Get the range of this cure
-	/call setCureRange ${_cureType}
-
-
-	/if (${_cureType.Equal[disease]}) {
-		/echo \aoDISEASE CURE selected.
-		/if (!${bln_hasDiseaseCure}) {
-			/echo I cannot cure Disease
-			/dt ${_name} I cannot cure you
-			/return
-		}
-		/varset str_spell 	${str_cure_disease}
-		/varset int_count 	${int_cure_disease}
-	} else /if (${_cureType.Equal[poison]}) {
-		/echo \agPOISON CURE selected.
-		/if (!${bln_hasPoisonCure}) {
-			/echo I cannot cure Poison
-			/dt ${_name} I cannot cure you
-			/return
-		}			
-		/varset str_spell 	${str_cure_poison}
-		/varset int_count 	${int_cure_poison}
-	} else /if (${_cureType.Equal[curse]}) {
-		/echo \ayCURSE CURE selected.
-		/if (!${bln_hasCurseCure}) {
-			/echo I cannot cure Curses
-			/dt ${_name} I cannot cure you
-			/return
-		}	
-		/varset str_spell 	${str_cure_curse}
-		/varset int_count 	${int_cure_curse}
-	} else /if (${_cureType.Equal[corruption]}) {
-		/echo \apCORRUPTION CURE selected.
-		/if (!${bln_hasCorruptionCure}) {
-			/echo I cannot cure Corruption
-			/dt ${_name} I cannot cure you
-			/return
-		}	
-		/varset str_spell 	${str_cure_corruption}
-		/varset int_count 	${int_cure_corruption}
-	}
-
-	| If cure target is out of range, return
-	/if (${Spawn[pc ${_name}].Distance} > ${Spell[${str_spell}].MyRange}) {
-		/echo \ar ${_name} \awis out of cure range! \ao${Spawn[pc ${_name}].Distance} > ${cureRange}
-		/return
-	}
-
-	
-	|-- calculate how many times we need to cast the cure counters: note MQ2 Natively does not have a round method
-	/varset int_castCount ${Math.Calc[${_counters} / ${int_count}]}
-	/if (${int_castCount} < 1) {
-		/varset int_castCount 1
-	} else /if (${int_castCount} > 1 && ${int_castCount} < 2) {
-		/varset int_castCount 2
-	} else /if (${int_castCount} > 2 && ${int_castCount} < 3) { 
-		/varset int_castCount 3
-	} else /if (${int_castCount} > 3 && ${int_castCount} < 4) { 
-		/varset int_castCount 4
-	} else /if (${int_castCount} > 4 && ${int_castCount} < 5) { 
-		/varset int_castCount 5
-	} else /if (${int_castCount} > 5 && ${int_castCount} < 6) { 
-		/varset int_castCount 5
-	}
-	/echo \ar${str_spell} casting: ${int_castCount}x times (${_counters} / ${int_count})
-
-	| need to mem curespell if I dont have it up
-	/target id ${_id}
-	:cureReadyWait1
-	/call chkSpellMemorized "${str_spell}" TRUE
-	/if (${Me.SpellReady[${str_spell}]} && (${Target.Distance}<=200)) {
-		/call castCure ${_name} ${_id} "${str_spell}" ${int_castCount} ${_cureType} ${_counters} ${_forced}
-	} else {
-		/goto :cureReadyWait1
-	}
-	:return
-/return
-
-|-- Casts a cure, for _count many times, on a _tgtID
-Sub castCure(string _name, int _id, string _spell, int _castCount, string _cureType, int _counters, bool _isForced) 
-	/echo \aoCastCure \aw${_name}, ${_id}, ${_spell}, ${_counters}
-	
-	/declare i int local 1
-	/for i 1 to ${_castCount}
-		|Check for Death
-		/if (!${SpawnCount[pc ${_name}]}) {
-			/dt ${_name} I cannot cure you, you are dead!
-			/return
-		}
-		| If I am a cleric and this is unforced, quickly check MT health
-		/if (${Me.Class.ShortName.Equal[CLR]} && !${_isForced}) /call chkHeal_MT
-		/call TrueTarget ${_id}
-		/echo \aoCasting \aw${i} \ag${_spell} \ao${i} \awof \ao${_castCount}
-		/call MQ2Cast "${_spell}" gem7 8s RunPriorityEvents
-	/next i 
-	/dt ${_name} I cured you ${_name}(${_id}) of ${_counters} ${_cureType} counters.
+    /for i 1 to ${int_immediateDebuffCures_total}
+        /varset foundCounters 0
+        |---------
+        |/echo \aoDebuffName \ag${DEBUFF_IMMEDIATE_${i}} \aoDebuffType \ag${DEBUFF_IMMEDIATE_${i}_Type} \aoDebuffType \ag${DEBUFF_IMMEDIATE_${i}_Targets}
+        /if (!${Select[${Spawn[id ${_id}].Class.ShortName},${DEBUFF_IMMEDIATE_${i}_Targets}]} && !${DEBUFF_IMMEDIATE_${i}_Targets.Equal[ALL]} && (${DEBUFF_IMMEDIATE_${i}_Targets.Equal[MT]} && ${_id} != ${int_MTID})) {
+            |/echo DID NOT FIND THIS CLASS AS PART OF CHECK ${Spawn[id ${_id}].Class.ShortName} => ${DEBUFF_IMMEDIATE_${i}_Targets}
+            /goto :nextImmediate
+        }
+        /dquery ${_victimName} -q "Me.Buff[${DEBUFF_IMMEDIATE_${i}}].ID" -o foundDebuff
+        /delay 10 ${DanNet.Q.Received}
+        /if (!${foundDebuff}) /goto :nextImmediate
+        |---------
+        /call getMQ2DebuffCounterString ${DEBUFF_IMMEDIATE_${i}_Type}
+        /varset dCounterString ${Macro.Return}
+        /dquery ${_victimName} -q "Debuff.${dCounterString}" -o foundCounters
+        /delay 10 ${DanNet.Q.Received}
+        /if (!${foundCounters}) /goto :nextImmediate
+        |---------
+        /echo \ar Immediate Cure Necessary! \ao ${DEBUFF_IMMEDIATE_${i}}
+        /call handleCureRequestV2 ${_victimName} ${_id} "${DEBUFF_IMMEDIATE_${i}}" ${DEBUFF_IMMEDIATE_${i}_Type} ${foundCounters} TRUE
+        | If we cured something from immediate cures, we want to bail out of this to continue our checks on others
+        /return CURED
+    :nextImmediate
+    /next i
+    /echo \ag No Immediate Cures Necessary.
 /return
 
 
+Sub chkCureType_REQUIRED(string _victimName, int _id)
+    /echo \awchkCureType_REQUIRED(\ao${_victimName}) 
+    /declare i 				int 	local	0
+    /declare foundCounters	int		local	0
+    /declare foundDebuff    bool    local   FALSE
+    /declare dCounterString string  local NULL
+
+    | Check if the victim has any immediates
+    /dquery ${_victimName} -q "has_required" -o foundDebuff
+    /delay 10 ${DanNet.Q.Received}
+    /if (!${foundDebuff}) /return 
+
+    /for i 1 to ${int_requiredDebuffCures_total}
+        /varset foundCounters 0
+        |---------
+        |/echo \aoDebuffName \ag${DEBUFF_REQUIRED_${i}} \aoDebuffType \ag${DEBUFF_REQUIRED_${i}_Type} \aoDebuffType \ag${DEBUFF_REQUIRED_${i}_Targets}
+        /if (!${Select[${Spawn[id ${_id}].Class.ShortName},${DEBUFF_REQUIRED_${i}_Targets}]} && !${DEBUFF_REQUIRED_${i}_Targets.Equal[ALL]} && (${DEBUFF_REQUIRED_${i}_Targets.Equal[MT]} && ${_id} != ${int_MTID})) {
+            |/echo DID NOT FIND THIS CLASS AS PART OF CHECK ${Spawn[id ${_id}].Class.ShortName} => ${DEBUFF_REQUIRED_${i}_Targets}
+            /goto :nextRequired
+        }
+        /dquery ${_victimName} -q "Me.Buff[${DEBUFF_REQUIRED_${i}}].ID" -o foundDebuff
+        /delay 10 ${DanNet.Q.Received}
+        /if (!${foundDebuff}) /goto :nextRequired
+        |---------
+        /call getMQ2DebuffCounterString ${DEBUFF_REQUIRED_${i}_Type}
+        /varset dCounterString ${Macro.Return}
+        /dquery ${_victimName} -q "Debuff.${dCounterString}" -o foundCounters
+        /delay 10 ${DanNet.Q.Received}
+        /if (!${foundCounters}) /goto :nextInextRequiredmmediate
+        |---------
+        /echo \ar Required Cure Necessary! \ao ${DEBUFF_REQUIRED_${i}}
+        /call handleCureRequestV2 ${_victimName} ${_id} "${DEBUFF_REQUIRED_${i}}" ${DEBUFF_REQUIRED_${i}_Type} ${foundCounters} TRUE
+        | If we cured something from immediate cures, we want to bail out of this to continue our checks on others
+        /return CURED
+    :nextRequired
+    /next i
+    /echo \ag No Required Cures Necessary.
+/return 
 
 
+Sub chkCureType_LAZY(string _victimName, int _id)
+    /echo \awchkCureType_LAZY(\ao${_victimName}) 
+	| Check if MT needs cure
+	| Specific items that need force cure
+	/declare foundCounters	int		local	0
+    /declare foundDebuff    bool    local   FALSE
+
+    | If no counters, return out
+    /dquery ${_victimName} -q "Debuff.Counters" -o foundCounters
+    /delay 10 ${DanNet.Q.Received}
+    /if (!${foundCounters}) /return
+
+    | Check Disease
+    :diseaseCure
+    /if (!${bln_hasCure_disease}) /goto :poisonCure
+    /varset foundCounters 0
+    /dquery ${_victimName} -q "Debuff.Diseased" -o foundCounters
+    /delay 10 ${DanNet.Q.Received}
+    /if (${foundCounters}) {
+        /call handleCureRequestV2 ${_victimName} ${_id} NOTSPECIFIED disease ${foundCounters} FALSE
+    }
+
+    | Check Poison
+    :poisonCure
+    /if (!${bln_hasCure_poison}) /goto :curseCure
+    /varset foundCounters 0
+    /dquery ${_victimName} -q "Debuff.Poisoned" -o foundCounters
+    /delay 10 ${DanNet.Q.Received}
+    /if (${foundCounters}) {
+        /call handleCureRequestV2 ${_victimName} ${_id} NOTSPECIFIED poison ${foundCounters} FALSE
+    }
+
+    | Check Curse
+    :curseCure
+    /if (!${bln_hasCure_curse}) /return
+    /varset foundCounters 0
+    /dquery ${_victimName} -q "Debuff.Cursed" -o foundCounters
+    /delay 10 ${DanNet.Q.Received}
+    /if (${foundCounters}) {
+        /call handleCureRequestV2 ${_victimName} ${_id} NOTSPECIFIED curse ${foundCounters} FALSE
+    }
+/return
+
+
+| note: curestring looks like "Wanton Destruction"|curse|ALL
+| note: str_cure_curse looks like "Remove Greater Curse"|45 <= this is due to not being able to programmatically retrieve the amount of counters cured
+Sub handleCureRequestV2(string _name, int _id, string _debuffName, string _cureType, int _counters, bool _forced)
+	/echo \ayhandleCureRequestV2: \ag${_name}\ao, \ag${_id}\ao, \ag${_debuffName}\ao, \ag${_cureType}, \ag${_counters}\ao, \ag${_forced}
+	| Verify I can actually cure this
+	/if (!${bln_hasCure_${_cureType}}) {
+		/echo \ar Cannot cure ${_cureType} due to lack of available cure.
+        /return
+	}
+
+    | Debug information
+    |/echo _cureString                                == "[debuff name]"|curse|ALL =>${_cureString}          
+    |/echo _cureString.Arg[1,|]                       == "[debuff name]"=>${_cureString.Arg[1,|]}
+    |/echo _cureString.Arg[2,|]                       == "[disease||poison||curse"]=>${_cureString.Arg[2,|]} 
+    |/echo {str_cure_{_cureString.Arg[2,|]}}          == "Remove Greater Curse|45"=> ${str_cure_${_cureString.Arg[2,|]}}
+    |/echo {str_cure_{_cureString.Arg[2,|]}.Arg[2,|]} == 45 =>${str_cure_${_cureString.Arg[2,|]}.Arg[2,|]}   
+
+    | this string will look like "Remove Greater Curse"
+	/declare cureSpell string local ${str_cure_${_cureType}.Arg[1,|]}
+    /echo cureSpell ${cureSpell}
+    /if (${cureSpell.Equal[NULL]}) {
+        /echo \arCannot cure ${_name} due to lack of ${_cureType} cure.
+        /return
+    }
+	/if (!${SpawnCount[pc ${_name}]} || ${Spawn[pc ${_name}].Distance3D} > ${Spell[${cureSpell}].MyRange}) {
+		/echo \arCannot cure ${_name} due to out of zone or out of range.
+        /return
+	}
+
+	| Determine cast counts
+	/declare countersToCure	int 	local ${_counters}
+	/declare countersCured	int		local ${str_cure_${_cureType}.Arg[3,|]}
+	
+    /echo countersToCure ${countersToCure} countersCured ${countersCured}
+    
+    /declare castCount 		int 	local ${Math.Calc[${Math.Calc[${Math.Calc[${countersToCure}+${countersCured}]}-1]} / ${countersCured} ]}
+
+
+    | Is the spell ready?
+    /call chkSpellMemorized "${cureSpell}" TRUE ${int_defaultCureGem}
+    | Cast the spell
+    /call castCureV2 ${_name} ${_id} "${cureSpell}" ${castCount} ${_forced}
+/return
+
+
+Sub castCureV2(string _name, int _id, string _spell, int _castCount, bool _forced)
+    /echo \ayCastCureV2: \ag${_name}\ao(\ag${_id}\ao) => \ag${_spell}\ao, \ag${_castCount}x\ao, \ag${_forced}
+    /declare i int local 0
+    /for i 1 to ${_castCount}
+        /if (!${SpawnCount[pc ${_name}]}) /return
+        /if (!${_forced} && (${int_healMode} > 0 && ${int_healMode} < 3) ) /call chkHeal_MT 
+        /call TrueTarget ${_id}
+        /call MQ2Cast "${_spell}" ${int_defaultCureGem} RunPriorityEvents
+     /next i
+/return 

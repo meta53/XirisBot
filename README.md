@@ -104,7 +104,7 @@ Hotkey or command that is used to tell all available debuffers to debuff the cur
 ### Curing
 Curing becomes *vitally* important in Txevu+ As such there are several commands to force curing. Note: for the majority of the time, all toons will request the appropriate cure from their assigned curers. However, there are times when you want to force it.
 1. Cure All Raid Groups `/dgt cureGroupPoison 45` this example tells all curers to look at their groups and to attempt to cure at least 45 poisons counters. Note that the curer will inspect the curee before casting and if its not required will skip that curee. The valid commands here are `cureGroupPoison` `cureGroupDisease` `cureGroupCurse`
-2. AutoCure the MT `/dt MyCleric autoCureMTOn` this tells a toon named MyCleric to watch the MT and cure anything that lands on her that is cureable. Note since we can set different MTs per cleric (by telling a cleric or whomever `/dt changeMT newMT`) you can set multiple clerics to autocure multiple 'MTs'
+2. AutoCure the MT `/dt MyCleric autoCureMT TRUE` this tells a toon named MyCleric to watch the MT and cure anything that lands on her that is cureable. Note since we can set different MTs per cleric (by telling a cleric or whomever `/dt changeMT newMT`) you can set multiple clerics to autocure multiple 'MTs'
 
 ### Healing
 Healing is usually handled automatically. 
@@ -199,7 +199,7 @@ XirisBot curing handlers. This library has several events that can be fired via 
 #### Requirements
 mq2cast, mq2dannet, mq2debuffs
 #### Events
-1. `/dt CurerName AutoCureMTOn` `/dt CurerName AutoCureMTOff` Toggle to tell specific character to auto cure the MT (clerics mostly)
+1. `/dt CurerName autoCureMT TRUE` `/dt CurerName autoCureMT FALSE` Toggle to tell specific character to auto cure the MT (clerics mostly)
 2. `/dgt cureGroupPoison 45` Tell the curers in raid to walk through their groups and cure 45 poison counters on whomever has poison counters (will skip toons with no counters)
 3. `/dgt cureGroupCurse 45` Tell the curers in raid to walk through their groups and cure 45 curse counters on whomever has curse counters (will skip toons with no counters)
 4. `/dgt cureGroupDisease 45` Tell the curers in raid to walk through their groups and cure 45 disease counters on whomever has disease counters (will skip toons with no counters)
