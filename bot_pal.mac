@@ -101,7 +101,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 		/if (${bln_offTank}) /call chkOffTanking
 		
 		|-- Check to see if self needs to be cured (xiris_curing.inc)
-		/call chkNeedCure
+		/call determineMyCureCounters
 	
 		|-- Check the two main groupings of heal classes (xiris_healing.inc)
 		/call chkHeal_Self

@@ -58,7 +58,7 @@ Additionally, if you note, the path does not link directly to the eqgame.exe but
 To achieve the best performance, you will have to run a PowerShell script (triggerable via batch file) to set the affinity of every eqgame.exe instance to a core. See `eqaff.bat` and `_AFFINITY.bat` inside the distribution zip file.
 
 ### INI Files & Class Macros
-XirisBot individual character properties are defined in a INI file, with the naming convention `./Macros/xiris_class_ini/BOT_ClassShortName_CharName.ini` or for example `BOT_BER_Ophidia.ini` In each of these INI files there are many sections, which tell XirisBot how the character should behave such as, disciplines, AA, nukes, debuffs, etc. See any of the ini files for examples. Most classes have their own class macros, except for pure Endurance based melee (MNK, ROG, BER) which share bot_melee.mac. Please note that **I personally don't usually run a macro on the MT**
+XirisBot individual character properties are defined in a INI file, with the naming convention `./Macros/xiris_settings_character/BOT_ClassShortName_CharName.ini` or for example `BOT_BER_Ophidia.ini` In each of these INI files there are many sections, which tell XirisBot how the character should behave such as, disciplines, AA, nukes, debuffs, etc. See any of the ini files for examples. Most classes have their own class macros, except for pure Endurance based melee (MNK, ROG, BER) which share bot_melee.mac. Please note that **I personally don't usually run a macro on the MT**
 #### Bard
 **bot_brd.mac** Melee class, with support for nuking, dotting, debuffing, and singing.
 #### Cleric

@@ -81,7 +81,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 		/call RunAllEvents
 
 		|-- Check to see if self needs to be cured (xiris_curing.inc)
-		/call chkNeedCure
+		/call determineMyCureCounters
 		
 		|-- Check the group for healing (xiris_healing.inc)
 		/call chkHeal_Self
@@ -178,7 +178,7 @@ Sub variant_initialize
 	|--Archery
 	/declare	bln_archeryAuto			bool	outer	TRUE
 	/declare	bln_autoFireState		bool	outer	FALSE
-	/declare	int_archeryDist			int		outer	${Ini[INI_CHAR,Settings,archeryDist,200]}
+	/declare	int_archeryDist			int		outer	${Ini[INI_COMMON,SETTINGS,archeryDist,200]}
 	
 	|--Concussion
 	/declare bln_concUse				bool	outer 	${Ini[INI_CHAR,Concussion,bln_concUse,TRUE]}

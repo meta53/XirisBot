@@ -147,7 +147,7 @@ Sub chkNuke
 				/if (${Me.CurrentMana}>=${Spell[${NUKE_${i}_Spell}].Mana} && ${Target.Distance}<=${Spell[${NUKE_${i}_Spell}].Range} && ${Target.LineOfSight}) {
 					/varset int_temp_stopCastPoint ${NUKE_${i}_StopHP}
 					/if (${Me.Class.ShortName.Equal[BRD]}) {
-						/call MQ2Medley SONG "${NUKE_${i}}" ${int_targetID} TRUE
+						/call MQ2Medley "${NUKE_${i}}" SONG ${int_targetID} TRUE
 						/echo \ag ${NUKE_${i}_Spell}  : DELAYING for \ay${NUKE_${i}_DelayTimer.OriginalValue}s \agrefresh	
 					} else {
 						/call MQ2Cast "${NUKE_${i}_Spell}" ${NUKE_${i}_Gem} 1s chkCastTarget
@@ -250,7 +250,7 @@ Sub chkQNuke
 				/if (${Me.CurrentMana}>=${Spell[${QNUKE_${i}_Spell}].Mana} && ${Target.Distance}<=${Spell[${QNUKE_${i}_Spell}].Range} && ${Target.LineOfSight}) {
 					/varset int_temp_stopCastPoint ${QNUKE_${i}_StopHP}
 					/if (${Me.Class.ShortName.Equal[BRD]}) {
-						/call MQ2Medley SONG "${QNUKE_${i}}" ${int_targetID} TRUE
+						/call MQ2Medley "${QNUKE_${i}}" SONG ${int_targetID} TRUE
 						/echo \ag ${QNUKE_${i}_Spell}  : DELAYING for \ay${QNUKE_${i}_DelayTimer.OriginalValue}s \agrefresh	
 					} else {
 						/call MQ2Cast "${QNUKE_${i}_Spell}" ${QNUKE_${i}_Gem} 1s chkCastTarget
@@ -500,8 +500,8 @@ Sub chkDOT
 					/varset dotDuration ${Spell[${DOT_${i}_Spell}].Duration.TotalSeconds}
 					/varset int_temp_stopCastPoint ${DOT_${i}_StopHP}
 					/if (${Me.Class.ShortName.Equal[BRD]}) {
-						/call MQ2Medley SONG "${DOT_${i}}" ${int_targetID} TRUE
-						/echo \ag ${DOT_${i}_Spell}  : DELAYING for \ay${dotDuration}s \agrefresh	
+						/call MQ2Medley "${DOT_${i}}" SONG ${int_targetID} TRUE
+						/echo \ag ${DOT_${i}_Spell} : DELAYING for \ay${dotDuration}s \agrefresh	
 					} else {
 						/call MQ2Cast "${DOT_${i}_Spell}" ${DOT_${i}_Gem} 1s chkCastTarget
 						/if (${Macro.Return.Equal[CAST_SUCCESS]}) {
@@ -1042,43 +1042,6 @@ Sub BuildComponents
 
 
 
-Sub BuildHP_Regen
-
-/return 
-
-Sub BuildMana_Regen
-
-/return 
-
-
-Sub BuildCures
-
-/return 
-
-
-Sub BuildBuffs_Default
-
-/return 
-
-Sub BuildBuffs_Combat
-
-/return
-
-Sub BuildDebuffs
-
-/return
-
-Sub BuildPets 
-
-/return 
-
-Sub BuildItems
-
-/return
-
-Sub BuildBurns
-
-/return
 
 
 

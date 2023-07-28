@@ -107,15 +107,13 @@ Sub CharmNPC(int _targetID, bool _forced, bool _attack, int _attackID)
         /call TrueTarget ${_targetID}
 
         /if (${Me.Class.ShortName.Equal[BRD]}) {
-            /call MQ2Medley SONG "${CHARM_${i}_Spell}" ${_targetID} TRUE
-            /goto :return
+            /call MQ2Medley "${CHARM_${i}_Spell}" SONG ${_targetID} TRUE
         } else {
             /call CastCharm "${CHARM_${i}_Spell}" ${CHARM_${db}_Gem} ${CHARM_${i}_MaxTries} ${Target.ID} ${_forced}
-            /goto :return
         }  
-        /call RunRaidEvents      
-    :return 
+        /call RunRaidEvents  
 
+    :return 
     /if (${Me.Pet.ID} ) {
         /varset bln_hasCharmedPet TRUE
         /if (${_attack}) {

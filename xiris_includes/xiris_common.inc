@@ -35,7 +35,7 @@ ______________________________________________
 
 **|
 
-#define INI_CHAR xiris_class_ini/BOT_${Me.Class.ShortName}_${Me.CleanName}.ini
+#define INI_CHAR xiris_settings_character/BOT_${Me.Class.ShortName}_${Me.CleanName}.ini
 #define INI_RAID xiris_settings_gobal/xiris_common.ini
 
 #include xiris_includes/xiris_dannet.inc
@@ -190,7 +190,10 @@ Sub Events_Rapid
 **|   
 
 Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint, string _assistArgs) 
-	/echo \aoxbot_initialize 1:${_tank1Name} 2:${_tank2Name} 3:${_tank3Name} 4:${_healPoint} 5:${_assistArgs}
+	/echo \agXBOT_${Me.Class.ShortName}: \aoMT: \ag${_tank1Name}\ao(\ag${Spawn[pc ${_tank1Name}].ID}\ao) \aw@ HealPoint:\ag${_healPoint}\ao Tank2: \ag${_tank2Name}\ao(\ag${Spawn[pc ${_tank2Name}].ID}\ao) Tank3: \ag${_tank3Name}\ao(\ag${Spawn[pc ${_tank3Name}].ID}\ao) AssistArgs: \ag${_assistArgs}
+
+
+	/echo \apInitialize: \aoCommon \aw-------------------------
 
 	|-- [Settings] : Communications & INI Declarations
 	/declare 	cmdChannel 				string	outer	dgt
@@ -231,9 +234,9 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/if (${_tank1Name.Equal[${Me.Name}]}) 	/varset bln_tanking TRUE
 
 	|-- Set the default tanks
-	/declare	str_defTank1			string	outer	${Ini[INI_CHAR,Settings,defaultTank1,Xiris]}
-	/declare	str_defTank2			string	outer	${Ini[INI_CHAR,Settings,defaultTank2,Xiria]}
-	/declare	str_defTank3			string	outer	${Ini[INI_CHAR,Settings,defaultTank3,Xirea]}
+	/declare	str_defTank1			string	outer	${Ini[INI_COMMON,SETTINGS,defaultTank1,Xiris]}
+	/declare	str_defTank2			string	outer	${Ini[INI_COMMON,SETTINGS,defaultTank2,Xiria]}
+	/declare	str_defTank3			string	outer	${Ini[INI_COMMON,SETTINGS,defaultTank3,Xirea]}
 	/declare 	str_tankName1			string	outer 	${str_defTank1}
 	/declare	str_tankName2			string	outer 	${str_defTank2}
 	/declare 	str_tankName3			string  outer	${str_defTank3}
@@ -255,7 +258,7 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 
 	|-- [Settings] :Auto Assist Settings
 	/declare 	bln_autoAssist			bool	outer 	FALSE
-	/declare	int_defAssistAt			int		outer   ${Ini[INI_CHAR,Settings,assistAt,98]}
+	/declare	int_defAssistAt			int		outer   ${Ini[INI_COMMON,SETTINGS,assistAt,98]}
 	/declare 	int_assistAt			int		outer   ${int_defAssistAt}
 	/if (${_assistArgs.Length}) {
 		/varset bln_autoAssist ${Bool[${_assistArgs.Token[1,,]}]}
@@ -264,7 +267,7 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/echo \ayAuto Assist settings: \awAuto?\ag${bln_autoAssist} \awAt?\ag${int_assistAt} \awArgs:\ag${_assistArgs}
 
 	|-- [Settings] : Miscellaneous Defaults
-	/declare	str_currentSpellSet			string	outer	${Ini[INI_CHAR,Settings,str_currentSpellSet,default]}
+	/declare	str_currentSpellSet			string	outer	${Ini[INI_COMMON,SETTINGS,str_currentSpellSet,default]}
 	/declare	bln_engaged				bool	outer	FALSE
 	/declare	bln_enraged				bool	outer	FALSE
 	/declare    bln_pulling		    	bool    outer   FALSE
@@ -280,10 +283,10 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/declare 	strFaceItem				string  outer   ${InvSlot[3].Item}
 
 	|-- [Settings] : Meditation & Utilities
-	/declare int_sitRadius   		int     outer ${Ini[INI_CHAR,Settings,sitRadius,50]}
-	/declare int_medPercent       	int     outer ${Ini[INI_CHAR,Settings,medPercent,100]}
-	/declare timer_medDelay			timer	outer ${Ini[INI_CHAR,Settings,medDelay,45s]}
-	/declare timer_sitDelay			timer	outer ${Ini[INI_CHAR,Settings,sitDelay,10s]}
+	/declare int_sitRadius   		int     outer ${Ini[INI_COMMON,SETTINGS,sitRadius,50]}
+	/declare int_medPercent       	int     outer ${Ini[INI_COMMON,SETTINGS,medPercent,100]}
+	/declare timer_medDelay			timer	outer ${Ini[INI_COMMON,SETTINGS,medDelay,45s]}
+	/declare timer_sitDelay			timer	outer ${Ini[INI_COMMON,SETTINGS,sitDelay,10s]}
 	/declare timer_check_utilities	timer   outer 0
 
 	|-- [Settings] : Camp
@@ -321,9 +324,10 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/call xbot_initialize_dannet
 	/call xbot_initialize_spellRoutines
 	/call xbot_initialize_buffing
-	|/call xbot_initialize_burns
+	/call xbot_initialize_burning
 	|/call xbot_initialize_casting
 	|/call xbot_initialize_charming
+	/call xbot_initialize_clicking
 	/call xbot_initialize_curing
 	|/call xbot_initialize_debuffing
 	|/call xbot_initialize_exclusions
@@ -335,7 +339,7 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	|/call xbot_initialize_movement
 
 	|-- report that the common things are initialized
-	/echo \agXBOT_INITIALIZE COMPLETE
+	/echo \agXBOT_${Me.Class.ShortName}:\aoInitialization Complete!
 	/end
 /return
 
@@ -898,7 +902,7 @@ Sub EVENT_UseStaunchRecovery
 	} else /if (${Me.Class.ShortName.Equal[PAL]} && ${Me.PctMana} < 20) {
 		/casting "Staunch Recovery" alt
 	} else /if (${Me.Class.ShortName.Equal[BRD]} && ${Me.PctMana} < 20) { 
-		/call MQ2Medley ALT "Staunch Recovery" ${int_targetID} FALSE
+		/call MQ2Medley "Staunch Recovery" ALT ${int_targetID} FALSE
 	} else /if ((${str_classArchetype.Equal[PRIEST]} || ${str_classArchetype.Equal[CASTER]}) && ${Me.PctMana} < 20) { 
 		/casting "Staunch Recovery" alt 
 	} 
@@ -908,7 +912,7 @@ Sub EVENT_UseIntensity
 	| Do not use if at bind point (ie: dead)
 	/if (${Zone.ID} == 340 || ${Zone.ID} == 344 || ${Zone.ID} == 345 || ${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /return
 	/if (${Me.Class.ShortName.Equal[BRD]}) {
-		/call MQ2Medley ALT "Intensity of the Resolute" ${int_targetID} TRUE
+		/call MQ2Medley "Intensity of the Resolute" ALT ${int_targetID} TRUE
 	} else {
 		/casting "Intensity of the Resolute" alt
 	}
@@ -918,7 +922,7 @@ Sub EVENT_UseServants
 	| Do not use if at bind point (ie: dead)
 	/if (${Zone.ID} == 340 || ${Zone.ID} == 344 || ${Zone.ID} == 345 || ${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /return
 	/if (${Me.Class.ShortName.Equal[BRD]}) {
-		/call MQ2Medley ALT "Steadfast Servant" ${int_targetID} FALSE
+		/call MQ2Medley "Steadfast Servant" ALT ${int_targetID} FALSE
 	} else {
 		/casting "Steadfast Servant" alt
 	}
@@ -928,7 +932,7 @@ Sub EVENT_UseInfusion
 	| Do not use if at bind point (ie: dead)
 	/if (${Zone.ID} == 340 || ${Zone.ID} == 344 || ${Zone.ID} == 345 || ${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /return
 	/if (${Me.Class.ShortName.Equal[BRD]}) {
-		/call MQ2Medley ALT "Infusion of the Faithful" ${int_targetID} FALSE
+		/call MQ2Medley "Infusion of the Faithful" ALT ${int_targetID} FALSE
 	} else {
 		/casting "Infusion of the Faithful" alt
 	}

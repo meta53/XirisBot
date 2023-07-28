@@ -191,10 +191,10 @@ Sub ParseLootINI
 	/echo \agParseLootINI \aw${lootINIFile}
 
 	|-- determine the count of the 3 major type QUEST|TRADE|VENDOR
-	/declare int_total  int local ${Ini[${lootINIFile},Settings,Total]}
-	/declare int_vendor	int	local ${Ini[${lootINIFile},Settings,Vendor]}
-	/declare int_trade  int local ${Ini[${lootINIFile},Settings,Trade]}
-	/declare int_quest	int	local ${Ini[${lootINIFile},Settings,Quest]}
+	/declare int_total  int local ${Ini[${lootINIFile},SETTINGS,Total]}
+	/declare int_vendor	int	local ${Ini[${lootINIFile},SETTINGS,Vendor]}
+	/declare int_trade  int local ${Ini[${lootINIFile},SETTINGS,Trade]}
+	/declare int_quest	int	local ${Ini[${lootINIFile},SETTINGS,Quest]}
 	
 	|-- kill the arrays if they already exist so we can rebuild them
 	/if (${Defined[loot_ALL]})		/deletevar loot_ALL
@@ -598,7 +598,7 @@ SUB openBags
 
 Sub xbot_initialize_looting
 
-	/declare bln_looting			bool	outer 	${Ini[INI_CHAR,Settings,lootUse,FALSE]}
+	/declare bln_looting			bool	outer 	${Ini[INI_COMMON,SETTINGS,lootUse,FALSE]}
 	/declare str_lootChannel		string  outer   rs
 	/declare bln_onlyQuest			bool 	outer	FALSE
 	/declare bln_lootAttuneable		bool	outer 	TRUE

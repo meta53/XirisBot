@@ -83,7 +83,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 		/call chkMTAlive FALSE
 		
 		|-- Check to see if self needs to be cured (xiris_curing.inc)
-		/call chkNeedCure
+		/call determineMyCureCounters
 
 		|-- Check Auto Assist if its on
 		/if (${bln_autoAssist}) /call chkAutoAssist

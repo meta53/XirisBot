@@ -284,11 +284,11 @@ Sub chkDownshits
 					/if (${Me.Class.ShortName.Equal[BRD]}) {
 						/echo ${FindItem[${itemName}].TimerReady} ?
 						/if (${dsType.Equal[ITEM]} && ${FindItem[${itemName}].TimerReady}==0) {
-							/call MQ2Medley ITEM "${itemName}" ${Me.ID} TRUE
+							/call MQ2Medley "${itemName}" ITEM ${Me.ID} TRUE
 						} else /if (${dsType.Equal[SPELL]}) {
-							/call MQ2Medley SONG ${buffName} ${Me.ID} TRUE
+							/call MQ2Medley ${buffName} SONG ${Me.ID} TRUE
 						} else /if (${dsType.Equal[ALT]}) {
-							/call MQ2Medley ALT ${buffName} ${Me.ID} TRUE
+							/call MQ2Medley ${buffName} ALT ${Me.ID} TRUE
 						}
 					} else {
 						/echo \ayDownflag (\ag${df}\ay) Casting \ay${buffName} \ag${downflag${df}.Token[2,|]}
@@ -400,7 +400,7 @@ Sub chkComponents(string _component, int _count, string _type, string _summoner,
 				}
 				
 			} else {
-				/varset message SUMMON_ITEM_NOT_FOUND
+				/varset message SUMMON_CLICK_NOT_FOUND
 				/goto :return
 			}
 			
@@ -781,7 +781,7 @@ Sub xbot_initialize_melee
 	
 	|-- [Settings] Damage shield/ no damage shield (specifically for events like pixxt riel tavas)
 	/declare bln_useDS				bool	outer	TRUE	
-	/declare int_damageShieldList_total			int		outer   ${Ini[dsINI,Settings,SpellCount,0]}
+	/declare int_damageShieldList_total			int		outer   ${Ini[dsINI,SETTINGS,SpellCount,0]}
 	/declare dsSpells[${int_damageShieldList_total}]	string outer
 
 	/declare ds int local 
@@ -790,7 +790,7 @@ Sub xbot_initialize_melee
 			|/echo Added DS${ds} spell ${dsSpells[${ds}]}
 		/next ds
 
-	/declare dsSongsTotal	int		outer   ${Ini[dsListINI,Settings,SongCount,0]}
+	/declare dsSongsTotal	int		outer   ${Ini[dsListINI,SETTINGS,SongCount,0]}
 	/declare dsSongs[${dsSongsTotal}]	string outer
 
 	| Initialize Library Events

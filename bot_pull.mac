@@ -73,7 +73,7 @@ Sub Main(int _pull_dist, string _channel, string _campName, bool _useDownFlags, 
 		
 		|-- Check to see if self needs to be cured (xiris_curing.inc)
 		/call RunAllEvents
-		/call chkNeedCure
+		/call determineMyCureCounters
 
 		/call chkUtils
 		

@@ -64,7 +64,7 @@ Sub SlowTarget(string _resist)
 	/declare db int local 
 	/for db 1 to ${DEBUFF_Total}
 		/if (${DEBUFF_${db}_Type.Find[SLOW]} && ${DEBUFF_${db}_ResistType.Find[${_resist}]} && ${DEBUFF_${db}_Trigger.Replace[#,$]}) {
-			/call chkSpellMemorized "DEBUFF_${db} " TRUE DEBUFF_${db}_Gem 
+			/call chkSpellMemorized "DEBUFF_${db}" TRUE ${DEBUFF_${db}_Gem} 
 			/call MQ2Cast "DEBUFF_${db}"
 		}
 	/next i
@@ -200,7 +200,7 @@ Sub CastDebuffsOnTarget(int _targetID, bool _forced)
 		:debuffCast
 			/call TrueTarget ${_targetID}
 			/if (${Me.Class.ShortName.Equal[BRD]}) {
-				/call MQ2Medley SONG "${DEBUFF_${db}_Spell}" ${_targetID} TRUE
+				/call MQ2Medley "${DEBUFF_${db}_Spell}" SONG ${_targetID} TRUE
 				/docommand /${cmdChannel} << ${Target.Name} >> ${DEBUFF_${db}_Spell} 
 			} else {
 				/call CastDebuff "${DEBUFF_${db}_Spell}" ${DEBUFF_${db}_Gem} ${DEBUFF_${db}_MaxTries} ${_targetID} ${_forced}

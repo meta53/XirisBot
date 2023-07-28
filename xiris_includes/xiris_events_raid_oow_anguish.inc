@@ -126,7 +126,6 @@ Sub Event_TureRampOn
 		/stick off
 		/nav wp tureSafe
 		/delay 10
-		/call chkNeedCure
 	} else /if (${Me.Class.ShortName.Equal[NEC]} || ${Me.Class.ShortName.Equal[MAG]} || ${Me.Class.ShortName.Equal[BST]}) {
 		/pet hold on
 		/pet back off
@@ -152,7 +151,6 @@ Sub Event_TureRampOff
 
 Sub Event_TureWanton 
 	/echo \aw Warning! \arWanton Destruction \awon me!
-	/call chkNeedCure
 /return
 
 |----------------------------

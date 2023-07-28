@@ -18,7 +18,7 @@ ______________________________________________
 
   Cast: the main subroutine that casts spells or items for you 
      Usage: 
-        /call MQ2Cast ["spell name"|"item name"|"AA name"|"AA#"] [[item|slotname]|alt|gem#] [give up time][s|m] [custom subroutine name] [-targetid|###] [-maxtries|#] [-recast|#] [-setin|setname] [-bandolier|setname]
+        /call MQ2Cast ["spell name"|"item name"|"AA name"|"AA#"] [[item|slotname]|AA|gem#] [give up time][s|m] [custom subroutine name] [-targetid|###] [-maxtries|#] [-recast|#] [-setin|setname] [-bandolier|setname]
      Examples: 
  
      To cast Howl of Tashan and mem it in slot 3 if not memmed:
@@ -139,7 +139,7 @@ Sub Events_SpellRoutines
 
 
 Sub xbot_initialize_spellRoutines
-	/echo \agInitialize: \aoSpell Routines \aw-------------------------
+	/echo \apInitialize: \aoSpell Routines \aw-------------------------
 	|-- Default values for xiris_spell_routines.inc
 	/declare noInvis 			bool 	outer 	TRUE
 	/declare noFeigning 		bool 	outer 	TRUE
@@ -168,8 +168,9 @@ Sub xbot_initialize_spellRoutines
 	
 /return
 
+
 | Note the _token must be a string "song||alt aa name||item name"
-Sub MQ2Medley(string _type, string _token, int _targetID, bool _interrupt)
+Sub MQ2Medley(string _token, string _type, int _targetID, bool _interrupt)
     
     /declare argstring string local "${_token}" -targetid|${_targetID}
     /if (${_interrupt}) /varset argstring "${_token}" -interrupt -targetid|${_targetID}
@@ -183,7 +184,7 @@ Sub MQ2Medley(string _type, string _token, int _targetID, bool _interrupt)
         /medley queue ${argstring}
         /delay ${castTime}
     } else {
-		/if (${FindItem[${_token}].TimerReady} > 0) /return 'ITEM_NOTREADY'
+		/if (${FindItem[${_token}].TimerReady} > 0) /return 'CLICK_NOTREADY'
         /autoinv
         /varcalc castTime (${FindItem[${_token}].CastTime} / 100)+20
         |/echo \awItem! "${_token}" ${FindItem[${_token}].CastTime} ${castTime}
@@ -265,7 +266,7 @@ Sub MQ2Cast(string spellName,string spellType,timer giveUpTimer,string mySub,str
 			}
 		}
 	} else /if ( ${Me.AltAbility[${spellName}].ID} ) {
-		/varset spellType alt
+		/varset spellType ALT
 	} else /if ( ${Spell[${spellName}].ID} ) {
 		/if ( !${spellType.Find[gem]} ) /varset spellType ${defaultGem}
 	}
