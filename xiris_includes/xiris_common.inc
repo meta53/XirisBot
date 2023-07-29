@@ -38,7 +38,7 @@ ______________________________________________
 #define INI_CHAR xiris_settings_character/BOT_${Me.Class.ShortName}_${Me.CleanName}.ini
 #define INI_RAID xiris_settings_gobal/xiris_common.ini
 
-#include xiris_includes/xiris_dannet.inc
+|** #include xiris_includes/xiris_dannet.inc
 #include xiris_includes/xiris_buffing.inc
 #include xiris_includes/xiris_burn.inc
 #include xiris_includes/xiris_casting.inc
@@ -54,7 +54,7 @@ ______________________________________________
 #include xiris_includes/xiris_pets.inc
 #include xiris_includes/xiris_movement.inc
 
-#include xiris_includes/xiris_spell_routines.inc
+#include xiris_includes/xiris_spell_routines.inc **|
 
 |COMMON
 #EVENT KillMob 				"[#1#] KillMob #2#"
@@ -317,7 +317,7 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	}
 
 	|-- init common events
-	/call xbot_initialize_events
+|** 	/call xbot_initialize_events
 	/call initEvents_Common
 
 	|-- init other libraries
@@ -336,11 +336,11 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	|/call xbot_initialize_melee
 	|/call xbot_initialize_offtanking
 	|/call xbot_initialize_pets
-	|/call xbot_initialize_movement
+	|/call xbot_initialize_movement **|
 
 	|-- report that the common things are initialized
 	/echo \agXBOT_${Me.Class.ShortName}:\aoInitialization Complete!
-	/end
+
 /return
 
 

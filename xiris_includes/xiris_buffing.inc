@@ -83,27 +83,7 @@ Sub Events_Buffing
 **|
 
 Sub xbot_initialize_buffing
-	/echo \aoxbot_initialize_buffing
-
-	| self buffs
-    /declare timer_check_selfBuffs          timer   outer   0
-    /declare int_selfBuffs_total            int     outer   0
-	/declare bln_selfBuffs_enabled			bool	outer	TRUE
-
-    | targeted buffs
-    /declare timer_check_targetedBuffs      timer   outer   0
-    /declare int_targetedBuffs_total        int     outer   0
-    /declare bln_targetedBuffs_enabled      bool    outer   TRUE
-    /declare bln_targetedBuffs_allowRaid    bool    outer   TRUE
-    /declare bln_targetedBuffs_allowGroup   bool    outer   TRUE 
-    /declare bln_targetedBuffs_automatic    bool    outer   TRUE
-
-    | combat buffs
-    /declare timer_check_combatBuffs        timer   outer   0
-    /declare int_combatBuffs_total          int     outer   0
-    /declare bln_combatBuffs_enabled        bool    outer   TRUE
-    /declare bln_combatBuffs_allowRaid      bool    outer   TRUE
-    /declare bln_combatBuffs_allowGroup     bool    outer   TRUE 
+	/echo \n \apInitialize: \aoBuffing \aw-------------------------
 
 	| process the character ini file
 	/call processSelfBuffs
@@ -124,11 +104,17 @@ Sub initEvents_buffing
 | Note int_selfBuffs_total is set here, as well as the list of selfbuffs
 Sub processSelfBuffs
     /echo \awprocessSelfBuffs
+
 	/declare raw_selfBuffs[100]		string 	local NULL
 	/declare i						int 	local 0
 	/declare sz 					int     local 0
     /declare test                   string  local NULL
-   
+
+    | self buffs
+    /declare timer_check_selfBuffs          timer   outer   0
+    /declare int_selfBuffs_total            int     outer   0
+	/declare bln_selfBuffs_enabled			bool	outer	TRUE
+
     |; =_buff|_type|_itemName
 	|BUFF_1="Reyfin's Racing Thoughts"|ITEM|"Xxeric's Matted-Fur Mask"
 	/for i 1 to ${raw_selfBuffs.Size}
@@ -143,16 +129,25 @@ Sub processSelfBuffs
 		/declare BUFFSELF_${i}		string	outer   ${test.Arg[1,|]}
 		/declare BUFFSELF_${i}_Type	string  outer   ${test.Arg[2,|]}
 		/declare BUFFSELF_${i}_Name	string  outer   ${test.Arg[3,|]}
-        /echo \aoBuff Processed[\ag${i}\ao]: \awBuff:\ag${BUFFSELF_${i}} \awType:\ag${BUFFSELF_${i}_Type} \awName:\ag${BUFFSELF_${i}_Name}
+        /echo \ao        BUFFSELF[\ag${i}\ao]: \awBuff:\ag${BUFFSELF_${i}} \awType:\ag${BUFFSELF_${i}_Type} \awName:\ag${BUFFSELF_${i}_Name}
 	/next i
 /return
 
 Sub processTargetedBuffs
     /echo \awprocessTargetedBuffs
+
     /declare raw_targetedBuffs[100]		string 	local NULL
 	/declare i						    int 	local 0
 	/declare sz 					    int     local 0
     /declare test                       string  local NULL
+
+    | targeted buffs
+    /declare timer_check_targetedBuffs      timer   outer   0
+    /declare int_targetedBuffs_total        int     outer   0
+    /declare bln_targetedBuffs_enabled      bool    outer   TRUE
+    /declare bln_targetedBuffs_allowRaid    bool    outer   TRUE
+    /declare bln_targetedBuffs_allowGroup   bool    outer   TRUE 
+    /declare bln_targetedBuffs_automatic    bool    outer   TRUE
 
     |; = _enabled|_allowRaid|_allowGroup|_automatic
     |settings=TRUE|TRUE|TRUE|FALSE
@@ -161,7 +156,7 @@ Sub processTargetedBuffs
     /if (!${Ini[INI_CHAR,BUFFS_TARGETED,settings].Arg[3,|]})  /varset bln_targetedBuffs_allowGroup FALSE
     /if (!${Ini[INI_CHAR,BUFFS_TARGETED,settings].Arg[4,|]})  /varset bln_targetedBuffs_automatic  FALSE
 
-    /echo \ao    Settings Processed: \awEnabled:\ag${bln_targetedBuffs_enabled} \awAllowRaid:\ag${bln_targetedBuffs_allowRaid} \awAllowGroup:\ag${bln_targetedBuffs_allowGroup} \awAutomatic:\ag${bln_targetedBuffs_automatic}
+    /echo \a-w    Settings Processed: \awEnabled:\ag${bln_targetedBuffs_enabled} \awAllowRaid:\ag${bln_targetedBuffs_allowRaid} \awAllowGroup:\ag${bln_targetedBuffs_allowGroup} \awAutomatic:\ag${bln_targetedBuffs_automatic}
     
     |;=_buff|_use|_targetType|_gem|_classes
     |BUFF_1="Balikor's Mark"|TRUE|GROUP|5|ALL
@@ -178,7 +173,7 @@ Sub processTargetedBuffs
 		/declare BUFFTARGETED_${i}_Type	    string  outer   ${test.Arg[3,|]}
 		/declare BUFFTARGETED_${i}_Gem	    string  outer   ${test.Arg[4,|]}
         /declare BUFFTARGETED_${i}_Targets	string  outer   ${test.Arg[5,|]}
-        /echo \ao    Buff Processed[\ag${i}\ao]: \awBuff:\ag${BUFFTARGETED_${i}} \awUse:\ag${BUFFTARGETED_${i}_Use} \awType:\ag${BUFFTARGETED_${i}_Type} \awGem:\ag${BUFFTARGETED_${i}_Gem} \awTargets:\ag${BUFFTARGETED_${i}_Targets}
+        /echo \ao        BUFFTARGETED[\ag${i}\ao]: \awBuff:\ag${BUFFTARGETED_${i}} \awUse:\ag${BUFFTARGETED_${i}_Use} \awType:\ag${BUFFTARGETED_${i}_Type} \awGem:\ag${BUFFTARGETED_${i}_Gem} \awTargets:\ag${BUFFTARGETED_${i}_Targets}
     /next i
 
 /return
@@ -190,13 +185,20 @@ Sub processCombatBuffs
 	/declare sz 					    int     local 0
     /declare test                       string  local NULL
 
+    | combat buffs
+    /declare timer_check_combatBuffs        timer   outer   0
+    /declare int_combatBuffs_total          int     outer   0
+    /declare bln_combatBuffs_enabled        bool    outer   TRUE
+    /declare bln_combatBuffs_allowRaid      bool    outer   TRUE
+    /declare bln_combatBuffs_allowGroup     bool    outer   TRUE 
+
     |; = _enabled|_allowRaid|_allowGroup|_automatic
     |settings=TRUE|TRUE|TRUE|FALSE
     /if (!${Ini[INI_CHAR,BUFFS_COMBAT,settings].Arg[1,|]})  /varset bln_combatBuffs_enabled         FALSE
     /if (!${Ini[INI_CHAR,BUFFS_COMBAT,settings].Arg[2,|]})  /varset bln_combatBuffs_allowRaid       FALSE
     /if (!${Ini[INI_CHAR,BUFFS_COMBAT,settings].Arg[3,|]})  /varset bln_combatBuffs_allowGroup      FALSE
 
-    /echo \ao    Settings Processed: \awEnabled:\ag${bln_combatBuffs_enabled} \awAllowRaid:\ag${bln_combatBuffs_allowRaid} \awAllowGroup:\ag${bln_combatBuffs_allowGroup}
+    /echo \a-w    Settings Processed: \awEnabled:\ag${bln_combatBuffs_enabled} \awAllowRaid:\ag${bln_combatBuffs_allowRaid} \awAllowGroup:\ag${bln_combatBuffs_allowGroup}
     |;=_buff|_use|_targetType|_gem|_classes
     |BUFF_1="Panoply of Vie"|TRUE|SINGLE|5|MT
    
@@ -213,7 +215,7 @@ Sub processCombatBuffs
 		/declare BUFFCOMBAT_${i}_Type	    string  outer   ${test.Arg[3,|]}
 		/declare BUFFCOMBAT_${i}_Gem	    string  outer   ${test.Arg[4,|]}
         /declare BUFFCOMBAT_${i}_Targets	string  outer   ${test.Arg[5,|]}
-        /echo \ao    Buff Processed[\ag${i}\ao]: \awBuff:\ag${BUFFCOMBAT_${i}} \awUse:\ag${BUFFCOMBAT_${i}_Use} \awType:\ag${BUFFCOMBAT_${i}_Type} \awGem:\ag${BUFFCOMBAT_${i}_Gem} \awTargets:\ag${BUFFCOMBAT_${i}_Targets}
+        /echo \ao        BUFFCOMBAT[\ag${i}\ao]: \awBuff:\ag${BUFFCOMBAT_${i}} \awUse:\ag${BUFFCOMBAT_${i}_Use} \awType:\ag${BUFFCOMBAT_${i}_Type} \awGem:\ag${BUFFCOMBAT_${i}_Gem} \awTargets:\ag${BUFFCOMBAT_${i}_Targets}
     /next i
 
 /return

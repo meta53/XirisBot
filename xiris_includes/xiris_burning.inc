@@ -61,7 +61,7 @@ Sub EVENT_BurnOff
 /return
 
 Sub xbot_initialize_burning
-    /echo \apInitialize: \aoBurning \aw-------------------------
+    /echo \n \apInitialize: \aoBurning \aw-------------------------
 
     /call processBurns
     /call initEvents_Burning
@@ -85,7 +85,7 @@ Sub processBurns
     /if (!${Ini[INI_CHAR,BURNS,settings].Arg[2,|]})  /varset int_burn_key       1
     /if (!${Ini[INI_CHAR,BURNS,settings].Arg[3,|]})  /varset bln_cry2Hander     FALSE
 
-     /echo \ao    Settings Processed: \awEnabled:\ag${bln_burnsEnabled} \awKey:\ag${int_burn_key}
+    /echo \a-w    Settings Processed: \awEnabled:\ag${bln_burnsEnabled} \awKey:\ag${int_burn_key}
     |;_burn|_type[AA|ITEM|SPELL|DISC]|_use|_afterIndex|_MGB[TRUE|ATTEMPT|FALSE]
     /declare raw_burn[20]       string  local   NULL
     /declare i                  int     local   0
@@ -105,7 +105,7 @@ Sub processBurns
         /declare BURN_${i}_Use      bool    outer   ${Ini[INI_CHAR,BURNS,BURN_${i}].Arg[3,|]}       
         /declare BURN_${i}_After    int     outer   ${Ini[INI_CHAR,BURNS,BURN_${i}].Arg[4,|]}
         /declare BURN_${i}_MGB      string  outer   ${Ini[INI_CHAR,BURNS,BURN_${i}].Arg[5,|]}
-         /echo \ao    [BURN][\ag${i}\ao]: \awName:\ag${BURN_${i}} \awType:\ag${BURN_${i}_Type} \awEnabled:\ag${BURN_${i}_Use} \awAfter:\ag${BURN_${i}_After}
+         /echo \ao        BURN[\ag${i}\ao]: \awName:\ag${BURN_${i}} \awType:\ag${BURN_${i}_Type} \awEnabled:\ag${BURN_${i}_Use} \awAfter:\ag${BURN_${i}_After}
     /next i
 /return
 

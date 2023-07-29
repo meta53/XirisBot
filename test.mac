@@ -2,12 +2,17 @@
 #define INI_COMMON      xiris_settings_global/xiris_settings_common.ini
 #include                xiris_includes/xiris_spell_routines.inc
 
+
 #include                xiris_includes/xiris_buffing.inc
+#include                xiris_includes/xiris_burning.inc
 #include                xiris_includes/xiris_common.inc
+
+#include                xiris_includes/xiris_clicks.inc
 #include                xiris_includes/xiris_curing.inc
+#include                xiris_includes/xiris_healing.inc
 #include                xiris_includes/xiris_dannet.inc
 #include                xiris_includes/xiris_events.inc
-#include                xiris_includes/xiris_clicks.inc
+
 
 #Turbo 5
 
@@ -16,8 +21,6 @@ Sub Main
     /declare int_MTID       int     outer   ${Spawn[pc Xirin].ID}
     /declare bln_engaged    bool    outer   TRUE
 
-    
-    /declare str_currentSpellSet string outer default
 
     /declare arr_raidLeaders[9] string outer NULL
 
@@ -38,6 +41,7 @@ Sub Main
     /call xbot_initialize_events
 	/call xbot_initialize_buffing
 	/call xbot_initialize_burning
+    /call xbot_initialize_casting
     /call xbot_initialize_curing
     /call xbot_initialize_clicking
    
@@ -48,8 +52,9 @@ Sub Main
 
 
         | Debug check the burning events
-        /call Events_Burning
-        /call Events_Clicking
+        |/call Events_Burning
+        |/call Events_Clicking
+        /call Events_Casting
 
         /if (${bln_engaged}) {
 
@@ -64,3 +69,107 @@ Sub Main
         /end
         /goto :MainLoop
 /return 
+
+Sub initEvents_Casting
+    /call RegisterRaidEvents Events_Burning 4
+/return 
+
+Sub Events_Casting
+
+/return
+
+Sub xbot_initialize_casting
+    /echo \n \apInitialize: \aoCasting \aw-------------------------
+
+    |-- Spellset
+    /declare str_currentSpellSet        string  outer    NULL
+
+    |-- Templates
+	/declare DOT_Template				string  outer  	_spell|_use|_gem|_maxTries|_namedOnly|_startHP|_stopHP|_hasCastOnce|_delay
+	/declare DOT_QUICK_Template			string  outer  	_spell|_use|_gem|_maxTries|_namedOnly|_startHP|_stopHP|_hasCastOnce|_delay
+	/declare NUKE_Template 				string  outer  	_spell|_use|_gem|_maxTries|_namedOnly|_startHP|_stopHP|_hasCastOnce|_delay
+	/declare NUKE_QUICK_Template 		string  outer   _spell|_use|_gem|_maxTries|_namedOnly|_startHP|_stopHP|_hasCastOnce|_delay	
+	/declare NUKE_AE_Template	 		string  outer  	_spell|_use|_gem|_maxTries|_namedOnly|_startHP|_stopHP|_hasCastOnce|_delay	
+    /declare JOLT_Template	 		    string  outer  	_spell|_use|_gem|_maxTries|_namedOnly|_startHP|_stopHP|_hasCastOnce|_delay
+	/declare STUN_Template				string  outer	_spell|_use|_gem
+
+    /call processCasting
+    /call initEvents_Casting
+/return
+
+
+Sub processCasting
+
+    | DOT 
+    /call processOffensiveSpellSettings DOT
+    | DOT_QUICK
+    /call processOffensiveSpellSettings DOT_QUICK
+    | NUKE
+    /call processOffensiveSpellSettings NUKE
+    | NUKE_QUICK
+    /call processOffensiveSpellSettings NUKE_QUICK
+    | NUKE_AE
+    /call processOffensiveSpellSettings NUKE_AE
+    | JOLT
+    /call processOffensiveSpellSettings JOLT
+    | STUN
+    /call processOffensiveSpellSettings STUN
+
+/return
+
+Sub processOffensiveSpellSettings(string _type)
+    /echo \awprocessOffensiveSpellSettings \a-g${_type}
+   
+    /declare bln_cast_${_type}_enabled      bool   outer   FALSE
+    /declare int_cast_${_type}_total        int    outer   0
+    /declare int_cast_${_type}_mana         int    outer   10
+    /declare int_cast_${_type}_start        int    outer   99
+    /declare int_cast_${_type}_stop         int    outer   0
+
+    |; _enabled|_delay|_minMana|_startHP|_stopHP
+    /if (${Ini[INI_CHAR,${_type},settings].Arg[1,|]})  /varset bln_cast_${_type}_enabled   ${Ini[INI_CHAR,${_type},settings].Arg[1,|]}
+    /if (${Ini[INI_CHAR,${_type},settings].Arg[3,|]})  /varset int_cast_${_type}_mana      ${Ini[INI_CHAR,${_type},settings].Arg[3,|]}
+    /if (${Ini[INI_CHAR,${_type},settings].Arg[4,|]})  /varset int_cast_${_type}_start     ${Ini[INI_CHAR,${_type},settings].Arg[4,|]}
+    /if (${Ini[INI_CHAR,${_type},settings].Arg[5,|]})  /varset int_cast_${_type}_stop      ${Ini[INI_CHAR,${_type},settings].Arg[5,|]}
+
+    /echo \a-w    Settings Processed: \aw${_type} Enabled:\ag${bln_cast_${_type}_enabled} \awTotal:\ag${bln_cast_${_type}_total} \awMinMana:\ag${int_cast_${_type}_mana} \awStart:\ag${int_cast_${_type}_start} \awStop:\ag${int_cast_${_type}_stop}
+    
+    |;_spell|_use|_gem|_maxTries|_namedOnly|_startHP|_stopHP|_hasCastOnce|_delay
+    /declare raw_casting[100]		string 	local NULL
+	/declare i						int 	local 0
+    /declare j                      int     local 0
+	/declare sz 					int     local 0
+    /declare test                   string  local NULL
+    /declare template               string  local ${_type}_Template
+    /declare pcount                 int     local ${template.Count[|]}
+
+	/varcalc pcount ${pcount}+1
+
+    /for i 1 to ${raw_casting.Size}
+        /varset test ${Ini[INI_CHAR,BURNS,BURN_${i}]}
+        /if (${test.Arg[1,|].Equal[NULL]}) {
+            /varset int_cast_${_type}_total ${sz}
+            /return
+        }
+        | Not null, set the values based on ${template}
+        /declare ${_type}_${i}  string  outer  ${test.Arg[1,|]}
+
+        /for j 1 to ${pcount}
+
+    /next i
+
+/return 
+
+|** /echo \awCreating New \ag ${_type} \awset: ${_type}_${_index}  == ${_line.Token[1,|]}
+	/declare ${_type}_${_index}_Spell string outer  ${_line.Token[1,|]}
+	/for j 2 to ${propertyCount}
+		/varset property ${propertyList.Token[${j},|]} 
+		|/echo ${property}
+		/if (${property.Find[Timer]}) {
+			/declare ${_type}_${_index}${property} timer outer ${_line.Token[${j},|]}s
+		|	/echo \ao${_type}_${_index}${property} \awis a timer \ar${${_type}_${_index}${property}}
+		} else {
+			/declare ${_type}_${_index}${property} string outer ${_line.Token[${j},|]}
+		}
+		
+	/next j **|

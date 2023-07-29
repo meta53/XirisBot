@@ -117,7 +117,7 @@ Sub EVENT_autoCureMT(string _line, string _sender, string _eventParams)
 
 
 Sub xbot_initialize_curing
-    /echo \apInitialize: \aoCuring \aw-------------------------
+    /echo \n \apInitialize: \aoCuring \aw-------------------------
 
     /if (${Select[${Me.Class.ShortName},CLR,DRU,SHM,PAL]}) /call processCureSpellSettings
     /call processCureDebuffList
@@ -179,7 +179,7 @@ Sub processCureSpellSettings
     /if (${Ini[INI_CHAR,CURES,CURE_radiant].Arg[2,|]})  /varset bln_useCure_radiant TRUE  
     /if (${Ini[INI_CHAR,CURES,CURE_radiant].Arg[3,|]})  /varset bln_useCure_radiant ${Ini[INI_CHAR,CURES,CURE_radiant].Arg[3,|]}    
 
-    /echo \ao    Settings Processed: \awEnabled:\ag${bln_curing_enabled} \awAllowMT:\ag${bln_autoCureMT} \awAllowSelf:\ag${bln_autoCureSelf} \awAllowGroup:\ag${bln_autoCureGroup} \awLazy:\ag${bln_autoCureLazy}
+    /echo \a-w    Settings Processed: \awEnabled:\ag${bln_curing_enabled} \awAllowMT:\ag${bln_autoCureMT} \awAllowSelf:\ag${bln_autoCureSelf} \awAllowGroup:\ag${bln_autoCureGroup} \awLazy:\ag${bln_autoCureLazy}
 
     |;CURE_poison="Antidote"|TRUE|64
     |CURE_curse="Remove Greater Curse"|TRUE|45 
@@ -228,8 +228,8 @@ Sub processCureSpellSettings
     /varcalc maxGroupPoisonCured ${groupPoisonCured} * 2
 
 
-    /echo \ao    Settings Processed: \aySINGLE\awCurse:\ag${bln_hasCure_curse}:\ao${str_cure_curse} \awDisease:\ag${bln_hasCure_disease}:\ao${str_cure_disease} \awPoison:\ag${bln_hasCure_poison}:\ao${str_cure_poison}
-    /echo \ao    Settings Processed: \ayGROUP \awCurse:\ag${bln_hasCure_curse_group}:\ao${str_cure_curse_group} \awDisease:\ag${bln_hasCure_disease_group}:\ao${str_cure_disease_group} \awPoison:\ag${bln_hasCure_poison_group}:\ao${str_cure_poison_group}
+    /echo \a-w    Settings Processed: \aySINGLE\awCurse:\ag${bln_hasCure_curse}:\ao${str_cure_curse} \awDisease:\ag${bln_hasCure_disease}:\ao${str_cure_disease} \awPoison:\ag${bln_hasCure_poison}:\ao${str_cure_poison}
+    /echo \a-w    Settings Processed: \ayGROUP \awCurse:\ag${bln_hasCure_curse_group}:\ao${str_cure_curse_group} \awDisease:\ag${bln_hasCure_disease_group}:\ao${str_cure_disease_group} \awPoison:\ag${bln_hasCure_poison_group}:\ao${str_cure_poison_group}
 /return 
 
 | Set up the cure requiremmments for all classes (for their inner loop checks) 
@@ -288,7 +288,7 @@ Sub processCureDebuffList
         /declare DEBUFF_IMMEDIATE_${i}          string  outer   ${Ini[INI_COMMON,CURING_DEBUFF_IMMEDIATE,DEBUFF_${i}].Arg[1,|]}
         /declare DEBUFF_IMMEDIATE_${i}_Type     string  outer   ${Ini[INI_COMMON,CURING_DEBUFF_IMMEDIATE,DEBUFF_${i}].Arg[2,|]}
         /declare DEBUFF_IMMEDIATE_${i}_Targets  string  outer   ${Ini[INI_COMMON,CURING_DEBUFF_IMMEDIATE,DEBUFF_${i}].Arg[3,|]}
-        /echo \ao   [CURING_DEBUFF_IMMEDIATE][\ag${i}\ao]: \awDebuff:\ag${DEBUFF_IMMEDIATE_${i}} \awType:\ag${DEBUFF_IMMEDIATE_${i}_Type} \awTargets:\ag${DEBUFF_IMMEDIATE_${i}_Targets}
+        /echo \ao        DEBUFF_IMMEDIATE[\ag${i}\ao]: \awDebuff:\ag${DEBUFF_IMMEDIATE_${i}} \awType:\ag${DEBUFF_IMMEDIATE_${i}_Type} \awTargets:\ag${DEBUFF_IMMEDIATE_${i}_Targets}
     /next i
 
     :required
@@ -305,7 +305,7 @@ Sub processCureDebuffList
         /declare DEBUFF_REQUIRED_${i}          string   outer   ${Ini[INI_COMMON,CURING_DEBUFF_REQUIRED,DEBUFF_${i}].Arg[1,|]}
         /declare DEBUFF_REQUIRED_${i}_Type     string   outer   ${Ini[INI_COMMON,CURING_DEBUFF_REQUIRED,DEBUFF_${i}].Arg[2,|]}
         /declare DEBUFF_REQUIRED_${i}_Targets  string   outer   ${Ini[INI_COMMON,CURING_DEBUFF_REQUIRED,DEBUFF_${i}].Arg[3,|]}
-        /echo \ao   CURING_DEBUFF_REQUIRED[\ag${i}\ao]: \awDebuff:\ag${DEBUFF_REQUIRED_${i}} \awType:\ag${DEBUFF_REQUIRED_${i}_Type} \awTargets:\ag${DEBUFF_REQUIRED_${i}_Targets}
+        /echo \ao        DEBUFF_REQUIRED[\ag${i}\ao]: \awDebuff:\ag${DEBUFF_REQUIRED_${i}} \awType:\ag${DEBUFF_REQUIRED_${i}_Type} \awTargets:\ag${DEBUFF_REQUIRED_${i}_Targets}
     /next i    
 /return 
 

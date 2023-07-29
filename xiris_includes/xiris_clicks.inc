@@ -18,7 +18,7 @@ Sub Events_Clicking
 /return 
 
 Sub xbot_initialize_clicking
-    /echo \apInitialize: \aoClicking \aw-------------------------
+    /echo \n \apInitialize: \aoClicking \aw-------------------------
 
     /call processClicks
     
@@ -42,7 +42,7 @@ Sub processClicks
     /if (!${Ini[INI_CHAR,CLICKS,settings].Arg[3,|]})  /varset int_click_start     98
     /if (!${Ini[INI_CHAR,CLICKS,settings].Arg[4,|]})  /varset int_click_stop      0
 
-    /echo \ao    Settings Processed: \awEnabled:\ag${bln_clicksEnabled} \awDelay:\ag${int_click_delay} \awStart:\ag${int_click_start} \awStop:\ag${int_click_stop}
+    /echo \a-w    Settings Processed: \awEnabled:\ag${bln_clicksEnabled} \awDelay:\ag${int_click_delay} \awStart:\ag${int_click_start} \awStop:\ag${int_click_stop}
     |;_item|_type|_effect[OFFENSE|DEFENSE|HEAL]|_use|_namedOnly|_startHP|_stopHP|_trigger
     | Note: Trigger is globally set to true for now. In future it will support the _effect type 
     /declare raw_click[20]       string  local   NULL
@@ -66,7 +66,7 @@ Sub processClicks
         /declare CLICK_${i}_Start       int     outer   ${Ini[INI_CHAR,CLICKS,CLICK_${i}].Arg[6,|]}
         /declare CLICK_${i}_Stop        int     outer   ${Ini[INI_CHAR,CLICKS,CLICK_${i}].Arg[7,|]}
         /declare CLICK_${i}_Trigger     bool    outer   ${Ini[INI_CHAR,CLICKS,CLICK_${i}].Arg[8,|]}
-         /echo \ao    [CLICK][\ag${i}\ao]: \awName:\ag${CLICK_${i}} \awType:\ag${CLICK_${i}_Type} \awEffect:\ag${CLICK_${i}_Effect} \awEnabled:\ag${CLICK_${i}_Use} \awNamedOnly:\ag${CLICK_${i}_NamedOnly} \awStart:\ag${CLICK_${i}_Start} \awStop:\ag${CLICK_${i}_Stop} \awTrigger:\ag${CLICK_${i}_Trigger}
+         /echo \ao        CLICK[\ag${i}\ao]: \awName:\ag${CLICK_${i}} \awType:\ag${CLICK_${i}_Type} \awEffect:\ag${CLICK_${i}_Effect} \awEnabled:\ag${CLICK_${i}_Use} \awNamedOnly:\ag${CLICK_${i}_NamedOnly} \awStart:\ag${CLICK_${i}_Start} \awStop:\ag${CLICK_${i}_Stop} \awTrigger:\ag${CLICK_${i}_Trigger}
     /next i
 /return
 

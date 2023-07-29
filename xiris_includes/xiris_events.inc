@@ -31,6 +31,8 @@ ______________________________________________
 
 
 Sub xbot_initialize_events
+    /echo \n \apInitialize: \aoEvents \aw-------------------------
+    
     |--Array
     /declare BackgroundEventsRaw[100]   string outer NULL
     /declare BackgroundEvents[0]        string outer NULL
@@ -67,7 +69,7 @@ Sub xbot_initialize_events
     |-- Depths of Darkhollow
     /if (${Zone.ShortName.Equal[dreadspire]})   /call initEvents_DoDH_Demiplane
 
-    /echo \aoxbot_initialize_events
+   
 
 /return
 
