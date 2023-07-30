@@ -1208,6 +1208,7 @@ SUB EVENT_shrinkGroup
 |- @param TargetID: The ID of the spawn you wish to check on
 |-------------------------------------------------------------|
 Sub TargetNamedCheck(_id)
+	/if (${Target.Named}) /return TRUE
 	/if ((${Spawn[npc id ${_id}].Named} || ${Spawn[npc id ${_id}].Name.Find[#]}) && ${Target.Level} >= 75) /return TRUE
 	/if (${Zone.ShortName.Equal[tacvi]} && ${Target.Level} >= 70) /return TRUE
 	/if (${Zone.ShortName.Equal[chambersa]} || ${Zone.ShortName.Equal[chambersb]} || ${Zone.ShortName.Equal[chambersc]} || ${Zone.ShortName.Equal[chambersd]} || ${Zone.ShortName.Equal[chamberse]}  && ${Target.Level} >= 70) /return TRUE

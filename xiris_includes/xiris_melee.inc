@@ -311,6 +311,41 @@ Sub chkDownshits
 	}
 /return
 
+
+
+Sub BuildComponents
+	|; =_component|_use|_type|_count|_summoner|_reagent
+	|COMPONENT_1="Shuriken of Eternity"|TRUE|ITEM|200|"Ton Po's Mystical Pouch"|NULL
+
+	| Run a test to see if there are no entries
+	/declare bln_components bool	outer FALSE
+	/if (${Select["${Ini[INI_CHAR,COMPONENTS,COMPONENT_1]}",NULL]} == 1) {
+		/echo \aoBuildComponents: \arNo components created!
+		/return
+	}
+
+	| create a temporary array so we can assign the DFs and then trim to final array
+	/varset bln_components TRUE
+	/declare arr_rawCO[10]	string	local 
+	/declare sizeCO 		int		local 1
+	/declare i 				int		local 1
+
+	/for i 1 to ${arr_rawCO.Size}
+		/varset arr_rawCO[${i}] ${Ini[INI_CHAR,COMPONENTS,COMPONENT_${i},FALSE]} 
+		/if (${arr_rawCO[${i}].NotEqual[FALSE]}) /varcalc sizeCO ${sizeCO}+1
+	/next i
+	
+	| populate an array of components
+	/declare arr_components[${sizeCO}]	string outer
+	/for i 1 to ${sizeCO}
+		/varset arr_components[${i}] "${arr_rawCO[${i}]}"
+	/next i
+	/echo \aoBuildComponents: \aw[\ag${sizeCO}\aw] \agcreated!
+/return  
+
+
+
+
 Sub chkComponentsAll
 	/if (${bln_componentCheck} && !${timer_component}) {
 		/declare i 			int 	local	1
