@@ -80,7 +80,9 @@ Sub Events_Curing
 Sub Events_Curing_Background
     /doevents autoCureMT
     /doevents cureLazy
-    /if (${Select[${Me.Class.ShortName},CLR,DRU,PAL,SHM]} && ((!${bln_engaged} && !${timer_check_cures}) || (${bln_engaged}))) /call chkCures
+    /if (${Select[${Me.Class.ShortName},CLR,DRU,PAL,SHM]} && ((!${bln_engaged} && !${timer_check_cures}) || (${bln_engaged}))) {
+        /call chkCures
+    }
 /return
 
 Sub EVENT_cureRequest(string _line, string _sender,  string _eventParams)
@@ -441,6 +443,7 @@ Sub chkCure_Group(bool _lazyGroup)
     | ------
 
     /for r 1 to ${g}
+        /if (!${Group.Member[${sz}].Present}) /continue
         /varcalc sz ${r}-1
         /dquery ${Group.Member[${sz}].Name} -q "str_queryCurable" -o str_debuffQueryResult
         /delay 20 ${DanNet.Q.Received}
@@ -564,6 +567,7 @@ Sub chkCure_Group(bool _lazyGroup)
         /echo \aoCURING SINGLE GROUP MEMBERS!
           /for r 1 to ${arr_REQUIRED_list.Size}
             /varcalc sz ${r}-1
+            /if (!${Group.Member[${sz}].Present}) /continue
             /echo \aoCURING \arREQUIRED \aoSINGLE GROUP MEMBERS! ${arr_REQUIRED_list[${r}]} ${Group.Member[${sz}].Name} ${Group.Member[${sz}].ID}
             /if ( ${arr_REQUIRED_list[${r}].NotEqual[NULL]}) {
                 /echo calling chkCureType_IMMEDIATE
@@ -580,6 +584,7 @@ Sub chkCure_Group(bool _lazyGroup)
     /if (${_lazyGroup} && ${bln_autoCureLazy}) {
         /for r 1 to ${g}
             /varcalc sz ${r}-1
+            /if (!${Group.Member[${sz}].Present}) /continue
             /call chkCureType_LAZY ${Group.Member[${sz}].Name} ${Group.Member[${sz}].ID}
         /next r
     }

@@ -226,7 +226,7 @@ Sub variant_initialize
 		/echo \agI am tanking, turning aggro on
 		/varset bln_tanking TRUE
 		/varset bln_taunting TRUE
-		/varset stickCmd front
+		/varset str_stickCommand front
 	} else {
 		/varset bln_tanking		FALSE
 		/varset bln_taunting	FALSE

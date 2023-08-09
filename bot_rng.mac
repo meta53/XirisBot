@@ -145,7 +145,7 @@ Sub chkUtils
 **|
 Sub chkConcussion
 	/if (!${bln_engaged} || ${Me.Invis}||${Me.Moving}||!${bln_concUse}) /return 
-	/if (${bln_concUse} && ${Me.Standing} && (!${timer_concDelay} || ${Me.TargetOfTarget.Name.Equal[${Me.Name}]})) {
+	/if (${bln_concUse} && ${Me.Standing} && (!${timer_concDelay} || ${Me.TargetOfTarget.CleanName.Equal[${Me.CleanName}]})) {
 		/call chkSpellMemorized "${str_concSpell}" ${str_concGem} FALSE
 		/call MQ2Cast "${str_concSpell}" ${str_concGem}
 		/varset timer_concDelay ${timer_concDelay.OriginalValue}

@@ -188,9 +188,9 @@ Sub InkNoqRun(int _curseID)
 	/call TrueTarget ${_curseID}
 	/delay 10
 	:checkCurseTarget
-	/if (${Me.TargetOfTarget.Name.Equal[NULL]}) /goto :checkCurseTarget
+	/if (${Me.TargetOfTarget.CleanName.Equal[NULL]}) /goto :checkCurseTarget
 	
-	/echo Target ${_curseID} is targetting ${Me.TargetOfTarget.Name} ? ${Me.TargetOfTarget.Name.Equal[${Me.Name}]}
+	/echo Target ${_curseID} is targetting ${Me.TargetOfTarget.CleanName} ? ${Me.TargetOfTarget.CleanName.Equal[${Me.Name}]}
 	
 	|-- start run logic
 	/varset inkRunning TRUE
@@ -198,14 +198,14 @@ Sub InkNoqRun(int _curseID)
 	|-- make sure that fucker still has you on aggro, 
 	|   if not, end this and continue what you were doing
 	
-	/if (${Me.TargetOfTarget.Name.Equal[${Me.Name}]}) {
+	/if (${Me.TargetOfTarget.CleanName.Equal[${Me.CleanName}]}) {
 		/say Target ${_curseID} is targetting me
 	}
 	
 	| DOUBLE CHECK THIS RUN LOOP  TODO MAKE IT WORK LIKE CURSECALLERS
 	:startLoop
 	/if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /call InkDeath
-	/if (${Me.TargetOfTarget.Name.Equal[${Me.Name}]}) {
+	/if (${Me.TargetOfTarget.CleanName.Equal[${Me.CleanName}]}) {
 		/if (${Target.Distance} < 50) {
 			/nav wp noqRun
 			:startLoopRun 
@@ -218,7 +218,7 @@ Sub InkNoqRun(int _curseID)
 	
 	:farLoop
 	/if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /call InkDeath
-	/if (${Me.TargetOfTarget.Name.Equal[${Me.Name}]} || !${Target.Name.Find[_corpse]}) {
+	/if (${Me.TargetOfTarget.CleanName.Equal[${Me.CleanName}]} || !${Target.Name.Find[_corpse]}) {
 		/if (${Target.Distance} < 50) {
 			/varset inkRunning TRUE
 			/call InkCurseRun
@@ -255,8 +255,8 @@ Sub chkNoqCursebearers
 			| get the victim
 			:getVictim
 			/if (${Target.ID} && ${Target.Type.Equal[NPC]}) {
-				/varset victim ${Me.TargetOfTarget.Name}
-				/if (${victim.Equal[${Me.Name}]}) {
+				/varset victim ${Me.TargetOfTarget.CleanName}
+				/if (${victim.Equal[${Me.CleanName}]}) {
 					/call InkNoqRun ${Target.ID}
 				} else /if (${victim.NotEqual[NULL]}) {
 					/squelch /dt ${victim} NoqCurse, ${Target.ID}
@@ -379,7 +379,7 @@ Sub EVENT_VORRAMP
 	/echo ah shit, yihst vor is about to rape my face
 	/if (${Me.Class.ShortName.Equal[CLR]}) /call MQ2Cast "${str_heal_group}" gem1 5s
 	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
-		/call FireRiposteDisc
+		/call FireDisc_Riposte
 	} else {
 		/return
 	}
@@ -609,7 +609,7 @@ Sub BalancerReset
 
 		:returnBalance
 		/if (${Navigation.Active}) /nav stop
-		/stick ${stickCmd} ${int_currentStickDistance}
+		/stick ${str_stickCommand} ${int_currentStickDistance}
 		/delay 10
 		/call Disengage
 		

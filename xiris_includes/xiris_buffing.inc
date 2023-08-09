@@ -27,48 +27,50 @@ REVISION HISTORY
 	07.21.23	xiris 	Rewrite using new INI structures
 **|
 
-#EVENT DoBuffsOnRAID		"#1# tells the group#*#'doRaidBuffs#*#'"
-#EVENT DoBuffsOnRAID		"#1# tells you#*#'doRaidBuffs#*#'"
-#EVENT DoBuffsOnRAID		"#1# tells the raid#*#'doRaidBuffs#*#'"
-#EVENT DoBuffsOnRAID		"[ #1# #*#]#*#doRaidBuffs#*#"
+#EVENT Buffing_Buff_OnRaid		"#1# tells the group#*#'doRaidBuffs#*#'"
+#EVENT Buffing_Buff_OnRaid		"#1# tells you#*#'doRaidBuffs#*#'"
+#EVENT Buffing_Buff_OnRaid		"#1# tells the raid#*#'doRaidBuffs#*#'"
+#EVENT Buffing_Buff_OnRaid		"[ #1# #*#]#*#doRaidBuffs#*#"
 
-#EVENT DoBuffsOnCHARACTER	"#1# tells the group#*#'doCharBuffs #2#'"
-#EVENT DoBuffsOnCHARACTER	"#1# tells you#*#'doCharBuffs #2#'"
-#EVENT DoBuffsOnCHARACTER	"#1# tells the raid#*#'doCharBuffs #2#'"
-#EVENT DoBuffsOnCHARACTER	"[ #1# #*#]#*#doCharBuffs #2#"
+#EVENT Buffing_Buff_OnChar	    "#1# tells the group#*#'doCharBuffs #2#'"
+#EVENT Buffing_Buff_OnChar	    "#1# tells you#*#'doCharBuffs #2#'"
+#EVENT Buffing_Buff_OnChar	    "#1# tells the raid#*#'doCharBuffs #2#'"
+#EVENT Buffing_Buff_OnChar	    "[ #1# #*#]#*#doCharBuffs #2#"
 
-#EVENT DisableDamageShields	"#1# tells the group#*#'NoDS#*#'"
-#EVENT DisableDamageShields	"#1# tells you#*#'NoDS#*#'"
-#EVENT DisableDamageShields	"#1# tells the raid#*#'NoDS#*#'"
-#EVENT DisableDamageShields	"[ #1# #*#]#*#NoDS#*#"
+#EVENT Buffing_DS_Disable	    "#1# tells the group#*#'NoDS#*#'"
+#EVENT Buffing_DS_Disable	    "#1# tells you#*#'NoDS#*#'"
+#EVENT Buffing_DS_Disable	    "#1# tells the raid#*#'NoDS#*#'"
+#EVENT Buffing_DS_Disable	    "[ #1# #*#]#*#NoDS#*#"
 
-#EVENT EnableDamageShields	"#1# tells the group#*#'YesDS #*#'"
-#EVENT EnableDamageShields	"#1# tells you#*#'YesDS #*#'"
-#EVENT EnableDamageShields	"#1# tells the raid#*#'YesDS #*#'"
-#EVENT EnableDamageShields	"[ #1# #*#]#*#YesDS#*#"
+#EVENT Buffing_DS_Enable	    "#1# tells the group#*#'YesDS #*#'"
+#EVENT Buffing_DS_Enable	    "#1# tells you#*#'YesDS #*#'"
+#EVENT Buffing_DS_Enable	    "#1# tells the raid#*#'YesDS #*#'"
+#EVENT Buffing_DS_Enable	    "[ #1# #*#]#*#YesDS#*#"
 
-#EVENT RemoveBuff			"#1# tells the group#*#REMOVEBUFF #2#'"
-#EVENT RemoveBuff			"#1# tells you#*#REMOVEBUFF #2#'"
-#EVENT RemoveBuff			"#1# tells the raid#*#REMOVEBUFF #2#'"
-#EVENT RemoveBuff 			"[ #1# #*#]#*#REMOVEBUFF #2#"
+#EVENT Buffing_Buff_Remove      "#1# tells the group#*#REMOVEBUFF #2#'"
+#EVENT Buffing_Buff_Remove      "#1# tells you#*#REMOVEBUFF #2#'"
+#EVENT Buffing_Buff_Remove      "#1# tells the raid#*#REMOVEBUFF #2#'"
+#EVENT Buffing_Buff_Remove      "[ #1# #*#]#*#REMOVEBUFF #2#"
 
-#EVENT RemoveAllBuffs		"#1# tells the group#*#'removeallbuffs#*#'"
-#EVENT RemoveAllBuffs		"#1# tells you#*#'removeallbuffs#*#'"
-#EVENT RemoveAllBuffs		"#1# tells the raid#*#'removeallbuffs#*#'"
-#EVENT RemoveAllBuffs 		"[ #1# #*#]#*#removeallbuffs #*#"
+#EVENT Buffing_Buff_RemoveAll   "#1# tells the group#*#'removeallbuffs#*#'"
+#EVENT Buffing_Buff_RemoveAll   "#1# tells you#*#'removeallbuffs#*#'"
+#EVENT Buffing_Buff_RemoveAll   "#1# tells the raid#*#'removeallbuffs#*#'"
+#EVENT Buffing_Buff_RemoveAll   "[ #1# #*#]#*#removeallbuffs #*#"
 
-
-Sub Events_Buffing
-	/doevents DisableDamageShields
-	/doevents EnableDamageShields
-
-	/doevents DoBuffsOnRAID
-	/doevents DoBuffsOnCHARACTER
-
-	/doevents RemoveBuff
-	/doevents RemoveAllBuffs
+Sub initEvents_buffing
+	/call RegisterBackgroundEvents Events_Buffing 6
 /return
 
+Sub Events_Buffing
+	/doevents Buffing_DS_Disable
+	/doevents Buffing_DS_Enable
+
+	/doevents Buffing_Buff_OnRaid
+	/doevents Buffing_Buff_OnChar
+
+	/doevents Buffing_Buff_Remove
+	/doevents Buffing_Buff_RemoveAll
+/return
 
 |**
  ----------------------------
@@ -96,9 +98,6 @@ Sub xbot_initialize_buffing
 /return
 
 
-Sub initEvents_buffing
-	/call RegisterBackgroundEvents Events_Buffing 6
-/return
 
 
 | Note int_selfBuffs_total is set here, as well as the list of selfbuffs
@@ -119,7 +118,7 @@ Sub processSelfBuffs
 	|BUFF_1="Reyfin's Racing Thoughts"|ITEM|"Xxeric's Matted-Fur Mask"
 	/for i 1 to ${raw_selfBuffs.Size}
         | if the value of the entry ends with a quoted string, we need to wrap it all in quotes again.
-        /varset test "${Ini[INI_CHAR,BUFFS_SELF,BUFF_${i}]}"
+        /varset test ${Ini[INI_CHAR,BUFFS_SELF,BUFF_${i}]}
         /if (${test.Arg[1,|].Equal[NULL]}) {
             /varset int_selfBuffs_total ${sz}
             /return
@@ -179,7 +178,7 @@ Sub processTargetedBuffs
 /return
 
 Sub processCombatBuffs
-    /echo \awprocesCombatBuffs
+    /echo \awprocessCombatBuffs
     /declare raw_combatBuffs[100]		string 	local NULL
 	/declare i						    int 	local 0
 	/declare sz 					    int     local 0
@@ -294,7 +293,10 @@ Sub chkSelfBuffs
  that fit the ${BUFFTARGETED_${i}_Targets} key for the buff
  ----------------------------
 **|
-Sub EVENT_DoBuffsOnRAID(_line, _chatSender, _eventParams)
+Sub EVENT_Buffing_Buff_OnRaid(_line, _chatSender, _eventParams)
+	| Flush the event
+	/doevents flush Buffing_Buff_OnRaid
+
 	/echo \awDoing Raid Buffs on \agALL
 	/memspellset buff
 	/call chkTargetedBuffs RAID NULL TRUE
@@ -302,31 +304,10 @@ Sub EVENT_DoBuffsOnRAID(_line, _chatSender, _eventParams)
 	/dgt ${Me.Class.Name} RAID BUFF [${_eventParams}] COMPLETE
 	| Restore the previous spellset
 	/memspellset ${str_currentSpellSet}
-	| Flush the event
-	/doevents flush DoBuffsOnRAID
+
 /return
 
-|**
- ----------------------------
- Group Buffs
- ----------------------------
- Will cast the targetted buffs on the GROUP
- Will run through each group member and cast the group/single buff(s)
- on the group leader if its a group spell, or loop through all the group members
- that fit the ${BUFFTARGETED_${i}_Targets} key for the buff
- ----------------------------
-**|
-Sub EVENT_DoBuffsOnGROUP(_line, _chatSender, _eventParams)
-	/echo \awDoing Raid Buffs on \ag${_eventParams}
-	/memspellset buff
-	/call chkTargetedBuffs RAID ${_eventParams} TRUE
 
-	/dgt ${Me.Class.Name} RAID BUFF [${_eventParams}] COMPLETE
-	| Restore the previous spellset
-	/memspellset ${str_currentSpellSet}
-	| Flush the event
-	/doevents flush DoBuffsOnRAID
-/return
 
 |**
  ----------------------------
@@ -336,7 +317,10 @@ Sub EVENT_DoBuffsOnGROUP(_line, _chatSender, _eventParams)
  Will target the character and cast the group/single target buff(s)
  ----------------------------
 **|
-Sub EVENT_DoBuffsOnCHARACTER(_line, _chatSender, _eventParams)
+Sub EVENT_Buffing_Buff_OnChar(_line, _chatSender, _eventParams)
+	| Flush the event
+	/doevents flush Buffing_Buff_OnChar
+
 	/echo \awDoing Character Buffs on \ag${_eventParams}
 	/memspellset buff
 	/call chkTargetedBuffs CHARACTER ${_eventParams} TRUE
@@ -344,8 +328,7 @@ Sub EVENT_DoBuffsOnCHARACTER(_line, _chatSender, _eventParams)
 	/dgt ${Me.Class.Name} CHAR BUFF [${_eventParams}] COMPLETE
 	| Restore the previous spellset
 	/memspellset ${str_currentSpellSet}
-	| Flush the event
-	/doevents flush DoBuffsOnCHARACTER
+
 /return
 
 |**
@@ -505,15 +488,15 @@ Sub chkCombatBuffs
  ----------------------------
 **|
 
-Sub EVENT_RemoveBuff(_line, _chatSender, _eventParams)
+Sub EVENT_Buffing_Buff_Remove(_line, _chatSender, _eventParams)
 	| Note these Buffs need to replace single quote with pipe due to chat mangling quotes: eg Brell|s Brawny Bulwark
 	/declare buffToRemove string local ${_eventParams.Arg[1,-]}
 	/echo \awEvent Remove Buff called: ${_eventParams} -> ${buffToRemove}
-	/call RemoveBuff "${buffToRemove}"
-	/doevents flush RemoveBuff
+	/call Buffing_Buff_Remove "${buffToRemove}"
+	/doevents flush Buffing_Buff_Remove
 /return
 
-Sub RemoveBuff(_badBuff)
+Sub Buffing_Buff_Remove(_badBuff)
 	/declare i int local
 	/declare buffName ${_badBuff.Replace[|,']}
 	/echo \agRemoving Buff \ao${buffName} (was ${_badBuff})
@@ -527,15 +510,15 @@ Sub RemoveBuff(_badBuff)
 /return
 
 
-Sub EVENT_RemoveAllBuffs(_line, _chatSender, _eventParams)
-	/call RemoveAllBuffs
-	/doevents flush RemoveAllBuffs
+Sub EVENT_Buffing_Buff_RemoveAll(_line, _chatSender, _eventParams)
+	/call Buffing_Buff_RemoveAll
+	/doevents flush Buffing_Buff_RemoveAll
 /return
 
-Sub RemoveAllBuffs
+Sub Buffing_Buff_RemoveAll
 	/declare n int local
 	/for n 1 to 25
-		/if (${Me.Buff[${n}].ID}) /call RemoveBuff "${Me.Buff[${n}]}"
+		/if (${Me.Buff[${n}].ID}) /call Buffing_Buff_Remove "${Me.Buff[${n}]}"
 	/next n
 /return
 
@@ -548,7 +531,7 @@ Sub RemoveAllBuffs
  Will attempt to remove defined buff or, if all buffs is called - all buffs currently on character.
  ----------------------------
 **|
-Sub EVENT_DisableDamageShields(_line, _sender, _eventParams)
+Sub EVENT_Buffing_DS_Disable(_line, _sender, _eventParams)
 	/call RemoveDS
 /return
 
@@ -557,7 +540,7 @@ Sub RemoveDS
 	| check to see if I have a DS, and if so kill it
 	/declare ds int local 
 	/for ds 1 to ${int_damageShieldList_total} 
-		/call RemoveBuff "${dsSpells[${ds}]}"
+		/call Buffing_Buff_Remove "${dsSpells[${ds}]}"
 	/next ds
 	/if (${Me.Class.ShortName.Equal[BRD]}) {
 		/varset str_savedMedley ${str_currentMedley}
@@ -565,11 +548,11 @@ Sub RemoveDS
 		/medley ${str_currentMedley}
 	}	
 	:return
-	/doevents flush DisableDamageShields
+	/doevents flush Buffing_DS_Disable
 /return 
 
 
-Sub EVENT_EnableDamageShields(_line, _sender, _eventParams)s
+Sub EVENT_Buffing_DS_Enable(_line, _sender, _eventParams)s
 	/varset bln_useDS TRUE
 	/if (${Me.Class.ShortName.Equal[BRD]}) {
 		/echo \aoTurning on ${str_savedMedley} Medley
@@ -578,6 +561,6 @@ Sub EVENT_EnableDamageShields(_line, _sender, _eventParams)s
 		/medley ${str_savedMedley}
 	}
 	:return
-	/doevents flush EnableDamageShields
+	/doevents flush Buffing_DS_Enable
 /return
 

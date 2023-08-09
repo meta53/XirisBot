@@ -93,7 +93,6 @@ Sub RegisterBackgroundEvents(string _EventSet, int _EventCount)
     /for i 1 to ${BackgroundEventsRaw.Size}
         /if (${BackgroundEventsRaw[${i}].Equal[NULL]}) {
             /varset BackgroundEventsRaw[${i}] ${_EventSet}
-            /call ${_EventSet}
             /goto :postInsert
         }
     /next i
@@ -228,6 +227,9 @@ Sub TrimPriorityEvents(int _count)
 
 
 Sub RunBackgroundEvents
+    |DEBUG< Turn Events off
+    /echo RunBackgroundEvents
+    /return
     /if (${BackgroundEvents.Size} == 0) /return
     /declare i int local 1
     /for i 1 to ${BackgroundEvents.Size}
@@ -238,6 +240,9 @@ Sub RunBackgroundEvents
 /return
 
 Sub RunRaidEvents
+    |DEBUG< Turn Events off
+    /echo RunRaidEvents
+    /return
     /if (${RaidEvents.Size} == 0) /return
     /declare j int local 1
     /for j 1 to ${RaidEvents.Size}
@@ -248,6 +253,9 @@ Sub RunRaidEvents
 /return
 
 Sub RunClassEvents
+    |DEBUG< Turn Events off
+    /echo RunClassEvents
+    /return
     /if (${ClassEvents.Size} == 0) /return
     /declare k int local 1
     /for k 1 to ${ClassEvents.Size}
@@ -258,6 +266,9 @@ Sub RunClassEvents
 /return
 
 Sub RunPriorityEvents
+    |DEBUG< Turn Events off
+    /echo RunPriorityEvents
+    /return
     /if (${PriorityEvents.Size} == 0) /return
     /declare k int local 1
     /for k 1 to ${PriorityEvents.Size}
@@ -269,6 +280,9 @@ Sub RunPriorityEvents
 
 
 Sub RunAllEvents
+    |DEBUG< Turn Events off
+    /echo RunAllEvents
+    /return
     /call RunBackgroundEvents
     /call RunRaidEvents
     /call RunClassEvents

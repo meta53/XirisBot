@@ -1,5 +1,7 @@
 #define INI_CHAR        xiris_settings_character/BOT_${Me.Class.ShortName}_${Me.CleanName}.ini
 #define INI_COMMON      xiris_settings_global/xiris_settings_common.ini
+#define INI_HEAL		xiris_settings_global.xiris_settings_healing.ini
+#define INI_LOOT        xiris_settings_global/xiris_settings_loot.ini
 #include                xiris_includes/xiris_spell_routines.inc
 
 
@@ -12,14 +14,22 @@
 #include                xiris_includes/xiris_healing.inc
 #include                xiris_includes/xiris_dannet.inc
 #include                xiris_includes/xiris_events.inc
-
+#include                xiris_includes/xiris_looting.inc
+#include                xiris_includes/xiris_melee.inc
+#include				xiris_includes/xiris_pets.inc
 
 #Turbo 120
 
 Sub Main 
     /mqclear
+	/declare float_startTime float  outer   ${EverQuest.Running}
+	/declare float_endTime   float  outer   0
+	/declare float_processed float  outer   0
     /declare int_MTID       int     outer   ${Spawn[pc Xirin].ID}
-    /declare bln_engaged    bool    outer   TRUE
+    /declare bln_engaged    bool    outer   FALSE
+    /declare int_sitRadius  int     local   80
+
+    /declare gbl_bln_useWarp    bool    outer   ${Ini[INI_COMMON,SETTINGS,useWarp,FALSE]}
 
 
     /declare arr_raidLeaders[9] string outer NULL
@@ -44,28 +54,350 @@ Sub Main
     /call xbot_initialize_casting
     /call xbot_initialize_curing
     /call xbot_initialize_clicking
-   
+    /call xbot_initialize_looting
+    /call xbot_initialize_melee
+	/call xbot_initialize_pets
+	/call xbot_initialize_healing
 
+	/varset float_endTime ${EverQuest.Running}
+	/varcalc float_processed ${float_endTime} - ${float_startTime}
+	/echo \arSETUP COMPLETE \ay${float_processed}ms  \ag${Macro.MemUse}MB  \ao${Macro.Undeclared}
     :MainLoop
         
 		/if (${Me.Hovering} || ${Window[tradewnd].Open} || ${Window[lootwnd].Open}) /goto :MainLoop
 
-
-        | Debug check the burning events
-        |/call Events_Burning
-        |/call Events_Clicking
-        /call Events_Casting
   
         /if (${bln_engaged}) {
 
             
         } else {
 
-            |/if (!${timer_check_utilities}) /call chkUtils
-			|/if (!${timer_check_loot} && ${bln_looting}) /call chkLoot
+
 
         }
-        /delay 20
-        
+	
+	    /delay 20
+
         /goto :MainLoop
 /return 
+
+
+Sub initEvents_Healing
+/return 
+
+Sub Events_Healing 
+/return 
+
+Sub Events_Healing_Background
+    /if (${Select[${Me.Class.ShortName},BST,CLR,DRU,PAL,SHM,RNG]} && ((!${bln_engaged} && !${timer_check_heals}) || (${bln_engaged}))) /call chkHeals
+/return
+
+
+Sub xbot_initialize_healing
+    /echo \n \apInitialize: \aoHealing \aw-------------------------
+
+    /if (${Select[${Me.Class.ShortName},BER,BRD,MNK,ROG,WAR,ENC,MAG,NEC,WIZ]}) /return
+	/call processHealDefaults
+    /call processHealSpellSettings
+	/call processHPRegenSettings
+	/call processManaRegenSettings
+    
+    /call initEvents_Healing
+/return 
+
+Sub processHealDefaults 
+	/echo \awprocessHealDefaults
+	| [Heal_Settings]
+	/declare int_heal_mode					int		outer	${Ini[INI_HEAL,Heal_Settings,int_heal_mode,2]}
+	/declare bln_heal_interrupt				bool	outer	${Ini[INI_HEAL,Heal_Settings,bln_heal_interrupt,TRUE]}
+	/declare bln_heal_useGroup				bool 	outer 	${Ini[INI_HEAL,Heal_Settings,bln_heal_useGroup,TRUE]}
+	/declare bln_heal_useHoT				bool	outer	${Ini[INI_HEAL,Heal_Settings,bln_heal_useHoT,TRUE]}
+	/declare str_heal_HoT_List				string 	outer  	${Ini[INI_HEAL,Heal_Settings,str_heal_HoT_List,NULL]}
+	/declare bln_heal_announce				bool 	outer	${Ini[INI_HEAL,Heal_Settings,bln_heal_announce,TRUE]}
+	/declare str_heal_announce				string 	outer 	${Ini[INI_HEAL,Heal_Settings,str_heal_announce,TRUE]}
+	/declare bln_heal_useDivineArb			bool	outer 	${Ini[INI_HEAL,Heal_Settings,bln_heal_useDivineArb,FALSE]}
+	/declare bln_heal_interruptToSaveSelf	bool	outer	${Ini[INI_HEAL,Heal_Settings,bln_heal_interruptToSaveSelf,TRUE]}
+	/declare int_heal_defaultGem			int     outer 	${Ini[INI_HEAL,Heal_Settings,int_heal_defaultGem,2]}
+
+	| [Heal_Spells]
+	/declare str_heal_normal				string	outer	NULL
+	/declare bln_heal_normal				bool 	outer 	TRUE
+	/declare str_heal_normal_efficient		string	outer	NULL
+	/declare str_heal_frantic				string	outer	NULL
+	/declare bln_heal_frantic				bool 	outer 	TRUE
+	/declare str_heal_frantic_efficient 	string	outer	NULL
+	/declare str_heal_HoT					string	outer	NULL
+	/declare bln_heal_HoT					bool 	outer 	${bln_heal_useHoT}
+	/declare str_heal_group					string	outer	NULL
+	/declare bln_heal_group 				bool 	outer 	${bln_heal_useGroup}
+	/declare str_heal_complete				string	outer	NULL
+	/declare bln_heal_complete				bool 	outer 	TRUE
+
+	| [Heal_Points]
+	/declare int_point_self_normal		int		outer	${Ini[INI_HEAL,Heal_Points,int_point_self_normal,75 ]}
+	/declare int_point_self_frantic		int		outer	${Ini[INI_HEAL,Heal_Points,int_point_self_frantic,45]}
+    /declare int_point_self_HoT			int		outer	${Ini[INI_HEAL,Heal_Points,int_point_self_HoT,95]}
+	/declare int_point_tank_normal		int		outer	${Ini[INI_HEAL,Heal_Points,int_point_tank_normal,90]}
+	/declare int_point_tank_frantic		int		outer	${Ini[INI_HEAL,Heal_Points,int_point_tank_frantic,45]}
+	/declare int_point_tank_HoT			int		outer	${Ini[INI_HEAL,Heal_Points,int_point_tank_HoT,95]}
+	/declare int_point_group_HoT		int		outer	${Ini[INI_HEAL,Heal_Points,int_point_group_HoT,95]}
+	/declare int_point_group_normal		int		outer	${Ini[INI_HEAL,Heal_Points,int_point_group_normal,70]}
+	/declare int_point_group_frantic	int		outer	${Ini[INI_HEAL,Heal_Points,int_point_group_frantic,45]}
+	/declare int_point_stopHeal			int		outer	${Ini[INI_HEAL,HealHeal_Points_Settings,int_point_stopHeal,96]}
+
+	| [HP_REGEN]
+	/declare bln_heal_regen				bool 	outer   FALSE
+	/declare int_heal_regen_index 		int 	outer 	0
+
+/return
+
+Sub processHealSpellSettings
+	/echo \awprocessHealSpellSettings
+
+	/declare i                          int     local	0
+    /declare sz                         int     local	0 
+    /declare test                       string  local	NULL
+
+	|; _mode|_useGroup|_useHoT|_announce|_autointerrupt|_defaultGem|_interruptToSaveSelf
+	| settings=2|TRUE|TRUE|TRUE|TRUE|2|TRUE|
+	/varset test ${Ini[INI_CHAR,HEALS,settings]}
+	/if (${test.NotEqual[NULL]}) {
+	/varset int_heal_mode 					${test.Arg[1,|]}
+	/varset bln_heal_useGroup				${test.Arg[2,|]}
+	/varset bln_heal_useHoT					${test.Arg[3,|]}
+	/varset bln_heal_announce				${test.Arg[4,|]}
+	/varset bln_heal_interrupt				${test.Arg[5,|]}
+	/varset int_heal_defaultGem				${test.Arg[6,|]}
+	/varset bln_heal_interruptToSaveSelf	${test.Arg[7,|]}
+
+	 /echo \a-w    Settings Processed: \awMode:\ag${int_heal_mode} \awAllowGroup:\ag${bln_heal_useGroup} \awAllowHoT:\ag${bln_heal_useHoT} \awAnnounce:\ag${bln_heal_announce} \awDefaultGem:\ag${int_heal_defaultGem} \awAutoInterrupt:\ag${bln_heal_interrupt} \awInterruptToSaveSelf:\ag${bln_heal_interruptToSaveSelf}
+	}
+
+
+	|; _heal|_hp_self|_hp_tank|_hp_group
+	| HEAL_normal="Ancient: Hallowed Light"|75|90|70|
+	:heals
+	|-----------
+	| Normal Heal
+	|-----------
+	/varset     test  						${Ini[INI_CHAR,HEALS,HEAL_normal,NULL]}
+	/varset		bln_heal_normal				${test}
+	/if (${test.NotEqual[NULL]}) {
+		/varset str_heal_normal				${test.Arg[1,|]}
+		/varset int_point_self_normal		${test.Arg[2,|]}
+		/varset int_point_tank_normal		${test.Arg[3,|]}
+		/varset int_point_group_normal		${test.Arg[4,|]}
+	} 
+
+	| Normal Heal Efficient
+	/varset     test  						${Ini[INI_CHAR,HEALS,HEAL_normal_efficient,NULL]}
+	/if (${test.NotEqual[NULL]}) 			/varset str_heal_normal_efficient	${test.Arg[1,|]}
+
+	|-----------
+	| Frantic Heal
+	|-----------
+	/varset     test  						${Ini[INI_CHAR,HEALS,HEAL_frantic,NULL]}
+	/varset		bln_heal_frantic			${test}
+	/if (${test.NotEqual[NULL]}) {
+		/varset str_heal_frantic			${test.Arg[1,|]}
+		/varset int_point_self_frantic		${test.Arg[2,|]}
+		/varset int_point_tank_frantic		${test.Arg[3,|]}
+		/varset int_point_group_frantic		${test.Arg[4,|]}
+	}
+
+	| Frantic Heal Efficient
+	/varset     test  						${Ini[INI_CHAR,HEALS,HEAL_frantic_efficient,NULL]}
+	/if (${test.NotEqual[NULL]}) 			/varset str_heal_frantic_efficient	${test.Arg[1,|]}	
+
+	|-----------
+	| HoT
+	|-----------
+	/varset     test  						${Ini[INI_CHAR,HEALS,HEAL_HoT,NULL]}
+	/varset		bln_heal_HoT				${test}
+	/if (${test.NotEqual[NULL]}) {
+		/varset str_heal_HoT				${test.Arg[1,|]}	
+		/varset int_point_self_HoT			${test.Arg[2,|]}
+		/varset int_point_tank_HoT			${test.Arg[3,|]}
+		/varset int_point_group_HoT			${test.Arg[4,|]}
+	}
+	|-----------
+	| Group
+	|-----------
+	/varset     test  						${Ini[INI_CHAR,HEALS,HEAL_group,NULL]}
+	/varset		bln_heal_group				${test}
+	/if (${test.NotEqual[NULL]}) 			/varset str_heal_group	${test.Arg[1,|]}	
+
+	|-----------
+	| Complete
+	|-----------
+	/varset     test						${Ini[INI_CHAR,HEALS,HEAL_complete,NULL]}
+	/varset		bln_heal_complete			${test}
+	/if (${test.NotEqual[NULL]}) 			/varset str_heal_complete	${test.Arg[1,|]}
+	
+	/echo \ao        Spells: \awNormal:\ag(${bln_heal_normal}) ${str_heal_normal} \awFrantic:\ag(${bln_heal_frantic}) ${str_heal_frantic} \awHoT:\ag(${bln_heal_HoT})${str_heal_HoT} \awGroup:\ag(${bln_heal_group}) ${str_heal_group} \awComplete:\ag(${bln_heal_complete}) ${str_heal_complete} 
+
+	/echo \ao        Points: \awNormal:\ag${int_point_self_normal}\a-g|\ag${int_point_tank_normal}\a-g|\ag${int_point_group_normal} \awFrantic:\ag${int_point_self_frantic}\a-g|\ag${int_point_tank_frantic}\a-g|\ag${int_point_group_frantic} \awHoT:\ag${int_point_self_HoT}\a-g|\ag${int_point_tank_HoT}\a-g|\ag${int_point_group_HoT}
+
+	|; Divine Arbitration
+	|; _divineArbitration|_type|_use|_minHP
+	:divineArb
+	/varset sz 0
+	/if  (${Me.Class.ShortName.Equal[CLR]}) {
+		     
+		/declare int_DivineArbitration_total int outer 0
+		/declare raw_da[3]     string  local NULL
+		/varset test ${Ini[INI_CHAR,HEALS,DIVINE_1]}
+		/if (${test.NotEqual[NULL]}) /varset bln_heal_useDivineArb	${test.Arg[1,|]}
+		/echo \a-w   Settings Processed: \awEnabled:\ag${bln_heal_useDivineArb} 
+
+		/for i 1 to ${raw_da.Size}
+			/varset test ${Ini[INI_CHAR,HEALS,DIVINE_${i}]}
+			/if (${test.Arg[1,|].Equal[NULL]}) {
+				/varset int_DivineArbitration_total ${sz}
+				/return
+			}
+			| Not null, set the values for the debuffs to be cured
+			/varcalc sz ${sz}+1
+			/declare DIVINE_${i}			string	outer	${Ini[INI_CHAR,HEALS,DIVINE_${i}].Arg[1,|]}
+			/declare DIVINE_${i}_Type		string	outer	${Ini[INI_CHAR,HEALS,DIVINE_${i}].Arg[2,|]}
+			/declare DIVINE_${i}_Use		string	outer	${Ini[INI_CHAR,HEALS,DIVINE_${i}].Arg[3,|]}
+			/declare DIVINE_${i}_minHP		string	outer	${Ini[INI_CHAR,HEALS,DIVINE_${i}].Arg[4,|]}
+			/echo \ao        DIVINE_[\ag${i}\ao]: \awDA:\ag${DIVINE_${i}} \awType:\ag${DIVINE_${i}_Type} \awUse:\ag${DIVINE_${i}_Use} \awminHP:\ag${DIVINE_${i}_minHP}
+ 
+		/next i
+	}
+
+/return
+
+Sub processHPRegenSettings
+	/echo \awprocessHPRegenSettings
+|
+	
+	/declare i                          int     local	0
+    /declare sz                         int     local	0 
+    /declare test                       string  local	NULL
+
+
+	|; _enabled
+	|settings=TRUE
+	/varset test ${Ini[INI_CHAR,HP_REGEN,settings]}
+	/if (${test.NotEqual[NULL]}) /varset bln_heal_regen	${test.Arg[1,|]}
+	/echo \a-w    Settings Processed: \awEnabled:\ag${bln_heal_regen}     
+	|;_regen|_type[AA|ITEM|SPELL]|_use|_key|_MGB[TRUE|ATTEMPT|FALSE]
+	| REGEN_1="Celestial Regeneration"|AA|TRUE|4|ATTEMPT|
+    
+	/declare int_heal_regen_total 		int outer 0
+	/declare raw_regen[10]     			string  local NULL
+	/for i 1 to ${raw_regen.Size}
+		/varset test ${Ini[INI_CHAR,HP_REGEN,REGEN_${i}]}
+		/if (${test.Arg[1,|].Equal[NULL]}) {
+			/varset int_heal_regen_total ${sz}
+			/return
+		}
+		| Not null, set the values for the debuffs to be cured
+		/varcalc sz ${sz}+1
+		/declare REGEN_${i}			string	outer	${Ini[INI_CHAR,HP_REGEN,REGEN_${i}].Arg[1,|]}
+		/declare REGEN_${i}_Type	string	outer	${Ini[INI_CHAR,HP_REGEN,REGEN_${i}].Arg[2,|]}
+		/declare REGEN_${i}_Use		string	outer	${Ini[INI_CHAR,HP_REGEN,REGEN_${i}].Arg[3,|]}
+		/declare REGEN_${i}_Key		string	outer	${Ini[INI_CHAR,HP_REGEN,REGEN_${i}].Arg[4,|]}
+		/declare REGEN_${i}_MGB		bool	outer	${Ini[INI_CHAR,HP_REGEN,REGEN_${i}].Arg[5,|]}
+		/echo \ao        REGEN_[\ag${i}\ao]: \awRegen:\ag${REGEN_${i}} \awType:\ag${REGEN_${i}_Type} \awUse:\ag${REGEN_${i}_Use} \awKey:\ag${REGEN_${i}_Key} \awMGB:\ag${REGEN_${i}_MGB} 
+
+	/next i
+	|
+	| Global Heal INI values, use this to cross reference array index when calling fireRegen[i]
+	| Each cleric that has CR should be enumerated in xiris_settings_healing.ini
+	| Note this has been generally superceeded by the individual regens having different keys
+	| [Celestial_Regeneration]
+
+	/if (${Me.Class.ShortName.NotEqual[CLR]}) /return
+	/declare int_heal_celestial_total							int 	outer   ${Ini[INI_HEAL,Celestial_Regeneration,int_totalCR,16]}
+	/declare int_heal_celestial_duration 						int  	outer 	${Ini[INI_HEAL,Celestial_Regeneration,int_durationCR,420]}
+	/declare int_heal_celestial_index							int 	outer 	0
+	/declare arr_heal_celestial[${int_heal_celestial_total}]	string  outer   NULL
+	/declare i int local 0
+	/for i 1 to ${arr_heal_celestial.Size}
+		/varset arr_heal_celestial[${i}]	${Ini[INI_HEAL,Celestial_Regeneration,cr_${i},NULL]}
+		/if (${Me.CleanName.Equal[${arr_heal_celestial[${i}]}]}) /varset int_heal_celestial_index ${i}
+	/next i
+	
+/return 
+
+Sub processManaRegenSettings
+	|; _enabled
+	|;_regen|_type[AA|ITEM|SPELL]|_use|_key|_MGB[TRUE|ATTEMPT|FALSE]
+/return
+
+
+| Based on conditions, determine which healing spell to use
+Sub getHealingSpell(int _hp, string _targetType, int _range, string _targetName, string _targetID)
+/return 
+
+| Determine if TargetID has a HoT and if so, how much heal per tick (SPA 100)
+Sub getHealOverByID(string _targetID)
+/return
+
+
+Sub chkHeals
+	/declare lazy bool local TRUE 
+	/if (${bln_engaged}) /varset lazy FALSE
+
+	/echo chkHeals MT: ${bln_autoHealMT} Self:${bln_autoHealSelf} Group: ${bln_autoHealGroup} Lazy:${lazy} Engaged?:${bln_engaged}
+	/if (${bln_autoHealMT}) 	/call chkHeal_MT    ${lazy}
+ 	/if (${bln_autoHealSelf} && !${bln_autoHealGroup}) 	/call chkHeal_Self  ${lazy}
+	/if (${bln_autoHealGroup})  /call chkHeal_Group ${lazy}
+
+/return 
+
+Sub chkHeal_MT(bool _lazyMT)
+    /echo \awchkHeal_MT(\ao${_lazyMT}\aw)
+/return
+
+Sub chkHeal_Self(bool _lazySelf)
+	/echo \awchkHeal_Self(\ao${_lazySelf}\aw)
+/return 
+
+Sub chkHeal_Group(bool _lazyGroup)
+    /echo \awchkHeal_Group(\ao${_lazyGroup}\aw)
+/return
+
+Sub heal_MT
+
+/return 
+
+Sub heal_Self 
+
+/return 
+
+Sub heal_Group 
+
+/return
+
+
+|-------------------------------------------------------------------------------- 
+|SUB: Casting the Heal Spell, will call castHealLoop while casting (for divine arb, ducking out, etc)
+|--------------------------------------------------------------------------------
+Sub castHealV2(int _id, string _name, string _spell, bool _isGroup, bool _isHoT) 
+
+/return
+
+
+Sub castHealLoop
+
+/return
+
+Sub castDivineArbitration 
+
+/return
+
+
+|-------------------------------------------------------------------------------- 
+|SUB: Check Resurrection
+|--------------------------------------------------------------------------------
+Sub chkRessurection
+/return 
+
+Sub castRessurection
+/return 
+
+

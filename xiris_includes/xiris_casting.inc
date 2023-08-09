@@ -88,8 +88,8 @@ Sub processCastingSpells
 /return
 
 Sub processOffensiveSpellSettings(string _type)
-    /echo \awprocessOffensiveSpellSettings \a-g${_type}
-   
+    /echo \awprocessOffensiveSpellSettings \ay${_type}
+
     /declare bln_cast_${_type}_enabled      bool   outer   FALSE
     /declare int_cast_${_type}_total        int    outer   0
     /declare int_cast_${_type}_mana         int    outer   10
@@ -102,11 +102,11 @@ Sub processOffensiveSpellSettings(string _type)
     /if (${Ini[INI_CHAR,${_type},settings].Arg[4,|]})  /varset int_cast_${_type}_start     ${Ini[INI_CHAR,${_type},settings].Arg[4,|]}
     /if (${Ini[INI_CHAR,${_type},settings].Arg[5,|]})  /varset int_cast_${_type}_stop      ${Ini[INI_CHAR,${_type},settings].Arg[5,|]}
 
-    /echo \a-w    Settings Processed: \aw${_type} Enabled:\ag${bln_cast_${_type}_enabled} \awTotal:\ag${bln_cast_${_type}_total} \awMinMana:\ag${int_cast_${_type}_mana} \awStart:\ag${int_cast_${_type}_start} \awStop:\ag${int_cast_${_type}_stop}
+    /echo \a-w    Settings Processed: \aw${_type} Enabled:\ag${bln_cast_${_type}_enabled} \awTotal:\ag${int_cast_${_type}_total} \awMinMana:\ag${int_cast_${_type}_mana} \awStart:\ag${int_cast_${_type}_start} \awStop:\ag${int_cast_${_type}_stop}
     
     /if (!${bln_cast_${_type}_enabled}) {    
         /varset int_cast_${_type}_total 0
-        /echo \a-w        ${_type} Processed: Count:\ao[\ag${int_cast_${_type}_total}\ao] \arNo ${_type} Spells
+        /echo \a-w        ${_type} Processed: Count:\ao[\ag${int_cast_${_type}_total}\ao] \awNo ${_type} Spells
         /return
     }
 
@@ -268,6 +268,7 @@ Sub chkCastTarget
  ----------------------------
 **|
 Sub chkSpellMemorized(string _spell, bool _wait, string _gem)
+    /echo \a-ochkSpellMemorized  \a-g${_spell}
 	/if (${_spell.Equal[NULL]}) {
        /docommand /${announceChannel} Ther was an error trying to memorize a NULL spell!;
        /return

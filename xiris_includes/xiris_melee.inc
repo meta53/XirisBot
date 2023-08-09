@@ -24,89 +24,367 @@ REVISION HISTORY
 						MQ2Melee for whatever reason (like.. MPG Specialization not working on berserkers!)
 	06.29.22	xiris 	Updated all events to only be either generic, or [/gsay, /rsay, /tell, MQ2DanNet(dgt, dt)] only
 	01.31.23	xiris 	Implemented UHC's downshit fix (arround line 260)
+	07.31.23	xiris	Rewrite using new INI structures
+						Removed downflags as that is now in Buffing (selfbuffs)
 **|
 
-|-- 
-#EVENT RESTICK			"#*#restick#*#"
-#EVENT AERAMP			"#*#aerampON#*#"
-#EVENT GETCLOSER		"#*#Your target is too far away#*#"
-#EVENT CANTSEETARGET	"#*#You cannot see your target#*#"
-#EVENT CANTNAVTARGET	"#*#Could not locate#*#"
+#EVENT Melee_ReStick		"#*#restick#*#"
+#EVENT Melee_FireAEMelee	"#*#aemeleeON#*#"
+#EVENT Melee_GetCloser		"#*#Your target is too far away#*#"
+#EVENT Melee_CantSeeTarget	"#*#You cannot see your target#*#"
+#EVENT Melee_CantNavTarget	"#*#Could not locate#*#"
 
-#EVENT RiposteDisc		"#1# tells the group#*#'RiposteDisc#*#'"
-#EVENT RiposteDisc		"#1# tells you#*#'RiposteDisc#*#'"
-#EVENT RiposteDisc		"#1# tells the raid#*#'RiposteDisc#*#'"
-#EVENT RiposteDisc 		"[ #1# #*#]#*#RiposteDisc#*#"
+#EVENT Melee_AutoAssist		"#1# tells the group#*#'AutoAssist #2#'"
+#EVENT Melee_AutoAssist		"#1# tells you#*#'AutoAssist #2#'"
+#EVENT Melee_AutoAssist		"#1# tells the raid#*#'AutoAssist #2#'"
+#EVENT Melee_AutoAssist 	"[ #1# #*#]#*#AutoAssist #2#"
 
-#EVENT AutoAssist		"#1# tells the group#*#'AutoAssist #2#'"
-#EVENT AutoAssist		"#1# tells you#*#'AutoAssist #2#'"
-#EVENT AutoAssist		"#1# tells the raid#*#'AutoAssist #2#'"
-#EVENT AutoAssist 		"[ #1# #*#]#*#AutoAssist #2#"
+#EVENT Melee_UpdatesStickCommand	"#1# tells the group#*#'UpdateStick #2#'"
+#EVENT Melee_UpdatesStickCommand	"#1# tells you#*#'UpdateStick #2#'"
+#EVENT Melee_UpdatesStickCommand	"#1# tells the raid#*#'UpdateStick #2#'"
+#EVENT Melee_UpdatesStickCommand	"[ #1# #*#]#*#UpdateStick #2#"
 
-#EVENT UpdateStickCMD	"#1# tells the group#*#'UpdateStick #2#'"
-#EVENT UpdateStickCMD	"#1# tells you#*#'UpdateStick #2#'"
-#EVENT UpdateStickCMD	"#1# tells the raid#*#'UpdateStick #2#'"
-#EVENT UpdateStickCMD	"[ #1# #*#]#*#UpdateStick #2#"
-
-#define dsINI xiris_includes/xiris_damageshields.ini
 
 Sub initEvents_Melee
- 	/call RegisterBackgroundEvents Events_Melee 15
-	/call RegisterRaidEvents Events_Melee_Engaged 4
-	/call RegisterPriorityEvents Events_Melee_Rapid 1
+	/if (${Select[${Me.Class.ShortName},BER,BST,BRD,MNK,PAL,RNG,ROG,SHD,WAR]}) /call RegisterBackgroundEvents  Events_Melee_Background 2
+    /if (${Select[${Me.Class.ShortName},BER,BST,BRD,MNK,PAL,RNG,ROG,SHD,WAR]}) /call RegisterRaidEvents        Events_Melee_Raid       3
+    /if (${Select[${Me.Class.ShortName},BER,BST,BRD,MNK,PAL,RNG,ROG,SHD,WAR]}) /call RegisterPriorityEvents    Events_Melee_Priority   1
 /return
 
-Sub Events_Melee
-	/doevents Leashing
-	/doevents AutoAssist
-	/doevents CANTNAVTARGET
+Sub Events_Melee_Background
+	/doevents Melee_AutoAssist
+	/doevents Melee_UpdatesStickCommand
+    /if (${bln_components_enabled} && !${timer_component_check}) /call chkComponents
 /return
 
-Sub Events_Melee_Engaged
-	/doevents AERAMP
-	/doevents GETCLOSER
-	/doevents CANTSEETARGET
-	/doevents RiposteDisc
-/return
-
-Sub Events_Melee_Rapid 
-	/doevents RESTICK
+Sub Events_Melee_Raid
+	/doevents Melee_FireAEMelee
+	/doevents Melee_GetCloser
+	/doevents Melee_CantSeeTarget
+	/if (${bln_engaged} && ${Select[${Me.Class.ShortName},BER,BST,BRD,MNK,PAL,RNG,ROG,SHD,WAR]}) /call chkCA_${Me.Class.ShortName}
 /return 
 
-Sub EVENT_ToggleMQ2Melee(string _pluginState)
-	/if (${_pluginState.Equal[ON]}) {
-		/call toggleMQ2Melee TRUE
+Sub Events_Melee_Priority
+    /doevents Melee_ReStick
+/return 
+
+
+Sub EVENT_Melee_AutoAssist(string _line, string _chatSender, string _eventParams)
+    /doevents flush Melee_AutoAssist
+	/if (${_eventParams.Equal[on]})     /call AutoAssist TRUE
+	/if (${_eventParams.NotEqual[on]})  /call AutoAssist FALSE
+/return
+
+Sub EVENT_Melee_GetCloser
+    /doevents flush Melee_GetCloser
+	/if (!${Target.ID} || ${Target.PctHPs} == 0 || !${bln_engaged} || ${timer_getCloser}) /return 
+	/varset timer_getCloser 50
+	| If the target is less than max stick distance, adjust the stick
+	/call StickAdjust
+/return
+
+SUB EVENT_Melee_CantSeeTarget
+    /doevents flush Melee_CantSeeTarget
+	/if (!${Target.ID} || ${Target.PctHPs} == 0 || !${bln_engaged} || ${timer_cantSee}) /return 
+	/varset timer_cantSee 100
+	/face fast
+/return
+
+SUB EVENT_Melee_CantNavTarget
+    /doevents flush Melee_CantNavTarget
+	/if (!${Target.ID} || ${Target.PctHPs} == 0 || !${bln_engaged} || ${timer_cantNav}) /return 
+	/echo \ar Cannot NAVTARGET ${bln_following}
+	| If the target is less than 50 range
+	/if (!${bln_following}) {
+		/if (${Select[${Me.Class.ShortName},BRD,BER,MNK,ROG,RNG,PAL,SHD,WAR]} && ${Target.ID}) {
+			/if (!${bln_tanking})  {
+				/if (${gbl_bln_useWarp}) /warp loc ${Target.Y} ${Target.X} ${Target.Z}
+			} else {
+				/if (${gbl_bln_useWarp}) /warp f 10
+			} 
+		}
 	} else {
-		/call toggleMQ2Melee FALSE
+		/echo \aoFollowing ${str_followTarget}
+		/call TrueTarget ${Spawn[pc ${str_followTarget}].ID}
+		/delay 5
+		/if (${gbl_bln_useWarp}) /warp loc ${Target.Y} ${Target.X} ${Target.Z}
 	}
-	/doevents flush TOGGLEMQ2MELEE
+    /varset timer_cantNav 50
 /return
 
-Sub toggleMQ2Melee(bool _state) 
-	/varset mq2meleeEnabled ${_state}
-	/if (${state}) {
-		/docommand /${announceChannel} MQ2MELEE ENABLED
-		/melee plugin=1
-	} else {
-		/docommand /${announceChannel} MQ2MELEE DISABLED
-		/melee plugin=0
+SUB Event_Melee_UpdatesStickCommand(string _line, string _chatSender, string _eventParams)
+    /doevents flush Melee_UpdatesStickCommand
+	/varset str_stickCommand ${_eventParams}
+/return 
+
+Sub EVENT_Melee_FireAEMelee
+    /doevents flush Melee_FireAEMelee
+    /call FireAEMelee
+/return
+
+Sub EVENT_Melee_ReStick
+    /doevents flush Melee_ReStick
+/return
+
+|**
+ ----------------------------
+ Melee Routines Initialization
+ ----------------------------
+ Sets default variables, and initializes the event listeners
+ ----------------------------
+**|
+
+Sub xbot_initialize_melee
+	/echo \n \apInitialize: \aoMelee \aw-------------------------
+
+	/declare 	int_currentStickDistance		int		outer   30
+	/declare	int_startStickDistance 	int 	outer 	40 	| Base stick distance
+	/declare 	int_minStickDistance	int		outer 	10	| Minimum stick distance
+	/declare 	int_maxStickDistance	int     outer   100 | Maximum attempted stick distance
+	/declare    int_maxNavDistance		int		outer   300	| Maximum attempted nav distance
+
+    /declare	bln_autoAssist			bool    outer   FALSE
+    /declare	timer_component_check	timer   outer   0
+    /declare	timer_cantNav			timer   outer   50
+    /declare	timer_cantSee			timer   outer   100 
+    /declare	timer_getCloser			timer   outer   50
+	/declare	timer_provoke			timer 	outer 	50
+
+	/declare 	str_stickCommand		string  outer  ${Ini[INI_COMMON,SETTINGS,stickCommand,snaproll rear 30]}
+	/if (${Ini[INI_CHAR,SETTINGS,stickcmd].NotEqual[NULL]}) /varset str_stickCommand ${Ini[INI_CHAR,SETTINGS,stickcmd]}
+
+	/call processProvoke
+	/call processComponents
+	/call processRangedItems
+	
+	| initialize the melee events
+	/call initEvents_Melee
+	
+/return
+
+Sub processProvoke
+	/echo \awprocessProvoke
+	/declare arr_rawProvoke[10]	    	string	local 
+	/declare i						    int 	local	0
+	/declare sz 					    int     local	0
+    /declare test                       string  local	NULL
+
+	/declare bln_provokes_enabled		bool 	outer	FALSE
+	/declare int_provokes_total			int		outer	0
+
+	|; = _enabled|
+	|settings=TRUE
+	/if (!${Ini[INI_CHAR,PROVOKE,settings].Arg[1,|]}) /multiline ; /echo \a-w    Settings Processed: \awEnabled:\ag${bln_provokes_enabled} ; /return
+   
+
+	|-; _provoke|_type|_use|_cost
+	|PROVOKE_1="Ancient: Chaos Cry"|DISC|TRUE|30
+	/for i 1 to ${arr_rawProvoke.Size}
+        /varset test ${Ini[INI_CHAR,PROVOKE,PROVOKE_${i}]}
+        /if (${test.Arg[1,|].Equal[NULL]}) {
+            /varset  int_provokes_total ${sz}
+            /return
+        } 
+        | Not null, set the values for the buffs
+		/varset bln_provokes_enabled TRUE
+		/varcalc sz	${sz}+1
+		/declare PROVOKE_${i}		    string	outer   ${test.Arg[1,|]}
+        /declare PROVOKE_${i}_Type	    string  outer   ${test.Arg[2,|]}
+		/declare PROVOKE_${i}_Use	    string  outer   ${test.Arg[3,|]}
+		/declare PROVOKE_${i}_Cost	    string  outer   ${test.Arg[4,|]}
+        /echo \ao        PROVOKE[\ag${i}\ao]: \awProvoke:\ag${PROVOKE_${i}} \awUse:\ag${PROVOKE_${i}_Use} \awType:\ag${PROVOKE_${i}_Type} \awCost:\ag${PROVOKE_${i}_Cost}
+    /next i
+
+
+/return 
+
+Sub processComponents
+    /echo \awprocessComponents
+   
+	/declare arr_rawComponents[10]	    string	local 
+	/declare i						    int 	local 0
+	/declare sz 					    int     local 0
+    /declare test                       string  local NULL
+
+
+    /declare bln_components_enabled     bool	outer FALSE
+    /declare int_components_total		int  	outer 0
+
+	| Run a test to see if there are no entries
+	/if (!${Ini[INI_CHAR,COMPONENTS,COMPONENT_1].Arg[1,|]}) /multiline ; /echo \a-w    Settings Processed: \awEnabled:\ag${bln_components_enabled} ; /return
+
+	|; =_component|_use|_type|_count|_summoner|_reagent
+	| COMPONENT_1="Axe of the Destroyer"|TRUE|DISC|200|"Axe of the Destroyer"|"Balanced Axe Components"
+    /for i 1 to ${arr_rawComponents.Size}
+        /varset test ${Ini[INI_CHAR,COMPONENTS,COMPONENT_${i}]}
+        /if (${test.Arg[1,|].Equal[NULL]}) {
+            /varset  int_components_total ${sz}
+            /return
+        } 
+        | Not null, set the values for the buffs
+        /varset  bln_components_enabled TRUE
+		/varcalc sz	${sz}+1
+		/declare COMPONENT_${i}		        string	outer   ${test.Arg[1,|]}
+        /declare COMPONENT_${i}_Use	        string  outer   ${test.Arg[2,|]}
+		/declare COMPONENT_${i}_Type	    string  outer   ${test.Arg[3,|]}
+		/declare COMPONENT_${i}_Count	    string  outer   ${test.Arg[4,|]}
+        /declare COMPONENT_${i}_Summoner	string  outer   ${test.Arg[5,|]}
+        /declare COMPONENT_${i}_Reagent     string  outer   ${test.Arg[6,|]}
+        /echo \ao        COMPONENT[\ag${i}\ao]: \awComponent:\ag${COMPONENT_${i}} \awUse:\ag${COMPONENT_${i}_Use} \awType:\ag${COMPONENT_${i}_Type} \awCount:\ag${COMPONENT_${i}_Count} \awSummoner:\ag${COMPONENT_${i}_Summoner} \awReagent:\ag${COMPONENT_${i}_Reagent}
+		/echo \aw							 \a-wDesired: \ay${COMPONENT_${i}_Count} \a-wInventory: \ag${FindItemCount[=${COMPONENT_${i}}]}
+	/next i
+/return
+
+Sub processRangedItems
+ 	/echo \awprocessRangedItems
+   
+	/declare arr_rawRanged[10]			string	local 
+	/declare i						    int 	local 0
+	/declare sz 					    int     local 0
+    /declare test                       string  local NULL
+
+
+    /declare bln_ranged_enabled			bool	outer FALSE
+    /declare int_ranged_total			int  	outer 0
+
+	
+	| Run a test to see if there are no entries
+	/if (!${Ini[INI_CHAR,RANGED,settings].Arg[1,|]})  /multiline ;  /echo \a-w    Settings Processed: \awEnabled:\ag${bln_ranged_enabled} ; /return
+
+	|; _rangedItem|_use|_component
+	| RANGED_1="Shuriken of Eternity"|TRUE|COMPONENT_1|
+    /for i 1 to ${arr_rawRanged.Size}
+        /varset test ${Ini[INI_CHAR,RANGED,RANGED_${i}]}
+        /if (${test.Arg[1,|].Equal[NULL]}) {
+            /varset  int_ranged_total ${sz}
+            /return
+        } 
+        | Not null, set the values for the buffs
+        /varset  bln_ranged_enabled TRUE
+		/varcalc sz	${sz}+1
+		/declare RANGED_${i}		        string	outer   ${test.Arg[1,|]}
+        /declare RANGED_${i}_Use	        string  outer   ${test.Arg[2,|]}
+		/declare RANGED_${i}_Component	    string  outer   ${test.Arg[3,|]}
+
+        /echo \ao        RANGED[\ag${i}\ao]: \awComponent:\ag${RANGED_${i}} \awUse:\ag${RANGED_${i}_Use} \awComponent:\ag${RANGED_${i}_Component}
+    /next i
+/return
+
+Sub FireAEMelee 
+    /if (${Me.Combat} && ${Me.Class.ShortName.Equal[MNK]})  /multiline ; /call MQ2Cast "Destructive Force" ALT ; /return
+    /if (${Me.Combat} && ${Me.Class.ShortName.Equal[WAR]})  /multiline ; /call MQ2Cast "Rampage" ALT ;  /return
+    /if (${Me.Combat} &&  ${Me.Class.ShortName.Equal[BER]}) /multiline ; /call MQ2Cast "Rampage" ALT ;  /return
+/return 
+
+
+Sub chkComponents
+	/if (${bln_components_enabled} && !${timer_component_check}) {
+		/declare i 			int 	local	1
+		/declare component	string 	local   NULL
+		/declare compType	string  local   NULL
+		/declare count		int		local	0
+		/declare summoner	string	local	NULL
+		/declare reagent	string  local   NULL
+		/for i 1 to ${int_components_total} 
+			/if (!${COMPONENT_${i}_Use}) /continue
+			/call chkComponent "${COMPONENT_${i}}" ${COMPONENT_${i}_Count} ${COMPONENT_${i}_Type} "${COMPONENT_${i}_Summoner}" "${COMPONENT_${i}_Reagent}"
+			/delay 10
+			/if (${Macro.Return.Equal[SUMMON_ITEM_NOT_FOUND]}) {
+				/echo SUMMON_ITEM_NOT_FOUND turning  this component OFF.
+				/docommand /${announceChannel} SUMMON_ITEM_NOT_FOUND  ${COMPONENT_${i}} ${COMPONENT_${i}_Summoner} turning  this component OFF.
+				/varset COMPONENT_${i}_Use FALSE
+			}
+			/if (${Macro.Return.Equal[OUT_OF_REAGENTS]}) {
+				/echo OUT_OF_REAGENTS turning  this component OFF.
+				/docommand /${announceChannel} OUT_OF_REAGENTS ${COMPONENT_${i}} ${COMPONENT_${i}_Reagent} turning  this component OFF.
+				/varset COMPONENT_${i}_Use FALSE
+			}
+			/autoinv
+		/next i
 	}
 /return
 
-Sub Event_UpdateStickCMD(_line, _sender, _eventParams)
-	/echo updateStickCMD ${_sender}
-	/echo _eventParams	${_eventParams}
 
-	/doevents flush UpdateStickCMD
-/return
+Sub chkComponent(string _component, int _count, string _type, string _summoner, string _reagent)
+	|/echo chkComponents ${_component}, ${_count}, ${_type}, ${_summoner}, ${_reagent}
+	|/echo (${FindItemCount[=${_component}]}>=${_count})
+	/if (${Zone.ShortName.NotEqual[thundercrest]} && ${Zone.ShortName.NotEqual[guildhall]}) /goto :chkComponent
+	/if (${SpawnCount[npc radius ${int_campRadius}]} > 0) /return
 
-Sub EVENT_RiposteDisc(_line, _sender, _eventParams)
-	/echo turning riposte disc on
-	/call FireRiposteDisc
-	/doevents flush RiposteDisc
-/return
+	/if (!${Defined[_reagent]})	/declare reagent string local NULL
+	/if (!${Defined[message]})	/declare message string local SUCCCESS
 
-Sub FireRiposteDisc
+	:chkComponent
+		|/echo \awChecking components: \aodesired:\ay${_count} \aohave: \ag${FindItemCount[=${_component}]}
+
+		/if (${FindItemCount[=${_component}]} >= ${_count}) {
+			/varset message COUNT_REACHED
+			|/echo \agReturning, have ${_count} ${_component}
+			/goto :return
+		} 
+
+		/autoinv
+
+		/if (${_type.Equal[ITEM]}) {
+			/echo ${_type}: ${_summoner} summoning ${_component} with ${reagent} 
+			|/echo summoner > 0 ? ${FindItemCount[=${_summoner}]}
+			/if (${FindItemCount[=${_summoner}]}>0) {
+				
+				/if (${reagent.Equal[NULL]}) {
+						/echo ${FindItemCount[=${_summoner}]}
+						/echo ${_summoner} summoning ${_component}	
+						/call MQ2Cast "${_summoner}" item
+						/delay 10
+						/autoinv
+						/goto :chkComponent
+				} else {
+					/if (${FindItemCount[=${reagent}]}>=10) {
+						/echo ${FindItemCount[=${_summoner}]}
+						/echo ${_summoner} summoning ${_component}	
+						/call MQ2Cast "${_summoner}" item
+						/delay 10
+						/autoinv
+						/goto :chkComponent
+					} else {
+						/varset message OUT_OF_REAGENTS
+						/goto :return
+					}
+				}
+				
+			} else {
+				/varset message SUMMON_CLICK_NOT_FOUND
+				/goto :return
+			}
+			
+		} else /if (${_type.Equal[DISC]}) {
+			/echo ${_type}: ${_summoner} summoning ${_component} with ${reagent}
+			/if (${FindItemCount[=${reagent}]}>=20) {
+				/doability "${_summoner}"
+				/delay 10
+				/autoinv
+			} else {
+				/varset message OUT_OF_REAGENTS
+				/goto :return
+			}
+			
+		} else /if (${_type.Equal[ALT]}) {
+			/echo ${_type}: ${_summoner} summoning ${_component} with ${reagent}
+			/if (${FindItemCount[=${reagent}]}>=20) {
+					/call MQ2Cast "${_summoner}" alt
+					/delay 10
+					/autoinv
+				} else {
+					/varset message OUT_OF_REAGENTS
+					/goto :return
+				}
+		}
+		
+	:return
+	/varset timer_component_check 300
+/return	${message}
+
+
+Sub FireDisc_Riposte
 	/echo \aoFiring Riposte Disc!
 	:monk
 	/if (${Me.Class.ShortName.Equal[MNK]}) {
@@ -160,370 +438,19 @@ Sub FireRiposteDisc
 	:return
 /return
 
-
-Sub Event_AutoAssist(string _eventParams)
-	/if (${_eventParams.Equal[on]}) /call AutoAssistON 
-	/if (${_eventParams.NotEqual[on]}) /call AutoAssistOFF
-/return
-
-Sub AutoAssistON
-	/dgt ${Me.Name} is now Auto Assisting!
-	/varset bln_autoAssist TRUE
-/return
-
-Sub AutoAssistOFF
-	/dgt ${Me.Name} is no longer Auto Assisting.
-	/varset bln_autoAssist FALSE
-/return
-
-
-Sub doBandolier(string _bando)
-	/echo \ay Equipping set ${_bando}
-	/autoinv
-	/autoinv
-	/delay 5
-	/if (${InvSlot[offhand].Item.ID}) {
-		/unequip 14
-		/delay 5
-		/autoinv
-	}
-	/if (${InvSlot[mainhand].Item.ID}) {
-		/unequip 13
-		/delay 5
-		/autoinv
-	}
-
-	/equipset ${_bando}
-/return
-
-Sub chkDownshits
-	/if ((${Target.ID} && ${Target.Type.Equal[NPC]}) || ${bln_engaged} || ${timer_check_downshits}) /return
-	|-- we don't buff at bind point because we might be naked.
-	/call chkNaked
-	/if (${bln_naked}) /return
-	
-	|- downshitif
-	/if ((${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]}) || ${Me.Moving} || (${SpawnCount[npc radius 55]}>0 && (${Zone.ID} != 340 && ${Zone.ID} != 344 && ${Zone.ID} != 345)) || ${Me.Feigning} || ${Me.Invis}) { 
-		/return
-	}
-
-	/if (!${bln_engaged} && !${Me.Combat}) {
-
-		/if (${downflagCount} > 0) {
-			|- run through array of downshits
-			/declare df 		int 	local
-			/declare tid 		int 	local ${Target.ID}
-			/declare ds			int		local 
-			/declare buffName 	string 	local
-			/declare itemArgs	string  local
-			/declare itemID		int     local
-			/declare itemName	string  local
-			/declare castArg 	string 	local
-			/declare castTime	int     local
-			/declare svdTGTID 	string 	local	${Target.ID}
-			/declare tgtID 		int 	local
-			/declare dsType  	string  local   SPELL
-			/declare wornSlot   string  local 
-			/declare itemInSlot string  local
-			/declare hadToMemBuffs bool     local FALSE
-			
-			/for df 1 to ${downflagCount} 
-				| down flags look like: 
-				| downflag1=Cloak of Discord|"Cloak of Discord" gem6
-				| downflag2=Legacy of Nettles|"Legacy of Nettles" gem 8 -targetid|${Me.ID}  
-				| downflag3=Fiery Might|28988 item
-				| downflag4=Eldritch Rune|Eldritch Rune alt
-				/if (!${Me.FreeBuffSlots}) /return
-				/varset buffName  ${downflag${df}.Token[1,|]}
-				/varset castArg   ${downflag${df}.Token[2,|]}|${downflag${df}.Token[3,|]}
-				/varset tgtID     ${downflag${df}.Token[3,|]}
-				/varset dsType SPELL
-				/if (${castArg.Find[item]}>0) {
-					/varset dsType ITEM
-				} else /if (${castArg.Find[alt]}>0) {
-					/varset dsType ALT
-				}
-
-				|- If we have Damage Shields turned off, check to see if this is a damage shield before casting it
-				|  If found, skip the downflag
-				/if (!${bln_useDS}) {
-					/for ds 1 to ${int_damageShieldList_total}
-						/if (${buffName.Equal[${dsSpells[${ds}]}]}) /goto :nextDF
-					/next ds
-				}
-				/call RunAllEvents	
-				
-
-				/if (${bln_engaged}) /return
-			
-				|/echo BuffName: ${buffName} castArg: ${castArg} tgtID: ${tgtID} ready: ${Me.SpellReady[${buffName}]} dsType: ${dsType} ?: ${castArg.Find[item]}
-				|/echo Stacks? ${Spell[${buffName}].Stacks} && Do I have it? ${Bool[${Me.Buff[${buffName}].ID}]}
-				/if (${Spell[${buffName}].Stacks} && !${Bool[${Me.Buff[${buffName}].ID}]}) {
-					
-					/if (${dsType.Equal[SPELL]} && !${Me.SpellReady[${buffName}]}) {
-						/echo \ay${buffName} \awis \arNOT \awReady, Memorizing
-						| Spell is not ready, memorize it
-						/varset hadToMemBuffs TRUE
-						/call chkSpellMemorized ${castArg} TRUE
-						/delay 10
-					} 
-
-					|- save existing target for buffs that take a target argument (3)
-					/if (${SpawnCount[ID ${tgtID}]} >= 1 )  /call TrueTarget ${tgtID}
-					|/echo downflag${df}: ${downflag${df}.Token[1,|]} | ${downflag${df}.Token[2,|]}|${downflag${df}.Token[3,|]}
-					
-					| - Bard specific handler using mq2medley
-					| - Note mq2medley will not auto swap items!
-					/varset itemArgs ${downflag${df}.Token[2,|]}
-					/varset itemID ${itemArgs.Token[1, ]}
-					/varset itemName ${FindItem[${itemID}].Name}
-					/if (${dsType.Equal[ITEM]} && !${FindItem[${itemID}].ID}) {
-						/echo \arCannot find BUFF_${df}: \aw${itemID}!
-						/goto :nextDF
-					}
-					/if (${Me.Class.ShortName.Equal[BRD]}) {
-						/echo ${FindItem[${itemName}].TimerReady} ?
-						/if (${dsType.Equal[ITEM]} && ${FindItem[${itemName}].TimerReady}==0) {
-							/call MQ2Medley "${itemName}" ITEM ${Me.ID} TRUE
-						} else /if (${dsType.Equal[SPELL]}) {
-							/call MQ2Medley ${buffName} SONG ${Me.ID} TRUE
-						} else /if (${dsType.Equal[ALT]}) {
-							/call MQ2Medley ${buffName} ALT ${Me.ID} TRUE
-						}
-					} else {
-						/echo \ayDownflag (\ag${df}\ay) Casting \ay${buffName} \ag${downflag${df}.Token[2,|]}
-						/call MQ2Cast ${castArg}
-					}
-					:dfcast
-					/if (${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]}) /goto :dfcast
-				}
-			:nextDF
-			/next df
-			|- return existing spellset
-			/if (${hadToMemBuffs}) /memspellset ${str_currentSpellSet}
-			|- return existing target
-			/if (${Bool[${svdTGTID}]}) /call TrueTarget ${svdTGTID}
-
-			}
-
-		}
-		/varset timer_check_downshits 30s
-	}
-/return
-
-
-
-Sub BuildComponents
-	|; =_component|_use|_type|_count|_summoner|_reagent
-	|COMPONENT_1="Shuriken of Eternity"|TRUE|ITEM|200|"Ton Po's Mystical Pouch"|NULL
-
-	| Run a test to see if there are no entries
-	/declare bln_components bool	outer FALSE
-	/if (${Select["${Ini[INI_CHAR,COMPONENTS,COMPONENT_1]}",NULL]} == 1) {
-		/echo \aoBuildComponents: \arNo components created!
-		/return
-	}
-
-	| create a temporary array so we can assign the DFs and then trim to final array
-	/varset bln_components TRUE
-	/declare arr_rawCO[10]	string	local 
-	/declare sizeCO 		int		local 1
-	/declare i 				int		local 1
-
-	/for i 1 to ${arr_rawCO.Size}
-		/varset arr_rawCO[${i}] ${Ini[INI_CHAR,COMPONENTS,COMPONENT_${i},FALSE]} 
-		/if (${arr_rawCO[${i}].NotEqual[FALSE]}) /varcalc sizeCO ${sizeCO}+1
-	/next i
-	
-	| populate an array of components
-	/declare arr_components[${sizeCO}]	string outer
-	/for i 1 to ${sizeCO}
-		/varset arr_components[${i}] "${arr_rawCO[${i}]}"
-	/next i
-	/echo \aoBuildComponents: \aw[\ag${sizeCO}\aw] \agcreated!
-/return  
-
-
-
-
-Sub chkComponentsAll
-	/if (${bln_componentCheck} && !${timer_component}) {
-		/declare i 			int 	local	1
-		/declare component	string 	local   NULL
-		/declare compType	string  local   NULL
-		/declare count		int		local	0
-		/declare summoner	string	local	NULL
-		/declare reagent	string  local   NULL
-		/for i 1 to ${int_componentTotal} 
-			/if (${COMPONENT_${i}_Check}) {
-				/varset component 	"${COMPONENT_${i}}"
-				/varset compType	${COMPONENT_${i}_Type}
-				/varset count		${COMPONENT_${i}_Count}
-				/varset summoner	"${COMPONENT_${i}_Summoner}"
-				/varset reagent		"${COMPONENT_${i}_Reagent}"
-				/call chkComponents ${component} ${count} ${compType} ${summoner} ${reagent}
-				/delay 10
-				/if (${Macro.Return.Equal[SUMMON_ITEM_NOT_FOUND]}) {
-					/echo SUMMON_ITEM_NOT_FOUND turning  this component OFF.
-					/docommand /${announceChannel} SUMMON_ITEM_NOT_FOUND  ${summoner} turning  this component OFF.
-					/varset COMPONENT_${i}_Check FALSE
-				}
-				/if (${Macro.Return.Equal[OUT_OF_REAGENTS]}) {
-					/echo OUT_OF_REAGENTS turning  this component OFF.
-					/docommand /${announceChannel} OUT_OF_REAGENTS  ${component} turning  this component OFF.
-					/varset COMPONENT_${i}_Check FALSE
-				}
-			}
-			/autoinv
-		/next i
-	}
-/return
-
-Sub EVENT_DISC_NOTAVAILABLE(string line)
-	/echo EVENT_DISC_NOTAVAILABLE 
-	/echo $(line)
-	/doevents flush DISC_NOTAVAILABLE
-/return
-
-
-Sub chkComponents(string _component, int _count, string _type, string _summoner, string _reagent)
-	|/echo chkComponents ${_component}, ${_count}, ${_type}, ${_summoner}, ${_reagent}
-	|/echo (${FindItemCount[=${_component}]}>=${_count})
-	/if (${SpawnCount[npc radius ${int_campRadius}]} > 0 && ${Zone.ShortName.NotEqual[thundercrest]}) {
-		|/echo returning due to spawn
-		/return
-	} 
-
-	/if (!${Defined[_reagent]})	/declare _reagent string local NULL
-	/if (!${Defined[message]})	/declare message string local SUCCCESS
-
-	:chkComponent
-		/echo \awChecking components: \aodesired:\ay${_count} \aohave: \ag${FindItemCount[=${_component}]}
-
-		/if (${FindItemCount[=${_component}]} >= ${_count}) {
-			/varset message COUNT_REACHED
-			/echo \agReturning, have ${_count} ${_component}
-			/goto :return
-		} 
-
-		/autoinv
-
-		/if (${_type.Equal[ITEM]}) {
-			/echo ${_type}: ${_summoner} summoning ${_component} with ${_reagent} 
-			/echo summoner > 0 ? ${FindItemCount[=${_summoner}]}
-			/if (${FindItemCount[=${_summoner}]}>0) {
-				
-				/if (${_reagent.Equal[NULL]}) {
-						/echo ${FindItemCount[=${_summoner}]}
-						/echo ${_summoner} summoning ${_component}	
-						/call MQ2Cast "${_summoner}" item
-						/delay 10
-						/autoinv
-						/goto :chkComponent
-				} else {
-					/if (${FindItemCount[=${_reagent}]}>=10) {
-						/echo ${FindItemCount[=${_summoner}]}
-						/echo ${_summoner} summoning ${_component}	
-						/call MQ2Cast "${_summoner}" item
-						/delay 10
-						/autoinv
-						/goto :chkComponent
-					} else {
-						/varset message OUT_OF_REAGENTS
-						/goto :return
-					}
-				}
-				
-			} else {
-				/varset message SUMMON_CLICK_NOT_FOUND
-				/goto :return
-			}
-			
-		} else /if (${_type.Equal[DISC]}) {
-			/echo ${_type}: ${_summoner} summoning ${_component} with ${_reagent}
-			/if (${FindItemCount[=${_reagent}]}>=20) {
-				/doability "${_summoner}"
-				/delay 10
-				/autoinv
-			} else {
-				/varset message OUT_OF_REAGENTS
-				/goto :return
-			}
-			
-		} else /if (${_type.Equal[ALT]}) {
-			/echo ${_type}: ${_summoner} summoning ${_component} with ${_reagent}
-			/if (${FindItemCount[=${_reagent}]}>=20) {
-					/call MQ2Cast "${_summoner}" alt
-					/delay 10
-					/autoinv
-				} else {
-					/varset message OUT_OF_REAGENTS
-					/goto :return
-				}
-		}
-		
-:return
-/varset timer_component 30s
-/return	${message}
-
-
-Sub EVENT_GETCLOSER
-	/if (!${Target.ID} || ${Target.PctHPs} == 0 || !${bln_engaged} || ${timer_getCloser}) /return 
-	/doevents flush GETCLOSER
-	/varset timer_getCloser 4s
-	| If the target is less than max stick distance, adjust the stick
-	/call StickAdjust
-/return
-
-SUB EVENT_CANTSEETARGET
-	/if (!${Target.ID} || ${Target.PctHPs} == 0 || !${bln_engaged} || ${timer_cantSee}) /return 
-	/doevents flush CANTSEETARGET
-	/varset timer_cantSee 10s 
-	/face fast
-/return
-
-SUB EVENT_CANTNAVTARGET
-	/if (!${Target.ID} || ${Target.PctHPs} == 0 || !${bln_engaged} || ${timer_cantNav}) /return 
-	/doevents flush CANTNAVTARGET
-	/varset timer_cantNav 4s 
-	/echo \ar Cannot NAVTARGET ${bln_following}
-	| If the target is less than 50 range
-	/if (!${bln_following}) {
-		/if (${Select[${Me.Class.ShortName},BRD,BER,MNK,ROG,RNG,PAL,SHD,WAR]} && ${Target.ID}) {
-			/if (!${bln_tanking})  {
-				/warp loc ${Target.Y} ${Target.X} ${Target.Z}
-			} else {
-				/warp f 10
-			} 
-		}
-	} else {
-		/echo \aoFollowing ${str_followTarget}
-		/call TrueTarget ${Spawn[pc ${str_followTarget}].ID}
-		/delay 5
-		/warp loc ${Target.Y} ${Target.X} ${Target.Z}
-	}
-/return
-
-Sub StickAdjust
-	
-	/if (${int_currentStickDistance} > ${int_minStickDistance} && ${Target.Distance} <= ${int_currentStickDistance}) {
-		/echo \agStickAdjust \ao${int_currentStickDistance} \aw> \ao${int_minStickDistance} \ay(\aw${Target.Distance})
-		/varcalc int_currentStickDistance ${int_currentStickDistance} - 5
-		/if (${int_currentStickDistance} < ${int_minStickDistance}) /varset int_currentStickDistance ${int_minStickDistance} 
-		/stick ${stickCmd} ${int_currentStickDistance}
-	} 
+Sub AutoAssist(bool _enabled)
+	/varset bln_autoAssist ${_enabled}
 /return
 
 Sub EngageTargetMelee
 	/call StickToTarget ${bln_engaged}
 /return
 
-
 Sub StickToTarget(bool _engageWhenInRange)
-	/if (${str_classArchetype.Equal[CASTER]} || ${str_classArchetype.Equal[PRIEST]}) /return
+	/if (${Select[${Me.Class.ShortName},CLR,DRU,SHM,ENC,MAG,NEC,WIZ]}) /return
 	/varset int_startStickDistance ${Spawn[id ${int_targetID}].MaxRangeTo}
 	/varset int_currentStickDistance ${int_startStickDistance}
-	/echo \aoStickToTarget \aw_engageWhenInRange:\ar ${_engageWhenInRange} \awdist: \ag${Target.Distance} \awcurrentstick: \ag${int_currentStickDistance} \awminstick: \ag${int_minStickDistance} \awmaxstick: \ag${int_startStickDistance} \n\awStick Command String:\ag ${stickCmd} ${int_currentStickDistance}
+	/echo \aoStickToTarget \aw_engageWhenInRange:\ar ${_engageWhenInRange} \awdist: \ag${Target.Distance} \awcurrentstick: \ag${int_currentStickDistance} \awminstick: \ag${int_minStickDistance} \awmaxstick: \ag${int_startStickDistance} \n\awStick Command String:\ag ${str_stickCommand} ${int_currentStickDistance}
 	
 	:determineStick
 	/if (${Target.Distance3D} > ${int_maxNavDistance}) {
@@ -557,7 +484,7 @@ Sub StickToTarget(bool _engageWhenInRange)
 		
 	}
 	:tryStick
-	/stick ${stickCmd} ${int_currentStickDistance}
+	/stick ${str_stickCommand} ${int_currentStickDistance}
 
 	:tryKill
 	/if (${_engageWhenInRange}) {
@@ -574,63 +501,18 @@ Sub StickToTarget(bool _engageWhenInRange)
 /return
 
 
-Sub EVENT_RESTICK
-	/if (${bln_engaged} && (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}))  {
-		/call StickToTarget ${bln_engaged}
-	}
-	/doevents flush RESTICK
-/return
-
-
 Sub chkTargetDist
 	/if (!${bln_engaged} || !${Me.Combat}) /return
 	/if (!${Me.AutoFire} && (${Target.Distance} > ${Math.Calc[${int_currentStickDistance}*1.1].Int}  )) /call StickToTarget ${bln_engaged}
 /return 
 
-
-Sub EVENT_AERAMP
-	/if (${Me.Combat}) {
-		/echo FIRING AERAMP
-		/if (${Me.Class.ShortName.Equal[MNK]}) {
-			/call MQ2Cast "256" alt
-		}
-		/if (${Me.Class.ShortName.Equal[WAR]}) {
-			/call MQ2Cast "99" alt
-		}
-		
-		/if (${Me.Class.ShortName.Equal[BER]}) {
-			/echo I should  be firing AE RAMP
-			/call MQ2Cast "99" alt
-		}
-	}
-	/doevents flush AERAMP
-/return
-
-|-- Swap sets
-Sub  swapWeaponSets(type)
-	/if (${type.Equal[Ranged]}) {
-	
-	} else /if (${type.Equal[Melee]}) {
-	
-	} else /if (${type.Equal[NotBlunt]}) {
-	
-	} else /if (${type.Equal[NotPierce]}) {
-	
-	} else /if (${type.Equal[Main]}) {
-	
-	}
-/return
-
-|-- Not Used
-Sub downshitInterrupt
-/return
-
-
-|-- Used 04/27/2022 due to mq2melee acting retarded in MPG: Specialization
-Sub chkCombatAbilities
-	/if (${mq2meleeEnabled}) /return
-	/call chkCA_${Me.Class.ShortName}
-/return
+|**
+ ----------------------------
+ COMBAT ABILITy Routines
+ ----------------------------
+ Per class methods, does the basic kick/etc stuff
+ ----------------------------
+**|
 
 Sub chkCA_BER
 	/if (${Me.AbilityReady[Frenzy]}) /doability "Frenzy"
@@ -673,161 +555,64 @@ Sub chkCA_WAR
 	/call chkTaunt
 /return 
 
-
 Sub chkTaunt 
-	/if (${bln_tanking} && ${bln_taunting} && ${Me.AbilityReady[Taunt]} && ${Me.TargetOfTarget.Name.NotEqual[${Me.Name}]}) /doability "Taunt"
+	/if (${bln_tanking} && ${bln_taunting} && ${Me.AbilityReady[Taunt]} && ${Me.TargetOfTarget.CleanName.NotEqual[${Me.CleanName}]}) /doability "Taunt"
+	/if (${bln_tanking} && ${bln_taunting} && !${timer_provoke} && ${bln_provokes_enabled}) /call chkProvoke
 /return 
 
 
-Sub chk_casterProvoke(string _provokeSpell)
-	/if (!${Defined[shd_minProvokeMana]}) {
-		/declare shd_minProvokeMana int	outer 200
-	}
-	
-	/if (${provokeTimer}) {
+
+
+Sub chkProvoke
+	/declare i int local 
+	/for i 1 to ${int_provokes_total}	
+		/if (${PROVOKE_${i}_Type.Equal[DISC]} && (${Me.Endurance} > ${PROVOKE_${i}_Cost}) &&  ${Me.CombatAbilityReady[${PROVOKE_${i}}]} ) {
+			/echo \a-gProvoking \ag${Target.Name} \a-w with \ag${PROVOKE_${i}}
+			/doability "${PROVOKE_${i}}"
+		} else /if (${PROVOKE_${i}_Type.Equal[SPELL]} && (${Me.CurrentMana} > ${PROVOKE_${i}_Cost}) &&  ${Me.SpellReady[${PROVOKE_${i}}]}) {
+			/echo \a-gProvoking \ag${Target.Name} \a-w with \ag${PROVOKE_${i}}
+			/call MQ2Cast "${PROVOKE_${i}}"
+		}
+		/if (${Me.TargetOfTarget.CleanName.Equal[${Me.CleanName}]}) /goto :return
+	/next i
+	:return
+	/if (${Me.TargetOfTarget.CleanName.Equal[${Me.CleanName}]}) /varset timer_provoke 500
+/return
+
+
+Sub chkRangedItem
+	/if (${bln_ranged_enabled} && ${int_ranged_total}) {
+		| make sure the ranged item is equiped
+		/if (${FindItem[${RANGED_1}].InvSlot} != 11) {
+			/echo \ag Swapping ${RANGED_1} to Slot 11 (Ranged)
+			/exchange "${RANGED_1}" ranged
+			/delay 10
+		}
+		| make sure our ammo is equiped in the ammoslot
+		/if (${FindItemCount[${${RANGED_1_Component}}]}) {
+			/if (${FindItem[${${RANGED_1_Component}}].InvSlot} != 22 && ${FindItem[${${RANGED_1_Component}}].InvSlot} != 11 ) {
+				/echo \ag Swapping in "${${RANGED_1_Component}}" ammo
+				/exchange "${${RANGED_1_Component}}" ammo
+				/delay 10
+			}
+		} else {
+			/echo \arOUT OF ${${RANGED_1_Component}}!
+			/return
+		}
 		
-	} else {
-		/if (${Me.CurrentMana} < ${shd_minProvokeMana}) {
-			 |/echo |- attemptProvoke -| I do not have enough mana to use [${_provokeSpell}].
-		} else {
-
-			/if (!${Me.SpellReady[${_provokeSpell}]}) {
-				|/echo |- attemptProvoke -| [${_provokeSpell}] is not ready.
-			} else {
-				/call MQ2Cast "${_provokeSpell}" ${spell_hateGem}
-				/if (${Spawn[${Me.TargetOfTarget}].CleanName.Equal[${Me.Name}]}) /varset provokeTimer 600
-			}
+		| Attempt to use ranged to hit target
+		/if (${Target.ID} && ${Target.Type.Equal[NPC]} && ${Target.LineOfSight} && ${Target.Distance} < ${FindItem[${RANGED_1}].Range}) {
+			/ranged
+			/doevents TooClose
 		}
 	}
+
 /return
 
-Sub chk_warProvoke(string _provokeDisc)
-	/if (!${Defined[war_minBellowEnd]}) {
-		/if (${_provokeDisc.Equal[Ancient: Chaos Cry]}) {
-			/declare war_minBellowEnd int outer 300
-		} else /if (${_provokeDisc.Equal[Bellow of the Mastruq]}) {
-			/declare war_minBellowEnd int outer 275
-		} else /if (${_provokeDisc.Equal[Incite]}) {
-			/declare war_minBellowEnd int outer 250
-		} else /if (${_provokeDisc.Equal[Berate]}) {
-			/declare war_minBellowEnd int outer 200
-		} else /if (${_provokeDisc.Equal[Bellow]}) {
-			/declare war_minBellowEnd int outer 175
-		} else /if (${_provokeDisc.Equal[Provoke]}) {
-			/declare war_minBellowEnd int outer 85
-		}
+Sub pullTarget
+	/if (${bln_provokes_enabled}) {
+		/call chkProvoke
+	} else /if (${bln_ranged_enabled}) {
+		/call chkRangedItem
 	}
-	
-	/if (${provokeTimer}) {
-		 |/echo |- attemptProvoke -| I have not met my recast timer for [${_provokeDisc}] - [${provokeTimer}].
-	} else {
-	
-		/if (${Me.Endurance} < ${war_minBellowEnd}) {
-			 |/echo |- attemptProvoke -| I do not have enough endurance to use [${_provokeDisc}].
-		} else {
-
-			/if (!${Me.CombatAbilityReady[${_provokeDisc}]}) {
-				|/echo |- attemptProvoke -| [${_provokeDisc}] is not ready.
-			} else {
-				/doability "${_provokeDisc}"
-				/if (${Spawn[${Me.TargetOfTarget}].CleanName.Equal[${Me}]}) /varset provokeTimer 600
-			}
-		}
-	}
-/return
-
-
-
-
-Sub xbot_initialize_melee
-	/echo \ao xbot_initialize_melee
-	
-	/declare 	int_currentStickDistance		int		outer   30
-	/declare	int_startStickDistance 	int 	outer 	40 	| Base stick distance
-	/declare 	int_minStickDistance	int		outer 	10	| Minimum stick distance
-	/declare 	int_maxStickDistance	int     outer   100 | Maximum attempted stick distance
-	/declare    int_maxNavDistance		int		outer   300	| Maximum attempted nav distance
-
-	/declare	timer_getCloser			timer	outer	5s
-	/declare 	timer_check_downshits	timer	outer 	0
-	/declare 	timer_cantSee			timer   outer   10s
-	/declare    timer_cantNav			timer   outer   10s
-	/declare 	timer_component			timer   outer   30s
-
-	|-- ALL CLASSES COMMON
-	|-- [Settings] : Downflags
-	/declare	downflagCount			int		outer	${Ini[INI_CHAR,Downflags,downflagCount,0]}
-	/declare df int local
-		/for df 1 to ${downflagCount} 
-			/declare downflag${df} 		string 	outer	${Ini[INI_CHAR,Downflags,downflag${df}]}
-		/next df
-	
-	|-- [Settings] : Holyflags
-	/declare	holyflagCount			int		outer	${Ini[INI_CHAR,Holyflags,holyflagCount,0]}
-	/declare hf int local
-		/for hf 1 to ${holyflagCount} 
-			/declare holyflag${hf} 		string 	outer	${Ini[INI_CHAR,Holyflags,holyflag${hf}]}
-		/next hf
-
-
-	|-- MELEE AND HYBRID CLASSES ONLY
-	|- [Settings] : Components
-	/declare	int_componentTotal		int		outer	${Ini[INI_CHAR,Components,int_componentTotal,0]}
-	/declare 	bln_componentCheck		bool	outer   ${If[${int_componentTotal}>0,TRUE,FALSE]}
-		/declare comp int local
-			/for comp 1 to ${int_componentTotal} 
-				/declare COMPONENT_${comp} 			string 	outer ${Ini[INI_CHAR,Components,COMPONENT_${comp}]}
-				/declare COMPONENT_${comp}_Check	bool 	outer ${Ini[INI_CHAR,Components,COMPONENT_${comp}_Check,FALSE]}
-				/declare COMPONENT_${comp}_Count 	int 	outer ${Ini[INI_CHAR,Components,COMPONENT_${comp}_Count]}
-				/declare COMPONENT_${comp}_Type  	string 	outer ${Ini[INI_CHAR,Components,COMPONENT_${comp}_Type]}
-				/declare COMPONENT_${comp}_Summoner string	outer ${Ini[INI_CHAR,Components,COMPONENT_${comp}_Summoner]}
-				/declare COMPONENT_${comp}_Reagent 	string	outer ${Ini[INI_CHAR,Components,COMPONENT_${comp}_Reagent]}
-			/next comp
-	
-	
-
-	|--[Settings] : Spell & Support Definitions
-	/declare item_pull				string	outer	${Ini[INI_CHAR,Puller,item_pull,"Shuriken of Eternity"]}
-	/declare item_pull_clean		string	outer	${Ini[INI_CHAR,Puller,item_pull_clean,Shuriken of Eternity]}
-	/declare item_summon			string	outer	${Ini[INI_CHAR,Puller,item_summon,"Ton Po's Mystical Pouch"]}
-	
-	/declare spell_pull				string	outer	${Ini[INI_CHAR,Puller,spell_pull,"Terror of Discord"]}
-	/declare spell_pullGem			string 	outer	${Ini[INI_CHAR,Puller,spell_pullGem,"gem2"]}
-	/declare spell_hate				string	outer	${Ini[INI_CHAR,Puller,spell_hate,"Terror of Discord"]}
-	/declare spell_hateGem			string  outer   ${Ini[INI_CHAR,Puller,spell_hateGem,"gem2"]}
-	/declare spell_aehate			string	outer	${Ini[INI_CHAR,Puller,spell_aehate,"Dread Gaze"]}
-	/declare spell_aehateGem		string	outer	${Ini[INI_CHAR,Puller,spell_aehate,"gem3"]}
-	/declare spell_snare			string	outer	${Ini[INI_CHAR,Puller,spell_snare,"Festering Darkness"]}
-	/declare bln_useSnare			bool	outer	${Ini[INI_CHAR,Puller,bln_useSnare,FALSE]}
-	/declare war_ca_hate_1			string	outer	${Ini[INI_CHAR,Puller,war_ca_hate_1,Bazu Bellow]}
-	/declare war_ca_hate_2			string	outer 	${Ini[INI_CHAR,Puller,war_ca_hate_2,Bellow of the Mastruq]}
-	/declare int_castDistance		int		outer	${Ini[INI_CHAR,Puller,int_castDistance,120]}
-
-	|-- [Settings] : Melee Defaults
-	/declare 	MinStrikeEndurance 		int		outer	200
-	/declare 	MinBellowEndurance		int		outer	200
-	/declare    provokeTimer            timer   outer   0
-	/declare 	stickCmd				string	outer   ${Ini[INI_CHAR,Sticking,stickCmd,snaproll rear]}
-	/declare 	bln_chkComponents		bool	outer	TRUE
-	/declare 	bln_tgtDeadSoon			bool	outer	FALSE
-	/declare	timer_reAssist			timer	outer	5s
-	/declare    bln_riposting			bool    outer   FALSE
-
-	
-	|-- [Settings] Damage shield/ no damage shield (specifically for events like pixxt riel tavas)
-	/declare bln_useDS				bool	outer	TRUE	
-	/declare int_damageShieldList_total			int		outer   ${Ini[dsINI,SETTINGS,SpellCount,0]}
-	/declare dsSpells[${int_damageShieldList_total}]	string outer
-
-	/declare ds int local 
-		/for ds 1 to ${int_damageShieldList_total}
-			/varset dsSpells[${ds}] ${Ini[dsINI,Spells,DS${ds}]}
-			|/echo Added DS${ds} spell ${dsSpells[${ds}]}
-		/next ds
-
-	/declare dsSongsTotal	int		outer   ${Ini[dsListINI,SETTINGS,SongCount,0]}
-	/declare dsSongs[${dsSongsTotal}]	string outer
-
-	| Initialize Library Events
-	/call initEvents_Melee
-/return
+/return 

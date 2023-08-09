@@ -124,7 +124,7 @@ Sub chkOffTanking
 	/for i 1 to ${SpawnCount[npc radius ${int_offtankRadius} range 46 80 noalert 5]}
 		/call TrueTarget ${NearestSpawn[${i}, npc radius ${int_offtankRadius} range 46 80 noalert 5].ID}
 		:CheckAggro
-		/if (!${Bool[${Me.TargetOfTarget.ID}]} || (${ExcludeList.Find[${Target.CleanName}]})) /goto :nextTarget
+		/if (!${Me.TargetOfTarget.ID} || (${ExcludeList.Find[${Target.CleanName}]})) /goto :nextTarget
 		/if (${Me.TargetOfTarget.Class.ShortName.Equal[WAR]} || ${Me.TargetOfTarget.Class.ShortName.Equal[PAL]} || ${Me.TargetOfTarget.Class.ShortName.Equal[SHD]}) /goto :nextTarget
 
 		/if ((${Target.Distance3D} < ${int_offtankRadius})) {
@@ -141,7 +141,7 @@ Sub chkOffTanking
 	/if (${SpawnCount[npc radius ${int_offtankRadius} range 46 80  noalert 5]} == 1 && ${bln_engaged}) {
 		/if (${SpawnCount[npc id ${int_targetID}]}) {
 			/call TrueTarget ${int_targetID}
-			/if (!${Bool[${Me.TargetOfTarget.ID}]}) /return
+			/if (!${Me.TargetOfTarget.ID}) /return
 			/varset bln_tanking		FALSE
 			/varset bln_taunting	FALSE
 			/if (${Target.PctHPs} <=99  && ${Target.ID}) /attack on
@@ -151,32 +151,15 @@ Sub chkOffTanking
 
 
 Sub aggroByID(int _targetID)	
-	
 	/if (!${Me.Standing}) /stand on
 	/if (!${bln_engaged}) /varset bln_engaged TRUE
 	/echo \ao Aggroing \ay${Target.Name}\aw(\ag${_targetID}\aw)
 	/echo \aw Class being Targetted: \ar${Me.TargetOfTarget.Class.ShortName}
 	:aggroLoop
-	|-- if SK/PAL try casting on it, if not, smack it;
-	/if (${Me.Class.ShortName.Equal[PAL]}) {
-		| Paladin should try to stun the NPC
-		/call chkStun TRUE
-		/goto :aggroSmack
-	} else /if (${Me.Class.ShortName.Equal[SHD]}) {
-		| SK should try hate spell
-		/call chkHate
-		/goto :aggroSmack
-	} 
-	
-	:aggroSmack
-	/squelch /varset bln_tanking TRUE
-	/squelch /varset bln_taunting TRUE
-	/if (${Target.ID} != ${_targetID}) /call TrueTarget ${_targetID}
 
-	/squelch /stick off
-	/squelch /stick front 20
-	/if (${Me.AbilityReady[Taunt]}) /taunt
-	/squelch /face fast
+	/if (${Target.ID} != ${_targetID}) /call TrueTarget ${_targetID}
+	/call chkTaunt
+	
 	/if (!${Me.Combat}  && ${Target.ID}) {
 		/echo  \awaggroByID \ag Attacking 
 		/attack on
@@ -184,33 +167,13 @@ Sub aggroByID(int _targetID)
 	/delay 20
 
 	
-	/if (${Me.TargetOfTarget.Class.ShortName.Equal[WAR]} || ${Me.TargetOfTarget.Class.ShortName.Equal[PAL]} || ${Me.TargetOfTarget.Class.ShortName.Equal[SHD]}) /goto :return		
-	/if ((${Me.TargetOfTarget.ID} == ${Me.ID}) || (${Me.TargetOfTarget.ID} == ${int_MTID}) || !${Target.ID} || ${Target.Name.Find['s_corpse']} || ${Target.Type.Equal[corpse]}) /goto :return
-	
+	/if (${Select[${Me.TargetOfTarget.Class.ShortName},WAR,PAL,SHD]} || ${Target.Name.Find['s_corpse']} || ${Target.Type.Equal[corpse]} ) /goto :return		
+
 	/goto :aggroLoop
 
 	:return
 	/varset bln_tanking		FALSE
 	/varset bln_taunting	FALSE
-/return
-
-
-
-|**
- ----------------------------
- Hate
- ----------------------------
- Checks current target, stuns if not on MT or Self
- ----------------------------
-**|
-
-Sub chkHate
-	/if (!${bln_engaged}) /return
-	/if (!${Target.ID}) /return
-	/if ( ${Me.SpellReady[${spell_hate}]}) {
-		/echo chkHate: Hating with ${spell_hate}
-		/call MQ2Cast "${spell_hate}" ${spell_hateGem} 2s
-	}
 /return
 
 

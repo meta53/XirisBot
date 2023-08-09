@@ -34,9 +34,10 @@ REVISION HISTORY
 ______________________________________________
 
 **|
-
-#define INI_CHAR xiris_settings_character/BOT_${Me.Class.ShortName}_${Me.CleanName}.ini
-#define INI_RAID xiris_settings_gobal/xiris_common.ini
+#define INI_CHAR        xiris_settings_character/BOT_${Me.Class.ShortName}_${Me.CleanName}.ini
+#define INI_COMMON      xiris_settings_global/xiris_settings_common.ini
+#define INI_RAID 		xiris_settings_gobal/xiris_common.ini
+#define INI_LOOT        xiris_settings_global/xiris_settings_loot.ini
 
 |** #include xiris_includes/xiris_dannet.inc
 #include xiris_includes/xiris_buffing.inc
@@ -411,23 +412,24 @@ Sub EVENT_KillMob(_line, _sender, _eventParams)
 Sub EngageTarget(int _targetID)
 	/if (!${_targetID}) /return
 	/if (${bln_following}) /call StopFollowing
+	
 	/echo \awEngaging Target \ag${Spawn[id ${_targetID}].Name} \ay(${_targetID}) \ao${Time.Time24} \ay${MacroQuest.Running}
 	
 	| Set Target Flags
 	/varset int_targetID ${_targetID}
 	/varset str_targetName ${Spawn[id ${_targetID}].Name}
 	/varset bln_engaged TRUE
-	/if (${Select[${Me.Class.ShortName},CLR,DRU,SHM]} || (${Me.Class.ShortName.Equal[CLR]} && !${bln_battleCleric})) /return
+	/if (${Select[${Me.Class.ShortName},DRU,SHM]} || (${Me.Class.ShortName.Equal[CLR]} && !${bln_battleCleric})) /return
 
 	| Target NPC
 	/call TrueTarget ${_targetID}
-	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) /call EngageTargetMelee
+	/if (${Select[${Me.Class.ShortName},BER,BRD,BST,MNK,RNG,ROG,SHD,WAR]}) /call EngageTargetMelee
 	
 	| Priests don't need to do anything else
 	| Stand Up
 	/if ((${Me.Feigning} && (${Me.PctHPs} > 50))) /stand
 	| Reset recast timers (nukes, dots, etc)
-	/if (${str_classArchetype.NotEqual[MELEE_END]} || ${Me.Class.ShortName.NotEqual[WAR]}) /call ResetCastTimers
+	/if (${Select[${Me.Class.ShortName},BER,BRD,BST,MNK,RNG,ROG,SHD]}) /call ResetCastTimers
 	| Sicc Pet
 	/if ((${Select[${Me.Class.ShortName},MAG,BST,NEC,ENC]}) && ${Me.Pet.ID}) /call chkPetAttack
 	| Start Swinging
@@ -539,18 +541,18 @@ Sub chkTargetStatus
 				/if (${Me.AltAbilityReady[Death Peace]})   	/call MQ2Cast "Death Peace" alt
 				/if (!${Me.Standing}) /stand
 			} else /if (${Me.Class.ShortName.Equal[BER]}) { 
-				/if (${use_riposte}) /call FireRiposteDisc
+				/if (${use_riposte}) /call FireDisc_Riposte
 				/if (${Me.CombatAbilityReady[Baffling Strike]} && ${FindItemCount[Axe of the Destroyer]}>0) /doability "Baffling Strike"
 				/if (${Me.CombatAbilityReady[Confusing Strike]} && ${FindItemCount[Rage Axe]}>0) 			/doability "Confusing Strike"
 				/if (${Me.CombatAbilityReady[Distracting Strike]} && ${FindItemCount[Bonesplicer Axe]}>0) 	/doability "Distracting Strike"
 			} else /if (${Me.Class.ShortName.Equal[ROG]}) { 
-				/if (${use_riposte}) /call FireRiposteDisc
+				/if (${use_riposte}) /call FireDisc_Riposte
 			} else /if (${Me.Class.ShortName.Equal[RNG]}) { 
 				/if (${Me.SpellReady[${str_concSpell}]})	/call MQ2Cast "${str_concSpell}" ${str_concGem}
-				/if (${use_riposte}) /call FireRiposteDisc	
+				/if (${use_riposte}) /call FireDisc_Riposte	
 			} else /if (${Me.Class.ShortName.Equal[MNK]}) { 
 				/if (${Me.AbilityReady[Feign Death]}) /doability "Feign Death"
-				/if (${use_riposte}) /call FireRiposteDisc	
+				/if (${use_riposte}) /call FireDisc_Riposte	
 				/if (!${Me.Standing}) /stand
 			}
 		}

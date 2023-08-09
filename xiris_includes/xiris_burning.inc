@@ -14,10 +14,10 @@ REVISION HISTORY
 **|    
 
 
-#EVENT BurnOnALL			"#*#BurnOnAll#*#"
-#EVENT BurnOn1				"#*#BurnOn1#*#"
-#EVENT BurnOn2				"#*#BurnOn2#*#"
-#EVENT BurnOff				"#*#BurnOff#*#"
+#EVENT Burn_ON_ALL      "#*#BurnOnAll#*#"
+#EVENT Burn_ON_1        "#*#BurnOn1#*#"
+#EVENT Burn_ON_2        "#*#BurnOn2#*#"
+#EVENT Burn_OFF			"#*#BurnOff#*#"
 
 
 Sub initEvents_Burning
@@ -25,39 +25,39 @@ Sub initEvents_Burning
 /return 
 
 Sub Events_Burning
-	/doevents cureRequest
-	/doevents cureGroup
-	/doevents cureImmediate
-    /doevents cureRequired
+	/doevents Burn_ON_ALL
+	/doevents Burn_ON_1
+	/doevents Burn_ON_2
+    /doevents Burn_OFF
     /if (${bln_burning} && ${bln_engaged} && ${int_burn_total})                  /call chkBurn
     /if (${Select[${Me.Class.ShortName},MNK,PAL,RNG,SHD]} && !${timer_cryCheck}) /call chkCryActive
 /return
 
 
-Sub EVENT_BurnOnAll
+Sub EVENT_Burn_ON_ALL
     /if (!${bln_engaged}) /return
     /varset bln_burning     TRUE
-    /doevents flush BurnOnAll
+    /doevents flush Burn_ON_ALL
 /return 
 
-Sub EVENT_BurnOn1
+Sub EVENT_Burn_ON_1
     /if (!${bln_engaged} || ${int_burn_key} != 1) /return
     /varset bln_burning     TRUE
     /varset timer_cryCheck  0
-    /doevents flush BurnOn1
+    /doevents flush Burn_ON_1
 /return 
 
-Sub EVENT_BurnOn2
+Sub EVENT_Burn_ON_2
     /if (!${bln_engaged} || ${int_burn_key} != 2) /return
     /varset bln_burning     TRUE
     /varset timer_cryCheck  0
-    /doevents flush BurnOn2
+    /doevents flush Burn_ON_2
 /return
 
-Sub EVENT_BurnOff
+Sub EVENT_Burn_OFF
     /varset bln_burning     FALSE
     /varset timer_cryCheck  300
-    /doevents flush BurnOff
+    /doevents flush Burn_OFF
 /return
 
 Sub xbot_initialize_burning
@@ -81,7 +81,7 @@ Sub processBurns
     /declare bln_cryRunning     bool    outer   FALSE
     /declare timer_cryCheck     timer   outer   0
 
-    /if (!${Ini[INI_CHAR,BURNS,settings].Arg[1,|]})  /varset bln_burnEnabled    FALSE
+    /if (!${Ini[INI_CHAR,BURNS,settings].Arg[1,|]})  /varset bln_burnsEnabled    FALSE
     /if (!${Ini[INI_CHAR,BURNS,settings].Arg[2,|]})  /varset int_burn_key       1
     /if (!${Ini[INI_CHAR,BURNS,settings].Arg[3,|]})  /varset bln_cry2Hander     FALSE
 
@@ -163,10 +163,10 @@ Sub attemptBurn(string _type, string _burn, int _after, string _mgb)
     } else {
         | No prior requirements | Check for MGB (Bards cant MGB so ignore them)
         /if (${_mgb.Equal[ATTEMPT]}) {
-            /if (${Me.AltAbilityReady[Mass Group Buff]}) /call MQ2Cast "Mass Group Buff" alt
+            /if (${Me.AltAbilityReady[Mass Group Buff]}) /call MQ2Cast "Mass Group Buff" ALT
         } else /if  (${_mgb.Equal[TRUE]}) {
             /if (${Me.AltAbilityReady[Mass Group Buff]}) {
-                /call  MQ2Cast "Mass Group Buff" alt
+                /call  MQ2Cast "Mass Group Buff" ALT
             } else {
                 /return
             }

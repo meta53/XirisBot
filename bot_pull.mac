@@ -305,7 +305,7 @@ Sub setCamp
 	/echo \awSetting to Camp \ag${str_campName}
 	/docommand /${cmdChannel} NavToWP ${str_campName}
 	/navigate RecordWaypoint ${str_campName}
-	|/if (${int_currentCamp} == 1) /docommand /${cmdChannel} CreateCamp camp1
+
 	
 	/varset D1X int outer ${Me.X}
 	/varset D1Y int outer ${Me.Y}
@@ -397,7 +397,7 @@ Sub pullTarget
 		}
 
 		| Target has me as aggrod, and in range, going to returnWithPull
-		/if (${Me.TargetOfTarget.Name.Equal[${Me.Name}]} && (${Target.Distance3D} < ${int_castDistance})) {
+		/if (${Me.TargetOfTarget.CleanName.Equal[${Me.CleanName}]} && (${Target.Distance3D} < ${int_castDistance})) {
 			/echo Target has me as aggrod, and in range, going to returnWithPull
 			/goto :ReturnWithPull
 		} 
@@ -427,7 +427,7 @@ Sub pullTarget
 				/call AggroTarget
 				/varcalc attempt ${attempt} + 1
 				/echo \aoAggro Attempt return ${Macro.Return}
-				/if (${Me.TargetOfTarget.Name.Equal[${Me.Name}]}) 	/goto :ReturnWithPull
+				/if (${Me.TargetOfTarget.CleanName.Equal[${Me.CleanName}]}) 	/goto :ReturnWithPull
 				/if (${Macro.Return.Equal[NOLOS]})    				/goto :RunningToTarget
 				/if (${Macro.Return.Equal[CAST_FIZZLE]})    		/goto :AggroCheck
 				/if (${Macro.Return.Equal[NOTARGET]}) 				/goto :return
@@ -480,7 +480,7 @@ Sub AggroTarget
 		/varset ret NOTARGET
 	} else /if (!${Target.LineOfSight}) {
 		/varset ret NOLOS
-	} else /if (${Me.TargetOfTarget.Name.Equal[${Me.Name}]}) {
+	} else /if (${Me.TargetOfTarget.CleanName.Equal[${Me.CleanName}]}) {
 		/varset ret SUCCESS
 	} else {
 		| Need to aggro the mob somehow
@@ -491,15 +491,13 @@ Sub AggroTarget
 			/goto :return
 		}
 		/if (${strPullType.Equal[RANGED]}) {
-			/face fast
-			/delay 5
-			/ranged
+			/call pullWithProvoke
 			/doevents TooClose
 			|-- Sometimes if we aren't spell casting and using range weapons we might be too close, and cannot hit them with it.
 			/if (${bln_tooClose}) {
 				/echo Too Close! Handling
 				/if (${Me.Class.ShortName.Equal[PAL]}) /call MQ2Cast "${spell_pull}" ${spell_pullGem} 2s
-				/if (${Me.Class.ShortName.Equal[WAR]}) /call chk_warProvoke "${war_ca_hate_1}"
+				/if (${Me.Class.ShortName.Equal[WAR]}) /call chkProvoke "${str_provoke_war_1}"
 				/delay 1
 				/if (${Me.CombatAbilityReady[Taunt]}) /doability Taunt
 				/varset bln_tooClose FALSE
@@ -618,10 +616,10 @@ Sub killTarget
 			/if ((${Me.TargetOfTarget.ID} != ${Me.ID}) && !${Target.Fleeing}) {
 				/if ((${Me.Class.ShortName.Equal[SHD]} || ${Me.Class.ShortName.Equal[PAL]}) && ${Me.SpellReady[${spell_hate}]}) {
 					/call MQ2Cast "${spell_hate}" ${spell_hateGem}
-				} else /if (${Me.Class.ShortName.Equal[WAR]} && (${Me.CombatAbilityReady[${war_ca_hate_1}]})) {
-					/doability "${war_ca_hate_1}"
-				} else /if (${Me.Class.ShortName.Equal[WAR]} && (${Me.CombatAbilityReady[${war_ca_hate_2}]})) {
-					/doability "${war_ca_hate_2}"
+				} else /if (${Me.Class.ShortName.Equal[WAR]} && (${Me.CombatAbilityReady[${str_provoke_war_1}]})) {
+					/doability "${str_provoke_war_1}"
+				} else /if (${Me.Class.ShortName.Equal[WAR]} && (${Me.CombatAbilityReady[${str_provoke_war_2}]})) {
+					/doability "${str_provoke_war_2}"
 				} 
 			} 
 			/if ((${SpawnCount[npc radius ${int_campRadius}]} > 1) && ${Me.Class.ShortName.Equal[SHD]}  && ${Me.SpellReady[${spell_aehate}]} ) {

@@ -1575,7 +1575,7 @@ Sub processHealing
 	| Heals/Cures are not laid out in INI like the rest of the elements.
 	| This is due to their complexity. We can however check for the 
 	| NULL settings element to bypass it all
-	/if (${Select["${Ini[INI_CHAR,HEALS,settings]}",NULL]} == 1 || ${Select[${Me.Class.ShortName},WAR,SHD,ROG,MNK,BER,NEC,WIZ,MAG]}) {
+	/if (${Select[${Ini[INI_CHAR,HEALS,settings]},NULL]} == 1 || ${Select[${Me.Class.ShortName},WAR,SHD,ROG,MNK,BER,NEC,WIZ,MAG]}) {
 		/echo \aoprocessHealing: \arNo heals created!
 		/return
 	}
