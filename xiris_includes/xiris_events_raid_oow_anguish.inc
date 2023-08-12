@@ -118,7 +118,7 @@ Sub Events_OOW_Anguish_Rapid
 Sub Event_TureRampOn
 	/echo \ao TURE RAMPAGE: \awengaged?\ag${bln_engaged} \awtanking?\ag${bln_tanking}
 	/if (!${bln_engaged} || ${bln_tanking}) /return
-	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
+	/if (${str_class_type.Equal[MELEE_END]} || ${str_class_type.Equal[MELEE_MANA]} || ${str_class_type.Equal[TANK]}) {
 		/echo \arTURE RAMPAGE
 		/squelch /attack off 
 		/squelch /stick off
@@ -136,7 +136,7 @@ Sub Event_TureRampOn
 
 Sub Event_TureRampOff 
 	/if (!${bln_engaged} || ${bln_tanking}) /return
-	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
+	/if (${str_class_type.Equal[MELEE_END]} || ${str_class_type.Equal[MELEE_MANA]} || ${str_class_type.Equal[TANK]}) {
 		/echo \arTURERAMPAGE
 		/call TrueTarget ${int_targetID}
 		/nav wp tureDPS
@@ -352,9 +352,9 @@ Sub Event_HanvarSetup
 	/declare timer_hanvar_ae   	timer outer 0
 	/declare timer_hanvarDebuff timer outer 30s
 
-	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
+	/if (${str_class_type.Equal[MELEE_END]} || ${str_class_type.Equal[MELEE_MANA]} || ${str_class_type.Equal[TANK]}) {
 		/nav wp hanvarSafe
-	} else /if (${str_classArchetype.Equal[CASTER]} || ${Me.Class.ShortName.Equal[SHM]} ||  ${Me.Class.ShortName.Equal[DRU]}) {
+	} else /if (${str_class_type.Equal[CASTER]} || ${Me.Class.ShortName.Equal[SHM]} ||  ${Me.Class.ShortName.Equal[DRU]}) {
 		/nav wp hanvarCaster
 	}
 	| We need to light up the fucker with DOTs and Cold Nukes
@@ -519,7 +519,7 @@ Sub chkOMMEvents
 	/doevents GazeBurst
 	/doevents GazeDone 
 	| TODO: Have Bards keep a charm memmed for OMM?
-	/if (${str_classArchetype.Equal[PRIEST]} || ${str_classArchetype.Equal[CASTER]}) {
+	/if (${str_class_type.Equal[PRIEST]} || ${str_class_type.Equal[CASTER]}) {
 		/call chkOMMPositioning
 	}
 	/if (${Me.Class.ShortName.Equal[ENC]}) {
@@ -551,9 +551,9 @@ Sub chkOMMLasherPositions
 	/if (!${SpawnCount[npc lasher]}) /return
 	/if (${NearestSpawn[npc lasher].Distance3D} < 30) {
 		/face fast lasher
-		/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]}) /dt ${Me.Name} KillMob ${NearestSpawn[npc lasher].ID} ${NearestSpawn[npc lasher].Name} 
+		/if (${str_class_type.Equal[MELEE_END]} || ${str_class_type.Equal[MELEE_MANA]}) /dt ${Me.Name} KillMob ${NearestSpawn[npc lasher].ID} ${NearestSpawn[npc lasher].Name} 
 	} else {
-		/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]}) /dt ${Me.Name} KillMob ${NearestSpawn[npc Overlord].ID} ${NearestSpawn[npc Overlord].Name} 
+		/if (${str_class_type.Equal[MELEE_END]} || ${str_class_type.Equal[MELEE_MANA]}) /dt ${Me.Name} KillMob ${NearestSpawn[npc Overlord].ID} ${NearestSpawn[npc Overlord].Name} 
 	}
 /return
 

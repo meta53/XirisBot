@@ -112,7 +112,7 @@ SUB EVENT_Melee_CantNavTarget
     /varset timer_cantNav 50
 /return
 
-SUB Event_Melee_UpdatesStickCommand(string _line, string _chatSender, string _eventParams)
+SUB EVENT_Melee_UpdatesStickCommand(string _line, string _chatSender, string _eventParams)
     /doevents flush Melee_UpdatesStickCommand
 	/varset str_stickCommand ${_eventParams}
 /return 
@@ -124,6 +124,7 @@ Sub EVENT_Melee_FireAEMelee
 
 Sub EVENT_Melee_ReStick
     /doevents flush Melee_ReStick
+	/call StickToTarget TRUE
 /return
 
 |**

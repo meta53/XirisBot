@@ -40,18 +40,16 @@ REVISION HISTORY
 #Event LootTooFar		"Corpse too far away"
 
 Sub initEvents_Looting
-    /call RegisterBackgroundEvents Events_Looting 2
+    /call RegisterBackgroundEvents Events_Looting_Background
 /return 
 
-Sub Events_Looting
+Sub Events_Looting_Background
     /if (!${bln_engaged} && ${bln_looting}) /call chkLoot
     /if (${bln_looting}) {
         /doevents Loot_OFF
         /doevents Loot_Refresh
     }
-
     /doevents Loot_ON
-     
 	/doevents Loot_Self
 /return
 
@@ -225,7 +223,7 @@ Sub setLootState(bool _enabled)
 Sub lootSelf 
     /if (!${Me.Standing}) /stand  
     /multiline /delay 20 ; /tar ${Me.Name}'s ; /corpse ; /loot ; /delay 2s ; /notify LootWnd LW_LootAllButton leftmouseup ; /delay 100 ; 
-    /if (${Select[${Me.Class.ShortName},BRD,BST,CLR,DRU,ENC,MAG,NEC,PAL,SHM,SHD]}) /memspellset ${str_currentSpellSet}
+    /if (${Select[${Me.Class.ShortName},BRD,BST,CLR,DRU,ENC,MAG,NEC,PAL,SHM,SHD]}) /memspellset ${str_casting_spellSet}
 /return
 
 Sub lootTarget(int _id)

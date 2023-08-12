@@ -31,31 +31,11 @@ REVISION HISTORY
 	12.29.22	xiris 	Removed Bufflines init/file due to it not being used for the foreseeable future.
 	12.31.22	xiris	Moved Clicky/AA/Burns to their own file
 	01.05.23	xiris	Changed logic in chkTargetStatus method to be more streamlined
+	08.12.23	xiris	As past of the substantial v2.0 rewrite, refactored much of this library
 ______________________________________________
 
 **|
-#define INI_CHAR        xiris_settings_character/BOT_${Me.Class.ShortName}_${Me.CleanName}.ini
-#define INI_COMMON      xiris_settings_global/xiris_settings_common.ini
-#define INI_RAID 		xiris_settings_gobal/xiris_common.ini
-#define INI_LOOT        xiris_settings_global/xiris_settings_loot.ini
 
-|** #include xiris_includes/xiris_dannet.inc
-#include xiris_includes/xiris_buffing.inc
-#include xiris_includes/xiris_burn.inc
-#include xiris_includes/xiris_casting.inc
-#include xiris_includes/xiris_charm.inc
-#include xiris_includes/xiris_curing.inc
-#include xiris_includes/xiris_debuffing.inc
-#include xiris_includes/xiris_events.inc 
-#include xiris_includes/xiris_exclude.inc
-#include xiris_includes/xiris_healing.inc
-#include xiris_includes/xiris_looting.inc
-#include xiris_includes/xiris_melee.inc
-#include xiris_includes/xiris_offtank.inc
-#include xiris_includes/xiris_pets.inc
-#include xiris_includes/xiris_movement.inc
-
-#include xiris_includes/xiris_spell_routines.inc **|
 
 |COMMON
 #EVENT KillMob 				"[#1#] KillMob #2#"
@@ -205,9 +185,9 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/dnet fullnames off
 
 	|-- [Settings] : Class Archetype (used in case switching)
-	/declare 	str_classArchetype		string	outer	UNKNOWN
+	/declare 	str_class_type		string	outer	UNKNOWN
 	/call 	 	getClassArchetype 		${Me.Class.ShortName}
-	/varset 	str_classArchetype		${Macro.Return}
+	/varset 	str_class_type		${Macro.Return}
 	/declare 	MeleeClasses 			string	outer	BRD,BER,BST,MNK,PAL,RNG,ROG,SHD,WAR
 	/declare 	PriestClasses 			string	outer	CLR,DRU,SHM
 	/declare 	CasterClasses 			string	outer	ENC,MAG,NEC,WIZ
@@ -268,7 +248,7 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/echo \ayAuto Assist settings: \awAuto?\ag${bln_autoAssist} \awAt?\ag${int_assistAt} \awArgs:\ag${_assistArgs}
 
 	|-- [Settings] : Miscellaneous Defaults
-	/declare	str_currentSpellSet			string	outer	${Ini[INI_COMMON,SETTINGS,str_currentSpellSet,default]}
+	/declare	str_casting_spellSet			string	outer	${Ini[INI_COMMON,SETTINGS,str_casting_spellSet,default]}
 	/declare	bln_engaged				bool	outer	FALSE
 	/declare	bln_enraged				bool	outer	FALSE
 	/declare    bln_pulling		    	bool    outer   FALSE
@@ -383,7 +363,7 @@ Sub chkGM
 Sub chkSit
 	/if (${Me.Moving} || ${Navigation.Active}) /return
 	|-- Mana Check
-	/if (${str_classArchetype.Equal[CASTER]} ||  ${str_classArchetype.Equal[PRIEST]}) {
+	/if (${str_class_type.Equal[CASTER]} ||  ${str_class_type.Equal[PRIEST]}) {
 		| Sit my ass down
 		/if ( ${Me.PctMana}<=${int_medPercent} && !${bln_engaged} && (${SpawnCount[npc radius ${int_sitRadius} zradius 55]} == 0)) {
 			|/echo I should be sitting my ass down for MANA Am I sitting? ${Me.Sitting}
@@ -392,7 +372,7 @@ Sub chkSit
 		
 	}
 	|-- Endurance Check
-	/if (${str_classArchetype.Equal[MELEE_END]} ||  ${str_classArchetype.Equal[TANK]}) {
+	/if (${str_class_type.Equal[MELEE_END]} ||  ${str_class_type.Equal[TANK]}) {
 		/if ( ${Me.PctEndurance}<=${int_medPercent} && !${bln_engaged} && (${SpawnCount[npc radius ${int_sitRadius} zradius 55]} == 0)) {
 			|/echo I should be sitting my ass down for Endurance Am I sitting? ${Me.Sitting}
 			/if (!${Me.Sitting}) /sit 
@@ -509,7 +489,7 @@ Sub chkTargetStatus
     /declare isNamed bool local ${Macro.Return}
 	/if (${Target.Type.Equal[NPC]} && ${Me.TargetOfTarget.CleanName.Equal[${Me.CleanName}]} && !${bln_tanking} && ${isNamed}) {
 		| Priest/Caster (with some sort of a aggro dump ability)
-		/if (${str_classArchetype.Equal[PRIEST]} || ${str_classArchetype.Equal[CASTER]}) {
+		/if (${str_class_type.Equal[PRIEST]} || ${str_class_type.Equal[CASTER]}) {
 			| Wizard
 			/if (${Me.Class.ShortName.Equal[WIZ]}) {
 				/if (${Me.AltAbilityReady[Mind Crash]})   	/call MQ2Cast "Mind Crash" alt
@@ -528,7 +508,7 @@ Sub chkTargetStatus
 			} else /if (${Me.Class.ShortName.Equal[DRU]}) { 
 
 			}
-		} else /if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
+		} else /if (${str_class_type.Equal[MELEE_END]} || ${str_class_type.Equal[MELEE_MANA]} || ${str_class_type.Equal[TANK]}) {
 			/declare use_riposte bool local FALSE
 			/if (${Zone.ShortName.Equal[tacvi]} && (${Target.Name.Find[Pirik]} || ${Target.Name.Find[Yihst]} || ${Target.Name.Find[Tunat]})) {
 				/varset use_riposte TRUE
@@ -589,18 +569,18 @@ Sub Disengage
 
 	/call RunPriorityEvents
 	| Priests have nothing left to do here;
-	/if (${str_classArchetype.Equal[PRIEST]}) /return
+	/if (${str_class_type.Equal[PRIEST]}) /return
 	/if (${Stick.Active}) /stick off
 
 	|-- class archetype resets
-	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
+	/if (${str_class_type.Equal[MELEE_END]} || ${str_class_type.Equal[MELEE_MANA]} || ${str_class_type.Equal[TANK]}) {
 		/echo \ag Disengage: Attack Off
 		/squelch /attack off
 		/delay 5
 		/squelch /attack off
 		/stick off
 	}
-	/if (${str_classArchetype.Equal[CASTER]} && ${Me.Pet.ID}) /pet back off
+	/if (${str_class_type.Equal[CASTER]} && ${Me.Pet.ID}) /pet back off
 /return
 
 
@@ -758,8 +738,8 @@ Sub getClassBaseType(string _shortName)
 
 Sub Event_SKILLCHECK(_line, _sender, _eventParams) 	
 	/echo ${_sender} checking skill archetype:${_eventParams.Arg[1,|]} | skill:${_eventParams.Arg[2,|]}
-	/echo str_classArchetype: ${str_classArchetype}
-	|/if (${str_classArchetype.Equal[${_eventParams.Arg[1,|]}]})  {
+	/echo str_class_type: ${str_class_type}
+	|/if (${str_class_type.Equal[${_eventParams.Arg[1,|]}]})  {
 		/echo found ${Me.Skill[${_eventParams.Arg[1,|]}]}
 		/docommand /${announceChannel} ${_eventParams.Arg[1,|]}:${Me.Skill[${_eventParams.Arg[1,|]}]}
 	|}
@@ -899,13 +879,13 @@ Sub EVENT_UseStaunchRecovery
 	| Do not use if at bind point (ie: dead)
 	/if (${Zone.ID} == 340 || ${Zone.ID} == 344 || ${Zone.ID} == 345 || ${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /return
 
-	/if ((${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[TANK]}) && ${Me.PctEndurance} < 20) {
+	/if ((${str_class_type.Equal[MELEE_END]} || ${str_class_type.Equal[TANK]}) && ${Me.PctEndurance} < 20) {
 		/casting "Staunch Recovery" alt 
 	} else /if (${Me.Class.ShortName.Equal[PAL]} && ${Me.PctMana} < 20) {
 		/casting "Staunch Recovery" alt
 	} else /if (${Me.Class.ShortName.Equal[BRD]} && ${Me.PctMana} < 20) { 
 		/call MQ2Medley "Staunch Recovery" ALT ${int_targetID} FALSE
-	} else /if ((${str_classArchetype.Equal[PRIEST]} || ${str_classArchetype.Equal[CASTER]}) && ${Me.PctMana} < 20) { 
+	} else /if ((${str_class_type.Equal[PRIEST]} || ${str_class_type.Equal[CASTER]}) && ${Me.PctMana} < 20) { 
 		/casting "Staunch Recovery" alt 
 	} 
 /return
@@ -947,7 +927,7 @@ Sub EVENT_UseInfusion
 
 
 Sub Event_RageOn(string line)
-	/if (!${mq2meleeEnabled} && !${Stick.Behind} && (${line.Find[${Spawn[${int_targetID}].DisplayName}]} || ${line.Find[${Target.DisplayName}]}) && (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]})) {
+	/if (!${mq2meleeEnabled} && !${Stick.Behind} && (${line.Find[${Spawn[${int_targetID}].DisplayName}]} || ${line.Find[${Target.DisplayName}]}) && (${str_class_type.Equal[MELEE_END]} || ${str_class_type.Equal[MELEE_MANA]} || ${str_class_type.Equal[TANK]})) {
 		/attack off
 	}
 	/if (((${line.Find[${Spawn[${int_targetID}].DisplayName}]} || ${line.Find[${Target.DisplayName}]}) && ${Me.Pet.ID}) && !${Me.PetBuff[Master's Aura Effect]}) {
@@ -959,7 +939,7 @@ Sub Event_RageOn(string line)
 /return
 
 Sub Event_RageOff(string line)
-	/if (!${mq2meleeEnabled} && (${line.Find[${Spawn[${int_targetID}].DisplayName}]} || ${line.Find[${Target.DisplayName}]}) && (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) && ${Target.ID}) {
+	/if (!${mq2meleeEnabled} && (${line.Find[${Spawn[${int_targetID}].DisplayName}]} || ${line.Find[${Target.DisplayName}]}) && (${str_class_type.Equal[MELEE_END]} || ${str_class_type.Equal[MELEE_MANA]} || ${str_class_type.Equal[TANK]}) && ${Target.ID}) {
 		/echo  \awRageOff :tryKill \ag Attacking 
 		/attack on
 	}
@@ -1087,7 +1067,7 @@ Sub EVENT_ChangeMT(_line, _sender, _eventParams)
 	/call setMT ${tankName}
 
 	/echo MTID: ${int_MTID} MTName: ${name}
-	/if (${str_classArchetype.Equal[PRIEST]}) /dgt [${Me.Class.ShortName}] ${Me.Name} ${str_action} >> ${Spawn[id ${int_MTID}].CleanName} <<  @ ${healPoint}
+	/if (${str_class_type.Equal[PRIEST]}) /dgt [${Me.Class.ShortName}] ${Me.Name} ${str_action} >> ${Spawn[id ${int_MTID}].CleanName} <<  @ ${healPoint}
 	/if (${Me.Class.ShortName.Equal[CLR]}) /call TrueTarget ${int_MTID}
 	/if (${Me.Name.Equal[${tankName}]}) {
 		/varset bln_tanking 	TRUE
@@ -1116,7 +1096,7 @@ Sub EVENT_ChangeSA(_line, _sender, _eventParams)
 
 
 Sub EVENT_ChangeAP(_line, _sender, _eventParams)
-	/if (${str_classArchetype.NotEqual[PRIEST]}) {
+	/if (${str_class_type.NotEqual[PRIEST]}) {
 		/echo _sender: ${_sender}
 		/echo _eventParams:${_eventParams}
 		/echo AP (AssistPoint) Change called! Changing to: ${chatTe_eventParamsxt.Arg[1, ]}
@@ -1563,7 +1543,7 @@ Sub EVENT_LoadWeaponset(string _line, string _sender, string _evtParams)
 
 
 Sub LoadWeaponset(string _weaponset)
-	|/if (${str_classArchetype.Equal[CASTER]} || ${str_classArchetype.Equal[PRIEST]} && ${_weaponset.NotEqual[default]}) /return
+	|/if (${str_class_type.Equal[CASTER]} || ${str_class_type.Equal[PRIEST]} && ${_weaponset.NotEqual[default]}) /return
 	/if (${_weaponset.Equal[NULL]}) /varset _weaponset default
 	/declare set string local ${Ini[INI_CHAR,Weaponsets,${_weaponset}]}
 	/if (${set.Equal[NULL]}) /return
@@ -1692,7 +1672,7 @@ Sub SaveCurrentWeaponset(string _key)
 
 
 Sub Event_SkillCheck(string _line, string _sender, string _eventParams)
-	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[TANK]} || ${Me.Class.ShortName.Equal[BRD]}) /return
+	/if (${str_class_type.Equal[MELEE_END]} || ${str_class_type.Equal[TANK]} || ${Me.Class.ShortName.Equal[BRD]}) /return
 	/echo SkillCheck: ${_line} ${_sender}
 	/echo params ${_eventParams}
 

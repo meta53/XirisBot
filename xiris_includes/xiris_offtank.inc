@@ -14,72 +14,95 @@ REVISION HISTORY
 	11.24.2021	xiris	Changed target looping to use XTarget since that is now supported on EMU
 	01.09.2022	xiris	Made sure to turn aggro off when only hitting one mob
 	09.15.2022	xiris	Slight re-write of the offtank logic to definitively fix the 'stuck on corpse' issue
+	08.11.2023	xiris 	Slight re-write to handle 2.0 INI files, etc
 ______________________________________________
 **|	
-#EVENT OFFTANKON			"#1# tells the group#*#'OfftankOn#*#'"
-#EVENT OFFTANKON			"#1# tells you#*#'OfftankOn#*#'"
-#EVENT OFFTANKON			"#1# tells the raid#*#OfftankOn#*#'"
-#EVENT OFFTANKON	 		"[ #1# #*#]#*#OfftankOn#*#"
+#EVENT OffTankON			"#1# tells the group#*#'OfftankOn#*#'"
+#EVENT OffTankON			"#1# tells you#*#'OfftankOn#*#'"
+#EVENT OffTankON			"#1# tells the raid#*#OfftankOn#*#'"
+#EVENT OffTankON	 		"[ #1# #*#]#*#OfftankOn#*#"
 
-#EVENT OFFTANKOFF			"#1# tells the group#*#'OfftankOff#*#'"
-#EVENT OFFTANKOFF			"#1# tells you#*#'OfftankOff#*#'"
-#EVENT OFFTANKOFF			"#1# tells the raid#*#OfftankOff#*#'"
-#EVENT OFFTANKOFF	 		"[ #1# #*#]#*#OfftankOff#*#"
+#EVENT OffTankOFF			"#1# tells the group#*#'OfftankOff#*#'"
+#EVENT OffTankOFF			"#1# tells you#*#'OfftankOff#*#'"
+#EVENT OffTankOFF			"#1# tells the raid#*#OfftankOff#*#'"
+#EVENT OffTankOFF	 		"[ #1# #*#]#*#OfftankOff#*#"
 
-#EVENT OFFTANKRADIUS		"#1# tells the group#*#'OfftankRadius #2#'"
-#EVENT OFFTANKRADIUS		"#1# tells you#*#'OfftankRadius #2#'"
-#EVENT OFFTANKRADIUS		"#1# tells the raid#*#OfftankRadius #2#'"
-#EVENT OFFTANKRADIUS	 	"[ #1# #*#]#*#OfftankRadius #2#"
+#EVENT OffTankRadius		"#1# tells the group#*#'OfftankRadius #2#'"
+#EVENT OffTankRadius		"#1# tells you#*#'OfftankRadius #2#'"
+#EVENT OffTankRadius		"#1# tells the raid#*#OfftankRadius #2#'"
+#EVENT OffTankRadius	 	"[ #1# #*#]#*#OfftankRadius #2#"
 
-#EVENT DION					"#1# tells the group#*#'DIOn#*#'"
-#EVENT DION					"#1# tells you#*#'DIOn#*#'"
-#EVENT DION					"#1# tells the raid#*#DIOn#*#'"
-#EVENT DION	 				"[ #1# #*#]#*#DIOn#*#"
+#EVENT OffTankDivineInterventionON		"#1# tells the group#*#'DIOn#*#'"
+#EVENT OffTankDivineInterventionON		"#1# tells you#*#'DIOn#*#'"
+#EVENT OffTankDivineInterventionON		"#1# tells the raid#*#DIOn#*#'"
+#EVENT OffTankDivineInterventionON		"[ #1# #*#]#*#DIOn#*#"
 
-#EVENT DIOFF				"#1# tells the group#*#'DIOff#*#'"
-#EVENT DIOFF				"#1# tells you#*#'DIOff#*#'"
-#EVENT DIOFF				"#1# tells the raid#*#DIOff#*#'"
-#EVENT DIOFF	 			"[ #1# #*#]#*#DIOff#*#"
+#EVENT OffTankDivineInterventionOFF		"#1# tells the group#*#'DIOff#*#'"
+#EVENT OffTankDivineInterventionOFF		"#1# tells you#*#'DIOff#*#'"
+#EVENT OffTankDivineInterventionOFF		"#1# tells the raid#*#DIOff#*#'"
+#EVENT OffTankDivineInterventionOFF		"[ #1# #*#]#*#DIOff#*#"
 
 
 Sub initEvents_Offtanking 
-	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) /call RegisterBackgroundEvents Events_Offtanking 5
+	/call RegisterBackgroundEvents Events_Offtanking_Background
 /return
 
-Sub Events_Offtanking 
-	/doevents OFFTANKON
-	/doevents OFFTANKOFF
-	/doevents OFFTANKRADIUS
-	/doevents DION
-	/doevents DIOFF
+Sub Events_Offtanking_Background 
+	/doevents OffTankON
+	/doevents OffTankOFF
+	/doevents OffTankRadius
+	/doevents OffTankDivineInterventionON
+	/doevents OffTankDivineInterventionOFF
 /return
 
-Sub EVENT_OFFTANKON
+Sub EVENT_OffTankON
+	/doevents flush OffTankON
 	/call ToggleOfftanking TRUE
-	/doevents flush OFFTANKON
 /return
 
-Sub EVENT_OFFTANKOFF
+Sub EVENT_OffTankOFF
+	/doevents flush OffTankOFF
 	/call ToggleOfftanking FALSE
-	/doevents flush OFFTANKOFF
 /return
 
-Sub EVENT_OFFTANKRADIUS(_line, _chatSender, _eventParams) 
+Sub EVENT_OffTankRadius(string _line, string _chatSender, string _eventParams) 
+	/doevents flush OffTankRadius
 	/call ChangeOfftankRadius ${_eventParams}
 /return
 
-Sub ChangeOfftankRadius(_radius)
-	/varset int_offtankRadius ${Int[${_radius}]}
-/return
-
-SUB EVENT_DION
+SUB EVENT_OffTankDivineInterventionON
+	/doevents flush OffTankDivineInterventionON
 	/varset bln_useDI TRUE
-	/doevents flush DION
 /return 
 
-Sub EVENT_DIOFF
+Sub EVENT_OffTankDivineInterventionOFF
+	/doevents flush OffTankDivineInterventionOFF
 	/varset bln_useDI FALSE
-	/doevents flush DIOFF
+/return
+
+Sub xbot_initialize_offtanking
+	/if (!${Select[${Me.Class.ShortName},PAL,SHD,WAR]}) /return
+	/echo \n \apInitialize: \aoOfftanking \aw-------------------------
+	
+	|-- [Settings] : Off Tanking
+	/declare bln_offTank		 	bool 	outer FALSE
+	/declare int_offtankRadius		int     outer 85
+	/declare bln_useDI				bool    outer FALSE
+
+	/call initEvents_Offtanking
+	/squelch /alert clear 5
+	| Specific NPCs to never offtank
+	| Note in future pull from exclude list
+	/squelch /alert add 5 "Huhn-Abram"
+	/squelch /alert add 5 "Voracious Feran"
+	/squelch /alert add 5 "Uchti"
+	/squelch /alert add 5 "Keldovan"
+	/squelch /alert add 5 "Jomica"
+	/squelch /alert add 5 "cursebearer"
+/return
+ 
+ Sub ChangeOfftankRadius(int _radius)
+	/varset int_offtankRadius ${_radius}
 /return
 
 Sub ToggleOfftanking(bool _blnOT)
@@ -88,14 +111,14 @@ Sub ToggleOfftanking(bool _blnOT)
 	/if (${_blnOT}) {
 		/dgt ${Me.Name} is now OFF TANKING!
 		/varset  bln_offTank	TRUE
-		/varset  bln_tanking		TRUE
+		/varset  bln_tanking	TRUE
 		/varset  bln_taunting 	TRUE
 		/varset  bln_tanking	TRUE
 	}
 	/if (!${_blnOT}) {
 		/dgt ${Me.Name} is ENDING OFF TANKING.
 		/varset  bln_offTank	FALSE
-		/varset  bln_tanking		FALSE
+		/varset  bln_tanking	FALSE
 		/varset  bln_taunting 	FALSE
 		/varset  bln_tanking	FALSE
 	}
@@ -122,6 +145,7 @@ Sub chkOffTanking
 	| Check all NPCs within offtankRadius
 	/declare i int local
 	/for i 1 to ${SpawnCount[npc radius ${int_offtankRadius} range 46 80 noalert 5]}
+		/call RunPriorityEvents
 		/call TrueTarget ${NearestSpawn[${i}, npc radius ${int_offtankRadius} range 46 80 noalert 5].ID}
 		:CheckAggro
 		/if (!${Me.TargetOfTarget.ID} || (${ExcludeList.Find[${Target.CleanName}]})) /goto :nextTarget
@@ -156,7 +180,7 @@ Sub aggroByID(int _targetID)
 	/echo \ao Aggroing \ay${Target.Name}\aw(\ag${_targetID}\aw)
 	/echo \aw Class being Targetted: \ar${Me.TargetOfTarget.Class.ShortName}
 	:aggroLoop
-
+	/call RunPriorityEvents
 	/if (${Target.ID} != ${_targetID}) /call TrueTarget ${_targetID}
 	/call chkTaunt
 	
@@ -177,22 +201,3 @@ Sub aggroByID(int _targetID)
 /return
 
 
-Sub xbot_initialize_offtanking
-	/echo \ao xbot_initialize_offtanking
-	|-- [Settings] : Off Tanking
-	/declare bln_offTank		 	bool 	outer FALSE
-	/declare int_offtankRadius		int     outer 85
-	/declare bln_useDI				bool    outer FALSE
-
-	/call initEvents_Offtanking
-	/squelch /alert clear 5
-	| Specific NPCs to never offtank
-	| Note in future pull from exclude list
-	/squelch /alert add 5 "Huhn-Abram"
-	/squelch /alert add 5 "Voracious Feran"
-	/squelch /alert add 5 "Uchti"
-	/squelch /alert add 5 "Keldovan"
-	/squelch /alert add 5 "Jomica"
-	/squelch /alert add 5 "cursebearer"
-/return
- 

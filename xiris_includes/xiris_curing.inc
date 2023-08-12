@@ -64,57 +64,71 @@ REVISION HISTORY
 #EVENT autoCureMT       "#1# tells the raid#*#'autoCureMT #2#'"
 #EVENT autoCureMT       "[ #1# #*#]#*#autoCureMT #2#"
 
+| Someone in group has been marked for Death!
+#EVENT MarkedForDeath   "#1# tells the group#*#'Marked For Death#*#"
+#EVENT MarkedForDeath   "#1# tells you#*#'Marked For Death #*#"
+#EVENT MarkedForDeath   "#1# tells the raid#*#'Marked For Death #*#"
+#EVENT MarkedForDeath   "[ #1# #*#]#*#Marked For Death #*#"
 
 Sub initEvents_Curing
-	/if (${Select[${Me.Class.ShortName},CLR,DRU,SHM,PAL]}) /call RegisterClassEvents Events_Curing 3
-	/call RegisterBackgroundEvents Events_Curing_Background 3
-/return
-
-Sub Events_Curing
-	/doevents cureRequest
-	/doevents cureGroup
-	/doevents cureImmediate
-    /doevents cureRequired 
+	/if (${Select[${Me.Class.ShortName},CLR,DRU,SHM,PAL]})  /call RegisterBackgroundEvents  Events_Curing_Background
+    /if (${Select[${Me.Class.ShortName},CLR,DRU,SHM,PAL]})  /call RegisterRaidEvents        Events_Curing_Raid
+    /if (${Select[${Me.Class.ShortName},CLR,DRU,SHM,PAL]})  /call RegisterPriorityEvents    Events_Curing_Priority
 /return
 
 Sub Events_Curing_Background
     /doevents autoCureMT
+    /doevents cureRequest
+	/doevents cureGroup
+	/doevents cureImmediate
+    /doevents cureRequired 
     /doevents cureLazy
-    /if (${Select[${Me.Class.ShortName},CLR,DRU,PAL,SHM]} && ((!${bln_engaged} && !${timer_check_cures}) || (${bln_engaged}))) {
-        /call chkCures
-    }
+    /if (${Select[${Me.Class.ShortName},CLR,DRU,PAL,SHM]} && (!${bln_engaged} && !${timer_check_cures})) /call chkCures
+/return
+
+Sub Events_Curing_Raid
+    /if (${Select[${Me.Class.ShortName},CLR,DRU,PAL,SHM]} && ${bln_engaged}) /call chkCures
+/return
+
+Sub Events_Curing_Priority
+    /doevents MarkedForDeath
 /return
 
 Sub EVENT_cureRequest(string _line, string _sender,  string _eventParams)
-    /call chkCureType_${_eventParams} ${_sender} ${Spawn[pc ${_sender}].ID}
     /doevents flush cureRequest
+    /call chkCureType_${_eventParams} ${_sender} ${Spawn[pc ${_sender}].ID}
 /return
 
 Sub EVENT_cureGroup(string _line, string _sender, string _eventParams)
-    /call chkCure_Group ${_eventParams}
     /doevents flush cureGroup
+    /call chkCure_Group ${_eventParams}
 /return 
 
 Sub EVENT_cureImmediate(string _line, string _sender,  string _eventParams)
-    /call chkCureType_IMMEDIATE ${_sender} ${Spawn[pc ${_sender}].ID}
     /doevents flush cureImmediate
+    /call chkCureType_IMMEDIATE ${_sender} ${Spawn[pc ${_sender}].ID}\
 /return
 
 Sub EVENT_cureRequired(string _line, string _sender,  string _eventParams)
-    /call chkCureType_REQUIRED ${_sender} ${Spawn[pc ${_sender}].ID}
     /doevents flush cureRequired
+    /call chkCureType_REQUIRED ${_sender} ${Spawn[pc ${_sender}].ID}
 /return
 
 Sub EVENT_cureLazy(string _line, string _sender,  string _eventParams)
-    /call chkCureType_LAZY ${_sender} ${Spawn[pc ${_sender}].ID}
     /doevents flush cureLazy
+    /call chkCureType_LAZY ${_sender} ${Spawn[pc ${_sender}].ID}
 /return
 
 Sub EVENT_autoCureMT(string _line, string _sender, string _eventParams)
-    /varset bln_autoCureMT ${_eventParams}
     /doevents flush autoCureMT
+    /varset bln_autoCureMT ${_eventParams}
 /return 
 
+Sub EVENT_MarkedForDeath(string _line, string _sender, string _eventParams)
+    |NOTE: Immediate types will be 'forced' cures meaning there will only be ducking out if the person is already cured.
+    /doevents flush MarkedForDeath
+    /call chkCureType_IMMEDIATE ${_sender} ${Spawn[pc ${_sender}].ID}
+/return
 
 
 
@@ -123,7 +137,6 @@ Sub xbot_initialize_curing
 
     /if (${Select[${Me.Class.ShortName},CLR,DRU,SHM,PAL]}) /call processCureSpellSettings
     /call processCureDebuffList
-    
     /call initEvents_Curing
 /return 
 
@@ -133,9 +146,9 @@ Sub xbot_initialize_curing
 | Set up the cure spells for priest classes
 Sub processCureSpellSettings
     /echo \awprocessCureSettings
-    /declare timer_check_cures  timer   outer   0
+    /declare timer_check_cures              timer   outer   50
     
-    /declare int_defaultCureGem             int     outer   7
+    /declare int_cure_defaultGem            int     outer   7
     /declare bln_hasCure_radiant            bool    outer   FALSE
     /declare bln_useCure_radiant            bool    outer   FALSE
     /declare str_cure_radiant               string  outer   "Radiant Cure"
@@ -164,6 +177,7 @@ Sub processCureSpellSettings
     /declare bln_autoCureSelf               bool    outer  TRUE
     /declare bln_autoCureGroup              bool    outer  TRUE
     /declare bln_autoCureLazy               bool    outer  TRUE
+    /declare str_cure_currentType           string  outer  NULL
 
 
     |; _enabled|_autoCureMT|_autoCureSelf|_autoCureGroup|_checkLazyCures
@@ -372,14 +386,12 @@ Sub determineMyCureCounters
 | Check Cures, we can use !bln_engaged as a determination for _lazy cures.
 | Note this is generally disabled, since only a few priests are ever assigned to autocure MT
 Sub chkCures
-    /declare lazy bool local TRUE
-    /if (${bln_engaged}) /varset lazy FALSE
-
-    /echo chkCures MT: ${bln_autoCureMT} Self:${bln_autoCureSelf} Group: ${bln_autoCureGroup} Lazy:${lazy} Engaged?:${bln_engaged}
+    /declare lazy bool local ${If[${bln_engaged},FALSE,TRUE]}
+    /echo \aochkCures \a-wMT: \ap${bln_autoCureMT} \a-wSelf: \ap${bln_autoCureSelf} \a-wGroup: \ap${bln_autoCureGroup} \a-wLazy: \ap${lazy} \a-wEngaged?: \ap${bln_engaged} ${If[${bln_engaged},,\a-wTimer?: \ap${timer_check_cures.OriginalValue}]}
 	/if (${bln_autoCureMT}) 	/call chkCure_MT    ${lazy}
  	/if (${bln_autoCureSelf}) 	/call chkCure_Self  ${lazy}
 	/if (${bln_autoCureGroup})  /call chkCure_Group ${lazy}
-    /varset timer_check_cures 10s
+    /varset timer_check_cures ${timer_check_cures.OriginalValue}
 /return
 
 | Check Cures for the MT. Optionally pass in TRUE for Lazy if you want to check LAZY cures as well.
@@ -708,7 +720,7 @@ Sub chkCureType_LAZY(string _victimName, int _id)
     /dquery ${_victimName} -q "Debuff.Diseased" -o foundCounters
     /delay 10 ${DanNet.Q.Received}
     /if (${foundCounters}) {
-        /call handleCureRequestV2 ${_victimName} ${_id} NOTSPECIFIED disease ${foundCounters} FALSE
+        /call handleCureRequestV2 ${_victimName} ${_id} NOTSPECIFIED disease ${foundCounters} FALSE 
     }
 
     | Check Poison
@@ -770,9 +782,12 @@ Sub handleCureRequestV2(string _name, int _id, string _debuffName, string _cureT
     
     /declare castCount 		int 	local ${Math.Calc[${Math.Calc[${Math.Calc[${countersToCure}+${countersCured}]}-1]} / ${countersCured} ]}
 
+    | Save the curetype for use in castingCureLoop
+    /call getMQ2DebuffCounterString ${_cureType}
+    /varset str_cure_currentType ${Macro.Return}
 
     | Is the spell ready?
-    /call chkSpellMemorized "${cureSpell}" TRUE ${int_defaultCureGem}
+    /call chkSpellMemorized "${cureSpell}" TRUE ${int_cure_defaultGem}
     | Cast the spell
     /call castCureV2 ${_name} ${_id} "${cureSpell}" ${castCount} ${_forced}
 /return
@@ -781,10 +796,22 @@ Sub handleCureRequestV2(string _name, int _id, string _debuffName, string _cureT
 Sub castCureV2(string _name, int _id, string _spell, int _castCount, bool _forced)
     /echo \ayCastCureV2: \ag${_name}\ao(\ag${_id}\ao) => \ag${_spell}\ao, \ag${_castCount}x\ao, \ag${_forced}
     /declare i int local 0
+    /declare f int local 0
     /for i 1 to ${_castCount}
+        /dquery ${victim} -q "Debuff.${str_cure_currentType}" -o f -t 20
+        /if (!${f}) /return
         /if (!${SpawnCount[pc ${_name}]}) /return
         /if (!${_forced} && (${int_healMode} > 0 && ${int_healMode} < 3) ) /call chkHeal_MT 
+        /call RunPriorityEvents
         /call TrueTarget ${_id}
-        /call MQ2Cast "${_spell}" ${int_defaultCureGem} RunPriorityEvents
+        /call MQ2Cast "${_spell}" ${int_cure_defaultGem} ${If[${forced},castingCureLoop,RunPriorityEvents]}
      /next i
 /return 
+
+Sub castingCureLoop 
+    /declare victim string local ${Me.Target.CleanName}
+    /declare fc      int    local 0
+    | currentCureType is an outer var so we can see if the user has been cured while we are casting this. 
+    /dquery ${victim} -q "Debuff.${str_cure_currentType}" -o f -t 20
+    /if (!${fc}) /stopcast
+/return

@@ -29,8 +29,8 @@ Sub Events_Burning
 	/doevents Burn_ON_1
 	/doevents Burn_ON_2
     /doevents Burn_OFF
-    /if (${bln_burning} && ${bln_engaged} && ${int_burn_total})                  /call chkBurn
-    /if (${Select[${Me.Class.ShortName},MNK,PAL,RNG,SHD]} && !${timer_cryCheck}) /call chkCryActive
+    /if (${bln_burning} && ${bln_engaged} && ${int_burn_total}) /call chkBurn
+    /if (${Select[${Me.Class.ShortName},MNK,PAL,RNG,SHD,WAR]} && !${timer_cryCheck} && !${bln_tanking}) /call chkCryActive
 /return
 
 

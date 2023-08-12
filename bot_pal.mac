@@ -185,7 +185,7 @@ Sub EVENT_STUNSTOP(_line, _chatSender, _eventParams)
 Sub variant_initialize	
 	|-- set up default vars
 	/declare    str_action				string	outer	Assisting	
-	/memspellset ${str_currentSpellSet}
+	/memspellset ${str_casting_spellSet}
 
 	/echo \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID}) HealPoint:${healPoint} ST: ${str_STName}(${int_STID})
 	/call initEvents_Class

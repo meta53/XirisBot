@@ -198,7 +198,7 @@ Sub variant_initialize
 	
 	|-- set up default vars
 	/declare    str_action				string	outer	Shamanizing	
-	/memspellset ${str_currentSpellSet}
+	/memspellset ${str_casting_spellSet}
 
 	|-- Cannibalization
 	/declare	int_canniManaThreshold	int		outer 	${Ini[INI_CHAR,Cannibalize,int_canni_mana_threshold,80]}

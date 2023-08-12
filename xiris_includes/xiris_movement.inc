@@ -34,10 +34,10 @@ ______________________________________________
 
 
 Sub initEvents_Movement
-	/call RegisterBackgroundEvents Events_Movement 5
+	/call RegisterBackgroundEvents Events_Movement_Background 5
 /return
 
-Sub Events_Movement
+Sub Events_Movement_Background
 	/doevents NavigateWP
 	/doevents Follow
 	/doevents Stop
@@ -45,14 +45,12 @@ Sub Events_Movement
 
 
 Sub xbot_initialize_movement
-	/echo \aoxbot_initialize_movement
+	/echo \n \apInitialize: \aoMovement \aw-------------------------
 	/declare bln_following 			bool 	outer FALSE
 	/declare int_maxFollowDistance	int 	outer 1000
 	/declare str_followTarget		string  outer 
 	/call initEvents_Movement
 /return
-
-
 
 SUB EVENT_Follow(_line, _chatSender, _eventParams)
 	/if (${_chatSender.Equal[${Me.CleanName}]}) /return
@@ -143,9 +141,6 @@ SUB AquireFollow(string _type, string _leader)
 		/goto :movingLoop
 	}
 /return
-
-
-
 
 
 Sub MoveToPosition(int _y, int _x, int _z, int _adjustment, bool _warp)

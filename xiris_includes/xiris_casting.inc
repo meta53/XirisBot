@@ -29,10 +29,10 @@ REVISION HISTORY
 
 
 Sub initEvents_Casting
-    /call RegisterRaidEvents Events_Casting 2
+    /call RegisterRaidEvents Events_Casting_Raid
 /return 
 
-Sub Events_Casting
+Sub Events_Casting_Raid
     /if (${Select[${Me.Class.ShortName.Equal[WAR,ROG,MNK,BER]}]}) /return
     /if (${bln_engaged}) /call chkOffensiveSpells
     /doevents SetResistType
@@ -40,25 +40,27 @@ Sub Events_Casting
 /return
 
 Sub xbot_initialize_casting
+    /if (${Select[${Me.Class.ShortName.Equal[WAR,ROG,MNK,BER]}]}) /return
     /echo \n \apInitialize: \aoCasting \aw-------------------------
 
     |-- Spellset & Resists
-    /declare str_currentSpellSet        string  outer    NULL
-    /declare str_defaultResistTypes	string	outer	Chromatic,Corruption,Cold,Disease,Fire,Magic,Poison,Prismatic
-	/declare str_useResistTypes		string	outer	${str_defaultResistTypes}
-
+    /declare str_casting_spellSet           string  outer   NULL
+    /declare str_casting_spellSet_saved     string  outer   NULL
+    /declare str_defaultResistTypes	        string	outer	Chromatic,Corruption,Cold,Disease,Fire,Magic,Poison,Prismatic
+	/declare str_useResistTypes		        string	outer	${str_defaultResistTypes}
+    /declare int_cast_offense_total         int     outer   0
+    /declare int_cast_default_gem           int     outer   9
     | Return out for non casters
-    /if (${Select[${Me.Class.ShortName.Equal[WAR,ROG,MNK,BER]}]}) /return
-
     /call processCastingTemplates
     /call processCastingSpells
     /call initEvents_Casting
 /return
 
 Sub processCastingTemplates
-    /declare i                  int local   0
+    /echo \awprocessCastingTemplates
+    /declare i                  int local       0
     /declare sz                 int     local   0
-    /declare rawSpells[10]      string  outer NULL
+    /declare rawSpells[10]      string  outer   NULL
     /declare test               string  local   NULL
     /for i 1 to ${rawSpells.Size}
         /varset test ${Ini[INI_COMMON,OFFENSIVE_SPELL_TYPE,Type_${i}]}
@@ -85,6 +87,7 @@ Sub processCastingSpells
     /for i 1 to ${arr_offenseSpellTypes.Size}
         /call processOffensiveSpellSettings ${arr_offenseSpellTypes[${i}]}
     /next i
+    /echo \a-w    Offensive Spells Processed: Count:\ag${int_cast_offense_total}
 /return
 
 Sub processOffensiveSpellSettings(string _type)
@@ -95,6 +98,7 @@ Sub processOffensiveSpellSettings(string _type)
     /declare int_cast_${_type}_mana         int    outer   10
     /declare int_cast_${_type}_start        int    outer   99
     /declare int_cast_${_type}_stop         int    outer   0
+    
 
     |; _enabled|_delay|_minMana|_startHP|_stopHP
     /if (${Ini[INI_CHAR,${_type},settings].Arg[1,|]})  /varset bln_cast_${_type}_enabled   ${Ini[INI_CHAR,${_type},settings].Arg[1,|]}
@@ -142,6 +146,7 @@ Sub processOffensiveSpellSettings(string _type)
             /varset property ${test.Arg[${j},|]}
             /declare ${key} string outer ${property}
         /next j
+        /varcalc int_cast_offense_total ${int_cast_offense_total} + 1 
         /echo \ao        ${_type}[\ag${i}\ao]: \awspell:\ag${${_type}_${i}_spell}
     /next i
 /return 
@@ -155,8 +160,7 @@ Sub processOffensiveSpellSettings(string _type)
  ----------------------------
 **|
 Sub chkOffensiveSpells
-    /if (!${Target.ID} || !${bln_engaged} || ${Target.Type.NotEqual[NPC]}) /return
-
+    /if (!${Target.ID} || !${bln_engaged} || ${Target.Type.NotEqual[NPC]} || !${int_cast_offense_total}) /return
     /echo chkOffensiveSpells ${arr_offenseSpellTypes.Size}
     /declare i      int     local 0
     /declare j      int     local 0
@@ -275,7 +279,7 @@ Sub chkSpellMemorized(string _spell, bool _wait, string _gem)
     }
 	/if (${Me.Gem[${_spell}]})  /return
 
-    /declare int_gem int local ${int_defaultCureGem}
+    /declare int_gem int local ${int_cast_default_gem}
     /if (${_gem.NotEqual[NULL]}) {
          /if (${_gem.Length} > 1) {
             /varset int_gem ${_gem.Right[1]}
@@ -305,7 +309,7 @@ Sub chkSpellMemorized(string _spell, bool _wait, string _gem)
 |--------------------------------------------------------------------------------
 
 Sub EVENT_SetResistType(_line, _chatSender, _eventParams) 
-	/if (${str_classArchetype.Equal[MELEE_END]} || ${Me.Class.ShortName.Equal[WAR]}) /return
+	/if (${str_class_type.Equal[MELEE_END]} || ${Me.Class.ShortName.Equal[WAR]}) /return
 	/declare _strResists string local ${_eventParams}
 	/echo \awSetting resist types: \ag${_eventParams}
 	
@@ -315,12 +319,12 @@ Sub EVENT_SetResistType(_line, _chatSender, _eventParams)
 /return 
 
 Sub SetResistTypes(string _typesCSV)
-	/if (${str_classArchetype.Equal[MELEE_END]} || ${Me.Class.ShortName.Equal[WAR]}) /return
+	/if (${str_class_type.Equal[MELEE_END]} || ${Me.Class.ShortName.Equal[WAR]}) /return
 	/varset str_useResistTypes ${_typesCSV}
 /return
 
 
 Sub SetSpellSet(string _type)
 	/memspellset ${_type}
-	/varset str_currentSpellSet ${_type}
+	/varset str_casting_spellSet ${_type}
 /return 

@@ -362,10 +362,10 @@ Sub Event_CC6
 
 |--Ikkinz4
 Sub Event_KeeperPosition
-	/if (${str_classArchetype.Equal[MELEE_END]} ||  ${str_classArchetype.Equal[TANK]} ||  ${str_classArchetype.Equal[MELEE_MANA]}) {
+	/if (${str_class_type.Equal[MELEE_END]} ||  ${str_class_type.Equal[TANK]} ||  ${str_class_type.Equal[MELEE_MANA]}) {
 		/echo Keeper punted me, re-positioning.
 		/nav target
-	} else /if (${str_classArchetype.Equal[CASTER]} ||  ${str_classArchetype.Equal[PRIEST]}) {
+	} else /if (${str_class_type.Equal[CASTER]} ||  ${str_class_type.Equal[PRIEST]}) {
 		/if (${Cast.Status.NotEqual[C]}) {
 			/echo Keeper punted me, re-positioning.
 			/nav wp kclr
@@ -378,7 +378,7 @@ Sub Event_KeeperPosition
 Sub EVENT_VORRAMP
 	/echo ah shit, yihst vor is about to rape my face
 	/if (${Me.Class.ShortName.Equal[CLR]}) /call MQ2Cast "${str_heal_group}" gem1 5s
-	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
+	/if (${str_class_type.Equal[MELEE_END]} || ${str_class_type.Equal[MELEE_MANA]} || ${str_class_type.Equal[TANK]}) {
 		/call FireDisc_Riposte
 	} else {
 		/return
@@ -388,8 +388,8 @@ Sub EVENT_VORRAMP
 
 Sub EVENT_VORBLUR
 	/if (!${bln_engaged}) /return
-	/if (${str_classArchetype.Equal[CASTER]} && ${Me.Casting.ID}) /call Interrupt
-	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]} && ${bln_engaged}) {
+	/if (${str_class_type.Equal[CASTER]} && ${Me.Casting.ID}) /call Interrupt
+	/if (${str_class_type.Equal[MELEE_END]} || ${str_class_type.Equal[MELEE_MANA]} || ${str_class_type.Equal[TANK]} && ${bln_engaged}) {
 		/if (!${bln_riposting}) {
 			/squelch /attack off 
 			/squelch /stick off
@@ -417,7 +417,7 @@ SUB EVENT_BALANCE
 	
 	/declare bpct	int	local	100
 	/varcalc bpct ${Spawn[npc Kvxe].PctHPs}+1
-	/if (${str_classArchetype.Equal[PRIEST]}) {
+	/if (${str_class_type.Equal[PRIEST]}) {
 		/echo PRIEST CLASS handling
 
 		/if (${bpct} < 45) {
@@ -434,7 +434,7 @@ SUB EVENT_BALANCE
 	/keypress esc
 	|- determine percentage to run to based on Kvxe's Hitpoints
 	/varset bln_balancing TRUE
-	/if (${str_classArchetype.Equal[CASTER]}) {
+	/if (${str_class_type.Equal[CASTER]}) {
 		
 		/echo CASTER CLASS checking
 		/varset bln_engaged FALSE
@@ -487,7 +487,7 @@ SUB EVENT_BALANCE
 	}
 
 	|-- Melee Classes
-	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
+	/if (${str_class_type.Equal[MELEE_END]} || ${str_class_type.Equal[MELEE_MANA]} || ${str_class_type.Equal[TANK]}) {
 		|-- Balance of Speed	
 		/squelch /attack off 
 		/squelch /stick off
@@ -591,13 +591,13 @@ Sub BalancerReset
 	/echo BALANCE OFF ${Target.Name}
 	/varset bln_balancing FALSE
 	
-	/if (${str_classArchetype.Equal[PRIEST]}) /return
+	/if (${str_class_type.Equal[PRIEST]}) /return
 
 	/doevents flush
 	/call Disengage
 
 	|-- Kvxe
-	/if (${str_classArchetype.NotEqual[CASTER]}) {
+	/if (${str_class_type.NotEqual[CASTER]}) {
 		/target npc Kvxe
 		/delay 5
 		/nav target
@@ -626,7 +626,7 @@ Sub EVENT_BALANCERAPE
 	/if (${Me.Class.ShortName.Equal[ENC]}) /call RuneSpam ${Spawn[pc id ${int_MTID}]}
 
 	|- exit if not priest
-	/if (${str_classArchetype.NotEqual[PRIEST]}) /return
+	/if (${str_class_type.NotEqual[PRIEST]}) /return
 	/if (${bln_chChainMember}) {
 		/echo part of a CHCHain, probably not doing this;
 		/return

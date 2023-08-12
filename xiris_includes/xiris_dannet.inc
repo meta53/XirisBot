@@ -3,6 +3,7 @@
 xiris_dannet.inc
 ----------------------------
 This file includes various utilities to help querying members with mq2dannet
+This is mostly a debug library
 
 | - Use the following format for sending query.
 | - /dannet PeerName Query
@@ -10,7 +11,7 @@ This file includes various utilities to help querying members with mq2dannet
 | -     /dannet
 | -        Will issue the /dnet info command.
 | -     /dannet Xanshia Me.ID
-| -        Will Send a Query to character named Xanshia and return his Spawn ID
+| -        Will Send a Query to character named Xanshia and return her Spawn ID
 | -     /dannet Xanshia Me.AltAbilityReady[MGB]
 | -        Will Send a Query to character named Xanshia and return if MGB is ready
 ______________________________________________

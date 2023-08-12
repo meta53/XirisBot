@@ -228,7 +228,7 @@ Sub variant_initialize
 	/declare	str_runeGem				string	outer	${Ini[INI_CHAR,ENC_Spells,Rune_Gem,gem6]}
 	/declare 	bln_runeActive			bool	outer	FALSE
 
-	/memspellset ${str_currentSpellSet}
+	/memspellset ${str_casting_spellSet}
 	/echo \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID}) HealPoint:${healPoint} ST: ${str_STName}(${int_STID})
 	/call initEvents_Class
 /return

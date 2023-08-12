@@ -14,6 +14,7 @@ REVISION HISTORY
     04.26.22    xiris   Added Specialization
     06.27.22    xiris   Added Adaptation
     07.16.22    xiris   Added Endurance
+    09.01.23    xiris   Added Anguish
 ______________________________________________
 **|	
 
@@ -40,8 +41,8 @@ Sub xbot_initialize_events
     /declare RaidEvents[0]              string outer NULL
     /declare ClassEventsRaw[50]         string outer NULL
     /declare ClassEvents[0]             string outer NULL
-    /declare PriorityEventsRaw[10]         string outer NULL
-    /declare PriorityEvents[0]             string outer NULL
+    /declare PriorityEventsRaw[10]      string outer NULL
+    /declare PriorityEvents[0]          string outer NULL
 
     |--Check for Special Events
 
@@ -86,8 +87,7 @@ Sub AddEventToExistingSet(string _EventSet, string _EventName)
 
 /return
 
-Sub RegisterBackgroundEvents(string _EventSet, int _EventCount)
-    /if (${_EventCount} == 0) /return
+Sub RegisterBackgroundEvents(string _EventSet)
     /declare i int local -1
     /declare bound int local 0
     /for i 1 to ${BackgroundEventsRaw.Size}
@@ -120,8 +120,7 @@ Sub TrimBackgroundEvents(int _count)
 /return
 
 
-Sub RegisterRaidEvents(string _EventSet, int _EventCount)
-    /if (${_EventCount} == 0) /return
+Sub RegisterRaidEvents(string _EventSet)
     /declare i int local -1
     /declare bound int local 0
     /for i 1 to ${RaidEventsRaw.Size}
@@ -153,8 +152,7 @@ Sub TrimRaidEvents(int _count)
     /next i
 /return
 
-Sub RegisterClassEvents(string _EventSet, int _EventCount)
-    /if (${_EventCount} == 0) /return
+Sub RegisterClassEvents(string _EventSet)
     /declare i int local -1
     /declare bound int local 0
     /for i 1 to ${ClassEventsRaw.Size}
@@ -189,8 +187,7 @@ Sub TrimClassEvents(int _count)
     /next i
 /return
 
-Sub RegisterPriorityEvents(string _EventSet, int _EventCount)
-    /if (${_EventCount} == 0) return
+Sub RegisterPriorityEvents(string _EventSet)
     /declare i int local -1
     /declare bound int local 0
     /for i 1 to ${PriorityEventsRaw.Size}
@@ -228,8 +225,8 @@ Sub TrimPriorityEvents(int _count)
 
 Sub RunBackgroundEvents
     |DEBUG< Turn Events off
-    /echo RunBackgroundEvents
-    /return
+    |/echo RunBackgroundEvents
+
     /if (${BackgroundEvents.Size} == 0) /return
     /declare i int local 1
     /for i 1 to ${BackgroundEvents.Size}
@@ -241,8 +238,8 @@ Sub RunBackgroundEvents
 
 Sub RunRaidEvents
     |DEBUG< Turn Events off
-    /echo RunRaidEvents
-    /return
+    |/echo RunRaidEvents
+ 
     /if (${RaidEvents.Size} == 0) /return
     /declare j int local 1
     /for j 1 to ${RaidEvents.Size}
@@ -254,8 +251,8 @@ Sub RunRaidEvents
 
 Sub RunClassEvents
     |DEBUG< Turn Events off
-    /echo RunClassEvents
-    /return
+    |/echo RunClassEvents
+
     /if (${ClassEvents.Size} == 0) /return
     /declare k int local 1
     /for k 1 to ${ClassEvents.Size}
@@ -267,8 +264,8 @@ Sub RunClassEvents
 
 Sub RunPriorityEvents
     |DEBUG< Turn Events off
-    /echo RunPriorityEvents
-    /return
+    |/echo RunPriorityEvents
+   
     /if (${PriorityEvents.Size} == 0) /return
     /declare k int local 1
     /for k 1 to ${PriorityEvents.Size}
@@ -281,8 +278,8 @@ Sub RunPriorityEvents
 
 Sub RunAllEvents
     |DEBUG< Turn Events off
-    /echo RunAllEvents
-    /return
+    |/echo RunAllEvents
+    
     /call RunBackgroundEvents
     /call RunRaidEvents
     /call RunClassEvents

@@ -10,11 +10,11 @@ REVISION HISTORY
 
 
 Sub initEvents_Clicking
-    /call RegisterRaidEvents Events_Clicking 1
+    /if (${int_click_total}) /call Events_Clicking_Raid Events_Clicking
 /return 
 
-Sub Events_Clicking
-    /if (!${timer_check_clicks}) /call chkClicks
+Sub Events_Clicking_Raid
+    /if (!${timer_check_clicks} && ${bln_engaged}) /call chkClicks
 /return 
 
 Sub xbot_initialize_clicking
@@ -80,10 +80,10 @@ Sub processClicks
 **|
 
 Sub chkClicks 
-    /if (!${int_click_total} || (${Me.Casting.ID} && ${Me.ClassName.NotEqual[BRD]}) || ${Me.Invis} || ${Me.Feigning} || ${timer_clickDelay}) /return
+    /if (!${int_click_total} || (${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]}) || ${Me.Invis} || ${Me.Feigning} || ${timer_check_clicks}) /return
 
     | Global [CLICKY] settings check
-    /if (${Target.PctHps} > ${int_click_start} || ${Target.PctHPs} < ${int_click_stop}) /return
+    /if (${Target.PctHPs} > ${int_click_start} || ${Target.PctHPs} < ${int_click_stop}) /return
 
     | Named Check
     /declare savedTargetID ${Target.ID}
@@ -97,12 +97,12 @@ Sub chkClicks
 		/if (${FindItem[${CLICKY_${i}}].TimerReady} > 0) /goto :nextClick
         | Handle click types
         /if (${CLICK_${i}_Type.Equal[OFFENSE]}) {
-            /if (!${bln_engaged} || (${CLICK_${i}_NamedOnly} && !${targetIsNamed}) || (${Target.PctHps} > ${CLICK_${i}_Start} || ${Target.PctHPs} < ${CLICK_${i}_Stop}))  /goto :nextClick
+            /if (!${bln_engaged} || (${CLICK_${i}_NamedOnly} && !${targetIsNamed}) || (${Target.PctHPs} > ${CLICK_${i}_Start} || ${Target.PctHPs} < ${CLICK_${i}_Stop}))  /goto :nextClick
         } else /if (${CLICK_${i}_Type.Equal[DEFENSE]})
             /if (!${bln_engaged} || (${CLICK_${i}_NamedOnly} && !${targetIsNamed}))  /goto :nextClick 
         } else /if (${CLICK_${i}_Type.Equal[HEAL]})
             /call TrueTarget ${Me.ID}
-            /if ( (${Target.PctHps} > ${CLICK_${i}_Start} || ${Target.PctHPs} < ${CLICK_${i}_Stop})) /return 
+            /if ( (${Target.PctHPs} > ${CLICK_${i}_Start} || ${Target.PctHPs} < ${CLICK_${i}_Stop})) /return 
         }
         | Handle the trigger (not currently implemented, all are set to TRUE)
         /if (!${CLICK_${i}_Trigger}) /goto :nextClick

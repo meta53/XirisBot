@@ -220,7 +220,7 @@ Sub variant_initialize
 	
 
 	
-	/memspellset ${str_currentSpellSet}
+	/memspellset ${str_casting_spellSet}
 	/echo \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID}) HealPoint:${healPoint} ST: ${str_STName}(${int_STID})
 	/call initEvents_Class
 /return

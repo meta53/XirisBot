@@ -1,6 +1,6 @@
 |**
 	EXCLUSION LIST for SHAMAN/ENC/ETC that auto target mobs
-	/if (!${ExcludeList.Find[${Spawn[${mobID}]}].Name}) /continue
+	/if (!${INI_EXCLUSIONS.Find[${Spawn[${mobID}]}].Name}) /continue
 **|
 
 |**
@@ -60,19 +60,19 @@ Sub setExclusions
 	/varset ExcludeList 
 
 	| Load Global Exclusions
-	/declare ExcludeGlobal string  local ${Ini[${ExcludeINI},"Excludes.global","Exclude"]}
+	/declare ExcludeGlobal string  local ${Ini[INI_EXCLUSIONS,Excludes.global,Exclude]}
 	/echo \ayGlobal Exclusions: \ag${ExcludeGlobal}
 	/call AddExclusions "${ExcludeGlobal}"
 	
 	| Add zone specific Exclusions
 	| If Zone entry not found, add it.
-	/declare ExcludeZone string  local ${Ini[${ExcludeINI},"Excludes.${Zone.ShortName}","Exclude"]}
+	/declare ExcludeZone string  local ${Ini[INI_EXCLUSIONS,Excludes.${Zone.ShortName},Exclude]}
 	/if (${ExcludeZone.Equal[NULL]}) {
 		/ini "${ExcludeZone}" "Excludes.${Zone.ShortName}" "Exclude" "|"
-		/varset ExcludeZone ${Ini[${ExcludeINI},"Excludes.${Zone.ShortName}","Exclude"]}
+		/varset ExcludeZone ${Ini[INI_EXCLUSIONS,Excludes.${Zone.ShortName},Exclude]}
 		/echo \ayZone Exclusions: ${ExcludeZone}
 	} else /if (${ExcludeZone.Equal[|]}) {
-		/varset ExcludeZone 
+		/varset ExcludeZone NULL
 	}
 	/echo \ayZone Exclusions: ${ExcludeZone}
 	/call AddExclusions "${ExcludeZone}"

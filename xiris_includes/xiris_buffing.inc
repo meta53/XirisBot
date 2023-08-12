@@ -42,9 +42,9 @@ REVISION HISTORY
 #EVENT Buffing_DS_Disable	    "#1# tells the raid#*#'NoDS#*#'"
 #EVENT Buffing_DS_Disable	    "[ #1# #*#]#*#NoDS#*#"
 
-#EVENT Buffing_DS_Enable	    "#1# tells the group#*#'YesDS #*#'"
-#EVENT Buffing_DS_Enable	    "#1# tells you#*#'YesDS #*#'"
-#EVENT Buffing_DS_Enable	    "#1# tells the raid#*#'YesDS #*#'"
+#EVENT Buffing_DS_Enable	    "#1# tells the group#*#'YesDS#*#'"
+#EVENT Buffing_DS_Enable	    "#1# tells you#*#'YesDS#*#'"
+#EVENT Buffing_DS_Enable	    "#1# tells the raid#*#'YesDS#*#'"
 #EVENT Buffing_DS_Enable	    "[ #1# #*#]#*#YesDS#*#"
 
 #EVENT Buffing_Buff_Remove      "#1# tells the group#*#REMOVEBUFF #2#'"
@@ -58,10 +58,12 @@ REVISION HISTORY
 #EVENT Buffing_Buff_RemoveAll   "[ #1# #*#]#*#removeallbuffs #*#"
 
 Sub initEvents_buffing
-	/call RegisterBackgroundEvents Events_Buffing 6
+	/call RegisterBackgroundEvents  Events_Buffing_Background
+    /call RegisterRaidEvents        Events_Buffing_Raid
 /return
 
-Sub Events_Buffing
+Sub Events_Buffing_Background
+    /if (!${bln_engaged} && ${int_selfBuffs_total} && !${timer_check_selfBuffs})        /call chkSelfBuffs
 	/doevents Buffing_DS_Disable
 	/doevents Buffing_DS_Enable
 
@@ -70,6 +72,11 @@ Sub Events_Buffing
 
 	/doevents Buffing_Buff_Remove
 	/doevents Buffing_Buff_RemoveAll
+/return
+
+
+Sub Events_Buffing_Raid 
+    /if (${bln_engaged}  && ${int_combatBuffs_total} && !${timer_check_combatBuffs})    /call chkCombatBuffs
 /return
 
 |**
@@ -87,17 +94,17 @@ Sub Events_Buffing
 Sub xbot_initialize_buffing
 	/echo \n \apInitialize: \aoBuffing \aw-------------------------
 
+
 	| process the character ini file
 	/call processSelfBuffs
 	/call processTargetedBuffs
-	/call processCombatBuffs 
+	/call processCombatBuffs
+    /call processDamageShields
 
 	| initialize the buffing events
 	/call initEvents_buffing
 	
 /return
-
-
 
 
 | Note int_selfBuffs_total is set here, as well as the list of selfbuffs
@@ -219,6 +226,28 @@ Sub processCombatBuffs
 
 /return
 
+Sub processDamageShields
+	/declare i						    int 	local 0
+	/declare sz 					    int     local 0
+    /declare test                       string  local NULL
+
+    | damage shields
+    /declare bln_buffs_damageshields    bool    outer   TRUE
+    /declare int_buffs_damageshields    int     outer   0
+
+    | damage shield comparison list
+    /declare arr_buffs_damageshields[100]   string  outer   NULL
+    /for i 1 to ${arr_buffs_damageshields.Size}
+        /varset test ${Ini[INI_DAMAGESHIELDS,SPELLS,DS${i}]}
+        /if (${test.Equal[NULL]}) {
+            /varset int_buffs_damageshields ${sz}
+            /return
+        }
+        /varcalc sz ${sz}+1
+        /varset arr_buffs_damageshields[${i}] ${Ini[INI_DAMAGESHIELDS,SPELLS,DS${i}]}
+    /next i
+/return
+
 
 |**
  ----------------------------
@@ -241,15 +270,14 @@ Sub chkSelfBuffs
     | We need to target ourselves since this is a self buff
     /target id ${Me.ID}
     /for i 1 to ${int_selfBuffs_total}
-        | Check to see if the buff is a DS and if bln_useDS if FALSE, skip the buff
-        /if (!${bln_useDS}) {
-            /for ds 1 to ${int_damageShieldList_total}
-                /if (${buffName.Equal[${dsSpells[${ds}]}]}) /goto :next_buff
+        | Check to see if the buff is a DS and if bln_buffs_damageshields if FALSE, skip the buff
+        /if (!${bln_buffs_damageshields}) {
+            /for ds 1 to ${int_buffs_damageshields}
+                /if (${${BUFFSELF_${i}}.Equal[${arr_buffs_damageshields[${ds}]}]}) /goto :next_buff
             /next ds
         }
 
         | Check the events for enagement to stop this sub
-        |/call RunAllEvents
         /if (${bln_engaged}) /return
 
         | Check to see if the buff is already applied
@@ -257,14 +285,14 @@ Sub chkSelfBuffs
         /if (${Spell[${BUFFSELF_${i}}].Stacks} && !${Me.Buff[${BUFFSELF_${i}}].ID}) {
             | Handle the item type buff check
             |BUFF_1="Reyfin's Racing Thoughts"|ITEM|"Xxeric's Matted-Fur Mask"
-            /varset brdCastingArgs "${BUFFSELF_${i}_Name}" TRUE ${int_defaultSpellGem}
-            /varset allCastingArgs ${BUFFSELF_${i}_Name}
+            /varset brdCastingArgs "${BUFFSELF_${i}_Name}" TRUE ${int_cast_default_gem}
+            /varset allCastingArgs ${BUFFSELF_${i}_Name} 
             /if (${BUFFSELF_${i}_Type.Equal[ITEM]}) {
                 /if (!${FindItem[=${BUFFSELF_${i}_Name}].ID})  /goto :next_buff
                 /varset brdCastingArgs ITEM ${brdCastingArgs} ${Me.ID} TRUE
                 
             } else /if (${BUFFSELF_${i}_Type.Equal[SPELL]}) {
-                /call chkSpellMemorized "${BUFFSELF_${i}_Name}" TRUE ${int_defaultSpellGem}
+                /call chkSpellMemorized "${BUFFSELF_${i}_Name}" TRUE ${int_cast_default_gem}
                 /varset brdCastingArgs SONG "${BUFFSELF_${i}_Name}" ${Me.ID} TRUE
 
             } else /if (${BUFFSELF_${i}_Type.Equal[ALT]})  {
@@ -276,7 +304,7 @@ Sub chkSelfBuffs
         }
     :next_buff
     /next i
-    /if (${bln_buffsCast}) /memspellset ${str_currentSpellSet}
+    /if (${bln_buffsCast}) /memspellset ${str_casting_spellSet}
     /varset timer_check_selfBuffs 300
 /return
 
@@ -303,7 +331,7 @@ Sub EVENT_Buffing_Buff_OnRaid(_line, _chatSender, _eventParams)
 
 	/dgt ${Me.Class.Name} RAID BUFF [${_eventParams}] COMPLETE
 	| Restore the previous spellset
-	/memspellset ${str_currentSpellSet}
+	/memspellset ${str_casting_spellSet}
 
 /return
 
@@ -327,7 +355,7 @@ Sub EVENT_Buffing_Buff_OnChar(_line, _chatSender, _eventParams)
     
 	/dgt ${Me.Class.Name} CHAR BUFF [${_eventParams}] COMPLETE
 	| Restore the previous spellset
-	/memspellset ${str_currentSpellSet}
+	/memspellset ${str_casting_spellSet}
 
 /return
 
@@ -414,7 +442,7 @@ Sub chkTargetedBuffs(string _targetType,string _targetName, bool _forced)
     :next_buff
     /next i
 
-    /memspellset ${str_currentSpellSet}
+    /memspellset ${str_casting_spellSet}
     /varset timer_check_targetedBuffs 300
     /if (${originalTargetID}) /call TrueTarget ${originalTargetID}
 /return
@@ -455,7 +483,7 @@ Sub chkCombatBuffs
                     /delay 20 ${DanNet.Q.Received}
                     /if (${foundDuration}) /goto :next_buff
                     /call TrueTarget ${Raid.Member[${r}].ID}
-                    /call MQ2Cast "${BUFFCOMBAT_${i}}" ${int_defaultSpellGem} RunPriorityEvents
+                    /call MQ2Cast "${BUFFCOMBAT_${i}}" ${int_cast_default_gem} RunPriorityEvents
                 }
             /next r
         } else /if (${bln_combatBuffs_allowGroup}) {
@@ -466,7 +494,7 @@ Sub chkCombatBuffs
                     /delay 20 ${DanNet.Q.Received}
                     /if (${foundDuration}) /goto :next_buff
                     /call TrueTarget ${Group.Member[${r}].ID}
-                    /call MQ2Cast "${BUFFCOMBAT_${i}}" ${int_defaultSpellGem} RunPriorityEvents
+                    /call MQ2Cast "${BUFFCOMBAT_${i}}" ${int_cast_default_gem} RunPriorityEvents
                 }
             /next r
         }
@@ -536,11 +564,12 @@ Sub EVENT_Buffing_DS_Disable(_line, _sender, _eventParams)
 /return
 
 Sub RemoveDS
-	/varset bln_useDS FALSE
+	/varset bln_buffs_damageshields FALSE
 	| check to see if I have a DS, and if so kill it
 	/declare ds int local 
-	/for ds 1 to ${int_damageShieldList_total} 
-		/call Buffing_Buff_Remove "${dsSpells[${ds}]}"
+	/for ds 1 to ${int_buffs_damageshields} 
+        /echo ${ds} ${arr_buffs_damageshields[${ds}]}
+		/call Buffing_Buff_Remove "${arr_buffs_damageshields[${ds}]}"
 	/next ds
 	/if (${Me.Class.ShortName.Equal[BRD]}) {
 		/varset str_savedMedley ${str_currentMedley}
@@ -553,7 +582,7 @@ Sub RemoveDS
 
 
 Sub EVENT_Buffing_DS_Enable(_line, _sender, _eventParams)s
-	/varset bln_useDS TRUE
+	/varset bln_buffs_damageshields TRUE
 	/if (${Me.Class.ShortName.Equal[BRD]}) {
 		/echo \aoTurning on ${str_savedMedley} Medley
 		/memspellset ${str_savedMedley}

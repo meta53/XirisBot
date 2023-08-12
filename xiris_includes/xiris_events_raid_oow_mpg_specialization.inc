@@ -104,34 +104,34 @@ Sub handleSpecializationChange
 	/if (${str_currentMode.Equal[RIGIDITY]}) {
 		/echo RIGIDITY	
 		| RIGIDITY: Don't use blunt weapons or cold based spells (casting time will be slowed);
-		/if (${str_classArchetype.Equal[CASTER]}) {
+		/if (${str_class_type.Equal[CASTER]}) {
 			/call SetResistTypes Fire,Magic,Poison,Disease
-		} else /if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
+		} else /if (${str_class_type.Equal[MELEE_END]} || ${str_class_type.Equal[MELEE_MANA]} || ${str_class_type.Equal[TANK]}) {
 			|/call doBandolier NOBLUNT
 			/call EngageTarget
 		}
 	} else /if (${str_currentMode.Equal[MISFORTUNE]}) {
 		/echo MISFORTUNE
 		| CURSE OF MISFORTUNE: Don't use slashing weapons and or magic based spell  (MOB becomes 100% resistant to them);
-		/if (${str_classArchetype.Equal[CASTER]}) {
+		/if (${str_class_type.Equal[CASTER]}) {
 			/call SetResistTypes Fire,Cold,Poison,Disease
-		} else /if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
+		} else /if (${str_class_type.Equal[MELEE_END]} || ${str_class_type.Equal[MELEE_MANA]} || ${str_class_type.Equal[TANK]}) {
 			|/call doBandolier NOSLASHING
 			/call EngageTarget
 		}
 	} else /if (${str_currentMode.Equal[IMPRECISION]}) {
 		/echo IMPRECISION
 		| IMPRECISION: Don't use piercing weapons, back stab or fire based spells (damage will be decreased);
-		/if (${str_classArchetype.Equal[CASTER]}) {
+		/if (${str_class_type.Equal[CASTER]}) {
 			/call SetResistTypes Magic,Cold,Poison,Disease
-		} else /if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
+		} else /if (${str_class_type.Equal[MELEE_END]} || ${str_class_type.Equal[MELEE_MANA]} || ${str_class_type.Equal[TANK]}) {
 			|/call doBandolier NOPIERCING
 			/call EngageTarget
 		}
 	} else /if (${str_currentMode.Equal[IMPURITY]}) {
 		/echo IMPURITY
 		| IMPURITY: Don't use hand to hand, flying kick, poison based spells or disease based spells (there is a significant mana increase to cast spells);
-		/if (${str_classArchetype.Equal[CASTER]}) {
+		/if (${str_class_type.Equal[CASTER]}) {
 			/call SetResistTypes Fire,Magic,Cold
 		} else /if (${Me.Class.ShortName.Equal[MNK]} || ${Me.Class.ShortName.Equal[BST]} ) {
 			|/call doBandolier NOH2H	
@@ -142,14 +142,14 @@ Sub handleSpecializationChange
 	} else /if (${str_currentMode.Equal[NORMAL]}) {
 		/echo NORMAL
 		| NORMAL: Use whatever you want!
-		/if (${str_classArchetype.Equal[CASTER]}) {
+		/if (${str_class_type.Equal[CASTER]}) {
 			/call SetResistTypes Fire,Cold,Poison,Disease
-		} else /if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
+		} else /if (${str_class_type.Equal[MELEE_END]} || ${str_class_type.Equal[MELEE_MANA]} || ${str_class_type.Equal[TANK]}) {
 			|/call doBandolier default
 			/call EngageTarget
 		}
 	}
-	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
+	/if (${str_class_type.Equal[MELEE_END]} || ${str_class_type.Equal[MELEE_MANA]} || ${str_class_type.Equal[TANK]}) {
 		/face fast
 		/attack on
 	}

@@ -315,7 +315,7 @@ Sub xbot_initialize_debuffing
 	/declare str_debuffedTargets		string  outer   NULL
 
 	|-- Return out if not a caster
-	/if (${str_classArchetype.Equal[MELEE_END]} || ${Me.Class.ShortName.Equal[WAR]}) /return
+	/if (${str_class_type.Equal[MELEE_END]} || ${Me.Class.ShortName.Equal[WAR]}) /return
 
 	|-- Load the debuffs set in the INI file
 	/call CreateDebuffLineup

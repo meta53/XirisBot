@@ -258,7 +258,7 @@ Sub EVENT_ForesightKyvMove
 	/say Kyv Moving
 	/doevents flush ForesightKyvMove
 	| The Kyv will cast spell 5694 Headshot 10000 DD, Feign Death
-	/if (${str_classArchetype.Equal[PRIEST]} || ${str_classArchetype.Equal[CASTER]}) {
+	/if (${str_class_type.Equal[PRIEST]} || ${str_class_type.Equal[CASTER]}) {
 		| casters and healers need to move to SafeCenterCaster
 		|/echo KyvMove
 		|/call ForesightNavigation D4 IsMovingAnywhere ForesightKyvSafe
@@ -368,7 +368,7 @@ Sub EVENT_ForesightAEClose
 	/doevents flush ForesightAEClose
 
 	| The dragorns will cast spell 5693 Flashfire 5000 AE DD
-	/if (${str_classArchetype.Equal[PRIEST]} || ${str_classArchetype.Equal[CASTER]}) {
+	/if (${str_class_type.Equal[PRIEST]} || ${str_class_type.Equal[CASTER]}) {
 		| casters and healers need to move to SafeCenterCaster
 		/call ForesightNavigation SafeCenterCaster IsMovingAnywhere ForesightAECloseSafe
 	} else {
@@ -389,7 +389,7 @@ Sub EVENT_ForesightPlatform
 
 	| The hazard will cast spell: 5697 Scalding Steam 5500 DD AE & 950/tick DOT
 	
-	/if (${str_classArchetype.Equal[PRIEST]} || ${str_classArchetype.Equal[CASTER]}) {
+	/if (${str_class_type.Equal[PRIEST]} || ${str_class_type.Equal[CASTER]}) {
 		| casters and healers can stay on the platform where they are
 		/call ForesightNavigation SafeCenterCaster IsMovingAnywhere ForesightPlatformSafe
 	} else {
@@ -407,7 +407,7 @@ Sub EVENT_ForesightDS
 	/doevents flush ForesightDS
 
 	| The dragorns will cast spell: 5698 Lacerating Aura 350pt DS
-	/if (${str_classArchetype.Equal[PRIEST]} || ${str_classArchetype.Equal[CASTER]}) {
+	/if (${str_class_type.Equal[PRIEST]} || ${str_class_type.Equal[CASTER]}) {
 		| casters and healers can continue whatever they are doing
 		/return
 	} else {
@@ -493,7 +493,7 @@ Sub EVENT_ForesightKyvSafe
 Sub EVENT_ForesightReflect
 	| The dragorns will cast spell: 5699
 	/doevents flush ForesightReflect
-	/if (${str_classArchetype.Equal[CASTER]}) {
+	/if (${str_class_type.Equal[CASTER]}) {
 		/declare wait int local 0
 		/say stopping for Reflection
 		| casters need to stop casting on target
@@ -532,7 +532,7 @@ Sub EVENT_D1
 		/varcalc dist ${Math.Distance[${Me.Y},${Me.X},${Me.Z}:${D1Y},${D1X},${D1Z}]}
 		/if (${dist} < 50) /nav stop
 		/if (${Navigation.Active})  /goto :movement
-		/if (${str_classArchetype.NotEqual[PRIEST]}) {
+		/if (${str_class_type.NotEqual[PRIEST]}) {
 			/call TrueTarget ${Spawn[NPC "Dragorn Flamecaster"].ID}
 			/call EngageTarget  ${Spawn[NPC "Dragorn Flamecaster"].ID}
 		} 
@@ -550,7 +550,7 @@ Sub EVENT_D2
 		/varcalc dist ${Math.Distance[${Me.Y},${Me.X},${Me.Z}:${D2Y},${D2X},${D2Z}]}
 		/if (${dist} < 50) /nav stop
 		/if (${Navigation.Active})  /goto :movement
-		/if (${str_classArchetype.NotEqual[PRIEST]}) {
+		/if (${str_class_type.NotEqual[PRIEST]}) {
 			/call TrueTarget ${Spawn[NPC "Dragorn Spellscribe"].ID}
 			/call EngageTarget  ${Spawn[NPC "Dragorn Spellscribe"].ID}
 		} 
@@ -568,7 +568,7 @@ Sub EVENT_D3
 		/varcalc dist ${Math.Distance[${Me.Y},${Me.X},${Me.Z}:${D3Y},${D3X},${D3Z}]}
 		/if (${dist} < 50) /nav stop
 		/if (${Navigation.Active})  /goto :movement
-		/if (${str_classArchetype.NotEqual[PRIEST]}) {
+		/if (${str_class_type.NotEqual[PRIEST]}) {
 			/call TrueTarget ${Spawn[NPC "Dragorn Adept"].ID}
 			/call EngageTarget  ${Spawn[NPC "Dragorn Adept"].ID}
 		} 
@@ -586,7 +586,7 @@ Sub EVENT_D4
 		/varcalc dist ${Math.Distance[${Me.Y},${Me.X},${Me.Z}:${D4Y},${D4X},${D4Z}]}
 		/if (${dist} < 50) /nav stop
 		/if (${Navigation.Active})  /goto :movement
-		/if (${str_classArchetype.NotEqual[PRIEST]}) {
+		/if (${str_class_type.NotEqual[PRIEST]}) {
 			/call TrueTarget ${Spawn[NPC "Dragorn Incinerator"].ID}
 			/call EngageTarget  ${Spawn[NPC "Dragorn Incinerator"].ID}
 		} 
@@ -603,7 +603,7 @@ Sub EVENT_D5
 		/delay 20
 		/varcalc dist ${Math.Distance[${Me.Y},${Me.X},${Me.Z}:${D5Y},${D5X},${D5Z}]}
 		/if (${dist} < 50) /nav stop
-		/if (${str_classArchetype.NotEqual[PRIEST]}) {
+		/if (${str_class_type.NotEqual[PRIEST]}) {
 			/call TrueTarget ${Spawn[NPC "Dragorn Acolyte"].ID}
 			/call EngageTarget  ${Spawn[NPC "Dragorn Acolyte"].ID}
 		} 
@@ -621,7 +621,7 @@ Sub EVENT_D6
 		/varcalc dist ${Math.Distance[${Me.Y},${Me.X},${Me.Z}:${D6Y},${D6X},${D6Z}]}
 		/if (${dist} < 50) /nav stop
 		/if (${Navigation.Active})  /goto :movement
-		/if (${str_classArchetype.NotEqual[PRIEST]}) {
+		/if (${str_class_type.NotEqual[PRIEST]}) {
 			/call TrueTarget ${Spawn[NPC "Dragorn Annihilator"].ID}
 			/call EngageTarget  ${Spawn[NPC "Dragorn Annihilator"].ID}
 		} 
