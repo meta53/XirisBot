@@ -137,7 +137,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 			/call chkMobDead
 
 			|-- debuff lib
-			/if (${${DEBUFF_Total}}) /call chkDebuffsOnSingleTarget ${int_targetID}
+			/if (${${DEBUFF_total}}) /call chkDebuffsOnSingleTarget ${int_targetID}
 
 			|-- class specific
 			/if (${bln_cmbtBuffUse} && ${int_cmbtBuffTotal}) /call cmbtBuffMT
@@ -148,7 +148,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 				
 				|-- std library (burns/aa/clicks)
 				/call chkAA
-				/call chkBurn
+				/call chkBurns
 				/call chkClicky
 
 				|-- verify target status
@@ -193,7 +193,7 @@ Sub MGBCelestialRegeneration
 
 /return
 
-Sub EVENT_DivineInterventionRequest(_line, _sender, _eventParams) 
+Sub EVENT_DivineInterventionRequest(string _line, string _sender, string _eventParams) 
 	/if (${Bool[${Me.Spell[Divine Intervention].ID}]}) {
 		/if (${Me.SpellReady[Divine Intervention]}) {
 			/declare tid int local ${Spawn[pc ${_sender}].ID}
@@ -202,9 +202,9 @@ Sub EVENT_DivineInterventionRequest(_line, _sender, _eventParams)
 			}
 			/echo \agDivine Intervention\aw on \ay${Target.Name}(${tid})
 			/call MQ2Cast "Divine Intervention" gem6 8s
-			/docommand /${announceChannel} DI >> ${Target.Name}
+			/docommand /${str_announce_channel} DI >> ${Target.Name}
 		} else {
-			/docommand /${announceChannel} DI is NOT ready, ask someone else!
+			/docommand /${str_announce_channel} DI is NOT ready, ask someone else!
 		}
 	}
 	/doevents flush DivineInterventionRequest
@@ -293,9 +293,9 @@ Sub chkUtils
 /return
 
 Sub chkYaulp
-	|/echo chkYaulp (${bln_engaged} && ${Me.PctMana}<=${int_medPercent} && ${Me.SpellReady[${str_spellYaulp}]})
+	|/echo chkYaulp (${bln_engaged} && ${Me.PctMana}<=${int_meditationPctMana} && ${Me.SpellReady[${str_spellYaulp}]})
 	/if (!${bln_useYaulp}) /return
-	/if (${bln_engaged} && ${Me.PctMana}<=${int_medPercent} && ${Me.SpellReady[${str_spellYaulp}]}) {
+	/if (${bln_engaged} && ${Me.PctMana}<=${int_meditationPctMana} && ${Me.SpellReady[${str_spellYaulp}]}) {
 		/call MQ2Cast "${str_spellYaulp}" ${str_gemYaulp}
 	}
 /return
@@ -344,7 +344,7 @@ Sub variant_initialize
 	/declare 	str_gemYaulp			string	outer 	${Ini[INI_CHAR,Yaulp,str_spellYaulp,gem9]}
 	
 	|-- Heal Settings
-	/declare	bln_annouce     		bool    outer   ${Ini[INI_CHAR,Cleric_Settings,bln_annouce,FALSE]}
+	/declare	bln_announce     		bool    outer   ${Ini[INI_CHAR,Cleric_Settings,bln_announce,FALSE]}
 	/declare	str_buffGem     		string  outer   ${Ini[INI_CHAR,Cleric_Settings,str_buffGem,gem9]}
 	
 	|-- Items 

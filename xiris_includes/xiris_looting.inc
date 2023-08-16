@@ -54,24 +54,24 @@ Sub Events_Looting_Background
 /return
 
 
-Sub EVENT_Loot_ON(_line, _chatSender, _eventParams)
+Sub EVENT_Loot_ON(string _line, string _sender, string _eventParams)
     /echo loot on ${_eventParams}
     /doevents flush Loot_ON
     /call setLootConstraint ${_eventParams}
     /call setLootState TRUE
 /return
 
-Sub EVENT_Loot_OFF(_line, _chatSender, _eventParams)
+Sub EVENT_Loot_OFF(string _line, string _sender, string _eventParams)
     /doevents flush Loot_OFF
     /call setLootState FALSE
 /return 
 
-Sub EVENT_Loot_Refresh(_line, _chatSender, _eventParams)
+Sub EVENT_Loot_Refresh(string _line, string _sender, string _eventParams)
     /doevents flush Loot_Refresh
     /call processLootList
 /return
 
-Sub EVENT_Loot_Self(_line, _chatSender, _eventParams)
+Sub EVENT_Loot_Self(string _line, string _sender, string _eventParams)
     /doevents flush Loot_Self
     /if (${bln_naked}) /call lootSelf
 /return

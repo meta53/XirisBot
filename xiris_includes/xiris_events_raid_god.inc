@@ -125,7 +125,7 @@ Sub Events_GoD_Tacvi
 |SUB: Event_UquaKey
 |--------------------------------------------------------------------------------
 Sub Event_UquaKey(string line,string key)
-  /docommand /${announceChannel} ${key}
+  /docommand /${str_announce_channel} ${key}
   /doevents flush UquaKey
 /return
 |--------------------------------------------------------------------------------
@@ -133,7 +133,7 @@ Sub Event_UquaKey(string line,string key)
 
 
 Sub Event_InkCurse
-	/docommand /${announceChannel} ${Me.Name} is Running.
+	/docommand /${str_announce_channel} ${Me.Name} is Running.
 	/call Disengage
 	/varset inkRunning TRUE
 	/call InkCurseRun
@@ -141,14 +141,14 @@ Sub Event_InkCurse
 
 Sub Event_InkCurseSafe
 	/if (!${inkRunning}) /return
-	/docommand /${announceChannel} ${Me.Name} is safe, returning.
+	/docommand /${str_announce_channel} ${Me.Name} is safe, returning.
 	/varset inkRunning FALSE
 	/maxfps bg 20
 	/play off
 /return
 
 Sub InkCurseDead
-	/docommand /${announceChannel} ${Me.Name} is dead, resetting.
+	/docommand /${str_announce_channel} ${Me.Name} is dead, resetting.
 	/varset inkRunning FALSE
 	/play off
 	/maxfps bg 20
@@ -160,10 +160,10 @@ Sub InkCurseDead
 | Noqufiel
 |----------------------------
 
-Sub Event_NoqCurse(_line, _chatSender, _eventParams)
+Sub Event_NoqCurse(string _line, string _sender, string _eventParams)
 	
 	/if (${bln_tanking}) {
-		/docommand /${announceChannel} I NEED TO RUN BUT TANKING!
+		/docommand /${str_announce_channel} I NEED TO RUN BUT TANKING!
 		/return
 	} 
 	/echo Event_NoqCurse ${_eventParams}
@@ -177,10 +177,10 @@ Sub Event_NoqCurse(_line, _chatSender, _eventParams)
 
 Sub InkNoqRun(int _curseID)
 	/if (${bln_tanking}) {
-		/docommand /${announceChannel} I NEED TO RUN BUT TANKING!
+		/docommand /${str_announce_channel} I NEED TO RUN BUT TANKING!
 		/return
 	} 
-	/docommand /${announceChannel} Running Noqufiel ${_curseID}
+	/docommand /${str_announce_channel} Running Noqufiel ${_curseID}
 	/doevents flush
 	/stick off
 	/call Disengage
@@ -204,7 +204,7 @@ Sub InkNoqRun(int _curseID)
 	
 	| DOUBLE CHECK THIS RUN LOOP  TODO MAKE IT WORK LIKE CURSECALLERS
 	:startLoop
-	/if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /call InkDeath
+	/if (${Zone.ShortName.Equal[${str_zone_bound}]}) /call InkDeath
 	/if (${Me.TargetOfTarget.CleanName.Equal[${Me.CleanName}]}) {
 		/if (${Target.Distance} < 50) {
 			/nav wp noqRun
@@ -217,7 +217,7 @@ Sub InkNoqRun(int _curseID)
 	} 	
 	
 	:farLoop
-	/if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /call InkDeath
+	/if (${Zone.ShortName.Equal[${str_zone_bound}]}) /call InkDeath
 	/if (${Me.TargetOfTarget.CleanName.Equal[${Me.CleanName}]} || !${Target.Name.Find[_corpse]}) {
 		/if (${Target.Distance} < 50) {
 			/varset inkRunning TRUE
@@ -226,7 +226,7 @@ Sub InkNoqRun(int _curseID)
 	}
 	|-- no longer targeted or you dont have a target. safe now
 
-	/if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /call InkDeath
+	/if (${Zone.ShortName.Equal[${str_zone_bound}]}) /call InkDeath
 	|-- insert some return logic here	
 	/varset inkRunning FALSE
 	/nav spawn pc ${str_MTName}
@@ -242,11 +242,12 @@ Sub chkNoqCursebearers
 	:curseBearerCheck
 	/if (${SpawnCount[npc cursebearer]}) {
 		/varset bln_engaged TRUE
+		/varset bln_killing TRUE
 		/varset QNUKE_DelayTimer 0
-		/varset QNUKE_StopHPIfNamed 0
-		/varset QNUKE_StartHPIfNamed 100
-		/varset QNUKE_StopHP 0
-		/varset QNUKE_StartHP 100
+		/varset QNUKE_stopHPIfNamed 0
+		/varset QNUKE_startHPIfNamed 100
+		/varset QNUKE_stopHP 0
+		/varset QNUKE_startHP 100
 		/varset QNUKE_Mana_NamedMinimum 0
 		/varset QNUKE_Mana_Minimum 0
 
@@ -290,16 +291,16 @@ Sub chkNoqCursebearers
 | Cursebearers
 |----------------------------
 Sub InkCurseRun
-    /docommand /${announceChannel} Running Cursecallers
+    /docommand /${str_announce_channel} Running Cursecallers
 	/nav wp cc1
     /delay 3s
 	/maxfps bg 30
 	:start
-		/if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /call InkDeath
+		/if (${Zone.ShortName.Equal[${str_zone_bound}]}) /call InkDeath
 		/if (${AdvPath.State} == 0) /play cursecallers
 	:movement
 		/if (!${Me.Inventory[17].ID} && !${Me.Inventory[18].ID}) /call InkDeath
-		/if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /call InkDeath
+		/if (${Zone.ShortName.Equal[${str_zone_bound}]}) /call InkDeath
 		/if (${AdvPath.State} == 2) {
 			/delay 10
 			/doevents InkCurseSafe
@@ -316,14 +317,14 @@ Sub InkCurseRun
 /return
 
 Sub InkDeath
-	/docommand /${announceChannel} ${Me.Name} is dead, Resetting.
+	/docommand /${str_announce_channel} ${Me.Name} is dead, Resetting.
 	/varset inkRunning FALSE
 	/play off
 	/delay 30
     /keypress back
 	:InkDeathWait
 	/doevents flush
-	/if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) {
+	/if (${Zone.ShortName.Equal[${str_zone_bound}]}) {
 		/delay 5s
 		/goto :InkDeathWait
 	}
@@ -541,7 +542,7 @@ Sub BalancerKillMelee(string _targetName, int _targetID, int _balanceTo)
 		/doevents BurnOn2
 		/doevents BurnOnAll
 		/doevents BurnOff
-		/call chkBurn
+		/call chkBurns
 		/if (!${bln_balancing}) /goto :return
 		/if (${Target.PctHPs} > ${_balanceTo}) /goto :BalancerMeleeLoop
 	:return
@@ -553,7 +554,7 @@ Sub BalancerKillMelee(string _targetName, int _targetID, int _balanceTo)
 Sub BalancerKillCaster(string _targetName, int _targetID, int _balanceTo)
 	|-- Balance of _targetName
 	/call TrueTarget ${_targetID}
-	/if (${QNUKE_Total} > 0 && ${Me.Class.ShortName.Equal[WIZ]}) {
+	/if (${QNUKE_total} > 0 && ${Me.Class.ShortName.Equal[WIZ]}) {
 		/echo setting fast only
 		/varset bln_useFastOnly TRUE
 	}
@@ -571,7 +572,7 @@ Sub BalancerKillCaster(string _targetName, int _targetID, int _balanceTo)
 		/doevents BurnOn2
 		/doevents BurnOnAll
 		/doevents BurnOff
-		/call chkBurn
+		/call chkBurns
 		/if (!${bln_balancing}) /goto :return
 		/if (${Target.PctHPs} > ${_balanceTo}) /goto :BalancerCasterLoop
 	:return
@@ -636,7 +637,7 @@ Sub EVENT_BALANCERAPE
 	:balanceRapeHeal
 		/doevents BALANCERAPEOFF
 		/if (!${balanceRapeHeal}) /return
-		/if (${bln_annouce}) /${cmdChannel} ${str_currentHeal} > ${Target.Name} hp:${Target.PctHPs} m:${Me.PctMana} d:${Target.Distance}
+		/if (${bln_announce}) /docommand /${str_announce_channel} ${str_currentHeal} > ${Target.Name} hp:${Target.PctHPs} m:${Me.PctMana} d:${Target.Distance}
 		/call MQ2Cast "${str_heal_normal}" gem2 1s
 		/if (!${SpawnCount[npc kvxe]}) /return
 	/goto :balanceRapeHeal

@@ -16,55 +16,54 @@ REVISION HISTORY
 	04.10.22	xiris   Mild refactoring to bring arg names inline with new	
 	05.01.23	xiris	Consolidated the melee endurance classes into a single statement
 	07.24.23	xiris	Rewrote majority of code to handle new INI implementations
+	08.13.23	xiris	Note: instead of loading another macro based on class, this macro will be the 
+						base macro for Xiris Bot. Everything now happens in the includes
 **|
 
 #turbo 120
-#define INI_COMMON      xiris_settings_global/xiris_settings_common.ini
+#warning 
 
+#define INI_CHAR        	xiris_settings_character/BOT_${Me.Class.ShortName}_${Me.CleanName}.ini
+#define INI_COMMON      	xiris_settings_global/xiris_settings_common.ini
+#define INI_DAMAGESHIELDS	xiris_settings_global/xiris_settings_damageshields.ini
+#define INI_HEAL			xiris_settings_global.xiris_settings_healing.ini
+#define INI_LOOT        	xiris_settings_global/xiris_settings_loot.ini
+#define INI_RAID 			xiris_settings_global/xiris_settings_raid.ini
+#include                	xiris_includes/xiris_spell_routines.inc
+
+#include                	xiris_includes/xiris_buffing.inc
+#include                	xiris_includes/xiris_burning.inc
+#include                	xiris_includes/xiris_casting.inc
+#include                	xiris_includes/xiris_clicks.inc
+#include 					xiris_includes/xiris_class.inc
+#include                	xiris_includes/xiris_common.inc
+#include                	xiris_includes/xiris_curing.inc
+#include                	xiris_includes/xiris_dannet.inc
+#include                	xiris_includes/xiris_events.inc
+#include                	xiris_includes/xiris_exclude.inc
+#include                	xiris_includes/xiris_healing.inc
+#include                	xiris_includes/xiris_looting.inc
+#include                	xiris_includes/xiris_melee.inc
+#include                	xiris_includes/xiris_movement.inc
+#include                	xiris_includes/xiris_offtank.inc
+#include					xiris_includes/xiris_pets.inc
 	
 |-------------------------------------------------------------------------------- 
 |SUB: Main
 |--------------------------------------------------------------------------------
-Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint, string _assistArgs)
-	
+Sub Main(string _t1, string _t2, string _t3, int _tankHealPointOverride)
+	/mqclear
 	
 	/echo \agYou are now in \arXIRIS: \aoBOT_LOADER.mac
+	/call xbot_initialize_common ${_t1} ${_t2} ${_t3} ${_tankHealPointOverride}
 
-	| set default values here in case we just started the loader with no args
-	/declare	str_defTank1		string	outer	${Ini[INI_COMMON,SETTINGS,defaultTank1,Xiris]}
-	/declare	str_defTank2		string	outer	${Ini[INI_COMMON,SETTINGS,defaultTank2,Xiria]}
-	/declare	str_defTank3		string	outer	${Ini[INI_COMMON,SETTINGS,defaultTank3,Xirea]}
-	/declare	int_defHealPoint	int		outer	${Ini[INI_COMMON,SETTINGS,defaultHealPoint,65]}
-	/declare    str_defAssistArgs	string	outer 	${Ini[INI_COMMON,SETTINGS,defaultAssistArgs,"FALSE,98"]}
-
-	/if (!${_tank1Name}) /varset _tank1Name ${str_defTank1}
-	/if (!${_tank2Name}) /varset _tank2Name ${str_defTank2}
-	/if (!${_tank3Name}) /varset _tank3Name ${str_defTank3}
-
-	/if (!${Defined[_healPoint]}) {
-		/declare _healPoint int local ${int_defHealPoint}
-	} else /if (!${_healPoint}) {
-		/varset _healPoint ${int_defHealPoint}
-	}
-
-	/if (!${Defined[_assistArgs]}) {
-		/declare _assistArgs int local ${str_defAssistArgs}
-	} else /if (!${_assistArgs}) {
-		/varset _assistArgs ${str_defAssistArgs}
-	}
-
-	|/echo \agLOADER: \aoMT: \ag${_tank1Name}\ao(\ag${Spawn[pc ${_tank1Name}].ID}\ao) \aw@ HealPoint:\ag${_healPoint}\ao Tank2: \ag${_tank2Name}\ao(\ag${Spawn[pc ${_tank2Name}].ID}\ao) Tank3: \ag${_tank3Name}\ao(\ag${Spawn[pc ${_tank3Name}].ID}\ao) AssistArgs: \ag${_assistArgs}
-	
-	| Determine which  macro to load
-	| note: melee endurance classes will run bot_melee
-	/declare 	macroName	string 	outer bot_${Me.Class.ShortName}
-	
-	/if (${Me.Class.ShortName.Equal[ROG]} || ${Me.Class.ShortName.Equal[MNK]} || ${Me.Class.ShortName.Equal[BER]}) {
-		/varset macroName bot_melee
-	} 
-	
-	| Load the class macro
-	/mac ${macroName} ${_tank1Name} ${_tank2Name} ${_tank3Name} ${_healPoint} ${_assistArgs}
-	
+	:MainLoop
+		/if (${Me.Hovering} || ${Window[tradewnd].Open} || ${Window[lootwnd].Open}) /goto :MainLoop
+		/call RunAllEvents
+        /if (${bln_engaged}) {
+			/call RunPriorityEvents
+			/call RunRaidEvents
+        } 
+    /goto :MainLoop
  /return
  

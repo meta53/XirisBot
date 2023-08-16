@@ -27,24 +27,34 @@ REVISION HISTORY
 #EVENT SetUseFastOnly		"#1# tells the raid#*#UseFastOnly #2#'"
 #EVENT SetUseFastOnly 		"[ #1# #*#]#*#UseFastOnly #2#"
 
+|MISC Casting (usually class based)
+#EVENT FIRETL 	            "#*#firetl#*#"
+
 
 Sub initEvents_Casting
-    /call RegisterRaidEvents Events_Casting_Raid
+    /call RegisterRaidEvents        Events_Casting_Raid
+    /call RegisterBackgroundEvents  Events_Casting_Background
 /return 
 
 Sub Events_Casting_Raid
-    /if (${Select[${Me.Class.ShortName.Equal[WAR,ROG,MNK,BER]}]}) /return
-    /if (${bln_engaged}) /call chkOffensiveSpells
+    /if (${Select[${Me.Class.ShortName.Equal[WAR,ROG,MNK,BER]}]})   /return
+    /if (${bln_engaged} && ${bln_killing} && !${bln_tanking} && !${bln_offTank})      /call chkOffensiveSpells
+    /if (${bln_engaged} && ${bln_killing} && !${bln_tanking} && !${bln_offTank})      /call chkDefensiveSpells
     /doevents SetResistType
 	/doevents SetUseFastOnly
 /return
+
+Sub Events_Casting_Background 
+    /if (${Me.Class.ShortName.Equal[WIZ]}) /doevents FIRETL
+/return 
+
 
 Sub xbot_initialize_casting
     /if (${Select[${Me.Class.ShortName.Equal[WAR,ROG,MNK,BER]}]}) /return
     /echo \n \apInitialize: \aoCasting \aw-------------------------
 
     |-- Spellset & Resists
-    /declare str_casting_spellSet           string  outer   NULL
+    /declare str_casting_spellSet           string  outer   default
     /declare str_casting_spellSet_saved     string  outer   NULL
     /declare str_defaultResistTypes	        string	outer	Chromatic,Corruption,Cold,Disease,Fire,Magic,Poison,Prismatic
 	/declare str_useResistTypes		        string	outer	${str_defaultResistTypes}
@@ -54,6 +64,7 @@ Sub xbot_initialize_casting
     /call processCastingTemplates
     /call processCastingSpells
     /call initEvents_Casting
+    /memspellset ${str_casting_spellSet}
 /return
 
 Sub processCastingTemplates
@@ -84,30 +95,91 @@ Sub processCastingTemplates
 
 Sub processCastingSpells
     /declare i int local 
+    | Offensive Spells
     /for i 1 to ${arr_offenseSpellTypes.Size}
         /call processOffensiveSpellSettings ${arr_offenseSpellTypes[${i}]}
     /next i
     /echo \a-w    Offensive Spells Processed: Count:\ag${int_cast_offense_total}
+    | Jolt Spells
+    /call processDefensiveSpellSetttings
+
 /return
+
+Sub processDefensiveSpellSetttings
+    /echo \awprocessDefensiveSpellSetttings \ay
+
+    /declare bln_cast_JOLT_enabled          bool    outer   FALSE
+    /declare int_cast_JOLT_total            int     outer   0
+    /declare timer_cast_JOLT                timer   outer   0
+    /declare int_cast_JOLT_minMana          int     outer   10
+    /declare int_cast_JOLT_startHP          int     outer   99
+    /declare int_cast_JOLT_stopHP           int     outer   0  
+    
+
+     |; _enabled|_delay|_minMana|_startHP|_stopHP
+    /if (${Ini[INI_CHAR,JOLT,settings].Arg[1,|]})  /varset bln_cast_JOLT_enabled    ${Ini[INI_CHAR,JOLT,settings].Arg[1,|]}
+    /if (${Ini[INI_CHAR,JOLT,settings].Arg[1,|]})  /varset timer_cast_JOLT          ${Ini[INI_CHAR,JOLT,settings].Arg[2,|]}
+    /if (${Ini[INI_CHAR,JOLT,settings].Arg[3,|]})  /varset int_cast_JOLT_minMana    ${Ini[INI_CHAR,JOLT,settings].Arg[3,|]}
+    /if (${Ini[INI_CHAR,JOLT,settings].Arg[4,|]})  /varset int_cast_JOLT_startHP    ${Ini[INI_CHAR,JOLT,settings].Arg[4,|]}
+    /if (${Ini[INI_CHAR,JOLT,settings].Arg[5,|]})  /varset int_cast_JOLT_stopHP     ${Ini[INI_CHAR,JOLT,settings].Arg[5,|]}
+
+        /echo \a-w    Settings Processed: \awJOLT Enabled:\ag${bln_cast_JOLT_enabled} \awTotal:\ag${int_cast_JOLT_total} \awMinMana:\ag${int_cast_JOLT_minMana} \awStart:\ag${int_cast_JOLT_startHP} \awStop:\ag${int_cast_JOLT_stopHP}
+    /if (!${bln_cast_JOLT_enabled}) {    
+        /varset int_cast_JOLT_total 0
+        /echo \a-w        JOLT Processed: Count:\ao[\ag${int_cast_JOLT_total}\ao] \awNo JOLT Spells
+        /return
+    }
+
+   | ; _jolt|_enabled|_gem|_maxTries|_namedOnly|_startHP|_stopHP|_hasCastOnce|_delay
+    /declare raw_jolt[12]		    string 	local NULL
+    /declare i						int 	local 0
+    /declare j                      int     local 0
+	/declare sz 					int     local 0
+    /declare test                   string  local   NULL
+
+    /for i 1 to ${raw_jolt.Size}
+        /varset test ${Ini[INI_CHAR,JOLT,JOLT_${i}]}
+        /if (${test.Arg[1,|].Equal[NULL]}) {
+            /varset  int_cast_JOLT_total ${sz}
+            /return
+        } 
+        | Not null, set the values for the buffs
+		/varcalc sz	${sz}+1
+		/declare JOLT_${i}_spell		    string	outer   ${test.Arg[1,|]}
+        /declare JOLT_${i}_enabled	    string  outer   ${test.Arg[2,|]}
+		/declare JOLT_${i}_gem	        string  outer   ${test.Arg[3,|]}
+		/declare JOLT_${i}_maxTries	    string  outer   ${test.Arg[4,|]}
+        /declare JOLT_${i}_namedOnly	    string  outer   ${test.Arg[5,|]}
+        /declare JOLT_${i}_startHP	    string  outer   ${test.Arg[6,|]}
+        /declare JOLT_${i}_stopHP	    string  outer   ${test.Arg[7,|]}
+        /declare JOLT_${i}_hasCastOnce   string  outer   ${test.Arg[8,|]}
+        /declare JOLT_${i}_delay	        string  outer   ${test.Arg[9,|]}
+        /declare JOLT_${i}_timer         timer   outer   JOLT${i}_delay	
+        /echo \ao        JOLT[\ag${i}\ao]: \awSpell:\ag${JOLT_${i}_spell} \awUse:\ag${JOLT_${i}_enabled} 
+    /next i
+
+
+/return 
 
 Sub processOffensiveSpellSettings(string _type)
     /echo \awprocessOffensiveSpellSettings \ay${_type}
 
-    /declare bln_cast_${_type}_enabled      bool   outer   FALSE
-    /declare int_cast_${_type}_total        int    outer   0
-    /declare int_cast_${_type}_mana         int    outer   10
-    /declare int_cast_${_type}_start        int    outer   99
-    /declare int_cast_${_type}_stop         int    outer   0
+    /declare bln_cast_${_type}_enabled      bool    outer   FALSE
+    /declare int_cast_${_type}_total        int     outer   0
+    /declare timer_cast_${_type}            timer   outer   0
+    /declare int_cast_${_type}_minMana      int     outer   10
+    /declare int_cast_${_type}_startHP      int     outer   99
+    /declare int_cast_${_type}_stopHP       int     outer   0
+
     
 
     |; _enabled|_delay|_minMana|_startHP|_stopHP
-    /if (${Ini[INI_CHAR,${_type},settings].Arg[1,|]})  /varset bln_cast_${_type}_enabled   ${Ini[INI_CHAR,${_type},settings].Arg[1,|]}
-    /if (${Ini[INI_CHAR,${_type},settings].Arg[3,|]})  /varset int_cast_${_type}_mana      ${Ini[INI_CHAR,${_type},settings].Arg[3,|]}
-    /if (${Ini[INI_CHAR,${_type},settings].Arg[4,|]})  /varset int_cast_${_type}_start     ${Ini[INI_CHAR,${_type},settings].Arg[4,|]}
-    /if (${Ini[INI_CHAR,${_type},settings].Arg[5,|]})  /varset int_cast_${_type}_stop      ${Ini[INI_CHAR,${_type},settings].Arg[5,|]}
+    /if (${Ini[INI_CHAR,${_type},settings].Arg[1,|]})  /varset bln_cast_${_type}_enabled    ${Ini[INI_CHAR,${_type},settings].Arg[1,|]}
+    /if (${Ini[INI_CHAR,${_type},settings].Arg[3,|]})  /varset int_cast_${_type}_minMana    ${Ini[INI_CHAR,${_type},settings].Arg[3,|]}
+    /if (${Ini[INI_CHAR,${_type},settings].Arg[4,|]})  /varset int_cast_${_type}_startHP    ${Ini[INI_CHAR,${_type},settings].Arg[4,|]}
+    /if (${Ini[INI_CHAR,${_type},settings].Arg[5,|]})  /varset int_cast_${_type}_stopHP     ${Ini[INI_CHAR,${_type},settings].Arg[5,|]}
 
-    /echo \a-w    Settings Processed: \aw${_type} Enabled:\ag${bln_cast_${_type}_enabled} \awTotal:\ag${int_cast_${_type}_total} \awMinMana:\ag${int_cast_${_type}_mana} \awStart:\ag${int_cast_${_type}_start} \awStop:\ag${int_cast_${_type}_stop}
-    
+    /echo \a-w    Settings Processed: \aw${_type} Enabled:\ag${bln_cast_${_type}_enabled} \awTotal:\ag${int_cast_${_type}_total} \awMinMana:\ag${int_cast_${_type}_minMana} \awStart:\ag${int_cast_${_type}_startHP} \awStop:\ag${int_cast_${_type}_stopHP}
     /if (!${bln_cast_${_type}_enabled}) {    
         /varset int_cast_${_type}_total 0
         /echo \a-w        ${_type} Processed: Count:\ao[\ag${int_cast_${_type}_total}\ao] \awNo ${_type} Spells
@@ -115,8 +187,8 @@ Sub processOffensiveSpellSettings(string _type)
     }
 
 
-    |;_spell|_use|_gem|_maxTries|_namedOnly|_startHP|_stopHP|_hasCastOnce|_delay
-    /declare raw_casting[100]		string 	local NULL
+    |;_spell|_enabled|_gem|_maxTries|_namedOnly|_startHP|_stopHP|_hasCastOnce|_delay
+    /declare raw_casting[12]		string 	local NULL
 	/declare i						int 	local 0
     /declare j                      int     local 0
 	/declare sz 					int     local 0
@@ -131,7 +203,7 @@ Sub processOffensiveSpellSettings(string _type)
     /for i 1 to ${raw_casting.Size}
         /varset test ${Ini[INI_CHAR,${_type},${_type}_${i}]}
         /if (${test.Arg[1,|].Equal[NULL]}) {
-            /varset int_cast_${_type}_total ${sz}
+            /varset  int_cast_${_type}_total ${sz}
             /echo \a-w        ${_type} Processed: Count:\ao[\ag${sz}\ao]
             /return
         }
@@ -146,9 +218,13 @@ Sub processOffensiveSpellSettings(string _type)
             /varset property ${test.Arg[${j},|]}
             /declare ${key} string outer ${property}
         /next j
+        | Add the timer based on delay
+        /declare ${_type}_${i}_timer timer outer ${${_type}_${i}_delay}
+        
         /varcalc int_cast_offense_total ${int_cast_offense_total} + 1 
-        /echo \ao        ${_type}[\ag${i}\ao]: \awspell:\ag${${_type}_${i}_spell}
+        /echo \ao        ${_type}_[\ag${i}\ao]: \awspell:\ag${${_type}_${i}_spell} \awenabled:\ag${${_type}_${i}_enabled} \awgem:\ag${${_type}_${i}_gem} \awmaxtries:\ag${${_type}_${i}_maxTries} \awnamedOnly:\ag${${_type}_${i}_namedOnly} \awstartHP:\ag${${_type}_${i}_startHP} \awstopHP:\ag${${_type}_${i}_stopHP} \awhascastonce:\ag${${_type}_${i}_hasCastOnce} \awdelay:\ag${${_type}_${i}_delay}    
     /next i
+    
 /return 
 
 |**
@@ -160,69 +236,67 @@ Sub processOffensiveSpellSettings(string _type)
  ----------------------------
 **|
 Sub chkOffensiveSpells
-    /if (!${Target.ID} || !${bln_engaged} || ${Target.Type.NotEqual[NPC]} || !${int_cast_offense_total}) /return
+    /if (!${Target.ID} || !${bln_engaged} || !${bln_killing} || ${Target.Type.NotEqual[NPC]} || !${int_cast_offense_total}) /return
     /echo chkOffensiveSpells ${arr_offenseSpellTypes.Size}
-    /declare i      int     local 0
-    /declare j      int     local 0
+    /declare i              int     local 0
+    /declare j              int     local 0
+    /declare oType          string  local NULL
+    /declare key            string  local NULL
     /call TargetNamedCheck
     /declare targetIsNamed  bool    local   ${Macro.Return}
     /for i 1 to ${arr_offenseSpellTypes.Size}
-        /echo enabled ${arr_offenseSpellTypes[${i}]} ${bln_cast_${arr_offenseSpellTypes[${i}]}_enabled} ${int_cast_${arr_offenseSpellTypes[${i}]}_total}
-        /if (!${bln_cast_${arr_offenseSpellTypes[${i}]}_enabled}) /goto :nextOffensiveSpell
+        /varset oType ${arr_offenseSpellTypes[${i}]}
+
+        | Check Settings for this type
+        /if (!${bln_cast_${oType}_enabled}) /continue
+        /if (${timer_cast_${oType}} ||(${Me.PctMana} < ${int_cast_${oType}_minMana} ||  ${Target.PctHPs} >= ${int_cast_${oType}_startHP})) /continue
+
         /for j 1 to ${int_cast_${arr_offenseSpellTypes[${i}]}_total}
-            /if (!${${arr_offenseSpellTypes[${i}]}_${j}_use} || (!${targetIsNamed} && ${${arr_offenseSpellTypes[${i}]}_${j}_namedOnly} || ${Target.Buff[${${arr_offenseSpellTypes[${i}]}_${j}_spell}].ID})) /continue
-            /call attemptOffensiveSpell ${arr_offenseSpellTypes[${i}]} ${j}
+            /varset key   ${oType}_${j}
+
+            | Check Triggers for this entry
+            /if ((${Target.PctHPs} <= ${${key}_startHP} && ${Target.PctHPs} >= ${${key}_stopHP}) &&!${${key}_enabled} || (!${targetIsNamed} && ${${key}_namedOnly}) || ${Target.Buff[${${key}_spell}].ID} || ${${key}_timer}) /continue
+
+            /call attemptCastingSpell ${key}
 			/call RunAllEvents
+            /varset timer_cast_${key} ${timer_cast_${key}.OriginalValue}
         /next j
-    :nextOffensiveSpell
+        /varset timer_cast_${oType} ${timer_cast_${oType}.OriginalValue}
     /next i
+    
 /return
 
 
-|**
- ----------------------------
- Cast Target Loop
- ----------------------------
- This method casts the offensive spell, if the start and stop are within bounds
- and the spell is memorized.
- Note the named only check happens in the chkOffensiveSpells subroutine, to minimize
- calls to TargetNamedCheck sub
- ----------------------------
-**|
-Sub attemptOffensiveSpell(string _type, int _index)
-    
-    /declare s string local ${${_type}_${_index}_spell}
-    /echo \aoattemptOffensiveSpell[\ag${_index}\ao](\ag${_type}\ao)\ap ${s}
 
-    /declare use        bool    local ${${_type}_${_index}_use}
-    /declare gem        int     local ${${_type}_${_index}_gem}
-    /declare tries      int     local ${${_type}_${_index}_maxTries}
-    /declare start      int     local ${${_type}_${_index}_startHP}
-    /declare stop       int     local ${${_type}_${_index}_stopHP}
+|-- Note the named only check happens in the chkOffensiveSpells subroutine, to minimize calls to TargetNamedCheck sub
+Sub attemptCastingSpell(string _key)
+    
+    /declare s string local           ${${_key}_spell}
+    /echo \aoattemptOffensiveSpell[\ag${s}\ao](\ag${${_key}_type}\ao)\ap ${${key}_gem}
+    /declare gem        int     local ${${_key}_gem}
+    /declare tries      int     local ${${_key}_maxTries}
 
     | Logic Checks
     /call chkSpellMemorized "${s}" FALSE ${gem}
-    /if (${Target.PctHPs} <= ${start} && ${Target.PctHPs} >= ${stop}) {
-        /if (${Me.Class.ShortName.Equal[BRD]}) {
-            /call MQ2Medley "${s}" SONG ${Target.ID} TRUE
-        } else {
-            /call MQ2Cast "${s}" ${gem} 1s chkCastTarget
-        }
-		/varset ${_type}_${_index}_hasCastOnce TRUE
+    /if (${Me.Class.ShortName.Equal[BRD]}) {
+        /call MQ2Medley "${s}" SONG ${Target.ID} TRUE
+    } else {
+        /call MQ2Cast "${s}" gem${gem} 1s chkCastTarget
     }
-    
+    /varset ${_key}_hasCastOnce TRUE
+    /varset ${_key}_timer       ${${_key}_delay} 
 /return 
 
-
-
 |-- Reset the timers on everything DOT/DD/STUN
-Sub ResetCastTimers
-	/if (${Select[${Me.Class.ShortName.Equal[WAR,ROG,MNK,BER]}]}) /return
+Sub resetCastTimers
+	/if (${Select[${Me.Class.ShortName},WAR,ROG,MNK,BER]}) /return
 
     /declare i      int     local 0
     /declare j      int     local 0
 
+    | offensive spell reset
     /for i 1 to ${arr_offenseSpellTypes.Size}
+        /if (!${bln_cast_${arr_offenseSpellTypes[${i}]}_enabled}) /continue
         /for j 1 to ${int_cast_${arr_offenseSpellTypes[${i}]}_total}
             /varset ${arr_offenseSpellTypes[${i}]}_${j}_hasCastOnce FALSE
         /next j
@@ -231,6 +305,45 @@ Sub ResetCastTimers
 	/echo       \a-wCasting: Reset all timers
 	:return
 /return 
+
+|**
+ ----------------------------
+ Check Defensive Spells vs Target (JOLT)
+ ----------------------------
+ This method checks the target status (named, etc), and loops through the defensive spell types and children
+ and calls casts if named and use conditions are met.
+ ----------------------------
+**|
+Sub chkDefensiveSpells
+    /if (!${Target.ID} || !${bln_engaged} || ${Target.Type.NotEqual[NPC]} || !${bln_cast_JOLT_enabled}) /return
+    /echo chkDefensiveSpells ${int_cast_JOLT_total}
+    /declare i      int     local 0
+    /declare j      int     local 0
+    /declare dtype   string  local NULL
+    /declare key    string  local NULL
+    /call TargetNamedCheck
+    /declare targetIsNamed  bool    local   ${Macro.Return}
+                
+    /for i 1 to ${int_cast_JOLT_total}
+        /varset dtype    JOLT
+
+        | Check Settings for this type
+         /if (!${bln_cast_${dtype}_enabled}) /continue
+        /if (${timer_cast_${dtype}} || (${Me.PctMana} < ${int_cast_${dtype}_minMana} ||  ${Target.PctHPs} >= ${int_cast_${dtype}_startHP})) /continue
+
+        | Check Each entry for this typoe
+        /for j 1 to ${int_cast_${dtype}_total}
+            /varset key   ${dtype}_${j}
+
+            | Check Triggers for this entry
+            /if ((${Target.PctHPs} <= ${${key}_startHP} && ${Target.PctHPs} >= ${${key}_stopHP}) &&!${${key}_enabled} || (!${targetIsNamed} && ${${key}_namedOnly} || ${Target.Buff[${${key}_spell}].ID}) || ${${key}_timer}) /continue
+            /call attemptCastingSpell ${key}
+			/call RunAllEvents
+            /varset timer_cast_${key} ${timer_cast_${key}.OriginalValue}
+        /next j
+    /next i
+    /varset timer_cast_${dtype} ${timer_cast_${dtype}.OriginalValue}
+/return
 
 
 |**
@@ -272,9 +385,9 @@ Sub chkCastTarget
  ----------------------------
 **|
 Sub chkSpellMemorized(string _spell, bool _wait, string _gem)
-    /echo \a-ochkSpellMemorized  \a-g${_spell}
+    |/echo \a-ochkSpellMemorized  \a-g${_spell}
 	/if (${_spell.Equal[NULL]}) {
-       /docommand /${announceChannel} Ther was an error trying to memorize a NULL spell!;
+       /docommand /${str_announce_channel} Ther was an error trying to memorize a NULL spell!;
        /return
     }
 	/if (${Me.Gem[${_spell}]})  /return
@@ -297,7 +410,7 @@ Sub chkSpellMemorized(string _spell, bool _wait, string _gem)
         /delay 50 ${Me.SpellReady[${_spell}]}
         /echo Spell Memorized
         /if (${Me.SpellReady[${_spell}]}) /return
-        /docommand /${announceChannel} There was a timeout error trying to memorize "${_spell}"
+        /docommand /${str_announce_channel} There was a timeout error trying to memorize "${_spell}"
 /return 
 
 
@@ -308,7 +421,7 @@ Sub chkSpellMemorized(string _spell, bool _wait, string _gem)
 | CSV value Chromatic,Corruption,Cold,Disease,Fire,Magic,Poison,Prismatic
 |--------------------------------------------------------------------------------
 
-Sub EVENT_SetResistType(_line, _chatSender, _eventParams) 
+Sub EVENT_SetResistType(string _line, string _sender, string _eventParams) 
 	/if (${str_class_type.Equal[MELEE_END]} || ${Me.Class.ShortName.Equal[WAR]}) /return
 	/declare _strResists string local ${_eventParams}
 	/echo \awSetting resist types: \ag${_eventParams}
@@ -325,6 +438,20 @@ Sub SetResistTypes(string _typesCSV)
 
 
 Sub SetSpellSet(string _type)
+    /varset str_casting_spellSet_saved ${str_casting_spellSet}
 	/memspellset ${_type}
 	/varset str_casting_spellSet ${_type}
 /return 
+
+|-------------------------------------------------------------------------------- 
+| EVENTS: CLASS Specific, ETC
+| Teleport, other class things
+|--------------------------------------------------------------------------------
+
+SUB EVENT_FIRETL
+	/doevents flush
+	/dgt Firing TL
+	/call MQ2Cast "Teleport" gem6
+	/delay 1m
+	/memspellset ${str_casting_spellSet}
+/return

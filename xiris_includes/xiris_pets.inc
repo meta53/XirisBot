@@ -76,19 +76,19 @@ Sub processPetSettings
 
 Sub processPetSummons
 	/echo \awprocessPetSummons
-	|; _pet|_use|_gem|_startHP|_keepAlive|_reagent
+	|; _pet|_enabled|_gem|_startHP|_keepAlive|_reagent
 	|PET="Child of Water"|TRUE|3|99|TRUE|NULL|
 
 	/declare bln_petSummoned	bool	outer	FALSE
 
 	/declare PET_1				string	outer	${Ini[INI_CHAR,PET,PET].Arg[1,|]}
-	/declare PET_1_Use			bool	outer	${Ini[INI_CHAR,PET,PET].Arg[2,|]}
+	/declare PET_1_enabled			bool	outer	${Ini[INI_CHAR,PET,PET].Arg[2,|]}
 	/declare PET_1_Gem			int		outer	${Ini[INI_CHAR,PET,PET].Arg[3,|]}
-	/declare PET_1_StartHP		int		outer	${Ini[INI_CHAR,PET,PET].Arg[4,|]}
+	/declare PET_1_startHP		int		outer	${Ini[INI_CHAR,PET,PET].Arg[4,|]}
 	/declare PET_1_KeepAlive	bool	outer	${Ini[INI_CHAR,PET,PET].Arg[5,|]}
 	/declare PET_1_Reagent		string	outer	${Ini[INI_CHAR,PET,PET].Arg[6,|]}	
  
-	/echo \ao        PET[\ag1\ao]: \awPet:\ag${PET_1} \awUse:\ag${PET_1_Use} \awGem:\ag${PET_1_Gem} \awStartHP:\ag${PET_1_StartHP} \awKeepAlive:\ag${PET_1_KeepAlive}
+	/echo \ao        PET[\ag1\ao]: \awPet:\ag${PET_1} \awUse:\ag${PET_1_enabled} \awGem:\ag${PET_1_Gem} \awStartHP:\ag${PET_1_startHP} \awKeepAlive:\ag${PET_1_KeepAlive}
 /return
 
 Sub processPetBuffs
@@ -106,7 +106,7 @@ Sub processPetBuffs
 	/declare bln_petBuffs_enabled			bool	outer	${bln_pets_enabled}
 	/declare bln_petBuffed					bool	outer	FALSE
 
-    |; _buff|_use|_gem
+    |; _buff|_enabled|_gem
 	|BUFF_1="Elemental Fury"|TRUE|7|
 	/for i 1 to ${raw_petBuffs.Size}
         | if the value of the entry ends with a quoted string, we need to wrap it all in quotes again.
@@ -118,9 +118,9 @@ Sub processPetBuffs
         | Not null, set the values for the buffs
 		/varcalc sz	${sz}+1
 		/declare PETBUFF_${i}		string	outer   ${test.Arg[1,|]}
-		/declare PETBUFF_${i}_Use	bool	outer   ${test.Arg[2,|]}
-		/declare PETBUFF_${i}_Gem	int		outer   ${test.Arg[3,|]}
-        /echo \ao        PETBUFF[\ag${i}\ao]: \awBuff:\ag${PETBUFF_${i}} \awUse:\ag${PETBUFF_${i}_Use} \awGem:\ag${PETBUFF_${i}_Gem}
+		/declare PETBUFF_${i}_enabled	bool	outer   ${test.Arg[2,|]}
+		/declare PETBUFF_${i}_gem	int		outer   ${test.Arg[3,|]}
+        /echo \ao        PETBUFF[\ag${i}\ao]: \awBuff:\ag${PETBUFF_${i}} \awUse:\ag${PETBUFF_${i}_enabled} \awGem:\ag${PETBUFF_${i}_gem}
 	/next i
 
 	| No Buffs? Disable buffing
@@ -144,7 +144,7 @@ Sub processPetHeals
 	/if (${Ini[INI_CHAR,PET,PETHEAL_1].Arg[1,|].Equal[NULL]})  /multiline ;  /echo \a-w    Settings Processed: \awEnabled:\ag${bln_petHeals_enabled} ; /return
 	
 
-    |; _heal|_use|_gem|_minHP|_minMana
+    |; _heal|_enabled|_gem|_minHP|_minMana
 	|HEAL_1="Renewal Of Jerikor"|TRUE|50|40|
 	/for i 1 to ${raw_petHeals.Size}
         | if the value of the entry ends with a quoted string, we need to wrap it all in quotes again.
@@ -156,11 +156,11 @@ Sub processPetHeals
         | Not null, set the values for the buffs
 		/varcalc sz	${sz}+1
 		/declare PETHEAL_${i}			string	outer   ${test.Arg[1,|]}
-		/declare PETHEAL_${i}_Use		bool	outer   ${test.Arg[2,|]}
-		/declare PETHEAL_${i}_Gem		int		outer   ${test.Arg[3,|]}
+		/declare PETHEAL_${i}_enabled		bool	outer   ${test.Arg[2,|]}
+		/declare PETHEAL_${i}_gem		int		outer   ${test.Arg[3,|]}
 		/declare PETHEAL_${i}_MinHP		int		outer   ${test.Arg[4,|]}
-		/declare PETHEAL_${i}_MinMana	int		outer   ${test.Arg[5,|]}
-        /echo \ao        PETHEAL[\ag${i}\ao]: \awBuff:\ag${PETHEAL_${i}} \awUse:\ag${PETHEAL_${i}_Use} \awGem:\ag${PETHEAL_${i}_Gem} \awMinHP:\ag${PETHEAL_${i}_MinHP} \awMinMana:\ag${PETHEAL_${i}_MinMana}
+		/declare PETHEAL_${i}_minMana	int		outer   ${test.Arg[5,|]}
+        /echo \ao        PETHEAL[\ag${i}\ao]: \awBuff:\ag${PETHEAL_${i}} \awUse:\ag${PETHEAL_${i}_enabled} \awGem:\ag${PETHEAL_${i}_gem} \awMinHP:\ag${PETHEAL_${i}_MinHP} \awMinMana:\ag${PETHEAL_${i}_minMana}
 	/next i
 /return 
 
@@ -168,7 +168,7 @@ Sub processPetHeals
 Sub processPetShrink
 	/echo \awprocessPetShrink
 	| There is only 1 pet shrinker ever defined so we don't have to worry about loops
-	|; _shrink|_use|_type|
+	|; _shrink|_enabled|_type|
 
 	/declare bln_petShrink_enabled 		bool	outer	FALSE
 	/declare int_petShrink_total 		int		outer	0
@@ -180,10 +180,10 @@ Sub processPetShrink
 	/varset  int_petShrink_total 		1
 	
 	/declare PETSHRINK_1		string	outer	${Ini[INI_CHAR,PET,SHRINK_1].Arg[1,|]}
-	/declare PETSHRINK_1_Use	bool	outer	${Ini[INI_CHAR,PET,SHRINK_1].Arg[2,|]}
+	/declare PETSHRINK_1_enabled	bool	outer	${Ini[INI_CHAR,PET,SHRINK_1].Arg[2,|]}
 	/declare PETSHRINK_1_Type	int		outer	${Ini[INI_CHAR,PET,SHRINK_1].Arg[3,|]}
 
-	/echo \ao        PETSHRINK[\ag1\ao]: \awShrink:\ag${PETSHRINK_1} \awUse:\ag${PETSHRINK_1_Use} \awType:\ag${PETSHRINK_1_Type} \
+	/echo \ao        PETSHRINK[\ag1\ao]: \awShrink:\ag${PETSHRINK_1} \awUse:\ag${PETSHRINK_1_enabled} \awType:\ag${PETSHRINK_1_Type} \
 /return 
 
 Sub processPetItems
@@ -200,9 +200,10 @@ Sub processPetItems
 	/declare bln_petItems_enabled			bool	outer	TRUE
 	/declare bln_petItemized				bool 	outer 	FALSE
 
-	/if (${Ini[INI_CHAR,PET,ITEM_1].Arg[1,|].Equal[NULL]}) /multiline ; /varset bln_petItems_enabled FALSE ; /return
+	/varset test ${Ini[INI_CHAR,PET,ITEM_1]}
+	/if (${test.Arg[1,|].Equal[NULL]}) /multiline ; /varset bln_petItems_enabled FALSE ; /return
 
-    |; _item|_type|_use|_gem|_summoner|_slot
+    |; _item|_type|_enabled|_gem|_summoner|_slot
 	|ITEM_1="Summoned: Crystal Belt"|SPELL|TRUE|1|"Summon Crystal Belt"|WORN
 	/for i 1 to ${raw_petItems.Size}
         | if the value of the entry ends with a quoted string, we need to wrap it all in quotes again.
@@ -214,17 +215,16 @@ Sub processPetItems
         | Not null, set the values for the buffs
 		/varcalc sz	${sz}+1
 		/declare PETITEM_${i}			string	outer   ${test.Arg[1,|]}
-		/declare PETITEM_${i}_Type		bool	outer   ${test.Arg[2,|]}
-		/declare PETITEM_${i}_Use		bool	outer   ${test.Arg[3,|]}
-		/declare PETITEM_${i}_Gem		int		outer   ${test.Arg[4,|]}
+		/declare PETITEM_${i}_type		bool	outer   ${test.Arg[2,|]}
+		/declare PETITEM_${i}_enabled		bool	outer   ${test.Arg[3,|]}
+		/declare PETITEM_${i}_gem		int		outer   ${test.Arg[4,|]}
 		/declare PETITEM_${i}_Summoner	string	outer   ${test.Arg[5,|]}
 		/declare PETITEM_${i}_Slot	    string	outer   ${test.Arg[6,|]}
-        /echo \ao        PETITEM[\ag${i}\ao]: \awBuff:\ag${PETITEM_${i}} \awType:\ag${PETITEM_${i}_Type}  \awUse:\ag${PETITEM_${i}_Use} \awGem:\ag${PETITEM_${i}_Gem} \awSummoner:\ag${PETITEM_${i}_Summoner}} \awSlot:\ag${PETITEM_${i}_Slot} 
+        /echo \ao        PETITEM[\ag${i}\ao]: \awBuff:\ag${PETITEM_${i}} \awType:\ag${PETITEM_${i}_type}  \awUse:\ag${PETITEM_${i}_enabled} \awGem:\ag${PETITEM_${i}_gem} \awSummoner:\ag${PETITEM_${i}_Summoner}} \awSlot:\ag${PETITEM_${i}_Slot} 
 	/next i
 /return
 
 Sub chkPet
-	/echo checkpet ${bln_pets_enabled} ${bln_engaged}
 	/if (!${bln_pets_enabled}) /return
 	| This method calls the other methods based on bools when we set this up
 	/if (${bln_engaged}) {
@@ -248,7 +248,6 @@ Sub chkPetStatus
 			/varset bln_pets_enabled FALSE
 			/return
 		}
-		/echo Summoning Pet
 		| Summon Pet
 		/call chkSpellMemorized "${PET_1}" TRUE ${PET_1_Gem}
 		/call MQ2Cast "${PET_1}" ${PET_1_Gem} 50
@@ -264,15 +263,19 @@ Sub chkPetStatus
 	}
 /return 
 
+Sub chkPetAttack
+	/if (!${bln_engaged} || !${Target.PctHPs} ) /return
+	/if (${Pet.ID} && !${Pet.Combat} && ${Target.ID}==${int_targetID} && ${Target.Distance}<=100) /call chkPetAttack
+/return
+
 Sub chkPetBuffs
 	/if (!${Pet.ID}) /return
-	/echo Buffing Pet
 	/declare i int local 0
 	/for i 1 to ${int_petBuffs_total}
 		| If no buff, or buff duration is under a minute, cast
 		/if (!${Pet.Buff[${PETBUFF_${i}}]} || (${Pet.Buff[${PETBUFF_${i}}]} && ${Pet.BuffDuration[${PETBUFF_${i}}]} < 60000)) {
-			/call chkSpellMemorized "${PETBUFF_${i}}" TRUE ${PETBUFF_${i}_Gem}
-			/call MQ2Cast "${PETBUFF_${i}}" ${PETBUFF_${i}_Gem} 50
+			/call chkSpellMemorized "${PETBUFF_${i}}" TRUE ${PETBUFF_${i}_gem}
+			/call MQ2Cast "${PETBUFF_${i}}" ${PETBUFF_${i}_gem} 50
 		}
 	/next i
 	
@@ -291,7 +294,6 @@ Sub chkPetShrink
 Sub chkPetItems
 	/if (!${Pet.ID}) /return
 	/if (!${bln_petItemized}) {
-		/echo Itemizing Pet
 		| Count the pet weapons so we don't have to cast them if we dont need to
 		/declare weaponCount int local 2
 		/if (!${Pet.Equipment[offhand]}) /varcalc weaponCount ${weaponCount} - 1
@@ -302,9 +304,9 @@ Sub chkPetItems
 		/declare i int local 0
 		/for i 1 to ${int_petItem_total}
 			/echo \a-wItem \ag${PETITEM_${i}} \a-wSummoner \ag${PETITEM_${i}_Summoner} 
-			/call chkSpellMemorized "${PETITEM_${i}_Summoner}" TRUE ${PETITEM_${i}_Gem}
+			/call chkSpellMemorized "${PETITEM_${i}_Summoner}" TRUE ${PETITEM_${i}_gem}
 			| Summon items and hand them to pet.
-			/call MQ2Cast "${PETITEM_${i}_Summoner}" ${PETITEM_${i}_Gem} 5s
+			/call MQ2Cast "${PETITEM_${i}_Summoner}" ${PETITEM_${i}_gem} 5s
 			/delay 50 !${Me.Casting.ID}
 			/if (${Pet.Distance} > 20 && ${Pet.Distance} < 100) /nav id ${Pet.ID}
 			/delay 300 !${Navigation.Active}

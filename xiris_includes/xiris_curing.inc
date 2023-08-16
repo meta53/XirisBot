@@ -83,11 +83,11 @@ Sub Events_Curing_Background
 	/doevents cureImmediate
     /doevents cureRequired 
     /doevents cureLazy
-    /if (${Select[${Me.Class.ShortName},CLR,DRU,PAL,SHM]} && (!${bln_engaged} && !${timer_check_cures})) /call chkCures
+    /if (${Select[${Me.Class.ShortName},CLR,DRU,PAL,SHM]} && (!${bln_engaged} || !${timer_check_cures})) /call chkCures
 /return
 
 Sub Events_Curing_Raid
-    /if (${Select[${Me.Class.ShortName},CLR,DRU,PAL,SHM]} && ${bln_engaged}) /call chkCures
+    /if (${Select[${Me.Class.ShortName},CLR,DRU,PAL,SHM]} && (${bln_engaged} || ${bln_killing})) /call chkCures
 /return
 
 Sub Events_Curing_Priority
@@ -189,7 +189,7 @@ Sub processCureSpellSettings
     /if (!${Ini[INI_CHAR,CURES,settings].Arg[5,|]})  /varset bln_autoCureLazy       FALSE
 
 
-    |; _radiant|_use|_type
+    |; _radiant|_enabled|_type
     /if (${Ini[INI_CHAR,CURES,CURE_radiant].Arg[1,|].NotEqual[NULL]})  /varset bln_hasCure_radiant TRUE
     /if (${Ini[INI_CHAR,CURES,CURE_radiant].Arg[1,|].NotEqual[NULL]})  /varset str_cure_radiant    ${Ini[INI_CHAR,CURES,CURE_radiant].Arg[1,|]}  
     /if (${Ini[INI_CHAR,CURES,CURE_radiant].Arg[2,|]})  /varset bln_useCure_radiant TRUE  
@@ -262,12 +262,12 @@ Sub processCureDebuffList
     /declare i                          int     local 0
     /declare sz                         int     local 0 
     /declare test                       string  local NULL
-
+    /declare str_queryCurable           string  outer   NULL
 
     | Tracking information for all classes
     | Immediate Cure Requirments, clients keep a list of /counters per type
     | We can then more quickly query them and determine if use group
-    /declare str_queryCurable           string  outer   NULL
+    
     /declare has_immediate              bool    outer   NULL
     /declare int_immediate_curse        int     outer   NULL
     /declare int_immediate_disease      int     outer   NULL
@@ -302,9 +302,9 @@ Sub processCureDebuffList
         | Not null, set the values for the debuffs to be cured
         /varcalc sz ${sz}+1
         /declare DEBUFF_IMMEDIATE_${i}          string  outer   ${Ini[INI_COMMON,CURING_DEBUFF_IMMEDIATE,DEBUFF_${i}].Arg[1,|]}
-        /declare DEBUFF_IMMEDIATE_${i}_Type     string  outer   ${Ini[INI_COMMON,CURING_DEBUFF_IMMEDIATE,DEBUFF_${i}].Arg[2,|]}
-        /declare DEBUFF_IMMEDIATE_${i}_Targets  string  outer   ${Ini[INI_COMMON,CURING_DEBUFF_IMMEDIATE,DEBUFF_${i}].Arg[3,|]}
-        /echo \ao        DEBUFF_IMMEDIATE[\ag${i}\ao]: \awDebuff:\ag${DEBUFF_IMMEDIATE_${i}} \awType:\ag${DEBUFF_IMMEDIATE_${i}_Type} \awTargets:\ag${DEBUFF_IMMEDIATE_${i}_Targets}
+        /declare DEBUFF_IMMEDIATE_${i}_type     string  outer   ${Ini[INI_COMMON,CURING_DEBUFF_IMMEDIATE,DEBUFF_${i}].Arg[2,|]}
+        /declare DEBUFF_IMMEDIATE_${i}_targets  string  outer   ${Ini[INI_COMMON,CURING_DEBUFF_IMMEDIATE,DEBUFF_${i}].Arg[3,|]}
+        /echo \ao        DEBUFF_IMMEDIATE[\ag${i}\ao]: \awDebuff:\ag${DEBUFF_IMMEDIATE_${i}} \awType:\ag${DEBUFF_IMMEDIATE_${i}_type} \awTargets:\ag${DEBUFF_IMMEDIATE_${i}_targets}
     /next i
 
     :required
@@ -319,9 +319,9 @@ Sub processCureDebuffList
         | Not null, set the values for the debuffs to be cured
         /varcalc sz ${sz}+1
         /declare DEBUFF_REQUIRED_${i}          string   outer   ${Ini[INI_COMMON,CURING_DEBUFF_REQUIRED,DEBUFF_${i}].Arg[1,|]}
-        /declare DEBUFF_REQUIRED_${i}_Type     string   outer   ${Ini[INI_COMMON,CURING_DEBUFF_REQUIRED,DEBUFF_${i}].Arg[2,|]}
-        /declare DEBUFF_REQUIRED_${i}_Targets  string   outer   ${Ini[INI_COMMON,CURING_DEBUFF_REQUIRED,DEBUFF_${i}].Arg[3,|]}
-        /echo \ao        DEBUFF_REQUIRED[\ag${i}\ao]: \awDebuff:\ag${DEBUFF_REQUIRED_${i}} \awType:\ag${DEBUFF_REQUIRED_${i}_Type} \awTargets:\ag${DEBUFF_REQUIRED_${i}_Targets}
+        /declare DEBUFF_REQUIRED_${i}_type     string   outer   ${Ini[INI_COMMON,CURING_DEBUFF_REQUIRED,DEBUFF_${i}].Arg[2,|]}
+        /declare DEBUFF_REQUIRED_${i}_targets  string   outer   ${Ini[INI_COMMON,CURING_DEBUFF_REQUIRED,DEBUFF_${i}].Arg[3,|]}
+        /echo \ao        DEBUFF_REQUIRED[\ag${i}\ao]: \awDebuff:\ag${DEBUFF_REQUIRED_${i}} \awType:\ag${DEBUFF_REQUIRED_${i}_type} \awTargets:\ag${DEBUFF_REQUIRED_${i}_targets}
     /next i    
 /return 
 
@@ -346,15 +346,15 @@ Sub determineMyCureCounters
 
     /for i 1 to ${int_immediateDebuffCures_total}
         |/echo IMMEDIATE: ${DEBUFF_IMMEDIATE_${i}} ${Me.Buff[${DEBUFF_IMMEDIATE_${i}}].ID} 
-        /if (${DEBUFF_IMMEDIATE_${i}_Targets.Equal[MT]} && (${Me.ID} != ${int_MTID})) /varset bln_MTApplies FALSE
-        /if (!${Select[${Me.Class.ShortName},${DEBUFF_REQUIRED_${i}_Targets} ]} && !${DEBUFF_IMMEDIATE_${i}_Targets.Equal[ALL]} && (${bln_MTApplies})) {
+        /if (${DEBUFF_IMMEDIATE_${i}_targets.Equal[MT]} && (${Me.ID} != ${int_MTID})) /varset bln_MTApplies FALSE
+        /if (!${Select[${Me.Class.ShortName},${DEBUFF_REQUIRED_${i}_targets} ]} && !${DEBUFF_IMMEDIATE_${i}_targets.Equal[ALL]} && (${bln_MTApplies})) {
             |/echo not a spell my class needs to cure
             /goto :nextImmediate
         }
         /if (${Me.Buff[${DEBUFF_IMMEDIATE_${i}}].ID}) {
-            /if (${DEBUFF_IMMEDIATE_${i}_Type.Equal[curse]})    /varset int_immediate_curse    ${Debuff.Cursed}
-            /if (${DEBUFF_IMMEDIATE_${i}_Type.Equal[disease]})  /varset int_immediate_disease  ${Debuff.Diseased}
-            /if (${DEBUFF_IMMEDIATE_${i}_Type.Equal[poison]})   /varset int_immediate_poison   ${Debuff.Poisoned}
+            /if (${DEBUFF_IMMEDIATE_${i}_type.Equal[curse]})    /varset int_immediate_curse    ${Debuff.Cursed}
+            /if (${DEBUFF_IMMEDIATE_${i}_type.Equal[disease]})  /varset int_immediate_disease  ${Debuff.Diseased}
+            /if (${DEBUFF_IMMEDIATE_${i}_type.Equal[poison]})   /varset int_immediate_poison   ${Debuff.Poisoned}
             /varset has_immediate TRUE
         }
     :nextImmediate
@@ -362,15 +362,15 @@ Sub determineMyCureCounters
 
     | We don't care as much about required buffs, so we dont need their counters
     /for i 1 to ${int_requiredDebuffCures_total}
-        /if (${DEBUFF_REQUIRED_${i}_Targets.Equal[MT]} && (${Me.ID} != ${int_MTID})) /varset bln_MTApplies FALSE
-        /if (!${Select[${Me.Class.ShortName},${DEBUFF_REQUIRED_${i}_Targets} ]} && !${DEBUFF_REQUIRED_${i}_Targets.Equal[ALL]} && (${bln_MTApplies})) {
+        /if (${DEBUFF_REQUIRED_${i}_targets.Equal[MT]} && (${Me.ID} != ${int_MTID})) /varset bln_MTApplies FALSE
+        /if (!${Select[${Me.Class.ShortName},${DEBUFF_REQUIRED_${i}_targets} ]} && !${DEBUFF_REQUIRED_${i}_targets.Equal[ALL]} && (${bln_MTApplies})) {
             |/echo not a spell my class needs to cure
             /goto :nextRequired
         }
         /if (${Me.Buff[${DEBUFF_REQUIRED_${i}}].ID}) {
-            /if (${DEBUFF_REQUIRED_${i}_Type.Equal[curse]})    /varset int_required_curse    ${Debuff.Cursed}
-            /if (${DEBUFF_REQUIRED_${i}_Type.Equal[disease]})  /varset int_required_disease  ${Debuff.Diseased}
-            /if (${DEBUFF_REQUIRED_${i}_Type.Equal[poison]})   /varset int_required_poison   ${Debuff.Poisoned}
+            /if (${DEBUFF_REQUIRED_${i}_type.Equal[curse]})    /varset int_required_curse    ${Debuff.Cursed}
+            /if (${DEBUFF_REQUIRED_${i}_type.Equal[disease]})  /varset int_required_disease  ${Debuff.Diseased}
+            /if (${DEBUFF_REQUIRED_${i}_type.Equal[poison]})   /varset int_required_poison   ${Debuff.Poisoned}
             /varset has_required TRUE
         }
     :nextRequired
@@ -387,6 +387,7 @@ Sub determineMyCureCounters
 | Note this is generally disabled, since only a few priests are ever assigned to autocure MT
 Sub chkCures
     /declare lazy bool local ${If[${bln_engaged},FALSE,TRUE]}
+    /if (${bln_killing} || ${bln_engaged}) /varset lazy FALSE
     /echo \aochkCures \a-wMT: \ap${bln_autoCureMT} \a-wSelf: \ap${bln_autoCureSelf} \a-wGroup: \ap${bln_autoCureGroup} \a-wLazy: \ap${lazy} \a-wEngaged?: \ap${bln_engaged} ${If[${bln_engaged},,\a-wTimer?: \ap${timer_check_cures.OriginalValue}]}
 	/if (${bln_autoCureMT}) 	/call chkCure_MT    ${lazy}
  	/if (${bln_autoCureSelf}) 	/call chkCure_Self  ${lazy}
@@ -397,7 +398,7 @@ Sub chkCures
 | Check Cures for the MT. Optionally pass in TRUE for Lazy if you want to check LAZY cures as well.
 | Note this is generally disabled, since "/dt CLERICNAME autocure TRUE" sets MT checking for priests
 Sub chkCure_MT(bool _lazyMT)
-    /echo \awchkCure_MT(\ao${_lazyMT}\aw)
+    |/echo \awchkCure_MT(\ao${_lazyMT}\aw)
     | Check Immediate Cures
     /call chkCureType_IMMEDIATE ${Spawn[id ${int_MTID}]} ${int_MTID}
     | Check Required Cures
@@ -409,7 +410,7 @@ Sub chkCure_MT(bool _lazyMT)
 | Check Cures for SELF. Optionally pass in TRUE for Lazy if you want to check LAZY cures as well.
 | Note this is generally disabled, since GROUP checks self
 Sub chkCure_Self(bool _lazySelf)
-    /echo \awchkCure_Self(\ao${_lazySelf}\aw)
+    |/echo \awchkCure_Self(\ao${_lazySelf}\aw)
     | Check Immediate Cures
     /call chkCureType_IMMEDIATE ${Me.Name} ${Me.ID}
     | Check Required Cures
@@ -421,7 +422,7 @@ Sub chkCure_Self(bool _lazySelf)
 | Check Cures for GROUP. Optionally pass in TRUE for Lazy if you want to check LAZY cures as well.
 | This is usually the only check a group priest will use.
 Sub chkCure_Group(bool _lazyGroup)
-    /echo \awchkCure_Group(\ao${_lazyGroup}\aw)
+    |/echo \awchkCure_Group(\ao${_lazyGroup}\aw)
 
     | Create local vars for processing
     /declare r int local 0
@@ -455,12 +456,13 @@ Sub chkCure_Group(bool _lazyGroup)
     | ------
 
     /for r 1 to ${g}
-        /if (!${Group.Member[${sz}].Present}) /continue
         /varcalc sz ${r}-1
-        /dquery ${Group.Member[${sz}].Name} -q "str_queryCurable" -o str_debuffQueryResult
-        /delay 20 ${DanNet.Q.Received}
+        /if (!${Group.Member[${sz}].Present}) /continue
+        /dquery ${Group.Member[${sz}].Name} -q "str_queryCurable" -o str_debuffQueryResult -t 20
+
         
         |Process the immediate results
+        /if (!${str_debuffQueryResult}) /continue
         /echo \apstr_debuffQueryResult \ao${Group.Member[${sz}].Name} \ag ${str_debuffQueryResult}
         /varset str_queryTF         ${str_debuffQueryResult.Arg[1,|].Arg[1,~]}
         /varset str_queryDetails    ${str_debuffQueryResult.Arg[1,|].Arg[2,~]}
@@ -614,6 +616,7 @@ Sub getMQ2DebuffCounterString(string _cureType)
 
 | Direct call from EVENT cureRequest(_TYPE[ALL|IMMEDIATE|REQUIRED|LAZY]) not generally used
 Sub chkCureType_ALL(string _victimName, int _id)
+    /if (!${SpawnCount[id ${_id}]}) /return
     /call chkCureType_IMMEDIATE ${_victimName} ${_id}
     /call chkCureType_REQUIRED  ${_victimName} ${_id}
 /return 
@@ -636,23 +639,23 @@ sub chkCureType_IMMEDIATE(string _victimName, int _id)
     /for i 1 to ${int_immediateDebuffCures_total}
         /varset foundCounters 0
         |---------
-        /echo \aoDebuffName \ag${DEBUFF_IMMEDIATE_${i}} \aoDebuffType \ag${DEBUFF_IMMEDIATE_${i}_Type} \aoDebuffType \ag${DEBUFF_IMMEDIATE_${i}_Targets}
-        /if (!${Select[${Spawn[id ${_id}].Class.ShortName},${DEBUFF_IMMEDIATE_${i}_Targets}]} && !${DEBUFF_IMMEDIATE_${i}_Targets.Equal[ALL]} && (${DEBUFF_IMMEDIATE_${i}_Targets.Equal[MT]} && ${_id} != ${int_MTID})) {
-            /echo DID NOT FIND THIS CLASS AS PART OF CHECK ${Spawn[id ${_id}].Class.ShortName} => ${DEBUFF_IMMEDIATE_${i}_Targets}
+        /echo \aoDebuffName \ag${DEBUFF_IMMEDIATE_${i}} \aoDebuffType \ag${DEBUFF_IMMEDIATE_${i}_type} \aoDebuffType \ag${DEBUFF_IMMEDIATE_${i}_targets}
+        /if (!${Select[${Spawn[id ${_id}].Class.ShortName},${DEBUFF_IMMEDIATE_${i}_targets}]} && !${DEBUFF_IMMEDIATE_${i}_targets.Equal[ALL]} && (${DEBUFF_IMMEDIATE_${i}_targets.Equal[MT]} && ${_id} != ${int_MTID})) {
+            /echo DID NOT FIND THIS CLASS AS PART OF CHECK ${Spawn[id ${_id}].Class.ShortName} => ${DEBUFF_IMMEDIATE_${i}_targets}
             /goto :nextImmediate
         }
         /dquery ${_victimName} -q "Me.Buff[${DEBUFF_IMMEDIATE_${i}}].ID" -o foundDebuff
         /delay 10 ${DanNet.Q.Received}
         /if (!${foundDebuff}) /goto :nextImmediate
         |---------
-        /call getMQ2DebuffCounterString ${DEBUFF_IMMEDIATE_${i}_Type}
+        /call getMQ2DebuffCounterString ${DEBUFF_IMMEDIATE_${i}_type}
         /varset dCounterString ${Macro.Return}
         /dquery ${_victimName} -q "Debuff.${dCounterString}" -o foundCounters
         /delay 10 ${DanNet.Q.Received}
         /if (!${foundCounters}) /goto :nextImmediate
         |---------
         /echo \ar Immediate Cure Necessary! \ao ${DEBUFF_IMMEDIATE_${i}}
-        /call handleCureRequestV2 ${_victimName} ${_id} "${DEBUFF_IMMEDIATE_${i}}" ${DEBUFF_IMMEDIATE_${i}_Type} ${foundCounters} TRUE
+        /call handleCureRequestV2 ${_victimName} ${_id} "${DEBUFF_IMMEDIATE_${i}}" ${DEBUFF_IMMEDIATE_${i}_type} ${foundCounters} TRUE
         | If we cured something from immediate cures, we want to bail out of this to continue our checks on others
         /return CURED
     :nextImmediate
@@ -676,23 +679,23 @@ Sub chkCureType_REQUIRED(string _victimName, int _id)
     /for i 1 to ${int_requiredDebuffCures_total}
         /varset foundCounters 0
         |---------
-        |/echo \aoDebuffName \ag${DEBUFF_REQUIRED_${i}} \aoDebuffType \ag${DEBUFF_REQUIRED_${i}_Type} \aoDebuffType \ag${DEBUFF_REQUIRED_${i}_Targets}
-        /if (!${Select[${Spawn[id ${_id}].Class.ShortName},${DEBUFF_REQUIRED_${i}_Targets}]} && !${DEBUFF_REQUIRED_${i}_Targets.Equal[ALL]} && (${DEBUFF_REQUIRED_${i}_Targets.Equal[MT]} && ${_id} != ${int_MTID})) {
-            |/echo DID NOT FIND THIS CLASS AS PART OF CHECK ${Spawn[id ${_id}].Class.ShortName} => ${DEBUFF_REQUIRED_${i}_Targets}
+        |/echo \aoDebuffName \ag${DEBUFF_REQUIRED_${i}} \aoDebuffType \ag${DEBUFF_REQUIRED_${i}_type} \aoDebuffType \ag${DEBUFF_REQUIRED_${i}_targets}
+        /if (!${Select[${Spawn[id ${_id}].Class.ShortName},${DEBUFF_REQUIRED_${i}_targets}]} && !${DEBUFF_REQUIRED_${i}_targets.Equal[ALL]} && (${DEBUFF_REQUIRED_${i}_targets.Equal[MT]} && ${_id} != ${int_MTID})) {
+            |/echo DID NOT FIND THIS CLASS AS PART OF CHECK ${Spawn[id ${_id}].Class.ShortName} => ${DEBUFF_REQUIRED_${i}_targets}
             /goto :nextRequired
         }
         /dquery ${_victimName} -q "Me.Buff[${DEBUFF_REQUIRED_${i}}].ID" -o foundDebuff
         /delay 10 ${DanNet.Q.Received}
         /if (!${foundDebuff}) /goto :nextRequired
         |---------
-        /call getMQ2DebuffCounterString ${DEBUFF_REQUIRED_${i}_Type}
+        /call getMQ2DebuffCounterString ${DEBUFF_REQUIRED_${i}_type}
         /varset dCounterString ${Macro.Return}
         /dquery ${_victimName} -q "Debuff.${dCounterString}" -o foundCounters
         /delay 10 ${DanNet.Q.Received}
         /if (!${foundCounters}) /goto :nextInextRequiredmmediate
         |---------
         /echo \ar Required Cure Necessary! \ao ${DEBUFF_REQUIRED_${i}}
-        /call handleCureRequestV2 ${_victimName} ${_id} "${DEBUFF_REQUIRED_${i}}" ${DEBUFF_REQUIRED_${i}_Type} ${foundCounters} TRUE
+        /call handleCureRequestV2 ${_victimName} ${_id} "${DEBUFF_REQUIRED_${i}}" ${DEBUFF_REQUIRED_${i}_type} ${foundCounters} TRUE
         | If we cured something from immediate cures, we want to bail out of this to continue our checks on others
         /return CURED
     :nextRequired
@@ -702,7 +705,8 @@ Sub chkCureType_REQUIRED(string _victimName, int _id)
 
 
 Sub chkCureType_LAZY(string _victimName, int _id)
-    /echo \awchkCureType_LAZY(\ao${_victimName}) 
+    /if (!${SpawnCount[id ${_id}]}) /return
+    |/echo \awchkCureType_LAZY(\ao${_victimName}) 
 	| Check if MT needs cure
 	| Specific items that need force cure
 	/declare foundCounters	int		local	0
@@ -747,8 +751,8 @@ Sub chkCureType_LAZY(string _victimName, int _id)
 
 | note: curestring looks like "Wanton Destruction"|curse|ALL
 | note: str_cure_curse looks like "Remove Greater Curse"|45 <= this is due to not being able to programmatically retrieve the amount of counters cured
-Sub handleCureRequestV2(string _name, int _id, string _debuffName, string _cureType, int _counters, bool _forced)
-	/echo \ayhandleCureRequestV2: \ag${_name}\ao, \ag${_id}\ao, \ag${_debuffName}\ao, \ag${_cureType}, \ag${_counters}\ao, \ag${_forced}
+Sub handleCureRequestV2(string _victim, int _id, string _debuffName, string _cureType, int _counters, bool _forced)
+	/echo \ayhandleCureRequestV2: \ag${_victim}\ao, \ag${_id}\ao, \ag${_debuffName}\ao, \ag${_cureType}, \ag${_counters}\ao, \ag${_forced}
 	| Verify I can actually cure this
 	/if (!${bln_hasCure_${_cureType}}) {
 		/echo \ar Cannot cure ${_cureType} due to lack of available cure.
@@ -766,11 +770,11 @@ Sub handleCureRequestV2(string _name, int _id, string _debuffName, string _cureT
 	/declare cureSpell string local ${str_cure_${_cureType}.Arg[1,|]}
     /echo cureSpell ${cureSpell}
     /if (${cureSpell.Equal[NULL]}) {
-        /echo \arCannot cure ${_name} due to lack of ${_cureType} cure.
+        /echo \arCannot cure ${_victim} due to lack of ${_cureType} cure.
         /return
     }
-	/if (!${SpawnCount[pc ${_name}]} || ${Spawn[pc ${_name}].Distance3D} > ${Spell[${cureSpell}].MyRange}) {
-		/echo \arCannot cure ${_name} due to out of zone or out of range.
+	/if (!${SpawnCount[pc ${_victim}]} || ${Spawn[pc ${_victim}].Distance3D} > ${Spell[${cureSpell}].MyRange}) {
+		/echo \arCannot cure ${_victim} due to out of zone or out of range.
         /return
 	}
 
@@ -789,22 +793,22 @@ Sub handleCureRequestV2(string _name, int _id, string _debuffName, string _cureT
     | Is the spell ready?
     /call chkSpellMemorized "${cureSpell}" TRUE ${int_cure_defaultGem}
     | Cast the spell
-    /call castCureV2 ${_name} ${_id} "${cureSpell}" ${castCount} ${_forced}
+    /call castCureV2 ${_victim} ${_id} "${cureSpell}" ${castCount} ${_forced}
 /return
 
 
-Sub castCureV2(string _name, int _id, string _spell, int _castCount, bool _forced)
-    /echo \ayCastCureV2: \ag${_name}\ao(\ag${_id}\ao) => \ag${_spell}\ao, \ag${_castCount}x\ao, \ag${_forced}
+Sub castCureV2(string _victim, int _id, string _spell, int _castCount, bool _forced)
+    /echo \ayCastCureV2: \ag${_victim}\ao(\ag${_id}\ao) => \ag${_spell}\ao, \ag${_castCount}x\ao, \ag${_forced}
     /declare i int local 0
     /declare f int local 0
     /for i 1 to ${_castCount}
-        /dquery ${victim} -q "Debuff.${str_cure_currentType}" -o f -t 20
+        /dquery ${_victim} -q "Debuff.${str_cure_currentType}" -o f -t 20
         /if (!${f}) /return
-        /if (!${SpawnCount[pc ${_name}]}) /return
-        /if (!${_forced} && (${int_healMode} > 0 && ${int_healMode} < 3) ) /call chkHeal_MT 
+        /if (!${SpawnCount[pc ${_victim}]}) /return
+        /if (!${_forced} && (${int_heal_mode} > 0 && ${int_heal_mode} < 3) ) /call chkHeal_MT 
         /call RunPriorityEvents
         /call TrueTarget ${_id}
-        /call MQ2Cast "${_spell}" ${int_cure_defaultGem} ${If[${forced},castingCureLoop,RunPriorityEvents]}
+        /call MQ2Cast "${_spell}" ${int_cure_defaultGem} ${If[${_forced},castingCureLoop,RunPriorityEvents]}
      /next i
 /return 
 

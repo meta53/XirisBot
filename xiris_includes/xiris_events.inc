@@ -34,6 +34,13 @@ ______________________________________________
 Sub xbot_initialize_events
     /echo \n \apInitialize: \aoEvents \aw-------------------------
     
+    |--Timers for Event Types
+    /declare timer_event_background     timer  outer 30
+    /declare timer_event_raid           timer  outer 10
+    /declare timer_event_class          timer  outer 10
+    /declare timer_event_priority       timer  outer 0
+
+
     |--Array
     /declare BackgroundEventsRaw[100]   string outer NULL
     /declare BackgroundEvents[0]        string outer NULL
@@ -88,6 +95,7 @@ Sub AddEventToExistingSet(string _EventSet, string _EventName)
 /return
 
 Sub RegisterBackgroundEvents(string _EventSet)
+    /echo RegisterBackGroundEvents ${_EventSet}
     /declare i int local -1
     /declare bound int local 0
     /for i 1 to ${BackgroundEventsRaw.Size}
@@ -153,6 +161,7 @@ Sub TrimRaidEvents(int _count)
 /return
 
 Sub RegisterClassEvents(string _EventSet)
+    /echo \arCLASS EVENTS ARE DEPRECATED
     /declare i int local -1
     /declare bound int local 0
     /for i 1 to ${ClassEventsRaw.Size}
@@ -227,52 +236,70 @@ Sub RunBackgroundEvents
     |DEBUG< Turn Events off
     |/echo RunBackgroundEvents
 
-    /if (${BackgroundEvents.Size} == 0) /return
+    /if (${BackgroundEvents.Size} == 0 || ${timer_event_background}) /return
     /declare i int local 1
     /for i 1 to ${BackgroundEvents.Size}
         /if (${BackgroundEvents[${i}].Equal[NULL]})  /goto :nextBGEvent
         /call ${BackgroundEvents[${i}]}
     :nextBGEvent
     /next i
+    | Timer for background events always the original value (3s)
+    /varset timer_event_background ${timer_event_background.OriginalValue}
 /return
 
 Sub RunRaidEvents
     |DEBUG< Turn Events off
     |/echo RunRaidEvents
  
-    /if (${RaidEvents.Size} == 0) /return
+    /if (${RaidEvents.Size} == 0 || ${timer_event_raid}) /return
     /declare j int local 1
     /for j 1 to ${RaidEvents.Size}
         /if (${RaidEvents[${j}].Equal[NULL]})  /goto :nextRaidEvent
         /call ${RaidEvents[${j}]}
     :nextRaidEvent    
     /next j
+    | Timer for raid events to 0 if killing
+    /if (${bln_engaged} || ${bln_killing}) {
+        /varset timer_event_raid 0
+    } else {
+        /varset timer_event_raid ${timer_event_raid.OriginalValue}
+    }
 /return
 
 Sub RunClassEvents
     |DEBUG< Turn Events off
     |/echo RunClassEvents
 
-    /if (${ClassEvents.Size} == 0) /return
+    /if (${ClassEvents.Size} == 0 || ${timer_event_class}) /return
     /declare k int local 1
     /for k 1 to ${ClassEvents.Size}
         /if (${ClassEvents[${k}].Equal[NULL]})  /goto :nextClassEvent
         /call ${ClassEvents[${k}]}
     :nextClassEvent
     /next k
+    | Timer for class events to 0 if killing
+    /if (${bln_engaged} || ${bln_killing}) {
+        /varset timer_event_class 0
+    } else {
+        /varset timer_event_class ${timer_event_class.OriginalValue}
+    }
+    
 /return
 
 Sub RunPriorityEvents
     |DEBUG< Turn Events off
-    |/echo RunPriorityEvents
-   
-    /if (${PriorityEvents.Size} == 0) /return
+    |/echo RunPriorityEvents ${PriorityEvents.Size}
+    
+    /if (${PriorityEvents.Size} == 0 || ${timer_event_priority}) /return
     /declare k int local 1
     /for k 1 to ${PriorityEvents.Size}
+        |/echo priority ${PriorityEvents[${k}]}
         /if (${PriorityEvents[${k}].Equal[NULL]})  /goto :nextRunPriorityEvents
         /call ${PriorityEvents[${k}]}
     :nextRunPriorityEvents
     /next k
+    | Timer for priority events always 0
+    /varset timer_event_priority ${timer_event_priority.OriginalValue}
 /return
 
 

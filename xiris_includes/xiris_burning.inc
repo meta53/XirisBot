@@ -29,26 +29,26 @@ Sub Events_Burning
 	/doevents Burn_ON_1
 	/doevents Burn_ON_2
     /doevents Burn_OFF
-    /if (${bln_burning} && ${bln_engaged} && ${int_burn_total}) /call chkBurn
+    /if (${bln_burning} && ${bln_engaged} &&  ${bln_killing} && ${int_burn_total}) /call chkBurns
     /if (${Select[${Me.Class.ShortName},MNK,PAL,RNG,SHD,WAR]} && !${timer_cryCheck} && !${bln_tanking}) /call chkCryActive
 /return
 
 
 Sub EVENT_Burn_ON_ALL
-    /if (!${bln_engaged}) /return
+    /if (!${bln_engaged} && !${bln_killing}) /return
     /varset bln_burning     TRUE
     /doevents flush Burn_ON_ALL
 /return 
 
 Sub EVENT_Burn_ON_1
-    /if (!${bln_engaged} || ${int_burn_key} != 1) /return
+    /if (!${bln_engaged} || ${int_burn_key} != 1 || !${bln_killing}) /return
     /varset bln_burning     TRUE
     /varset timer_cryCheck  0
     /doevents flush Burn_ON_1
 /return 
 
 Sub EVENT_Burn_ON_2
-    /if (!${bln_engaged} || ${int_burn_key} != 2) /return
+    /if (!${bln_engaged} || ${int_burn_key} != 2 || !${bln_killing}) /return
     /varset bln_burning     TRUE
     /varset timer_cryCheck  0
     /doevents flush Burn_ON_2
@@ -73,7 +73,7 @@ Sub processBurns
     
     |; _enabled|_key|_cry2hander
 	| settings=TRUE|1|FALSE
-    /declare bln_burnsEnabled   bool    outer   TRUE
+    /declare bln_burns_enabled   bool    outer   TRUE
     /declare int_burn_key       int     outer   1
     /declare int_burn_total     int     outer   0
     /declare bln_burning        bool    outer   FALSE
@@ -81,12 +81,12 @@ Sub processBurns
     /declare bln_cryRunning     bool    outer   FALSE
     /declare timer_cryCheck     timer   outer   0
 
-    /if (!${Ini[INI_CHAR,BURNS,settings].Arg[1,|]})  /varset bln_burnsEnabled    FALSE
+    /if (!${Ini[INI_CHAR,BURNS,settings].Arg[1,|]})  /varset bln_burns_enabled    FALSE
     /if (!${Ini[INI_CHAR,BURNS,settings].Arg[2,|]})  /varset int_burn_key       1
     /if (!${Ini[INI_CHAR,BURNS,settings].Arg[3,|]})  /varset bln_cry2Hander     FALSE
 
-    /echo \a-w    Settings Processed: \awEnabled:\ag${bln_burnsEnabled} \awKey:\ag${int_burn_key}
-    |;_burn|_type[AA|ITEM|SPELL|DISC]|_use|_afterIndex|_MGB[TRUE|ATTEMPT|FALSE]
+    /echo \a-w    Settings Processed: \awEnabled:\ag${bln_burns_enabled} \awKey:\ag${int_burn_key}
+    |;_burn|_type[AA|ITEM|SPELL|DISC]|_enabled|_afterIndex|_MGB[TRUE|ATTEMPT|FALSE]
     /declare raw_burn[20]       string  local   NULL
     /declare i                  int     local   0
     /declare sz                 int     local   0
@@ -101,11 +101,11 @@ Sub processBurns
         | Not null, set the values for the burns
         /varcalc sz ${sz}+1
         /declare BURN_${i}          string  outer   ${Ini[INI_CHAR,BURNS,BURN_${i}].Arg[1,|]}
-        /declare BURN_${i}_Type     string  outer   ${Ini[INI_CHAR,BURNS,BURN_${i}].Arg[2,|]}
-        /declare BURN_${i}_Use      bool    outer   ${Ini[INI_CHAR,BURNS,BURN_${i}].Arg[3,|]}       
-        /declare BURN_${i}_After    int     outer   ${Ini[INI_CHAR,BURNS,BURN_${i}].Arg[4,|]}
+        /declare BURN_${i}_type     string  outer   ${Ini[INI_CHAR,BURNS,BURN_${i}].Arg[2,|]}
+        /declare BURN_${i}_enabled      bool    outer   ${Ini[INI_CHAR,BURNS,BURN_${i}].Arg[3,|]}       
+        /declare BURN_${i}_after    int     outer   ${Ini[INI_CHAR,BURNS,BURN_${i}].Arg[4,|]}
         /declare BURN_${i}_MGB      string  outer   ${Ini[INI_CHAR,BURNS,BURN_${i}].Arg[5,|]}
-         /echo \ao        BURN[\ag${i}\ao]: \awName:\ag${BURN_${i}} \awType:\ag${BURN_${i}_Type} \awEnabled:\ag${BURN_${i}_Use} \awAfter:\ag${BURN_${i}_After}
+         /echo \ao        BURN[\ag${i}\ao]: \awName:\ag${BURN_${i}} \awType:\ag${BURN_${i}_type} \awEnabled:\ag${BURN_${i}_enabled} \awAfter:\ag${BURN_${i}_after}
     /next i
 /return
 
@@ -143,13 +143,13 @@ Sub chkCryActive
  ----------------------------
 **|
 Sub chkBurns
-    /if (!${Target.ID} || ${Target.Type.NotEqual[NPC]} || !${bln_engaged} || !${bln_burning} || !${int_burn_total} ||  (${Me.Casting.ID} && ${Me.ClassName.NotEqual[BRD]}) || ${Me.Invis} || ${Me.Feigning}) /return
+    /if (!${Target.ID} || ${Target.Type.NotEqual[NPC]} || !${bln_engaged} || !${bln_killing} || !${bln_burning} || !${int_burn_total} ||  (${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]}) || ${Me.Invis} || ${Me.Feigning}) /return
 
     /declare i  int local   0
 
     /for i 1 to ${int_burn_total}
-        /if (!${BURN_${i}_Use}) /goto :nextBurn
-        /call attemptBurn ${BURN_${i}_Type} ${BURN_${i}} ${BURN_${i}_After} ${BURN_${i}_MGB}
+        /if (!${BURN_${i}_enabled}) /goto :nextBurn
+        /call attemptBurn ${BURN_${i}_type} ${BURN_${i}} ${BURN_${i}_after} ${BURN_${i}_MGB}
     :nextBurn
     /next i
 /return 
@@ -158,8 +158,8 @@ Sub chkBurns
 Sub attemptBurn(string _type, string _burn, int _after, string _mgb)
     /if (${_after} > 0) {
         | Checking to see if the previous ability was fired
-        /if (${BURN_${_after}_Type.Equal[AA]}   &&  ${Me.AltAbilityReady[${BURN_${_after}}]})    /return 
-        /if (${BURN_${_after}_Type.Equal[DISC]} &&  ${Me.CombatAbilityReady[${BURN_${_after}}]}) /return
+        /if (${BURN_${_after}_type.Equal[AA]}   &&  ${Me.AltAbilityReady[${BURN_${_after}}]})    /return 
+        /if (${BURN_${_after}_type.Equal[DISC]} &&  ${Me.CombatAbilityReady[${BURN_${_after}}]}) /return
     } else {
         | No prior requirements | Check for MGB (Bards cant MGB so ignore them)
         /if (${_mgb.Equal[ATTEMPT]}) {
@@ -174,13 +174,13 @@ Sub attemptBurn(string _type, string _burn, int _after, string _mgb)
     }
     | Valid burn, cast it
     /if (${Me.Class.ShortName.Equal[BRD]}) {
-        /if (${_type.Equal[AA]} && ${Me.AltAbilityReady[${_AA}]})           /call MQ2Medley "${_burn}" ALT  ${int_targetID} TRUE
-        /if (${_type.Equal[DISC]} && ${Me.CombatAbilityReady[${_AA}]})      /doability      "${_burn}"
+        /if (${_type.Equal[AA]} && ${Me.AltAbilityReady[${_burn}]})           /call MQ2Medley "${_burn}" ALT  ${int_targetID} TRUE
+        /if (${_type.Equal[DISC]} && ${Me.CombatAbilityReady[${_burn}]})      /doability      "${_burn}"
         /if (${_type.Equal[ITEM]} && !${FindItem[=${_burn}].TimerReady})    /call MQ2Medley "${_burn}" ITEM ${int_targetID} TRUE
         /if (${_type.Equal[SPELL]})                                         /call MQ2Medley "${_burn}" SONG
     } else {
-        /if (${_type.Equal[AA]} && ${Me.AltAbilityReady[${_AA}]})           /call MQ2Cast   "${_burn}" ALT
-        /if (${_type.Equal[DISC]} && ${Me.CombatAbilityReady[${_AA}]})      /doability      "${_burn}"
+        /if (${_type.Equal[AA]} && ${Me.AltAbilityReady[${_burn}]})           /call MQ2Cast   "${_burn}" ALT
+        /if (${_type.Equal[DISC]} && ${Me.CombatAbilityReady[${_burn}]})      /doability      "${_burn}"
         /if (${_type.Equal[ITEM]} && !${FindItem[=${_burn}].TimerReady})    /call MQ2Cast   "${_burn}" ITEM
         /if (${_type.Equal[SPELL]})                                         /call MQ2Cast   "${_burn}"
     }

@@ -145,7 +145,7 @@ Sub Event_TureRampOff
 		/if (${Navigation.Active}) /goto :ture_run
 		/squelch /attack on
 	} else /if (${Me.Class.ShortName.Equal[NEC]} || ${Me.Class.ShortName.Equal[MAG]} || ${Me.Class.ShortName.Equal[BST]}) {
-		/pet attack
+		/call chkPetAttack
 	}
 /return 
 
@@ -181,8 +181,8 @@ Sub Event_JelvanStart
 				/squelch /attack on 
 				/rs KillMob ${Target.ID}
 				/delay 5s 
-				/docommand /${announceChannel} DebuffTarget ${Target.ID}
-				/docommand /${announceChannel} singsongs
+				/docommand /${str_announce_channel} DebuffTarget ${Target.ID}
+				/docommand /${str_announce_channel} singsongs
 				
 				/stick off
 				/nav wp jelvan1tank
@@ -213,8 +213,8 @@ Sub Event_JelvanStart
 				/if (${Me.CombatAbilityReady[Ancient: Chaos Cry]}) /doability "Ancient: Chaos Cry"
 				/squelch /attack on 
 				/delay 5s 
-				/docommand /${announceChannel} DebuffTarget ${Target.ID}
-				/docommand /${announceChannel} singsongs
+				/docommand /${str_announce_channel} DebuffTarget ${Target.ID}
+				/docommand /${str_announce_channel} singsongs
 				
 				/stick off
 				/nav wp jelvan2tank
@@ -248,8 +248,8 @@ Sub Event_JelvanStart
 				/if (${Me.CombatAbilityReady[Ancient: Chaos Cry]}) /doability "Ancient: Chaos Cry"
 				/squelch /attack on 
 				/delay 5s 
-				/docommand /${announceChannel} DebuffTarget ${Target.ID}
-				/docommand /${announceChannel} singsongs
+				/docommand /${str_announce_channel} DebuffTarget ${Target.ID}
+				/docommand /${str_announce_channel} singsongs
 				
 				/stick off
 				/nav wp jelvan3tank
@@ -559,8 +559,8 @@ Sub chkOMMLasherPositions
 
 
 Sub chkOMMCharm 
-	/echo \aochkOMMCharm \awPet? \ag${Me.Pet.ID}
-	/if (!${Me.Pet.ID}) {
+	/echo \aochkOMMCharm \awPet? \ag${Pet.ID}
+	/if (!${Pet.ID}) {
 		/if (${bln_hasCharmedPet}) /shout LOST CONTROL OF PET!
 		/if (${FindItem[=Mindreaver's Vest of Coercion].ID} && ${FindItem[=Mindreaver's Vest of Coercion].TimerReady}==0) {
 			/call MQ2Cast "Mindreaver's Vest of Coercion" item 2s
@@ -608,15 +608,15 @@ Sub chkOMMCharm
 		/if (!${bln_hasCharmedPet}) /varset bln_hasCharmedPet TRUE
 		:petattack_check
 		/if (!${bln_hasCharmedPet}) /varset bln_hasCharmedPet TRUE
-		/if (${Me.Pet.ID} && ${Me.Pet.Target.ID} != ${Spawn[npc Overlord].ID}) {
+		/if (${Pet.ID} && ${Me.Pet.Target.ID} != ${Spawn[npc Overlord].ID}) {
 			/echo \agSiccing pet!
 			/call TrueTarget ${Spawn[npc Overlord].ID}
 			/pet attack
 			/if (!${Me.Pet.Buff[Speed of Salik]}) {
 				/echo \agBuffing Pet!
-				/target id ${Me.Pet.ID}
+				/target id${Pet.ID}
 				/call chkSpellMemorized "Speed of Salik" TRUE gem8
-				/call MQ2Cast "Speed of Salik" 
+				/call MQ2Cast "Speed of Salik" gem8
 			} 
 		}
 	}

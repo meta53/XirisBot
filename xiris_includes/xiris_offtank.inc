@@ -65,7 +65,7 @@ Sub EVENT_OffTankOFF
 	/call ToggleOfftanking FALSE
 /return
 
-Sub EVENT_OffTankRadius(string _line, string _chatSender, string _eventParams) 
+Sub EVENT_OffTankRadius(string _line, string _sender, string _eventParams) 
 	/doevents flush OffTankRadius
 	/call ChangeOfftankRadius ${_eventParams}
 /return
@@ -85,7 +85,6 @@ Sub xbot_initialize_offtanking
 	/echo \n \apInitialize: \aoOfftanking \aw-------------------------
 	
 	|-- [Settings] : Off Tanking
-	/declare bln_offTank		 	bool 	outer FALSE
 	/declare int_offtankRadius		int     outer 85
 	/declare bln_useDI				bool    outer FALSE
 
@@ -113,14 +112,12 @@ Sub ToggleOfftanking(bool _blnOT)
 		/varset  bln_offTank	TRUE
 		/varset  bln_tanking	TRUE
 		/varset  bln_taunting 	TRUE
-		/varset  bln_tanking	TRUE
 	}
 	/if (!${_blnOT}) {
 		/dgt ${Me.Name} is ENDING OFF TANKING.
 		/varset  bln_offTank	FALSE
 		/varset  bln_tanking	FALSE
 		/varset  bln_taunting 	FALSE
-		/varset  bln_tanking	FALSE
 	}
 	
 /return
@@ -128,13 +125,13 @@ Sub ToggleOfftanking(bool _blnOT)
 
 
 Sub chkOffTanking
-	/if (${Zone.ID} == 340 || ${Zone.ID} == 344 || ${Zone.ID} == 345 || ${Zone.ShortName.Equal[${Me.BoundLocation[0]}]} || ${bln_following}) /return
+	/if (${Zone.ID} == 340 || ${Zone.ID} == 344 || ${Zone.ID} == 345 || ${Zone.ShortName.Equal[${str_zone_bound}]} || ${bln_following}) /return
 	/if (${bln_engaged} && ${bln_useDI}) /call chkDivineIntervention
 
 	| If there are no spawns within OT Distance, return
 	/if (!${SpawnCount[npc radius ${int_offtankRadius} range 46 80]}) {
 		| Refresh XTarget if we haven't done it in the last 60s
-		/if (!${timer_xtargetRefresh}) /call RefreshXTarget
+		/if (!${timer_xtarget_refresh}) /call RefreshXTarget
 		/return
 	}
 	:OffTankCheck

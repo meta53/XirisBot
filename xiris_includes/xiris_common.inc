@@ -32,35 +32,43 @@ REVISION HISTORY
 	12.31.22	xiris	Moved Clicky/AA/Burns to their own file
 	01.05.23	xiris	Changed logic in chkTargetStatus method to be more streamlined
 	08.12.23	xiris	As past of the substantial v2.0 rewrite, refactored much of this library
+						Added raid builder, moved functionality from standalone macro
+						Removed auto assist as I never use it
 ______________________________________________
 
 **|
 
+| NPC Engagement Events
+#EVENT EngageNPC			"[#1#] EngageMob #2#"
+#EVENT EngageNPC			"<#1#> EngageMob #2#"
+#EVENT EngageNPC			"#1# tells the group#*#'EngageMob #2#'"
+#EVENT EngageNPC			"#1# tells you#*#'EngageMob #2#'"
+#EVENT EngageNPC			"#1# tells the raid#*#'EngageMob #2#'"
+#EVENT EngageNPC			"#1# tell your raid#*#'EngageMob #2#'"
+#EVENT EngageNPC			"#1# tell your party, #*#'EngageMob #2#'"
+#EVENT EngageNPC			"[ #1# #*#]#*#EngageMob #2#"
 
-|COMMON
-#EVENT KillMob 				"[#1#] KillMob #2#"
-#EVENT KillMob 				"<#1#> KillMob #2#"
-#EVENT KillMob				"#1# tells the group#*#'KillMob #2#'"
-#EVENT KillMob				"#1# tells you#*#'KillMob #2#'"
-#EVENT KillMob				"#1# tells the raid#*#'KillMob #2#'"
-#EVENT KillMob				"#1# tell your raid#*#'KillMob #2#'"
-#EVENT KillMob				"#1# tell your party, #*#'KillMob #2#'"
-#EVENT KillMob 				"[ #1# #*#]#*#KillMob #2#"
+#EVENT KillNPC 				"[#1#] KillMob #2#"
+#EVENT KillNPC 				"<#1#> KillMob #2#"
+#EVENT KillNPC				"#1# tells the group#*#'KillMob #2#'"
+#EVENT KillNPC				"#1# tells you#*#'KillMob #2#'"
+#EVENT KillNPC				"#1# tells the raid#*#'KillMob #2#'"
+#EVENT KillNPC				"#1# tell your raid#*#'KillMob #2#'"
+#EVENT KillNPC				"#1# tell your party, #*#'KillMob #2#'"
+#EVENT KillNPC 				"[ #1# #*#]#*#KillMob #2#"
 
-#EVENT Zoned				"You have entered#*#"
-#EVENT Zoned				"LOADING, PLEASE WAIT..."
-#EVENT EndMac				"#*#end macro#*#"
+#EVENT Disengage 			"[#1#] BackOff #2#"
+#EVENT Disengage 			"<#1#> BackOff #2#"
+#EVENT Disengage			"#1# tells the group#*#'BackOff#*#'"
+#EVENT Disengage			"#1# tells you#*#'BackOff#*#'"
+#EVENT Disengage			"#1# tells the raid#*#'BackOff#*#'"
+#EVENT Disengage			"#1# tell your raid#*#'BackOff#*#'"
+#EVENT Disengage 			"[ #1# #*#]#*#BackOff#*#"
 
-#EVENT BackOff 				"[#1#] BackOff #2#"
-#EVENT BackOff 				"<#1#> BackOff #2#"
-#EVENT BackOff				"#1# tells the group#*#'BackOff#*#'"
-#EVENT BackOff				"#1# tells you#*#'BackOff#*#'"
-#EVENT BackOff				"#1# tells the raid#*#'BackOff#*#'"
-#EVENT BackOff				"#1# tell your raid#*#'BackOff#*#'"
-#EVENT BackOff 				"[ #1# #*#]#*#BackOff#*#"
+#EVENT RageOff				"#*#is no longer enraged#*#"
+#EVENT RageOn				"#*#has become ENRAGED#*#"
 
-#EVENT QuitExpedition       "#*#DZQUIT#*#"
-
+| Tank Setting Events
 #EVENT ChangeMT 			"[#1#] ChangeMT #2#"
 #EVENT ChangeMT 			"<#1#> ChangeMT #2#"
 #EVENT ChangeMT				"#1# tells the group#*#'ChangeMT #2#'"
@@ -77,62 +85,58 @@ ______________________________________________
 #EVENT ChangeSA				"#1# tell your raid#*#'ChangeSA #2#'"
 #EVENT ChangeSA 			"[ #1# #*#]#*#ChangeSA #2#"
 
-#EVENT ChangeAP 			"[#1#] ChangeAP #2#"
-#EVENT ChangeAP 			"<#1#> ChangeAP #2#"
-#EVENT ChangeAP				"#1# tells the group#*#'ChangeAP #2#'"
-#EVENT ChangeAP				"#1# tells you#*#'ChangeAP #2#'"
-#EVENT ChangeAP				"#1# tells the raid#*#'ChangeAP #2#'"
-#EVENT ChangeAP				"#1# tell your raid#*#'ChangeAP #2#'"
-#EVENT ChangeAP 			"[ #1# #*#]#*#ChangeAP #2#"
+| Raid Building Events
+#EVENT RaidReform 			"#1# tells you#*#'RaidReform #2#'"
+#EVENT RaidReform			"#1# tells the group#*#'RaidReform #2#'"
+#EVENT RaidReform			"#1# tells the raid#*#'RaidReform #2#'"
+#EVENT RaidReform 			"[ #1# #*#]#*#RaidReform #2#"
 
+#EVENT RaidBuildByTemplate	"#1# tells you#*#'RaidBuild #2#'"
+#EVENT RaidBuildByTemplate	"#1# tells the group#*#'RaidBuild #2#'"
+#EVENT RaidBuildByTemplate	"#1# tells the raid#*#'RaidBuild #2#'"
+#EVENT RaidBuildByTemplate	"[ #1# #*#]#*#RaidBuild #2#"
+#EVENT RaidBuildByTemplate	"#1# tells you#*#'Voltron #2#'"
+#EVENT RaidBuildByTemplate	"#1# tells the group#*#'Voltron #2#'"
+#EVENT RaidBuildByTemplate	"#1# tells the raid#*#'Voltron #2#'"
+#EVENT RaidBuildByTemplate	"[ #1# #*#]#*#Voltron #2#"
+
+| MISC events
+#EVENT CheckNaked			"#*#CheckNaked#*#"
+#EVENT Zoned				"You have entered#*#"
+#EVENT Zoned				"LOADING, PLEASE WAIT..."
 
 #EVENT UseStaunchRecovery   "#*#DoStaunchRecovery#*#"
 #EVENT UseIntensity			"#*#DoIntensity#*#"
 #EVENT UseServants			"#*#DoServants#*#"
 #Event UseInfusion			"#*#DoInfusion#*#"
 
-|MISC events
-#EVENT CheckNaked			"#*#CheckNaked#*#"
-
-#EVENT RageOff				"#*#is no longer enraged#*#"
-#EVENT RageOn				"#*#has become ENRAGED#*#"
-#EVENT ImDead          		"#*#You have been slain by#*#"
-#EVENT ImDead          		"Returning to home point, please wait..."
-#EVENT ImDead          		"#*#Returning to Bind Location#*#"
-#EVENT LoadRingset 			"#1#LoadRingset#*#"
-#EVENT LoadWeaponset		"#1#LoadWeaponset #2#"
-#EVENT SaveRingset      	"#1#SaveRingset#*#"
-#EVENT SaveWeaponset  		"#1#SaveWeaponset #2#"
-#EVENT SaveCurrentWeaponset "#1#SaveCurrentWeaponset #2#"
-#EVENT InvisOFF				"#1#InvisOff#*#"
-#EVENT SkillCheck           "#1#SkillCheck #2#"
-
-#EVENT FixCorpses			"#*#fixCorpses#*#"
-
-#EVENT SetupRaid 	"[#1#] SetupRaid #2#"
-#EVENT SetupRaid 	"<#1#> SetupRaid #2#"
-#EVENT SetupRaid	"#1# tells the group#*#'SetupRaid #2#'"
-#EVENT SetupRaid	"#1# tells you#*#'SetupRaid #2#'"
-#EVENT SetupRaid	"#1# tells the raid#*#'SetupRaid #2#'"
-#EVENT SetupRaid	"#1# tell your raid#*#'SetupRaid #2#'"
-#EVENT SetupRaid 	"[ #1# #*#]#*#SetupRaid #2#"
-
-#EVENT RefreshXTarget		"#1# tells the group#*#'RefreshXTarget#*#'"
-#EVENT RefreshXTarget		"#1# tells you#*#'RefreshXTarget#*#'"
-#EVENT RefreshXTarget		"#1# tells the raid#*#'RefreshXTarget#*#'"
-#EVENT RefreshXTarget		"#1# tell your raid#*#'RefreshXTarget#*#'"
-#EVENT RefreshXTarget		"#*#RefreshXTarget#*#"
-
 Sub initEvents_Common
-	/call RegisterBackgroundEvents 	Events_Common	10
-	/call RegisterRaidEvents 		Events_Raid		10
-	/call RegisterPriorityEvents 		Events_Rapid	2
+	/call RegisterBackgroundEvents	Events_Common_Background
+	/call RegisterRaidEvents		Events_Common_Raid
+	/call RegisterPriorityEvents	Events_Common_Priority
 /return
 
-Sub Events_Raid 
+Sub Events_Common_Background
+	/doevents CheckNaked
+
+	/if (!${bln_engaged}) {
+		/doevents RaidReform
+		/doevents RaidBuildByTemplate
+		/doevents Zoned	
+		/doevents LoadRingset
+		/doevents LoadWeaponset
+		/doevents SaveWeaponset
+		/doevents SaveCurrentWeaponset
+		/doevents SaveRingset
+		/doevents RefreshXTarget
+		/if (!${timer_check_utilities}) /call chkUtils
+	}
+/return
+
+Sub Events_Common_Raid
+	/if (${bln_engaged}) /call ${If[${Me.Class.ShortName.Equal[CLR]},chkTargetStatusNonDPS,chkTargetStatus]}
 	/doevents RageOn
 	/doevents RageOff
-	/doevents BackOff
 	/doevents ChangeMT
 	/doevents ChangeSA
 	/doevents ChangeAP
@@ -140,456 +144,350 @@ Sub Events_Raid
 	/doevents UseIntensity
 	/doevents UseServants
 	/doevents UseInfusion
-/return
+/return 
 
-Sub Events_Common
-	/doevents Zoned	
-	/doevents CheckNaked
-	/doevents LoadRingset
-	/doevents LoadWeaponset
-	/doevents SaveWeaponset
-	/doevents SaveCurrentWeaponset
-	/doevents SaveRingset
-	/doevents SetupRaid
-	/doevents RefreshXTarget
-	/doevents FixCorpses
-/return
-
-Sub Events_Rapid
-	/doevents KillMob 
-	/doevents BackOff
+Sub Events_Common_Priority
+	/doevents KillNPC 
+	/doevents EngageNPC
+	/doevents Disengage
 /return 
 
 
-|**
- ----------------------------
- INITIALIZATION Sub
- ----------------------------
- xbot_initialize has all the common variables
- used in the bot set. Unioned with all the modern macros
- ----------------------------
-**|   
+| Called by the raidleader to the raid to tell them to reprocess the new template
+Sub EVENT_RaidReform(string _sender, string _line, string _eventParams)
+	/echo \atRaid Reform \ag${_eventParams}
+	/doevents flush RaidReform
+	/call processRaidTemplate ${_eventParams} FALSE
+/return
 
-Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint, string _assistArgs) 
-	/echo \agXBOT_${Me.Class.ShortName}: \aoMT: \ag${_tank1Name}\ao(\ag${Spawn[pc ${_tank1Name}].ID}\ao) \aw@ HealPoint:\ag${_healPoint}\ao Tank2: \ag${_tank2Name}\ao(\ag${Spawn[pc ${_tank2Name}].ID}\ao) Tank3: \ag${_tank3Name}\ao(\ag${Spawn[pc ${_tank3Name}].ID}\ao) AssistArgs: \ag${_assistArgs}
+| Called by the raidleader to herself by /echo BuildRaid TEMPLATE
+Sub EVENT_RaidBuildByTemplate(string _sender, string _line, string _eventParams)
+	/echo \atRaid Build By Template \ag${_eventParams}
+	/doevents flush RaidBuildByTemplate
+	/call processRaidTemplate ${_eventParams} TRUE
+/return
 
 
+
+
+Sub xbot_initialize_common(string _t1, string _t2, string _t3, int _tankHealPointOverride) 
 	/echo \apInitialize: \aoCommon \aw-------------------------
 
-	|-- [Settings] : Communications & INI Declarations
-	/declare 	cmdChannel 				string	outer	dgt
-	/declare    announceChannel			string  outer   rsay
-	/declare 	mq2meleeEnabled			bool    outer   FALSE
-	/call LoadPlugin MQ2Melee ${mq2meleeEnabled}
-	/declare 	int_macroMaximumResponseDist	int outer 1000
-	/dnet fullnames off
+	|-- [Telemetry]
+	/declare	float_startTime 		float	outer   ${EverQuest.Running}
+	/declare	float_endTime   		float	outer   0
+	/declare	float_processed 		float	outer   0
+	/declare	bln_debug 				bool	outer  	TRUE
 
-	|-- [Settings] : Class Archetype (used in case switching)
-	/declare 	str_class_type		string	outer	UNKNOWN
-	/call 	 	getClassArchetype 		${Me.Class.ShortName}
-	/varset 	str_class_type		${Macro.Return}
-	/declare 	MeleeClasses 			string	outer	BRD,BER,BST,MNK,PAL,RNG,ROG,SHD,WAR
-	/declare 	PriestClasses 			string	outer	CLR,DRU,SHM
-	/declare 	CasterClasses 			string	outer	ENC,MAG,NEC,WIZ
-	/declare 	RangedClasses			string	outer	RNG
-	/declare 	str_raidGroupMode		string  outer   DEFAULT
-	/declare 	arr_raidLeaders[9] 	string  outer 	NULL 
-	/declare 	RaidDIClerics[6] 		string  outer 	NULL
-
-	/call SetupRaid ${str_raidGroupMode}
-
-	/declare timer_di_request timer outer 30s
-	/declare i int local 0
-	/for i 1 to ${RaidDIClerics.Size}
-		/declare timer_di_${i}		timer outer 0
-	/next i
+	|-- [Base Settings]
+	/declare	str_command_channel		string	outer	${Ini[INI_COMMON,SETTINGS,str_command_channel,dga]}
+	/declare 	str_announce_channel	string	outer	${Ini[INI_COMMON,SETTINGS,str_announce_channel,dgt]}
+	/dnet 		fullnames 							  	${Ini[INI_COMMON,SETTINGS,dnet_fullNames,off]}
+	/declare 	gbl_bln_useWarp    		bool    outer	${Ini[INI_COMMON,SETTINGS,useWarp,FALSE]}
+	/declare 	bln_announce			bool 	outer 	TRUE
 	
-	|-- [Settings] :Tank Settings
-	/declare	bln_tanking				bool	outer	FALSE
-	/declare 	bln_taunting			bool 	outer	FALSE
-	/if (${Me.Combat}) /attack off
-	/if (${Stick.Active}) /stick off
+	|-- [Class/Grouping/Raid Settings]
+	/call processClassTypes
+	/declare 	str_class_type			string 	outer ${Macro.Return}
+	/declare 	str_raid_mode			string  outer DEFAULT
+	/call processRaidTemplate ${str_raid_mode}	FALSE
 
-	/declare    bln_battleCleric		bool    outer   FALSE
-	/if (${_tank1Name.Equal[${Me.Name}]}) 	/varset bln_tanking TRUE
-	/if (${_tank1Name.Equal[${Me.Name}]}) 	/varset bln_tanking TRUE
-
-	|-- Set the default tanks
-	/declare	str_defTank1			string	outer	${Ini[INI_COMMON,SETTINGS,defaultTank1,Xiris]}
-	/declare	str_defTank2			string	outer	${Ini[INI_COMMON,SETTINGS,defaultTank2,Xiria]}
-	/declare	str_defTank3			string	outer	${Ini[INI_COMMON,SETTINGS,defaultTank3,Xirea]}
-	/declare 	str_tankName1			string	outer 	${str_defTank1}
-	/declare	str_tankName2			string	outer 	${str_defTank2}
-	/declare 	str_tankName3			string  outer	${str_defTank3}
+	|-- [Tank List & Default Tank Heal Point]
+	/declare	str_default_t1			string	outer	${Ini[INI_COMMON,SETTINGS,defaultTank1,Xiris]}
+	/declare 	str_default_t2			string	outer	${Ini[INI_COMMON,SETTINGS,defaultTank2,Xiria]}
+	/declare	str_default_t3			string	outer	${Ini[INI_COMMON,SETTINGS,defaultTank3,Xirea]}			
+	/declare 	str_t1_name				string	local	${str_default_t1}
+	/declare    str_t2_name 			string  local 	${str_default_t2}
+	/declare	str_t3_name				string	local	${str_default_t3}
 
 	|-- Insert passed in values for tanks if we have the parameters passed in
-	/if (${_tank1Name.Length} > 3 )  /varset str_tankName1 ${_tank1Name}
-	/if (${_tank2Name.Length} > 3 )  /varset str_tankName2 ${_tank2Name}
-	/if (${_tank3Name.Length} > 3 )  /varset str_tankName3 ${_tank3Name}
+	/if (${_t1.Length} > 3)				/varset str_t1_name ${_t1}
+	/if (${_t2.Length} > 3)				/varset str_t2_name ${_t2}
+	/if (${_t3.Length} > 3)				/varset str_t3_name ${_t3}
 
 	|-- ID and Name here keep track of *current* tank/second tank. They are swapped as needed.
-	/declare	int_MTID           		int		outer	${Spawn[${str_tankName1}].ID}
-	/declare 	str_MTName				string  outer  	${str_tankName1}	
-	/declare 	int_STID				int		outer	${Spawn[${str_tankName2}].ID}
-	/declare 	str_STName				string  outer 	${str_tankName2}
-	/declare	int_TTID				int	 	outer 	${Spawn[${str_tankName3}].ID}
-	/declare 	str_TTName				string	outer 	${str_tankName3}
+	/declare	int_MTID           		int		outer	${Spawn[${str_t1_name}].ID}
+	/declare 	str_MTName				string  outer  	${str_t1_name}	
+	/declare 	int_STID				int		outer	${Spawn[${str_t2_name}].ID}
+	/declare 	str_STName				string  outer 	${str_t2_name}
+	/declare	int_TTID				int	 	outer 	${Spawn[${str_t3_name}].ID}
+	/declare 	str_TTName				string	outer 	${str_t3_name}
 
-	/echo \aw Tanks \ayMT:\ag${str_MTName} \ayST:\ag${str_STName} \ayTT:\ag${str_TTName}
+	|-- Setting base tank settings
+	/declare	bln_tanking				bool	outer	${If[${Me.ID} == ${int_MTID},TRUE,FALSE]}
+	/declare	bln_taunting			bool 	outer	${If[${Me.ID} == ${int_MTID},TRUE,FALSE]}
+	/declare bln_offTank		 		bool 	outer FALSE
+	/echo
+	/echo \ao        Tanks \awMT:\ag${str_MTName} \awST:\ag${str_STName} \awTT:\ag${str_TTName}
 
-	|-- [Settings] :Auto Assist Settings
-	/declare 	bln_autoAssist			bool	outer 	FALSE
-	/declare	int_defAssistAt			int		outer   ${Ini[INI_COMMON,SETTINGS,assistAt,98]}
-	/declare 	int_assistAt			int		outer   ${int_defAssistAt}
-	/if (${_assistArgs.Length}) {
-		/varset bln_autoAssist ${Bool[${_assistArgs.Token[1,,]}]}
-		/varset int_assistAt ${_assistArgs.Token[2,,]}
-	} 
-	/echo \ayAuto Assist settings: \awAuto?\ag${bln_autoAssist} \awAt?\ag${int_assistAt} \awArgs:\ag${_assistArgs}
-
-	|-- [Settings] : Miscellaneous Defaults
-	/declare	str_casting_spellSet			string	outer	${Ini[INI_COMMON,SETTINGS,str_casting_spellSet,default]}
-	/declare	bln_engaged				bool	outer	FALSE
-	/declare	bln_enraged				bool	outer	FALSE
-	/declare    bln_pulling		    	bool    outer   FALSE
-	/declare 	int_targetID			int		outer 	0
-	/declare    str_targetName			string  outer   NULL
-	/declare 	aggroAnim 				string 	outer 	|5|8|12|17|18|42|44|80|106|129|144|
-	/declare    bln_naked               bool	outer   FALSE
-	/declare 	bln_ducking				bool	outer	FALSE
-	/declare	timer_naked 			timer   outer	0
-	/declare 	timer_hott				timer   outer   20s
-	/declare 	timer_xtargetRefresh	timer	outer 	60s
-	| strFaceItem storage (for OMM event have to swap masks)
-	/declare 	strFaceItem				string  outer   ${InvSlot[3].Item}
+	|-- [Settings] : Miscellaneous Defaults 
+	| Engaged is 'engagement' which means a tank has picked up an aggro NPC and is tanking it
+	| and the auto slowing/debuffing can happen, but NOT assist in killing
+	| Killing is the actuall KillMob call, which causes everyone to assist.
+	/declare	bln_engaged				bool    outer   FALSE
+	/declare 	bln_killing				bool 	outer	FALSE
+	/declare 	bln_enraged				bool 	outer	FALSE
+	/declare 	int_targetID			int 	outer	0
+	/declare 	str_targetName			string  outer   NULL
+	/declare 	bln_naked 				bool	outer	FALSE
+	/declare 	timer_announce_naked 	timer	outer	0
+	/call chkNaked
+	/if (${bln_naked}) /multiline ; /delay 30m !${bln_naked} 
+	/declare 	bln_ducking				bool 	outer	FALSE
+	/declare 	timer_xtarget_refresh	timer	outer 	600
+	| TODO: Create Inventory Handler 
+	/declare 	str_item_face_default	string  outer   ${InvSlot[3].Item}
 
 	|-- [Settings] : Meditation & Utilities
-	/declare int_sitRadius   		int     outer ${Ini[INI_COMMON,SETTINGS,sitRadius,50]}
-	/declare int_medPercent       	int     outer ${Ini[INI_COMMON,SETTINGS,medPercent,100]}
-	/declare timer_medDelay			timer	outer ${Ini[INI_COMMON,SETTINGS,medDelay,45s]}
-	/declare timer_sitDelay			timer	outer ${Ini[INI_COMMON,SETTINGS,sitDelay,10s]}
-	/declare timer_check_utilities	timer   outer 0
+	/declare int_sittingRadius   		int     outer ${Ini[INI_COMMON,SETTINGS,sitRadius,50]}
+	/declare int_meditationPctMana       int     outer ${Ini[INI_COMMON,SETTINGS,medPercent,100]}
+	/declare timer_meditation			timer	outer ${Ini[INI_COMMON,SETTINGS,medDelay,45s]}
+	/declare timer_sitting				timer	outer ${Ini[INI_COMMON,SETTINGS,sitDelay,10s]}
+	/declare timer_check_utilities		timer   outer 0
 
-	|-- [Settings] : Camp
-	/declare bln_useCAMP			bool	outer 	FALSE
-	/declare int_campX 				int 	outer 	${Me.X}
-	/declare int_campY 				int 	outer 	${Me.Y}
-	/declare int_campZ 				int 	outer 	${Me.Z}
-	/declare int_campRadius			int		outer	85			
-	/declare SZ_shortName			string	outer ${Zone.ShortName}
-	
-	|--include the custom event initializations & other things
-	/declare bln_outside			bool	outer	TRUE
-	/declare bln_slowUse			bool	outer	FALSE
-	/declare bln_slowed				bool	outer	FALSE
-	/declare int_slowResisted		int		outer	0
-	/declare int_slowMaxTries		int		outer	3
-	
-	:init_naked_wait
-	/call chkNaked 
-	/if (${bln_naked}) {
-		/echo \arI am naked, waiting 30s and rechecking before I initialize!
-		/call LootSelf
-		/call chkNaked 
-		/if (${bln_naked}) {
-			/delay 1m
-			/goto :init_naked_wait
-		}
-	}
 
-	|-- init common events
-|** 	/call xbot_initialize_events
-	/call initEvents_Common
+	|-- [Settings] : Camp Information
+	/declare int_campX 					int 	outer 	${Me.X}
+	/declare int_campY 					int 	outer 	${Me.Y}
+	/declare int_campZ 					int 	outer 	${Me.Z}
+	/declare int_campRadius				int		outer	85
+	/declare str_zone_initial			string 	outer   ${Zone.ShortName}
+	/declare str_zone_bound 			string  outer 	${Me.BoundLocation[0]}
 
-	|-- init other libraries
-	/call xbot_initialize_dannet
+	|-- INITIALIZE Libraries
+    /call xbot_initialize_dannet
 	/call xbot_initialize_spellRoutines
+    /call xbot_initialize_events
 	/call xbot_initialize_buffing
 	/call xbot_initialize_burning
-	|/call xbot_initialize_casting
-	|/call xbot_initialize_charming
+    /call xbot_initialize_casting
 	/call xbot_initialize_clicking
-	/call xbot_initialize_curing
-	|/call xbot_initialize_debuffing
-	|/call xbot_initialize_exclusions
-	|/call xbot_initialize_healing ${_healPoint}
-	|/call xbot_initialize_looting
-	|/call xbot_initialize_melee
-	|/call xbot_initialize_offtanking
-	|/call xbot_initialize_pets
-	|/call xbot_initialize_movement **|
+    /call xbot_initialize_curing
+	/call xbot_initialize_exclusions
+	/call xbot_initialize_healing
+    /call xbot_initialize_looting
+	/call xbot_initialize_melee
+	/call xbot_initialize_movement
+	/call xbot_initialize_offtanking
+	/call xbot_initialize_pets 
+	/call xbot_initialize_classes
 
-	|-- report that the common things are initialized
-	/echo \agXBOT_${Me.Class.ShortName}:\aoInitialization Complete!
+	| Initialize the Common Events
+	/call initEvents_Common
+
+	/varset float_endTime ${EverQuest.Running}
+	/varcalc float_processed ${float_endTime} - ${float_startTime}
+	/echo \arSETUP COMPLETE \ay${float_processed}ms  \ag${Macro.MemUse}MB  \ao${Macro.Undeclared}
 
 /return
 
+Sub processClassTypes
+	/echo \awprocessClassTypes
+	/if (${Select[${Me.Class.ShortName},CLR,DRU,SHM]})		/return PRIEST
+	/if (${Select[${Me.Class.ShortName},NEC,WIZ,MAG,ENC]})	/return CASTER
+	/if (${Select[${Me.Class.ShortName},ROG,BER,MNK]})		/return MELEE_END
+	/if (${Select[${Me.Class.ShortName},BST,RNG,BRD]})		/return MELEE_MANA
+	/if (${Select[${Me.Class.ShortName},WAR,SHD,PAL]})		/return TANK	
+/return
 
 
+Sub processRaidTemplate(string _template, bool _build)
+	/if (!${Raid.Members} && !${_build}) /return
+	/echo \awprocessRaidTemplate \ay${_template} \a-y${_build}
+	/declare test 				string	local	NULL
+	| Make sure the template is enumerated
+	/varset test	${Ini[INI_RAID,SETTINGS,Templates]}
+	/if (!${test.Find[${_template}]}) /multiline ; /docommand /${str_announce_channel} Raid Template ${_template} NOT Found, Aborting ; /return
 
+	| Since this method can be called more than once, we want to kill previous arrays
+	/if (${Defined[arr_raid_diClerics]}) 		/deletevar arr_raid_diClerics
+	/if (${Defined[arr_raid_groupLeaders]})		/deletevar arr_raid_groupLeaders
+
+	/declare int_raidCount		int		local	${Ini[INI_RAID,RAID_${_template},RaidCount]}
+	/declare str_groupCounts	string	local	${Ini[INI_RAID,RAID_${_template},GroupCount]}
+	/declare int_leader			int 	local	0
+	/declare di                 int		local	0
+	/declare g					int  	local	0
+	/declare i					int		local	0
+	/declare j					int 	local 	0
+	/declare bln_heal_useDivineIntervention bool	outer	TRUE
+
+	/if (!${Raid.Members}) /goto :return
+	/for i 1 to ${int_raidCount}
+		/varset test ${Ini[INI_RAID,RAID_${_template},Raid_${i}_Leaders]}
+		/if (${test.Find[${Raid.Leader}]}) {
+			/varset int_leader	${i}
+			/varset g			${str_groupCounts.Arg[${i},|]}
+			/echo \aw        Setting Raid Group mode to \ao${_template} \aw:: \awFound my membership in Raid \ao${i}
+			
+			| Populate Raid Group Leaders List
+			/echo \aw        Raid Group Leaders List
+			/declare arr_raid_groupLeaders[${g}]	string	outer	NULL
+			/for j 1 to ${g}
+				/varset	arr_raid_groupLeaders[${j}]  ${test.Arg[${j},|]}
+				/echo \ag        Raid Group Leader \aw[\ao${j}\aw] \ay${arr_raid_groupLeaders[${j}]}
+			/next j
+			
+			| Set the Divine Intervention Clerics for my Raid
+			/echo \aw        Divine Intervention List
+			/varset 	di ${Ini[INI_RAID,RAID_${_template},Raid_${i}_DI_Count]}
+			/declare 	dl ${Ini[INI_RAID,RAID_${_template},Raid_${i}_DI_Clerics]}
+			/declare arr_raid_diClerics[${di}]		string	outer	NULL
+			/for j 1 to ${di}
+				/varset arr_raid_diClerics[${j}]	${dl.Arg[${j},|]}
+				/if (${arr_raid_diClerics[${j}].Equal[${Me.CleanName}]}) /varset bln_heal_useDivineIntervention TRUE
+				/echo \ag        Divine Intervention \aw[\ao${j}\aw] \ay${arr_raid_diClerics[${j}]}
+			/next j
+			/goto :return
+		}
+	/next i
+	:fail_GroupNotFound
+		/echo \awSetting Raid Group Mode \arERROR
+		/echo \aw   Unable to find our raid leader in the leader list for the \ao${_template} \awraid type.
+		/declare 	arr_raid_groupLeaders[1]	string 	outer NULL
+		/declare 	arr_raid_diClerics[1]		string	outer NULL
+
+	:return
+	/if (${_build}) /call raidBuildByTemplate ${_template}
+/return
+
+Sub raidBuildByTemplate(string _template)
+	/squelch /docommand /${str_command_channel} /raiddisband 
+	/squelch /docommand /${str_command_channel} /keypress ctrl+d
+	/call raidBuildGroups ${_template}
+	/delay 20
+	/docommand /${str_announce_channel} RaidReform ${_template}
+/return
+
+Sub raidBuildGroups(string _template)
+	/echo \aw RaidBuildGroups ${_template}
+	/declare int_raidCount		int		local	${Ini[INI_RAID,RAID_${_template},RaidCount]}
+	/declare str_groupCounts	string	local	${Ini[INI_RAID,RAID_${_template},GroupCount]}
+	/declare int_groupCounts 	int     local 	${str_groupCounts.Count[|]}
+	/echo \ag    RaidCount: \ao${int_raidCount} \aggroupCounts: \ao${str_groupCounts} \aggroupCountsForThisRaid \ao${int_groupCounts}
+
+	/declare raid_leaders		string	local	NULL
+	/declare raid_leader		string  local   NULL
+
+	/declare group_leader		string  local 	NULL
+	/declare group_count		int 	local   0
+	
+	/declare group_members		string  local 	NULL
+	/declare group_member		string  local   NULL
+	/declare member_count		int 	local 	0
+	/declare g					int  	local	0
+	/declare i					int		local	0
+	/declare j					int 	local 	0
+	
+	
+	/for i 1 to ${int_raidCount}
+		/varset 	group_count ${str_groupCounts.Arg[${i},|]}
+		/varset 	raid_leaders ${Ini[INI_RAID,RAID_${_template},Raid_${i}_Leaders]}
+		/varset     raid_leader  ${raid_leaders.Arg[1,|]}
+		/for j 1 to ${group_count}
+			
+			/echo \aw    Raid \ag${i}\aw RaidLeader:\ag${raid_leader}\aw Group \ag${j}
+			/varset 	group_leader	${raid_leaders.Arg[${j},|]} 
+			/varset 	group_members	${Ini[INI_RAID,RAID_${_template},Raid_${i}_${j}]}
+			/varset 	member_count 		${group_members.Count[|]}
+			/for g 1 to ${member_count}
+				/varset group_member 		${group_members.Arg[${g},|]}
+				/echo \a-w     Group Leader:\ag${group_leader} \ao=> \a-wMember:\ag${group_member}
+				/if (${group_leader.Equal[${Me.CleanName}]}) {
+					/if (${group_member.NotEqual[${Me.CleanName}]}) /invite ${group_member}
+				} else {
+					/if (${group_member.NotEqual[${group_leader}]}) /dex ${group_leader} /invite ${group_member}
+				}
+				/delay 2
+			/next g
+			
+			/echo \ag${raid_leader} \ao=> \ag${group_leader}
+			/if (${raid_leader.Equal[${Me.CleanName}]}) {
+				/if (${group_leader.NotEqual[${Me.CleanName}]}) /raidinvite ${group_leader}
+			} else {
+				/if (${raid_leader.NotEqual[${group_leader}]}) /dex ${raid_leader} /raidinvite ${group_leader}
+			}
+		/next j
+	/next i
+/return
 
 |**
  ----------------------------
- Fail States
+ Engagement | Targetting & Killing NPCs
  ----------------------------
- Check things that should be/should not be
- ----------------------------
-**|
-
-Sub Event_QuitExpedition
-	|echo yeah not going to do that here.
-/return  
-
-|-- No Need to check fail states on EMU!
-Sub chkFailStates
-	|--/call chkGM
-	|--/call chkZone
-/return
-
-Sub chkGM
-	/if (${Spawn.Equal[GM]}) /end
-/return
-
-
-
-|**
- ----------------------------
- Mana/HP/Endurance checking routine
- ----------------------------
- Based on class. ie: CLR/WIZ/MAG/NEC check for mana - others check for endurance
- uses int_sitRadius, etc
+ Note:	There is a difference now between engaging a NPC and killing it
+ 		This was created so we can start debuffing automatically without calling kill
  ----------------------------
 **|
-Sub chkSit
-	/if (${Me.Moving} || ${Navigation.Active}) /return
-	|-- Mana Check
-	/if (${str_class_type.Equal[CASTER]} ||  ${str_class_type.Equal[PRIEST]}) {
-		| Sit my ass down
-		/if ( ${Me.PctMana}<=${int_medPercent} && !${bln_engaged} && (${SpawnCount[npc radius ${int_sitRadius} zradius 55]} == 0)) {
-			|/echo I should be sitting my ass down for MANA Am I sitting? ${Me.Sitting}
-			/if (!${Me.Sitting}) /sit
-		} 
-		
-	}
-	|-- Endurance Check
-	/if (${str_class_type.Equal[MELEE_END]} ||  ${str_class_type.Equal[TANK]}) {
-		/if ( ${Me.PctEndurance}<=${int_medPercent} && !${bln_engaged} && (${SpawnCount[npc radius ${int_sitRadius} zradius 55]} == 0)) {
-			|/echo I should be sitting my ass down for Endurance Am I sitting? ${Me.Sitting}
-			/if (!${Me.Sitting}) /sit 
-		} 
-	}
+
+Sub EVENT_EngageNPC(string _line, string _sender, string _eventParams)
+	/doevents flush EngageNPC
+	/call EngageNPC ${_eventParams.Arg[1, ]}
 /return
 
-
-|--Engage Target EVENT, calls EngageTarget
-Sub EVENT_KillMob(_line, _sender, _eventParams)
-	/if (${_eventParams.Arg[1, ].Equal[NULL]}) /return
-	/doevents flush KillMob
-	/call EngageTarget ${_eventParams.Arg[1, ]}
-/return
-
-|-- Engage Target Sub, handles class specific modifications (minor)
-Sub EngageTarget(int _targetID)
-	/if (!${_targetID}) /return
+Sub EngageNPC(int _targetID)
+	/if (!${_targetID}) 	/return
 	/if (${bln_following}) /call StopFollowing
-	
-	/echo \awEngaging Target \ag${Spawn[id ${_targetID}].Name} \ay(${_targetID}) \ao${Time.Time24} \ay${MacroQuest.Running}
-	
+
+	/echo \awEngaging NPC \ag${Spawn[id ${_targetID}].Name} \ay(${_targetID}) \ao${Time.Time24} \ay${MacroQuest.Running}
 	| Set Target Flags
 	/varset int_targetID ${_targetID}
 	/varset str_targetName ${Spawn[id ${_targetID}].Name}
 	/varset bln_engaged TRUE
-	/if (${Select[${Me.Class.ShortName},DRU,SHM]} || (${Me.Class.ShortName.Equal[CLR]} && !${bln_battleCleric})) /return
+	/varset bln_killing FALSE
 
-	| Target NPC
+	| Clerics are done here
+	/if (${Me.Class.ShortName.Equal[CLR]}) /return
+
+		| True Target the NPC
 	/call TrueTarget ${_targetID}
-	/if (${Select[${Me.Class.ShortName},BER,BRD,BST,MNK,RNG,ROG,SHD,WAR]}) /call EngageTargetMelee
-	
-	| Priests don't need to do anything else
-	| Stand Up
-	/if ((${Me.Feigning} && (${Me.PctHPs} > 50))) /stand
+
 	| Reset recast timers (nukes, dots, etc)
-	/if (${Select[${Me.Class.ShortName},BER,BRD,BST,MNK,RNG,ROG,SHD]}) /call ResetCastTimers
+	/if (${Select[${Me.Class.ShortName},BRD,BST,RNG,SHD,ENC,WIZ,NEC,MAG]}) /call resetCastTimers
+
+
+
+
+/return
+
+Sub EVENT_KillNPC(string _line, string _sender, string _eventParams)
+	/echo \atKill NPC ${_eventParams}
+	/doevents flush KillNPC
+	/call KillNPC ${_eventParams.Arg[1, ]}
+/return 
+
+Sub KillNPC(int _targetID)
+	/if (!${_targetID}) 	/return
+	/if (${bln_following})	/call StopFollowing
+
+	/echo \awKilling NPC \ag${Spawn[id ${_targetID}].Name} \ay(${_targetID}) \ao${Time.Time24} \ay${MacroQuest.Running}
+	| Set Target Flags
+	/varset int_targetID ${_targetID}
+	/varset str_targetName ${Spawn[id ${_targetID}].Name}
+	/varset bln_engaged TRUE
+	/varset bln_killing TRUE
+
+	| Clerics are done here
+	/if (${Me.Class.ShortName.Equal[CLR]}) /return
+
+	| Stand if Feigning
+	/if ((${Me.Feigning} && (${Me.PctHPs} > 50))) /stand
+
+	| True Target the NPC
+	/call TrueTarget ${_targetID}
+	
+	| Start the Stick Cycle
+	/if (${Select[${Me.Class.ShortName},BER,BRD,BST,MNK,RNG,ROG,SHD,WAR]})		/call killTargetMelee
+
+	| Reset recast timers (nukes, dots, etc)
+	/if (${Select[${Me.Class.ShortName},BRD,BST,RNG,SHD,ENC,WIZ,NEC,MAG]})		/call resetCastTimers
+
 	| Sicc Pet
-	/if ((${Select[${Me.Class.ShortName},MAG,BST,NEC,ENC]}) && ${Me.Pet.ID}) /call chkPetAttack
-	| Start Swinging
+	/if ((${Select[${Me.Class.ShortName},BST,ENC,MAG,NEC,SHM]}) &&${Pet.ID})	/call chkPetAttack
 
 	| Stop Sticking if you are MT, cause it's annoying
 	/if (${Me.ID} == ${int_MTID} || ${bln_tanking}) /squelch /stick off
-/return
-
-|**
- ----------------------------
- Target Checking
- ----------------------------
- Determines if the main assist has a new target, and whether we can attack
- ----------------------------
-**|
-
-Sub chkTargetStatus
-	/declare reason string local TARGET_VALID
-	/if (!${bln_engaged}) /goto :return
-
-	| Target doesnt exist
-	/if (!${SpawnCount[id ${int_targetID}]}) {
-		/varset reason TARGET_DOESNT_EXIST 
-		/goto :disengage
-	}
-
-	| No target, or I am at my bound zone, if engaged, kill
-	/if (${int_targetID} == 0 || !${Target.ID} || ${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) {
-		/varset reason NOTARGET_or_ATBIND
-		/goto :disengage
-	}
-	
-	:chkTargetValid
-	| Assumes bln_engaged == true
-	| Check for target being corpse or non-existant
-	/if ((!${Bool[SpawnCount npc id ${int_targetID}]} || ${Spawn[id ${int_targetID}].Type.Equal[corpse]} || ${Spawn[id ${int_targetID}].Name.Find[s_corpse]})) {
-		/echo \awNo Targets with ID(\ay${int_targetID}\aw) or is a CORPSE \aoDisengaging!
-		/varset reason TARGET_IS_CORPSE
-		/goto :disengage
-	} 
-	
-	| Check to see if my target is NPC and there is no NPCs around
-	/if (${Bool[${Target.ID}]} && ${Target.ID} == ${int_MTID} && (!${SpawnCount[npc id ${int_targetID} radius 200]} || ${Zone.ShortName.Equal[${Me.BoundLocation[0]}]})) {
-		/echo \awTarget is MT, and No NPC in radius 200 (or at bind) \aoDisengaging!
-		/varset reason TARGETMT_or_ATBIND
-		/goto :disengage
-	}
-
-	| Check to see if there are any NPCs on XTarget and Radius
-	/if ((${Me.XTarget}==0 && !${SpawnCount[npc radius 200]})) {
-		/echo \awNo Targets within 200, or on XTarget \aoDisengaging!
-		/varset reason NOTARGETSWITHIN200_AND_NOXTARGET
-		/goto :disengage
-	} 
-
-	| If there is something on XTarget, and its over 400 away, ignore it.
-	/if (${Bool[${Me.XTarget}]} && (!${SpawnCount[npc radius 400]}  || ${Zone.ShortName.Equal[${Me.BoundLocation[0]}]})) {
-		/echo \awNo Targets within 400, even if they are on XTarget \aoDisengaging!
-		/varset reason NOTARGETWITHIN400_AND_HASXTARGET
-		/goto :disengage
-	}
-
-	| Priests can skip next check and just go to check hott aggro
-	/if (${Me.Class.ShortName.Equal[SHM]} && ${Me.Class.ShortName.Equal[CLR]} && ${Me.Class.ShortName.Equal[DRU]}) /goto :chkTargetTarget
-
-	| I am engaged, check we are targetting correct NPC (not if we are tanking becausse that is annoying)
-	/if ((${Target.ID} != ${int_targetID}) && (${Spawn[id ${int_targetID}].PctHPs} >= 0 && !${Spawn[id ${int_targetID}].Name.Find[s_corpse]}) && !${bln_tanking}) {
-		| I am not targetting the correct NPC
-		/echo \aoCurrent Target \arNOT \ao${Spawn[id ${int_targetID}].Name}(${int_targetID})\aw, re-targetting
-		/call TrueTarget ${int_targetID}
-	} else /if ((${Target.ID} != ${int_targetID}) && (${Target.PctHPs} >= 0 && !${Spawn[id ${int_targetID}].Name.Find[s_corpse]}) && ${bln_tanking}) {
-		/varset int_targetID ${Target.ID}
-	}
-	
-	:chkTargetTarget
-	/call TargetNamedCheck ${int_targetID}
-    /declare isNamed bool local ${Macro.Return}
-	/if (${Target.Type.Equal[NPC]} && ${Me.TargetOfTarget.CleanName.Equal[${Me.CleanName}]} && !${bln_tanking} && ${isNamed}) {
-		| Priest/Caster (with some sort of a aggro dump ability)
-		/if (${str_class_type.Equal[PRIEST]} || ${str_class_type.Equal[CASTER]}) {
-			| Wizard
-			/if (${Me.Class.ShortName.Equal[WIZ]}) {
-				/if (${Me.AltAbilityReady[Mind Crash]})   	/call MQ2Cast "Mind Crash" alt
-				/if (${Me.SpellReady[${str_concSpell}]})	/call MQ2Cast "${str_concSpell}" ${str_concGem}
-			} else /if (${Me.Class.ShortName.Equal[NEC]}) {
-				/if (${Me.AltAbilityReady[Death Peace]})   	/call MQ2Cast "Death Peace" alt
-				/if (!${Me.Standing}) /stand
-			} else /if (${Me.Class.ShortName.Equal[ENC]}) {
-				/if (${Me.AltAbilityReady[Soothing Words]}) /call MQ2Cast "Soothing Words" alt	
-			} else /if (${Me.Class.ShortName.Equal[MAG]}) {
-
-			} else /if (${Me.Class.ShortName.Equal[CLR]}) {
-				/if (${Me.AltAbilityReady[Sanctuary]}) 		/call MQ2Cast "Sanctuary" alt	
-			} else /if (${Me.Class.ShortName.Equal[SHM]}) {
-
-			} else /if (${Me.Class.ShortName.Equal[DRU]}) { 
-
-			}
-		} else /if (${str_class_type.Equal[MELEE_END]} || ${str_class_type.Equal[MELEE_MANA]} || ${str_class_type.Equal[TANK]}) {
-			/declare use_riposte bool local FALSE
-			/if (${Zone.ShortName.Equal[tacvi]} && (${Target.Name.Find[Pirik]} || ${Target.Name.Find[Yihst]} || ${Target.Name.Find[Tunat]})) {
-				/varset use_riposte TRUE
-			} else /if (${Zone.ShortName.Equal[anguish]} && (${Target.Name.Find[Keldovan]} || ${Target.Name.Find[Ture]} || ${Target.Name.Find[Vangl]} || ${Target.Name.Find[Zun]} || ${Target.Name.Find[Hanvar]} || ${Target.Name.Find[Overlord]})) {
-				/varset use_riposte TRUE
-			} else /if (${Zone.ShortName.Find[chambers]} &&  ${Target.Name.Find[Master]}) {
-				/varset use_riposte TRUE
-			} 
-			/if (${Me.Class.ShortName.Equal[SHD]}) {
-				/if (${Me.AltAbilityReady[Death Peace]})   	/call MQ2Cast "Death Peace" alt
-				/if (!${Me.Standing}) /stand
-			} else /if (${Me.Class.ShortName.Equal[BER]}) { 
-				/if (${use_riposte}) /call FireDisc_Riposte
-				/if (${Me.CombatAbilityReady[Baffling Strike]} && ${FindItemCount[Axe of the Destroyer]}>0) /doability "Baffling Strike"
-				/if (${Me.CombatAbilityReady[Confusing Strike]} && ${FindItemCount[Rage Axe]}>0) 			/doability "Confusing Strike"
-				/if (${Me.CombatAbilityReady[Distracting Strike]} && ${FindItemCount[Bonesplicer Axe]}>0) 	/doability "Distracting Strike"
-			} else /if (${Me.Class.ShortName.Equal[ROG]}) { 
-				/if (${use_riposte}) /call FireDisc_Riposte
-			} else /if (${Me.Class.ShortName.Equal[RNG]}) { 
-				/if (${Me.SpellReady[${str_concSpell}]})	/call MQ2Cast "${str_concSpell}" ${str_concGem}
-				/if (${use_riposte}) /call FireDisc_Riposte	
-			} else /if (${Me.Class.ShortName.Equal[MNK]}) { 
-				/if (${Me.AbilityReady[Feign Death]}) /doability "Feign Death"
-				/if (${use_riposte}) /call FireDisc_Riposte	
-				/if (!${Me.Standing}) /stand
-			}
-		}
-	}
-	/goto :return
-
-	:disengage
-		/echo \aoChkTargetStatus \awTriggering Disengage: \ag${reason}
-		/goto :return
-	:retarget
-	
-	:return
-	/if (${reason.NotEqual[TARGET_VALID]}) /call Disengage
-/return
-
-
-|-------------------------------------------------------------------------------- 
-|SUB: Event_BackOff!
-|--------------------------------------------------------------------------------
-
-Sub Event_BackOff
-	/echo \ao Event Back Off Called
-	/doevents flush BackOff
-	/call Disengage
-/return
-
-Sub Disengage 
-	/echo \awDisengaging \ao${Time.Time24}
-	|-- global reset
-	/varset bln_engaged 		FALSE
-	/varset int_targetID		0
-	/varset str_targetName		NULL
-	/varset str_debuffedTargets NULL
-
-	/call RunPriorityEvents
-	| Priests have nothing left to do here;
-	/if (${str_class_type.Equal[PRIEST]}) /return
-	/if (${Stick.Active}) /stick off
-
-	|-- class archetype resets
-	/if (${str_class_type.Equal[MELEE_END]} || ${str_class_type.Equal[MELEE_MANA]} || ${str_class_type.Equal[TANK]}) {
-		/echo \ag Disengage: Attack Off
-		/squelch /attack off
-		/delay 5
-		/squelch /attack off
-		/stick off
-	}
-	/if (${str_class_type.Equal[CASTER]} && ${Me.Pet.ID}) /pet back off
-/return
-
-
-Sub chkMobDead
-	/if ((${SpawnCount[npc radius 200]} == 0 || ${Me.XTarget} == 0) && ${bln_engaged} ) {
-		/echo chkMobDead triggered XTarget:${Me.XTarget} || SpawnCount:!${SpawnCount[npc id ${int_targetID} radius 250]}  && engaged:${bln_engaged}
-		/call Disengage
-	}
-/return
+/return 
 
 Sub TrueTarget(int _targetID)
 	/if (${SpawnCount[id ${_targetID}]} && ${Target.ID} != ${_targetID} ) {
@@ -608,17 +506,251 @@ Sub TrueTarget(int _targetID)
 	}
 /return
 
-
 |**
  ----------------------------
- Assist Checking
+ Target & Status Checking
  ----------------------------
- Determines if the main assist is dead, if so, set new MA
+ Determines if the main assist has a new target, and whether we can attack
+ TODO: #3 We can probably simplify this.
  ----------------------------
 **|
+
+Sub chkTargetStatus
+	/declare reason string local TARGET_VALID
+	/if (!${bln_engaged}) /goto :return
+
+	| Target doesnt exist
+	/if (!${SpawnCount[id ${int_targetID}]}) {
+		/multiline ; /echo \awTarget with ID \ao${int_targetID} \awNot Found! \ay${str_zone_bound} ; /varset reason TARGET_DOESNT_EXIST 
+		/goto :disengage
+	}
+
+	| No target, or I am at my bound zone, if engaged, kill
+	/if (${int_targetID} == 0 || !${Target.ID} || ${Zone.ShortName.Equal[${str_zone_bound}]}) {
+		/multiline ; /echo \awNo Target (${int_targetID}, ${Target.ID}) or at bind! \ay${str_zone_bound} ; /varset reason NOTARGET_or_ATBIND
+		/goto :disengage
+	}
+	
+	:chkTargetValid
+	| Assumes bln_engaged == true
+	| Check for target being corpse or non-existant
+	/if ((!${Bool[SpawnCount npc id ${int_targetID}]} || ${Spawn[id ${int_targetID}].Type.Equal[corpse]} || ${Spawn[id ${int_targetID}].Name.Find[s_corpse]})) {
+		/multiline ; /echo \awNo Targets with ID(\ay${int_targetID}\aw) or is a CORPSE \aoDisengaging! ; /varset reason TARGET_IS_CORPSE ; /goto :disengage
+	} else /if (${Bool[${Target.ID}]} && ${Target.ID} == ${int_MTID} && (!${SpawnCount[npc id ${int_targetID} radius 200]} || ${Zone.ShortName.Equal[${str_zone_bound}]})) {
+		/multiline ; /echo \awTarget is MT, and No NPC in radius 200 (or at bind) \aoDisengaging! ; /varset reason TARGETMT_or_ATBIND 
+	} else  /if ((${Me.XTarget}==0 && !${SpawnCount[npc radius 200]})) {
+		/multiline ; /echo \awNo Targets within 200, or on XTarget \aoDisengaging! ;/varset reason NOTARGETSWITHIN200_AND_NOXTARGET ;/goto :disengage
+	} else /if (${Bool[${Me.XTarget}]} && (!${SpawnCount[npc radius 400]}  || ${Zone.ShortName.Equal[${str_zone_bound}]})) {
+		/multiline ; /echo \awNo Targets within 400, even if they are on XTarget \aoDisengaging! ; /varset reason NOTARGETWITHIN400_AND_HASXTARGET ; /goto :disengage
+	}
+
+	| Priests can skip next check and just go to check hott aggro
+	/if (${Select[${Me.Class.ShortName},SHM,CLR,DRU]}) /goto :chkTargetTarget
+
+	| I am engaged, check we are targetting correct NPC (not if we are tanking becausse that is annoying)
+	/if ((${Target.ID} != ${int_targetID}) && (${Spawn[id ${int_targetID}].PctHPs} >= 0 && !${Spawn[id ${int_targetID}].Name.Find[s_corpse]}) && !${bln_tanking}) {
+		| I am not targetting the correct NPC
+		/echo \aoCurrent Target \arNOT \ao${Spawn[id ${int_targetID}].Name}(${int_targetID})\aw, re-targetting
+		/call TrueTarget ${int_targetID}
+	} else /if ((${Target.ID} != ${int_targetID}) && (${Target.PctHPs} >= 0 && !${Spawn[id ${int_targetID}].Name.Find[s_corpse]}) && ${bln_tanking}) {
+		/varset int_targetID ${Target.ID}
+	}
+	
+	:chkTargetTarget
+	/call TargetNamedCheck ${int_targetID}
+    /declare isNamed bool local ${Macro.Return}
+	/if (${Target.Type.Equal[NPC]} && ${Me.TargetOfTarget.CleanName.Equal[${Me.CleanName}]} && !${bln_tanking} && ${isNamed}) {
+		/call attemptDumpAggro
+	}
+	/return
+
+	:disengage
+		/echo \aoChkTargetStatus \awTriggering Disengage: \ag${reason}
+		/if (${reason.NotEqual[TARGET_VALID]}) /call Disengage
+
+	:return
+/return
+
+
+Sub chkTargetStatusNonDPS
+	/if ((${SpawnCount[npc radius 300]} == 0 || ${Me.XTarget} == 0) && ${bln_killing} ) {
+		/echo chkTargetStatusNonDPS triggered XTarget:${Me.XTarget} || ${SpawnCount[npc id ${int_targetID} radius 300]} SpawnCount:!${SpawnCount[npc id ${int_targetID} radius 250]}  && engaged:${bln_engaged}
+		/call Disengage
+	}
+/return
+
+Sub TargetNamedCheck(_id)
+	/if (${Target.Named}) /return TRUE
+	/if ((${Spawn[npc id ${_id}].Named} || ${Spawn[npc id ${_id}].Name.Find[#]}) && ${Target.Level} >= 75) 				/return TRUE
+	/if (${Select[${Zone.ShortName},tacvi,chambersa,chambersb,chambersc,chambersd,chamberse]} && ${Target.Level} >=71)	/return TRUE
+	/if (${Zone.ShortName.Equal[anguish]}  && ${Target.Level} >= 75)													/return TRUE
+	/if (${Zone.ShortName.Equal[arena]}) 																				/return TRUE
+	/if (${Zone.ShortName.Equal[thundercrest]}) 																		/return TRUE
+/return FALSE
+
+|TODO #4
+Sub attemptDumpAggro
+	| Priest/Caster (with some sort of a aggro dump ability)
+	/if (${str_class_type.Equal[PRIEST]} || ${str_class_type.Equal[CASTER]}) {
+		| Wizard
+		/if (${Me.Class.ShortName.Equal[WIZ]}) {
+			/if (${Me.AltAbilityReady[Mind Crash]})   	/call MQ2Cast "Mind Crash" alt
+			/call chkDefensiveSpells
+		} else /if (${Me.Class.ShortName.Equal[NEC]}) {
+			/call chkDefensiveSpells
+			/if (!${Me.Standing}) /stand
+		} else /if (${Me.Class.ShortName.Equal[ENC]}) {
+			/if (${Me.AltAbilityReady[Soothing Words]}) /call MQ2Cast "Soothing Words" alt	
+		} else /if (${Me.Class.ShortName.Equal[MAG]}) {
+
+		} else /if (${Me.Class.ShortName.Equal[CLR]}) {
+			/if (${Me.AltAbilityReady[Sanctuary]}) 		/call MQ2Cast "Sanctuary" alt	
+		} else /if (${Me.Class.ShortName.Equal[SHM]}) {
+
+		} else /if (${Me.Class.ShortName.Equal[DRU]}) { 
+
+		}
+	} else /if (${str_class_type.Equal[MELEE_END]} || ${str_class_type.Equal[MELEE_MANA]} || ${str_class_type.Equal[TANK]}) {
+		/declare use_riposte bool local FALSE
+		/if (${Zone.ShortName.Equal[tacvi]} && (${Target.Name.Find[Pirik]} || ${Target.Name.Find[Yihst]} || ${Target.Name.Find[Tunat]})) {
+			/varset use_riposte TRUE
+		} else /if (${Zone.ShortName.Equal[anguish]} && (${Target.Name.Find[Keldovan]} || ${Target.Name.Find[Ture]} || ${Target.Name.Find[Vangl]} || ${Target.Name.Find[Zun]} || ${Target.Name.Find[Hanvar]} || ${Target.Name.Find[Overlord]})) {
+			/varset use_riposte TRUE
+		} else /if (${Zone.ShortName.Find[chambers]} &&  ${Target.Name.Find[Master]}) {
+			/varset use_riposte TRUE
+		} 
+		/if (${Me.Class.ShortName.Equal[SHD]}) {
+			/if (${Me.AltAbilityReady[Death Peace]})   	/call MQ2Cast "Death Peace" alt
+			/if (!${Me.Standing}) /stand
+		} else /if (${Me.Class.ShortName.Equal[BER]}) { 
+			/if (${use_riposte}) /call FireDisc_Riposte
+			/if (${Me.CombatAbilityReady[Baffling Strike]} && ${FindItemCount[Axe of the Destroyer]}>0) /doability "Baffling Strike"
+			/if (${Me.CombatAbilityReady[Confusing Strike]} && ${FindItemCount[Rage Axe]}>0) 			/doability "Confusing Strike"
+			/if (${Me.CombatAbilityReady[Distracting Strike]} && ${FindItemCount[Bonesplicer Axe]}>0) 	/doability "Distracting Strike"
+		} else /if (${Me.Class.ShortName.Equal[ROG]}) { 
+			/if (${use_riposte}) /call FireDisc_Riposte
+		} else /if (${Me.Class.ShortName.Equal[RNG]}) { 
+			/if (${Me.SpellReady[${str_concSpell}]})	/call MQ2Cast "${str_concSpell}" ${str_concGem}
+			/if (${use_riposte}) /call FireDisc_Riposte	
+		} else /if (${Me.Class.ShortName.Equal[MNK]}) { 
+			/if (${Me.AbilityReady[Feign Death]}) /doability "Feign Death"
+			/if (${use_riposte}) /call FireDisc_Riposte	
+			/if (!${Me.Standing}) /stand
+		}
+	}
+/return
+
+Sub Event_RefreshXTarget
+	/call RefreshXTarget
+/return 
+
+SUB RefreshXTarget
+	/if (${timer_xtarget_refresh}) /return
+	/echo \aoRefreshing \aoXTarget \ay${timer_xtarget_refresh}
+	/declare i int local 1
+	/for i 1 to 5
+		/xtarget set ${i} grouptank
+		/delay 1
+		/xtarget set ${i} autohater
+	/next i
+	/varset timer_xtarget_refresh 60s
+/return
+
+Sub Event_RageOn(string _line, string _sender, string _eventParams)
+	/doevents flush RageOn
+	/if ((${_line.Find[${Spawn[${int_targetID}].DisplayName}]} || ${_line.Find[${Target.DisplayName}]}) && (${str_class_type.Equal[MELEE_END]} || ${str_class_type.Equal[MELEE_MANA]} || ${str_class_type.Equal[TANK]})) {
+		/attack off
+	}
+	/if (((${_line.Find[${Spawn[${int_targetID}].DisplayName}]} || ${_line.Find[${Target.DisplayName}]}) &&${Pet.ID}) && !${Me.PetBuff[Master's Aura Effect]}) {
+		/echo Enrage detected! Backing pet off.
+		/pet back off
+		/varset bln_enraged TRUE
+	}
+	
+/return
+
+Sub Event_RageOff(string _line, string _sender, string _eventParams)
+	/doevents flush RageOff
+	/if (${_line.Find[${Spawn[${int_targetID}].DisplayName}]} || ${_line.Find[${Target.DisplayName}]}) {
+		/if (${Select[${str_class_type},MELEE_END,MELEE_MANA,TANK]}) /attack on
+		/if (${Pet.ID}) /call chkPetAttack
+	}
+	/if ((${str_class_type.Equal[MELEE_END]} || ${str_class_type.Equal[MELEE_MANA]} || ${str_class_type.Equal[TANK]}) && ${_line.Find[${Target.DisplayName}]}) {
+		/echo  \awRageOff :tryKill \ag Attacking 
+		/attack on
+	}
+	
+/return
+
+Sub chkNaked
+	/doevents flush chkNaked
+	/if (${Me.Inventory[2].Name.Equal[NULL]} && !${timer_announce_naked}) {
+		/docommand /${str_announce_channel} I am NAKED. 
+		/varset bln_naked 				TRUE
+		/varset timer_announce_naked	30s
+	} else {
+		/varset bln_naked				FALSE
+	}
+/return
+
+|** 
+ ----------------------------
+ Disengagement
+ ----------------------------
+ Turns off attack/casting routines on NPC, etc
+ ----------------------------
+**|
+
+Sub EVENT_Disengage 
+	/doevents flush Disengage
+	/call Disengage
+/return 
+
+Sub Disengage
+		/echo \awDisengaging \ao${Time.Time24}
+	|-- global reset
+	/varset bln_engaged 		FALSE
+	/varset bln_killing			FALSE
+	/varset int_targetID		0
+	/varset str_targetName		NULL
+	|/varset str_debuffedTargets NULL
+
+	|-- back off pet
+	/if (${Pet.ID}) /multiline ; /pet back off ; /pet hold on
+	/call RunPriorityEvents
+
+	| Priests have nothing left to do here;
+	/if (${str_class_type.Equal[PRIEST]}) /return
+
+	|-- class archetype resets
+	/if (${Select[${str_class_type},MELEE_END,MELEE_MANA,TANK]}) {
+		/echo \ag Disengage: Attack Off
+		/squelch /attack off
+		/delay 5
+		/squelch /attack off
+		/stick off
+	}
+/return
+
+Sub EVENT_Zoned 
+	/doevents flush Zoned
+	/echo \awEvent_Zoned ${Time.Time24}
+	/call setExclusions
+	/if (${MacroQuest.GameState.Equal[CHARSELECT]}) /end
+  	
+/return 
+
+|** 
+ ----------------------------
+ Tank Checking
+ ----------------------------
+ Determines if the main tank is dead, if so, set new MT
+ ----------------------------
+**|
+
 Sub chkMTAlive(bool _setAsTarget)
 	|--MT is a live and ID is correct
-	/if (${Bool[${SpawnCount[PC ${str_MTName}]}]} && (${int_MTID} == ${Spawn[PC ${str_MTName}].ID})) /goto :return 
+	/if (${Bool[${SpawnCount[PC ${str_MTName}]}]} && (${int_MTID} == ${Spawn[PC ${str_MTName}].ID})) /return
 
 	|--MT, ST, and TT are not in zone or dead!
 	/if (${Bool[${SpawnCount[PC ${str_MTName}]}]} && ${Bool[${SpawnCount[PC ${str_STName}]}]} && ${Bool[${SpawnCount[PC ${str_TTName}]}]}) {
@@ -644,6 +776,7 @@ Sub chkMTAlive(bool _setAsTarget)
 		/varset str_MTName ${str_STName}
 		/varset str_STName ${str_TTName}
 		/varset int_MTID ${Spawn[${str_STName}].ID}
+		/varset int_STID ${Spawn[${str_TTName}].ID}
 		/goto :hasChanged
 	}
 	
@@ -667,797 +800,106 @@ Sub chkMTAlive(bool _setAsTarget)
 		/if (${Bool[${Me.Casting.ID}]}) /call Interrupt
 		/call TrueTarget ${int_MTID}
 	}
-:return	
 /return
 
-
-
-
-|**
- ----------------------------
- Class Archetype
- ----------------------------
- Based on class. ie: CLR/DRU/SHM = PRIEST, NEC/WIZ/MAG/ENC = CASTER
- ----------------------------
-**|
-Sub getClassArchetype(string _shortName)
-	| PRIEST CLASS ENUMERATION
-	/if (${Select[${_shortName},CLR,DRU,SHM]}) {
-		/return PRIEST
-	}
-	
-	| CASTER CLASS ENUMERATION
-	/if (${Select[${_shortName},NEC,WIZ,MAG,ENC]}) {
-		/return CASTER
-	}
-
-	| MELEE DPS CLASS ENUMERATION - Endurance Focus
-	/if (${Select[${_shortName},ROG,BER,MNK]}) {
-		/return MELEE_END
-	}
-	
-	| MELEE DPS CLASS ENUMERATION - Mana Focus
-	/if (${Select[${_shortName},BST,RNG,BRD]}) {
-		/return MELEE_MANA
-	}	
-	
-	| TANK CLASS ENUMERATION
-	/if (${Select[${_shortName},WAR,SHD,PAL]}) {
-		/return TANK
-	}		
-/return
-
-Sub getClassBaseType(string _shortName)
-	/if (${Select[${_shortName},CLR,DRU,SHM]}) {
-		/return PRIEST
-	}
-	
-	| CASTER CLASS ENUMERATION
-	/if (${Select[${_shortName},NEC,WIZ,MAG,ENC]}) {
-		/return CASTER
-	}
-
-	| MELEE DPS CLASS ENUMERATION - Endurance Focus
-	/if (${Select[${_shortName},ROG,BER,MNK]}) {
-		/return MELEE
-	}
-	
-	| MELEE DPS CLASS ENUMERATION - Mana Focus
-	/if (${Select[${_shortName},BST,RNG,BRD]}) {
-		/return MELEE
-	}	
-	
-	| TANK CLASS ENUMERATION
-	/if (${Select[${_shortName},WAR,SHD,PAL]}) {
-		/return MELEE
-	}	
-
-/return 
-
-
-
-Sub Event_SKILLCHECK(_line, _sender, _eventParams) 	
-	/echo ${_sender} checking skill archetype:${_eventParams.Arg[1,|]} | skill:${_eventParams.Arg[2,|]}
-	/echo str_class_type: ${str_class_type}
-	|/if (${str_class_type.Equal[${_eventParams.Arg[1,|]}]})  {
-		/echo found ${Me.Skill[${_eventParams.Arg[1,|]}]}
-		/docommand /${announceChannel} ${_eventParams.Arg[1,|]}:${Me.Skill[${_eventParams.Arg[1,|]}]}
-	|}
-/return
-
-
-
-|**
- ------------------------
- EVENTS
-	Event Handlers defined at the top of this file
-	
- ------------------------
-**|
-
-|-------------------------------------------------------------------------------- 
-|SUB: Event_SetupRaid
-|	  Sets the raid group leaders based on mode. Also, calls this on init with default settings
-|     Also sets the list of available Divine INtervention Clerics
-
-|--------------------------------------------------------------------------------
-Sub Event_SetupRaid(_line, _sender, _eventParams)
-	/call SetupRaid ${_eventParams.Arg[1,|]}
-	/doevents flush SetupRaid
-/return 
-
-
-Sub SetupRaid(string _mode)
-	|-- Pull from the common ini settings file to grab the group leaders/di clerics etc
-	|/echo Setting raid group mode to ${_mode}
-	|/varset _mode TRIAD
-	/varset str_raidGroupMode ${_mode}
-
-	
-
-	/deletevar arr_raidLeaders 
-	/deletevar RaidDIClerics
-	
-	|[RaidBuilder]
-	|keys=DEFAULT|TRIAD|JELVAN|THIRTYSIX
-	/declare keys string local ${Ini[INI_RAID,RaidBuilder,keys]}
-	:fail_noRaid
-	/if (!${keys.Find[${_mode}]}) {
-		/echo \awSetting Raid Group Mode \arERROR: 
-		/echo \aw   Unable to find \ay${_mode} in \ao${keys}
-		/declare arr_raidLeaders[1] string outer NULL
-		/declare RaidDIClerics[1] string outer NULL
-		/goto :return
-	}
-
-	/declare settingsGroup	string local RAID_${_mode}
-	/declare raidCount		int	local ${Ini[INI_RAID,${settingsGroup},RaidCount]}
-	/declare groupCount     int local
-	/declare groupCountCSV	string local ${Ini[INI_RAID,${settingsGroup},GroupCount]}
-
-	/declare leaderList  	string local
-	/declare leaderIndex  	int local 0
-
-	/declare DICount		int local
-	/declare DIList			string local
-
-	/declare i int local
-	/declare j int local
-
-	| Find which Group Set I am in 
-	/for i 1 to ${raidCount}
-		/varset leaderList ${Ini[INI_RAID,${settingsGroup},Raid_${i}_Leaders]}
-		
-		/if (${leaderList.Find[${Raid.Leader}]}) {
-			/varset leaderIndex ${i}
-			/varset groupCount ${groupCountCSV.Arg[${i},,]}
-			| Set the group leaders
-			/declare arr_raidLeaders[${groupCount}] string outer NULL
-			/varset leaderList ${Ini[INI_RAID,${settingsGroup},Raid_${i}_Leaders]}
-			/echo \awFound my membership in Raid \ao${i}
-			/echo \aySetting Raid Group mode to \ao${_mode}
-			/for j 1 to ${groupCount}
-				/varset	arr_raidLeaders[${j}]  ${leaderList.Arg[${j},|]}
-				/echo \ag Raid Group Leader \aw[\ag${j}\aw] \ay${arr_raidLeaders[${j}]}
-			/next j
-
-			| Set the Divine Intervention Information
-			/varset DICount ${Ini[INI_RAID,${settingsGroup},Raid_${i}_DI_Count]}
-			/varset DIList	${Ini[INI_RAID,${settingsGroup},Raid_${i}_DI_Clerics]}
-			/declare RaidDIClerics[${DICount}] string outer NULL
-			/echo \aySetting Raid Divine Intervention mode to \ao${_mode}
-			/for j 1 to ${DICount}
-				/varset	RaidDIClerics[${j}]  ${DIList.Arg[${j},|]}
-				/echo \ag Divine Intervention \aw[\ag${j}\aw] \ay${RaidDIClerics[${j}]}
-			/next j
-			/goto :return
-		}
-
-	/next i
-	:fail_noGroup
-		/echo \awSetting Raid Group Mode \arERROR
-		/echo \aw   Unable to find our raid leader in the leader list for the \ao${_mode} \awraid type.
-		/declare arr_raidLeaders[1] string outer NULL
-		/declare RaidDIClerics[1] string outer NULL
-		/goto :return
-	:return
-
-/return
-
-
-|-------------------------------------------------------------------------------- 
-|SUB: Event_InvisOff
-|--------------------------------------------------------------------------------
-Sub Event_InvisOFF 
-	/call InvisOff
-/return 
-
-Sub InvisOff
-	/if (${Me.Buff[Group Perfected Invisibility].ID}) /nomodkey /notify BuffWindow Buff${Math.Calc[${Me.Buff[Group Perfected Invisibility].ID}-1].Int} leftmouseup
-	/if (${Me.Buff[Gather Shadows].ID}) /nomodkey /notify BuffWindow Buff${Math.Calc[${Me.Buff[Gather Shadows].ID}-1].Int} leftmouseup
-	/if (${Me.Buff[Invisibility].ID}) /nomodkey /notify BuffWindow Buff${Math.Calc[${Me.Buff[Invisibility].ID}-1].Int} leftmouseup
-/return 
-
-|-------------------------------------------------------------------------------- 
-|SUB: Event_EndMac
-|--------------------------------------------------------------------------------
-Sub Event_EndMac
-	/dgt Someone told me to end the macro it! ${Time}
-	/delay 1s
-	/gate
-	/delay 2m
-	/camp desktop
-	/end
-	/doevents flush EndMac
-/return
-
-
-
-
-| AA Special Events
-Sub EVENT_UseStaunchRecovery
-	| Do not use if at bind point (ie: dead)
-	/if (${Zone.ID} == 340 || ${Zone.ID} == 344 || ${Zone.ID} == 345 || ${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /return
-
-	/if ((${str_class_type.Equal[MELEE_END]} || ${str_class_type.Equal[TANK]}) && ${Me.PctEndurance} < 20) {
-		/casting "Staunch Recovery" alt 
-	} else /if (${Me.Class.ShortName.Equal[PAL]} && ${Me.PctMana} < 20) {
-		/casting "Staunch Recovery" alt
-	} else /if (${Me.Class.ShortName.Equal[BRD]} && ${Me.PctMana} < 20) { 
-		/call MQ2Medley "Staunch Recovery" ALT ${int_targetID} FALSE
-	} else /if ((${str_class_type.Equal[PRIEST]} || ${str_class_type.Equal[CASTER]}) && ${Me.PctMana} < 20) { 
-		/casting "Staunch Recovery" alt 
-	} 
-/return
-
-Sub EVENT_UseIntensity
-	| Do not use if at bind point (ie: dead)
-	/if (${Zone.ID} == 340 || ${Zone.ID} == 344 || ${Zone.ID} == 345 || ${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /return
-	/if (${Me.Class.ShortName.Equal[BRD]}) {
-		/call MQ2Medley "Intensity of the Resolute" ALT ${int_targetID} TRUE
-	} else {
-		/casting "Intensity of the Resolute" alt
-	}
-/return
-
-Sub EVENT_UseServants
-	| Do not use if at bind point (ie: dead)
-	/if (${Zone.ID} == 340 || ${Zone.ID} == 344 || ${Zone.ID} == 345 || ${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /return
-	/if (${Me.Class.ShortName.Equal[BRD]}) {
-		/call MQ2Medley "Steadfast Servant" ALT ${int_targetID} FALSE
-	} else {
-		/casting "Steadfast Servant" alt
-	}
-/return
-
-Sub EVENT_UseInfusion
-	| Do not use if at bind point (ie: dead)
-	/if (${Zone.ID} == 340 || ${Zone.ID} == 344 || ${Zone.ID} == 345 || ${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /return
-	/if (${Me.Class.ShortName.Equal[BRD]}) {
-		/call MQ2Medley "Infusion of the Faithful" ALT ${int_targetID} FALSE
-	} else {
-		/casting "Infusion of the Faithful" alt
-	}
-/return
-
-
-|-------------------------------------------------------------------------------- 
-|SUB: Event_ENRAGE HANDLERS for pets (and melee if they aren't usign mq2melee, ala specialization)
-|--------------------------------------------------------------------------------
-
-
-Sub Event_RageOn(string line)
-	/if (!${mq2meleeEnabled} && !${Stick.Behind} && (${line.Find[${Spawn[${int_targetID}].DisplayName}]} || ${line.Find[${Target.DisplayName}]}) && (${str_class_type.Equal[MELEE_END]} || ${str_class_type.Equal[MELEE_MANA]} || ${str_class_type.Equal[TANK]})) {
-		/attack off
-	}
-	/if (((${line.Find[${Spawn[${int_targetID}].DisplayName}]} || ${line.Find[${Target.DisplayName}]}) && ${Me.Pet.ID}) && !${Me.PetBuff[Master's Aura Effect]}) {
-		/echo Enrage detected! Backing pet off.
-		/pet back off
-		/varset bln_enraged TRUE
-	}
-	/doevents flush RageOn
-/return
-
-Sub Event_RageOff(string line)
-	/if (!${mq2meleeEnabled} && (${line.Find[${Spawn[${int_targetID}].DisplayName}]} || ${line.Find[${Target.DisplayName}]}) && (${str_class_type.Equal[MELEE_END]} || ${str_class_type.Equal[MELEE_MANA]} || ${str_class_type.Equal[TANK]}) && ${Target.ID}) {
-		/echo  \awRageOff :tryKill \ag Attacking 
-		/attack on
-	}
-	/if ((${line.Find[${Spawn[${int_targetID}].DisplayName}]} || ${line.Find[${Target.DisplayName}]}) && ${Me.Pet.ID}) {
-		/pet attack
-		/varset bln_enraged FALSE
-	}
-	/doevents flush RageOff
-/return
-
-
-|-------------------------------------------------------------------------------- 
-|-- DUCKING EVENT
-|-- Used for events like MPG/Demi:Hatchet
-|-------------------------------------------------------------------------------- 
-Sub EVENT_DUCKON
-	/echo ducking!
-	/varset bln_ducking TRUE
-	/duck
-	:ducking
-	/if (!${Me.Ducking}) /keypress x
-	/call RunRaidEvents
-	/if (${bln_ducking}) {
-		/delay 1s
-		/goto :ducking
-	}
-	/doevents flush DuckOn
-/return
-
-Sub EVENT_DUCKOFF
-	/echo end ducking!
-	/if (${Me.Ducking}) /keypress x
-	/varset bln_ducking FALSE
-	/doevents flush DuckOff
-/return
-
-
-
-|-------------------------------------------------------------------------------- 
-|SUB: Event_ZONE HANDLERS
-|--------------------------------------------------------------------------------
-Sub Event_Zoned
-	/echo \awEvent_Zoned ${Time.Time24}
-	/call setExclusions
-	/if (${MacroQuest.GameState.Equal[CHARSELECT]}) /end
-  	/doevents flush Zoned
-/return
-
-
-
-Sub doRefreshAlerts
-  /declare i int local
-  /declare NPCAlertList int local ${Math.Calc[${list_ignore.Count[|]}-1].Int}
-  /squelch /alert clear 1
-    /if (${NPCAlertList}>0) {
-  	/for i 1 to ${NPCAlertList}
-  		/squelch /alert add 1 ${list_ignore.Arg[${i},|]}
-	/next i
-  }
-/return
-
-
-
-
-|-------------------------------------------------------------------------------- 
-|EVENTS: MISCELLANEOUS
-| Note, the immunity calls send the immune announcemnt 
-|       to the channel, so all bots can pick it up.
-|--------------------------------------------------------------------------------
-
-|**
-----------------------------
-Set the MT to a specific NAME
-----------------------------  
-**|
-
-Sub getMTbyPrecedence
-	/echo getMTbyPrecedence
-
-	/declare newTank	string	local
-	/declare newID 		int 	local
-
-	|-- Start with the defined str_MTName,...3
-	/if (${SpawnCount[pc ${str_MTName}]} == 1) {
-		/varset newTank ${str_MTName}
-		/goto :return
-	} else /if (${SpawnCount[pc ${str_STName}]} == 1) {
-		/varset newTank ${str_STName}
-		/goto :return
-	}  else /if (${SpawnCount[pc ${str_TTName}]} == 1) {
-		/varset newTank ${str_TTName}
-		/goto :return
-	}
-
-
-	| No tank is still alive, lets do by class precedence
-	| Try to determine the next valid tank (likely a DPS or myself)
-	/if (${NearestSpawn[PC WAR].Name.NotEqual[NULL]}) {
-		/varset newTank ${NearestSpawn[PC WAR].Name}
-	} else /if (${NearestSpawn[PC SK].Name.NotEqual[NULL]}) {
-		/varset newTank ${NearestSpawn[PC SHD].Name}
-	} else /if (${NearestSpawn[PC PAL].Name.NotEqual[NULL]}) {
-		/varset newTank ${NearestSpawn[PC PAL].Name}
-	} else /if (${NearestSpawn[PC MNK].Name.NotEqual[NULL]}) {
-		/varset newTank ${NearestSpawn[PC MNK].Name}
-	} else {
-		/echo NO Suitable Replacement MT's met, set self to MT
-		/varset newTank ${Me.Name}
-	}
-
-	:return
-	/varset newID ${Spawn[PC ${newTank}].ID}
-	| set globals
-	/varset int_MTID ${newID}
-	/varset str_MTName ${newTank}
-	/echo End getMTbyPrecedence: ${newTank}(${newID});
-/return ${newID}
-
-
-Sub EVENT_ChangeMT(_line, _sender, _eventParams)
-	/echo Changing the MT
-	/echo _sender: ${_sender}
-	/echo _eventParams:${_eventParams}
-	/declare tankName string local ${_eventParams.Arg[1, ]}
-	/call setMT ${tankName}
-
-	/echo MTID: ${int_MTID} MTName: ${name}
-	/if (${str_class_type.Equal[PRIEST]}) /dgt [${Me.Class.ShortName}] ${Me.Name} ${str_action} >> ${Spawn[id ${int_MTID}].CleanName} <<  @ ${healPoint}
-	/if (${Me.Class.ShortName.Equal[CLR]}) /call TrueTarget ${int_MTID}
-	/if (${Me.Name.Equal[${tankName}]}) {
-		/varset bln_tanking 	TRUE
-		/varset bln_taunting 	TRUE
-	} else {
-		/varset bln_tanking 	FALSE
-		/varset bln_taunting 	FALSE
-	}
+Sub EVENT_ChangeMT(string _line, string _sender, string _eventParams)
 	/doevents flush ChangeMT
+	/call setMT ${_eventParams.Arg[1, ]}
 /return
 
 Sub setMT(string _tankName)
 	/echo \agSetMT(${_tankName}):: ${Spawn[${_tankName}].ID}
-	/varset str_MTName ${_tankName}
-	/varset int_MTID ${Spawn[${_tankName}].ID}
-/return
-
-Sub EVENT_ChangeSA(_line, _sender, _eventParams)
-	/echo SA Change called! Changing to: ${_eventParams.Arg[1, ]}
-	/echo _sender: ${_sender}
-	/echo _eventParams:${_eventParams}
-	/declare SA string local ${_eventParams.Arg[1, ]}
-	/varset	int_STID ${Spawn[${SA}].ID}
-	/doevents flush ChangeSA
+	/varset str_MTName 		${_tankName}
+	/varset int_MTID 		${Spawn[${_tankName}].ID}
+	/varset bln_tanking 	${Me.Name.Equal[${_tankName}]}
+	/varset bln_taunting 	${Me.Name.Equal[${_tankName}]}
+	/if (${Me.Class.ShortName.Equal[CLR]}) /call TrueTarget ${int_MTID}
+	/if (${str_class_type.Equal[PRIEST]}) /docommand /${str_announce_channel} [${Me.Class.ShortName}] ${Me.Name}  ${Spawn[id ${int_MTID}].CleanName}
 /return
 
 
-Sub EVENT_ChangeAP(_line, _sender, _eventParams)
-	/if (${str_class_type.NotEqual[PRIEST]}) {
-		/echo _sender: ${_sender}
-		/echo _eventParams:${_eventParams}
-		/echo AP (AssistPoint) Change called! Changing to: ${chatTe_eventParamsxt.Arg[1, ]}
-		/declare AP int local ${_eventParams.Arg[1, ]}
-		/varset	int_assistAt ${AP}
-		/dgt [${Me.Class.ShortName}] ${Me.Name} ${str_action} >> ${Spawn[id ${int_MTID}].CleanName} <<  @ ${int_assistAt}
-	}
-	/doevents flush ChangeAP
-/return
-
-
-
-
-
-Sub LoadPlugin(string _pluginName, bool _load) 
-	/if (${_load}) {
-		/if (!${Plugin[_pluginName].Name.Length}) {
-			/docommand /${cmdChannel} //plugin ${_pluginName}
-			/delay 5s
-		}
+Sub getMTbyPrecedence
+	|-- Start with the defined backup Tanks
+	/if (${SpawnCount[pc ${str_MTName}]}) {
+		/varset str_MTName ${str_MTName}
+	} else /if (${SpawnCount[pc ${str_STName}]}) {
+		/varset str_MTName ${str_STName}
+	}  else /if (${SpawnCount[pc ${str_TTName}]}) {
+		/varset str_MTName ${str_TTName}
+	} else /if (${NearestSpawn[pc WAR].CleanName.NotEqual[NULL]}) {
+		/varset str_MTName ${NearestSpawn[PC WAR].CleanName}
+	} else /if (${NearestSpawn[pc SK].CleanName.NotEqual[NULL]}) {
+		/varset str_MTName ${NearestSpawn[PC SHD].CleanName}
+	} else /if (${NearestSpawn[pc PAL].CleanName.NotEqual[NULL]}) {
+		/varset str_MTName ${NearestSpawn[PC PAL].CleanName}
+	} else /if (${NearestSpawn[pc MNK].CleanName.NotEqual[NULL]}) {
+		/varset str_MTName ${NearestSpawn[PC MNK].CleanName}
 	} else {
-		/if (${Plugin[_pluginName].Name.Length}) {
-			/docommand /${cmdChannel} //plugin ${_pluginName} unload
-		}
+		/echo NO Suitable Replacement MT's met, set self to MT
+		/varset str_MTName ${Me.Name}
 	}
-/return
-
-
-
-Sub chkAutoAssist
-	/if (!${bln_autoAssist}) /return
-	/declare tgtID int local
-	/dquery ${str_MTName} -q "Target.ID"
-	/delay 20 ${DanNet.Query.Received}
-	/varset tgtID ${DanNet.Q}
-	/call TrueTarget ${tgtID}
-	/call EngageTarget ${tgtID}
-/return
-
-
-| --------------------------------------------------------------------------------------|
-| -- Shrinks your group if you have one of several shrink items 					   -|
-| --------------------------------------------------------------------------------------|
-
-
-SUB EVENT_shrinkGroup
-
-	| ---------- Declare your shrink item.  If you have one that isn't in this list, simply add another elseif statement at the bottom
-	/declare shrink_ItemName string local
-
-	/if (${FindItem[Bracelet of the Shadow Hive].ID}) {
-		/varset shrink_ItemName Bracelet of the Shadow Hive
-	} else /if (${FindItem[Cobalt Bracer].ID}) {
-		/varset shrink_ItemName Cobalt Bracer
-	}
-
-	| ---------- You don't have a shrink item, exit
-	/if (!${shrink_ItemName.Length}) /return
-
-	| ---------- Cycle through group and shrink them
-	/declare i int local
-
-	/for i 0 to ${Group}
-
-		:recheckGroupMember
-		/if (${Spawn[${Group.Member[${i}]}].Height} > 2.40) {
-
-			| ---------- Equip the item if not already done so
-			/if (!${Defined[originalItem]}) {
-				/declare originalItem string local ${InvSlot[${FindItem[${shrink_ItemName}].WornSlot[1].Name}].Item.Name}
-				/exchange "${shrink_ItemName}" ${FindItem[${shrink_ItemName}].WornSlot[1].Name}
-			}
-			
-			/call e3_Cast ${Group.Member[${i}].ID} "${shrink_ItemName}"
-			/delay 10s !${Me.Casting}
-			/goto :recheckGroupMember
-		}
-
-	/next i
-
-	| ---------- Swap back to the original item if you used it
-	/if (${Defined[originalItem]}) {
-		/delay 5
-		/exchange "${originalItem}" ${FindItem[${shrink_ItemName}].WornSlot[1].Name}
-	}
-	/doevents flush shrinkGroup
-/return
-|-------------------------------------------------------------|
-|- Reliably determine if target is Named				     -|
-|-------------------------------------------------------------|
-|- @param TargetID: The ID of the spawn you wish to check on
-|-------------------------------------------------------------|
-Sub TargetNamedCheck(_id)
-	/if (${Target.Named}) /return TRUE
-	/if ((${Spawn[npc id ${_id}].Named} || ${Spawn[npc id ${_id}].Name.Find[#]}) && ${Target.Level} >= 75) /return TRUE
-	/if (${Zone.ShortName.Equal[tacvi]} && ${Target.Level} >= 70) /return TRUE
-	/if (${Zone.ShortName.Equal[chambersa]} || ${Zone.ShortName.Equal[chambersb]} || ${Zone.ShortName.Equal[chambersc]} || ${Zone.ShortName.Equal[chambersd]} || ${Zone.ShortName.Equal[chamberse]}  && ${Target.Level} >= 70) /return TRUE
-	/if (${Zone.ShortName.Equal[anguish]}  && ${Target.Level} >= 75) /return TRUE
-	/if (${Zone.ShortName.Equal[arena]}) /return TRUE
-	/if (${Zone.ShortName.Equal[thundercrest]}) /return TRUE
-/return FALSE
+	/varset int_MTID 	${Spawn[PC ${str_MTName}].ID}
 	
+	/echo \arGetMTbyPrecedence: \ag${str_MTName} \ao(\ag${int_MTID}\ao)
+/return ${newID}
 
-| --------------------------------------------------------------------------------------------------------|
-| -- Determines if a bot is dead by the number of items of gear they have on 							 -|
-| -- 5 or more empty spots is "Dead"																	 -|
-| --------------------------------------------------------------------------------------------------------|
+|** 
+ ----------------------------
+ AA Special Events
+ ----------------------------
+ Determines if the main tank is dead, if so, set new MT
+ ----------------------------
+**|
+Sub EVENT_enabledStaunchRecovery
+	| Do not use if at bind point (ie: dead)
+	/if (${Zone.ID} == 340 || ${Zone.ID} == 344 || ${Zone.ID} == 345 || ${Zone.ShortName.Equal[${str_zone_bound}]}) /return
+	/if ((${str_class_type.Equal[PRIEST]} || ${str_class_type.Equal[CASTER]}) && ${Me.PctMana} < 20) { 
+		/call MQ2Cast "Staunch Recovery" alt 
+	} 
+/return
 
-Sub chkDead
-	/declare i int local
-	/declare emptySlotCount int local 0
-
-	/for i 1 to 20
-	 	/if (!${InvSlot[${i}].Item.Name.Length}) {
-	 		/varset emptySlotCount ${Math.Calc[${emptySlotCount} + 1]}
-	 	}
-	/next i
-
-	/if (${emptySlotCount} > 5) {
-		/return DEAD
+Sub EVENT_enabledIntensity
+	| Do not use if at bind point (ie: dead)
+	/if (${Zone.ID} == 340 || ${Zone.ID} == 344 || ${Zone.ID} == 345 || ${Zone.ShortName.Equal[${str_zone_bound}]}) /return
+	/if (${Me.Class.ShortName.Equal[BRD]}) {
+		/call MQ2Medley "Intensity of the Resolute" ALT ${int_targetID} TRUE
 	} else {
-		/return NOTDEAD
+		/call MQ2Cast "Intensity of the Resolute" alt
 	}
-
 /return
 
-
-|-- CHECK NAKED
-Sub Event_CheckNaked
-	/call chkNaked
-	/doevents flush CheckNaked
-/return
-
-Sub chkNaked
-	|/echo chkNaked ${Bool[${Me.Inventory[2].Name}]} ${timer_naked}
-	/doevents flush chkNaked
-	/if (!${Bool[${Me.Inventory[2].Name}]} && !${timer_naked}) {
-		/docommand /${announceChannel} I am NAKED. 
-		/varset bln_naked TRUE
-		/varset timer_naked 30s
+Sub EVENT_enabledServants
+	| Do not use if at bind point (ie: dead)
+	/if (${Zone.ID} == 340 || ${Zone.ID} == 344 || ${Zone.ID} == 345 || ${Zone.ShortName.Equal[${str_zone_bound}]}) /return
+	/if (${Me.Class.ShortName.Equal[BRD]}) {
+		/call MQ2Medley "Steadfast Servant" ALT ${int_targetID} FALSE
 	} else {
-		/varset bln_naked FALSE
+		/call MQ2Cast "Steadfast Servant" ALT
 	}
 /return
 
-Sub Event_FixCorpses
-	/doevents flush FixCorpses
-	/hidecorpse all
-	/delay 2
-	/hidecorpse none
-	/delay 2
-	/hidecorpse looted
-/return
-
-
-SUB verifyEvent(sring _chatSender, string _eventParams)
-	/declare userValidated 	bool local FALSE
-	/declare includeBot 	bool local TRUE
-	/declare inZone 		bool local FALSE
-	/declare inRange 		bool local FALSE
-	/declare inAssistRange 	bool local FALSE
-	/declare sender         string local ${_chatSender}
-
-	| Set sender by parsing the _chatSender
-	/if (${_chatSender.Left[1].Compare[ ]}<0) /varset sender ${_chatSender.Right[-2].Left[-1]}
-	/if (${_chatSender.Equal[You]}) /varset sender ${Me.CleanName}
-	/if (${_chatSender.Equal[MQ2]}) /varset sender ${Me.CleanName}
-
-	| Note if this is sent by dannet as a /dgt (instead of box chat /bc)
-	| Then the sender will be like xiris (all)
- 	/if (${_chatSender.Find[(]})  {
-		/varset sender ${_chatSender.Arg[1,(]}
-	}
-
-	| -Validate _chatSender.
-	/varset userValidated TRUE
-	
-	| -Check inZone
-	/if (${SpawnCount[pc =${sender}]}) /varset inZone TRUE
-	
-	| -Check inRange
-	/if (${SpawnCount[pc =${sender} radius ${int_macroMaximumResponseDist}]}) /varset inRange TRUE
-	|/echo \awVerifyEvent Sender:\ag${sender} \awParams: \ag${_eventParams}
-
-	| -Check for /only|
-	/if (${_eventParams.Find[/only|]}) {
-		/varset includeBot FALSE
-		/call argueString only| "${_eventParams}"
-		/call check_selectedBots "${Macro.Return}" "${sender}"
-		/if (${Macro.Return}) /varset includeBot TRUE
-	}
-		
-	| -Check for /exclude|
-	/if (${_eventParams.Find[/exclude|]}) {
-		/call argueString exclude| "${_eventParams}"
-		/call check_selectedBots "${Macro.Return}" "${sender}"
-		/if (${Macro.Return}) /varset includeBot FALSE
-	}
-	
-	| -Check for /not|
-	/if (${_eventParams.Find[/not|]}) {
-		/call argueString not| "${_eventParams}"
-		/call check_selectedBots "${Macro.Return}" "${sender}"
-		/if (${Macro.Return}) /varset includeBot FALSE
-	}
-	
-	| -Check for /include|
-	/if (${_eventParams.Find[/include|]}) {
-		/call argueString include| "${_eventParams}"
-		/call check_selectedBots "${Macro.Return}" "${sender}"
-		/if (${Macro.Return}) /varset includeBot TRUE
-	}
-	/echo \ayReturning Sender:\ag${sender} \awValid?\ag${userValidated} \awIncluded?\ag${includeBot} \awInZone?\ag${inZone} \awInRange?\ag${inRange}
-/return ${sender}_${userValidated}_${includeBot}_${inZone}_${inRange}
-
-| See if the bot is in the return from the arguestring parser
-SUB check_selectedBots(_selectedBots, _chatSender)
-	/declare botSelected bool local FALSE
-	/if (${_selectedBots.Find[ ]}) /varset _selectedBots ${_selectedBots.Replace[ ,,]}
-	/if (${Select[priests,${_selectedBots}]} && ${Select[${Me.Class.ShortName},${PriestClasses}]} || ${Select[healers,${_selectedBots}]} && ${Select[${Me.Class.ShortName},${PriestClasses}]} || ${Select[ranged,${_selectedBots}]} && ${Select[${Me.Class.ShortName},${RangedClasses}]} || ${Select[casters,${_selectedBots}]} && ${Select[${Me.Class.ShortName},${CasterClasses}]} || ${Select[melee,${_selectedBots}]} && ${Select[${Me.Class.ShortName},${MeleeClasses}]} || ${Select[me,${_selectedBots}]} && ${_chatSender.Equal[${Me.CleanName}]} || ${Select[${Me.Class},${_selectedBots}]} || ${Select[${Me.Class.ShortName},${_selectedBots}]} || ${Select[${Me.CleanName},${_selectedBots}]} || ${Select[all,${_selectedBots}]} || ${Select[group,${_selectedBots}]} && ${Me.CleanName.Equal[${_chatSender}]} || ${Select[group,${_selectedBots}]} || ${Select[zone,${_selectedBots}]} && ${SpawnCount[pc ${_chatSender}]}) /varset botSelected TRUE
-	
-/return ${botSelected}
-
-
-| Evaluate and Argument string in E3 Format eg: \only|CLR,DRU,SHM
-SUB argueString(WhatToFind, givenData)
-	|/echo \aoEvaluating Arguments \aw==> \ag${WhatToFind}  \aw=> \ay${givenData}
-	/declare i 			int 	local 1
-	/declare foundData 	string 	local NULL
-	
-	:nextArg
-	/if (${givenData.Find[/]}) {
-		/if (${givenData.Arg[${i},/].Find[${WhatToFind}]}) {
-			/varset foundData ${givenData.Arg[${i},/].Arg[2,|]}		
-		} else {
-			/varcalc i ${i} + 1
-			/if (${givenData.Arg[${i},/].Length}) /goto :nextArg
-		}
+Sub EVENT_enabledInfusion
+	| Do not use if at bind point (ie: dead)
+	/if (${Zone.ID} == 340 || ${Zone.ID} == 344 || ${Zone.ID} == 345 || ${Zone.ShortName.Equal[${str_zone_bound}]}) /return
+	/if (${Me.Class.ShortName.Equal[BRD]}) {
+		/call MQ2Medley "Infusion of the Faithful" ALT ${int_targetID} FALSE
 	} else {
-		/if (${givenData.Arg[${i}, ].Find[${WhatToFind}]}) {
-			/varset foundData ${givenData.Arg[${i}, ].Arg[2,|]}
-		} else {
-			/varcalc i ${i} + 1
-			/if (${givenData.Arg[${i}, ].Length}) /goto :nextArg
-		}
+		/call MQ2Cast "Infusion of the Faithful" ALT
 	}
+/return
 
-/return ${foundData}
-
-|----------------------------------------------------|
-|- Resets XTarget window 1-5 elements to auto		-|
-|----------------------------------------------------|
-Sub Event_RefreshXTarget
-	/call RefreshXTarget
+|** 
+ ----------------------------
+ Inventory Management
+ ----------------------------
+ TODO #6
+ ----------------------------
+**|
+Sub RestoreFaceSlot
+	/exchange "${str_item_face_default}" face
+	/delay 5
 /return 
 
-
-SUB RefreshXTarget
-	/if (${timer_xtargetRefresh}) /return
-	/echo \aoRefreshing \aoXTarget \ay${timer_xtargetRefresh}
-	/declare i int local 1
-	/for i 1 to 5
-		/xtarget set ${i} grouptank
-		/delay 1
-		/xtarget set ${i} autohater
-	/next i
-	/varset timer_xtargetRefresh 60s
-/return
-
-|--------------------------------------------------------|
-|- Creates new arrays, or stacks onto existing arrays.	-|
-|--------------------------------------------------------|
-|- Syntax: /call BuildArray ArrayName Data				-|
-|-  Ex: /call BuildArray DebuffTargets ${Target.ID}		-|
-|--------------------------------------------------------|
-|- @param ArrayName: Name of the array to build.		-|
-|- @param Data: Data you wish to add to the array.		-|
-|--------------------------------------------------------|
-SUB BuildArray(ArrayName, Data, varScope)
-	/if (!${Defined[varScope]}) /declare varScope string local outer
-
-	| If the array is not defined, declare it.
-	/if (!${Defined[${ArrayName}]}) {
-		/declare ${ArrayName}[1] string ${varScope}
-		/varset ${ArrayName}[1] ${Data}
-		
-	| Else, if the array is already defined.
-	} else {
-	
-		| Create a copy of the existing array.
-		/declare ${ArrayName}Copy[${${ArrayName}.Size}] string local
-		/declare i int local
-		/for i 1 to ${${ArrayName}.Size}
-			/varset ${ArrayName}Copy[${i}] ${${ArrayName}[${i}]}
-		/next i
-		
-		| Delete the existing array.
-		/deletevar ${ArrayName}
-		
-		| Build a resized array.
-		/declare ${ArrayName}[${Math.Calc[${${ArrayName}Copy.Size}+1].Int}] string ${varScope}
-		/for i 1 to ${${ArrayName}.Size}
-			/varset ${ArrayName}[${i}] ${${ArrayName}Copy[${i}]}
-		/next i
-	
-		| Insert new data into the array
-		/varset ${ArrayName}[${${ArrayName}.Size}] ${Data}
-	}
-/return ${ArrayName}
-
-
-
-|----------------------------------------------------|
-|- Removes elements from an existing array.			-|
-|----------------------------------------------------|
-|- @param ArrayName: Name of the array to search.	-|
-|- @param Data: Data you wish to remove.			-|
-|----------------------------------------------------|
-SUB RemoveArrayElement(ArrayName, Data)
-	/declare remainingElements string local
-	/declare newArraySize int local
-
-	/declare i int local
-
-	| Count array elements that do not match 'Data'.
-	/for i 1 to ${${ArrayName}.Size}	
-
-		/if (${${ArrayName}[${i}].NotEqual[${Data}]}) {
-			/varset remainingElements ${remainingElements}${${ArrayName}[${i}]},
-			/varcalc newArraySize ${newArraySize} + 1
-		}
-
-	/next i
-	
-	| If there are  elements remaining in the array, create a copy of the new array
-	/if (${newArraySize}) {
-	
-		/declare newArray[${newArraySize}] string local
-		
-		/for i 1 to ${newArraySize}
-		
-			/varset newArray[${i}] ${remainingElements.Arg[${i},,]}
-		
-		/next i
-	}
-	
-	| Delete the existing array.
-	/deletevar ${ArrayName}
-	
-	| If there is a new array to make
-	/if (${Defined[newArray]}) {
-
-		/declare ${ArrayName}[${newArray.Size}] string outer
-	
-		/for i 1 to ${newArray.Size}
-		
-			/varset ${ArrayName}[${i}] ${newArray[${i}]}
-		
-		/next i
-	}
-/return
 
 Sub EVENT_SaveRingset
 	/call SaveRingset
@@ -1505,10 +947,6 @@ Sub EVENT_LoadRingset(string _line, string _sender, string _eventParams)
 	/call LoadRingset
 /return
 
-Sub RestoreFaceSlot
-	/exchange "${strFaceItem}" face
-	/delay 5
-/return 
 
 Sub LoadRingset
 
@@ -1534,13 +972,11 @@ Sub LoadRingset
 	/if (${Me.Class.ShortName.Equal[BRD]}) /medley
 /return 
 
-
 |-- method to load the saved weapons from INI (primarily for Trial of Specialization)
 Sub EVENT_LoadWeaponset(string _line, string _sender, string _evtParams)
 	/echo \ayLoading Weaponset <${_evtParams}> (${_sender})
 	/if (${_evtParams.NotEqual[NULL]}) /call LoadWeaponset ${_evtParams}
 /return
-
 
 Sub LoadWeaponset(string _weaponset)
 	|/if (${str_class_type.Equal[CASTER]} || ${str_class_type.Equal[PRIEST]} && ${_weaponset.NotEqual[default]}) /return
@@ -1598,7 +1034,7 @@ Sub LoadWeaponset(string _weaponset)
 		/autoinventory
 		/echo \ag Moving "${weap}" to ${posi}
 		/if (${FindItemCount[${weap}]} == 0) {
-			/docommand /${announceChannel} Could not find ${weap}, fix my ini!
+			/docommand /${str_announce_channel} Could not find ${weap}, fix my ini!
 			/goto :return
 		} else {
 			/exchange "${weap}" ${posi}
@@ -1628,7 +1064,7 @@ Sub LoadWeaponset(string _weaponset)
 		/autoinventory
 		/echo \ag Moving "${weap}" to ${posi}
 		/if (${FindItemCount[${weap}]} == 0) {
-			/docommand /${announceChannel} Could not find ${weap}, fix my ini!
+			/docommand /${str_announce_channel} Could not find ${weap}, fix my ini!
 		} else {
 			/exchange "${weap}" ${posi}
 		}
@@ -1657,11 +1093,11 @@ Sub SaveWeaponset(string _key, string _weaponset)
 /return
 
 |#EVENT SaveCurrentWeaponset "#1#SaveCurrentWeaponset #2#"
-Sub EVENT_SaveCurrentWeaponset(string _line, string _sender, string _eventParams)
+Sub EVENT_SaveEquipedWeaponset(string _line, string _sender, string _eventParams)
 	/call SaveCurrentWeaponset ${_eventParams}
 /return
 
-Sub SaveCurrentWeaponset(string _key)
+Sub SaveEquipedWeaponse(string _key)
 	/echo Saving Current Weaponset as ${_key}
 	/if (${_key.Equal[NULL]}) /varset _key test
 	/declare pri string local ${Me.Inventory[mainhand].Name}
@@ -1670,19 +1106,81 @@ Sub SaveCurrentWeaponset(string _key)
  	/ini INI_CHAR "Weaponsets" "${_key}" "${pri}|mainhand,${off}|offhand"
 /return
 
+|** 
+ ----------------------------
+ Out of Combat (!${bln_engaged}) Utility Checking
+ ----------------------------
+ Defined by Class 
+ ----------------------------
+**|
 
-Sub Event_SkillCheck(string _line, string _sender, string _eventParams)
-	/if (${str_class_type.Equal[MELEE_END]} || ${str_class_type.Equal[TANK]} || ${Me.Class.ShortName.Equal[BRD]}) /return
-	/echo SkillCheck: ${_line} ${_sender}
-	/echo params ${_eventParams}
+Sub chkUtils
+	/call chkSit
+	/if (${Select[${Me.Class.ShortName},BST,MAG,NEC]}) /call chkPet
+	/varset timer_check_utilities 20s
+/return 
 
-	/declare sval int local  ${Me.Skill[${_eventParams}]}
-	/if (${sval} == 0) {
-		/docommand /${announceChannel} ${Me.Skill[${_eventParams}]}
-		/nav wp lobby
+Sub chkSit 
+	/if (${Me.Moving} || ${Navigation.Active} || ${bln_tanking}) /return
+	|-- Mana Check
+	/if (${str_class_type.Equal[CASTER]} ||  ${str_class_type.Equal[PRIEST]}) {
+		| Sit my ass down
+		/if ( ${Me.PctMana}<=${int_meditationPctMana} && !${bln_engaged} && (${SpawnCount[npc radius ${int_sittingRadius} zradius 55]} == 0)) {
+			|/echo I should be sitting my ass down for MANA Am I sitting? ${Me.Sitting}
+			/if (!${Me.Sitting}) /sit
+		} 
+		
 	}
-	/doevents flush SkillCheck
-
+	|-- Endurance Check
+	/if (${str_class_type.Equal[MELEE_END]} ||  ${str_class_type.Equal[TANK]}) {
+		/if ( ${Me.PctEndurance}<=${int_meditationPctMana} && !${bln_engaged} && (${SpawnCount[npc radius ${int_sittingRadius} zradius 55]} == 0)) {
+			|/echo I should be sitting my ass down for Endurance Am I sitting? ${Me.Sitting}
+			/if (!${Me.Sitting}) /sit 
+		} 
+	}
 /return
 
+Sub chkUtils_BER
+/return 
 
+Sub chkUtils_BRD 
+/return 
+
+Sub chkUtils_BST
+/return 
+
+Sub chkUtils_CLR
+/return 
+
+Sub chkUtils_ENC
+/return 
+
+Sub chkUtils_MAG
+/return 
+
+Sub chkUtils_MNK
+/return 
+
+Sub chkUtils_NEC
+/return 
+
+Sub chkUtils_PAL
+/return 
+
+Sub chkUtils_RNG
+/return 
+
+Sub chkUtils_ROG
+/return 
+
+Sub chkUtils_SHD
+/return 
+
+Sub chkUtils_SHM
+/return 
+
+Sub chkUtils_WAR 
+/return 
+
+Sub chkUtils_WIZ
+/return 

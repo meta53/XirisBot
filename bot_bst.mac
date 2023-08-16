@@ -103,10 +103,10 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 			/call RunAllEvents
 			
 			|-- debuff lib
-			/if (${${DEBUFF_Total}}) /call chkDebuffsOnSingleTarget ${int_targetID}
+			/if (${${DEBUFF_total}}) /call chkDebuffsOnSingleTarget ${int_targetID}
 
 			|-- class specific
-			/if (${Me.Pet.ID}) /call chkPetAttack
+			/if (${Pet.ID}) /call chkPetAttack
 
 			|-- melee library
 			/if (!${mq2meleeEnabled}) /call chkCA_${Me.Class.ShortName}
@@ -117,7 +117,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 
 			|-- std library (burns/aa/clicks)
 			/call chkAA
-			/call chkBurn
+			/call chkBurns
 			/call chkClicky
 
 			|-- verify target status
@@ -153,7 +153,7 @@ Sub chkUtils
 /return
 
 
-Sub EVENT_DOSHRINK(_line, _chatSender, _eventParams)
+Sub EVENT_DOSHRINK(string _line, string _sender, string _eventParams)
 	/echo \ay doShrinkEventCalled
 	/memspellset shrink
 	/declare i int local 0

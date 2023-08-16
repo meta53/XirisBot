@@ -49,13 +49,13 @@ Sub EVENT_CharmOFF
     /varset bln_activeCharming FALSE
 /return 
 
-Sub EVENT_CharmNPCByID(_line, _chatSender, _eventParams)
+Sub EVENT_CharmNPCByID(string _line, string _sender, string _eventParams)
     /varset bln_activeCharming TRUE
     /echo \ayCharming NPC by ID \ag${_eventParams}
     /call CharmNPC ${_eventParams}
 /return
 
-Sub EVENT_CharmNPCByName(_line, _chatSender,_eventParams)
+Sub EVENT_CharmNPCByName(string _line, string _sender, string _eventParam)
     /varset bln_activeCharming TRUE
     /echo \ayCharming NPC by Name \ag${_eventParams}
     /call CharmNPC ${Spawn[npc ${_eventParams}].ID}
@@ -65,11 +65,11 @@ Sub EVENT_CharmNPCByName(_line, _chatSender,_eventParams)
 
 Sub CharmNPC(int _targetID, bool _forced, bool _attack, int _attackID)
     /echo \aoCharmNPC\aw(\ag${_targetID}\aw ${bln_activeCharming})
-    /if (!${bln_activeCharming} && !${_forced} || ${Me.Pet.ID} ) /return
+    /if (!${bln_activeCharming} && !${_forced} ||${Pet.ID} ) /return
     /if (${Me.Casting.ID}) /stopcast
         
     /varset bln_hasCharmedPet FALSE
-    | /declare CHARM_Template         string  outer   _Spell|_Gem|_MaxTries|_KeepAlive|_Resist|_RecastTimer
+    | /declare CHARM_Template         string  outer   _Spell|_gem|_maxTries|_KeepAlive|_Resist|_RecastTimer
     | Check the logic in charm (ie: if we can use ancient if enc, etc)
     :charmTarget
     | Removed multiple charm spells, it got too fucky
@@ -77,10 +77,10 @@ Sub CharmNPC(int _targetID, bool _forced, bool _attack, int _attackID)
     /call TrueTarget ${_targetID}
     
     | Trigger Check based on type (Calls chkCharmTrigger)		
-    |** /call chkCharmTrigger ${CHARM_${i}_Type}
-    /echo \ayChkCharmTrigger: \ao${CHARM_${i}_Type} \ar${Macro.Return} "${CHARM_${i}_Spell}"
+    |** /call chkCharmTrigger ${CHARM_${i}_type}
+    /echo \ayChkCharmTrigger: \ao${CHARM_${i}_type} \ar${Macro.Return} "${CHARM_${i}_Spell}"
     /if (!${Macro.Return}) {
-        /if (${i} < ${CHARM_Total}) {
+        /if (${i} < ${CHARM_total}) {
             /echo \aoGoing to next charm since first failed!
             /goto :nextCharm
         } else {
@@ -93,7 +93,7 @@ Sub CharmNPC(int _targetID, bool _forced, bool _attack, int _attackID)
     | Checks passed, check if the spell is memorized. Skip if not
     :charmSpellMemorized
         /echo \awChecking if \ao"${CHARM_${i}_Spell}" \aw is memorized
-        /call chkSpellMemorized "${CHARM_${i}_Spell}" ${_forced} ${CHARM_${i}_Gem}
+        /call chkSpellMemorized "${CHARM_${i}_Spell}" ${_forced} ${CHARM_${i}_gem}
         /goto :charmCast
     :charmSpellReadyWait 
         | If this is a forced cast, wait for the spell to be ready
@@ -109,18 +109,18 @@ Sub CharmNPC(int _targetID, bool _forced, bool _attack, int _attackID)
         /if (${Me.Class.ShortName.Equal[BRD]}) {
             /call MQ2Medley "${CHARM_${i}_Spell}" SONG ${_targetID} TRUE
         } else {
-            /call CastCharm "${CHARM_${i}_Spell}" ${CHARM_${db}_Gem} ${CHARM_${i}_MaxTries} ${Target.ID} ${_forced}
+            /call CastCharm "${CHARM_${i}_Spell}" ${CHARM_${db}_gem} ${CHARM_${i}_maxTries} ${Target.ID} ${_forced}
         }  
         /call RunRaidEvents  
 
     :return 
-    /if (${Me.Pet.ID} ) {
+    /if (${Pet.ID} ) {
         /varset bln_hasCharmedPet TRUE
         /if (${_attack}) {
             /echo \awEngaging Target(\ag${_attackID}\aw) with Charmed Pet \ag${Me.Pet.Name}! 
             /shout Engaging Target(${_attackID}) with Charmed Pet ${Me.Pet.Name}! 
             /call TrueTarget ${_attackID}
-            /squelch /pet attack
+            /call chkPetAttack
             /call EngageTarget ${_attackID}
         }
     } 
@@ -195,15 +195,15 @@ Sub CastCharm(string _charm, string _gem, int _maxTries, int _targetID, bool _fo
 Sub CreateCharmLineup
     /declare i                      int     local
     | Charms
-    /declare CHARM_Total            int     outer   ${Ini[INI_CHAR,CHARM,CHARM_Total,0]}
+    /declare CHARM_total            int     outer   ${Ini[INI_CHAR,CHARM,CHARM_total,0]}
     /declare CHARM_ChainCharming    bool    outer   FALSE       
 
-    /echo CHARM_Total: ${CHARM_Total}
+    /echo CHARM_total: ${CHARM_total}
 
-    /if (${Bool[${CHARM_Total}]}) {
-        /for i 1 to ${CHARM_Total}
+    /if (${Bool[${CHARM_total}]}) {
+        /for i 1 to ${CHARM_total}
             /call addSpellToLineup CHARM ${i} ${Ini[INI_CHAR,CHARM,CHARM_${i}]} 
-            /declare CHARM_${i}_Type  		string	outer	${Ini[INI_CHAR,CHARM,CHARM_${i}_Type,NORMAL]}
+            /declare CHARM_${i}_type  		string	outer	${Ini[INI_CHAR,CHARM,CHARM_${i}_type,NORMAL]}
         /next i
     }
     
@@ -213,9 +213,9 @@ Sub CreateCharmLineup
 Sub chkCharmTrigger(string _key)
     /if (${Me.Class.ShortName.Equal[ENC]}) {
         | Charm 1 "True Name"
-        /if (${_key.Equal[NORMAL]} && (!${Me.Pet.ID} || ${Target.Buff[${CHARM_1_SPELL}].Duration.TotalSeconds} < 5) && ${Me.SpellReady[${CHARM_1_Spell}]})  /return TRUE
+        /if (${_key.Equal[NORMAL]} && (!${Pet.ID} || ${Target.Buff[${CHARM_1_SPELL}].Duration.TotalSeconds} < 5) && ${Me.SpellReady[${CHARM_1_Spell}]})  /return TRUE
     } else /if (${Me.Class.ShortName.Equal[BRD]}) {
-        /if (${_key.Equal[NORMAL]} && (!${Me.Pet.ID} || ${Target.Charmed.Duration.TotalSeconds} < 6) && ${Me.SpellReady[${CHARM_1_Spell}]})  /return TRUE
+        /if (${_key.Equal[NORMAL]} && (!${Pet.ID} || ${Target.Charmed.Duration.TotalSeconds} < 6) && ${Me.SpellReady[${CHARM_1_Spell}]})  /return TRUE
     }
 
 /return FALSE
@@ -224,7 +224,7 @@ Sub xbot_initialize_charming
     /echo \ao xbot_initialize_charming
 
     |-- Templates
-    /declare CHARM_Template         string  outer   _Spell|_Gem|_MaxTries|_KeepAlive|_Resist|_RecastTimer
+    /declare CHARM_Template         string  outer   _Spell|_gem|_maxTries|_KeepAlive|_Resist|_RecastTimer
 
     |-- Charm Settings/Misc
     /declare bln_useCharm           bool    outer   ${Ini[INI_CHAR,Charm,UseCharm,FALSE]}
@@ -240,6 +240,6 @@ Sub xbot_initialize_charming
  
     |-- Init Events
     /call initEvents_Charm
-    /echo \awCharms: \ag${CHARM_Total}
+    /echo \awCharms: \ag${CHARM_total}
 
 /return 

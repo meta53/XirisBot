@@ -108,10 +108,10 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 			/call RunAllEvents
 
 			|-- debuff lib
-			/if (${${DEBUFF_Total}}) 	/call chkDebuffsOnSingleTarget ${int_targetID}
+			/if (${${DEBUFF_total}}) 	/call chkDebuffsOnSingleTarget ${int_targetID}
 
 			|-- class specific
-			/if (${Me.Pet.ID}) 			/call chkPetAttack	
+			/if (${Pet.ID}) 			/call chkPetAttack	
 			/if (${int_cmbtBuffTotal} && !${bln_hasCharmedPet})	/call cmbtBuffGRP
 		
 			|-- dps library (caster)
@@ -120,7 +120,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 			
 			|-- std library (burns/aa/clicks)
 			/call chkAA
-			/call chkBurn
+			/call chkBurns
 			/call chkClicky
 
 			|-- verify target status
@@ -166,12 +166,12 @@ Sub chkUtils
 
 
 
-Sub EVENT_RUNEON(_line, _sender, _eventParams)
+Sub EVENT_RUNEON(string _line, string _sender, string _eventParams)
 	/varset bln_runeActive TRUE
 	/call RuneSpam ${_sender}
 /return
 
-Sub EVENT_RUNEONName(_line, _sender, _eventParams)
+Sub EVENT_RUNEONName(string _line, string _sender, string _eventParams)
 	/varset bln_runeActive TRUE
 	/call RuneSpam ${_eventParams}
 /return
@@ -212,7 +212,7 @@ Sub variant_initialize
 	
 	|--Enchanter Specific Settings
 	/declare 	str_mezSingle			string	outer	${Ini[INI_CHAR,ENC_Spells,Mez_Single,Euphoria]}
-	/declare	use_mezSingle			bool	outer	${Ini[INI_CHAR,ENC_Spells,Mez_Single_Use,TRUE]}
+	/declare	use_mezSingle			bool	outer	${Ini[INI_CHAR,ENC_Spells,Mez_Single_enabled,TRUE]}
 	/declare	int_mezSingleMinLvl		int		outer	${Ini[INI_CHAR,ENC_Spells,Mez_Single_MinLevel,40]}
 	/declare	int_mezSingleMaxLvl		int		outer	${Ini[INI_CHAR,ENC_Spells,Mez_Single_MaxLevel,73]}
 	/declare	int_mezSingleGem		string	outer	${Ini[INI_CHAR,ENC_Spells,Mez_Single_Gem,gem4]}
@@ -224,7 +224,7 @@ Sub variant_initialize
 	/declare	int_mezAEGem			string	outer	${Ini[INI_CHAR,ENC_Spells,Mez_AE_Gem,gem5]}
 	
 	/declare	str_rune				string	outer 	${Ini[INI_CHAR,ENC_Spells,Rune,Rune of Salik]}
-	/declare	use_rune				bool	outer	${Ini[INI_CHAR,ENC_Spells,Rune_Use,TRUE]}
+	/declare	use_rune				bool	outer	${Ini[INI_CHAR,ENC_Spells,Rune_enabled,TRUE]}
 	/declare	str_runeGem				string	outer	${Ini[INI_CHAR,ENC_Spells,Rune_Gem,gem6]}
 	/declare 	bln_runeActive			bool	outer	FALSE
 

@@ -39,11 +39,11 @@ Sub Events_Exclusions
 	/doevents ADDEXCLUSION
 /return
 
-Sub EVENT_REFRESHEXCLUSIONS(_line, _chatSender, _eventParams)
+Sub EVENT_REFRESHEXCLUSIONS(string _line, string _sender, string _eventParams)
 	/call RefreshExclusions
 /return
 
-Sub EVENT_ADDEXCLUSION(_line, _chatSender, _eventParams)
+Sub EVENT_ADDEXCLUSION(string _line, string _sender, string _eventParams)
 	/call AddExclusions ${_eventParams}
 /return
 

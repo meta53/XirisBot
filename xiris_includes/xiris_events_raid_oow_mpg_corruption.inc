@@ -41,7 +41,7 @@ Sub chkCorruptionMez
 				/say Mezzing ${Target.Name}
                 /call MQ2Cast "${str_mezSingle}" ${int_mezSingleGem}
 				/if (${Macro.Return.Equal[CAST_SUCCESS]}) {
-					/docommand /${announceChannel} ${Target.Name} MEZZED
+					/docommand /${str_announce_channel} ${Target.Name} MEZZED
 				}
             }
         :nextwizard
@@ -56,7 +56,7 @@ Sub chkCorruptionMez
 				/say Mezzing ${Target.Name}
                 /call MQ2Cast "${str_mezSingle}" ${int_mezSingleGem}
 				/if (${Macro.Return.Equal[CAST_SUCCESS]}) {
-					/docommand /${announceChannel} ${Target.Name} MEZZED
+					/docommand /${str_announce_channel} ${Target.Name} MEZZED
 				}
             }
         :nextmage
@@ -71,7 +71,7 @@ Sub chkCorruptionMez
 				/say Mezzing ${Target.Name}
                 /call MQ2Cast "${str_mezSingle}" ${int_mezSingleGem}
 				/if (${Macro.Return.Equal[CAST_SUCCESS]}) {
-					/docommand /${announceChannel} ${Target.Name} MEZZED
+					/docommand /${str_announce_channel} ${Target.Name} MEZZED
 				}
             }
         :nextnecro

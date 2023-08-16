@@ -240,10 +240,10 @@ mq2cast, mq2dannet
 7. `/dgt HealMode EFFICIENT|DEFAULT` Changes the heal mode (and spells cast) to either default or efficient mode. Efficient recommended for most events if you have many clerics.
 8. `/dt Healer FocusHEALMT_ON|FocusHealMT_OFF` Toggles the healer to only heal self and MT
 9. `/dt Healer HealType 0|1|2|3` Changes the heal type to following:
-    1. /if (${int_healMode}==0) /echo \a-wChanging healing \aoTYPE \a-wto \ag0-Self (only)
-    2. /if (${int_healMode}==1) /echo \a-wChanging healing \aoTYPE \a-wto \ag1-MT (and self)
-    3. /if (${int_healMode}==2) /echo \a-wChanging healing \aoTYPE \a-wto \ag2-Group (and MT, includes self)
-    4. /if (${int_healMode}==3) /echo \a-wChanging healing \aoTYPE \a-wto \ag3-GroupOnly (includes self)
+    1. /if (${int_heal_mode}==0) /echo \a-wChanging healing \aoTYPE \a-wto \ag0-Self (only)
+    2. /if (${int_heal_mode}==1) /echo \a-wChanging healing \aoTYPE \a-wto \ag1-MT (and self)
+    3. /if (${int_heal_mode}==2) /echo \a-wChanging healing \aoTYPE \a-wto \ag2-Group (and MT, includes self)
+    4. /if (${int_heal_mode}==3) /echo \a-wChanging healing \aoTYPE \a-wto \ag3-GroupOnly (includes self)
 10. `/dgt FireTotem X` where X is the totem group. (Cleric, Druid, Shaman) defined by char ini. Will cause toons in group X (integer) to place their heal totems
 ##### CH Events
 1. `/dgt CHStart 1 ${Me.Name} Xiria 30 cleric1,cleric2,cleric3,cleric4` Will start a ch chain with the 4 clerics listed. 3 second delay. Chain key of 1, meaning that chain is index 1, so multiple chains can be run. `CHStart ChainIndex HealTarget BackupTarget Delay [CSV Clerics]`

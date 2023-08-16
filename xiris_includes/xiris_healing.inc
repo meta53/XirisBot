@@ -111,10 +111,10 @@ REVISION HISTORY
 #EVENT FireRegen 		"[ #1# #*#]#*#FireRegen #2#"
 
 |-- Mana Regen Events (Paragon of Spirit [BST])
-#EVENT FireRegenMana	"#1# tells you#*#'FireRegenMana #2#'"
-#EVENT FireRegenMana	"#1# tells the group#*#'FireRegenMana #2#'"
-#EVENT FireRegenMana	"#1# tells the raid#*#'FireRegenMana #2#'"
-#EVENT FireRegenMana	"[ #1# #*#]#*#FireRegenMana #2#"
+#EVENT FireManaRegen	"#1# tells you#*#'FireManaRegen #2#'"
+#EVENT FireManaRegen	"#1# tells the group#*#'FireManaRegen #2#'"
+#EVENT FireManaRegen	"#1# tells the raid#*#'FireManaRegen #2#'"
+#EVENT FireManaRegen	"[ #1# #*#]#*#FireManaRegen #2#"
 
 Sub initEvents_Healing
 	/if (${Select[${Me.Class.ShortName},BST,CLR,DRU,PAL,SHM,RNG]} ) /call RegisterBackgroundEvents	Events_Healing_Background
@@ -124,7 +124,7 @@ Sub initEvents_Healing
 
 
 Sub Events_Healing_Raid 
-	/if (${Select[${Me.Class.ShortName},BST,CLR,DRU,PAL,SHM,RNG]} && ${bln_engaged}) /call chkHeals
+	/if (${Select[${Me.Class.ShortName},BST,CLR,DRU,PAL,SHM,RNG]} && (${bln_engaged} || ${bln_killing})) /call chkHeals
 /return
 
 Sub Events_Healing_Raid_ClericsOnly
@@ -141,7 +141,7 @@ Sub Events_Healing_Raid_ClericsOnly
 /return 
 
 Sub Events_Healing_Background
-    /if (${Select[${Me.Class.ShortName},BST,CLR,DRU,PAL,SHM,RNG]} && (!${bln_engaged} && !${timer_check_heals})) /call chkHeals
+    /if (${Select[${Me.Class.ShortName},BST,CLR,DRU,PAL,SHM,RNG]} && (!${bln_engaged} && !${bln_killing} && !${timer_check_heals})) /call chkHeals
 	/doevents GroupHeal
 	/doevents InterruptON
 	/doevents InterruptOFF
@@ -151,6 +151,7 @@ Sub Events_Healing_Background
 	/doevents HealPoints
 	/doevents FireRegen 
 	/doevents FireRegenMana
+	/if (!${bln_engaged} && !${bln_killing} && ${int_mana_regen_total}) /call chkManaRegen
 /return
 
 Sub EVENT_InterruptON
@@ -169,7 +170,7 @@ Sub EVENT_GroupHeal
 	/call MQ2Cast "${str_heal_group}"
 /return
 
-Sub EVENT_ChangeHPTank(_line, _chatSender, _eventParams)
+Sub EVENT_ChangeHPTank(string _line, string _sender, string _eventParams)
 	/doevents flush ChangeHPTank
 	/if (${Select[${Me.Class.ShortName},BST,CLR,DRU,PAL,SHM,RNG]}) {
 		/echo \agTank HP (HealPoint) Change called! \awChanging to: \ay${_eventParams}
@@ -178,7 +179,7 @@ Sub EVENT_ChangeHPTank(_line, _chatSender, _eventParams)
 	}
 /return 
 
-Sub EVENT_ChangeHPSelf(_line, _chatSender, _eventParams)
+Sub EVENT_ChangeHPSelf(string _line, string _sender, string _eventParams)
 	/doevents flush ChangeHPSelf
 	/if (${Select[${Me.Class.ShortName},BST,CLR,DRU,PAL,SHM,RNG]}) {
 		/echo \agSelf HP (HealPoint) Change called! \awChanging to: \ay${_eventParams}
@@ -187,20 +188,20 @@ Sub EVENT_ChangeHPSelf(_line, _chatSender, _eventParams)
 	}
 /return 
 
-Sub EVENT_ChangeHPGroup(_line, _chatSender, _eventParams)
+Sub EVENT_ChangeHPGroup(string _line, string _sender, string _eventParams)
 	/doevents flush ChangeHPGroup
 	/if (${Select[${Me.Class.ShortName},BST,CLR,DRU,PAL,SHM,RNG]}) {
 		/echo \agGroup HP (HealPoint) Change called! \awChanging to: \ay${_eventParams}
 		/declare HP int local ${_eventParams}
 		/varset	int_point_group_normal ${HP}
 	}
+/return
 
-
-Sub xbot_initialize_healing
+Sub xbot_initialize_healing(int _tankHealPointOverride)
     /echo \n \apInitialize: \aoHealing \aw-------------------------
 
     /if (${Select[${Me.Class.ShortName},BER,BRD,MNK,ROG,WAR,ENC,MAG,NEC,WIZ]}) /return
-	/call processHealDefaults
+	/call processHealDefaults ${_tankHealPointOverride}
     /call processHealSpellSettings
 	/call processHPRegenSettings
 	/call processManaRegenSettings
@@ -208,7 +209,7 @@ Sub xbot_initialize_healing
     /call initEvents_Healing
 /return 
 
-Sub processHealDefaults 
+Sub processHealDefaults(int _tankHealPointOverride) 
 	/echo \awprocessHealDefaults
 
 	| [Heal_Settings]
@@ -248,6 +249,7 @@ Sub processHealDefaults
 	/declare int_heal_complete_chain		int     outer   0
 	/declare int_heal_complete_target		int  	outer 	0
 	/declare bln_heal_complete_paused		bool  	outer 	FALSE
+	/declare timer_heal_complete_pause		timer   outer   0
 
 	| Can you believe that you cannot get the HoT amount from any TLO? I've looked.
 	/declare int_heal_HoT_perTick			int 	outer	100
@@ -262,7 +264,7 @@ Sub processHealDefaults
 	/declare int_point_self_normal		int		outer	${Ini[INI_HEAL,Heal_Points,int_point_self_normal,75 ]}
 	/declare int_point_self_frantic		int		outer	${Ini[INI_HEAL,Heal_Points,int_point_self_frantic,45]}
     /declare int_point_self_HoT			int		outer	${Ini[INI_HEAL,Heal_Points,int_point_self_HoT,95]}
-	/declare int_point_tank_normal		int		outer	${Ini[INI_HEAL,Heal_Points,int_point_tank_normal,90]}
+	/declare int_point_tank_normal		int		outer	${If[${_tankHealPointOverride}, ${_tankHealPointOverride}, ${Ini[INI_HEAL,Heal_Points,int_point_tank_normal,75 ]}]}
 	/declare int_point_tank_frantic		int		outer	${Ini[INI_HEAL,Heal_Points,int_point_tank_frantic,45]}
 	/declare int_point_tank_HoT			int		outer	${Ini[INI_HEAL,Heal_Points,int_point_tank_HoT,95]}
 	/declare int_point_group_HoT		int		outer	${Ini[INI_HEAL,Heal_Points,int_point_group_HoT,95]}
@@ -306,7 +308,6 @@ Sub processHealSpellSettings
 
 	 /echo \a-w    Settings Processed: \awMode:\ag${int_heal_mode} \awAllowGroup:\ag${bln_heal_useGroup} \awAllowHoT:\ag${bln_heal_useHoT} \awAnnounce:\ag${bln_heal_announce} \awDefaultGem:\ag${int_heal_defaultGem} \awAutoInterrupt:\ag${bln_heal_interrupt} \awInterruptToSaveSelf:\ag${bln_heal_interruptToSaveSelf}
 	}
-
 
 	|; _heal|_hp_self|_hp_tank|_hp_group
 	| HEAL_normal="Ancient: Hallowed Light"|75|90|70|
@@ -387,7 +388,7 @@ Sub processHealSpellSettings
 	|-----------
 	| Divine Arbitration
 	|-----------
-	|; _divineArbitration|_type|_use|_MinHP
+	|; _divineArbitration|_type|_enabled|_MinHP
 	:divineArb
 	/varset sz 0
 	/if  (${Me.Class.ShortName.Equal[CLR]}) {
@@ -407,10 +408,10 @@ Sub processHealSpellSettings
 			| Not null, set the values for the debuffs to be cured
 			/varcalc sz ${sz}+1
 			/declare DIVINE_${i}			string	outer	${Ini[INI_CHAR,HEALS,DIVINE_${i}].Arg[1,|]}
-			/declare DIVINE_${i}_Type		string	outer	${Ini[INI_CHAR,HEALS,DIVINE_${i}].Arg[2,|]}
-			/declare DIVINE_${i}_Use		string	outer	${Ini[INI_CHAR,HEALS,DIVINE_${i}].Arg[3,|]}
+			/declare DIVINE_${i}_type		string	outer	${Ini[INI_CHAR,HEALS,DIVINE_${i}].Arg[2,|]}
+			/declare DIVINE_${i}_enabled		string	outer	${Ini[INI_CHAR,HEALS,DIVINE_${i}].Arg[3,|]}
 			/declare DIVINE_${i}_MinHP		string	outer	${Ini[INI_CHAR,HEALS,DIVINE_${i}].Arg[4,|]}
-			/echo \ao        DIVINE_[\ag${i}\ao]: \awDA:\ag${DIVINE_${i}} \awType:\ag${DIVINE_${i}_Type} \awUse:\ag${DIVINE_${i}_Use} \awminHP:\ag${DIVINE_${i}_MinHP}
+			/echo \ao        DIVINE_[\ag${i}\ao]: \awDA:\ag${DIVINE_${i}} \awType:\ag${DIVINE_${i}_type} \awUse:\ag${DIVINE_${i}_enabled} \awminHP:\ag${DIVINE_${i}_MinHP}
  
 		/next i
 	}
@@ -425,7 +426,7 @@ Sub processHealSpellSettings
 	/if (${test.NotEqual[NULL]}) {
 		/varset REZ							${test.Arg[1,|]}
 		/varset REZ_Type					${test.Arg[2,|]}
-		/varset REZ_Use						${test.Arg[3,|]}
+		/varset REZ_enabled						${test.Arg[3,|]}
 	}			
 
 /return
@@ -441,7 +442,7 @@ Sub processHPRegenSettings
 	/varset test ${Ini[INI_CHAR,HP_REGEN,settings]}
 	/if (${test.NotEqual[NULL]}) /varset bln_heal_regen	${test.Arg[1,|]}
 	/echo \a-w    Settings Processed: \awEnabled:\ag${bln_heal_regen}     
-	|;_regen|_type[AA|ITEM|SPELL]|_use|_key|_MGB[TRUE|ATTEMPT|FALSE]
+	|;_regen|_type[AA|ITEM|SPELL]|_enabled|_key|_MGB[TRUE|ATTEMPT|FALSE]
 	| REGEN_1="Celestial Regeneration"|AA|TRUE|4|ATTEMPT|
     
 	/declare int_heal_regen_total 		int outer 0
@@ -455,11 +456,11 @@ Sub processHPRegenSettings
 		| Not null, set the values for the debuffs to be cured
 		/varcalc sz ${sz}+1
 		/declare REGEN_HP_${i}			string	outer	${Ini[INI_CHAR,HP_REGEN,REGEN_${i}].Arg[1,|]}
-		/declare REGEN_HP_${i}_Type		string	outer	${Ini[INI_CHAR,HP_REGEN,REGEN_${i}].Arg[2,|]}
-		/declare REGEN_HP_${i}_Use		string	outer	${Ini[INI_CHAR,HP_REGEN,REGEN_${i}].Arg[3,|]}
+		/declare REGEN_HP_${i}_type		string	outer	${Ini[INI_CHAR,HP_REGEN,REGEN_${i}].Arg[2,|]}
+		/declare REGEN_HP_${i}_enabled		string	outer	${Ini[INI_CHAR,HP_REGEN,REGEN_${i}].Arg[3,|]}
 		/declare REGEN_HP_${i}_Key		int		outer	${Ini[INI_CHAR,HP_REGEN,REGEN_${i}].Arg[4,|]}
 		/declare REGEN_HP_${i}_MGB		bool	outer	${Ini[INI_CHAR,HP_REGEN,REGEN_${i}].Arg[5,|]}
-		/echo \ao        REGEN_[\ag${i}\ao]: \awRegen:\ag${REGEN_HP_${i}} \awType:\ag${REGEN_HP_${i}_Type} \awUse:\ag${REGEN_HP_${i}_Use} \awKey:\ag${REGEN_HP_${i}_Key} \awMGB:\ag${REGEN_HP_${i}_MGB} 
+		/echo \ao        REGEN_[\ag${i}\ao]: \awRegen:\ag${REGEN_HP_${i}} \awType:\ag${REGEN_HP_${i}_type} \awUse:\ag${REGEN_HP_${i}_enabled} \awKey:\ag${REGEN_HP_${i}_Key} \awMGB:\ag${REGEN_HP_${i}_MGB} 
 
 	/next i
 	|
@@ -488,18 +489,18 @@ Sub processManaRegenSettings
     /declare test                       string  local	NULL
 
 	|; _enabled
-	|;_regen|_type[AA|ITEM|SPELL]|_use|_key|_MGB[TRUE|ATTEMPT|FALSE]
+	|;_regen|_type[AA|ITEM|SPELL]|_enabled|_key|_MGB[TRUE|ATTEMPT|FALSE]
 	|settings=TRUE
-	/varset test ${Ini[INI_CHAR,HP_REGEN,settings]}
+	/varset test ${Ini[INI_CHAR,MANA_REGEN,settings]}
 	/if (${test.NotEqual[NULL]}) /varset bln_heal_regen_mana	${test.Arg[1,|]}
 	/echo \a-w    Settings Processed: \awEnabled:\ag${bln_heal_regen_mana}     
-	|;_regen|_type[AA|ITEM|SPELL]|_use|_key|_MGB[TRUE|ATTEMPT|FALSE]
+	|;_regen|_type[AA|ITEM|SPELL]|_enabled|_key|_MGB[TRUE|ATTEMPT|FALSE]
 	| REGEN_1="Celestial Regeneration"|AA|TRUE|4|ATTEMPT|
     
 	/declare int_mana_regen_total 		int outer 0
 	/declare raw_regen[10]     			string  local NULL
 	/for i 1 to ${raw_regen.Size}
-		/varset test ${Ini[INI_CHAR,HP_REGEN,REGEN_${i}]}
+		/varset test ${Ini[INI_CHAR,MANA_REGEN,REGEN_${i}]}
 		/if (${test.Arg[1,|].Equal[NULL]}) {
 			/varset int_mana_regen_total ${sz}
 			/return
@@ -507,54 +508,20 @@ Sub processManaRegenSettings
 		| Not null, set the values for the debuffs to be cured
 		/varcalc sz ${sz}+1
 		/declare REGEN_MANA_${i}			string	outer	${Ini[INI_CHAR,MANA_REGEN,REGEN_${i}].Arg[1,|]}
-		/declare REGEN_MANA_${i}_Type		string	outer	${Ini[INI_CHAR,MANA_REGEN,REGEN_${i}].Arg[2,|]}
-		/declare REGEN_MANA_${i}_Use		string	outer	${Ini[INI_CHAR,MANA_REGEN,REGEN_${i}].Arg[3,|]}
-		/declare REGEN_MANA_${i}_Key		int		outer	${Ini[INI_CHAR,MANA_REGEN,REGEN_${i}].Arg[4,|]}
-		/declare REGEN_MANA_${i}_MGB		bool	outer	${Ini[INI_CHAR,MANA_REGEN,REGEN_${i}].Arg[5,|]}
-		/echo \ao        REGEN_MANA_[\ag${i}\ao]: \awRegen:\ag${REGEN_MANA_${i}} \awType:\ag${REGEN_MANA_${i}_Type} \awUse:\ag${REGEN_MANA_${i}_Use} \awKey:\ag${REGEN_MANA_${i}_Key} \awMGB:\ag${REGEN_MANA_${i}_MGB} 
+		/declare REGEN_MANA_${i}_targets	string	outer	${Ini[INI_CHAR,MANA_REGEN,REGEN_${i}].Arg[2,|]}
+		/declare REGEN_MANA_${i}_Combat		string	outer	${Ini[INI_CHAR,MANA_REGEN,REGEN_${i}].Arg[3,|]}
+		/declare REGEN_MANA_${i}_type		string	outer	${Ini[INI_CHAR,MANA_REGEN,REGEN_${i}].Arg[4,|]}
+		/declare REGEN_MANA_${i}_enabled		string	outer	${Ini[INI_CHAR,MANA_REGEN,REGEN_${i}].Arg[5,|]}
+		/declare REGEN_MANA_${i}_gem		int		outer	${Ini[INI_CHAR,MANA_REGEN,REGEN_${i}].Arg[6,|]}
+		/declare REGEN_MANA_${i}_minMana	int		outer	${Ini[INI_CHAR,MANA_REGEN,REGEN_${i}].Arg[7,|]}
+		/declare REGEN_MANA_${i}_MinHP		int		outer	${Ini[INI_CHAR,MANA_REGEN,REGEN_${i}].Arg[8,|]}
+		/declare REGEN_MANA_${i}_MGB		bool	outer	${Ini[INI_CHAR,MANA_REGEN,REGEN_${i}].Arg[9,|]}
+		/echo \ao        REGEN_MANA_[\ag${i}\ao]: \awRegen:\ag${REGEN_MANA_${i}} \awType:\ag${REGEN_MANA_${i}_type} \awUse:\ag${REGEN_MANA_${i}_enabled} \awGem:\ag${REGEN_MANA_${i}_gem} \awMinMana:\ag${REGEN_MANA_${i}_minMana} \awMinHP:\ag${REGEN_MANA_${i}_MinHP} \awMGB:\ag${REGEN_MANA_${i}_MGB} 
 
 	/next i
 /return
 
 
-Sub castHPRegen(int _key) 
-	/declare i int local 0
-	/for i 1 to ${int_heal_regen_total}
-		/if (${REGEN_HP_${i}_Key} == ${_key}) {
-			/call attemptRegen ${REGEN_HP_${i}_Type} ${REGEN_HP_${i}} ${REGEN_HP_${i}_MGB}
-		}
-	/next i
-/return
-
-Sub castManaRegen(int _key)
-	/declare i int local 0
-	/for i 1 to ${int_mana_regen_total}
-		/if (${REGEN_MANA_${i}_Key} == ${_key}) {
-			/call attemptRegen ${REGEN_MANA_${i}_Type} ${REGEN_MANA_${i}} ${REGEN_MANA_${i}_MGB}
-		}
-	/next i
-/return
-
-| Regen attempt routine, works for both hp and mana
-Sub attemptRegen(string _type, string _regen, string _mgb)
-	/if (${_mgb.Equal[ATTEMPT]}) {
-		/if (${Me.AltAbilityReady[Mass Group Buff]}) /call MQ2Cast "Mass Group Buff" ALT
-	} else /if  (${_mgb.Equal[TRUE]}) {
-		/if (${Me.AltAbilityReady[Mass Group Buff]}) {
-			/call  MQ2Cast "Mass Group Buff" ALT
-		} else {
-			/return
-		}
-	} 
-
-	| Cast the Regen
-	| Note bards are excluded because they have no AE regen ability
-	/if (${_type.Equal[AA]} && ${Me.AltAbilityReady[${_AA}]})           /call MQ2Cast   "${_regen}" ALT
-	/if (${_type.Equal[DISC]} && ${Me.CombatAbilityReady[${_AA}]})      /doability      "${_regen}"
-	/if (${_type.Equal[ITEM]} && !${FindItem[=${_burn}].TimerReady})    /call MQ2Cast   "${_regen}" ITEM
-	/if (${_type.Equal[SPELL]})                                         /call MQ2Cast   "${_regen}"
-    
-/return 
 
 Sub EVENT_DebugCheckHeal(string _line, string _sender, string _eventParams)
 	/echo check Heal Fired ${_eventParams}
@@ -580,6 +547,7 @@ Sub EVENT_DebugCheckHeal(string _line, string _sender, string _eventParams)
 
 Sub chkHeals
 	/declare lazy bool local ${If[${bln_engaged},FALSE,TRUE]} 
+	/if (${bln_killing} || ${bln_engaged}) /varset lazy FALSE
 	/echo \aochkHeals \a-wMT: \ap${If[(${int_heal_mode} && ${int_heal_mode} < 3),TRUE,FALSE]} \a-wSelf:\ap${If[!${int_heal_mode},TRUE,FALSE]} \a-wGroup: \ap${bln_heal_useGroup} \a-wLazy:\ap${lazy} \a-wEngaged?:\ap ${bln_engaged} ${If[${bln_engaged},,\a-wTimer?: \ap${timer_check_heals.OriginalValue}]}
 	/if (${Select[${int_heal_mode},1,2]})							/call chkHeal_MT    ${lazy}
  	/if (!${int_heal_mode}) 										/call chkHeal_Self  ${lazy}
@@ -589,8 +557,9 @@ Sub chkHeals
 /return 
 
 Sub chkHeal_MT(bool _lazyMT)
-    /echo \awchkHeal_MT(\ao${_lazyMT}\aw)
+    /echo \awchkHeal_MT(Lazy:\ao${_lazyMT}\aw)
 	/declare eff string  local	${If[${bln_heal_useEfficient},_efficient,]} 
+	/echo \aweff:\ag${eff} \aw(hp:\ag${Spawn[id ${int_MTID}].PctHPs} \aw< limit\ag${Math.Clamp[${Math.Calc[${int_point_tank_HoT}*1.025]},0,100]} \aw&& Dist:(\ag${Spawn[id ${int_MTID}].Distance3D} \aw<= \ag${int_heal_range_normal${eff}}\aw))
 	/if (${Spawn[id ${int_MTID}].PctHPs} < ${Math.Clamp[${Math.Calc[${int_point_tank_HoT}*1.025]},0,100]} && (${Spawn[id ${int_MTID}].Distance3D} <= ${int_heal_range_normal${eff}})) {
 		/call chkMTAlive TRUE 
 		/call setHealingSpell ${Spawn[id ${int_MTID}].PctHPs} tank ${Spawn[id ${int_MTID}].Distance3D} ${Spawn[id ${int_MTID}].CleanName} ${int_MTID} TRUE
@@ -598,12 +567,12 @@ Sub chkHeal_MT(bool _lazyMT)
 /return
 
 Sub chkHeal_Self(bool _lazySelf)
-	/echo \awchkHeal_Self(\ao${_lazySelf}\aw)
+	/echo \awchkHeal_Self(Lazy:\ao${_lazySelf}\aw)
 	/if (${Me.PctHPs} < ${Math.Clamp[${Math.Calc[${int_point_self_HoT}*1.025]},0,100]}) /call setHealingSpell ${Me.PctHPs} self 0 ${Me.CleanName} ${Me.ID} TRUE
 /return 
 
 Sub chkHeal_Group(bool _lazyGroup)
-    /echo \awchkHeal_Group(\ao${_lazyGroup}\aw)
+    /echo \awchkHeal_Group(Lazy:\ao${_lazyGroup}\aw)
 	/if (${Spawn[${WorstHurt[group,1,100,FALSE]}].PctHPs} > ${Math.Clamp[${Math.Calc[${int_point_group_HoT}*1.025]},0,100]} ) /return
 
 	| Determine the counts of major and minor hurt, using the Group.Injured TLO
@@ -634,7 +603,7 @@ Sub updateGroupRangeCount(int _range)
 
 | Based on conditions, determine which healing spell to use
 Sub setHealingSpell(int _hp, string _targetType, int _range, string _targetName, string _targetID, bool _castOnReady)
-	/echo setHealingSpell ${_hp} ${_targetType} ${_range} ${_targetName} ${_targetID} ${_castOnReady}
+	/echo \aosetHealingSpell \ag${_hp} ${_targetType} ${_range} ${_targetName} ${_targetID} ${_castOnReady}
 	/declare pt			int		local	${Math.Clamp[${Math.Calc[${int_point_${_targetType}_HoT}*1.025]},0,100]}
 	/if (!${_hp} || ${Me.PctMana} == 0 || (${_hp} > ${pt})) /return NOHEAL
 
@@ -681,15 +650,15 @@ Sub castHealV2(int _id, string _name, string _spell, bool _isGroup, bool _isHoT)
 	/call chkSpellMemorized "${_spell}" TRUE ${int_heal_defaultGem}
 	/if (${_isGroup}) {
 		| Don't check health on group spells or you will constantly duck out if cleric doesnt need to be healed!
-		/call MQ2Cast "${_spell}" 
+		/call MQ2Cast "${_spell}" gem${int_heal_defaultGem}
 	} else {
-		/call MQ2Cast "${_spell}" castingHealLoop
+		/call MQ2Cast "${_spell}" gem${int_heal_defaultGem} castingHealLoop
 	}
 	
 	/delay 5
 	/if (!${Defined[timer_HoT_${_id}]}) /declare timer_HoT_${_id} timer outer 30s
 	/if (${_isHoT} && ${Macro.Return.Equal[CAST_SUCCESS]}) /varset timer_HoT_${_id} 30s
-	/if (${Macro.Return.Equal[CAST_SUCCESS]} && ${bln_annouce}) /${cmdChannel} ${_spell} > ${Target.Name} hp:${Target.PctHPs} m:${Me.PctMana} d:${Target.Distance}
+	/if (${Macro.Return.Equal[CAST_SUCCESS]} && ${bln_announce}) /docommand /${str_announce_channel} ${_spell} > ${Target.Name} hp:${Target.PctHPs} m:${Me.PctMana} d:${Target.Distance}
 /return ${Macro.Return}
 
 | Casting Heal Loop. Will determine if we need to duck out, and also check priority events while doing so (mark of death!)
@@ -708,14 +677,15 @@ Sub chkDivinearbitrationReady
 	/declare ready int local 0
 	/declare i int local 0
 	/for i 1 to ${int_DivineArbitration_total}
-		/if (${DIVINE_${i}_Type.Equal[ITEM]} && ${DIVINE_${i}_Use} && !${FindItem[=${DIVINE_${i}}].TimerReady}) /varset ready ${i}
-		/if (${DIVINE_${i}_Type.Equal[AA]} && ${DIVINE_${i}_Use} && ${Me.AltAbilityReady[${DIVINE_${i}}]}) /varset ready ${i}
+		/if (${DIVINE_${i}_type.Equal[ITEM]} && ${DIVINE_${i}_enabled} && !${FindItem[=${DIVINE_${i}}].TimerReady}) /varset ready ${i}
+		/if (${DIVINE_${i}_type.Equal[AA]} && ${DIVINE_${i}_enabled} && ${Me.AltAbilityReady[${DIVINE_${i}}]}) /varset ready ${i}
 	/next i
 /return ${ready}
 
 Sub castDivineArbitration(int _index)
-	/call MQ2Cast "${DIVINE_${_index}}" ${If[${DIVINE_${_index}_Type.Equal[AA]},AA,]}
+	/call MQ2Cast "${DIVINE_${_index}}" ${If[${DIVINE_${_index}_type.Equal[AA]},AA,]}
 /return
+
 
 
 |-------------------------------------------------------------------------------- 
@@ -759,7 +729,7 @@ Sub castRessurection(int _id)
 	/corpse 
 	/if (${REZ_Type.Equal[ITEM]} && ${FindItem[${REZ}].ID}) {
 		/call MQ2Cast "${REZ}"  ITEM
-		/if (${Macro.Return.Equal[CAST_SUCCESS]}) /docommand /${announceChannel} Rezzed ${Target.Name}
+		/if (${Macro.Return.Equal[CAST_SUCCESS]}) /docommand /${str_announce_channel} Rezzed ${Target.Name}
 	}
 /return 
 
@@ -769,6 +739,7 @@ Sub castRessurection(int _id)
 Sub EVENT_CHStart(string _line, string _sender, string _eventParams)
 	/doevents flush CHStart
 	/call getCHPosition ${_eventParams.Arg[5]}
+	/echo ${Macro.Return}
 	/if (${Macro.Return}) /call heal_chStart "${_eventParams}" ${Macro.Return}
 /return 
 
@@ -799,38 +770,57 @@ Sub EVENT_CHSwitch(string _line, string _sender, string _eventParams)
 Sub getCHPosition(string _order)
 	/declare i int local 0
 	/declare p int local 0
-	/for i 0 to ${Math.Calc[${_order.Count[,]}+1]}
+	/echo ${Math.Calc[${_order.Count[,]}+1]} count
+	/for i 1 to ${Math.Calc[${_order.Count[,]}+1]}
+		/echo ${i} ${_order.Arg[${i},,]}
 		/if (${_order.Arg[${i},,].Equal[${Me.CleanName}]}) /return ${i}
 	/next i
 /return 0
 
 Sub heal_chStart(string _settings, int _position)
+	/echo heal_chStart (${_settings}) :: ${_position}
 	/call ChangeHealMode CHCHAIN
 	/varset bln_heal_complete_member TRUE
+	/varset _position ${Math.Calc[${_position} - 1 ]}
 
 	/varset  int_heal_complete_chain	${_settings.Arg[1]}
 	/declare t1		string	local		${Spawn[pc ${_settings.Arg[2]}].ID}
+	/echo t1: ${t1} ${Spawn[pc ${_settings.Arg[2]}]}
 	/declare t2		string	local 		${Spawn[pc ${_settings.Arg[3]}].ID}
+	/echo t1: ${t2} ${Spawn[pc ${_settings.Arg[2]}]}
 	/declare delay	timer	local		0
 	/declare sd 	int   	local 		${Math.Calc[${_settings.Arg[4]} * ${_position} + 1]}
 
 	/call chkSpellMemorized "${str_heal_complete}"	TRUE 9
 
 	:chStart
-	/varset  int_heal_complete_target	${Spawn[pc ${t1}].ID}
-	/echo \a-wStarting Complete Heal Chain \ao[\ag\ag${int_heal_complete_chain} \ao- \ag${sd}\a-gms\ao]
+	/varset  int_heal_complete_target	${t1}
+	/echo \a-wStarting Complete Heal Chain \ao[\ag\ag${int_heal_complete_chain} \ao @ \ag${sd}\a-gms\ao] on \ag${t1}
 	/varset  delay ${sd}
-
+	/echo delay ${delay}
 	:chWaitLoop
-	/if (${delay}) /multiline ; /call RunAllEvents ; /goto :chWaitLoop
+	/if (${delay}) {
+		 /call RunAllEvents
+		 /goto :chWaitLoop
+	}
 	
 	:chLoop
 	| Check properties that might have changed during the chWaitLoop EVENT checking
 	| No longer a chain member, target switched, t1 died, t2 died, oom
+	/echo \ao chLoop member? \ag${bln_heal_complete_member} \ao t1\ag ${t1}
 	/if (!${bln_heal_complete_member}) /return
-	/if (${t1} !=${int_heal_complete_target}) /varset t1 ${int_heal_complete_target}
-	/if (${Spawn[id ${t1}]} && !${t1.NotEqual[${t2}]}) /varset t1 ${t2}
-	/if (!${Spawn[id ${t1}]} || ${Me.CurrentMana} < ${Math.Calc[${Spell[${str_heal_complete}].Mana}+20]}) /return
+	/if (${Spawn[id ${t1}].ID} && !${t1.NotEqual[${t2}]}) /varset t1 ${t2}
+	/echo count ${t1} !${Spawn[id ${t1}].ID} || ${Math.Calc[${Spell[${str_heal_complete}].Mana}+20]} > ${Me.CurrentMana}
+	/if (!${Spawn[id ${t1}].ID}) {
+		/echo ch failed due to no ${t1} spawn ${Spawn[id ${t1}].ID}
+		/return
+	} 
+
+	/if (${Math.Calc[${Spell[${str_heal_complete}].Mana}+20]} > ${Me.CurrentMana}) {
+		/echo failed due to lack of mana
+		/return
+
+	}
 
 		| Loop is valid, running
 		/call RunAllEvents
@@ -839,7 +829,7 @@ Sub heal_chStart(string _settings, int _position)
 		/call TrueTarget ${t1}
 
 		:chCast
-		/docommand /${announceChannel} [${int_heal_complete_chain}]:[${_position}] CHC->${Spawn[id t1].CleanName} hp:${Target.PctHPs} d:${Target.Distance3D} m:${Me.PctMana}
+		/docommand /${str_announce_channel} [${int_heal_complete_chain}]:[${_position}] CHC->${Spawn[id ${t1}].CleanName} hp:${Target.PctHPs} d:${Target.Distance3D} m:${Me.PctMana}
 		/call MQ2Cast "${str_heal_complete}" RunPriorityEvents
 		/if (${Macro.Return.Equal[CAST_FIZZLE]}) /goto :chCast
 		/call RunAllEvents
@@ -890,7 +880,7 @@ Sub heal_chSwitch(int _chainID, string _newT1)
  0-Self (only) | 1-MT (and self) | 2-Group (and MT, includes self) | 3-GroupOnly (includes self) | 
  ----------------------------
 **|
-Sub EVENT_HealType(_line, _chatSender, _eventParams)
+Sub EVENT_HealType(string _line, string _sender, string _eventParams)
 	/doevents flush HealType
 	/call ChangeHealType ${_eventParams}
 	
@@ -915,7 +905,7 @@ Sub ChangeHealType(int _type)
  NORMAL|EFFICIENT|CHCHAIN
  ----------------------------
 **|
-Sub EVENT_HealMode(_line, _chatSender, _eventParams)
+Sub EVENT_HealMode(string _line, string _sender, string _eventParams)
 	/doevents flush HealMode
 	/call ChangeHealMode ${_eventParams}
 	
@@ -923,7 +913,7 @@ Sub EVENT_HealMode(_line, _chatSender, _eventParams)
 
 Sub ChangeHealMode(string _strMode)
 	|- Mem the appropriate spell set
-	/echo \a-wChanging healing \aoMODE \a-wto \ag_strMode
+	/echo \a-wChanging healing \aoMODE \a-wto \ag${_strMode}
 	/varset str_casting_spellSet_saved ${str_casting_spellSet}
 	/if (${_strMode.Find[CHCHAIN]}) {
 		/varset str_casting_spellSet	default
@@ -947,3 +937,102 @@ Sub setHealInterrupt(bool _interrupt)
 	/varset bln_heal_interrupt ${_interrupt}
 /return
 
+|**
+ ----------------------------
+ Divine Intervention
+ ----------------------------
+ Divine Intervention Methods for CLR only
+ ----------------------------
+**|
+
+Sub EVENT_DivineInterventionRequest(string _line, string _sender, string _eventParams)
+	/doevents flush DivineInterventionRequest
+	/if (!${bln_heal_useDivineIntervention}) /return 
+	/call castDivineIntervention ${_sender}
+/return
+
+
+Sub castDivineIntervention(string _targetName) 
+	/if (!${FindItemCount[Emerald]}) {
+		/docommand /${str_announce_channel} Cannot DI ${_targetName} out of Emeralds
+	}
+	/if (${Me.SpellReady[Divine Intervention]}) {
+		/call TrueTarget ${Spawn[pc ${_targetName}].ID}
+		/call MQ2Cast "Divine Intervention"
+		/docommand /${str_announce_channel} Casting DI ON ${_targetName}
+	} else {
+		/docommand /${str_announce_channel} Cannot DI ${_targetName} spell not Ready
+	}
+/return
+
+|**
+ ----------------------------
+ Regeneration Settings
+ ----------------------------
+ TODO #7
+ ManaRegen SELF  is generally self regens that are instant, like Cannibalization
+ ManaRegen GROUP is generally group regens that are duration, like Paragon of Spirit
+ HPRegen   is generally assumed GROUP healing things like totems or celestial healing type AA
+ ----------------------------
+**|
+
+Sub EVENT_FireRegen(string _line, string _sender, string _eventParams)
+	/doevents flush FireRegen
+	/call castHPRegen ${_eventParams}
+/return
+
+
+Sub castHPRegen(int _key) 
+	/declare i int local 0
+	/for i 1 to ${int_heal_regen_total}
+		/if (${REGEN_HP_${i}_Key} == ${_key} ) {
+			/call attemptRegen ${REGEN_HP_${i}_type} ${REGEN_HP_${i}} ${REGEN_HP_${i}_MGB}
+		}
+	/next i
+/return
+
+|-- Mana Regen out of combat (cannibalization)
+Sub chkManaRegen
+	/declare i int local 0
+	/for i 1 to ${int_mana_regen_total}
+		/if (${REGEN_MANA_${i}_targets.Equal[SELF]} && ${Me.PctMana} <= ${REGEN_MANA_${i}_minMana} && ${Me.PctHPs} >= ${REGEN_MANA_${i}_MinHP}) {
+			/call attemptRegen ${REGEN_MANA_${i}_type} ${REGEN_MANA_${i}} ${REGEN_MANA_${i}_MGB}
+		}
+	/next i
+/return 
+
+|-- Forced Group Mana Regen (paragon)
+Sub EVENT_FireManaRegen(string _line, string _sender, string _eventParams)
+	/doevents flush FireManaRegen
+	/call castManaRegen ${_eventParams}
+/return
+
+Sub castManaRegen(int _key)
+	/declare i int local 0
+	/for i 1 to ${int_mana_regen_total}
+		/if (${REGEN_MANA_${i}_Key} == ${_key} && ${REGEN_MANA_${i}_targets.Equal[GROUP]} ) {
+			/call attemptRegen ${REGEN_MANA_${i}_type} ${REGEN_MANA_${i}} ${REGEN_MANA_${i}_MGB}
+		}
+	/next i
+/return
+
+| Regen attempt routine, works for both hp and mana
+Sub attemptRegen(string _type, string _regen, string _mgb)
+	/if (${_mgb.Equal[ATTEMPT]}) {
+		/if (${Me.AltAbilityReady[Mass Group Buff]}) /call MQ2Cast "Mass Group Buff" ALT
+	} else /if  (${_mgb.Equal[TRUE]}) {
+		/if (${Me.AltAbilityReady[Mass Group Buff]}) {
+			/call  MQ2Cast "Mass Group Buff" ALT
+		} else {
+			/return
+		}
+	} 
+
+	| Cast the Regen
+	| Note bards are excluded because they have no AE regen ability
+	/if (${_type.Equal[AA]} && ${Me.AltAbilityReady[${_AA}]})           /call MQ2Cast   "${_regen}" ALT
+	/if (${_type.Equal[DISC]} && ${Me.CombatAbilityReady[${_AA}]})      /doability      "${_regen}"
+	/if (${_type.Equal[ITEM]} && !${FindItem[=${_burn}].TimerReady})    /call MQ2Cast   "${_regen}" ITEM
+	/if (${_type.Equal[SPELL]})                                         /call MQ2Cast   "${_regen}"
+    
+/return 

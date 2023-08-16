@@ -17,7 +17,7 @@ REVISION HISTORY
 	12.28.21	xiris	Added Buff Groupings so clients can request "Symbol" and will get whatever the highest symbol the cleric has. Etc.
 	01.14.22	xiris	Continued work on buffing logic
 	02.15.22	xiris	EQTitan returns nonsense for raid.group stuff now, so we have to make it so we pass in the group leaders names (ugh)
-						Added Array named arr_raidLeaders to store this manually (laaame)
+						Added Array named arr_raid_groupLeaders to store this manually (laaame)
 	03.01.22	xiris	Added Exclusions for Buffing use command /only|EXCLUSIONS eg: doRaidBuffs /only|ENC		
 	05.13.22	xiris	Reduced events to BC only		
 	06.13.22	xiris	Restored events for Group/Party/Raid due to need to split raids sometimes (multiple camp pulling)	
@@ -76,7 +76,7 @@ Sub Events_Buffing_Background
 
 
 Sub Events_Buffing_Raid 
-    /if (${bln_engaged}  && ${int_combatBuffs_total} && !${timer_check_combatBuffs})    /call chkCombatBuffs
+    /if (${bln_engaged} && ${bln_killing} && ${int_combatBuffs_total} && !${timer_check_combatBuffs})    /call chkCombatBuffs
 /return
 
 |**
@@ -122,9 +122,8 @@ Sub processSelfBuffs
 	/declare bln_selfBuffs_enabled			bool	outer	TRUE
 
     |; =_buff|_type|_itemName
-	|BUFF_1="Reyfin's Racing Thoughts"|ITEM|"Xxeric's Matted-Fur Mask"
+	|BUFF_1="Reyfin's Racing Thoughts"|ITEM|"Xxeric's Matted-Fur Mask"|
 	/for i 1 to ${raw_selfBuffs.Size}
-        | if the value of the entry ends with a quoted string, we need to wrap it all in quotes again.
         /varset test ${Ini[INI_CHAR,BUFFS_SELF,BUFF_${i}]}
         /if (${test.Arg[1,|].Equal[NULL]}) {
             /varset int_selfBuffs_total ${sz}
@@ -133,9 +132,9 @@ Sub processSelfBuffs
         | Not null, set the values for the buffs
 		/varcalc sz	${sz}+1
 		/declare BUFFSELF_${i}		string	outer   ${test.Arg[1,|]}
-		/declare BUFFSELF_${i}_Type	string  outer   ${test.Arg[2,|]}
-		/declare BUFFSELF_${i}_Name	string  outer   ${test.Arg[3,|]}
-        /echo \ao        BUFFSELF[\ag${i}\ao]: \awBuff:\ag${BUFFSELF_${i}} \awType:\ag${BUFFSELF_${i}_Type} \awName:\ag${BUFFSELF_${i}_Name}
+		/declare BUFFSELF_${i}_type	string  outer   ${test.Arg[2,|]}
+		/declare BUFFSELF_${i}_itemName	string  outer   ${test.Arg[3,|]}
+        /echo \ao        BUFFSELF[\ag${i}\ao]: \awBuff:\ag${BUFFSELF_${i}} \awType:\ag${BUFFSELF_${i}_type} \awitemName:\ag${BUFFSELF_${i}_itemName}
 	/next i
 /return
 
@@ -164,7 +163,7 @@ Sub processTargetedBuffs
 
     /echo \a-w    Settings Processed: \awEnabled:\ag${bln_targetedBuffs_enabled} \awAllowRaid:\ag${bln_targetedBuffs_allowRaid} \awAllowGroup:\ag${bln_targetedBuffs_allowGroup} \awAutomatic:\ag${bln_targetedBuffs_automatic}
     
-    |;=_buff|_use|_targetType|_gem|_classes
+    |;=_buff|_enabled|_targetType|_gem|_classes
     |BUFF_1="Balikor's Mark"|TRUE|GROUP|5|ALL
     /for i 1 to ${raw_targetedBuffs.Size}
         /varset test ${Ini[INI_CHAR,BUFFS_TARGETED,BUFF_${i}]}
@@ -175,11 +174,12 @@ Sub processTargetedBuffs
         | Not null, set the values for the buffs
 		/varcalc sz	${sz}+1
 		/declare BUFFTARGETED_${i}		    string	outer   ${test.Arg[1,|]}
-        /declare BUFFTARGETED_${i}_Use	    string  outer   ${test.Arg[2,|]}
-		/declare BUFFTARGETED_${i}_Type	    string  outer   ${test.Arg[3,|]}
-		/declare BUFFTARGETED_${i}_Gem	    string  outer   ${test.Arg[4,|]}
-        /declare BUFFTARGETED_${i}_Targets	string  outer   ${test.Arg[5,|]}
-        /echo \ao        BUFFTARGETED[\ag${i}\ao]: \awBuff:\ag${BUFFTARGETED_${i}} \awUse:\ag${BUFFTARGETED_${i}_Use} \awType:\ag${BUFFTARGETED_${i}_Type} \awGem:\ag${BUFFTARGETED_${i}_Gem} \awTargets:\ag${BUFFTARGETED_${i}_Targets}
+        /declare BUFFTARGETED_${i}_enabled	    string  outer   ${test.Arg[2,|]}
+		/declare BUFFTARGETED_${i}_type	    string  outer   ${test.Arg[3,|]}
+		/declare BUFFTARGETED_${i}_gem	    string  outer   ${test.Arg[4,|]}
+        /declare BUFFTARGETED_${i}_targets	string  outer   ${test.Arg[5,|]}
+        /declare BUFFTARGETED_${i}_reagent	string  outer   ${test.Arg[6,|]}
+        /echo \ao        BUFFTARGETED[\ag${i}\ao]: \awBuff:\ag${BUFFTARGETED_${i}} \awUse:\ag${BUFFTARGETED_${i}_enabled} \awType:\ag${BUFFTARGETED_${i}_type} \awGem:\ag${BUFFTARGETED_${i}_gem} \awTargets:\ag${BUFFTARGETED_${i}_targets} \awReagents:\ag${BUFFTARGETED_${i}_reagent}
     /next i
 
 /return
@@ -205,7 +205,7 @@ Sub processCombatBuffs
     /if (!${Ini[INI_CHAR,BUFFS_COMBAT,settings].Arg[3,|]})  /varset bln_combatBuffs_allowGroup      FALSE
 
     /echo \a-w    Settings Processed: \awEnabled:\ag${bln_combatBuffs_enabled} \awAllowRaid:\ag${bln_combatBuffs_allowRaid} \awAllowGroup:\ag${bln_combatBuffs_allowGroup}
-    |;=_buff|_use|_targetType|_gem|_classes
+    |;=_buff|_enabled|_targetType|_gem|_classes
     |BUFF_1="Panoply of Vie"|TRUE|SINGLE|5|MT
    
     /for i 1 to ${raw_combatBuffs.Size}
@@ -217,11 +217,11 @@ Sub processCombatBuffs
         | Not null, set the values for the buffs
 		/varcalc sz	${sz}+1
 		/declare BUFFCOMBAT_${i}		    string	outer   ${test.Arg[1,|]}
-        /declare BUFFCOMBAT_${i}_Use	    string  outer   ${test.Arg[2,|]}
-		/declare BUFFCOMBAT_${i}_Type	    string  outer   ${test.Arg[3,|]}
-		/declare BUFFCOMBAT_${i}_Gem	    string  outer   ${test.Arg[4,|]}
-        /declare BUFFCOMBAT_${i}_Targets	string  outer   ${test.Arg[5,|]}
-        /echo \ao        BUFFCOMBAT[\ag${i}\ao]: \awBuff:\ag${BUFFCOMBAT_${i}} \awUse:\ag${BUFFCOMBAT_${i}_Use} \awType:\ag${BUFFCOMBAT_${i}_Type} \awGem:\ag${BUFFCOMBAT_${i}_Gem} \awTargets:\ag${BUFFCOMBAT_${i}_Targets}
+        /declare BUFFCOMBAT_${i}_enabled	    string  outer   ${test.Arg[2,|]}
+		/declare BUFFCOMBAT_${i}_type	    string  outer   ${test.Arg[3,|]}
+		/declare BUFFCOMBAT_${i}_gem	    string  outer   ${test.Arg[4,|]}
+        /declare BUFFCOMBAT_${i}_targets	string  outer   ${test.Arg[5,|]}
+        /echo \ao        BUFFCOMBAT[\ag${i}\ao]: \awBuff:\ag${BUFFCOMBAT_${i}} \awUse:\ag${BUFFCOMBAT_${i}_enabled} \awType:\ag${BUFFCOMBAT_${i}_type} \awGem:\ag${BUFFCOMBAT_${i}_gem} \awTargets:\ag${BUFFCOMBAT_${i}_targets}
     /next i
 
 /return
@@ -259,16 +259,14 @@ Sub processDamageShields
  ----------------------------
 **|
 Sub chkSelfBuffs
-	/if (!${int_selfBuffs_total} || !${bln_selfBuffs_enabled}) /return
+	/if (!${int_selfBuffs_total} || !${bln_selfBuffs_enabled} || (${SpawnCount[NPC raidus ${int_campRadius}]} && (${Zone.ID} != 340 && ${Zone.ID} != 344 && ${Zone.ID} != 345 && ${Zone.ShortName.Equal[${str_zone_bound}]}))) /return
 
     /echo \aochkSelfBuffs\aw(\ag${int_selfBuffs_total}\aw)
     /declare i  int                 local 0
     /declare ds int                 local 0
-    /declare brdCastingArgs string  local NULL
-    /declare allCastingArgs string  local NULL
     /declare bln_buffsCast  bool    local FALSE
     | We need to target ourselves since this is a self buff
-    /target id ${Me.ID}
+    
     /for i 1 to ${int_selfBuffs_total}
         | Check to see if the buff is a DS and if bln_buffs_damageshields if FALSE, skip the buff
         /if (!${bln_buffs_damageshields}) {
@@ -278,33 +276,25 @@ Sub chkSelfBuffs
         }
 
         | Check the events for enagement to stop this sub
-        /if (${bln_engaged}) /return
+        /if (${bln_engaged} || ${bln_killing}) /return
 
         | Check to see if the buff is already applied
         /echo \aw    Checking \ag${BUFFSELF_${i}} \aoStacks?\ag${Spell[${BUFFSELF_${i}}].Stacks}  \aoCurrently Have? \ag${Bool[${Me.Buff[${BUFFSELF_${i}}].ID}]}
         /if (${Spell[${BUFFSELF_${i}}].Stacks} && !${Me.Buff[${BUFFSELF_${i}}].ID}) {
+            /target id ${Me.ID}
             | Handle the item type buff check
-            |BUFF_1="Reyfin's Racing Thoughts"|ITEM|"Xxeric's Matted-Fur Mask"
-            /varset brdCastingArgs "${BUFFSELF_${i}_Name}" TRUE ${int_cast_default_gem}
-            /varset allCastingArgs ${BUFFSELF_${i}_Name} 
-            /if (${BUFFSELF_${i}_Type.Equal[ITEM]}) {
-                /if (!${FindItem[=${BUFFSELF_${i}_Name}].ID})  /goto :next_buff
-                /varset brdCastingArgs ITEM ${brdCastingArgs} ${Me.ID} TRUE
-                
-            } else /if (${BUFFSELF_${i}_Type.Equal[SPELL]}) {
-                /call chkSpellMemorized "${BUFFSELF_${i}_Name}" TRUE ${int_cast_default_gem}
-                /varset brdCastingArgs SONG "${BUFFSELF_${i}_Name}" ${Me.ID} TRUE
-
-            } else /if (${BUFFSELF_${i}_Type.Equal[ALT]})  {
-                /varset brdCastingArgs ALT "${BUFFSELF_${i}_Name}" ${Me.ID} TRUE
+            |; =_buff|_type|_itemName
+            |BUFF_1="Reyfin's Racing Thoughts"|ITEM|"Xxeric's Matted-Fur Mask"|
+            
+            /if (${Me.Class.ShortName.Equal[BRD]}) {
+                /call MQ2Medley "${BUFFSELF_${i}_itemName}" ${BUFFSELF_${i}_type} ${Me.ID} TRUE 
+            } else {
+                /call MQ2Cast   "${BUFFSELF_${i}_itemName}" ${BUFFSELF_${i}_type} 
             }
             /varset bln_buffsCast TRUE
-            /if (${Me.Class.ShortName.Equal[BRD]})  /call MQ2Medley ${brdCastingArgs}
-            /if (!${Me.Class.ShortName.Equal[BRD]}) /call MQ2Cast "${allCastingArgs}"
         }
     :next_buff
     /next i
-    /if (${bln_buffsCast}) /memspellset ${str_casting_spellSet}
     /varset timer_check_selfBuffs 300
 /return
 
@@ -318,18 +308,19 @@ Sub chkSelfBuffs
  Will cast the targetted buffs on the RAID
  Will run through each raid group and cast the group/single buff(s)
  on the group leader if its a group spell, or loop through all the raid members
- that fit the ${BUFFTARGETED_${i}_Targets} key for the buff
+ that fit the ${BUFFTARGETED_${i}_targets} key for the buff
  ----------------------------
 **|
-Sub EVENT_Buffing_Buff_OnRaid(_line, _chatSender, _eventParams)
+Sub EVENT_Buffing_Buff_OnRaid(string _line, string _sender, string _eventParams)
 	| Flush the event
 	/doevents flush Buffing_Buff_OnRaid
-
-	/echo \awDoing Raid Buffs on \agALL
+    /if (!${int_targetedBuffs_total} || !${bln_targetedBuffs_enabled}) /return
+	/echo \awDoing Raid Buffs on \agALL (${int_targetedBuffs_total})
+     /docommand /${str_announce_channel} Doing Raid Buffs (${int_targetedBuffs_total})
 	/memspellset buff
 	/call chkTargetedBuffs RAID NULL TRUE
 
-	/dgt ${Me.Class.Name} RAID BUFF [${_eventParams}] COMPLETE
+	/docommand /${str_announce_channel} RAID BUFF COMPLETE
 	| Restore the previous spellset
 	/memspellset ${str_casting_spellSet}
 
@@ -345,15 +336,16 @@ Sub EVENT_Buffing_Buff_OnRaid(_line, _chatSender, _eventParams)
  Will target the character and cast the group/single target buff(s)
  ----------------------------
 **|
-Sub EVENT_Buffing_Buff_OnChar(_line, _chatSender, _eventParams)
+Sub EVENT_Buffing_Buff_OnChar(string _line, string _sender, string _eventParams)
 	| Flush the event
 	/doevents flush Buffing_Buff_OnChar
-
+     /if (!${int_targetedBuffs_total} || !${bln_targetedBuffs_enabled}) /return
 	/echo \awDoing Character Buffs on \ag${_eventParams}
+    /docommand /${str_announce_channel} Doing Character Buffs on ${_eventParams} (${int_targetedBuffs_total})
 	/memspellset buff
 	/call chkTargetedBuffs CHARACTER ${_eventParams} TRUE
     
-	/dgt ${Me.Class.Name} CHAR BUFF [${_eventParams}] COMPLETE
+	/docommand /${str_announce_channel} CHAR BUFF [${_eventParams}] COMPLETE
 	| Restore the previous spellset
 	/memspellset ${str_casting_spellSet}
 
@@ -385,11 +377,17 @@ Sub chkTargetedBuffs(string _targetType,string _targetName, bool _forced)
     /memspellset buff
     /delay 30
 
-    |;=_buff|_use|_targetType|_gem|_classes
+    |;=_buff|_enabled|_targetType|_gem|_classes|_reagent
     /for i 1 to ${int_targetedBuffs_total}
-        /if (!${BUFFTARGETED_${i}_Use}) /goto :next_buff
+        /if (!${BUFFTARGETED_${i}_enabled}) /goto :next_buff
+        /if (${BUFFTARGETED_${i}_reagent.NotEqual[NULL]})  {
+                /if (${FindItemCount[${BUFFTARGETED_${i}_reagent}]} < 10) {
+                    /docommand /${str_announce_channel} OUT OF REAGENT ${BUFFTARGETED_${i}_reagent} - ${BUFFTARGETED_${i}}
+                    /continue
+                }
+        }
         | Verify that the spell is memorized
-        /call chkSpellMemorized "${BUFFTARGETED_${i}}" TRUE ${BUFFTARGETED_${i}_Gem}
+        /call chkSpellMemorized "${BUFFTARGETED_${i}}" TRUE ${BUFFTARGETED_${i}_gem}
         | Character Buffing, this will only cast the buff on a single target
         /if (${_targetType.Equal[CHARACTER]}) {
             /echo \ayCasting \agSINGLE \aybuff on \ag${_targetName}
@@ -397,16 +395,16 @@ Sub chkTargetedBuffs(string _targetType,string _targetName, bool _forced)
             /call MQ2Cast "${BUFFTARGETED_${i}}"
 
         } else /if (${_targetType.Equal[GROUP]}) {
-            /if (${BUFFTARGETED_${i}_Type.Equal[GROUP]}) {
+            /if (${BUFFTARGETED_${i}_type.Equal[GROUP]}) {
                 | Group Spell on my own group
                 /echo \ayCasting \agGROUP \aybuff on \ag${Group.Member[0].Name}
                 /call TrueTarget ${Group.Member[0].ID}
                 /call MQ2Cast "${BUFFTARGETED_${i}}"
 
-            } else /if (${BUFFTARGETED_${i}_Type.Equal[SINGLE]}) {
+            } else /if (${BUFFTARGETED_${i}_type.Equal[SINGLE]}) {
                  /varcalc g ${Group.GroupSize} - 1
                  /for r 0 to ${g}
-					/if (${Select[${Group.Member[${r}].Class.ShortName},${BUFFTARGETED_${i}_Targets}]} || ${BUFFTARGETED_${i}_Targets.Equal[ALL]} || (${BUFFCOMBAT_${i}_Targets.Equal[MT]} && ${Group.Member[${r}].ID} == ${int_MTID})) {
+					/if (${Select[${Group.Member[${r}].Class.ShortName},${BUFFTARGETED_${i}_targets}]} || ${BUFFTARGETED_${i}_targets.Equal[ALL]} || (${BUFFCOMBAT_${i}_targets.Equal[MT]} && ${Group.Member[${r}].ID} == ${int_MTID})) {
 						/echo \ayCasting \agSINGLE \aybuff on \ag${Group.Member[${g}].Name}
 						/call TrueTarget ${Group.Member[${g}].ID}
 						/call MQ2Cast "${BUFFTARGETED_${i}}"
@@ -414,22 +412,22 @@ Sub chkTargetedBuffs(string _targetType,string _targetName, bool _forced)
                  /next r
             }
         } else /if (${_targetType.Equal[RAID]}) {
-            /if (${BUFFTARGETED_${i}_Type.Equal[GROUP]}) {
+            /if (${BUFFTARGETED_${i}_type.Equal[GROUP]}) {
                 | Raid Buffing, this will walk through raid
-                /for r 1 to ${arr_raidLeaders.Size}
-                    /if (${arr_raidLeaders[${r}].NotEqual[NULL]}) {
-                        /echo \ayCasting \agGROUP \aybuff on \ag${arr_raidLeaders[${r}]}
-                        /if (${Target.Name.NotEqual[${arr_raidLeaders[${r}]}]}) /call TrueTarget ${Spawn[pc ${arr_raidLeaders[${r}]}].ID}
+                /for r 1 to ${arr_raid_groupLeaders.Size}
+                    /if (${arr_raid_groupLeaders[${r}].NotEqual[NULL]}) {
+                        /echo \ayCasting \agGROUP \aybuff on \ag${arr_raid_groupLeaders[${r}]}
+                        /if (${Target.Name.NotEqual[${arr_raid_groupLeaders[${r}]}]}) /call TrueTarget ${Spawn[pc ${arr_raid_groupLeaders[${r}]}].ID}
                         /call MQ2Cast "${BUFFTARGETED_${i}}"
                     }       
                 /next r
-            } else  /if (${BUFFTARGETED_${i}_Type.Equal[SINGLE]}) {
+            } else  /if (${BUFFTARGETED_${i}_type.Equal[SINGLE]}) {
                 | Single Target Buffing in the raid, look at groups and see if a target is in each
                 | Note it is probably unlikely that a SINGLE type buff will apply to ALL, but instead likely to be MT
                 | or a subset of classes
                 /for r 1 to ${Raid.Members}
                     | we may not be able to query the class from the raid member, we might need to dquery
-                    /if (${Select[${Raid.Member[${r}].Class.ShortName},${BUFFTARGETED_${i}_Targets}]} || ${BUFFTARGETED_${i}_Targets.Equal[ALL]} || (${BUFFTARGETED_${i}_Targets.Equal[MT]} && ${Raid.Member[${r}].ID} == ${int_MTID})) {
+                    /if (${Select[${Raid.Member[${r}].Class.ShortName},${BUFFTARGETED_${i}_targets}]} || ${BUFFTARGETED_${i}_targets.Equal[ALL]} || (${BUFFTARGETED_${i}_targets.Equal[MT]} && ${Raid.Member[${r}].ID} == ${int_MTID})) {
                         /echo \ayCasting \agSINGLE \aybuff on \ag${Raid.Member[${r}].Name}
                         /call TrueTarget ${Raid.Member[${r}].ID}
                         /call MQ2Cast "${BUFFTARGETED_${i}}"
@@ -460,7 +458,7 @@ Sub chkTargetedBuffs(string _targetType,string _targetName, bool _forced)
 |; = _enabled|_allowRaid|_allowGroup|_automatic
 |settings=TRUE|TRUE|TRUE|FALSE
 
-|; =_buff|_use|_targetType[SINGLE|GROUP]|_gem|_classes
+|; =_buff|_enabled|_targetType[SINGLE|GROUP]|_gem|_classes
 |BUFF_1="Panoply of Vie"|TRUE|SINGLE|5|MT
 Sub chkCombatBuffs
     /if (!${int_combatBuffs_total} || !${bln_combatBuffs_enabled}) /return
@@ -472,29 +470,32 @@ Sub chkCombatBuffs
     /declare originalTargetID   int local 0
     /if (${Target.ID}) /varset originalTargetID ${Target.ID}
 
-    |_buff|_use|_targetType[SINGLE|GROUP]|_gem|_classes
+    |_buff|_enabled|_targetType[SINGLE|GROUP]|_gem|_classes
     /for i 1 to ${int_combatBuffs_total}
-        | check raid using BUFFCOMBAT_${i}_Targets which can be [(classes) WAR,ROG,BRD,MNK,BER||MT||NAMELIST]
+        /if (!${Spell[${BUFFCOMBAT_${i}}].ID}) /return
+        | check raid using BUFFCOMBAT_${i}_targets which can be [(classes) WAR,ROG,BRD,MNK,BER||MT||NAMELIST]
         /if (${bln_combatBuffs_allowRaid}) {
             /for r 1 to ${Raid.Members}
-                /if (${Select[${Raid.Member[${r}].Class.ShortName},${BUFFCOMBAT_${i}_Targets}]} || ${BUFFCOMBAT_${i}_Targets.Equal[ALL]} || (${BUFFCOMBAT_${i}_Targets.Equal[MT]} && ${Raid.Member[${r}].ID} == ${int_MTID})) {
+                /if (${Select[${Raid.Member[${r}].Class.ShortName},${BUFFCOMBAT_${i}_targets}]} || ${BUFFCOMBAT_${i}_targets.Equal[ALL]} || (${BUFFCOMBAT_${i}_targets.Equal[MT]} && ${Raid.Member[${r}].ID} == ${int_MTID})) {
                     | Check to see if the target has the buff already
                     /dquery ${Raid.Member[${r}].Name} -q "Me.Buff[${BUFFCOMBAT_${i}}].Duration"  -o foundDuration
                     /delay 20 ${DanNet.Q.Received}
-                    /if (${foundDuration}) /goto :next_buff
+                    /if (${foundDuration}) /continue
+                    /echo \awCombatBuff \ao${BUFFCOMBAT_${i}} \awfound applicable target \ag${Raid.Member[${r}].Name}
                     /call TrueTarget ${Raid.Member[${r}].ID}
-                    /call MQ2Cast "${BUFFCOMBAT_${i}}" ${int_cast_default_gem} RunPriorityEvents
+                    /call MQ2Cast "${BUFFCOMBAT_${i}}" gem${int_cast_default_gem} RunPriorityEvents
                 }
             /next r
         } else /if (${bln_combatBuffs_allowGroup}) {
             /varcalc g ${Group.GroupSize} - 1
             /for r 0 to ${g} 
-                /if (${Select[${Group.Member[${r}].Class.ShortName},${BUFFTARGETED_${i}_Targets}]} || ${BUFFTARGETED_${i}_Targets.Equal[ALL]} || (${BUFFCOMBAT_${i}_Targets.Equal[MT]} && ${Group.Member[${r}].ID} == ${int_MTID})) {
+                /if (${Select[${Group.Member[${r}].Class.ShortName},${BUFFCOMBAT_${i}_targets}]} || ${BUFFCOMBAT_${i}_targets.Equal[ALL]} || (${BUFFCOMBAT_${i}_targets.Equal[MT]} && ${Group.Member[${r}].ID} == ${int_MTID})) {
                     /dquery ${Group.Member[${r}].Name} -q "Me.Buff[${BUFFCOMBAT_${i}}].Duration"  -o foundDuration
                     /delay 20 ${DanNet.Q.Received}
-                    /if (${foundDuration}) /goto :next_buff
+                    /if (${foundDuration}) /continue
+                    /echo \awCombatBuff \ao${BUFFCOMBAT_${i}} \awfound applicable target \ag${Group.Member[${r}].Name}
                     /call TrueTarget ${Group.Member[${r}].ID}
-                    /call MQ2Cast "${BUFFCOMBAT_${i}}" ${int_cast_default_gem} RunPriorityEvents
+                    /call MQ2Cast "${BUFFTARGETED_${i}}" gem${int_cast_default_gem} RunPriorityEvents
                 }
             /next r
         }
@@ -516,7 +517,7 @@ Sub chkCombatBuffs
  ----------------------------
 **|
 
-Sub EVENT_Buffing_Buff_Remove(_line, _chatSender, _eventParams)
+Sub EVENT_Buffing_Buff_Remove(string _line, string _sender, string _eventParams)
 	| Note these Buffs need to replace single quote with pipe due to chat mangling quotes: eg Brell|s Brawny Bulwark
 	/declare buffToRemove string local ${_eventParams.Arg[1,-]}
 	/echo \awEvent Remove Buff called: ${_eventParams} -> ${buffToRemove}
@@ -538,7 +539,7 @@ Sub Buffing_Buff_Remove(_badBuff)
 /return
 
 
-Sub EVENT_Buffing_Buff_RemoveAll(_line, _chatSender, _eventParams)
+Sub EVENT_Buffing_Buff_RemoveAll(string _line, string _sender, string _eventParams)
 	/call Buffing_Buff_RemoveAll
 	/doevents flush Buffing_Buff_RemoveAll
 /return
@@ -559,7 +560,7 @@ Sub Buffing_Buff_RemoveAll
  Will attempt to remove defined buff or, if all buffs is called - all buffs currently on character.
  ----------------------------
 **|
-Sub EVENT_Buffing_DS_Disable(_line, _sender, _eventParams)
+Sub EVENT_Buffing_DS_Disable(string _line, string _sender, string _eventParams)
 	/call RemoveDS
 /return
 
@@ -581,7 +582,7 @@ Sub RemoveDS
 /return 
 
 
-Sub EVENT_Buffing_DS_Enable(_line, _sender, _eventParams)s
+Sub EVENT_Buffing_DS_Enable(string _line, string _sender, string _eventParams)s
 	/varset bln_buffs_damageshields TRUE
 	/if (${Me.Class.ShortName.Equal[BRD]}) {
 		/echo \aoTurning on ${str_savedMedley} Medley
@@ -593,3 +594,16 @@ Sub EVENT_Buffing_DS_Enable(_line, _sender, _eventParams)s
 	/doevents flush Buffing_DS_Enable
 /return
 
+Sub EVENT_DOSHRINK(string _line, string _sender, string _eventParams)
+    /if (!${Select[${Me.Class.ShortName},BST,SHM]}) /return
+	/echo \ay doShrinkEventCalled
+	/memspellset shrink
+	/declare i int local 0
+	/for i 0 to 5
+		/call TrueTarget ${Group.Member[${i}].ID}
+		/delay 5
+		/call MQ2Cast "Shrink" gem1 5s
+		/delay 10
+	/next i
+	/memspellset default
+/return

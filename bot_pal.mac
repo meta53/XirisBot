@@ -122,7 +122,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 			
 			|-- std library (burns/aa/clicks)
 			/call chkAA
-			/call chkBurn
+			/call chkBurns
 			/call chkCryActive
 			/call chkClicky
 
@@ -154,21 +154,21 @@ Sub chkUtils
 	/varset timer_check_utilities 20s
 /return
 
-Sub EVENT_STUNMOB(_line, _chatSender, _eventParams)
+Sub EVENT_STUNMOB(string _line, string _sender, string _eventParams)
 	/echo \ayI should stun this mob
 	/call TrueTarget(${_eventParams.Arg[1, ]})
 	/call chkStun TRUE
 	/doevents flush STUNMOB
 /return
 
-Sub EVENT_STUNLOCK(_line, _chatSender, _eventParams)
+Sub EVENT_STUNLOCK(string _line, string _sender, string _eventParams)
 	/echo \aoI am Stun Locking this mob
 	/call TrueTarget(${_eventParams.Arg[1, ]})
 	/call chkStunLock
 	/doevents flush STUNLOCK
 /return
 
-Sub EVENT_STUNSTOP(_line, _chatSender, _eventParams)
+Sub EVENT_STUNSTOP(string _line, string _sender, string _eventParams)
 	/echo \agI am no lnger Stun Locking the mob
 	/call chkStunLockStop
 	/doevents flush STUNLOCKSTOP

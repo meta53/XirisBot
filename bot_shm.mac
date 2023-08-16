@@ -106,10 +106,10 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 			/call RunAllEvents
 
 			|-- debuff lib
-			/if (${${DEBUFF_Total}}) /call chkDebuffsOnSingleTarget ${int_targetID}
+			/if (${${DEBUFF_total}}) /call chkDebuffsOnSingleTarget ${int_targetID}
 			
 			|-- class specific
-			/if (${Me.Pet.ID}) /call chkPetAttack
+			/if (${Pet.ID}) /call chkPetAttack
 			/if (${int_cmbtBuffTotal})	/call cmbtBuffGRP
 			
 			|-- dps library (priest)
@@ -118,7 +118,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 			
 			|-- std library (burns/aa/clicks)
 			/call chkAA
-			/call chkBurn
+			/call chkBurns
 			/call chkClicky
 
 			|-- verify target status
@@ -177,7 +177,7 @@ Sub chkUtils
 	/varset timer_check_utilities 20s
 /return
 
-Sub EVENT_DOSHRINK(_line, _chatSender, _eventParams)
+Sub EVENT_DOSHRINK(string _line, string _sender, string _eventParams)
 	/echo \ay doShrinkEventCalled
 	/if (${FindItemCount[Umbracite Swarm Orb]}) {
 		/echo \agShrinking

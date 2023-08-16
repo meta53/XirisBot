@@ -31,7 +31,7 @@ Sub Event_Timer(Timer,OriginalValue)
 #event InnyDoom "#*#You feel a sense of doom upon you.#*#"
 
 Sub Event_InnyDoom
-    /if (${AnnounceChannel.NotEqual[NULL]}) /docommand /${AnnounceChannel} Inny wants to DT me!
+    /if (${str_announce_channel.NotEqual[NULL]}) /docommand /${str_announce_channel} Inny wants to DT me!
     /while ( ${Me.Song[Doom].ID} && ${Me.State.NotEqual[HOVER]} ) {
         /bc -- Need Cure for Doom --
         /delay 2s ${Spawn[Cleansing Aura].ID}

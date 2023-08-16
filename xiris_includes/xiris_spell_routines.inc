@@ -169,38 +169,22 @@ Sub xbot_initialize_spellRoutines
 /return
 
 
-| Note the _token must be a string "song||alt aa name||item name"
-Sub MQ2Medley(string _token, string _type, int _targetID, bool _interrupt)
-    
-    /declare argstring string local "${_token}" -targetid|${_targetID}
-    /if (${_interrupt}) /varset argstring "${_token}" -interrupt -targetid|${_targetID}
-    /declare castTime int  local
+| Note the _medley must be a string of the song name, aa name, or item name
+| Rewriting this nonsense
+| "[Harmony of Sound|Pendant of Discord|Blade Dance]",[SONG|ITEM|AA],214,TRUE 
+Sub MQ2Medley(string _medley, string _type, int _targetID, bool _interrupt)
 
-    /echo \aoMQ2Medley \ag${_type}\aw,\ao ${_token}\aw, \ao${_targetID}\aw, \ao${_interrupt}  
-	/echo \at/medley queue \ay${argstring}
+	/declare str_bardCasting string local queue "${_medley}"
+	/if (${_interrupt}) /varset str_bardCasting ${str_bardCasting} -interrupt
 
-    /if (${_type.NotEqual[ITEM]}) {
-        /varcalc castTime (${Spell[${_token}].CastTime} / 100)+20
-        /medley queue ${argstring}
-        /delay ${castTime}
-    } else {
-		/if (${FindItem[${_token}].TimerReady} > 0) /return 'CLICK_NOTREADY'
-        /autoinv
-        /varcalc castTime (${FindItem[${_token}].CastTime} / 100)+20
-        |/echo \awItem! "${_token}" ${FindItem[${_token}].CastTime} ${castTime}
-        | if the item is not in wornslot or slot 30
-        | Check to see if worn, if so we can just click
-        | MQ2Exchange requries ITEMNAME
-        /if (${FindItem[${_token}].InvSlot} <=30) {
-            /medley queue ${argstring}
-        } else {
-            | Swap the item with whatever is in slot 30
-            /exchange "${_token}" 30
-            /delay 10
-            /medley queue ${argstring}
-            /if (${_interrupt}) /delay ${castTime}
-        }
-    }
+    |/echo \aoMQ2Medley \awToken \ag${_medley}\aw, Type\ag${_type}\aw, Target\ao${_targetID}\aw, Interrupt\ao${_interrupt}  
+	/echo \at/medley \ay${str_bardCasting} \at(slot:\ay${FindItem[${_medley}].InvSlot}\at)
+
+	| if the item is not ready 
+	/if (${_type.Equal[ITEM]}) {
+		/if (${FindItem[${_medley}].TimerReady} > 0) /return 'CLICK_NOTREADY'
+	}
+	/medley ${str_bardCasting}
 /return 'CAST_SUCCESS'
 
 

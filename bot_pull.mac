@@ -15,7 +15,7 @@ REVISION HISTORY
 	12.01.21	xiris	Added some tweaked events around pulling (NOLOS/TOOCLOSE) to handle weird edge cases
 	04.10.22	xiris	Normalized arguments
 	05.24.22	xiris	Reworked the pulling sub - gained performance
-	05.28.22	xiris	Refactored /docommand /${cmdChannel} to be consistent globally
+	05.28.22	xiris	Refactored /docommand /${str_command_channel} to be consistent globally
 	06.13.22	xiris 	Changed things that were explicit commands to event requests so we don't
 						rely on bcaa (and can use rsay or gsay) and was able to remove announce Channel
 	12.19.22	xiris   Tweaked the incamp target acquisition to ignore alert 1
@@ -84,7 +84,7 @@ Sub Main(int _pull_dist, string _channel, string _campName, bool _useDownFlags, 
 			/if (${bln_looting}) /call chkLoot
 			/call resetCamp
 			/call RefreshXTarget
-			/docommand /${cmdChannel} Disengage
+			/docommand /${str_command_channel} Disengage
 			/if (${bln_looting}) /call chkLoot
 			/if (!${bln_looting}) /hidecorpse npc
 		}
@@ -103,12 +103,12 @@ Sub Main(int _pull_dist, string _channel, string _campName, bool _useDownFlags, 
 /return
 
 Sub chkZone
-	/if (${Zone.ShortName.NotEqual[${SZ_shortName}]}) {
-		/if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) {
+	/if (${Zone.ShortName.NotEqual[${str_zone_initial}]}) {
+		/if (${Zone.ShortName.Equal[${str_zone_bound}]}) {
 			/delay 30s
-			/if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) {
-				/docommand /${cmdChannel}  I died! GTFO! ${Time.Time24}
-				/docommand /${cmdChannel} firetl
+			/if (${Zone.ShortName.Equal[${str_zone_bound}]}) {
+				/docommand /${str_command_channel}  I died! GTFO! ${Time.Time24}
+				/docommand /${str_command_channel} firetl
 				/delay 45s
 				/dga /notify ConfirmationDialogBox CD_Yes_Button leftmouseup
 				/dga /notify LargeDialogWindow LDW_YesButton leftmouseup
@@ -200,10 +200,10 @@ Sub getTarget
 
 						/if (${bln_increment}) {
 							/varset int_currentCamp ${int_currentCamp}+1
-							/docommand /${cmdChannel} Incrementing Camp to ${int_currentCamp}
+							/docommand /${str_command_channel} Incrementing Camp to ${int_currentCamp}
 						} else {
 							/varset int_currentCamp ${int_currentCamp}-1
-							/docommand /${cmdChannel} Decrementing Camp to ${int_currentCamp}
+							/docommand /${str_command_channel} Decrementing Camp to ${int_currentCamp}
 						}
 					
 						/call moveCamp ${int_currentCamp}
@@ -303,7 +303,7 @@ Sub chkTargetValid
 
 Sub setCamp
 	/echo \awSetting to Camp \ag${str_campName}
-	/docommand /${cmdChannel} NavToWP ${str_campName}
+	/docommand /${str_command_channel} NavToWP ${str_campName}
 	/navigate RecordWaypoint ${str_campName}
 
 	
@@ -319,7 +319,7 @@ Sub setCamp
 
 Sub resetCamp
 	/echo \awResetting to Camp \ag${str_campName}
-	/docommand /${cmdChannel} NavToWP ${str_campName}
+	/docommand /${str_command_channel} NavToWP ${str_campName}
 	| -- don't run self back to camp its not necessary run to my pull spot instead
 	/declare int_returnCount int local 0
 	/if (${Navigation.PathExists[wp ${str_campName}]}) {
@@ -341,7 +341,7 @@ Sub resetCamp
 
 Sub moveCamp(int _campNumber) 
 	/echo \awMoving to Camp Number \ag${str_campName}
-	/docommand /${cmdChannel} NavToWP camp${_campNumber}
+	/docommand /${str_command_channel} NavToWP camp${_campNumber}
 	:moveCampNavLoop
 		/echo moveCampNavLoop
 		/if (${Navigation.Active}) {
@@ -588,8 +588,8 @@ Sub killTarget
 	|--issue kill command
 	/varcalc int_killCount ${int_killCount}+1
 
-	/docommand /${cmdChannel} KillMob ${Target.ID} "${Target.Name}" ${Time.Time24}
-	/call ResetCastTimers
+	/docommand /${str_command_channel} KillMob ${Target.ID} "${Target.Name}" ${Time.Time24}
+	/call resetCastTimers
 	/face fast
 	/attack on
 	/g Called Kill ${Target.ID} ${Target.Name} ${Time.Time24}
@@ -682,9 +682,9 @@ Sub chkUtils
 		/call chkComponentsAll
 		/if (!${timer_allBuffs} && ${bln_usePull}) {
 			/echo \ayRequesting Buffs @${Time.Time24}
-			/docommand /${cmdChannel} DoHideCorpses
+			/docommand /${str_command_channel} DoHideCorpses
 			/delay 5s
- 			/docommand /${cmdChannel} DoRaidBuffs ALL
+ 			/docommand /${str_command_channel} DoRaidBuffs ALL
 			/echo \awBuffs Requested, setting timer to 45m, and waiting 120s!
 			/varset timer_allBuffs 45m
 			:buffDelay
@@ -987,10 +987,10 @@ Sub variant_initialize(int _pull_dist, string _channel, string _campName, bool _
 	/declare useGroup	bool	outer	FALSE
 	
 	|--command channel setup
-	/if (!${Defined[cmdChannel]}) /declare cmdChannel string	outer	dga
-	/varset cmdChannel dga
-	/if (${Defined[_channel]}) /varset cmdChannel ${_channel}
-	/echo 	cmdChannel is ${cmdChannel}
+	/if (!${Defined[str_command_channel]}) /declare str_command_channel string	outer	dga
+	/varset str_command_channel dga
+	/if (${Defined[_channel]}) /varset str_command_channel ${_channel}
+	/echo 	str_command_channel is ${str_command_channel}
 
 	|--camp counts
 	/declare int_currentCamp		int		outer	1

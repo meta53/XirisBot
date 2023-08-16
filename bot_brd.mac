@@ -53,7 +53,7 @@ Sub Events_BRD
 	/doevents BardSlow
 /return 
 
-Sub EVENT_Sing(_line, _sender, _eventParams)	
+Sub EVENT_Sing(string _line, string _sender, string _eventParams)	
 	/call SingSongs ${str_currentMedley}
 	/doevents flush Sing
 /return
@@ -65,7 +65,7 @@ Sub SingSongs(string _type)
 	/medley ${_type}
 /return
 
-Sub EVENT_Hush(_line, _sender, _eventParams)
+Sub EVENT_Hush(string _line, string _sender, string _eventParams)
 	/medley stop
 	/doevents flush Hush
 /return
@@ -146,7 +146,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 
 			|-- std library (burns/aa/clicks)
 			/call chkAA
-			/call chkBurn
+			/call chkBurns
 			/call chkClicky
 			
 			|-- verify target status

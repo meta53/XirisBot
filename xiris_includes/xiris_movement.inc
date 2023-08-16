@@ -52,25 +52,27 @@ Sub xbot_initialize_movement
 	/call initEvents_Movement
 /return
 
-SUB EVENT_Follow(_line, _chatSender, _eventParams)
-	/if (${_chatSender.Equal[${Me.CleanName}]}) /return
-	/declare followType 	string 	local 	${If[${_eventParams.Find[/type|NAV]},NAV,STICK]}
-	/call verifyEvent "${_chatSender}" "${_eventParams}"
-	/if (${Bool[${Macro.Return.Arg[2,_]}]} && ${Bool[${Macro.Return.Arg[3,_]}]} && ${Bool[${Macro.Return.Arg[4,_]}]}) {
-		/call StartFollowing ${_chatSender} ${followType}
-	}
+SUB EVENT_Follow(string _line, string _sender, string _eventParams)
 	/doevents flush Follow
+	/echo followin ${_sender} ${_eventParams}
+	/if (${_sender.Equal[${Me.CleanName}]}) /return
+	/declare followType 	string 	local 	${If[${_eventParams.Find[/type|NAV]},NAV,STICK]}
+	/call verifyEvent "${_sender}" "${_eventParams}"
+	/if (${Bool[${Macro.Return.Arg[2,_]}]} && ${Bool[${Macro.Return.Arg[3,_]}]} && ${Bool[${Macro.Return.Arg[4,_]}]}) {
+		/call StartFollowing ${_sender} ${followType}
+	}
+	
 /return
 
 
-SUB EVENT_Stop(_line, _chatSender, _eventParams)
+SUB EVENT_Stop(string _line, string _sender, string _eventParams)
 	| -Check if I'm bln_following.
 	/if (${bln_following}) /call StopFollowing
 	/doevents flush Stop
 /return
 
 
-SUB EVENT_NavigateWP(_line, _chatSender, _eventParams)
+SUB EVENT_NavigateWP(string _line, string _sender, string _eventParams)
 	/echo \ayNavigate to waypoint: \ag${_eventParams}
 	/declare wp string local ${_eventParams.Arg[1]}
 	/nav wp ${wp}
@@ -84,7 +86,7 @@ Sub StartFollowing(string _leader, string _followType)
 	/if (!${Me.Standing}) /stand on
 	| -Check Range
 	/if (${Spawn[=${_leader}].Distance} > ${int_maxFollowDistance}) {
-		/docommand /${cmdChannel} [${str_followTarget}] is too far away.
+		/docommand /${str_command_channel} [${str_followTarget}] is too far away.
 	} else {
 		/echo \ao StartFollowing, so call disengage
 		/call Disengage
@@ -92,7 +94,7 @@ Sub StartFollowing(string _leader, string _followType)
 		/if (${_followType.Equal[NAV]} || (${_followType.NotEqual[NAV]} && ${Spawn[=${_leader}].LineOfSight})) {
 			/call AquireFollow ${_followType} ${_leader}
 		} else {
-			/docommand /${cmdChannel} _followType != NAV || STICK cannot see [${_leader}]
+			/docommand /${str_command_channel} _followType != NAV || STICK cannot see [${_leader}]
 		}
 	} 
 /return
@@ -159,3 +161,99 @@ Sub MoveToPosition(int _y, int _x, int _z, int _adjustment, bool _warp)
 	/if (${_warp} && ${gbl_bln_useWarp}) /warp loc ${_y} ${_x} ${_z}
 	/deletevar timer_movement
 /return 
+
+|#TODO #5
+
+SUB verifyEvent(sring _sender, string _eventParams)
+	/declare userValidated 	bool local FALSE
+	/declare includeBot 	bool local TRUE
+	/declare inZone 		bool local FALSE
+	/declare inRange 		bool local FALSE
+	/declare inAssistRange 	bool local FALSE
+	/declare sender         string local ${_sender}
+
+	| Set sender by parsing the _sender
+	/if (${_sender.Left[1].Compare[ ]}<0) /varset sender ${_sender.Right[-2].Left[-1]}
+	/if (${_sender.Equal[You]}) /varset sender ${Me.CleanName}
+	/if (${_sender.Equal[MQ2]}) /varset sender ${Me.CleanName}
+
+	| Note if this is sent by dannet as a /dgt (instead of box chat /bc)
+	| Then the sender will be like xiris (all)
+ 	/if (${_sender.Find[(]})  {
+		/varset sender ${_sender.Arg[1,(]}
+	}
+
+	| -Validate _sender.
+	/varset userValidated TRUE
+	
+	| -Check inZone
+	/if (${SpawnCount[pc =${sender}]}) /varset inZone TRUE
+	
+	| -Check inRange
+	/if (${SpawnCount[pc =${sender} radius ${int_maxFollowDistance}]}) /varset inRange TRUE
+	|/echo \awVerifyEvent Sender:\ag${sender} \awParams: \ag${_eventParams}
+
+	| -Check for /only|
+	/if (${_eventParams.Find[/only|]}) {
+		/varset includeBot FALSE
+		/call argueString only| "${_eventParams}"
+		/call check_selectedBots "${Macro.Return}" "${sender}"
+		/if (${Macro.Return}) /varset includeBot TRUE
+	}
+		
+	| -Check for /exclude|
+	/if (${_eventParams.Find[/exclude|]}) {
+		/call argueString exclude| "${_eventParams}"
+		/call check_selectedBots "${Macro.Return}" "${sender}"
+		/if (${Macro.Return}) /varset includeBot FALSE
+	}
+	
+	| -Check for /not|
+	/if (${_eventParams.Find[/not|]}) {
+		/call argueString not| "${_eventParams}"
+		/call check_selectedBots "${Macro.Return}" "${sender}"
+		/if (${Macro.Return}) /varset includeBot FALSE
+	}
+	
+	| -Check for /include|
+	/if (${_eventParams.Find[/include|]}) {
+		/call argueString include| "${_eventParams}"
+		/call check_selectedBots "${Macro.Return}" "${sender}"
+		/if (${Macro.Return}) /varset includeBot TRUE
+	}
+	/echo \ayReturning Sender:\ag${sender} \awValid?\ag${userValidated} \awIncluded?\ag${includeBot} \awInZone?\ag${inZone} \awInRange?\ag${inRange}
+/return ${sender}_${userValidated}_${includeBot}_${inZone}_${inRange}
+
+| See if the bot is in the return from the arguestring parser
+SUB check_selectedBots(_selectedBots, _sender)
+	/declare botSelected bool local FALSE
+	/if (${_selectedBots.Find[ ]}) /varset _selectedBots ${_selectedBots.Replace[ ,,]}
+	/if (${Select[priests,${_selectedBots}]} && ${Select[${Me.Class.ShortName},${PriestClasses}]} || ${Select[healers,${_selectedBots}]} && ${Select[${Me.Class.ShortName},${PriestClasses}]} || ${Select[ranged,${_selectedBots}]} && ${Select[${Me.Class.ShortName},${RangedClasses}]} || ${Select[casters,${_selectedBots}]} && ${Select[${Me.Class.ShortName},${CasterClasses}]} || ${Select[melee,${_selectedBots}]} && ${Select[${Me.Class.ShortName},${MeleeClasses}]} || ${Select[me,${_selectedBots}]} && ${_sender.Equal[${Me.CleanName}]} || ${Select[${Me.Class},${_selectedBots}]} || ${Select[${Me.Class.ShortName},${_selectedBots}]} || ${Select[${Me.CleanName},${_selectedBots}]} || ${Select[all,${_selectedBots}]} || ${Select[group,${_selectedBots}]} && ${Me.CleanName.Equal[${_sender}]} || ${Select[group,${_selectedBots}]} || ${Select[zone,${_selectedBots}]} && ${SpawnCount[pc ${_sender}]}) /varset botSelected TRUE
+	
+/return ${botSelected}
+
+
+| Evaluate and Argument string in E3 Format eg: \only|CLR,DRU,SHM
+SUB argueString(WhatToFind, givenData)
+	|/echo \aoEvaluating Arguments \aw==> \ag${WhatToFind}  \aw=> \ay${givenData}
+	/declare i 			int 	local 1
+	/declare foundData 	string 	local NULL
+	
+	:nextArg
+	/if (${givenData.Find[/]}) {
+		/if (${givenData.Arg[${i},/].Find[${WhatToFind}]}) {
+			/varset foundData ${givenData.Arg[${i},/].Arg[2,|]}		
+		} else {
+			/varcalc i ${i} + 1
+			/if (${givenData.Arg[${i},/].Length}) /goto :nextArg
+		}
+	} else {
+		/if (${givenData.Arg[${i}, ].Find[${WhatToFind}]}) {
+			/varset foundData ${givenData.Arg[${i}, ].Arg[2,|]}
+		} else {
+			/varcalc i ${i} + 1
+			/if (${givenData.Arg[${i}, ].Length}) /goto :nextArg
+		}
+	}
+
+/return ${foundData}

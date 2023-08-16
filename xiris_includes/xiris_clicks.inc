@@ -14,7 +14,7 @@ Sub initEvents_Clicking
 /return 
 
 Sub Events_Clicking_Raid
-    /if (!${timer_check_clicks} && ${bln_engaged}) /call chkClicks
+    /if (!${timer_check_clicks} && ${bln_engaged} && ${bln_killing}) /call chkClicks
 /return 
 
 Sub xbot_initialize_clicking
@@ -43,7 +43,7 @@ Sub processClicks
     /if (!${Ini[INI_CHAR,CLICKS,settings].Arg[4,|]})  /varset int_click_stop      0
 
     /echo \a-w    Settings Processed: \awEnabled:\ag${bln_clicksEnabled} \awDelay:\ag${int_click_delay} \awStart:\ag${int_click_start} \awStop:\ag${int_click_stop}
-    |;_item|_type|_effect[OFFENSE|DEFENSE|HEAL]|_use|_namedOnly|_startHP|_stopHP|_trigger
+    |;_item|_type|_effect[OFFENSE|DEFENSE|HEAL]|_enabled|_namedOnly|_startHP|_stopHP|_trigger
     | Note: Trigger is globally set to true for now. In future it will support the _effect type 
     /declare raw_click[20]       string  local   NULL
     /declare i                  int     local   0
@@ -59,14 +59,14 @@ Sub processClicks
         | Not null, set the values for the clicks
         /varcalc sz ${sz}+1
         /declare CLICK_${i}             string  outer   ${Ini[INI_CHAR,CLICKS,CLICK_${i}].Arg[1,|]}
-        /declare CLICK_${i}_Type        string  outer   ${Ini[INI_CHAR,CLICKS,CLICK_${i}].Arg[2,|]}
+        /declare CLICK_${i}_type        string  outer   ${Ini[INI_CHAR,CLICKS,CLICK_${i}].Arg[2,|]}
         /declare CLICK_${i}_Effect      string  outer   ${Ini[INI_CHAR,CLICKS,CLICK_${i}].Arg[3,|]}       
-        /declare CLICK_${i}_Use         bool    outer   ${Ini[INI_CHAR,CLICKS,CLICK_${i}].Arg[4,|]}
+        /declare CLICK_${i}_enabled         bool    outer   ${Ini[INI_CHAR,CLICKS,CLICK_${i}].Arg[4,|]}
         /declare CLICK_${i}_NamedOnly   bool    outer   ${Ini[INI_CHAR,CLICKS,CLICK_${i}].Arg[5,|]}
         /declare CLICK_${i}_Start       int     outer   ${Ini[INI_CHAR,CLICKS,CLICK_${i}].Arg[6,|]}
         /declare CLICK_${i}_Stop        int     outer   ${Ini[INI_CHAR,CLICKS,CLICK_${i}].Arg[7,|]}
         /declare CLICK_${i}_Trigger     bool    outer   ${Ini[INI_CHAR,CLICKS,CLICK_${i}].Arg[8,|]}
-         /echo \ao        CLICK[\ag${i}\ao]: \awName:\ag${CLICK_${i}} \awType:\ag${CLICK_${i}_Type} \awEffect:\ag${CLICK_${i}_Effect} \awEnabled:\ag${CLICK_${i}_Use} \awNamedOnly:\ag${CLICK_${i}_NamedOnly} \awStart:\ag${CLICK_${i}_Start} \awStop:\ag${CLICK_${i}_Stop} \awTrigger:\ag${CLICK_${i}_Trigger}
+         /echo \ao        CLICK[\ag${i}\ao]: \awName:\ag${CLICK_${i}} \awType:\ag${CLICK_${i}_type} \awEffect:\ag${CLICK_${i}_Effect} \awEnabled:\ag${CLICK_${i}_enabled} \awNamedOnly:\ag${CLICK_${i}_NamedOnly} \awStart:\ag${CLICK_${i}_Start} \awStop:\ag${CLICK_${i}_Stop} \awTrigger:\ag${CLICK_${i}_Trigger}
     /next i
 /return
 
@@ -96,11 +96,11 @@ Sub chkClicks
         | If the timer isn't ready, skip
 		/if (${FindItem[${CLICKY_${i}}].TimerReady} > 0) /goto :nextClick
         | Handle click types
-        /if (${CLICK_${i}_Type.Equal[OFFENSE]}) {
-            /if (!${bln_engaged} || (${CLICK_${i}_NamedOnly} && !${targetIsNamed}) || (${Target.PctHPs} > ${CLICK_${i}_Start} || ${Target.PctHPs} < ${CLICK_${i}_Stop}))  /goto :nextClick
-        } else /if (${CLICK_${i}_Type.Equal[DEFENSE]})
-            /if (!${bln_engaged} || (${CLICK_${i}_NamedOnly} && !${targetIsNamed}))  /goto :nextClick 
-        } else /if (${CLICK_${i}_Type.Equal[HEAL]})
+        /if (${CLICK_${i}_type.Equal[OFFENSE]}) {
+            /if (!${bln_engaged} || !${bln_killing} || (${CLICK_${i}_NamedOnly} && !${targetIsNamed}) || (${Target.PctHPs} > ${CLICK_${i}_Start} || ${Target.PctHPs} < ${CLICK_${i}_Stop}))  /goto :nextClick
+        } else /if (${CLICK_${i}_type.Equal[DEFENSE]})
+            /if (!${bln_engaged} || !${bln_killing} || (${CLICK_${i}_NamedOnly} && !${targetIsNamed}))  /goto :nextClick 
+        } else /if (${CLICK_${i}_type.Equal[HEAL]})
             /call TrueTarget ${Me.ID}
             /if ( (${Target.PctHPs} > ${CLICK_${i}_Start} || ${Target.PctHPs} < ${CLICK_${i}_Stop})) /return 
         }

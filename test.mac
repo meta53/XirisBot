@@ -23,60 +23,14 @@
 #include					xiris_includes/xiris_pets.inc
 
 #turbo 120
-#warning
+
 
 
 Sub Main 
     /mqclear
-	/declare float_startTime 	float	outer   ${EverQuest.Running}
-	/declare float_endTime   	float	outer   0
-	/declare float_processed 	float	outer   0
-    /declare int_MTID       	int     outer   ${Me.ID}
-	/declare str_MTName			string  outer 	${Me.CleanName}
-    /declare bln_engaged    	bool    outer   FALSE
-	/declare int_targetID		int     outer   ${Spawn[npc Teleporter].ID}
-    /declare int_sitRadius  	int     outer   80
-	/declare announceChannel	string  outer	dgt 	
-	/declare bln_tanking		bool 	outer	FALSE
-
-    /declare gbl_bln_useWarp    bool    outer   ${Ini[INI_COMMON,SETTINGS,useWarp,FALSE]}
-
-
-    /declare arr_raidLeaders[9] string outer NULL
-
-    | we might find this by looping through ${Raid.Member[${i}].GroupLeader} where i is 1-> ${Raid.Members} 
-    | determining if if GroupLeader is true, and if so, add them to arr_raidLeaders
-    /varset arr_raidLeaders[1] Xiris
-    /varset arr_raidLeaders[2] Xiria
-    /varset arr_raidLeaders[3] Xirea
-    /varset arr_raidLeaders[4] Xirin
-    /varset arr_raidLeaders[5] Xeqisa
-    /varset arr_raidLeaders[6] Xaeliea
-    /varset arr_raidLeaders[7] Xaexa
-    /varset arr_raidLeaders[8] Xaia
-    /varset arr_raidLeaders[9] Xepatia
-
-    /call xbot_initialize_dannet
-	/call xbot_initialize_spellRoutines
-    /call xbot_initialize_events
-	/call xbot_initialize_buffing
-	/call xbot_initialize_burning
-    /call xbot_initialize_casting
-	/call xbot_initialize_clicking
-    /call xbot_initialize_curing
-	/call xbot_initialize_exclusions
-	/call xbot_initialize_healing
-    /call xbot_initialize_looting
-    /call xbot_initialize_melee
-	/call xbot_initialize_movement
-	/call xbot_initialize_offtanking
-	/call xbot_initialize_pets
 	
+	/call xbot_initialize_common Xiris Xiria Xirea 85
 
-	/varset float_endTime ${EverQuest.Running}
-	/varcalc float_processed ${float_endTime} - ${float_startTime}
-	/echo \arSETUP COMPLETE \ay${float_processed}ms  \ag${Macro.MemUse}MB  \ao${Macro.Undeclared}
-	/call initEvents_Healing
     :MainLoop
 		/doevents
 		/if (${Me.Hovering} || ${Window[tradewnd].Open} || ${Window[lootwnd].Open}) /goto :MainLoop
@@ -87,77 +41,6 @@ Sub Main
         } else {
 			/call RunAllEvents
         }
-		/delay 10
         /goto :MainLoop
 /return 
 
-Sub initEvents_Common
-
-/return
-
-Sub Events_Common_Background
-
-/return
-
-Sub Events_Common_Raid
-
-/return 
-
-Sub Events_Common_Priority
-
-/return 
-
-
-Sub xbot_initialize_common(string _t1, string _t2, string _t3, int _tankHealPointOverride, string _strAutoAssistSettings) 
-	/echo \apInitialize: \aoCommon \aw-------------------------
-
-	|--[Base Settings]
-	/declare	str_command_channel		string	outer ${Ini[INI_COMMON,SETTINGS,cmdChannel,dga]}
-	/declare 	str_announce_channel	string	outer ${Ini[INI_COMMON,SETTINGS,announceChannel,dgt]}
-	/dnet 		fullnames 							  ${Ini[INI_COMMON,SETTINGS,dnet_fullNames,off]}
-
-	|--[Class/Grouping/Raid Settings]
-	/call setClassType
-	/declare 	str_class_type			string 	outer ${Macro.Return}
-	/declare 	str_raid_mode			string  outer DEFAULT
-	/call processRaidTemplate ${str_raid_mode}	FALSE
-	
-	
-
-
-
-/return
-
-Sub processRaidTemplate(string _template, bool _build)
-	/echo \awprocessRaidTemplate \ay${_template} \a-y${_build}
-	/declare test 				string	local	NULL
-	| Make sure the template is enumerated
-	/varset test	${Ini[INI_RAID,SETTINGS,Templates]}
-	/if (!${test.Find[_template]}) /multiline ; /docommand /${str_announce_channel} Raid Template ${_template} NOT Found, Aborting ; /return
-
-	| Since this method can be called more than once, we want to kill previous arrays
-	/if (${Defined[arr_raid_diclerics]}) 	/deletevar arr_raid_diclerics
-	/if (${Defined[arr_raid_leaders]})		/deletevar arr_raid_leaders
-
-	/declare int_raidCount		int		local	${Ini[INI_RAID,RAID_${_template},RaidCount]}
-	/declare int_groupCount		int		local	${Ini[INI_RAID,RAID_${_template},GroupCount]}
-	/declare r                  int		local	0
-	/declare g					int  	local	0
-
-	/declare arr_raid_${r}_diclerics[${}]
-
-
-	/if (${_build}) /call buildRaidByTemplate ${_template}
-/return
-
-Sub buildRaidByTemplate(string _template)
-
-/return
-
-Sub setClassType
-	/if (${Select[${_shortName},CLR,DRU,SHM]})		/return PRIEST
-	/if (${Select[${_shortName},NEC,WIZ,MAG,ENC]})	/return CASTER
-	/if (${Select[${_shortName},ROG,BER,MNK]})		/return MELEE_END
-	/if (${Select[${_shortName},BST,RNG,BRD]})		/return MELEE_MANA
-	/if (${Select[${_shortName},WAR,SHD,PAL]})		/return TANK	
-/return

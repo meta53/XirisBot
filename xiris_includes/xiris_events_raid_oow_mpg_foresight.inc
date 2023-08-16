@@ -403,7 +403,7 @@ Sub EVENT_ForesightPlatformSafe
 /return 
 
 Sub EVENT_ForesightDS
-	/docommand /${announceChannel} !!Evading DamageShield!!
+	/docommand /${str_announce_channel} !!Evading DamageShield!!
 	/doevents flush ForesightDS
 
 	| The dragorns will cast spell: 5698 Lacerating Aura 350pt DS
