@@ -175,7 +175,7 @@ Sub aggroByID(int _targetID)
 
 	/squelch /stick off
 	/squelch /stick front 20
-	/if (${Me.AbilityReady[Taunt]}) /taunt
+	/if (${Me.AbilityReady[Taunt]}) /doability taunt
 	/squelch /face fast
 	/if (!${Me.Combat}  && ${Target.ID}) {
 		/echo  \awaggroByID \ag Attacking 

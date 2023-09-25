@@ -616,12 +616,12 @@ Sub chkSpellMemorized(string _spell, bool _wait, string _gem)
 		/declare waitCount int local 0
 		:memwait
             /echo Waiting for ${_spell}
-			/delay 50 ${Me.SpellReady[${_spell}]}
+			/delay 60 !${Me.SpellReady[${_spell}]}
             /echo Spell Memorized
 			/if (${Me.SpellReady[${_spell}]}) {
                 /return
             } else {
-                /docommand /${announceChannel} There was a timeout error trying to memorize "${_spell}"
+                |/docommand /${announceChannel} There was a timeout error trying to memorize "${_spell}"
                 /return
             }
 		

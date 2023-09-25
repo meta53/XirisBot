@@ -106,7 +106,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 			|-- std library (burns/aa/clicks)
 			/call chkAA
 			/call chkBurn
-			/call chkCryActive
+			|/call chkCryActive
 			/call chkClicky
 
 			|-- verify target status

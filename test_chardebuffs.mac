@@ -1,0 +1,25 @@
+
+#define INI_CHAR        xiris_settings_character/BOT_${Me.Class.ShortName}_${Me.CleanName}.ini
+#define INI_COMMON      xiris_settings_global/xiris_settings_common.ini
+#include                xiris_includes/xiris_spell_routines.inc
+#include                xiris_includes/xiris_buffing.inc
+#include                xiris_includes/xiris_burn.inc
+#include                xiris_includes/xiris_common.inc
+#include                xiris_includes/xiris_curing.inc
+#include                xiris_includes/xiris_dannet.inc
+#include                xiris_includes/xiris_events.inc
+
+#turbo 120
+
+Sub Main
+    /mqclear
+    /declare int_MTID   int local ${Spawn[Xirin].ID}
+    /call processCureDebuffList
+    /call determineMyCureCounters
+
+    :mainloop 
+        /call determineMyCureCounters
+        /delay 5
+    /goto :mainloop
+/return
+

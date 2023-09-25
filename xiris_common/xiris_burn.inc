@@ -52,7 +52,7 @@ Sub EVENT_BurnOn
 	/if (!${bln_engaged}) /return
 	/echo \agEnabling \arBurn \agMode
 	/varset bln_burning TRUE
-	/varset bln_checkForCry TRUE
+	/varset bln_checkForCry FALSE
 	/doevents flush BurnOn
 /return
 
@@ -61,7 +61,7 @@ Sub EVENT_BurnOnAll
 	/if (!${bln_engaged}) /return
 	/echo \agEnabling \arBurn ALL \agMode
 	/varset bln_burning TRUE
-	/varset bln_checkForCry TRUE
+	/varset bln_checkForCry FALSE
 	/doevents flush BurnOnAll
 /return
 
@@ -81,7 +81,7 @@ Sub EVENT_BurnOn2
 		/echo \agEnabling \arBurn \agMode on CoHort \ao2
 		/varset bln_burning TRUE
 	}
-	/varset bln_checkForCry TRUE
+	/varset bln_checkForCry FALSE
 	/doevents flush BurnOn2
 /return
 
@@ -90,7 +90,7 @@ Sub EVENT_BurnOff
 	/varset bln_burning FALSE
 	/varset bln_checkForCry FALSE
 	/doevents flush BurnOff
-	/call chkCryActive
+	|/call chkCryActive
 /return
 
 |**

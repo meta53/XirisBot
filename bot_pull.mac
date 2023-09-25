@@ -80,7 +80,7 @@ Sub Main(int _pull_dist, string _channel, string _campName, bool _useDownFlags, 
 		/call chkZone
 		
 		|-- reset group to camp spot (leash) if its empty
-		/if (${SpawnCount[npc radius ${int_campRadius} zradius 25]} == 0) {
+		/if (${SpawnCount[npc radius ${int_campRadius} zradius ${int_zRadius}]} == 0) {
 			/if (${bln_looting}) /call chkLoot
 			/call resetCamp
 			/call RefreshXTarget
@@ -96,7 +96,7 @@ Sub Main(int _pull_dist, string _channel, string _campName, bool _useDownFlags, 
 			/if (${Target.Distance} > 20) /call pullTarget
 			/if (!${Target.ID}) /goto :getAndKill
 			/if (${Target.ID}) /call killTarget
-			
+			/docommand /${cmdChannel} BackOff
 			/echo We have killed ${int_killCount} mobs
 
 	/goto :MainLoop
@@ -151,11 +151,11 @@ Sub getTarget
 	:AcquireLoop
 		| set the vars like target validity to FALSE so we can check
 		/call setRSTVars
-		/echo SpawnCount: ${SpawnCount[npc radius ${int_campRadius} zradius 15]}
+		/echo SpawnCount: ${SpawnCount[npc radius ${int_campRadius} zradius ${int_zRadius}]}
 		/echo Target.ID: ${Target.ID}
 		|----------If I am getting smacked in camp, kill it
-		/if (${SpawnCount[npc radius ${int_campRadius} zradius 15]} > 0) {
-			/call TrueTarget ${NearestSpawn[npc radius ${int_campRadius} zradius 15].ID} 
+		/if (${SpawnCount[npc radius ${int_campRadius} zradius ${int_zRadius}]} > 0) {
+			/call TrueTarget ${NearestSpawn[npc radius ${int_campRadius} zradius ${int_zRadius}].ID} 
 			/if (${Target.ID} && ${Target.Type.Equal[NPC]} || ${Target.Type.Equal[PET]}) {
 				/echo Something is hitting me, killing it!
 				/varset bln_validTGT	TRUE
@@ -164,8 +164,8 @@ Sub getTarget
 			
 		} else {
 			|----------Alert 1 is never target, Alert 2 is hunter targets--------
-			/if (${SpawnCount[npc radius ${int_campRadius} zradius 15 noalert 1]} > 0) {
-				/call TrueTarget ${NearestSpawn[npc radius ${int_campRadius} zradius 15 noalert 1].ID} 
+			/if (${SpawnCount[npc radius ${int_campRadius} zradius ${int_zRadius} noalert 1]} > 0) {
+				/call TrueTarget ${NearestSpawn[npc radius ${int_campRadius} zradius ${int_zRadius} noalert 1].ID} 
 				/echo NPC in camp (R:${int_campRadius}), killing: Distance: ${Target.Distance3D}
 			} else /if (${SpawnCount[npc alert 2 radius ${int_alert2Radius} range ${int_minTLevel} ${int_maxTLevel} zradius ${int_zRadius} noalert 1]} > 0) {
 				/call TrueTarget ${NearestSpawn[npc alert 2 radius ${int_alert2Radius} range ${int_minTLevel} ${int_maxTLevel} zradius ${int_zRadius}  noalert 1].ID}
@@ -237,7 +237,7 @@ Sub getTarget
 Sub chkTargetValid
 	/echo chkTargetValid ${Target.Name}
 
-	/if (${Target.Type.NotEqual[NPC]}) {
+	/if (${Target.Type.NotEqual[NPC]} && ${Target.Type.NotEqual[PET]}) {
 		/echo INVALID Not NPC
 		/call setTGTAlert
 		/return
@@ -571,9 +571,9 @@ Sub killTarget
 		/if (${int_waited} > 15) /return
 		/if (!${Target.ID}) 	 /return
 		/if (${Target.Distance} > ${int_campRadius}) {
-			/if (${SpawnCount[npc radius ${int_campRadius}]} > 0) {
+			/if (${SpawnCount[npc radius ${int_campRadius} zradius ${int_zRadius}]} > 0) {
 				/echo \aySomething already in camp, changing target!
-				/call TrueTarget ${NearestSpawn[npc].ID}
+				/call TrueTarget ${NearestSpawn[npc radius ${int_campRadius} zradius ${int_zRadius}].ID}
 				/varset int_targetID ${Target.ID}
 				/varset str_targetName ${Spawn[id ${int_targetID}].Name}
 				/varset bln_engaged TRUE
@@ -596,13 +596,13 @@ Sub killTarget
 	/attack on
 	/g Called Kill ${Target.ID} ${Target.Name} ${Time.Time24}
 	
-	/if ((${SpawnCount[npc radius ${int_campRadius}]} > 1) && ${Me.Class.ShortName.Equal[SHD]}  && ${Me.SpellReady[${spell_aehate}]} ) {
+	/if ((${SpawnCount[npc radius ${int_campRadius} zradius ${int_zRadius}]} > 1) && ${Me.Class.ShortName.Equal[SHD]}  && ${Me.SpellReady[${spell_aehate}]} ) {
 		/echo ${Me.SpellReady[${spell_aehate}]} Cast ${spell_aehate} ${spell_aehateGem} 5s
 		/call MQ2Cast "${spell_aehate}" ${spell_aehateGem}
 	}
-	/if ((${SpawnCount[npc radius ${int_campRadius}]} > 1) && ${Me.Class.ShortName.Equal[WAR]} && ${Me.CombatAbilityReady[Area Taunt]}) {
+	/if ((${SpawnCount[npc radius ${int_campRadius} zradius ${int_zRadius}]} > 1) && ${Me.Class.ShortName.Equal[WAR]} && ${Me.CombatAbilityReady[Area Taunt]}) {
 		/doability "Area Taunt"
-	} else /if ((${SpawnCount[npc radius ${int_campRadius}]} > 1) && ${Me.Class.ShortName.Equal[WAR]} && ${Me.AltAbilityReady[Rampage]}) {
+	} else /if ((${SpawnCount[npc radius ${int_campRadius} zradius ${int_zRadius}]} > 1) && ${Me.Class.ShortName.Equal[WAR]} && ${Me.AltAbilityReady[Rampage]}) {
 		/call MQ2Cast "Rampage" alt
 	}
 	
@@ -624,7 +624,7 @@ Sub killTarget
 					/doability "${war_ca_hate_2}"
 				} 
 			} 
-			/if ((${SpawnCount[npc radius ${int_campRadius}]} > 1) && ${Me.Class.ShortName.Equal[SHD]}  && ${Me.SpellReady[${spell_aehate}]} ) {
+			/if ((${SpawnCount[npc radius ${int_campRadius} zradius ${int_zRadius}]} > 1) && ${Me.Class.ShortName.Equal[SHD]}  && ${Me.SpellReady[${spell_aehate}]} ) {
 				/echo ${Me.SpellReady[${spell_aehate}]} Cast ${spell_aehate} ${spell_aehateGem} 5s
 				/call MQ2Cast "${spell_aehate}" ${spell_aehateGem}
 			}
@@ -648,7 +648,7 @@ Sub chkCombatState
 	/if (${Target.Type.NotEqual[NPC]}) 		 /varset bln_TGTDead TRUE
 	/if (${Target.Type.Equal[Item]})		 /varset bln_TGTDead TRUE
 	/if (!${Target.ID}) 					 /varset bln_TGTDead TRUE
-	/if (${bln_TGTDead} && ${SpawnCount[npc radius ${int_campRadius}]} == 0 && ${bln_looting}) /call chkLoot
+	/if (${bln_TGTDead} && ${SpawnCount[npc radius ${int_campRadius} zradius ${int_zRadius}]} == 0 && ${bln_looting}) /call chkLoot
 /return
 
 
@@ -665,7 +665,7 @@ Sub chkCombatState
 **|
 
 Sub chkUtils
-	/if (${SpawnCount[npc radius ${int_campRadius}]} > 0) /return
+	/if (${SpawnCount[npc radius ${int_campRadius} zradius ${int_zRadius}]} > 0) /return
 	/varset bln_wait4Mana	FALSE
 	/varset	bln_wait4End	FALSE
 	/varset bln_wait4HP		FALSE
@@ -690,7 +690,7 @@ Sub chkUtils
 			/echo \awBuffs Requested, setting timer to 45m, and waiting 120s!
 			/varset timer_allBuffs 45m
 			:buffDelay
-			/delay 120s ${SpawnCount[npc radius ${int_campRadius}]}
+			/delay 120s ${SpawnCount[npc radius ${int_campRadius} zradius ${int_zRadius}]}
 
 			|--remove DS (summoning mobs will fuck you over)
 			/call RemoveDS
@@ -698,7 +698,7 @@ Sub chkUtils
 			
 		/if (${bln_wait4Mana} || ${bln_wait4End} || ${bln_wait4HP}) {
 			/echo Waiting for : mana: ${bln_wait4Mana} endurance: ${bln_wait4End} hitpoints: ${bln_wait4HP}
-			/if (${SpawnCount[npc radius ${int_campRadius}]} > 0) /goto :return
+			/if (${SpawnCount[npc radius ${int_campRadius} zradius ${int_zRadius}]} > 0) /goto :return
 			/if (!${Me.Sitting}) /sit on 
 			/delay 50
 			/goto :chkUtilLoop
@@ -752,7 +752,7 @@ Sub chkBuffs
 	/echo IDs    ENC:${int_groupENCidx} CLR: ${int_groupCLRidx} DRU: ${int_groupDRUidx} SHM:${int_groupSHMidx}
 	/echo Timers ENC:${timer_buffENC} CLR: ${timer_buffCLR} DRU: ${timer_buffDRU} SHM:${timer_buffSHM}
 	/echo ----
-	/if (${SpawnCount[npc radius ${int_campRadius}]} > 0) /return
+	/if (${SpawnCount[npc radius ${int_campRadius} zradius ${int_zRadius}]} > 0) /return
 	
 	/declare int_wait 		int 	local 0
 	/declare hasBuffLine 	bool 	local FALSE
@@ -928,7 +928,7 @@ sub setSupportIDs
 
 
 Sub chkComponents
-	/if (${SpawnCount[npc radius ${int_campRadius}]} > 0) /return
+	/if (${SpawnCount[npc radius ${int_campRadius} zradius ${int_zRadius}]} > 0) /return
 	/if (${FindItemCount[=${item_pull_clean}]}>=50) /return
 	/if (${strPullType.Equal[SPELL]}) /return
 
@@ -936,7 +936,7 @@ Sub chkComponents
 	
 	:chkComponent
 	/autoinv
-	/if (${SpawnCount[npc radius ${int_campRadius}]} > 0) /return
+	/if (${SpawnCount[npc radius ${int_campRadius} zradius ${int_zRadius}]} > 0) /return
 	
 	/if (${FindItemCount[=${item_pull_clean}]}>=200) /return
 	
@@ -1165,13 +1165,11 @@ Sub setAlerts
 	|-- Zone Specific Ignores
 	/if (${Zone.ShortName.Equal[dranik]}) {
 		/squelch /alert add 1 "Filligno the Slayer"
-	}
-	/if (${Zone.ShortName.Equal[kodtaz]}) {
+	} else /if (${Zone.ShortName.Equal[kodtaz]}) {
 		/squelch /alert add 1 "Kenra"
 		/squelch /alert add 1 "Gazak"
 		/squelch /alert add 1 "Maroley"
-	}
-	/if (${Zone.ShortName.Equal[riwwi]}) {
+	} else /if (${Zone.ShortName.Equal[riwwi]}) {
 		/squelch /alert add 1 "yunjo"
 		/squelch /alert add 1 "Kayin"
 		/squelch /alert add 1 "Turlini"
@@ -1181,9 +1179,9 @@ Sub setAlerts
 		/squelch /alert add 1 "Iniba"
 		/squelch /alert add 1 "Uxnikk"
 		/squelch /alert add 1 "Kekken"
-	}
-	/if (${Zone.ShortName.Equal[barindu]}) {
+	} else /if (${Zone.ShortName.Equal[barindu]}) {
 		/squelch /alert add 1 "yunjo"
+		/squelch /alert add 1 "Jomaj"
 		/squelch /alert add 1 "Chiaka"
 		/squelch /alert add 1 "Diru"
 		/squelch /alert add 1 "Abena"
@@ -1192,11 +1190,10 @@ Sub setAlerts
 		/squelch /alert add 1 "Gurru"
 		/squelch /alert add 1 "Udranda"
 		/squelch /alert add 1 "Aneuk Controller"
-	}  
-	/if (${Zone.ShortName.Equal[ferubi]}) {
+		/squelch /alert add 1 "Kunimi"
+	} else /if (${Zone.ShortName.Equal[ferubi]}) {
 		/squelch /alert add 1 "Rondo"
-	}  
-	/if (${Zone.ShortName.Equal[qinimi]}) {
+	} else /if (${Zone.ShortName.Equal[qinimi]}) {
 		/squelch /alert add 1 "Krvne"
 		/squelch /alert add 1 "Mass of Stone"
 		/squelch /alert add 1 "Councilman"
@@ -1205,8 +1202,7 @@ Sub setAlerts
 		/squelch /alert add 1 "a disgruntled" 
 		/squelch /alert add 1 "a melancholy"
 		/squelch /alert add 1 "Besana"
-	}  
-	/if (${Zone.ShortName.Equal[pofire]}) {
+	} else /if (${Zone.ShortName.Equal[pofire]}) {
 		/squelch /alert add 1 "Guardian of Doomfire"
 		/squelch /alert add 1 "General Reparm"
 		/squelch /alert add 1 "General Druav Flamesinger"
@@ -1215,8 +1211,7 @@ Sub setAlerts
 		/squelch /alert add 1 "Pyronis"
 		/squelch /alert add 1 "Magmaton"
 		/squelch /alert add 1 "Arch Mage Yozanni"
-	}  
-	/if (${Zone.ShortName.Equal[qvic]}) {
+	} else /if (${Zone.ShortName.Equal[qvic]}) {
 		/squelch /alert add 1 "Ptav M'sha"
 		/squelch /alert add 1 "Dvoin M'sha"
 		/squelch /alert add 1 "Mnat M'sha"
@@ -1226,8 +1221,7 @@ Sub setAlerts
 		/squelch /alert add 1 "Svi`pral the Second Arbitor"
 		/squelch /alert add 1 "Vishai the First Arbitor"
 		/squelch /alert add 1 "Ytvagi the Third Arbitor"
-	}  
-	/if (${Zone.ShortName.Equal[riftseekers]}) {
+	} else /if (${Zone.ShortName.Equal[riftseekers]}) {
 		/squelch /alert add 1 "a ferocious chimera"
 		/squelch /alert add 1 "a ferocious feran"
 		/squelch /alert add 1 "Chailak"
@@ -1249,8 +1243,7 @@ Sub setAlerts
 		/squelch /alert add 1 "Taromani"
 		/squelch /alert add 1 "portal"
 		/squelch /alert add 1 "a_companion_chimera_002"
-	} 
-	/if (${Zone.ShortName.Equal[wallofslaughter]}) {
+	} else /if (${Zone.ShortName.Equal[wallofslaughter]}) {
 		/squelch /alert add 1 "Korshawn"
 		/squelch /alert add 1 "Jarekiv"
 		/squelch /alert add 1 "a portal crystal"
@@ -1260,25 +1253,30 @@ Sub setAlerts
 		/squelch /alert add 1 "Verow"
 		/squelch /alert add 1 "Sandak"
 		/squelch /alert add 1 "Velitorkin"
- 	}
-	/if (${Zone.ShortName.Equal[ssratemple]}) {
+		/squelch /alert add 1 "Cipheron"
+		/squelch /alert add 1 "Hivequeen"
+ 	} else /if (${Zone.ShortName.Equal[ssratemple]}) {
 		/squelch /alert add 1 "Rhag"
-	}
-	/if (${Zone.ShortName.Equal[chardok]}) {
+		/squelch /alert add 1 "phantom"
+	} else /if (${Zone.ShortName.Equal[chardok]}) {
 		/squelch /alert add 1 "slave"
 		/squelch /alert add 1 "niblek"
 		/squelch /alert add 1 "vault master"
-	}
-	/if (${Zone.ShortName.Equal[burningwood]}) {
+	} else /if (${Zone.ShortName.Equal[burningwood]}) {
 		/squelch /alert add 1 "a sarnak imitator"
-	}
-	/if (${Zone.ShortName.Equal[rathemtn]}) {
+	} else /if (${Zone.ShortName.Equal[rathemtn]}) {
 		/squelch /alert add 1 "Guzzla"
 		/squelch /alert add 1 "Chizzlik"
 		/squelch /alert add 1 "Ukla"
 	} else /if (${Zone.ShortName.Equal[codecay]}) {
-		/varset int_maxPullCount 20
-		/squelch /alert add 2 "Barban"
+		/squelch /alert add 1 "Barban"
+	} else /if (${Zone.ShortName.Equal[akheva]}) {
+		/squelch /alert add 1 "Shimmering"
+		/squelch /alert add 1 "Sacrificed"
+		/squelch /alert add 1 "Insanity"
+	} else /if (${Zone.ShortName.Equal[causeway]}) {
+		/squelch /alert add 1 "Gorvoroth"
+		/squelch /alert add 1 "kupiop"
 	}
 	
 
@@ -1391,7 +1389,11 @@ Sub setAlerts
 		/squelch /alert add 2  "a weathered guardian"
 		/squelch /alert add 2  "a weathered clockwork"
 	} else /if (${Zone.ShortName.Equal[ssratemple]}) {
+		/varset int_maxPullCount 50
+		/varset int_zRadius 25
 		/squelch /alert add 2 "Shissar Assassin"
+		/squelch /alert add 2 "An Elite"
+		/squelch /alert add 2 "A Shissar Arch Arcanist"
 	} else /if (${Zone.ShortName.Equal[chardok]}) {
 		/squelch /alert add 2 "iksar betrayer"
 	} else /if (${Zone.ShortName.Equal[southkarana]} || ${Zone.ShortName.Equal[rathemtn]}) {
@@ -1424,15 +1426,19 @@ Sub setAlerts
 		/squelch /alert add 2 "pawbuster"
 	} else /if (${Zone.ShortName.Equal[causeway]}) {
 		/varset int_maxPullCount 10
-		/squelch /alert add 2 "battle-scarred"
-		/squelch /alert add 2 "mountain"
-		/squelch /alert add 2 "murkglider stalker"
+		/squelch /alert add 2 "bazu"
+		|/squelch /alert add 2 "murkglider"
 	} else /if (${Zone.ShortName.Equal[wallofslaughter]}) {
-		/varset int_maxPullCount 10
+		/varset int_maxPullCount 5
+		/varset int_zRadius 500
+		/varset int_minZHeight -1000
+		/varset int_maxZHeight 1000
 		|/squelch /alert add 2 "enchainer"
-		|/squelch /alert add 2 "darkwarrior"
-		|/squelch /alert add 2 "ireknight"
-		/squelch /alert add 2 "mastermind"
+		/squelch /alert add 2 "darkwarrior"
+		|/squelch /alert add 2 "mastermind"
+		/squelch /alert add 2 "murk"
+		/squelch /alert add 2 "assassin"
+		/squelch /alert add 2 "bazu"
 	} else /if (${Zone.ShortName.Equal[gukbottom]}) {
 		/varset int_maxPullCount 20
 		
@@ -1446,7 +1452,8 @@ Sub setAlerts
 		/squelch /alert add 2 "A Valorian Guard"
 	} else /if (${Zone.ShortName.Equal[fungusgrove]}) {
 		/varset int_maxPullCount 20
-		/squelch /alert add 2 "Shuddering Mushroom"
+		/squelch /alert add 2 "Shuddering Fungus"
+		/squelch /alert add 2 "a small mushroom"
 	} else /if (${Zone.ShortName.Equal[codecay]}) {
 		/varset int_maxPullCount 20
 		/squelch /alert add 2 "Corrupted Knight"
@@ -1455,6 +1462,12 @@ Sub setAlerts
 	} else /if (${Zone.ShortName.Equal[charasis]}) {
 		/varset int_maxPullCount 20
 		/squelch /alert add 2 "pulsating bile"
+	} else /if (${Zone.ShortName.Equal[akheva]}) {
+		/varset int_maxPullCount 50
+		/squelch /alert add 2 "Apprentice Keeper"
+		/squelch /alert add 2 "Altar Priest"
+		/squelch /alert add 2 "Atulinae"
+		/squelch /alert add 2 "Sheleric Vis"
 	}
 
 /return
