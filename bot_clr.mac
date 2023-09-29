@@ -123,7 +123,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 		/if ((${bln_autoRez} && !${bln_engaged}) || (${bln_combatRez} && ${bln_engaged})) /call chkRessurection
 
 		|-- Check Divine Arbitration Flag
-		/if (!${bln_ArbitrationReady}) /call chkArbitrationReady
+		/if (!${bln_divineArbReady}) /call chkArbitrationReady
 
 		|-- Check Auto Assist if its on
 		/if (${bln_autoAssist} && ${bln_battleCleric}) /call chkAutoAssist
@@ -261,8 +261,8 @@ Check|Set to see if Divine Arbitration is Ready
 ----------------------------  
 **|
 Sub chkArbitrationReady
-	/varset bln_ArbitrationReady	FALSE
-	/if (${Me.AltAbilityReady[divine arbitration]} || !${FindItem[${str_epicName}].Timer}) /varset bln_ArbitrationReady TRUE
+	/varset bln_divineArbReady	FALSE
+	/if (${Me.AltAbilityReady[divine arbitration]} || !${FindItem[${str_epicName}].Timer}) /varset bln_divineArbReady TRUE
 /return
 
 
@@ -334,7 +334,7 @@ Sub variant_initialize
 	/declare	int_CTGTID				int 	outer	0
 	/declare	int_currentFPoint		int		outer	30
 	/declare	bln_FHealReady			bool	outer	FALSE
-	/declare	bln_ArbitrationReady			bool	outer	FALSE
+	/declare	bln_divineArbReady			bool	outer	FALSE
 	/declare    str_action				string	outer	Healing
 	/declare	str_currHeal			string	outer	NULL
 

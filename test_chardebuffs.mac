@@ -1,25 +1,53 @@
 
-#define INI_CHAR        xiris_settings_character/BOT_${Me.Class.ShortName}_${Me.CleanName}.ini
-#define INI_COMMON      xiris_settings_global/xiris_settings_common.ini
-#include                xiris_includes/xiris_spell_routines.inc
-#include                xiris_includes/xiris_buffing.inc
-#include                xiris_includes/xiris_burn.inc
-#include                xiris_includes/xiris_common.inc
-#include                xiris_includes/xiris_curing.inc
-#include                xiris_includes/xiris_dannet.inc
-#include                xiris_includes/xiris_events.inc
-
 #turbo 120
+#define INI_zoneInfo xiris_common/xiris_pull_zoneinfo.ini
 
 Sub Main
     /mqclear
-    /declare int_MTID   int local ${Spawn[Xirin].ID}
-    /call processCureDebuffList
-    /call determineMyCureCounters
+/declare int_maxPullCount int outer 3
+    /call SetAlerts
 
-    :mainloop 
-        /call determineMyCureCounters
-        /delay 5
-    /goto :mainloop
+  
 /return
 
+Sub SetAlerts
+    /echo \aoSetAlerts \aw---------------
+	/declare i		int		local 0
+	/declare test	string 	local NULL
+	/declare sz  	string 	local ${Zone.ShortName}
+
+	| handle the OOW instances
+	/if (${sz.Find[dranikcatacombs]}) {
+		/varset sz dranikcatacombs
+	} else /if (${sz.Find[dranikhollows]}) {
+		/varset sz dranikhollows
+	} else /if (${sz.Find[draniksewers]}) {
+		/varset sz draniksewers
+	}
+
+    | handle setting maxpull from INI
+    /varset int_maxPullCount ${Ini[INI_zoneInfo,${sz},MAXPULL,3]}
+
+	| set the entry count
+	/declare avoidCount  ${Ini.File[INI_zoneInfo].Section[${sz}].Key[AVOID].Count}
+	/declare huntCount  ${Ini.File[INI_zoneInfo].Section[${sz}].Key[HUNT].Count}
+    /echo \aoAvoidCount:\ag${avoidCount} \aoHuntCount:\ag${huntCount} \aoMaxPullCount:\ag${int_maxPullCount}
+
+    | set the avoidance list
+    /alert clear 1
+    /if (${avoidCount}) {  
+        /for i 1 to ${avoidCount}
+            /varset test ${Ini.File[INI_zoneInfo].Section[${sz}].Key[AVOID].ValueAtIndex[${i}]}
+            /alert add 1 ${test}
+        /next i
+    }
+
+    | set the hunter list
+    /alert clear 2
+	/if (${huntCount}) {
+        /for i 1 to ${huntCount}
+		/varset test ${Ini.File[INI_zoneInfo].Section[${sz}].Key[HUNT].ValueAtIndex[${i}]}
+		/alert add 2 ${test}
+	    /next i
+    }
+/return
