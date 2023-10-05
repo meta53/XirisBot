@@ -89,11 +89,13 @@ Sub Events_Curing_Background
 /return
 
 Sub Event_AutoCureMTOn
+	/doevents flush AutoCureMTOn
 	/echo \agNow Automatically Curing MT
 	/varset bln_autoCureMT TRUE
 /return 
 
 Sub Event_AutoCureMTOff
+	/doevents flush AutoCureMTOff
 	/echo \awNo Longer Automatically Curing MT
 	/varset bln_autoCureMT FALSE
 /return
@@ -140,37 +142,41 @@ Sub Event_cureRequest(_line, _sender, _eventParams)
 /return
 
 Sub Event_cureReceived(_line, _sender, _eventParams)
+	/doevents flush cureReceived
 	/declare id int local ${Int[${_eventParams}]}
 	/if (${id} == ${Me.ID}) /call resetCureState
-	/doevents flush cureReceived
+	
 /return
 
 Sub Event_cureGroupPoison(_line, _sender, _eventParams)
+	/doevents flush cureGroupPoison
 	/if (${Me.Class.ShortName.NotEqual[CLR]} && ${Me.Class.ShortName.NotEqual[DRU]} && ${Me.Class.ShortName.NotEqual[SHM]} && ${Me.Class.ShortName.NotEqual[PAL]}) /return
 	/docommand /${announceChannel} Curing Group of Poisons with: ${str_cure_poison}
 	/call cureGroup poison ${_eventParams}
-	/doevents flush cureGroupPoison
+	
 /return
 
 Sub Event_cureGroupDisease(_line, _sender, _eventParams)
+	/doevents flush cureGroupDisease
 	/if (${Me.Class.ShortName.NotEqual[CLR]} && ${Me.Class.ShortName.NotEqual[DRU]} && ${Me.Class.ShortName.NotEqual[SHM]} && ${Me.Class.ShortName.NotEqual[PAL]}) /return
 	/docommand /${announceChannel} Curing Group of Disease with: ${str_cure_disease}
 	/call cureGroup disease ${_eventParams}
-	/doevents flush cureGroupDisease
+	
 /return
 
 Sub Event_cureGroupCurse(_line, _sender, _eventParams)
+	/doevents flush cureGroupCurse
 	/if (${Me.Class.ShortName.NotEqual[CLR]} &&${Me.Class.ShortName.NotEqual[DRU]} && ${Me.Class.ShortName.NotEqual[SHM]} && ${Me.Class.ShortName.NotEqual[PAL]}) /return
 	/docommand /${announceChannel} Curing Group of Curses with: ${str_cure_curse}
 	/call cureGroup curse ${_eventParams}
-	/doevents flush cureGroupCurse
+	
 /return
 
 Sub Event_cureGroupCorruptiuon(_line, _sender, _eventParams)
+	/doevents flush cureGroupCorruptiuon
 	/if (${Me.Class.ShortName.NotEqual[CLR]} &&${Me.Class.ShortName.NotEqual[DRU]} && ${Me.Class.ShortName.NotEqual[SHM]} && ${Me.Class.ShortName.NotEqual[PAL]}) /return
 	/docommand /${announceChannel} Curing Group of Corruption with: ${str_cure_corruption}
 	/call cureGroup corruption ${_eventParams}
-	/doevents flush Event_cureGroupCorruptiuon
 /return
 
 Sub resetCureState
@@ -353,6 +359,7 @@ Sub requestCure(string _type, int _counters, bool _force)
 /return
 
 Sub EVENT_ResetGroupCurer 
+	/doevents flush ResetGroupCurer
 	/call getGroupCurer DEFAULT
 	/varset str_myCurer ${Macro.Return}
 /return 
