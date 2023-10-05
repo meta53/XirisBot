@@ -100,32 +100,41 @@ Sub Event_AutoCureMTOff
 
 |-- Single target cure, simple syntax (for manual entry)
 |   Counters determined by Dannet query
+|	string _pcName, string _type
 Sub Event_cureMe(_line, _sender, _eventParams)
-	/echo EVENT_CUREME ${_sender} type: ${_eventParams}
-	|string _pcName, string _type
-	/declare name string local ${_sender}
-	/declare curetype string local ${_eventParams}
-	/call getCureCounters ${name} ${curetype}
-	/declare counters int local ${Macro.Return}
-	/call handleCureRequest ${_sender} ${Spawn[pc ${pcName}].ID} ${curetype} ${counters} FALSE
 	/doevents flush cureMe
+	/declare name		string local ${_sender}
+	/declare curetype	string local ${_eventParams}
+	/declare qs 		string 	local	NULL
+
+	/call getDebuffPluginQuery ${cureType}
+	/varset qs ${Macro.Return}
+	/call getCureCounters ${name} ${qs}
+	/declare counters int local ${Macro.Return}
+
+	/echo \awCure Request \ayname: \ag${name}(${Spawn[pc ${pcName}].ID}) \aytype: \ag${curetype} \aycounters: \ag${counters}
+	/call handleCureRequest ${_sender} ${Spawn[pc ${pcName}].ID} ${curetype} ${counters} FALSE
+	
 /return
 
 
 |-- Single target cure, generated syntax (for macro call)
 |   Counters determined by DanNet query
 Sub Event_cureRequest(_line, _sender, _eventParams)	
-	/declare name string local ${_eventParams.Arg[1, ]}
-	/declare id int local ${_eventParams.Arg[2, ]}
-	/declare curetype string local  ${_eventParams.Arg[3, ]}
-	/call getCureCounters ${name} ${curetype}
-	/declare counters int local  ${_eventParams.Arg[4, ]}
-	/declare forced bool local ${_eventParams.Arg[5, ]}
-
-	/if (${counters} == 0) /varset counters ${Macro.Return}
-	/echo \awCure Request \ayname: \ag${name}(${id}) \aytype: \ag${curetype} \aycounters: \ag${counters} \ayforced: \ag${forced}
 	/doevents flush cureRequest
+	/declare name 		string	local	${_eventParams.Arg[1, ]}
+	/declare id 		int 	local	${_eventParams.Arg[2, ]}
+	/declare curetype 	string 	local	${_eventParams.Arg[3, ]}
+	/declare counters 	int 	local	${_eventParams.Arg[4, ]}
+	/declare forced 	bool 	local	${_eventParams.Arg[5, ]}
+	/declare qs 		string 	local	NULL
 
+	/call getDebuffPluginQuery ${cureType}
+	/varset qs ${Macro.Return}
+	/call getCureCounters ${name} ${qs}
+	/if (${counters} == 0) /varset counters ${Macro.Return}
+
+	/echo \awCure Request \ayname: \ag${name}(${id}) \aytype: \ag${curetype} \aycounters: \ag${counters} \ayforced: \ag${forced}
 	/call handleCureRequest ${name} ${id} ${curetype} ${counters} ${forced}
 	
 /return
@@ -439,39 +448,8 @@ Sub getGroupCurer(string _cureType)
 	} else {
 		/echo \aggetGroupCurer: \ao${myCurer}  \aw(Cure Type: \ag${_cureType}\aw)
 	}
-
-	
-	
 /return ${myCurer}
 
-Sub setCureRange(string _cureType) 
-	/if (${_cureType.Equal[poison]}) {]
-		/varset cureRange ${Spell[${str_cure_poison}].MyRange}
-	} else /if (${_cureType.Equal[curse]}) { 
-		/varset cureRange ${Spell[${str_cure_curse}].MyRange}
-	} else /if (${_cureType.Equal[disease]}) { 
-		/varset cureRange ${Spell[${str_cure_disease}].MyRange}
-	} else /if (${_cureType.Equal[corruption]}) {
-		/varset cureRange ${Spell[${str_cure_corruption}].MyRange} 
-	}
-
-/return 
-
-|-- Use DanNet to get the counters required
-|   Query via Dannet
-Sub getCureCounters(string _pcName, string _type) 
-	/declare c int local 0
-	/if (${_type.Equal[poison]}) {
-		/dquery ${_pcName} -q "Debuff.Poisoned"
-	} else /if (${_type.Equal[curse]}) {
-		/dquery ${_pcName} -q "Debuff.Cursed"
-	} else /if (${_type.Equal[disease]}) {
-		/dquery ${_pcName} -q "Debuff.Diseased"
-	}
-	/delay 20 ${DanNet.Query.Received}
-	/varset c ${DanNet.Q}
-	/echo getCureCounters(${_pcName}, ${_type}) == ${c}
-/return ${c}
 
 Sub cureGroup(string _cureType, int _counters)
 	/if (${bln_chChainMember} || ${bln_focusHealMT}) /return
@@ -492,12 +470,15 @@ Sub cureGroup(string _cureType, int _counters)
 		| Cure Group by Each
 		/declare	gmember			int local	0
 		/declare    counter         int local   0
+		/declare 	qs				string local NULL
 		/for gmember 0 to ${Group}
-			/echo handling: ${Group.Member[${gmember}].Name} ${Group.Member[${gmember}].ID} ${ct} ${cnt}
+			/echo \aoCureGroup: \ag${Group.Member[${gmember}].Name} ${Group.Member[${gmember}].ID} ${ct} ${cnt}
 			| If I am a cleric, quickly check MT health
 			/if (${Me.Class.ShortName.Equal[CLR]} ) /call chkHeal_MT
 			| Check to see if the toon actually needs to be cured, else skip
-			/call getCureCounters ${Group.Member[${gmember}].Name} ${_cureType}
+			/call getDebuffPluginQuery ${_cureType}
+			/varset qs ${Macro.Return}
+			/call getCureCounters ${Group.Member[${gmember}].Name} ${qs}
 			/varset counter ${Int[${Macro.Return}]}
 			/if (${counter}>0) /call handleCureRequest ${Group.Member[${gmember}].Name} ${Group.Member[${gmember}].ID} ${ct} ${cnt}
 			/call RunRaidEvents
@@ -559,53 +540,37 @@ Sub cureSelf(string _cureType, int _counters)
 	/call handleCureRequest ${Me.CleanName} ${Me.ID} ${_cureType} ${_counters}
 /return
 
+Sub chkHasCureForType(string _ct)
+	/if (${_ct.Equal[disease]}	&& ${bln_hasDiseaseCure})	/return TRUE
+	/if (${_ct.Equal[poison]}	&& ${bln_hasPoisonCure})	/return TRUE
+	/if (${_ct.Equal[curse]}	&& ${bln_hasCurseCure})		/return TRUE
+	/if (${_ct.Equal[corruption]} && ${bln_hasCorruptionCure}) /return TRUE
+/return FALSE
+
 | Handle Incoming cure request.
 | TODO: If cleric, check MT hp before healing unless FORCED is true.
 Sub handleCureRequest(string _name, int _id, string _cureType, int _counters, bool _forced) 
 	/echo \ayhandleCureRequest: ${_name}, ${_id}, ${_cureType}, ${_counters}, ${_forced}
 	|-- if requester is not in zone, ignore it
 	/if (!${SpawnCount[pc ${_name}]}) {
+		/echo \arI cannot cure \aw${_name}, \arthey are dead
 		/dt ${_name} I cannot cure you, you are dead!
 		/return
 	}
-	
-	|-- find cure spell string & counters it clears
-	/declare	str_spell	  	string		local	${str_cure_disease}
-	/declare    int_count     	int			local   ${_counters}
-	/declare    int_castCount 	float    	local   1
-	/declare    qstring  	  	string   	local
-	/declare 	c 				int 		local	0
 
-	/if (${_cureType.Equal[disease]}) /varset qstring Debuff.Diseased
-	/if (${_cureType.Equal[curse]})   /varset qstring Debuff.Cursed
-	/if (${_cureType.Equal[poison]})  /varset qstring Debuff.Poisoned
-
-	|-- Sanity check their cure request with a query *(if we arent forced!)
-	/if (!${_forced}) {
-		/echo Verifying Need ${_name} "${qstring}"
-		/dquery ${_name} -q "${qstring}"
-		/delay 20 ${DanNet.Query.Received}
-		/varset c ${DanNet.Q}
-		/if (!${c}) {
-			/echo \ao${_name} \agdid NOT need curing, returning
-			/goto :return
-		} else {
-			/echo \ag${_name} \awNEEDS curing ${c}, continuing
-		}
-	}
-
-	/if (!${Bool[${_counters}]}) {
-		/dt ${_name} I cannot cure you, you sent no counters!
+	/call chkHasCureForType ${_cureType}
+	/if (!${Macro.Return}) {
+		/echo \arI cannot cure \aw${_cureType}
+		/dt ${_name} I cannot cure you of ${_cureType}
 		/return
 	}
 
-	| If I am a cleric and this is unforced, quickly check MT health
-	/if (${Me.Class.ShortName.Equal[CLR]} && !${_forced}) /call chkHeal_MT
+	/declare	str_spell	  	string		local	${str_cure_disease}
+	/declare    int_count     	int			local   ${_counters}
+	
+	
 
-	| Get the range of this cure
-	/call setCureRange ${_cureType}
-
-
+	|-- check that we can cure this type
 	/if (${_cureType.Equal[disease]}) {
 		/echo \aoDISEASE CURE selected.
 		/if (!${bln_hasDiseaseCure}) {
@@ -643,6 +608,20 @@ Sub handleCureRequest(string _name, int _id, string _cureType, int _counters, bo
 		/varset str_spell 	${str_cure_corruption}
 		/varset int_count 	${int_cure_corruption}
 	}
+	
+	|-- find cure spell string & counters it clears
+
+	/declare    qstring  	  	string   	local
+	/declare 	c 				int 		local	0
+
+	/call getDebuffPluginQuery ${_cureType}
+	/varset qstring ${Macro.Return}
+
+	| If I am a cleric and this is unforced, quickly check MT health
+	/if (${Me.Class.ShortName.Equal[CLR]} && !${_forced}) /call chkHeal_MT
+
+	|-- Get the range of this cure
+	/call setCureRange ${_cureType}
 
 	| If cure target is out of range, return
 	/if (${Spawn[pc ${_name}].Distance} > ${Spell[${str_spell}].MyRange}) {
@@ -650,8 +629,23 @@ Sub handleCureRequest(string _name, int _id, string _cureType, int _counters, bo
 		/return
 	}
 
+	|-- Sanity check their cure request with a query *(if we arent forced!)
+	:counterCheck
+	/if (!${_forced}) {
+		/echo Verifying Need ${_name} "${qstring}"
+		/call getCureCounters "${qs}"
+		/varset c ${Macro.Return}
+		/if (!${c}) {
+			/echo \ao${_name} \agdid NOT need curing, returning
+			/goto :return
+		} else {
+			/echo \ag${_name} \awNEEDS curing ${c}, continuing
+		}
+	}
+
 	
 	|-- calculate how many times we need to cast the cure counters: note MQ2 Natively does not have a round method
+	/declare    int_castCount 	float    	local   1
 	/varset int_castCount ${Math.Calc[${_counters} / ${int_count}]}
 	/if (${int_castCount} < 1) {
 		/varset int_castCount 1
@@ -684,24 +678,74 @@ Sub handleCureRequest(string _name, int _id, string _cureType, int _counters, bo
 Sub castCure(string _name, int _id, string _spell, int _castCount, string _cureType, int _counters, bool _isForced) 
 	/echo \aoCastCure \aw${_name}, ${_id}, ${_spell}, ${_counters}
 	
-	/declare i int local 1
+	/declare i 			int local 1
+	/declare c 			int local 0
+	/declare qs 		string 	local	NULL
+
+	/call getDebuffPluginQuery ${_cureType}
+	/varset qs ${Macro.Return}
+
 	/for i 1 to ${_castCount}
 		|Check for Death
 		/if (!${SpawnCount[pc ${_name}]}) {
 			/dt ${_name} I cannot cure you, you are dead!
 			/return
 		}
+
+		|-- Sanity check their cure request with a query *(if we arent forced!)
+		:counterCheck
+		/if (!${_isForced}) {
+			/call getCureCounters "${qs}"
+			/varset c ${Macro.Return}
+			/if (!${c}) {
+				/echo \ao${_name} \agdid NOT need further ${qs} curing, returning
+				/goto :return
+			} else {
+				/echo \ag${_name} \awNEEDS curing ${c}, continuing
+			}
+		}
+
 		| If I am a cleric and this is unforced, quickly check MT health
 		/if (${Me.Class.ShortName.Equal[CLR]} && !${_isForced}) /call chkHeal_MT
 		/call TrueTarget ${_id}
-		/echo \aoCasting \aw${i} \ag${_spell}
 		/call MQ2Cast "${_spell}" gem7 8s
+
 	/next i 
+	:return
 	/dt ${_name} I cured you ${_name}(${_id}) of ${_counters} ${_cureType} counters.
 /return
 
 
+Sub setCureRange(string _cureType) 
+	/if (${_cureType.Equal[poison]}) {]
+		/varset cureRange ${Spell[${str_cure_poison}].MyRange}
+	} else /if (${_cureType.Equal[curse]}) { 
+		/varset cureRange ${Spell[${str_cure_curse}].MyRange}
+	} else /if (${_cureType.Equal[disease]}) { 
+		/varset cureRange ${Spell[${str_cure_disease}].MyRange}
+	} else /if (${_cureType.Equal[corruption]}) {
+		/varset cureRange ${Spell[${str_cure_corruption}].MyRange} 
+	}
 
+/return 
+
+Sub getDebuffPluginQuery(string _ct)
+	/declare q string local NULL
+	/if (${_ct.Equal[disease]}) /varset q Debuff.Diseased
+	/if (${_ct.Equal[curse]})   /varset q Debuff.Cursed
+	/if (${_ct.Equal[poison]})  /varset q Debuff.Poisoned
+	/echo \a-w		getDebuffPluginQuery \ag${_ct} \ao=> \ag${q}
+/return ${q}
+
+|-- Use DanNet to get the counters required
+|   Query via Dannet
+Sub getCureCounters(string _pcName, string _qs) 
+	/declare cc int local 0
+	/dquery ${_pcName} -q "${_qs}"
+	/delay 20 ${DanNet.Query.Received}
+	/varset cc ${DanNet.Q}
+	/echo \a-w		getCureCounters\aw(\ag${_pcName}\aw, \ag${_qs}\aw) == \ag${cc}
+/return ${cc}
 
 Sub xbot_initialize_curing
 	/echo \ao xbot_initialize_curing
