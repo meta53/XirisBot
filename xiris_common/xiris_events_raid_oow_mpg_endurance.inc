@@ -22,9 +22,9 @@ Sub InitEvents_OOW_MPG_Endurance
 /return
 
 Sub Events_OOW_MPG_Endurance
-    /if (${Me.Class.ShortName.Equal[ENC]}) /call chkEnduranceMez
-    /if (${Me.Class.ShortName.Equal[WAR]}) /call chkEnduranceAdds
-    /if (${Me.Class.ShortName.Equal[PAL]}) /call chkEnduranceAdds
+   | /if (${Me.Class.ShortName.Equal[ENC]}) /call chkEnduranceMez
+    |/if (${Me.Class.ShortName.Equal[WAR]}) /call chkEnduranceAdds
+    |/if (${Me.Class.ShortName.Equal[PAL]}) /call chkEnduranceAdds
 /return 
 
 Sub chkEnduranceMez

@@ -665,6 +665,7 @@ Sub chkHeal_Group
 **|
 
 Sub healMAINTANK
+	/if (${Me.CurrentMana} < ${Spell[${str_heal_normal}].Mana}) /return
 	/call chkMTAlive TRUE
 	/call setHealingSpell ${Spawn[id ${int_MTID}].PctHPs} tank ${Spawn[id ${int_MTID}].Distance3D} ${Spawn[id ${int_MTID}].CleanName} ${int_MTID}
 	/if (${Macro.Return.Equal[CASTOK]}) {
@@ -686,6 +687,7 @@ Sub healMAINTANK
 **|
 
 Sub healSELF
+	/if (${Me.CurrentMana} < ${Spell[${str_heal_normal}].Mana}) /return
 	/call setHealingSpell ${Me.PctHPs} self 0 ${Me.Name} ${Me.ID}
 	/if (${Macro.Return.Equal[CASTOK]}) {
 		/echo \aghealSELF:\ao${Me.Name}\aw(\ay${Me.ID}\aw) \aw=>\ag${Target.Name}  \ao${str_currentHeal}
@@ -710,6 +712,7 @@ Sub healSELF
  ----------------------------
 **|
 Sub healGRP
+	/if (${Me.CurrentMana} < ${Spell[${str_heal_normal}].Mana}) /return
 	/declare 	i 			 	int local	0
 	/declare    n				int local   1
 	/declare 	int_inRange		int local 	0

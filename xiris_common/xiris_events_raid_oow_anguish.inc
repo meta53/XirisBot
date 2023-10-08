@@ -24,7 +24,7 @@ ______________________________________________
 |	Jelvan
 #Event JelvanSetup		"#*#JelvanSetup#*#"
 #EVENT JelvanStart  	"#*#Hail, Jelvan#*#"
-#EVENT JelvanPhase2		"#*#JelvanP2#*#"
+#EVENT JelvanPhase2		"#*#JP2#*#"
 
 |	Warden Hanvar
 #EVENT HanvarSetup  	"#*#HanvarSetup#*#"
@@ -55,13 +55,12 @@ Sub InitEvents_OOW_Anguish
 
 	/declare eventTarget	   	string outer NULL
 	
-	/call RegisterRaidEvents Events_OOW_Anguish 15
+	/call RegisterBackgroundEvents Events_OOW_Anguish 15
 
 
 /return
 
 Sub Events_OOW_Anguish 
-
 	/if ((${Me.Class.ShortName.Equal[WAR]} || ${Me.Class.ShortName.Equal[SHD]}) && ${bln_engaged}) /call chkDivineIntervention
 
 	| Ture Events
@@ -167,32 +166,42 @@ Sub Event_JelvanStart
 			/if (${SpawnCount[npc Tanthi]} == 1 && !${bln_jelvanEngaged}) {
 				/call TrueTarget ${Spawn[npc Tanthi].ID}
 				/varset bln_jelvanEngaged TRUE
-				/stick 10
-				/attack on
+				|/stick 10
+				|/attack on
 				/if (${Me.CombatAbilityReady[Stonewall Discipline]}) /doability "Stonewall Discipline"
 				/delay 20
 				/if (${Me.CombatAbilityReady[Bazu Bellow]}) /doability "Bazu Bellow"
 				/delay 20
 				/if (${Me.CombatAbilityReady[Ancient: Chaos Cry]}) /doability "Ancient: Chaos Cry"
 				/squelch /attack on 
-				/rs KillMob ${Target.ID}
-				/delay 5s 
-				/docommand /${announceChannel} DebuffTarget ${Target.ID}
-				/docommand /${announceChannel} singsongs
+				|/rs KillMob ${Target.ID}
+				|/delay 5s 
+				|/docommand /${announceChannel} DebuffTarget ${Target.ID}
+				|/docommand /${announceChannel} singsongs
 				
 				/stick off
-				/nav wp jelvan1tank
+				/nav wp jelvan2tank
+				:nav11
+				/if (${Navigation.Active}) /goto :nav11
+				/face fast 
+				/squelch /attack on
+				/stick 10 front
+				/end
 			}
 	| West, 1 RT
 		} else /if (${Me.CleanName.Equal[Sadelia]}) {
 			/if (${SpawnCount[npc Tanthi]} == 1 && !${bln_jelvanEngaged}) {
 				/call TrueTarget ${Spawn[npc Tanthi].ID}
 				/varset bln_jelvanEngaged TRUE
-				/squelch /attack on 
-				/stick 20
-				/delay 5s 
+				|/stick 20
+				|/delay 5s 
+				/casting "Serene Command"
 				/stick off
-				/nav wp jelvan1tank  
+				/nav wp jelvan2tank
+				:nav12
+				/if (${Navigation.Active}) /goto :nav12
+				/face fast 
+				|/squelch /attack on
 			}
 	|-------------
 	| South, 2 MT
@@ -200,32 +209,43 @@ Sub Event_JelvanStart
 			/if (${SpawnCount[npc Tanthu]} == 1 && !${bln_jelvanEngaged}) {
 				/call TrueTarget ${Spawn[npc Tanthu].ID}
 				/varset bln_jelvanEngaged TRUE
-				/stick 10
-				/attack on
+				|/stick 10
+				|/attack on
 				/if (${Me.CombatAbilityReady[Stonewall Discipline]}) /doability "Stonewall Discipline"
 				/delay 20
 				/if (${Me.CombatAbilityReady[Bazu Bellow]}) /doability "Bazu Bellow"
 				/delay 20
 				/if (${Me.CombatAbilityReady[Ancient: Chaos Cry]}) /doability "Ancient: Chaos Cry"
-				/squelch /attack on 
-				/delay 5s 
-				/docommand /${announceChannel} DebuffTarget ${Target.ID}
-				/docommand /${announceChannel} singsongs
+				 
+				|/delay 5s 
+				|/docommand /${announceChannel} DebuffTarget ${Target.ID}
+				|/docommand /${announceChannel} singsongs
 				
 				/stick off
 				/nav wp jelvan2tank
+				:nav21
+				/if (${Navigation.Active}) /goto :nav21
+				/face fast 
+				/stick 10 front
+				/squelch /attack on
 			}
 
 	| South, 2 RT		
-		} else /if (${Me.CleanName.Equal[Erinyes]}) {
+		} else /if (${Me.CleanName.Equal[Ertres]}) {
 			/if (${SpawnCount[npc Tanthu]} == 1 && !${bln_jelvanEngaged}) {
 				/call TrueTarget ${Spawn[npc Tanthu].ID}
 				/varset bln_jelvanEngaged TRUE
-				/squelch /attack on 
-				/stick 20
-				/delay 5s 
+				|/stick off
+				|/squelch /attack on 
+				|/stick 20
+				|/delay 5s 
+				/ranged
 				/stick off
-				/nav wp jelvan2tank 
+				/nav wp jelvan2tank
+				:nav22
+				/if (${Navigation.Active}) /goto :nav22
+				/face fast 
+				|/squelch /attack on
 			}
 
 	|-------------
@@ -235,8 +255,8 @@ Sub Event_JelvanStart
 			/if (${SpawnCount[npc Tantho]} == 1 && !${bln_jelvanEngaged}) {
 				/call TrueTarget ${Spawn[npc Tantho].ID}
 				/varset bln_jelvanEngaged TRUE
-				/stick 10
-				/attack on
+				|/stick 10
+				|/attack on
 				/if (${Me.CombatAbilityReady[Stonewall Discipline]}) /doability "Stonewall Discipline"
 				/delay 20
 				/if (${Me.CombatAbilityReady[Bazu Bellow]}) /doability "Bazu Bellow"
@@ -244,11 +264,17 @@ Sub Event_JelvanStart
 				/if (${Me.CombatAbilityReady[Ancient: Chaos Cry]}) /doability "Ancient: Chaos Cry"
 				/squelch /attack on 
 				/delay 5s 
-				/docommand /${announceChannel} DebuffTarget ${Target.ID}
-				/docommand /${announceChannel} singsongs
+				|/docommand /${announceChannel} DebuffTarget ${Target.ID}
+				|/docommand /${announceChannel} singsongs
 				
 				/stick off
-				/nav wp jelvan3tank
+				/nav wp jelvan2tank
+				:nav31
+				/if (${Navigation.Active}) /goto :nav31
+				/face fast 
+				/squelch /attack on
+				/stick 10 front
+				/end
 			}
 
 	| East, 3 RT
@@ -256,17 +282,22 @@ Sub Event_JelvanStart
 			/if (${SpawnCount[npc Tantho]} == 1 && !${bln_jelvanEngaged}) {
 				/call TrueTarget ${Spawn[npc Tantho].ID}
 				/varset bln_jelvanEngaged TRUE
-				/squelch /attack on 
-				/stick 20
-				/delay 5s 
 				/stick off
-				/nav wp jelvan3tank
+				/squelch /attack on 
+				|/stick 20
+				|/delay 5s 
+				
+				/stick off
+				/nav wp jelvan2tank
+				:nav32
+				/if (${Navigation.Active}) /goto :nav32
+				/face fast 
+				|/squelch /attack on
 			}
 		}
 
 		| Loop de derp
 		/if ((${bln_jelvanEngaged} && !${Target.ID}) || !${bln_jelvanEngaged}) {
-			/delay 10
 			/goto :Tormentor_Checks
 		}
 	}

@@ -25,9 +25,9 @@ Sub InitEvents_OOW_MPG_Corruption
 
 Sub Events_OOW_MPG_Corruption
 	|/if (${Me.Class.ShortName.Equal[ENC]}) /call chkCorruptionMez
-	/if (${Me.Class.ShortName.Equal[WAR]}) /call chkCorruptionAdds
-    /if (${Me.Class.ShortName.Equal[PAL]}) /call chkCorruptionAdds
-	/if (${Me.Class.ShortName.Equal[SHD]}) /call chkCorruptionAdds
+	|/if (${Me.Class.ShortName.Equal[WAR]}) /call chkCorruptionAdds
+    |/if (${Me.Class.ShortName.Equal[PAL]}) /call chkCorruptionAdds
+	|/if (${Me.Class.ShortName.Equal[SHD]}) /call chkCorruptionAdds
 /return
 
 Sub chkCorruptionMez

@@ -478,15 +478,15 @@ Sub cureGroup(string _cureType, int _counters)
 		/declare	gmember			int local	0
 		/declare    counter         int local   0
 		/declare 	qs				string local NULL
+		/call getDebuffPluginQuery ${_cureType}
+		/varset qs ${Macro.Return}
 		/for gmember 0 to ${Group}
 			/echo \aoCureGroup: \ag${Group.Member[${gmember}].Name} ${Group.Member[${gmember}].ID} ${ct} ${cnt}
 			| If I am a cleric, quickly check MT health
 			/if (${Me.Class.ShortName.Equal[CLR]} ) /call chkHeal_MT
 			| Check to see if the toon actually needs to be cured, else skip
-			/call getDebuffPluginQuery ${_cureType}
-			/varset qs ${Macro.Return}
 			/call getCureCounters ${Group.Member[${gmember}].Name} ${qs}
-			/varset counter ${Int[${Macro.Return}]}
+			/varset counter ${Macro.Return}
 			/if (${counter}>0) /call handleCureRequest ${Group.Member[${gmember}].Name} ${Group.Member[${gmember}].ID} ${ct} ${cnt}
 			/call RunRaidEvents
 		/next gmember
@@ -627,7 +627,7 @@ Sub handleCureRequest(string _name, int _id, string _cureType, int _counters, bo
 	| If I am a cleric and this is unforced, quickly check MT health
 	/if (${Me.Class.ShortName.Equal[CLR]} && !${_forced}) /call chkHeal_MT
 
-	|-- Get the range of this cure
+	|-- Get the range of this cured
 	/call setCureRange ${_cureType}
 
 	| If cure target is out of range, return
@@ -639,8 +639,8 @@ Sub handleCureRequest(string _name, int _id, string _cureType, int _counters, bo
 	|-- Sanity check their cure request with a query *(if we arent forced!)
 	:counterCheck
 	/if (!${_forced}) {
-		/echo Verifying Need ${_name} "${qstring}"
-		/call getCureCounters "${qs}"
+		/echo Verifying Need ${_name} ${qstring}
+		/call getCureCounters ${_name} "${qstring}"
 		/varset c ${Macro.Return}
 		/if (!${c}) {
 			/echo \ao${_name} \agdid NOT need curing, returning
@@ -702,7 +702,7 @@ Sub castCure(string _name, int _id, string _spell, int _castCount, string _cureT
 		|-- Sanity check their cure request with a query *(if we arent forced!)
 		:counterCheck
 		/if (!${_isForced}) {
-			/call getCureCounters "${qs}"
+			/call getCureCounters ${_name} "${qs}"
 			/varset c ${Macro.Return}
 			/if (!${c}) {
 				/echo \ao${_name} \agdid NOT need further ${qs} curing, returning

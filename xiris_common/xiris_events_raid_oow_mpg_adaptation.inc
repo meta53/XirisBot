@@ -28,6 +28,7 @@ Sub InitEvents_OOW_MPG_Adaptation
     /declare adaptationFireDebuffTimer      timer   outer 0
     /declare bln_phaseChanged               bool    outer FALSE
     /declare int_currentPhase               int     outer 0
+    /declare glowTimer                      timer  outer 30s
     /call RegisterRaidEvents Events_OOW_MPG_Adaptation 0
 /return
 
@@ -40,10 +41,11 @@ Sub Events_OOW_MPG_Adaptation
 /return
 
 Sub EVENT_DestructionActive 
+    /doevents flush DestructionActive
+    /if (${glowTimer}) /return
     /echo \arDESTRUCTION Glow Triggered! ${Time.Time24}
     /gsay DESTRUCTION Glow Triggered! ${Time.Time24}
-    /beep
-    /doevents flush DestructionActive
+    /varset glowTimer 30s
 /return 
 
 Sub chkAdaptationMez

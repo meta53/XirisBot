@@ -38,10 +38,10 @@ Sub Events_OOW_MPG_Specialization
 	/doevents IMPURITY
 	**|
 	|- safety catch if we have the debuff but the events didnt catch it, manually check our debuffs!
-	/call chkCurrentSpecialization
-	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
-		/call chkCombatAbilities
-	}
+	|/call chkCurrentSpecialization
+	|/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
+	|	/call chkCombatAbilities
+	|}
 	
 	
 /return
