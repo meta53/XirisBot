@@ -135,8 +135,9 @@ Sub EVENT_MarkedForDeath(string _line, string _sender, string _eventParams)
 Sub xbot_initialize_curing
     /echo \n \apInitialize: \aoCuring \aw-------------------------
 
-    /if (${Select[${Me.Class.ShortName},CLR,DRU,SHM,PAL]}) /call processCureSpellSettings
+    /call processCureSpellSettings
     /call processCureDebuffList
+    /call processCureObservers
     /call initEvents_Curing
 /return 
 
@@ -324,6 +325,14 @@ Sub processCureDebuffList
         /echo \ao        DEBUFF_REQUIRED[\ag${i}\ao]: \awDebuff:\ag${DEBUFF_REQUIRED_${i}} \awType:\ag${DEBUFF_REQUIRED_${i}_type} \awTargets:\ag${DEBUFF_REQUIRED_${i}_targets}
     /next i    
 /return 
+
+| SET UP Observers for the IMMEDIATE debuffs within my group
+Sub processCureObservers
+    /declare i int local 0
+    /for i 1 to ${int_immediateDebuffCures_total}
+
+    /next i
+/return
 
 | RUN on everytoon, in their loop, so the DQUERY from curer can check the bools for each type instead of querying each type?
 | Since we want the immediate debuffs here already counted by the clients

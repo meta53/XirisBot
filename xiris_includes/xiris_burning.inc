@@ -118,6 +118,10 @@ Sub processBurns
 	leftfinger="Ring of Disdain"
 	rightfinger="Ring of Ire Intent"
 
+	face=""|
+	leftear=""|
+	rightear=""|
+
 	; = _mainHand|_offHand|_range
 	SET_default="Notched Blade of Bloodletting"|"Mace of Tortured Nightmares"|NULL
 	SET_slashing="Notched Blade of Bloodletting"|"Blade of Natural Turmoil"|NULL

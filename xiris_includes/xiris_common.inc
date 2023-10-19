@@ -185,6 +185,8 @@ Sub xbot_initialize_common(string _t1, string _t2, string _t3, int _tankHealPoin
 	/dnet 		fullnames 							  	${Ini[INI_COMMON,SETTINGS,dnet_fullNames,off]}
 	/declare 	gbl_bln_useWarp    		bool    outer	${Ini[INI_COMMON,SETTINGS,useWarp,FALSE]}
 	/declare 	bln_announce			bool 	outer 	TRUE
+	/declare 	gbl_db_path				string local 	${MacroQuest.Path[macros]}/xiris_settings_global
+
 	
 	|-- [Class/Grouping/Raid Settings]
 	/call processClassTypes
@@ -280,6 +282,7 @@ Sub xbot_initialize_common(string _t1, string _t2, string _t3, int _tankHealPoin
 	/echo \arSETUP COMPLETE \ay${float_processed}ms  \ag${Macro.MemUse}MB  \ao${Macro.Undeclared}
 
 /return
+
 
 Sub processClassTypes
 	/echo \awprocessClassTypes
@@ -1184,3 +1187,125 @@ Sub chkUtils_WAR
 
 Sub chkUtils_WIZ
 /return 
+
+|** 
+ ----------------------------
+ Dannet Observer Utilities
+ ----------------------------
+ Create/Remove Observers
+ Requires MQ2SQLite and a SQLite database
+ ----------------------------
+**|
+
+| CREATE an observer. This is a shortcut method that takes several arguments
+| _table: the SQLite table to inspect
+| _action: add|drop
+Sub createObserver(int _id, string _name, string _table, string _tlo, string _alias, string _command)
+	/declare _count           int     local 1
+	/declare _countObs        int     local 1
+	/declare _action          string  local FALSE
+	/declare _toon            string  local FALSE
+	/declare _timestart       int     local 0
+	/declare _timeend         int     local 0
+	/declare _found           bool    local FALSE
+	/declare _tmpVar          string  local FALSE
+	/declare _tmpObs          string  local FALSE
+	/declare _countFail       int     local 0
+
+	| Since we are creating an observer, let us make sure the timer
+	/call updateTimer ${_alias} 1s RESTART
+
+	
+	| create the SQL command
+	/if (${_command.Equal[drop]}) {
+		/varset _action -drop
+	} else /if (${_command.Equal[add]}) {
+		/varset _action
+	} 
+
+
+	| Create record in DB if not exist
+	/if (!${sqlite.Rows[${_table}]}) {
+		/sqlite query "${gbl_db_path}" ${_table} SELCT * FROM ${_table}
+	}
+
+	| Not working? Exit
+	/if (!${sqlite.Rows[${_table}]}) {
+		/return FALSE
+	}
+
+	| Look through Dannet
+	/while (${_count} <= ${DanNet.Peers}) {
+		/varset _timestart ${MacroQuest.Running}
+    	/varset _toon ${DanNet.Peers.Value}].Arg[${_count},|]}
+    	/varset _countFail 0
+
+		| skip self
+		/if (${_toon.Equal[${Me.DisplayName}]}) {
+			/varcalc _count ${_count} + 1
+			/continue
+		}
+
+		/varset _found FALSE
+    	/varset _countObs 1
+		/echo \a-w${sqlite.Rows[${_table}]}\ax
+		/echo \aoToon\aw ${_count}\ax::\at${_toon}\ax
+
+		  | start our trip throught the sql data
+		/while (${_countObs} <= ${sqlite.Rows[${_table}]}) {
+			/varset _tmpVar ${_toon}_${sqlite.Result[${_table} ${_countObs} env_var]}
+			/varset _tmpObs ${sqlite.Result[${_table} ${_countObs} value]}
+
+			| define or delete the variables as we need
+			/if (${_action.Equal[drop]}) {
+				/if (!${DanNet[${_toon}].OSet["${_tmpObs}"]}) {
+					/varcalc _countObs ${_countObs} + 1
+					/continue
+				}
+
+			} else /if (${_action.Equal[add]}) {
+				/if (${DanNet[${_toon}].OSet["${_tmpObs}"]}) {
+					/varcalc _countObs ${_countObs} + 1
+					/continue
+				}
+
+				| if the observer variable does not exist create it
+				/if (!${Defined[${_tmpVar}]}) {
+					/declare ${_tmpVar} string outer
+				}
+			}
+
+			| set observer or drop it
+			/dobserve ${_toon} -q "${_tmpObs}" -o ${_tmpVar} ${_actionO}
+			/delay 5 ${DanNet[${_toon}].OSet["${_tmpObs}"]}
+			/if (!${DanNet[${_toon}].OSet["${_tmpObs}"]}) {
+				/varcalc _countFail ${_countFail} + 1
+			}
+			/echo \a-t/dobserve\ax ${_toon} -q \a-w"${_tmpObs}"\ax -o ${_tmpVar} ${_actionO} (\a-w${DanNet[${_toon}].OSet["${_tmpObs}"]}\ax)
+
+			/varset _found TRUE
+			/varcalc _countObs ${_countObs} + 1
+		}
+
+
+		| set an end time for our test for that characer
+		/varset _timeend ${MacroQuest.Running}
+
+		| give us some response so we know that something is happening
+		/if ((!${_silent} || ${_debug}) && ${_found}) {
+			/invoke ${out[17, "Observe (${If[${_action.Equal[add]},\agadd\ax,\ardrop\ax]})${sep}${_table}(\a-r${_countFail}\ax)${sep}\aw${_toon}\ax${sep}\a-w${Math.Calc[((${_timeend}-${_timestart}) / 10) / 60]}s\ax"]}
+		}
+
+		| moving to the next toon in the dannet
+		/varcalc _count ${_count} + 1
+		/varset _found FALSE
+	}
+/return TRUE
+
+Sub removeObserver(int _id, string _alias)
+
+/return
+
+Sub updateTimer(string _alias, string _value, string _command)
+
+/return

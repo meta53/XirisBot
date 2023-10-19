@@ -54,7 +54,7 @@ Sub initEvents_OOW_Anguish
 
 	/declare eventTarget	   	string outer NULL
 	
-	/call RegisterRaidEvents Events_OOW_Anguish 15
+	/call RegisterBackgroundEvents Events_OOW_Anguish 15
 	/call RegisterPriorityEvents Events_OOW_Anguish_Rapid 3
 
 
