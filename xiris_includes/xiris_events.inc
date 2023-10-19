@@ -15,9 +15,11 @@ REVISION HISTORY
     06.27.22    xiris   Added Adaptation
     07.16.22    xiris   Added Endurance
     09.01.23    xiris   Added Anguish
+    10.19.23    xiris   Added Class Events
 ______________________________________________
 **|	
 
+#include xiris_includes/xiris_events_class.inc
 #include xiris_includes/xiris_events_raid_god.inc 
 #include xiris_includes/xiris_events_raid_dodh_demiplane.inc 
 #include xiris_includes/xiris_events_raid_epic.inc 
@@ -51,6 +53,9 @@ Sub xbot_initialize_events
     /declare PriorityEventsRaw[10]      string outer NULL
     /declare PriorityEvents[0]          string outer NULL
 
+    |--Setup Class Events
+    /if (${Me.Class.ShortName.Equal[BRD]}) /call xbot_initialize_class_BRD
+
     |--Check for Special Events
 
     |- Gates of Discord
@@ -59,7 +64,7 @@ Sub xbot_initialize_events
     /if (${Zone.ShortName.Equal[inktuta]})      /call initEvents_GoD_Inktuta
     /if (${Zone.ShortName.Equal[tacvi]})        /call initEvents_GoD_Tacvi
 
-    |-- Omens of War
+    |- Omens of War
     /if (${Zone.ShortName.Equal[chambersa]})    /call initEvents_OOW_MPG_Hatred
     /if (${Zone.ShortName.Equal[chambersb]})    /call initEvents_OOW_MPG_Endurance
     /if (${Zone.ShortName.Equal[chambersc]})    /call initEvents_OOW_MPG_Foresight
@@ -68,13 +73,13 @@ Sub xbot_initialize_events
     /if (${Zone.ShortName.Equal[chambersf]})    /call initEvents_OOW_MPG_Corruption
     /if (${Zone.ShortName.Equal[thundercrest]} || ${Zone.ShortName.Equal[anguish]})      /call initEvents_OOW_Anguish
 
-    |-- Epic 1.5 Fights
+    |- Epic 1.5 Fights
     /if (${Zone.ShortName.Equal[gfaydark]})     /call initEvents_Epic
     
-    |-- Dragons of Norrath
+    |- Dragons of Norrath
     /if (${Zone.ShortName.Equal[thenest]})      /call initEvents_DoN_Vishimtar
 
-    |-- Depths of Darkhollow
+    |- Depths of Darkhollow
     /if (${Zone.ShortName.Equal[dreadspire]})   /call initEvents_DoDH_Demiplane
 
    

@@ -1,0 +1,71 @@
+|**
+----------------------------
+BOT_LOADER.mac
+----------------------------
+This macro is configured for use by my crew based on class
+Modify for specific toons
+______________________________________________
+REVISION HISTORY
+    08.10.10    xiris
+	11.17.10	xiris	Added delays everywhere to try to figure out weird failures
+	09.04.15	xiris	Changed the variant_initialize to better handle weirdness from EMU
+	10.05.15	xiris	Changed to use modbot for certain classes, better handle standard values
+	12.04.15	xiris 	Modified how the initialization of parameters works
+						Added a ranger specific macro
+	09.17.18	xiris   Did some cleanup, its quicker now
+	04.10.22	xiris   Mild refactoring to bring arg names inline with new	
+	05.01.23	xiris	Consolidated the melee endurance classes into a single statement
+	07.24.23	xiris	Rewrote majority of code to handle new INI implementations
+	08.13.23	xiris	Note: instead of loading another macro based on class, this macro will be the 
+						base macro for Xiris Bot. Everything now happens in the includes
+	10.18.23	xiris	Ported some of the v1.5 branch into this since I changed some things with curing/etc
+**|
+
+#turbo 120
+#warning 
+
+#define INI_CHAR        	xiris_settings_character/BOT_${Me.Class.ShortName}_${Me.CleanName}.ini
+#define INI_COMMON      	xiris_settings_global/xiris_settings_common.ini
+#define INI_DAMAGESHIELDS	xiris_settings_global/xiris_settings_damageshields.ini
+#define INI_HEAL			xiris_settings_global.xiris_settings_healing.ini
+#define INI_LOOT        	xiris_settings_global/xiris_settings_loot.ini
+#define INI_RAID 			xiris_settings_global/xiris_settings_raid.ini
+#include                	xiris_includes/xiris_spell_routines.inc
+
+#include                	xiris_includes/xiris_buffing.inc
+#include                	xiris_includes/xiris_burning.inc
+#include                	xiris_includes/xiris_casting.inc
+#include                	xiris_includes/xiris_clicks.inc
+#include 					xiris_includes/xiris_class.inc
+#include                	xiris_includes/xiris_common.inc
+#include                	xiris_includes/xiris_curing.inc
+#include                	xiris_includes/xiris_dannet.inc
+#include                	xiris_includes/xiris_events.inc
+#include                	xiris_includes/xiris_exclude.inc
+#include                	xiris_includes/xiris_healing.inc
+#include                	xiris_includes/xiris_looting.inc
+#include                	xiris_includes/xiris_melee.inc
+#include                	xiris_includes/xiris_movement.inc
+#include                	xiris_includes/xiris_offtank.inc
+#include					xiris_includes/xiris_pets.inc
+
+	
+|-------------------------------------------------------------------------------- 
+|SUB: Main
+|--------------------------------------------------------------------------------
+Sub Main(string _t1, string _t2, string _t3, int _tankHealPointOverride)
+	
+	/echo \awI am a \arXiris\ao_Bot \agBeep \atBoop
+	/call xbot_initialize_common ${_t1} ${_t2} ${_t3} ${_tankHealPointOverride}s 
+
+	:MainLoop
+		/if (${Me.Hovering} || ${Window[tradewnd].Open} || ${Window[lootwnd].Open}) /goto :MainLoop
+		/call RunAllEvents
+        /if (${bln_engaged}) {
+			/call RunPriorityEvents
+			/call RunRaidEvents
+			/call RunClassEvents
+        } 
+    /goto :MainLoop
+ /return
+ 

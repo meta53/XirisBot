@@ -39,6 +39,16 @@ REVISION HISTORY
 #EVENT NotYourKill		"You may not loot this corpse at this time."
 #Event LootTooFar		"Corpse too far away"
 
+|-- Greed Events
+#EVENT SHAKE_DOWN_RAIDFOR_MONEY "#*#ShakeDown#*#"
+
+#EVENT GIMME_MONEY		"#1# tells you#*#'GimmeMoney #2#'"
+#EVENT GIMME_MONEY		"#1# tells you#*#'GimmeMoney #2#'"
+#EVENT GIMME_MONEY		"#1# tells the raid#*#GimmeMoney #2#'"
+#EVENT GIMME_MONEY 		"[ #1# #*#]#*#GimmeMoney #2#"
+
+
+
 Sub initEvents_Looting
     /call RegisterBackgroundEvents Events_Looting_Background
 /return 
@@ -51,6 +61,8 @@ Sub Events_Looting_Background
     }
     /doevents Loot_ON
 	/doevents Loot_Self
+	/doevents SHAKE_DOWN_RAIDFOR_MONEY
+	/doevents GIMME_MONEY
 /return
 
 
@@ -413,3 +425,110 @@ Sub lootTarget(int _id)
 		/autoinv
 	}
 /return    
+
+
+
+|-------------------------------------------------------------------------------- 
+|SUB: Shake down the assholes in your raid for cash!
+|-------------------------------------------------------------------------------- 
+Sub Event_SHAKE_DOWN_RAIDFOR_MONEY(string _line, string _chatSender, string _eventParams)
+	/doevents flush SHAKE_DOWN_RAIDFOR_MONEY
+	/if (${bln_engaged}) /return
+	/declare i int local 0
+	/if (${Raid.Members} == 0) /return
+	/for i 2 to ${Raid.Members}
+		/if (${Raid.Member[${i}].Name.Equal[${Me.Name}]}) /continue
+		/dt ${Raid.Member[${i}]} ${i} => GimmeMoney VIG
+		/delay 20s
+	/next i
+	/docommand /${announceChannel} Raid has given me ${givenPlat}! I now have ${Me.Platinum}!
+/return
+
+Sub Event_GIMME_MONEY(string _line, string _chatSender, string _eventParams)
+	/doevents flush GIMME_MONEY
+	/call TransferCash ${_chatSender} ${_eventParams}
+/return 
+
+Sub TransferCash(string _recipient, string _cashArgs)
+	/if (${bln_engaged}) /return
+	/echo \aoTransferCash \awTo=>\ag${_recipient} \awType=>\ag${_cashArgs}
+	
+	/declare myPlat		int	local 	${Me.Platinum}
+	/declare givenPlat	int	local	0
+	/declare moveCount	int local 	0
+	| to select all plat  						/nomodkey /shiftkey /notify InventoryWindow IW_Money0 leftmouseup
+	| to select some plat						/nomodkey /notify InventoryWindow IW_Money0 leftmouseup
+	| to check quanity window open 				/if ${Window[QuantityWnd].Open}
+	| to check what is in quantity window 		${Window[QuantityWnd].Child[QTYW_SliderInput].Text}
+	| to change what is in the quantity window 	/notify QuantityWnd QTYW_slider newvalue ${newAmount}
+	| to hit accept on quantity window 			/notify QuantityWnd QTYW_Accept_Button leftmouseup
+
+	/if (${_cashArgs.Equal[ALL]}) {
+		/varset givenPlat ${myPlat}
+	} else {
+		/if (${_cashArgs.Equal[VIG]}) {
+			/echo vig!
+			| VIG means... well its a joke, but leave self with 1000pp
+			/varcalc givenPlat ${myPlat} - 1000
+			/echo givenPlat ${givenPlat}
+			/if (${givenPlat} < 1000) {
+				/docommand /${announceChannel}  I don't have the VIG! 1000pp minimum remainder < (${myPlat}pp)
+				/return
+			}
+		} else {
+			/varset givenPlat ${_cashArgs}
+		}
+		| Can I afford this?
+		/if (${givenPlat} > ${myPlat}) {
+			/docommand /${announceChannel}  I don't have ${givenPlat}pp (${myPlat}pp)
+			/return
+		}
+		
+	}
+
+	/echo \aoGiving \ag${givenPlat}pp \aoto \ag ${_recipient}
+	/docommand /${announceChannel} Giving ${givenPlat}pp to ${_recipient}
+
+	| Move to recipient
+	/call TrueTarget ${Spawn[pc ${_recipient}].ID}
+	/if (${Navigation.PathExists[spawn ${_recipient}]}) {
+		/nav recordwaypoint navStart
+		/nav spawn ${_recipient}
+
+		:navRecipient
+		/if (${moveCount} > 10) {
+			/docommand /${announceChannel} Cannot move to ${_recipient}
+			/return
+		}
+		/if (${Navigation.Active}) {
+			/delay 10
+			/varcalc moveCount ${moveCount}+1
+			/goto :navRecipient
+		}
+	}
+	/delay 5
+
+	| Open Inventory and grab plat
+	/if (!${Window[InventoryWindow].Open}) /nomodkey /keypress inventory 
+	/delay 5
+
+	| Select the amount of platinum
+	/nomodkey /notify InventoryWindow IW_Money0 leftmouseup
+	/delay 3
+	/if (!${Window[QuantityWnd].Open}) {
+		/docommand /${announceChannel} Failed to open QuanitityWnd
+		/return
+	} else {
+		/notify QuantityWnd QTYW_slider newvalue ${givenPlat}
+		/delay 2
+		/notify QuantityWnd QTYW_Accept_Button leftmouseup
+		/delay 2
+		/click left target
+		/delay 10
+		/if (${Window[TradeWnd].Open}) /nomodkey /notify TradeWnd TRDW_Trade_Button leftmouseup
+		|/docommand /${announceChannel} I have given ${_recipient} ${givenPlat}pp
+		/delay 40
+		/nav wp navStart
+	}
+
+/return

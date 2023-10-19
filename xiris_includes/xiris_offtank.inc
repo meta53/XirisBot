@@ -81,12 +81,15 @@ Sub EVENT_OffTankDivineInterventionOFF
 /return
 
 Sub xbot_initialize_offtanking
-	/if (!${Select[${Me.Class.ShortName},PAL,SHD,WAR]}) /return
 	/echo \n \apInitialize: \aoOfftanking \aw-------------------------
 	
 	|-- [Settings] : Off Tanking
+	/declare bln_offTank			bool	outer FALSE
 	/declare int_offtankRadius		int     outer 85
 	/declare bln_useDI				bool    outer FALSE
+
+	| Return if not an OT class
+	/if (!${Select[${Me.Class.ShortName},PAL,SHD,WAR]}) /return
 
 	/call initEvents_Offtanking
 	/squelch /alert clear 5
@@ -98,6 +101,8 @@ Sub xbot_initialize_offtanking
 	/squelch /alert add 5 "Keldovan"
 	/squelch /alert add 5 "Jomica"
 	/squelch /alert add 5 "cursebearer"
+	/squelch /alert add 5 "Ansdaicher"
+	/squelch /alert add 5 "Zellucheraz"
 /return
  
  Sub ChangeOfftankRadius(int _radius)

@@ -27,15 +27,15 @@ REVISION HISTORY
 	07.21.23	xiris 	Rewrite using new INI structures
 **|
 
-#EVENT Buffing_Buff_OnRaid		"#1# tells the group#*#'doRaidBuffs#*#'"
-#EVENT Buffing_Buff_OnRaid		"#1# tells you#*#'doRaidBuffs#*#'"
-#EVENT Buffing_Buff_OnRaid		"#1# tells the raid#*#'doRaidBuffs#*#'"
-#EVENT Buffing_Buff_OnRaid		"[ #1# #*#]#*#doRaidBuffs#*#"
+#EVENT Buffing_OnRAID		    "#1# tells the group#*#'doRaidBuffs#*#'"
+#EVENT Buffing_OnRAID		    "#1# tells you#*#'doRaidBuffs#*#'"
+#EVENT Buffing_OnRAID		    "#1# tells the raid#*#'doRaidBuffs#*#'"
+#EVENT Buffing_OnRAID		    "[ #1# #*#]#*#doRaidBuffs#*#"
 
-#EVENT Buffing_Buff_OnChar	    "#1# tells the group#*#'doCharBuffs #2#'"
-#EVENT Buffing_Buff_OnChar	    "#1# tells you#*#'doCharBuffs #2#'"
-#EVENT Buffing_Buff_OnChar	    "#1# tells the raid#*#'doCharBuffs #2#'"
-#EVENT Buffing_Buff_OnChar	    "[ #1# #*#]#*#doCharBuffs #2#"
+#EVENT Buffing_OnCHAR	        "#1# tells the group#*#'doCharBuffs #2#'"
+#EVENT Buffing_OnCHAR	        "#1# tells you#*#'doCharBuffs #2#'"
+#EVENT Buffing_OnCHAR	        "#1# tells the raid#*#'doCharBuffs #2#'"
+#EVENT Buffing_OnCHAR	        "[ #1# #*#]#*#doCharBuffs #2#"
 
 #EVENT Buffing_DS_Disable	    "#1# tells the group#*#'NoDS#*#'"
 #EVENT Buffing_DS_Disable	    "#1# tells you#*#'NoDS#*#'"
@@ -57,7 +57,7 @@ REVISION HISTORY
 #EVENT Buffing_Buff_RemoveAll   "#1# tells the raid#*#'removeallbuffs#*#'"
 #EVENT Buffing_Buff_RemoveAll   "[ #1# #*#]#*#removeallbuffs #*#"
 
-Sub initEvents_buffing
+Sub initEvents_Buffing
 	/call RegisterBackgroundEvents  Events_Buffing_Background
     /call RegisterRaidEvents        Events_Buffing_Raid
 /return
@@ -67,8 +67,8 @@ Sub Events_Buffing_Background
 	/doevents Buffing_DS_Disable
 	/doevents Buffing_DS_Enable
 
-	/doevents Buffing_Buff_OnRaid
-	/doevents Buffing_Buff_OnChar
+	/doevents Buffing_OnRAID
+	/doevents Buffing_OnCHAR
 
 	/doevents Buffing_Buff_Remove
 	/doevents Buffing_Buff_RemoveAll
@@ -102,8 +102,7 @@ Sub xbot_initialize_buffing
     /call processDamageShields
 
 	| initialize the buffing events
-	/call initEvents_buffing
-	
+	/call initEvents_Buffing
 /return
 
 
@@ -311,9 +310,9 @@ Sub chkSelfBuffs
  that fit the ${BUFFTARGETED_${i}_targets} key for the buff
  ----------------------------
 **|
-Sub EVENT_Buffing_Buff_OnRaid(string _line, string _sender, string _eventParams)
+Sub EVENT_Buffing_OnRAID(string _line, string _sender, string _eventParams)
 	| Flush the event
-	/doevents flush Buffing_Buff_OnRaid
+	/doevents flush Buffing_OnRAID
     /if (!${int_targetedBuffs_total} || !${bln_targetedBuffs_enabled}) /return
 	/echo \awDoing Raid Buffs on \agALL (${int_targetedBuffs_total})
      /docommand /${str_announce_channel} Doing Raid Buffs (${int_targetedBuffs_total})
@@ -336,9 +335,9 @@ Sub EVENT_Buffing_Buff_OnRaid(string _line, string _sender, string _eventParams)
  Will target the character and cast the group/single target buff(s)
  ----------------------------
 **|
-Sub EVENT_Buffing_Buff_OnChar(string _line, string _sender, string _eventParams)
+Sub EVENT_Buffing_OnCHAR(string _line, string _sender, string _eventParams)
 	| Flush the event
-	/doevents flush Buffing_Buff_OnChar
+	/doevents flush Buffing_OnCHAR
      /if (!${int_targetedBuffs_total} || !${bln_targetedBuffs_enabled}) /return
 	/echo \awDoing Character Buffs on \ag${_eventParams}
     /docommand /${str_announce_channel} Doing Character Buffs on ${_eventParams} (${int_targetedBuffs_total})
@@ -592,18 +591,4 @@ Sub EVENT_Buffing_DS_Enable(string _line, string _sender, string _eventParams)s
 	}
 	:return
 	/doevents flush Buffing_DS_Enable
-/return
-
-Sub EVENT_DOSHRINK(string _line, string _sender, string _eventParams)
-    /if (!${Select[${Me.Class.ShortName},BST,SHM]}) /return
-	/echo \ay doShrinkEventCalled
-	/memspellset shrink
-	/declare i int local 0
-	/for i 0 to 5
-		/call TrueTarget ${Group.Member[${i}].ID}
-		/delay 5
-		/call MQ2Cast "Shrink" gem1 5s
-		/delay 10
-	/next i
-	/memspellset default
 /return

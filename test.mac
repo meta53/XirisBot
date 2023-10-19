@@ -27,8 +27,7 @@
 
 
 Sub Main 
-    /mqclear
-	
+   
 	/call xbot_initialize_common Xiris Xiria Xirea 85
 
     :MainLoop

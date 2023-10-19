@@ -12,6 +12,7 @@ xiris_class_ini/
 !.gitignore
 !README.md
 !bot_*
+!xiris*
 !xiris_includes/*
 !xiris_settings/character/*
 !xiris_settings/global/*

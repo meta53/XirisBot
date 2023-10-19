@@ -29,7 +29,16 @@ REVISION HISTORY
 
 |MISC Casting (usually class based)
 #EVENT FIRETL 	            "#*#firetl#*#"
+#EVENT DOSHRINK 			"[#1#] doShrink#*#"
+#EVENT DOSHRINK 			"<#1#> doShrink#*#"
+#EVENT DOSHRINK				"#1# tells the group#*#'doShrink#*#'"
+#EVENT DOSHRINK				"#1# tells you#*#'doShrink#*#'"
+#EVENT DOSHRINK				"#1# tells the raid#*#'doShrink#*#'"
+#EVENT DOSHRINK				"#1# tell your raid#*#'doShrink#*#'"
+#EVENT DOSHRINK 			"[ #1# #*#]#*#doShrink#*#"
 
+#EVENT AEON 	            "#*#aeNukeON"
+#EVENT AEOFF	            "#*#aeNukeOFF"
 
 Sub initEvents_Casting
     /call RegisterRaidEvents        Events_Casting_Raid
@@ -42,6 +51,10 @@ Sub Events_Casting_Raid
     /if (${bln_engaged} && ${bln_killing} && !${bln_tanking} && !${bln_offTank})      /call chkDefensiveSpells
     /doevents SetResistType
 	/doevents SetUseFastOnly
+    /if (${Me.Class.ShortName.Equal[MAG]} || ${Me.Class.ShortName.Equal[WIZ]}) {
+        /doevents AEON
+        /doevents AEOFF
+    } 
 /return
 
 Sub Events_Casting_Background 
@@ -454,4 +467,22 @@ SUB EVENT_FIRETL
 	/call MQ2Cast "Teleport" gem6
 	/delay 1m
 	/memspellset ${str_casting_spellSet}
+/return
+
+
+Sub EVENT_DOSHRINK(string _line, string _sender, string _eventParams)
+	/echo \ay doShrinkEventCalled
+    /if (${FindItemCount[Umbracite Swarm Orb]}) {
+		/echo \agShrinking
+		/call MQ2Cast "Umbracite Swarm Orb" item
+	} else {
+		/declare i int local 0
+		/for i 0 to 5
+			/call TrueTarget ${Group.Member[${i}].ID}
+			/delay 5
+			/call MQ2Cast "Shrink" gem1 5s
+			/delay 10
+		/next i
+	}
+	}
 /return

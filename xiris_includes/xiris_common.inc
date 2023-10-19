@@ -105,6 +105,15 @@ ______________________________________________
 #EVENT Zoned				"You have entered#*#"
 #EVENT Zoned				"LOADING, PLEASE WAIT..."
 
+#EVENT RemoveRingset		"#1#RemoveRingset#*#"
+#EVENT LoadRingset 			"#1#LoadRingset#*#"
+#EVENT LoadWeaponset		"#1#LoadWeaponset #2#"
+#EVENT SaveJewelry			"#1#SaveJewelry#*#"
+#EVENT SaveRingset      	"#1#SaveRingset#*#"
+#EVENT SaveFaceSlot      	"#1#SaveFaceSlot#*#"
+#EVENT SaveWeaponset  		"#1#SaveWeaponset #2#"
+#EVENT SaveCurrentWeaponset "#1#SaveCurrentWeaponset #2#"
+
 #EVENT UseStaunchRecovery   "#*#DoStaunchRecovery#*#"
 #EVENT UseIntensity			"#*#DoIntensity#*#"
 #EVENT UseServants			"#*#DoServants#*#"
@@ -123,13 +132,26 @@ Sub Events_Common_Background
 		/doevents RaidReform
 		/doevents RaidBuildByTemplate
 		/doevents Zoned	
+		| Iventory Remove Events
+		/doevents RemoveRingset
+
+		| Inventory Load Events
+		/doevents LoadFaceSlot
 		/doevents LoadRingset
 		/doevents LoadWeaponset
+
+		| Inventory Save Events
+		/doevents SaveJewelry
+		/doevents SaveFaceSlot
+		/doevents SaveRingset
+		/doevents SaveEarrings
 		/doevents SaveWeaponset
 		/doevents SaveCurrentWeaponset
-		/doevents SaveRingset
+
 		/doevents RefreshXTarget
 		/if (!${timer_check_utilities}) /call chkUtils
+
+			
 	}
 /return
 
@@ -218,8 +240,7 @@ Sub xbot_initialize_common(string _t1, string _t2, string _t3, int _tankHealPoin
 	|-- Setting base tank settings
 	/declare	bln_tanking				bool	outer	${If[${Me.ID} == ${int_MTID},TRUE,FALSE]}
 	/declare	bln_taunting			bool 	outer	${If[${Me.ID} == ${int_MTID},TRUE,FALSE]}
-	/declare bln_offTank		 		bool 	outer FALSE
-	/echo
+
 	/echo \ao        Tanks \awMT:\ag${str_MTName} \awST:\ag${str_STName} \awTT:\ag${str_TTName}
 
 	|-- [Settings] : Miscellaneous Defaults 
@@ -272,7 +293,7 @@ Sub xbot_initialize_common(string _t1, string _t2, string _t3, int _tankHealPoin
 	/call xbot_initialize_movement
 	/call xbot_initialize_offtanking
 	/call xbot_initialize_pets 
-	/call xbot_initialize_classes
+	/call xbot_initialize_class_${Me.Class.ShortName}
 
 	| Initialize the Common Events
 	/call initEvents_Common
@@ -1309,3 +1330,355 @@ Sub removeObserver(int _id, string _alias)
 Sub updateTimer(string _alias, string _value, string _command)
 
 /return
+
+
+|----------------------------------------------------|
+| Save Jewelry Slots		 |
+|----------------------------------------------------|
+|--Save Events
+Sub EVENT_SaveJewelry
+	/doevents flush SaveJewelry 
+	/call SaveRingset
+	/call SaveFaceSlot
+	/call SaveEarrings
+/return 
+
+Sub EVENT_SaveRingset
+	/doevents flush SaveRingset
+	/call SaveRingset
+/return
+
+Sub EVENT_SaveFaceSlot
+	/doevents flush SaveFaceSlot 
+	/call SaveFaceSlot
+/return 
+
+Sub EVENT_SaveEarrings
+	/doevents flush SaveEarrings 
+	/call SaveEarrings
+/return 
+
+|-----
+|-- Save Subs
+Sub SaveRingset
+	/declare leftfinger 	string	local	${Me.Inventory[leftfinger].Name}
+	/declare rightfinger 	string	local	${Me.Inventory[rightfinger].Name}
+
+	/echo \aoSaving Ring Slots \awleft: \ag${leftfinger} \awright: \ag${rightfinger}
+	/ini "INI_CHAR" "Jewelry" "leftfinger" "${leftfinger}"
+	/ini "INI_CHAR" "Jewelry" "rightfinger" "${rightfinger}"
+/return
+
+Sub SaveFaceSlot
+	/declare face			string	local	${Me.Inventory[face].Name}
+	/echo \aoSaving Face Slot \awface: \ag${face}
+	/ini "INI_CHAR" "Jewelry" "face" "${face}"
+/return 
+
+Sub SaveEarrings 
+	/declare leftear 	string	local	${Me.Inventory[leftear].Name}
+	/declare rightear 	string	local	${Me.Inventory[rightear].Name}
+
+	/echo \aoSaving Ear Slots \awleft: \ag${leftear} \awright: \ag${rightear}
+	/ini "INI_CHAR" "Jewelry" "leftear" "${leftear}"
+	/ini "INI_CHAR" "Jewelry" "rightear" "${rightear}"
+/return 
+
+
+|-- method to load the saved weapons from INI (primarily for Trial of Specialization)
+Sub EVENT_LoadWeaponset(string _line, string _sender, string _evtParams)
+	/echo \ayLoading Weaponset <${_evtParams}> (${_sender})
+	/if (${_evtParams.NotEqual[NULL]}) /call LoadWeaponset ${_evtParams}
+/return
+
+
+|#EVENT SaveWeaponset  		"#1#SaveWeaponset #2#"
+Sub EVENT_SaveWeaponset(string _line, string _sender, string _eventParams)
+	/echo \aySavingWeaponset ${_sender} ${_eventParams}
+	/declare key string local ${_eventParams.Arg[1,=]}
+	/declare weapons string local ${_eventParams.Arg[2,=]}
+	/echo  key: ${key} weapons: ${weapons}
+	/if (${_eventParams.NotEqual[NULL]}) /call SaveWeaponset ${_eventParams.Token[1,=]} ${_eventParams.Token[2,=]}
+/return
+
+Sub SaveWeaponset(string _key, string _weaponset)
+	|weaponset line should be [_key] [item1|mainhand,item2|offhand]
+	|example: default=Longsword of Execration|mainhand,Aegis of Midnight|offhand
+	/echo writing key: ${_key} weaponset: ${_weaponset}
+	/ini INI_CHAR "Weaponsets" "${_key}" "${_weaponset}"
+/return
+
+|#EVENT SaveCurrentWeaponset "#1#SaveCurrentWeaponset #2#"
+Sub EVENT_SaveCurrentWeaponset(string _line, string _sender, string _eventParams)
+	/call SaveCurrentWeaponset ${_eventParams}
+/return
+
+Sub SaveCurrentWeaponset(string _key)
+	/echo Saving Current Weaponset as ${_key}
+	/if (${_key.Equal[NULL]}) /varset _key test
+	/declare pri string local ${Me.Inventory[mainhand].Name}
+	/declare off string local ${Me.Inventory[offhand].Name}
+	
+ 	/ini INI_CHAR "Weaponsets" "${_key}" "${pri}|mainhand,${off}|offhand"
+/return
+
+| TODO rewrite this like we did for rings
+Sub LoadWeaponset(string _weaponset)
+	|/if (${str_classArchetype.Equal[CASTER]} || ${str_classArchetype.Equal[PRIEST]} && ${_weaponset.NotEqual[default]}) /return
+	/if (${_weaponset.Equal[NULL]}) /varset _weaponset default
+	/declare set string local ${Ini[INI_CHAR,Weaponsets,${_weaponset}]}
+	/if (${set.Equal[NULL]}) /return
+	/if (${Me.Class.ShortName.Equal[BRD]}) /medley stop
+	/echo \aw ${_weaponset}: ${set}
+	/declare slot string local 
+	/declare weap string local
+	/declare posi string local 
+
+	|-- auto inventory
+	/declare notemptyCount int local 0
+	:notempty
+	/varcalc notemptyCount ${notemptyCount}+1
+	/autoinventory
+	/if (${notemptyCount} > 10) /return
+	/if (${Cursor.ID}) /goto :notempty
+
+	|-- empty both hands
+	/if (${Me.Inventory[mainhand].Name.NotEqual[NULL]}) {
+		/echo \aoUnequip mainhand
+		/unequip mainhand
+		/autoinventory
+	}
+	/delay 12
+	/if (${Me.Inventory[offhand].Name.NotEqual[NULL]}) {
+		/echo \aoUnequip offhand
+		/unequip offhand
+		/autoinventory
+	}
+
+	/if (${_weaponset.Equal[EMPTY]}) /goto :return
+
+	
+	/delay 12
+	:mainhand
+	|-- do mainhand
+	/varset slot ${set.Token[1,,]}
+	/varset weap ${slot.Token[1,|]}
+	/varset posi ${slot.Token[2,|]}
+
+	/if (${weap.Equal[NULL]}) {
+		/autoinventory
+		/echo \ay Weaponset ${_weaponset} mainhand is NULL! Removing.
+		/if (${Me.Inventory[mainhand].Name.NotEqual[NULL]}) {
+			/echo unequip mainhand
+			/unequip mainhand
+			/autoinventory
+		} else {
+			/echo Mainhand was already Empty!
+		}
+	} else {
+		/autoinventory
+		/echo \ag Moving "${weap}" to ${posi}
+		/if (${FindItemCount[${weap}]} == 0) {
+			/docommand /${announceChannel} Could not find ${weap}, fix my ini!
+			/goto :return
+		} else {
+			/exchange "${weap}" ${posi}
+		}
+	}
+
+	|-- auto inventory
+	/autoinventory
+	/delay 12
+	:offhand
+	|-- do secondary first in case its 2 handed weapon
+	/varset slot ${set.Token[2,,]}
+	/varset weap ${slot.Token[1,|]}
+	/varset posi ${slot.Token[2,|]}
+	/if (${weap.Equal[NULL]}) {
+		/autoinventory
+		/if (${Me.Inventory[offhand].Name.NotEqual[NULL]}) {
+			/echo \ayWeaponset ${_weaponset} offhand is NULL! Removing.
+			/echo \aoUnequipping Offhand
+			/unequip offhand
+			/autoinventory
+		} else {
+			/echo \aoOffhand was already Empty!
+		}
+		
+	} else {
+		/autoinventory
+		/echo \ag Moving "${weap}" to ${posi}
+		/if (${FindItemCount[${weap}]} == 0) {
+			/docommand /${announceChannel} Could not find ${weap}, fix my ini!
+		} else {
+			/exchange "${weap}" ${posi}
+		}
+		
+	} 
+
+	:return
+	/autoinventory
+	/if (${Me.Class.ShortName.Equal[BRD]}) /medley
+/return
+
+
+
+Sub Event_SkillCheck(string _line, string _sender, string _eventParams)
+	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[TANK]} || ${Me.Class.ShortName.Equal[BRD]}) /return
+	/echo SkillCheck: ${_line} ${_sender}
+	/echo params ${_eventParams}
+
+	/declare sval int local  ${Me.Skill[${_eventParams}]}
+	/if (${sval} == 0) {
+		/docommand /${announceChannel} ${Me.Skill[${_eventParams}]}
+		/nav wp lobby
+	}
+	/doevents flush SkillCheck
+
+/return
+
+
+
+
+|-----
+Sub EVENT_RemoveRingset
+	/echo removingRingset
+	/doevents flush RemoveRingset
+	/call RemoveRingset
+/return
+
+Sub RemoveRingset
+	/declare notemptyCount int local 0
+	/declare sEmpty string	local NULL
+	/declare sBag   string	local NULL
+	/declare sSlot  string	local NULL
+
+	:emptyCursor
+	/varcalc notemptyCount ${notemptyCount}+1
+	/autoinventory
+	/if (${notemptyCount} > 10) /return
+	/if (${Cursor.ID}) /goto :emptyCursor
+
+	:openBags
+	/keypress open_inv_bags
+
+	:leftFinger
+	/call FindEmptyBagSlot
+	/varset sBag    ${Macro.Return.Arg[1,,]}
+	/varset sSlot   ${Macro.Return.Arg[2,,]}
+	/echo sBag:${sBag} sSlot:${sSlot}
+	/if (${sSlot.Equal[NULL]} || ${Me.Inventory[leftfinger].Name.Equal[NULL]}) {
+		/echo \arNo EmptySlots or No Left Finger Equiped!
+		/goto :rightFinger
+	} else {
+		/itemnotify leftfinger leftmouseup
+		/delay 5
+		/echo ${sBag}|${sSlot}
+		/itemnotify in pack${sBag} ${sSlot} leftmouseup
+	}
+
+	:rightFinger
+	/call FindEmptyBagSlot
+	/varset sBag    ${Macro.Return.Arg[1,,]}
+	/varset sSlot   ${Macro.Return.Arg[2,,]}
+	/echo sBag:${sBag} sSlot:${sSlot}
+	/if (${sSlot.Equal[NULL]} || ${Me.Inventory[rightfinger].Name.Equal[NULL]}) {
+		/echo \arNo EmptySlots or No Right Finger Equiped!
+	} else {
+		/itemnotify rightfinger leftmouseup
+		/delay 5
+		/echo ${sBag}|${sSlot}
+		/itemnotify in pack${sBag} ${sSlot} leftmouseup
+	}
+/return
+
+Sub FindEmptyBagSlot
+	/echo \aoFindEmptyBagSlot
+	/declare bag 			int local -1
+	/declare bagSlot 		int local -1
+	/declare bagSlotCount 	int local
+	/declare i int local 
+	/declare j int local 
+	/for i 23 to 32
+		/varset bagSlotCount ${Me.Inventory[${i}].Container}
+		/echo \awBag:\ag${i} \awSlots:\ag${bagSlotCount}
+		/if (!${bagSlotCount}) /continue
+		/for j 1 to ${bagSlotCount}
+
+			/if (!${Me.Inventory[${i}].Item[${j}].ID}) {
+				/varset bag ${i}
+				/varset bagSlot ${j}
+				/echo \ao First Empty Slot is \awBag:\ag${bag} \awSlot:\ag${bagSlot}
+				/goto :return
+			}
+		/next j
+	/next i
+	
+ 
+:return
+	| using itemnotify, bags are invslot 1-8
+	/if (${bag} != -1) /varcalc bag ${bag}-22
+/return ${bag},${bagSlot}
+
+|-- method to load the saved rings from INI (primarily for Trial of Foresight)
+Sub EVENT_LoadRingset
+	/doevents flush LoadRingset
+	/echo \ayLoading Ringset
+	/call LoadRingset
+/return
+
+Sub LoadRingset
+	/if (${Me.Class.ShortName.Equal[BRD]}) /medley stop
+	/declare lr string local ${Ini[INI_CHAR,Jewelry,leftfinger,NULL]}
+	/declare rr string local ${Ini[INI_CHAR,Jewelry,rightfinger,NULL]}
+
+	/declare notemptyCount int local 0
+	:emptyCursor
+	/varcalc notemptyCount ${notemptyCount}+1
+	/autoinventory
+	/if (${notemptyCount} > 10) /return
+	/if (${Cursor.ID}) /goto :emptyCursor
+
+	:leftRing
+	/if (${lr.NotEqual[NULL]}) {
+		/exchange "${lr}" leftfinger
+		/delay 10
+	}
+	
+	:rightRing
+	/if (${rr.NotEqual[NULL]}) {
+		/exchange "${rr}" rightfinger
+		/delay 10
+	}
+	| return out
+	/echo \agSaved Ringset Equipped 
+	/autoinventory
+	/if (${Me.Class.ShortName.Equal[BRD]}) /medley ${str_currentMedley}
+/return 
+
+Sub Event_LoadFaceSlot
+	/doevents flush LoadFaceSlot
+	/call LoadFaceSlot
+/return 
+
+Sub LoadFaceSlot
+	/if (${Me.Class.ShortName.Equal[BRD]}) /medley stop
+	/declare face string local ${Ini[INI_CHAR,Jewelry,face,NULL]}
+	
+	/declare notemptyCount int local 0
+	:emptyCursor
+	/varcalc notemptyCount ${notemptyCount}+1
+	/autoinventory
+	/if (${notemptyCount} > 10) /return
+	/if (${Cursor.ID}) /goto :emptyCursor
+	
+	:faceSlot 
+	/if (${face.NotEqual[NULL]}) {
+		/exchange "${face}" face
+		/delay 10
+	}
+	| return out
+	/echo \agSaved Faceslot Equipped 
+	/autoinventory
+	/if (${Me.Class.ShortName.Equal[BRD]}) /medley ${str_currentMedley}
+/return 
