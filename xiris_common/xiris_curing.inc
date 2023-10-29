@@ -58,6 +58,7 @@ REVISION HISTORY
 |-- Corruption (N/A until TSS)
 
 
+
 |-- Other Events
 #EVENT ResetGroupCurer	"#1# tells you#*#'ResetGroupCurer#*#'"
 #EVENT ResetGroupCurer	"#1# tells the group#*#'ResetGroupCurer#*#'"
@@ -66,6 +67,12 @@ REVISION HISTORY
 
 #EVENT AutoCureMTOn		"#*#AutoCureMTOn#*#"
 #EVENT AutoCureMTOn		"#*#AutoCureMTOff#*#"
+
+|-- Forcing a fire of group cure *(shaman, nadox)
+#EVENT FireNadox		"#1# tells the group#*#'fireNadox#*#'"
+#EVENT FireNadox		"#1# tells you#*#'fireNadox#*#'"
+#EVENT FireNadox		"#1# tells the raid#*#'fireNadox#*#'"
+#EVENT FireNadox 		"[ #1# #*#]#*#fireNadox#*#"
 
 Sub InitEvents_Curing
 	/if (${str_classArchetype.Equal[PRIEST]} || ${Me.Class.ShortName.Equal[PAL]}) /call RegisterClassEvents Events_Curing 5
@@ -80,6 +87,7 @@ Sub Events_Curing
 	/doevents cureGroupCurse
 	/doevents AutoCureMTOn
 	/doevents AutoCureMTOff
+	/if (${Me.Class.ShortName.Equal[SHM]}) /doevents fireNadox
 /return
 
 Sub Events_Curing_Background
@@ -100,6 +108,13 @@ Sub Event_AutoCureMTOff
 	/varset bln_autoCureMT FALSE
 /return
 
+Sub Event_FireNadox
+	/doevents flush FireNadox 
+	/echo \agFiring Group: Blood of Nadox!
+	/call TrueTarget ${Me.ID}
+	/call MQ2Cast "${str_cure_poison}" gem4 8s
+/return 
+
 |-- Single target cure, simple syntax (for manual entry)
 |   Counters determined by Dannet query
 |	string _pcName, string _type
@@ -114,8 +129,8 @@ Sub Event_cureMe(_line, _sender, _eventParams)
 	/call getCureCounters ${name} ${qs}
 	/declare counters int local ${Macro.Return}
 
-	/echo \awCure Request \ayname: \ag${name}(${Spawn[pc ${pcName}].ID}) \aytype: \ag${curetype} \aycounters: \ag${counters}
-	/call handleCureRequest ${_sender} ${Spawn[pc ${pcName}].ID} ${curetype} ${counters} FALSE
+	/echo \awCure Request \ayname: \ag${name}(${Spawn[pc ${name}].ID}) \aytype: \ag${curetype} \aycounters: \ag${counters}
+	/call handleCureRequest ${name} ${Spawn[pc ${name}].ID} ${curetype} ${counters} FALSE
 	
 /return
 

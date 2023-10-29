@@ -326,6 +326,7 @@ Sub chkComponentsAll
 				/varset count		${COMPONENT_${i}_Count}
 				/varset summoner	"${COMPONENT_${i}_Summoner}"
 				/varset reagent		"${COMPONENT_${i}_Reagent}"
+				/echo calling chkComponents
 				/call chkComponents ${component} ${count} ${compType} ${summoner} ${reagent}
 				/delay 10
 				/if (${Macro.Return.Equal[SUMMON_ITEM_NOT_FOUND]}) {
@@ -352,10 +353,10 @@ Sub EVENT_DISC_NOTAVAILABLE(string line)
 
 
 Sub chkComponents(string _component, int _count, string _type, string _summoner, string _reagent)
-	|/echo chkComponents ${_component}, ${_count}, ${_type}, ${_summoner}, ${_reagent}
-	|/echo (${FindItemCount[=${_component}]}>=${_count})
-	/if (${SpawnCount[npc radius ${int_campRadius}]} > 0 && ${Zone.ShortName.NotEqual[thundercrest]}) {
-		|/echo returning due to spawn
+	/echo chkComponents ${_component}, ${_count}, ${_type}, ${_summoner}, ${_reagent}
+	/echo (${FindItemCount[=${_component}]}>=${_count}?)
+	/if (${SpawnCount[npc radius ${int_campRadius}]} > 0 && ${Zone.ShortName.NotEqual[thundercrest]}  && ${Zone.ShortName.NotEqual[guildhall]}  && ${Zone.ShortName.NotEqual[guildlobby]}) {
+		/echo \a-rReturning due to spawn
 		/return
 	} 
 
@@ -666,6 +667,7 @@ Sub chk_casterProvoke(string _provokeSpell)
 	}
 /return
 
+
 Sub chk_warProvoke(string _provokeDisc)
 	/if (!${Defined[war_minBellowEnd]}) {
 		/if (${_provokeDisc.Equal[Ancient: Chaos Cry]}) {
@@ -684,22 +686,26 @@ Sub chk_warProvoke(string _provokeDisc)
 	}
 	
 	/if (${provokeTimer}) {
-		 |/echo |- attemptProvoke -| I have not met my recast timer for [${_provokeDisc}] - [${provokeTimer}].
+		 /echo |- attemptProvoke -| I have not met my recast timer for [${_provokeDisc}] - [${provokeTimer}].
 	} else {
 	
 		/if (${Me.Endurance} < ${war_minBellowEnd}) {
-			 |/echo |- attemptProvoke -| I do not have enough endurance to use [${_provokeDisc}].
+			 /echo |- attemptProvoke -| I do not have enough endurance to use [${_provokeDisc}].
 		} else {
 
 			/if (!${Me.CombatAbilityReady[${_provokeDisc}]}) {
-				|/echo |- attemptProvoke -| [${_provokeDisc}] is not ready.
+				/echo |- attemptProvoke -| [${_provokeDisc}] is not ready.
 			} else {
 				/doability "${_provokeDisc}"
-				/if (${Spawn[${Me.TargetOfTarget}].CleanName.Equal[${Me}]}) /varset provokeTimer 600
+				/if (${Spawn[${Me.TargetOfTarget}].CleanName.Equal[${Me}]}) /varset provokeTimer 20
 			}
 		}
 	}
 /return
+
+sub chk_taunt
+	/if (${Me.AbilityReady[Taunt]}) /doability Taunt
+/return 
 
 
 
@@ -717,7 +723,7 @@ Sub xbot_initialize_melee
 	/declare 	timer_check_downshits	timer	outer 	0
 	/declare 	timer_cantSee			timer   outer   10s
 	/declare    timer_cantNav			timer   outer   10s
-	/declare 	timer_component			timer   outer   30s
+	/declare 	timer_component			timer   outer   0
 
 	|-- ALL CLASSES COMMON
 	|-- [Settings] : Downflags
@@ -740,16 +746,17 @@ Sub xbot_initialize_melee
 	/declare	int_componentTotal		int		outer	${Ini[INI_CHAR,Components,int_componentTotal,0]}
 	/declare 	bln_componentCheck		bool	outer   ${If[${int_componentTotal}>0,TRUE,FALSE]}
 		/declare comp int local
-			/for comp 1 to ${int_componentTotal} 
-				/declare COMPONENT_${comp} 			string 	outer ${Ini[INI_CHAR,Components,COMPONENT_${comp}]}
-				/declare COMPONENT_${comp}_Check	bool 	outer ${Ini[INI_CHAR,Components,COMPONENT_${comp}_Check,FALSE]}
-				/declare COMPONENT_${comp}_Count 	int 	outer ${Ini[INI_CHAR,Components,COMPONENT_${comp}_Count]}
-				/declare COMPONENT_${comp}_Type  	string 	outer ${Ini[INI_CHAR,Components,COMPONENT_${comp}_Type]}
-				/declare COMPONENT_${comp}_Summoner string	outer ${Ini[INI_CHAR,Components,COMPONENT_${comp}_Summoner]}
-				/declare COMPONENT_${comp}_Reagent 	string	outer ${Ini[INI_CHAR,Components,COMPONENT_${comp}_Reagent]}
-			/next comp
-	
-	
+		/for comp 1 to ${int_componentTotal} 
+			/declare COMPONENT_${comp} 			string 	outer ${Ini[INI_CHAR,Components,COMPONENT_${comp}]}
+			/declare COMPONENT_${comp}_Check	bool 	outer ${Ini[INI_CHAR,Components,COMPONENT_${comp}_Check,FALSE]}
+			/declare COMPONENT_${comp}_Count 	int 	outer ${Ini[INI_CHAR,Components,COMPONENT_${comp}_Count]}
+			/declare COMPONENT_${comp}_Type  	string 	outer ${Ini[INI_CHAR,Components,COMPONENT_${comp}_Type]}
+			/declare COMPONENT_${comp}_Summoner string	outer ${Ini[INI_CHAR,Components,COMPONENT_${comp}_Summoner]}
+			/declare COMPONENT_${comp}_Reagent 	string	outer ${Ini[INI_CHAR,Components,COMPONENT_${comp}_Reagent]}
+			|/echo \a-w${COMPONENT_${comp}} ${COMPONENT_${comp}_Check} ${COMPONENT_${comp}_Count} ${COMPONENT_${comp}_Type} ${COMPONENT_${comp}_Summoner} ${COMPONENT_${comp}_Reagent}
+		/next comp 
+	|/echo \awComponents:\ag${int_componentTotal} ${bln_componentCheck}
+	|/call chkComponentsAll
 
 	|--[Settings] : Spell & Support Definitions
 	/declare item_pull				string	outer	${Ini[INI_CHAR,Puller,item_pull,"Shuriken of Eternity"]}

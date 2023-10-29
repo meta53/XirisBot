@@ -22,10 +22,35 @@ Sub InitEvents_OOW_MPG_Endurance
 /return
 
 Sub Events_OOW_MPG_Endurance
-   | /if (${Me.Class.ShortName.Equal[ENC]}) /call chkEnduranceMez
-    |/if (${Me.Class.ShortName.Equal[WAR]}) /call chkEnduranceAdds
-    |/if (${Me.Class.ShortName.Equal[PAL]}) /call chkEnduranceAdds
+    /if (${Me.Name.Equal[Xiris]} && ${SpawnCount[npc Ansdaicher]}) /call chkAncients 
+    /if (${Me.Class.ShortName.Equal[ENC]}) /call chkEnduranceMez
+    /if (${Me.Class.ShortName.Equal[PAL]}) /call chkEnduranceAdds
+    /if (${Me.Class.ShortName.Equal[WAR]}) /call chkEnduranceAdds
 /return 
+
+Sub chkAncients
+    /echo chkAncients
+    
+    :checkAnsdaicher
+    /call TrueTarget ${Spawn[npc Ansdaicher]}
+    /if (${Me.TargetOfTarget.ID} != ${Me.ID}) {
+        /call chk_warProvoke Ancient: Chaos Cry
+        /call chk_warProvoke Bazu Bellow
+        /call chk_taunt
+    }
+
+    :checkZellucheraz
+    /call TrueTarget ${Spawn[npc Zellucheraz]}
+    /if (${Me.TargetOfTarget.ID} != ${Me.ID}) {
+        /call chk_warProvoke Ancient: Chaos Cry
+        /call chk_warProvoke Bazu Bellow
+        /call chk_taunt  
+    }
+
+    /goto :checkAnsdaicher
+
+
+/return
 
 Sub chkEnduranceMez
     /if (${SpawnCount[npc defender]}) {
@@ -58,6 +83,9 @@ Sub chkEnduranceAdds
                     /attack on
                     /delay 10
                     /goto :aggroFrantic
+                } else /if (${Me.TargetOfTarget.ID} != ${Me.ID}) {
+                    | We want to immediately call kill on Frantic Discordlings (they rape)
+                    /rs KillMob ${Target.ID} "${Target.Name}" ${Time.Time24}
                 }
             :nextFrantic
             /next i

@@ -122,6 +122,7 @@ Sub chkOffTanking
 	| Check all NPCs within offtankRadius
 	/declare i int local
 	/for i 1 to ${SpawnCount[npc radius ${int_offtankRadius} range 46 80 noalert 5]}
+		/doevents OFFTANKOFF
 		/call TrueTarget ${NearestSpawn[${i}, npc radius ${int_offtankRadius} range 46 80 noalert 5].ID}
 		:CheckAggro
 		/if (!${Bool[${Me.TargetOfTarget.ID}]} || (${ExcludeList.Find[${Target.CleanName}]})) /goto :nextTarget
@@ -231,5 +232,7 @@ Sub xbot_initialize_offtanking
 	/squelch /alert add 5 "Keldovan"
 	/squelch /alert add 5 "Jomica"
 	/squelch /alert add 5 "cursebearer"
+	/squelch /alert add 5 "Ansdaicher"
+	/squelch /alert add 5 "Zellucheraz"
 /return
  

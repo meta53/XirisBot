@@ -122,7 +122,7 @@ Sub Main(int _pull_dist, string _channel, string _campName, bool _useDownFlags, 
 /return
 
 Sub chkZone
-	/if (${Zone.ShortName.NotEqual[${SZ_shortName}]}) {
+	/if (${Zone.ShortName.NotEqual[${str_startZone}]}) {
 		/if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) {
 			/delay 30s
 			/if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) {
@@ -524,7 +524,7 @@ Sub AggroTarget
 				/if (${Me.Class.ShortName.Equal[PAL]}) /call MQ2Cast "${spell_pull}" ${spell_pullGem} 2s
 				/if (${Me.Class.ShortName.Equal[WAR]}) /call chk_warProvoke "${war_ca_hate_1}"
 				/delay 1
-				/if (${Me.CombatAbilityReady[Taunt]}) /doability Taunt
+				/if (${Me.AbilityReady[Taunt]}) /doability Taunt
 				/varset bln_tooClose FALSE
 				/goto :TargetAggroCheck
 			}

@@ -136,22 +136,20 @@ Sub Event_InkCurse
 	/docommand /${announceChannel} ${Me.Name} is Running.
 	/call Disengage
 	/varset inkRunning TRUE
-	/call InkCurseRun
+	/call InkCurseRun2
 /return
 
 Sub Event_InkCurseSafe
 	/if (!${inkRunning}) /return
 	/docommand /${announceChannel} ${Me.Name} is safe, returning.
+	/nav stop
 	/varset inkRunning FALSE
-	/maxfps bg 20
-	/play off
 /return
 
 Sub InkCurseDead
 	/docommand /${announceChannel} ${Me.Name} is dead, resetting.
 	/varset inkRunning FALSE
-	/play off
-	/maxfps bg 20
+	/nav stop
 	/delay 30
     /keypress back
 /return
@@ -206,22 +204,25 @@ Sub InkNoqRun(int _curseID)
 	:startLoop
 	/if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /call InkDeath
 	/if (${Me.TargetOfTarget.Name.Equal[${Me.Name}]}) {
-		/if (${Target.Distance} < 50) {
-			/nav wp noqRun
+		|/if (${Target.Distance} < 50) {
+			/nav wp cb3
 			:startLoopRun 
-			/delay 10
 			/if (${Navigation.Active}) /goto :startLoopRun
 			/goto :farLoop
-		}
-		/goto :startLoop
+		|}
+		|/goto :startLoop
 	} 	
 	
 	:farLoop
+	/nav wp cb3
+	:farLoop2
+	/if (${Navigation.Active}) /goto :farLoop2
+
 	/if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /call InkDeath
 	/if (${Me.TargetOfTarget.Name.Equal[${Me.Name}]} || !${Target.Name.Find[_corpse]}) {
 		/if (${Target.Distance} < 50) {
 			/varset inkRunning TRUE
-			/call InkCurseRun
+			/call InkCurseRun2
 		}
 	}
 	|-- no longer targeted or you dont have a target. safe now
@@ -293,7 +294,6 @@ Sub InkCurseRun
     /docommand /${announceChannel} Running Cursecallers
 	/nav wp cc1
     /delay 3s
-	/maxfps bg 30
 	:start
 		/if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /call InkDeath
 		/if (${AdvPath.State} == 0) /play cursecallers
@@ -314,6 +314,51 @@ Sub InkCurseRun
 		/goto :start
 	
 /return
+
+Sub InkCurseRun2 
+	/docommand /${announceChannel} Running Cursecallers
+	/speed 1.4
+	/if (!${inkRunning}) /return
+	/nav wp cb1
+	:cb1 
+	/if (${Navigation.Active}) /goto :cb1
+		/doevents InkCurseSafe
+		/doevents NoqSafe
+	/if (!${inkRunning}) /return
+	/nav wp cb6	
+	:cb6 
+	/if (${Navigation.Active}) /goto :cb6
+		/doevents InkCurseSafe
+		/doevents NoqSafe
+	/if (!${inkRunning}) /return	
+	/nav wp cb5	
+	:cb5
+	/if (${Navigation.Active}) /goto :cb5
+		/doevents InkCurseSafe
+		/doevents NoqSafe
+	/if (!${inkRunning}) /return
+	/nav wp cb4
+	:cb4 
+	/if (${Navigation.Active}) /goto :cb4
+		/doevents InkCurseSafe
+		/doevents NoqSafe
+	/if (!${inkRunning}) /return
+	/nav wp cb3
+	:cb3 
+	/if (${Navigation.Active}) /goto :cb3
+		/doevents InkCurseSafe
+		/doevents NoqSafe
+	/if (!${inkRunning}) /return	
+	/nav wp cb2
+	:cb2
+	/if (${Navigation.Active}) /goto :cb2
+		/doevents InkCurseSafe
+		/doevents NoqSafe
+	/if (!${inkRunning}) /return	
+	/nav wp cb1
+	/goto :cb1
+	/speed 1.4
+/return 
 
 Sub InkDeath
 	/docommand /${announceChannel} ${Me.Name} is dead, Resetting.

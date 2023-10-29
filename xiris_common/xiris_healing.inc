@@ -554,7 +554,7 @@ Note: this now checks to see what healing mode we are in.
 Note: targetType is a key into the actual spell to set, ie: tank, group, self
 ----------------------------  
 **|	
-Sub setHealingSpell(int _hp, string _targetType, int _range, string _targetName, string _targetID)
+Sub setHealingSpell(int _hp, string _targetType, int _range, string _targetName, string _targetID, bool _isGroupMember)
 	/varset str_currentHeal ${str_heal_normal}
 	/if (${str_healMode.Equal[EFFICIENT]}) /varset str_currentHeal ${str_heal_normal_efficient}
 
@@ -586,7 +586,7 @@ Sub setHealingSpell(int _hp, string _targetType, int _range, string _targetName,
 		/varset response CASTOK
 		/goto :return
 	| HOT TODO: Add a timer for the remaining HoT duration so as to not spam via dquery
-	} else /if (${_hp} <= ${int_point_${_targetType}_HoT} && ${use_heal_HoT} &&  !${timer_HoT_${_targetID}}) {
+	} else /if (${_hp} <= ${int_point_${_targetType}_HoT} && ${use_heal_HoT} &&  !${timer_HoT_${_targetID}} && (${_targetType.Equal[tank]} && ${_isGroupMember})) {
 		/varset str_currentHeal ${str_heal_normal}
 		/if (${str_healMode.Equal[EFFICIENT]}) /varset str_currentHeal ${str_heal_normal_efficient}
 
@@ -667,7 +667,7 @@ Sub chkHeal_Group
 Sub healMAINTANK
 	/if (${Me.CurrentMana} < ${Spell[${str_heal_normal}].Mana}) /return
 	/call chkMTAlive TRUE
-	/call setHealingSpell ${Spawn[id ${int_MTID}].PctHPs} tank ${Spawn[id ${int_MTID}].Distance3D} ${Spawn[id ${int_MTID}].CleanName} ${int_MTID}
+	/call setHealingSpell ${Spawn[id ${int_MTID}].PctHPs} tank ${Spawn[id ${int_MTID}].Distance3D} ${Spawn[id ${int_MTID}].CleanName} ${int_MTID} ${bln_MTGrouped}
 	/if (${Macro.Return.Equal[CASTOK]}) {
 		/echo \aghealMAINTANK:\ao${str_MTName}\aw(\ay${int_MTID}\aw) \aw=>\ag${Target.Name}  \ao${str_currentHeal}
 		/call healCast ${int_MTID} ${Target.Name} "${str_currentHeal}" FALSE
@@ -688,7 +688,7 @@ Sub healMAINTANK
 
 Sub healSELF
 	/if (${Me.CurrentMana} < ${Spell[${str_heal_normal}].Mana}) /return
-	/call setHealingSpell ${Me.PctHPs} self 0 ${Me.Name} ${Me.ID}
+	/call setHealingSpell ${Me.PctHPs} self 0 ${Me.Name} ${Me.ID} TRUE
 	/if (${Macro.Return.Equal[CASTOK]}) {
 		/echo \aghealSELF:\ao${Me.Name}\aw(\ay${Me.ID}\aw) \aw=>\ag${Target.Name}  \ao${str_currentHeal}
 		/call healCast ${Me.ID} ${Me.Name} "${str_currentHeal}" FALSE
@@ -774,7 +774,7 @@ Sub healGRP
 		| hp checks
 		|/echo \awCastSingleTargetHeals  \ag ${memName} \aw(\ay${memID}\aw)
 		|(int _hp, string _targetType, int _range, string _targetName, string _targetID)
-		/call setHealingSpell ${Spawn[id ${memID}].PctHPs} group ${Spawn[id ${memID}].Distance3D} ${memName} ${memID}
+		/call setHealingSpell ${Spawn[id ${memID}].PctHPs} group ${Spawn[id ${memID}].Distance3D} ${memName} ${memID} TRUE
 		/varset castStatus ${Macro.Return}
 		|/echo \ao${castStatus}: \ag${str_currentHeal}
 		/if (${castStatus.Equal[NOHEAL]}) {

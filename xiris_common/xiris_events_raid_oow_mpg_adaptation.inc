@@ -35,8 +35,8 @@ Sub InitEvents_OOW_MPG_Adaptation
 Sub Events_OOW_MPG_Adaptation
     /if (${SpawnCount[npc Master of Destruction]}) /doevents DestructionActive
 	|/if (${Me.Class.ShortName.Equal[ENC]}) /call chkAdaptationMez
-	/if (${Me.Class.ShortName.Equal[WAR]}) /call chkCorruptionAdds
-    /if (${Me.Class.ShortName.Equal[PAL]}) /call chkCorruptionAdds
+	|/if (${Me.Class.ShortName.Equal[WAR]}) /call chkCorruptionAdds
+    |/if (${Me.Class.ShortName.Equal[PAL]}) /call chkCorruptionAdds
 	/if (${Me.Class.ShortName.Equal[SHD]}) /call chkCorruptionAdds
 /return
 

@@ -118,9 +118,12 @@ ______________________________________________
 #EVENT ImDead          		"#*#You have been slain by#*#"
 #EVENT ImDead          		"Returning to home point, please wait..."
 #EVENT ImDead          		"#*#Returning to Bind Location#*#"
+#EVENT RemoveRingset		"#1#RemoveRingset#*#"
 #EVENT LoadRingset 			"#1#LoadRingset#*#"
 #EVENT LoadWeaponset		"#1#LoadWeaponset #2#"
+#EVENT SaveJewelry			"#1#SaveJewelry#*#"
 #EVENT SaveRingset      	"#1#SaveRingset#*#"
+#EVENT SaveFaceSlot      	"#1#SaveFaceSlot#*#"
 #EVENT SaveWeaponset  		"#1#SaveWeaponset #2#"
 #EVENT SaveCurrentWeaponset "#1#SaveCurrentWeaponset #2#"
 #EVENT InvisOFF				"#1#InvisOff#*#"
@@ -164,14 +167,24 @@ Sub Events_Raid
 Sub Events_Common
 	/doevents Zoned	
 	/doevents CheckNaked
-	|/doevents LoadRingset
-	/doevents LoadWeaponset
+
+	| Inventory Save Events
+	/doevents SaveJewelry
+	/doevents SaveFaceSlot
+	/doevents SaveRingset
+	/doevents SaveEarrings
 	/doevents SaveWeaponset
-	|/doevents SaveCurrentWeaponset
-	|/doevents SaveRingset
-	|/doevents InvisOFF
-	|/doevents SkillCheck
-	|/doevents Disengage
+	/doevents SaveCurrentWeaponset
+	
+	| Iventory Remove Events
+	/doevents RemoveRingset
+
+	| Inventory Load Events
+	/doevents LoadFaceSlot
+	/doevents LoadRingset
+	/doevents LoadWeaponset
+
+	/doevents SaveRingset
 	/doevents SetupRaid
 	/doevents RefreshXTarget
 	/doevents FixCorpses
@@ -249,6 +262,9 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	|-- ID and Name here keep track of *current* tank/second tank. They are swapped as needed.
 	/declare	int_MTID           		int		outer	${Spawn[${str_tankName1}].ID}
 	/declare 	str_MTName				string  outer  	${str_tankName1}	
+	/call chkMTGrouped ${int_MTID}
+	/declare 	bln_MTGrouped			bool  	outer   ${Macro.Return}
+	/echo \ar chkMTGrouped: \ao ${bln_MTGrouped}
 	/declare 	int_STID				int		outer	${Spawn[${str_tankName2}].ID}
 	/declare 	str_STName				string  outer 	${str_tankName2}
 	/declare	int_TTID				int	 	outer 	${Spawn[${str_tankName3}].ID}
@@ -295,7 +311,7 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/declare int_campY 				int 	outer 	${Me.Y}
 	/declare int_campZ 				int 	outer 	${Me.Z}
 	/declare int_campRadius			int		outer	85			
-	/declare SZ_shortName			string	outer ${Zone.ShortName}
+	/declare str_startZone			string	outer ${Zone.ShortName}
 	
 	|--include the custom event initializations & other things
 	/declare bln_outside			bool	outer	TRUE
@@ -415,19 +431,24 @@ Sub EngageTarget(int _targetID)
 	/varset int_targetID ${_targetID}
 	/varset str_targetName ${Spawn[id ${_targetID}].Name}
 	/varset bln_engaged TRUE
-	/if (${Select[${Me.Class.ShortName},CLR,DRU,SHM]} || (${Me.Class.ShortName.Equal[CLR]} && !${bln_battleCleric})) /return
 
+	/if (${Select[${Me.Class.ShortName},CLR,DRU]} || (${Me.Class.ShortName.Equal[CLR]} && !${bln_battleCleric})) /return
+
+	
+	
 	| Target NPC
 	/call TrueTarget ${_targetID}
 	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) /call EngageTargetMelee
+
+	| Sicc Pet
+	/if ((${Select[${Me.Class.ShortName},MAG,BST,NEC,ENC,SHM]}) && ${Me.Pet.ID}) /call chkPetAttack
 	
 	| Priests don't need to do anything else
 	| Stand Up
 	/if ((${Me.Feigning} && (${Me.PctHPs} > 50))) /stand
 	| Reset recast timers (nukes, dots, etc)
 	/if (${str_classArchetype.NotEqual[MELEE_END]} || ${Me.Class.ShortName.NotEqual[WAR]}) /call ResetCastTimers
-	| Sicc Pet
-	/if ((${Select[${Me.Class.ShortName},MAG,BST,NEC,ENC]}) && ${Me.Pet.ID}) /call chkPetAttack
+	
 	| Start Swinging
 
 	| Stop Sticking if you are MT, cause it's annoying
@@ -685,6 +706,15 @@ Sub chkMTAlive(bool _setAsTarget)
 	}
 :return	
 /return
+
+Sub chkMTGrouped(int _mtid)
+	/declare g 			int 	local 0
+	/declare isGrouped 	bool 	local FALSE
+
+	/for g 0 to 5
+		/if (${Group.Member[${g}].Present} && ${Group.Member[${g}].ID} == ${_mtid}) /return TRUE 
+	/next g
+/return FALSE
 
 
 
@@ -1362,7 +1392,7 @@ SUB argueString(WhatToFind, givenData)
 /return ${foundData}
 
 |----------------------------------------------------|
-|- Resets XTarget window 1-5 elements to auto		-|
+|  Resets XTarget window 1-5 elements to auto		 |
 |----------------------------------------------------|
 Sub Event_RefreshXTarget
 	/call RefreshXTarget
@@ -1381,174 +1411,204 @@ SUB RefreshXTarget
 	/varset timer_xtargetRefresh 60s
 /return
 
-|--------------------------------------------------------|
-|- Creates new arrays, or stacks onto existing arrays.	-|
-|--------------------------------------------------------|
-|- Syntax: /call BuildArray ArrayName Data				-|
-|-  Ex: /call BuildArray DebuffTargets ${Target.ID}		-|
-|--------------------------------------------------------|
-|- @param ArrayName: Name of the array to build.		-|
-|- @param Data: Data you wish to add to the array.		-|
-|--------------------------------------------------------|
-SUB BuildArray(ArrayName, Data, varScope)
-	/if (!${Defined[varScope]}) /declare varScope string local outer
-
-	| If the array is not defined, declare it.
-	/if (!${Defined[${ArrayName}]}) {
-		/declare ${ArrayName}[1] string ${varScope}
-		/varset ${ArrayName}[1] ${Data}
-		
-	| Else, if the array is already defined.
-	} else {
-	
-		| Create a copy of the existing array.
-		/declare ${ArrayName}Copy[${${ArrayName}.Size}] string local
-		/declare i int local
-		/for i 1 to ${${ArrayName}.Size}
-			/varset ${ArrayName}Copy[${i}] ${${ArrayName}[${i}]}
-		/next i
-		
-		| Delete the existing array.
-		/deletevar ${ArrayName}
-		
-		| Build a resized array.
-		/declare ${ArrayName}[${Math.Calc[${${ArrayName}Copy.Size}+1].Int}] string ${varScope}
-		/for i 1 to ${${ArrayName}.Size}
-			/varset ${ArrayName}[${i}] ${${ArrayName}Copy[${i}]}
-		/next i
-	
-		| Insert new data into the array
-		/varset ${ArrayName}[${${ArrayName}.Size}] ${Data}
-	}
-/return ${ArrayName}
 
 
 
 |----------------------------------------------------|
-|- Removes elements from an existing array.			-|
+| Save INVENTORY Slots		 |
 |----------------------------------------------------|
-|- @param ArrayName: Name of the array to search.	-|
-|- @param Data: Data you wish to remove.			-|
-|----------------------------------------------------|
-SUB RemoveArrayElement(ArrayName, Data)
-	/declare remainingElements string local
-	/declare newArraySize int local
-
-	/declare i int local
-
-	| Count array elements that do not match 'Data'.
-	/for i 1 to ${${ArrayName}.Size}	
-
-		/if (${${ArrayName}[${i}].NotEqual[${Data}]}) {
-			/varset remainingElements ${remainingElements}${${ArrayName}[${i}]},
-			/varcalc newArraySize ${newArraySize} + 1
-		}
-
-	/next i
-	
-	| If there are  elements remaining in the array, create a copy of the new array
-	/if (${newArraySize}) {
-	
-		/declare newArray[${newArraySize}] string local
-		
-		/for i 1 to ${newArraySize}
-		
-			/varset newArray[${i}] ${remainingElements.Arg[${i},,]}
-		
-		/next i
-	}
-	
-	| Delete the existing array.
-	/deletevar ${ArrayName}
-	
-	| If there is a new array to make
-	/if (${Defined[newArray]}) {
-
-		/declare ${ArrayName}[${newArray.Size}] string outer
-	
-		/for i 1 to ${newArray.Size}
-		
-			/varset ${ArrayName}[${i}] ${newArray[${i}]}
-		
-		/next i
-	}
-/return
+|--Save Events
+Sub EVENT_SaveJewelry
+	/doevents flush SaveJewelry 
+	/call SaveRingset
+	/call SaveFaceSlot
+	/call SaveEarrings
+/return 
 
 Sub EVENT_SaveRingset
+	/doevents flush SaveRingset
 	/call SaveRingset
 /return
 
-Sub SaveRingset
-	
-	/declare leftfinger string local ${Me.Inventory[leftfinger].Name}
-	/declare rightfinger string local ${Me.Inventory[rightfinger].Name}
+Sub EVENT_SaveFaceSlot
+	/doevents flush SaveFaceSlot 
+	/call SaveFaceSlot
+/return 
 
-	/echo \aoSaving Ringset \awleft: \ag${leftfinger} \awright: \ag${rightfinger}
-	/ini INI_CHAR "SavedInventory" "leftfinger" "${leftfinger}"
-	/ini INI_CHAR "SavedInventory" "rightfinger" "${rightfinger}"
+Sub EVENT_SaveEarrings
+	/doevents flush SaveEarrings 
+	/call SaveEarrings
+/return 
+
+|-----
+|-- Save Subs
+Sub SaveRingset
+	/declare leftfinger 	string	local	${Me.Inventory[leftfinger].Name}
+	/declare rightfinger 	string	local	${Me.Inventory[rightfinger].Name}
+
+	/echo \aoSaving Ring Slots \awleft: \ag${leftfinger} \awright: \ag${rightfinger}
+	/ini "INI_CHAR" "INVENTORY" "leftfinger" "${leftfinger}"
+	/ini "INI_CHAR" "INVENTORY" "rightfinger" "${rightfinger}"
 /return
 
+Sub SaveFaceSlot
+	/declare face			string	local	${Me.Inventory[face].Name}
+	/echo \aoSaving Face Slot \awface: \ag${face}
+	/ini "INI_CHAR" "INVENTORY" "face" "${face}"
+/return 
+
+Sub SaveEarrings 
+	/declare leftear 	string	local	${Me.Inventory[leftear].Name}
+	/declare rightear 	string	local	${Me.Inventory[rightear].Name}
+
+	/echo \aoSaving Ear Slots \awleft: \ag${leftear} \awright: \ag${rightear}
+	/ini "INI_CHAR" "INVENTORY" "leftear" "${leftear}"
+	/ini "INI_CHAR" "INVENTORY" "rightear" "${rightear}"
+/return 
+
+|-----
 Sub EVENT_RemoveRingset
+	/echo removingRingset
+	/doevents flush RemoveRingset
 	/call RemoveRingset
 /return
 
 Sub RemoveRingset
-	/varset Ring_1_Name ${Me.Inventory[leftfinger].Name}
-	/varset Ring_2_Name ${Me.Inventory[rightfinger].Name}
 	/declare notemptyCount int local 0
-	:notempty
+	/declare sEmpty string	local NULL
+	/declare sBag   string	local NULL
+	/declare sSlot  string	local NULL
+
+	:emptyCursor
 	/varcalc notemptyCount ${notemptyCount}+1
 	/autoinventory
 	/if (${notemptyCount} > 10) /return
-	/if (${Cursor.ID}) /goto :notempty
+	/if (${Cursor.ID}) /goto :emptyCursor
 
-	/echo \aoRemoving \ar${Ring_1_Name} \ayfrom leftfinger
-	/unequip leftfinger
-	/delay 10
-	/autoinventory
+	:openBags
+	/keypress open_inv_bags
 
-	/echo \aoRemoving \ar${Ring_2_Name} \ayfrom rightfinger
-	/unequip rightfinger
-	/delay 10
-	/autoinventory
-	
+	:leftFinger
+	/call FindEmptyBagSlot
+	/varset sBag    ${Macro.Return.Arg[1,,]}
+	/varset sSlot   ${Macro.Return.Arg[2,,]}
+	/echo sBag:${sBag} sSlot:${sSlot}
+	/if (${sSlot.Equal[NULL]} || ${Me.Inventory[leftfinger].Name.Equal[NULL]}) {
+		/echo \arNo EmptySlots or No Left Finger Equiped!
+		/goto :rightFinger
+	} else {
+		/itemnotify leftfinger leftmouseup
+		/delay 5
+		/echo ${sBag}|${sSlot}
+		/itemnotify in pack${sBag} ${sSlot} leftmouseup
+	}
+
+	:rightFinger
+	/call FindEmptyBagSlot
+	/varset sBag    ${Macro.Return.Arg[1,,]}
+	/varset sSlot   ${Macro.Return.Arg[2,,]}
+	/echo sBag:${sBag} sSlot:${sSlot}
+	/if (${sSlot.Equal[NULL]} || ${Me.Inventory[rightfinger].Name.Equal[NULL]}) {
+		/echo \arNo EmptySlots or No Right Finger Equiped!
+	} else {
+		/itemnotify rightfinger leftmouseup
+		/delay 5
+		/echo ${sBag}|${sSlot}
+		/itemnotify in pack${sBag} ${sSlot} leftmouseup
+	}
 /return
 
+Sub FindEmptyBagSlot
+	/echo \aoFindEmptyBagSlot
+	/declare bag 			int local -1
+	/declare bagSlot 		int local -1
+	/declare bagSlotCount 	int local
+	/declare i int local 
+	/declare j int local 
+	/for i 23 to 32
+		/varset bagSlotCount ${Me.Inventory[${i}].Container}
+		/echo \awBag:\ag${i} \awSlots:\ag${bagSlotCount}
+		/if (!${bagSlotCount}) /continue
+		/for j 1 to ${bagSlotCount}
+
+			/if (!${Me.Inventory[${i}].Item[${j}].ID}) {
+				/varset bag ${i}
+				/varset bagSlot ${j}
+				/echo \ao First Empty Slot is \awBag:\ag${bag} \awSlot:\ag${bagSlot}
+				/goto :return
+			}
+		/next j
+	/next i
+	
+ 
+:return
+	| using itemnotify, bags are invslot 1-8
+	/if (${bag} != -1) /varcalc bag ${bag}-22
+/return ${bag},${bagSlot}
+
 |-- method to load the saved rings from INI (primarily for Trial of Foresight)
-Sub EVENT_LoadRingset(string _line, string _sender, string _eventParams)
-	/echo \ayLoading Ringset ${_eventParams}
+Sub EVENT_LoadRingset
+	/doevents flush LoadRingset
+	/echo \ayLoading Ringset
 	/call LoadRingset
 /return
 
-Sub RestoreFaceSlot
-	/exchange "${strFaceItem}" face
-	/delay 5
-/return 
-
 Sub LoadRingset
-
 	/if (${Me.Class.ShortName.Equal[BRD]}) /medley stop
-	/echo ${Ring_1_Name},  ${Ring_2_Name}
+	/declare lr string local ${Ini[INI_CHAR,INVENTORY,leftfinger,NULL]}
+	/declare rr string local ${Ini[INI_CHAR,INVENTORY,rightfinger,NULL]}
+	/echo \aoLoading Ringset \awLeft:\ag${lr} \awRight:\ag${rr}
 
 	/declare notemptyCount int local 0
-	:notempty
+	:emptyCursor
 	/varcalc notemptyCount ${notemptyCount}+1
 	/autoinventory
 	/if (${notemptyCount} > 10) /return
-	/if (${Cursor.ID}) /goto :notempty
+	/if (${Cursor.ID}) /goto :emptyCursor
 
-	/if (${leftfinger.NotEqual[NULL]}) {
-		 /exchange "${Ring_1_Name}" leftfinger
+	:leftRing
+	/if (${lr.NotEqual[NULL]}) {
+		/exchange "${lr}" leftfinger
+		/delay 10
 	}
-	/delay 10
-	/if (${rightfinger.NotEqual[NULL]}) {
-		/exchange "${Ring_2_Name}" rightfinger
+	
+	:rightRing
+	/if (${rr.NotEqual[NULL]}) {
+		/exchange "${rr}" rightfinger
+		/delay 10
 	}
+	| return out
 	/echo \agSaved Ringset Equipped 
 	/autoinventory
-	/if (${Me.Class.ShortName.Equal[BRD]}) /medley
+	/if (${Me.Class.ShortName.Equal[BRD]}) /medley ${str_currentMedley}
 /return 
 
+Sub Event_LoadFaceSlot
+	/doevents flush LoadFaceSlot
+	/call LoadFaceSlot
+/return 
+
+Sub LoadFaceSlot
+	/if (${Me.Class.ShortName.Equal[BRD]}) /medley stop
+	/declare face string local ${Ini[INI_CHAR,INVENTORY,face,NULL]}
+	
+	/declare notemptyCount int local 0
+	:emptyCursor
+	/varcalc notemptyCount ${notemptyCount}+1
+	/autoinventory
+	/if (${notemptyCount} > 10) /return
+	/if (${Cursor.ID}) /goto :emptyCursor
+	
+	:faceSlot 
+	/if (${face.NotEqual[NULL]}) {
+		/exchange "${face}" face
+		/delay 10
+	}
+	| return out
+	/echo \agSaved Faceslot Equipped 
+	/autoinventory
+	/if (${Me.Class.ShortName.Equal[BRD]}) /medley ${str_currentMedley}
+/return 
 
 |-- method to load the saved weapons from INI (primarily for Trial of Specialization)
 Sub EVENT_LoadWeaponset(string _line, string _sender, string _evtParams)
@@ -1557,6 +1617,7 @@ Sub EVENT_LoadWeaponset(string _line, string _sender, string _evtParams)
 /return
 
 
+| TODO rewrite this like we did for rings
 Sub LoadWeaponset(string _weaponset)
 	|/if (${str_classArchetype.Equal[CASTER]} || ${str_classArchetype.Equal[PRIEST]} && ${_weaponset.NotEqual[default]}) /return
 	/if (${_weaponset.Equal[NULL]}) /varset _weaponset default

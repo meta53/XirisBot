@@ -182,6 +182,14 @@ Sub EVENT_DOSHRINK(_line, _chatSender, _eventParams)
 	/if (${FindItemCount[Umbracite Swarm Orb]}) {
 		/echo \agShrinking
 		/call MQ2Cast "Umbracite Swarm Orb" item
+	} else {
+		/declare i int local 0
+		/for i 0 to 5
+			/call TrueTarget ${Group.Member[${i}].ID}
+			/delay 5
+			/call MQ2Cast "Shrink" gem9 5s
+			/delay 10
+		/next i
 	}
 /return
 

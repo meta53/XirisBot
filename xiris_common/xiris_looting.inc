@@ -159,7 +159,7 @@ Sub Event_SHAKE_DOWN_RAIDFOR_MONEY(string _line, string _chatSender, string _eve
 	/declare i int local 0
 	/if (${Raid.Members} == 0) /return
 	/for i 2 to ${Raid.Members}
-		/if (${Raid.Member[${i}].Equal[${Me.Name}]}) /continue
+		/if (${Raid.Member[${i}].Name.Equal[${Me.Name}]}) /continue
 		/dt ${Raid.Member[${i}]} ${i} => GimmeMoney VIG
 		/delay 20s
 	/next i

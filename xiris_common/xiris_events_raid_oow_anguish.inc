@@ -36,6 +36,7 @@ ______________________________________________
 #EVENT AMVStart			"#*#AMVStart#*#"
 #EVENT MarkOfDeath		"#*#You have been marked for death#*#"
 #EVENT AMVKill 			"#1# tells the raid#*#'AMVKill #2#'"
+#EVENT AMVRetreat		"#1# tells the raid#*#'AMVRetreat #2#'"
 
 |   OMM
 #EVENT GazeYou			"#*#gaze of deadly power focusing on you#*#" 
@@ -475,10 +476,10 @@ Sub EVENT_AMVKill
 |----------------------------
 Sub Event_OMMStart 
 	/varset bln_OMMEngaged TRUE 
-	/if (${${Me.Class.ShortName.Equal[ENC]}}) {
+	/if (${Select[${Me.Class.ShortName},ENC]}) {
 		/varset bln_activeCharming TRUE
 	}
-	/if (${${Me.Class.ShortName.Equal[WAR]}}) {
+	/if (${Select[${Me.Class.ShortName},WAR,PAL]}) {
 		/varset bln_offTank TRUE
 		/varset int_offtankRadius 200
 	}
@@ -521,7 +522,7 @@ Sub Event_GazeYou
 			/call MQ2Cast "Mirrored Mask" ITEM
 		}
 		/delay 20
-		/call RestoreFaceSlot
+		/call LoadFaceSlot
 		/doevents flush GazeYou
 		/if (!${SpawnCount[npc frenzied]}) {
 			/call TrueTarget ${Spawn[npc Overlord].ID}
@@ -704,12 +705,20 @@ Sub chkOMMAdds
 
 Sub EVENT_MarkOfDeath
 	/echo \aoMarked for Death!
+	/doevents flush MarkOfDeath
 	/if (${bln_tanking}) /return
 	/if (!${bln_amvEngaged} && ${eventTarget.Equal[Vangl]}) /varset bln_amvEngaged TRUE
 	/if (!${bln_OMMEngaged} && ${eventTarget.Equal[Overlord]}) /varset bln_OMMEngaged TRUE
-	/doevents flush MarkOfDeath
+	
 	/call chkMarkedForDeathCureDist 
 /return
+
+Sub EVENT_AMVRetreat
+	/doevents flush AMVRetreat
+	/call chkMarkedForDeathCureDist 
+/return
+
+
 
 
 Sub chkGroupMarkedForDeath

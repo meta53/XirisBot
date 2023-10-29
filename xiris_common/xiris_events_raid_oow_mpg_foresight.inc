@@ -88,11 +88,6 @@ Sub InitEvents_OOW_MPG_Foresight
 	/declare MainHandWeapon			string	outer	NULL
 	/declare WeaponSlot				int		outer	1
 	/declare HasRemovedRings		bool	outer	FALSE
-	/declare Ring_1_Name			string	outer	NULL
-	/declare Ring_1_Slot			int		outer	1
-	/declare Ring_2_Name			string	outer	NULL
-	/declare Ring_2_Slot			int		outer	1
-
 
 	|--Waypoints
 	|  Pulled from MQ2Nav		   X	   Y	  Z
@@ -145,19 +140,19 @@ Sub Events_OOW_MPG_Foresight
 	/doevents ForesightKyvDuckSafe
 	/doevents ForesightKyvSafe
 
-	|/doevents ForesightWeapon
-	|/doevents ForesightWeaponSafe
+	/doevents ForesightWeapon
+	/doevents ForesightWeaponSafe
 
 	/doevents ForesightRing
-	|/doevents ForesightRingSafe
+	/doevents ForesightRingSafe
 
 	|/doevents ForesightAEClose
 	|/doevents ForesightAECloseSafe
 
 	|--events that you need to just wait out
-	/doevents ForesightReflect
+	|/doevents ForesightReflect
 	|/doevents ForesightAEMaxDPS
-	/doevents ForesightDS
+	|/doevents ForesightDS
 	
 
 	|-- Killing Events
@@ -167,7 +162,41 @@ Sub Events_OOW_MPG_Foresight
 	/doevents D4
 	/doevents D5
 	/doevents D6
+
+	/if (${str_classArchetype.NotEqual[PRIEST]} && ${str_classArchetype.NotEqual[CASTER]}) /call chkDragornDS
+	/if (${str_classArchetype.Equal[CASTER]}) /call chkDragornReflect
 /return
+
+Sub chkDragornDS
+	/if (${Target.Name.Find[dragorn]}) {
+		:dsCheck
+		/if (${Target.Buff[Jagged Spikes].ID}) {
+			/attack off
+			/say spikes...
+			:dsWait
+			/delay 20
+			/goto :dsCheck
+		} else {
+			/call EngageTarget ${Target.ID}
+		}
+	}
+/return 
+
+Sub chkDragornReflect
+/if (${Target.Name.Find[dragorn]}) {
+		:dsCheck
+		/if (${Target.Buff[Lacerating Aura].ID}) {
+			/say reflect...
+			:dsWait
+			/delay 10
+			/goto :dsCheck
+		} else {
+			/call EngageTarget ${Target.ID}
+		}
+	}
+/return 
+
+
 
 Sub ForesightNavigation(string _wp, string _watch, string _event)
 	/say Navigating to ${_wp}
@@ -411,32 +440,23 @@ Sub EVENT_ForesightDS
 		| casters and healers can continue whatever they are doing
 		/return
 	} else {
-		/declare atk bool local FALSE
-		/declare tid int local ${Target.ID}
-		/declare wait int local 1
-		| Melee need to stop attacking
-		|- turn off melee & movement
-		/if (${Me.Combat})   /varset atk TRUE
-		/if (${Navigation.Active}) /nav stop
-		/stick off
-		
-		|- movement & event waiting loop
-		:DSDelay
-		/varcalc wait ${wait}+1
-		/if (${wait} < 11) {
-			/echo Waiting for DS to fade (no emote)
-			/delay 3
-			/goto :DSDelay
+		/if (${Target.Buff[Lacerating Aura].ID}) {
+			/declare atk bool local FALSE
+			| Melee need to stop attacking
+			|- turn off melee & movement
+			/if (${Me.Combat})   		/varset atk TRUE
+			/if (${Navigation.Active}) 	/nav stop
+			/stick off
+			/attack off
+
+			|- event waiting loop
+			:DSDelay
+				/echo Waiting for DS to fade (no emote)
+				/delay 3
+				/if (${Target.Buff[Lacerating Aura].ID}) /goto :DSDelay
 		}
 	}
-	/echo Safe event fired, returning to origin
-	/varset ${_watch} FALSE
-	/call TrueTarget ${tid}
-	:returnDelay
-	/if (${Target.Distance} >= 40) {
-		/delay 10
-		/goto :returnDelay
-	}
+
 	/nav stop
 	/if (${atk}) /attack on
 /return

@@ -103,6 +103,7 @@ Sub chkCurrentSpecialization
 |-- handle the current specialization if we need to change things;
 |   try not to call this unless the current check said we needed to change;
 Sub handleSpecializationChange
+	/declare masterID int local ${Spawn[npc specialization].ID}
 	| switch on current Mode
 	/if (${str_currentMode.Equal[RIGIDITY]}) {
 		/echo RIGIDITY	
@@ -111,7 +112,7 @@ Sub handleSpecializationChange
 			/call SetResistTypes Fire,Magic,Poison,Disease
 		} else /if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
 			|/call doBandolier NOBLUNT
-			/call EngageTarget
+			/call EngageTarget ${masterID}
 		}
 	} else /if (${str_currentMode.Equal[MISFORTUNE]}) {
 		/echo MISFORTUNE
@@ -120,7 +121,7 @@ Sub handleSpecializationChange
 			/call SetResistTypes Fire,Cold,Poison,Disease
 		} else /if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
 			|/call doBandolier NOSLASHING
-			/call EngageTarget
+			/call EngageTarget ${masterID}
 		}
 	} else /if (${str_currentMode.Equal[IMPRECISION]}) {
 		/echo IMPRECISION
@@ -129,7 +130,7 @@ Sub handleSpecializationChange
 			/call SetResistTypes Magic,Cold,Poison,Disease
 		} else /if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
 			|/call doBandolier NOPIERCING
-			/call EngageTarget
+			/call EngageTarget ${masterID}
 		}
 	} else /if (${str_currentMode.Equal[IMPURITY]}) {
 		/echo IMPURITY
@@ -138,7 +139,7 @@ Sub handleSpecializationChange
 			/call SetResistTypes Fire,Magic,Cold
 		} else /if (${Me.Class.ShortName.Equal[MNK]} || ${Me.Class.ShortName.Equal[BST]} ) {
 			|/call doBandolier NOH2H	
-			/call EngageTarget
+			/call EngageTarget ${masterID}
 		} else {
 			|/call doBandolier default
 		}
@@ -149,11 +150,11 @@ Sub handleSpecializationChange
 			/call SetResistTypes Fire,Cold,Poison,Disease
 		} else /if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
 			|/call doBandolier default
-			/call EngageTarget
+			/call EngageTarget ${masterID}
 		}
 	}
 	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
 		/face fast
-		/attack on
+		/call EngageTarget ${masterID}
 	}
 /return
