@@ -111,7 +111,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 			/if (${${DEBUFF_Total}}) 	/call chkDebuffsOnSingleTarget ${int_targetID}
 
 			|-- class specific
-			/if (${Me.Pet.ID}) 			/call chkPetAttack	
+			/if (${Pet.ID}) 			/call chkPetAttack	
 			/if (${int_cmbtBuffTotal} && !${bln_hasCharmedPet})	/call cmbtBuffGRP
 		
 			|-- dps library (caster)

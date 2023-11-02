@@ -106,7 +106,7 @@ Sub chkNuke
 	/if ((${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]}) || ${Me.Moving} || ${Me.Invis} || ${ExcludeList.Find[${Spawn[${Target.CleanName}]}]}) /return
 
 	|-- press pet attack for funsies
-	/if (${Me.Pet.ID} && ${bln_petUse} && !${Me.Pet.Combat}) /call chkPetAttack
+	/if (${Pet.ID} && ${bln_petUse} && !${Me.Pet.Combat}) /call chkPetAttack
 
 	|-- named check
 	:named_check
@@ -210,7 +210,7 @@ Sub chkQNuke
 	/if ((${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]}) || ${Me.Moving} || ${Me.Invis} || ${ExcludeList.Find[${Spawn[${Target.CleanName}]}]}) /return
 	
 	|-- press pet attack for funsies
-	/if (${Me.Pet.ID} && ${bln_petUse} && !${Me.Pet.Combat}) /call chkPetAttack
+	/if (${Pet.ID} && ${bln_petUse} && !${Me.Pet.Combat}) /call chkPetAttack
 
 	|-- named check
 	:named_check
@@ -456,7 +456,7 @@ Sub chkDOT
 	/if ((${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]}) || ${Me.Moving} || ${Me.Invis} || ${ExcludeList.Find[${Spawn[${Target.CleanName}]}]}) /return
 	
 	|-- press pet attack for funsies
-	/if (${Me.Pet.ID} && ${bln_petUse} && !${Me.Pet.Combat}) /call chkPetAttack
+	/if (${Pet.ID} && ${bln_petUse} && !${Me.Pet.Combat}) /call chkPetAttack
 
 	|-- named check
 	:named_check

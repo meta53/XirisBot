@@ -805,35 +805,42 @@ Sub getTarget
 Sub chkTargetValid
 	/echo chkTargetValid ${Target.Name}
 	/if (${Target.Type.NotEqual[NPC]}) /return
+
+	|--check to see if its a corpse
+	/if (${Target.Name.Find['s_corpse]}) {
+		/echo \arINVALID \awTarget is a corpse!
+		/call setTGTAlert
+		/return
+	}
 	
 	|--check if there is a path to the target
 	/if (!${Navigation.PathExists[target]}) {
-		/echo INVALID No Path to Target
+		/echo \arINVALID \awNo Path to Target
 		/call setTGTAlert
 		/return
 	}
 	
 	|--check my target is the apropriate level
 	/if ((${Target.ID}) && (${Target.Level} < ${int_minTLevel})) {
-		/echo target too low of a level
+		/echo \arINVALID \awTarget too low of a level
 		/call setTGTAlert
 		/return
 	}
 	/if (${Target.Underwater}) {
-		/echo target is underwater
+		/echo \arINVALID \awTarget is underwater
 		/call setTGTAlert
 		/return
 	}
 	
 	|--check my target is the above the apropriate z-radius floor
 	/if ((${Target.ID}) && ${Int[${Target.Z}]}<${int_minZHeight}) { 
-		/echo target below z floor
+		/echo \arINVALID \awTarget below z floor
 		/call setTGTAlert
 		/return
 	} 
 	|--check my target is the above the apropriate z-radius ceiling
 	/if ((${Target.ID}) &&${Int[${Target.Z}]}>${int_maxZHeight}) { 
-		/echo target below z ceiling
+		/echo \arINVALID \awTarget below z ceiling
 		/call setTGTAlert
 		/return
 	}
@@ -865,15 +872,16 @@ Sub pullTarget
 
 	
 	:pullLoop
-		/if (!${bln_validTGT}) 				/goto :return
-		/if (!${Target.ID}) 				/goto :return
-		/if (${Target.Type.NotEqual[NPC]}) 	/goto :return
+		/if (!${bln_validTGT}) 					/goto :return
+		/if (!${Target.ID}) 					/goto :return
+		/if (${Target.Type.NotEqual[NPC]}) 		/goto :return
+		/if (${Target.Name.Find['s_corpse]})	/goto :return
 
 		| Start the pull by running to the target
 		:RunningToTarget
 		/if (${Navigation.PathExists[target]}) {
 			/if (!${Navigation.Active}) /navigate target
-			/delay 10
+			/delay 15
 		} else {
 			/call clearNavStuck
 			/goto :RunningToTarget
@@ -915,6 +923,7 @@ Sub pullTarget
 				/call AggroTarget
 				/varcalc attempt ${attempt} + 1
 				/echo \aoAggro Attempt return ${Macro.Return}
+				/if (${Macro.Return.Equal[FAILED]})					/goto :AggroCheck
 				/if (${Me.TargetOfTarget.Name.Equal[${Me.Name}]}) 	/goto :ReturnWithPull
 				/if (${Macro.Return.Equal[NOLOS]})    				/goto :RunningToTarget
 				/if (${Macro.Return.Equal[CAST_FIZZLE]})    		/goto :AggroCheck
@@ -986,11 +995,10 @@ Sub AggroTarget
 		} else {
 			/if (${Me.PctMana} > 10) {
 				/call chkSpellMemorized "${spell_pull}" TRUE ${spell_pullGem}
-				/echo ${Me.SpellReady[${spell_pull}]} Cast "${spell_pull}" ${spell_pullGem} 2s
+				/echo \awReady?\ag${Me.SpellReady[${spell_pull}]} \awCasting \ag"${spell_pull}" \ap${spell_pullGem} \aw2s
 				/call MQ2Cast "${spell_pull}" ${spell_pullGem} 2s
 				/doevents NoLOS
 			
-				
 				/if (${bln_noLOS}) /varset ret NOLOS
 				/if (${Macro.Return.Equal[CAST_SUCCESS]}) /varset ret SUCCESS
 				/if (${Macro.Return.Equal[CAST_CANNOTSEE]}) /varset ret NOLOS
@@ -1056,9 +1064,8 @@ Sub killTarget
 		}
 		
 	:killMob
+	/echo \aoIssuing Kill Command
 	|--issue kill command
-	
-	
 	/docommand /${announceChannel} KillMob ${Target.ID} "${Target.Name}" ${Time.Time24}
 	/call ResetCastTimers
 	/face fast
@@ -1079,9 +1086,9 @@ Sub killTarget
 	|--while in combat do these things
 	:combatLoop
 		/call chkCombatState
-		/if (${int_targetID} != ${Target.ID}) /return
-		/if (${Target.Type.NotEqual[NPC]}) /return
-		/if (${Target.Distance} > ${int_campRadius}) /goto :distanceWaitLoop 
+		/if (${int_targetID} != ${Target.ID}) 			/goto :return
+		/if (${Target.Type.NotEqual[NPC]}) 				/goto :return
+		/if (${Target.Distance} > ${int_campRadius}) 	/goto :distanceWaitLoop 
 
 		/if (!${bln_TGTDead}) {
 			/if ((${Me.TargetOfTarget.ID} != ${Me.ID}) && !${Target.Fleeing}) {
@@ -1101,8 +1108,8 @@ Sub killTarget
 		} else {
 			/echo \agTarget is dead, return
 		}
-
-
+	:return	
+	/hidecorpse npc
 /return
 
 Sub chkLDONCompletion

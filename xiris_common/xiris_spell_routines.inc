@@ -134,6 +134,7 @@ Sub Events_SpellRoutines
 	/doevents NotReady
 	/doevents NoHold
 	/doevents NoCharm
+	/call RunRapidEvents
 /return
 
 
@@ -286,7 +287,7 @@ Sub MQ2Cast(string spellName,string spellType,timer giveUpTimer,string mySub,str
 		/if (${Cast.Result.Equal[CAST_NOTREADY]}) 		/goto :CastEnd
 		/if (${Cast.Result.Equal[CAST_NOCHARM]})		/goto :CastEnd
 		/if ( !${interruptFlag} && ${mySub.Length} ) 	/call ${mySub}
-		
+		/call Events_SpellRoutines
 		/goto :cast_spell_pending
 	} else /if ( ${Cast.Result.Equal[CAST_RESIST]} ) {
 		/if ( ( ${FindItem[${spellName}].ID} && ${giveUpTimer} && !${FindItem[${spellName}].Timer} ) || ( ${Spell[${spellName}].ID} && ${giveUpTimer} > ${Spell[${spellName}].RecoveryTime} ) ) /goto :cast_spell
@@ -360,3 +361,7 @@ Sub Event_Recover
 Sub Event_NoCharm
 	/if (${Defined[castReturn]}) /varset castReturn CAST_NOCHARM
 /return
+
+Sub Event_Stunned 
+	/if (${Defined[castReturn]}) /varset castReturn CAST_STUNNED
+/return 

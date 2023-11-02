@@ -27,16 +27,16 @@ Sub chkPet
 	
 	|--Destroy your familiar if it is up. Hate them
 	/if (${bln_engaged} && !${bln_hanvarEngaged}) /return
-	/if (${Me.Pet.ID} && ${Me.Pet.Name.Find[familiar]}) /pet get lost
+	/if (${Pet.ID} && ${Me.Pet.Name.Find[familiar]}) /pet get lost
 	/if (${Me.Invis} || ${Me.Moving} || ${timer_petBuffRecheck}) /return
 
-	/declare hadPetOnInitialize bool local ${Bool[${Me.Pet.ID}]}
+	/declare hadPetOnInitialize bool local ${Bool[${Pet.ID}]}
 	|--Spawn your pet
 	/call chkPetSpawn
 	/call RunRaidEvents	
 	
 	|--Buff your pet
-	/if (${Me.Class.ShortName.NotEqual[SHM]} &&  ${Bool[${Me.Pet.ID}]}) /call chkPetBuffs
+	/if (${Me.Class.ShortName.NotEqual[SHM]} &&  ${Bool[${Pet.ID}]}) /call chkPetBuffs
 
 	|--Weaponize your pet if its a new spawn
 	/if (${Me.Class.ShortName.Equal[MAG]} && !${hadPetOnInitialize}) /call chkPetWeaps
@@ -48,7 +48,7 @@ Sub chkPet
 
 Sub chkPetBuffs
 	/if (${bln_engaged}) /return
-	/if (${bln_petUseBuffs} && ${Me.Pet.ID} && !${timer_petBuffRecheck} && ${Me.Pet.Distance} < 100) {
+	/if (${bln_petUseBuffs} && ${Pet.ID} && !${timer_petBuffRecheck} && ${Me.Pet.Distance} < 100) {
 		/declare i int local
 		/for i 1 to ${int_petBuffTotal}  
 			/if (!${Me.PetBuff[${petBuff_${i}}]}) {
@@ -58,7 +58,7 @@ Sub chkPetBuffs
 		/next i
 		/memspellset ${str_spellset}
 	}
-	/if (${Target.ID}==${Me.Pet.ID}) /squelch /target clear
+	/if (${Target.ID}==${Pet.ID}) /squelch /target clear
 	/if (!${timer_petBuffRecheck})	 /varset timer_petBuffRecheck 30s
 
 	
@@ -76,18 +76,18 @@ Sub chkPetSpawn
 
 	|--Destroy your familiar if it is up. Hates them precious
 	/if (${bln_engaged}) /return
-	/if (${Me.Pet.ID} && ${Me.Pet.Name.Find[familiar]}) /pet get lost
+	/if (${Pet.ID} && ${Me.Pet.Name.Find[familiar]}) /pet get lost
 	/if (${Me.Invis} || ${Me.Moving} || ${timer_petBuffRecheck}) /return
 
 	|--Spawn your pet
-	/if (!${Me.Pet.ID} && ${bln_petUse}) {
+	/if (!${Pet.ID} && ${bln_petUse}) {
 		/if ((${str_petReagent.Equal[NULL]}) || (${str_petReagent.NotEqual[NULL]} && ${FindItemCount[${str_petReagent}]} > 1)) {
 			/if (!${Me.Standing}) /stand on
 			/echo spawning pet ${str_petSpell} ${str_petGem}
 			/if (${Me.AltAbility[Suspend Minion]}) /alt activate 176
 			/delay 5s !${Me.Casting.ID}
-			/delay 3s ${Me.Pet.ID}
-			/if (!${Me.Pet.ID}) {
+			/delay 3s ${Pet.ID}
+			/if (!${Pet.ID}) {
 				/call chkSpellMemorized "${str_petSpell}" TRUE ${str_petGem}
 				/call MQ2Cast "${str_petSpell}" ${str_petGem} 5s
 				:castWait
@@ -96,7 +96,7 @@ Sub chkPetSpawn
 			} 
 			/delay 5s
 			
-			/if (${Me.Pet.ID} && ${Me.AltAbility[Pet Discipline]}) /pet hold on
+			/if (${Pet.ID} && ${Me.AltAbility[Pet Discipline]}) /pet hold on
 			/varset bln_petShrunk FALSE
 			/delay 8s
 		} else {
@@ -105,12 +105,12 @@ Sub chkPetSpawn
 		}
 		
 	}
-	/if (${Target.ID}==${Me.Pet.ID}) /squelch /target clear
+	/if (${Target.ID}==${Pet.ID}) /squelch /target clear
 /return
 
 
 Sub chkPetWeaps
-	/if (${bln_engaged} || !${Me.Pet.ID} || ${bln_petWeaponized}) /goto :return
+	/if (${bln_engaged} || !${Pet.ID} || ${bln_petWeaponized}) /goto :return
 
 	|-- load 'petWeap' spell set
 	/delay 3s
@@ -118,11 +118,11 @@ Sub chkPetWeaps
 	/delay 5s
 
 	|-- Belt
-	/call SummonItemForPet "Summoned: ${str_petBelt}" "Summon ${str_petBelt}" ${Me.Pet.ID}
+	/call SummonItemForPet "Summoned: ${str_petBelt}" "Summon ${str_petBelt}" ${Pet.ID}
 	|-- Weapon 1
-	/call SummonItemForPet "Summoned: ${str_petWeap1}" "Summon ${str_petWeap1}" ${Me.Pet.ID}
+	/call SummonItemForPet "Summoned: ${str_petWeap1}" "Summon ${str_petWeap1}" ${Pet.ID}
 	|-- Weapon 2
-	/call SummonItemForPet "Summoned: ${str_petWeap2}" "Summon ${str_petWeap2}" ${Me.Pet.ID}
+	/call SummonItemForPet "Summoned: ${str_petWeap2}" "Summon ${str_petWeap2}" ${Pet.ID}
 	
 	/memspellset ${str_spellset}
 	/autoinv
@@ -199,7 +199,7 @@ Sub SummonItemForPet(string _itemName, string _spellName, int _petID)
 
 
 Sub ShrinkPet
-	/if (!${Me.Pet.ID}) /return
+	/if (!${Pet.ID}) /return
 	/if (${bln_petShrunk}) /return
 	/if (${str_petShrinker.Equal[NULL]}) /return
 	/declare sc int local 1
@@ -233,7 +233,7 @@ Sub chkPetHeal
 
 Sub chkPetAttack
 	/if (!${bln_engaged} || !${Target.PctHPs} ) /return
-	/if (${Me.Pet.ID} && !${Me.Pet.Combat} && ${Target.ID}==${int_targetID} && ${Target.PctHPs}<${int_petAttackHP} && ${Target.Distance}<=100) 	/squelch /pet attack
+	/if (${Pet.ID} && !${Me.Pet.Combat} && ${Target.ID}==${int_targetID} && ${Target.PctHPs}<${int_petAttackHP} && ${Target.Distance}<=100) 	/squelch /pet attack
 /return
 
 

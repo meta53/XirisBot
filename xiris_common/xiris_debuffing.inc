@@ -233,6 +233,7 @@ Sub CastDebuff(string _debuff, string _gem,  int _maxTries, int _targetID, bool 
 	/declare 	tgtName string  local ${Target.CleanName}
 	:AttemptDebuff
 		/call RunRaidEvents
+		/call RunRaidEvents
 		|/echo \aoAttempting Debuff: \aw${_debuff} on \ao${Spawn[id ${_targetID}].Name}
 		|/call chkTargetStatus
 		/if (${_targetID} == 0 && !${_forced}) {

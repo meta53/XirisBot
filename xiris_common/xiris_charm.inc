@@ -14,18 +14,18 @@ REVISION HISTORY
 
 
 
-#EVENT  CharmON         "#*#CharmON#*#"
-#EVENT  CharmOFF        "#*#CharmOFF#*#"
+#EVENT  CharmON             "#*#CharmON#*#"
+#EVENT  CharmOFF            "#*#CharmOFF#*#"
 
-#EVENT  CharmNPCByID    "#1# tells the group#*#'CharmNPCByID #2#'"
-#EVENT  CharmNPCByID    "#1# tells you#*#'CharmNPCByID #2#'"
-#EVENT  CharmNPCByID    "#1# tells the raid#*#CharmNPCByID #2#'"
-#EVENT  CharmNPCByID    "[ #1# #*#]#*#CharmNPCByID #2#"
+#EVENT  CharmNPCByID        "#1# tells the group#*#'CharmNPCByID #2#'"
+#EVENT  CharmNPCByID        "#1# tells you#*#'CharmNPCByID #2#'"
+#EVENT  CharmNPCByID        "#1# tells the raid#*#CharmNPCByID #2#'"
+#EVENT  CharmNPCByID        "[ #1# #*#]#*#CharmNPCByID #2#"
 
-#EVENT  CharmNPCByName    "#1# tells the group#*#'CharmNPCByName #2#'"
-#EVENT  CharmNPCByName    "#1# tells you#*#'CharmNPCByName #2#'"
-#EVENT  CharmNPCByName    "#1# tells the raid#*#CharmNPCByName #2#'"
-#EVENT  CharmNPCByName  "[ #1# #*#]#*#CharmNPCByName #2#"
+#EVENT  CharmNPCByName      "#1# tells the group#*#'CharmNPCByName #2#'"
+#EVENT  CharmNPCByName      "#1# tells you#*#'CharmNPCByName #2#'"
+#EVENT  CharmNPCByName      "#1# tells the raid#*#CharmNPCByName #2#'"
+#EVENT  CharmNPCByName      "[ #1# #*#]#*#CharmNPCByName #2#"
 
 Sub InitEvents_Charm
     /if (${Me.Class.ShortName.NotEqual[BRD]} && ${Me.Class.ShortName.NotEqual[ENC]} && ${Me.Class.ShortName.NotEqual[NEC]}) /return
@@ -64,9 +64,9 @@ Sub EVENT_CharmNPCByName(_line, _chatSender,_eventParams)
 
 
 Sub CharmNPC(int _targetID, bool _forced, bool _attack, int _attackID)
-    /echo \aoCharmNPC\aw(\ag${_targetID}\aw ${bln_activeCharming})
+    /echo \aoCharmNPC\aw(\ag${_targetID}\aw) Forced? \ag${_forced} \awAttack? \ag${_attack} \awTarget? \ag${_attackID})
     /if (!${bln_activeCharming} && !${_forced}) /return
-    /if (${Me.Pet.ID}) /return
+    /if (${Pet.ID}) /return
         
     /varset bln_hasCharmedPet FALSE
     | /declare CHARM_Template         string  outer   _Spell|_Gem|_MaxTries|_KeepAlive|_Resist|_RecastTimer
@@ -74,22 +74,21 @@ Sub CharmNPC(int _targetID, bool _forced, bool _attack, int _attackID)
     :charmTarget
     /declare i int local 2
     /for i  1 to ${CHARM_Total}
-        /if (${Me.Pet.ID}) /return
+        /if (${Pet.ID}) /return
         /call TrueTarget ${_targetID}
        
        | Trigger Check based on type (Calls chkCharmTrigger)		
-       /call chkCharmTrigger ${CHARM_${i}_Type}
-       /echo \ayChkCharmTrigger: \ao${CHARM_${i}_Type} \ar${Macro.Return} "${CHARM_${i}_Spell}"
-        /if (!${Macro.Return}) {
-            /if (${i} < ${CHARM_Total}) {
-                /echo \aoGoing to next charm since first failed!
-                /goto :nextCharm
-            } else {
-                /echo \aoChkCharmTrigger FAILED
-                /goto :return
-            }
-           
-        }
+    |    /call chkCharmTrigger ${CHARM_${i}_Type}
+    |    /echo \ayChkCharmTrigger: \ao${CHARM_${i}_Type} \ar${Macro.Return} "${CHARM_${i}_Spell}"
+    |     /if (!${Macro.Return}) {
+    |         /if (${i} < ${CHARM_Total}) {
+    |             /echo \aoGoing to next charm since first failed!
+    |             /goto :nextCharm
+    |         } else {
+    |             /echo \aoChkCharmTrigger FAILED
+    |             /goto :return
+    |         }   
+    |     }
        
         | Checks passed, check if the spell is memorized. Skip if not
 		:charmSpellMemorized
@@ -110,7 +109,7 @@ Sub CharmNPC(int _targetID, bool _forced, bool _attack, int _attackID)
 				/call MQ2Medley SONG "${CHARM_${i}_Spell}" ${_targetID} TRUE
                 /goto :return
 			} else {
-				/call CastCharm "${CHARM_${i}_Spell}" ${CHARM_${db}_Gem} ${CHARM_${i}_MaxTries} ${Target.ID} ${_forced}
+				/call CastCharm "${CHARM_${i}_Spell}" ${CHARM_${i}_Gem} ${CHARM_${i}_MaxTries} ${Target.ID} ${_forced}
                 /goto :return
             }  
         /call RunRaidEvents      
@@ -120,7 +119,7 @@ Sub CharmNPC(int _targetID, bool _forced, bool _attack, int _attackID)
         /next i
     :return 
 
-    /if (${Me.Pet.ID} ) {
+    /if (${Pet.ID} ) {
         /varset bln_hasCharmedPet TRUE
         /if (${_attack}) {
             /echo \awEngaging Target(\ag${_attackID}\aw) with Charmed Pet \ag${Me.Pet.Name}! 
@@ -217,11 +216,11 @@ Sub CreateCharmLineup
 Sub chkCharmTrigger(string _key)
     /if (${Me.Class.ShortName.Equal[ENC]}) {
         | Charm 1 "Ancient: Voice of Muram"
-        /if (${_key.Equal[ANCIENT]} && (!${Me.Pet.ID} || ${Target.Charmed.Duration.TotalSeconds} < 6) && ${Me.SpellReady[${CHARM_1_Spell}]}) /return TRUE
+        /if (${_key.Equal[ANCIENT]} && (!${Pet.ID} || ${Target.Charmed.Duration.TotalSeconds} < 6) && ${Me.SpellReady[${CHARM_1_Spell}]}) /return TRUE
         | Charm 2 "True Name"
-        /if (${_key.Equal[NORMAL]} && (!${Me.Pet.ID} || ${Target.Buff[${CHARM_1_SPELL}].Duration.TotalSeconds} < 5) && ${Me.SpellReady[${CHARM_1_Spell}]})  /return TRUE
+        /if (${_key.Equal[NORMAL]} && (!${Pet.ID} || ${Target.Buff[${CHARM_1_SPELL}].Duration.TotalSeconds} < 5) && ${Me.SpellReady[${CHARM_1_Spell}]})  /return TRUE
     } else /if (${Me.Class.ShortName.Equal[BRD]}) {
-        /if (${_key.Equal[NORMAL]} && (!${Me.Pet.ID} || ${Target.Charmed.Duration.TotalSeconds} < 6) && ${Me.SpellReady[${CHARM_1_Spell}]})  /return TRUE
+        /if (${_key.Equal[NORMAL]} && (!${Pet.ID} || ${Target.Charmed.Duration.TotalSeconds} < 6) && ${Me.SpellReady[${CHARM_1_Spell}]})  /return TRUE
     }
 
 /return FALSE

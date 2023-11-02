@@ -48,11 +48,18 @@ REQUIRED INCLUDES
 
 #TURBO 120
 
+#EVENT  FIRE_WARCRY        "#1# tells the group#*#'FireWarCry #2#'"
+#EVENT  FIRE_WARCRY        "#1# tells you#*#'FireWarCry #2#'"
+#EVENT  FIRE_WARCRY        "#1# tells the raid#*#FireWarCry #2#'"
+#EVENT  FIRE_WARCRY        "[ #1# #*#]#*#FireWarCry #2#"
+
 Sub InitEvents_Class
 	|/call RegisterClassEvents Events_AllMelee 0
+	/if (${Me.Class.ShortName.Equal[BER]}) /call RegisterClassEvents Events_Class_BER 1
 /return
 
-Sub Events_AllMelee
+Sub Events_Class_BER
+	/doevents FIRE_WARCRY
 /return 
 
 Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint, string _assistArgs)
@@ -141,9 +148,13 @@ Sub chkUtils
 	|-- Standard Methods
 	/call chkSit
 	/varset timer_check_utilities 20s
-	
 /return
 
+Sub EVENT_FIRE_WARCRY(_line, _chatSender, _eventParams)
+	/shout I am Firing Warcry on ${Spawn[id ${_eventParams}].Name} (${_eventParams});
+	/call TrueTarget ${_eventParams}
+	/if (${Me.CombatAbilityReady[Ancient: Cry of Chaos]}) /doability "Ancient: Cry of Chaos"
+/return 
 
 |**
  ----------------------------

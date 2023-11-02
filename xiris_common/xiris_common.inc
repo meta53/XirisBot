@@ -120,6 +120,7 @@ ______________________________________________
 #EVENT ImDead          		"#*#Returning to Bind Location#*#"
 #EVENT RemoveRingset		"#1#RemoveRingset#*#"
 #EVENT LoadRingset 			"#1#LoadRingset#*#"
+#EVENT LoadFaceSlot			"#1#LoadFaceSlot#*#"
 #EVENT LoadWeaponset		"#1#LoadWeaponset #2#"
 #EVENT SaveJewelry			"#1#SaveJewelry#*#"
 #EVENT SaveRingset      	"#1#SaveRingset#*#"
@@ -441,7 +442,7 @@ Sub EngageTarget(int _targetID)
 	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) /call EngageTargetMelee
 
 	| Sicc Pet
-	/if ((${Select[${Me.Class.ShortName},MAG,BST,NEC,ENC,SHM]}) && ${Me.Pet.ID}) /call chkPetAttack
+	/if ((${Select[${Me.Class.ShortName},MAG,BST,NEC,ENC,SHM]}) && ${Pet.ID}) /call chkPetAttack
 	
 	| Priests don't need to do anything else
 	| Stand Up
@@ -513,7 +514,7 @@ Sub chkTargetStatus
 	/if (${Me.Class.ShortName.Equal[SHM]} && ${Me.Class.ShortName.Equal[CLR]} && ${Me.Class.ShortName.Equal[DRU]}) /goto :chkTargetTarget
 
 	| I am engaged, check we are targetting correct NPC (not if we are tanking becausse that is annoying)
-	/if ((${Target.ID} != ${int_targetID}) && (${Spawn[id ${int_targetID}].PctHPs} >= 0 && !${Spawn[id ${int_targetID}].Name.Find[s_corpse]}) && !${bln_tanking}) {
+	/if ((${Target.ID} != ${int_targetID}) && (${Spawn[id ${int_targetID}].PctHPs} >= 0 && !${Spawn[id ${int_targetID}].Name.Find[s_corpse]}) && !${bln_tanking} && !${bln_activeCharming}) {
 		| I am not targetting the correct NPC
 		/echo \aoCurrent Target \arNOT \ao${Spawn[id ${int_targetID}].Name}(${int_targetID})\aw, re-targetting
 		/call TrueTarget ${int_targetID}
@@ -617,7 +618,7 @@ Sub Disengage
 		/squelch /attack off
 		/stick off
 	}
-	/if (${str_classArchetype.Equal[CASTER]} && ${Me.Pet.ID}) /pet back off
+	/if (${str_classArchetype.Equal[CASTER]} && ${Pet.ID}) /pet back off
 /return
 
 
@@ -976,7 +977,7 @@ Sub Event_RageOn(string line)
 	/if (!${mq2meleeEnabled} && !${Stick.Behind} && (${line.Find[${Spawn[${int_targetID}].DisplayName}]} || ${line.Find[${Target.DisplayName}]}) && (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]})) {
 		/attack off
 	}
-	/if (((${line.Find[${Spawn[${int_targetID}].DisplayName}]} || ${line.Find[${Target.DisplayName}]}) && ${Me.Pet.ID}) && !${Me.PetBuff[Master's Aura Effect]}) {
+	/if (((${line.Find[${Spawn[${int_targetID}].DisplayName}]} || ${line.Find[${Target.DisplayName}]}) && ${Pet.ID}) && !${Me.PetBuff[Master's Aura Effect]}) {
 		/echo Enrage detected! Backing pet off.
 		/pet back off
 		/varset bln_enraged TRUE
@@ -989,7 +990,7 @@ Sub Event_RageOff(string line)
 		/echo  \awRageOff :tryKill \ag Attacking 
 		/attack on
 	}
-	/if ((${line.Find[${Spawn[${int_targetID}].DisplayName}]} || ${line.Find[${Target.DisplayName}]}) && ${Me.Pet.ID}) {
+	/if ((${line.Find[${Spawn[${int_targetID}].DisplayName}]} || ${line.Find[${Target.DisplayName}]}) && ${Pet.ID}) {
 		/pet attack
 		/varset bln_enraged FALSE
 	}

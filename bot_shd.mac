@@ -87,7 +87,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 			/call RunAllEvents
 
 			|-- class specific
-			/if (${Me.Pet.ID}) 		/call chkPetAttack	
+			/if (${Pet.ID}) 		/call chkPetAttack	
 			/if (${bln_lifetapUse} && (${Me.PctHPs} <= ${int_lifetapHP}))	/call chkLifetap
 			/if (!${bln_tanking}) 	/call chkFeignDeath
 

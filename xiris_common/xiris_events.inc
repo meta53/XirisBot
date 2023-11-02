@@ -56,7 +56,7 @@ Sub xbot_initialize_events
     /if (${Zone.ShortName.Equal[chambersd]})    /call InitEvents_OOW_MPG_Specialization
     /if (${Zone.ShortName.Equal[chamberse]})    /call InitEvents_OOW_MPG_Adaptation
     /if (${Zone.ShortName.Equal[chambersf]})    /call InitEvents_OOW_MPG_Corruption
-    /if (${Zone.ShortName.Equal[thundercrest]} || ${Zone.ShortName.Equal[anguish]})      /call InitEvents_OOW_Anguish
+    /if (${Zone.ShortName.Equal[guildhall]} || ${Zone.ShortName.Equal[anguish]})      /call InitEvents_OOW_Anguish
 
     |-- Epic 1.5 Fights
     /if (${Zone.ShortName.Equal[gfaydark]})     /call InitEvents_Epic
