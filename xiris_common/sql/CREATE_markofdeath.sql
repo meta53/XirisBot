@@ -21,3 +21,4 @@
 --INSERT OR IGNORE INTO MarkOfDeath(SpawnID,Counters) VALUES (402,19);
 --INSERT OR REPLACE INTO MarkOfDeath(Name,SpawnID,Counters,CureInProcess) VALUES ('Xiris', 22, 14,FALSE);
 SELECT * FROM MarkOfDeath;
+SELECT * FROM observers;
