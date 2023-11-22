@@ -207,6 +207,8 @@ Sub resetCureState
 
 |-- Check if I need a cure (all classes)
 Sub chkNeedCure
+	|-- Check Need cure is disabled for OMM since we are only caring about Mark
+	/if (${bln_OMMEngaged}) /return
 	|-- If I have bln_autoCureMT Set to TRUE, always check if the MT needs cure and do it proactively
 	/if (${bln_autoCureMT}) /call cureMTAuto
 	|-- Verify that I actually have debuffs even if it says i need to cure, reset that
@@ -559,7 +561,7 @@ Sub cureMTAuto
 Sub cureSelf(string _cureType, int _counters)
 	/g Curing Self ${_cureType} ${_counters}
 	| Cure Self
-	/call handleCureRequest ${Me.CleanName} ${Me.ID} ${_cureType} ${_counters}
+	/call handleCureRequest ${Me.CleanName} ${Me.ID} ${_cureType} ${_counters} TRUE
 /return
 
 Sub chkHasCureForType(string _ct)
@@ -696,9 +698,39 @@ Sub handleCureRequest(string _name, int _id, string _cureType, int _counters, bo
 	:return
 /return
 
+
+|${Group.Member[${gm}].Name} ${Group.Member[${gm}].ID} disease ${gcount[${i}]} TRUE
+Sub handleCureMarkOfDeath(string _name, int _id, bool _group, int _counters) 
+	/echo \a-w      handleCureMarkOfDeath\aw(\ag${_name}\aw) Group? \ag${_group} \awCounters? \ag${_counters}
+	/declare str_cureToUse 		string local ${str_cure_disease}
+	/declare int_countersCured 	int    local 18
+	/declare int_startCount   	float    local 1
+	/declare int_finalCount     float    local 1
+
+	/varcalc int_startCount ${Math.Abs[${Math.Calc[${_counters} / ${int_countersCured}]}]}
+	/varcalc int_finalCount ${Math.Abs[${Math.Calc[${int_startCount} / ${int_groupClerics}]}]}
+
+	/varcalc int_finalCount ${int_finalCount} * 100
+	/varcalc int_finalCount ${int_finalCount} + 0.5
+	/varset  int_finalCount ${Int[${int_finalCount}]}
+	/varcalc int_finalCount ${Int[${Math.Calc[${int_finalCount}/100 + 1]}]}
+
+	/varcalc _counters ${Math.Calc[${_counters} / (${int_countersCured}*${int_finalCount})]}
+
+	| Note since the server is janky and not calculating counters except for the initial counter we
+	| have to cast more than once. All clerics in group will cast at least once.
+	/echo \ar int_startCount: ${int_startCount} int_groupClerics: ${int_groupClerics} int_finalCount: ${int_finalCount}
+
+	/if (${_group} && ${Me.Class.ShortName.Equal[CLR]}) /varset str_cureToUse ${str_heal_group}
+	/call castCure ${_name} ${_id} "${str_cureToUse}" ${int_finalCount} disease ${_counters} TRUE
+	/1 Attempted to cure ${_name} of Mark
+	/call TrueTarget ${int_MTID}
+/return 
+
+
 |-- Casts a cure, for _count many times, on a _tgtID
 Sub castCure(string _name, int _id, string _spell, int _castCount, string _cureType, int _counters, bool _isForced) 
-	/echo \aoCastCure \aw${_name}, ${_id}, ${_spell}, ${_counters}
+	/echo \aoCastCure \aw${_name}, ${_id}, ${_spell}, ${_castCount}, ${_cureType}, ${_counters}, ${_isForced}
 	
 	/declare i 			int local 1
 	/declare c 			int local 0
@@ -708,6 +740,7 @@ Sub castCure(string _name, int _id, string _spell, int _castCount, string _cureT
 	/varset qs ${Macro.Return}
 
 	/for i 1 to ${_castCount}
+		/echo \agCasting ${i} =>  ${_castCount}
 		|Check for Death
 		/if (!${SpawnCount[pc ${_name}]}) {
 			/dt ${_name} I cannot cure you, you are dead!
@@ -730,8 +763,8 @@ Sub castCure(string _name, int _id, string _spell, int _castCount, string _cureT
 		| If I am a cleric and this is unforced, quickly check MT health
 		/if (${Me.Class.ShortName.Equal[CLR]} && !${_isForced}) /call chkHeal_MT
 		/call TrueTarget ${_id}
-		/call MQ2Cast "${_spell}" gem7 8s
-
+		/if (${Me.Casting.ID}) /call Interrupt
+		/call MQ2Cast "${_spell}" gem4 8s
 	/next i 
 	:return
 	/dt ${_name} I cured you ${_name}(${_id}) of ${_counters} ${_cureType} counters.
@@ -756,16 +789,15 @@ Sub getDebuffPluginQuery(string _ct)
 	/if (${_ct.Equal[disease]}) /varset q Debuff.Diseased
 	/if (${_ct.Equal[curse]})   /varset q Debuff.Cursed
 	/if (${_ct.Equal[poison]})  /varset q Debuff.Poisoned
-	/echo \a-w		getDebuffPluginQuery \ag${_ct} \ao=> \ag${q}
+	/echo \a-w		getDebuffPluginQuery\aw(\ag${_ct} \aw${q}\aw)
 /return ${q}
 
 |-- Use DanNet to get the counters required
 |   Query via Dannet
 Sub getCureCounters(string _pcName, string _qs) 
 	/declare cc int local 0
-	/dquery ${_pcName} -q "${_qs}"
+	/dquery ${_pcName} -q "${_qs}" -o cc
 	/delay 20 ${DanNet.Query.Received}
-	/varset cc ${DanNet.Q}
 	/echo \a-w		getCureCounters\aw(\ag${_pcName}\aw, \ag${_qs}\aw) == \ag${cc}
 /return ${cc}
 

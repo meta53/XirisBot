@@ -1172,14 +1172,15 @@ Sub SetAlerts
 
 	| set the entry count
 	/declare avoidCount  ${Ini.File[INI_zoneInfo].Section[${sz}].Key[AVOID].Count}
-	/declare huntCount  ${Ini.File[INI_zoneInfo].Section[${sz}].Key[HUNT].Count}
-    /echo \aoAvoidCount:\ag${avoidCount} \aoHuntCount:\ag${huntCount} \aoMaxPullCount:\ag${int_maxPullCount}
+	/declare huntCount  ${Ini.File[INI_zoneInfo].Section[${sz}].Key[VICTIM].Count}
+    /echo \ag${sz} \aoAvoidCount:\ag${avoidCount} \aoHuntCount:\ag${huntCount} \aoMaxPullCount:\ag${int_maxPullCount}
 
     | set the avoidance list
     /alert clear 1
     /if (${avoidCount}) {  
         /for i 1 to ${avoidCount}
             /varset test ${Ini.File[INI_zoneInfo].Section[${sz}].Key[AVOID].ValueAtIndex[${i}]}
+			/echo \arAVOIDING \ag${test}
             /alert add 1 ${test}
         /next i
     }
@@ -1188,9 +1189,11 @@ Sub SetAlerts
     /alert clear 2
 	/if (${huntCount}) {
         /for i 1 to ${huntCount}
-		/varset test ${Ini.File[INI_zoneInfo].Section[${sz}].Key[HUNT].ValueAtIndex[${i}]}
+		/varset test ${Ini.File[INI_zoneInfo].Section[${sz}].Key[VICTIM].ValueAtIndex[${i}]}
+		/echo \arVICTIZING \ag${test}
 		/alert add 2 ${test}
 	    /next i
     }
+
 /return
 

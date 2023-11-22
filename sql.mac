@@ -1,0 +1,79 @@
+#TURBO 10
+
+#include xiris_common/xiris_spell_routines.inc
+
+
+Sub Main
+	/declare _pathDB					string outer C:\Program Files (x86)\EQ\ROF2 MQNext\macros\xiris_common\sql\XirisBot.db
+
+    /echo \ag ${dbChar}
+    :loop 
+        /if (${Me.Name.Equal[Xirin]})   /call SQLTestWrite
+        /if (${Me.Name.Equal[Xanshia]}) /call SQLTestRead
+    /delay 10
+    /goto :loop
+/return 
+
+Sub SQLTestWrite
+    /echo \awSQLTest \aoRunningSQLTestWrite ${Spawn[Xirin].ID} ?
+    /sqlite open mycon "${_pathDB}" SQLITE_OPEN_READWRITE|SQLITE_OPEN_CREATE 
+    |/echo attempting insert into Characters
+    |/sqlite advquery mycon dummy INSERT OR REPLACE INTO Characters(Name,SpawnID,ZoneID) VALUES ('${Me.Name}', ${Me.ID}, ${Zone.ID});
+
+    /if (${Me.Buff[Mark of Death].ID}) { 
+        /echo Attempting insert into MarkOfDeath
+        /sqlite advquery mycon dummy INSERT OR REPLACE INTO MarkOfDeath(Name,SpawnID,Counters,CureInProcess) VALUES ('${Me.Name}', ${Me.ID}, ${Debuff.Diseased}, FALSE);
+    }
+    /sqlite clear dummy
+    /sqlite close mycon
+/return 
+
+
+Sub SQLTestRead
+    /echo \awSQLTest: \aoReading MarkOfDeath table 
+    |/sqlite query "{_pathDB}" build "SELECT * FROM Characters;"
+    /sqlite open mycon "${_pathDB}" SQLITE_OPEN_READWRITE|SQLITE_OPEN_CREATE 
+    /sqlite advquery mycon dummy SELECT * FROM MarkOfDeath;
+    /if (!${sqlite.rows[dummy]}) /goto :return
+    /declare i int local 0
+    /declare c int local 0
+    /echo \a-w  Marked Rowcount: ${sqlite.rows[dummy]}
+    /for i 1 to ${sqlite.rows[dummy]}
+        /echo \awPC: \aoRow\aw[\ao${i}\aw].\aoName \ag${sqlite.result[dummy ${i} Name]} \awCounters: \ar${sqlite.result[dummy ${i} Counters]} \awInProcess? \ao${sqlite.result[dummy ${i} CureInProcess]} 
+        /if (${sqlite.result[dummy ${i} Counters]} > 0 && !${sqlite.result[dummy ${i} CureInProcess]} ) {
+            /varset c ${sqlite.result[dummy ${i} Counters]}
+            /echo \ar${sqlite.result[dummy ${i} Name]} MARKED FOR DEATH
+            /echo \a-w    Curing ${sqlite.result[dummy ${i} Counters]} Counters
+            /call TrueTarget ${sqlite.result[dummy ${i} SpawnID]}
+            /casting "Pure Blood" gem4 8s
+            /varcalc c ${c}-14
+            /if (${c} < 0) /varset c 0
+            /sqlite advquery mycon dummy UPDATE MarkOfDeath SET Counters = ${c}, CureInProcess = TRUE WHERE SpawnID = '${sqlite.result[dummy ${i} SpawnID]}';
+            /continue
+        }
+    /next i
+
+    /sqlite advquery mycon dummy DELETE FROM MarkOfDeath WHERE Counters=0;
+    
+    :return
+    /sqlite clear dummy
+    /sqlite close mycon
+/return 
+
+
+Sub TrueTarget(int _targetID)
+	/if (${SpawnCount[id ${_targetID}]} && ${Target.ID} != ${_targetID} ) {
+		/declare retryTimer timer local 30
+		:Target_Loop
+		/squelch /target id ${_targetID}
+		/delay 2 ${Target.ID} == ${_targetID}
+		
+		/if (${Target.ID} != ${_targetID} && ${SpawnCount[id ${_targetID}]}) {
+			/if (${retryTimer}) {
+				/goto :Target_Loop
+			} else {
+				/echo Failed to target [${Spawn[id ${_targetID}].CleanName} - ${_targetID}]
+			}
+		}
+	}
+/return

@@ -48,6 +48,16 @@ REQUIRED INCLUDES
 
 #TURBO 120
 
+#EVENT  WARCRYON_1        "#1# tells the group#*#'CryOn1#*#'"
+#EVENT  WARCRYON_1        "#1# tells you#*#'CryOn1#*#'"
+#EVENT  WARCRYON_1        "#1# tells the raid#*#CryOn1#*#'"
+#EVENT  WARCRYON_1        "[ #1# #*#]#*#CryOn1#*#"
+
+#EVENT  WARCRYON_2        "#1# tells the group#*#'CryOn2#*#'"
+#EVENT  WARCRYON_2        "#1# tells you#*#'CryOn2#*#'"
+#EVENT  WARCRYON_2        "#1# tells the raid#*#CryOn2#*#'"
+#EVENT  WARCRYON_2        "[ #1# #*#]#*#CryOn2#*#"
+
 #EVENT  FIRE_WARCRY        "#1# tells the group#*#'FireWarCry #2#'"
 #EVENT  FIRE_WARCRY        "#1# tells you#*#'FireWarCry #2#'"
 #EVENT  FIRE_WARCRY        "#1# tells the raid#*#FireWarCry #2#'"
@@ -60,6 +70,8 @@ Sub InitEvents_Class
 
 Sub Events_Class_BER
 	/doevents FIRE_WARCRY
+	/doevents WARCRYON_1
+	/doevents WARCRYON_2
 /return 
 
 Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint, string _assistArgs)
@@ -110,7 +122,6 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 	
 			|-- melee library
 			/if (!${mq2meleeEnabled}) /call chkCA_${Me.Class.ShortName}
-
 			|-- std library (burns/aa/clicks)
 			/call chkAA
 			/call chkBurn
@@ -150,12 +161,36 @@ Sub chkUtils
 	/varset timer_check_utilities 20s
 /return
 
+Sub EVENT_WARCRYON_1
+	/doevents flush WARCRYON_1
+	/if (${BURN_Group}==1) {
+		/echo \agEnabling \arWarCry \agMode on CoHort \ao1
+		/call FireWarCry
+	}
+/return 
+
+Sub EVENT_WARCRYON_2
+	/doevents flush WARCRYON_2
+	/if (${BURN_Group}==2) {
+		/echo \agEnabling \arWarCry \agMode on CoHort \ao1
+		/call FireWarCry
+	}
+/return 
+
+
 Sub EVENT_FIRE_WARCRY(_line, _chatSender, _eventParams)
 	/shout I am Firing Warcry on ${Spawn[id ${_eventParams}].Name} (${_eventParams});
 	/call TrueTarget ${_eventParams}
-	/if (${Me.CombatAbilityReady[Ancient: Cry of Chaos]}) /doability "Ancient: Cry of Chaos"
+	/call FireWarCry
 /return 
 
+
+Sub FireWarCry
+	/if (${Me.CombatAbilityReady[Ancient: Cry of Chaos]}) {
+		/echo \agFIRING WARCRY ${Time.Time24} ${Target.Name}
+ 		/doability "Ancient: Cry of Chaos"
+	}
+/return 
 |**
  ----------------------------
  INITIALIZATION Sub
@@ -173,4 +208,7 @@ Sub variant_initialize
 
 	/echo \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID}) HealPoint:${healPoint} ST: ${str_STName}(${int_STID})
 	/call InitEvents_Class
+
+
+
 /return

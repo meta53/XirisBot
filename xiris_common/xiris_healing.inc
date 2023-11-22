@@ -569,13 +569,19 @@ Sub setHealingSpell(int _hp, string _targetType, int _range, string _targetName,
 	/if (!${_hp} || ${Me.PctMana} == 0 || (${_hp} > ${pt}))  {
 		/varset response  NOHEAL
 		/goto :return
+	| DIVINE ARBITRATION
+	} else /if (${_hp} <= ${int_point_${_targetType}_frantic} && ${use_heal_divineArb} && ${bln_divineArbReady} && ${Me.Class.ShortName.Equal[CLR]} && ${_isGroupMember}) {
+		/varset 	str_currentHeal DIVINE_ARBITRATION
+		/varcalc	int_point_calcStopHeal ${Math.Calc[${int_point_${_targetType}_frantic}*1.1]}
+		/varset 	response  CASTDIVINE
+		/goto :return
 	| FRANTIC
 	} else /if (${_hp} <= ${int_point_${_targetType}_frantic}) {
-		/varset str_currentHeal ${str_heal_frantic}
+		/varset 	str_currentHeal ${str_heal_frantic}
 		/if (${str_healMode.Equal[EFFICIENT]}) /varset str_currentHeal ${str_heal_frantic_efficient}
 		|/echo  \aoFRANTIC \ag(${str_healMode})  \ar${str_currentHeal} \awon \ag ${_targetName}\aw(\ay${_targetID}\aw)
 		/varcalc	int_point_calcStopHeal ${Math.Calc[${int_point_${_targetType}_frantic}*1.1]}
-		/varset response  CASTOK
+		/varset 	response  CASTOK
 		/goto :return
 	| NORMAL
 	} else /if (${_hp} <= ${int_point_${_targetType}_normal}) {
@@ -671,6 +677,8 @@ Sub healMAINTANK
 	/if (${Macro.Return.Equal[CASTOK]}) {
 		/echo \aghealMAINTANK:\ao${str_MTName}\aw(\ay${int_MTID}\aw) \aw=>\ag${Target.Name}  \ao${str_currentHeal}
 		/call healCast ${int_MTID} ${Target.Name} "${str_currentHeal}" FALSE
+	} else /if (${Macro.Return.Equal[CASTDIVINE]}) {
+		/call healDivineArbitration
 	}
 	/if (${Me.Class.ShortName.NotEqual[CLR]} && (${Target.ID} != ${int_targetID})) /call TrueTarget ${int_targetID}
 /return
@@ -692,6 +700,8 @@ Sub healSELF
 	/if (${Macro.Return.Equal[CASTOK]}) {
 		/echo \aghealSELF:\ao${Me.Name}\aw(\ay${Me.ID}\aw) \aw=>\ag${Target.Name}  \ao${str_currentHeal}
 		/call healCast ${Me.ID} ${Me.Name} "${str_currentHeal}" FALSE
+	} else /if (${Macro.Return.Equal[CASTDIVINE]}) {
+		/call healDivineArbitration
 	}
 	/if (${Me.Class.ShortName.NotEqual[CLR]} && (${Target.ID} != ${int_targetID}))  /call TrueTarget ${int_targetID}
 /return
@@ -713,14 +723,14 @@ Sub healSELF
 **|
 Sub healGRP
 	/if (${Me.CurrentMana} < ${Spell[${str_heal_normal}].Mana}) /return
-	/declare 	i 			 	int local	0
-	/declare    n				int local   1
-	/declare 	int_inRange		int local 	0
+	/declare 	i 			 	int 	local	0
+	/declare    n				int 	local   1
+	/declare 	int_inRange		int 	local 	0
 	/varcalc	int_point_calcStopHeal ${Math.Calc[${int_point_group_normal}*1.2]}
-	/declare 	memName 		string local 
-	/declare 	memID			string  local 0
-	/declare 	perTick			int local 0
-	/declare    castStatus		string local 
+	/declare 	memName 		string 	local 	${Me.Name}
+	/declare 	memID			string  local	0
+	/declare 	perTick			int 	local	0
+	/declare    castStatus		string 	local   NOHEAL
 
 
 	:determineGroupDamage
@@ -738,9 +748,14 @@ Sub healGRP
 		/call updateGroupRangeCount ${int_range_group}
 		/varset int_inRange ${Int[${Macro.Return}]}
 		/if (${int_inRange}>=3) {
-			/echo  \arGROUP  \ar${str_heal_group} \awon \ay${Me.Name}
-			/call healCast ${Me.ID} ${Me.Name} "${str_heal_group}" TRUE
-			/goto :return
+			/if (${use_heal_divineArb} && ${bln_divineArbReady} && ${Me.Class.ShortName.Equal[CLR]}) {
+				/call healDivineArbitration
+			} else {
+				/echo  \arGROUP  \ar${str_heal_group} \awon \ay${Me.Name}
+				/call healCast ${Me.ID} ${Me.Name} "${str_heal_group}" TRUE
+				/goto :return
+			}
+			
 		} else {
 			/echo \arGROUP not fired not enough in range \aw(\ay${int_inRange} < 3\aw)
 			/goto :CastSingleTargetHeals
@@ -1366,8 +1381,8 @@ Sub xbot_initialize_healing(int _healPoint)
 	| 	Heal Mode: NORMAL|EFFICIENT|CHCHAIN
 	/declare    str_healMode				string  outer 	NORMAL
 	/declare	str_savedHealMode			string  outer   ${str_healMode}
-	| 	Heal Mode: 0|Self Only, 1|Self/MT 2|Self/MT/Group
 
+	| 	Heal Mode: 0|Self Only, 1|Self/MT 2|Self/MT/Group
 	/declare 	int_defaultHealMode			int 	outer   ${Ini[${healINI},Heal_Settings,int_healMode]}
 	/declare	int_healMode    			int     outer   ${Ini[INI_CHAR,Healing_Settings,int_healMode,${int_defaultHealMode}]}
 	/declare 	bln_focusHealMT				bool    outer   FALSE
@@ -1376,6 +1391,7 @@ Sub xbot_initialize_healing(int _healPoint)
 
 	/declare 	use_heal_defaultDivineArb	bool	outer 	${Ini[${healINI},Heal_Settings,use_heal_divineArb, FALSE]}
 	/declare	use_heal_divineArb			bool	outer	${Ini[INI_CHAR,Healing_Settings,use_heal_divineArb,${use_heal_defaultDivineArb}]}
+	/declare	bln_divineArbReady			bool	outer	FALSE
 	
 	|-- Healing Spells
 	/declare 	str_heal_normal				string	outer	${Ini[INI_CHAR,Healing_Spells,str_heal_normal,NULL]}

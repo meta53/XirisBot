@@ -967,6 +967,120 @@ Sub chkCastTarget
     :return
 /return
 
+|**
+ ----------------------------
+ Check Defensive Spells vs Target (JOLT)
+ ----------------------------
+ This method checks the target status (named, etc), and loops through the defensive spell types and children
+ and calls casts if named and use conditions are met. Note: these can be AA/DISC/SPELL jolts
+ ----------------------------
+**|
+Sub chkDefensiveSpells
+    /if (!${Target.ID} || !${bln_engaged} || ${Target.Type.NotEqual[NPC]} || !${bln_cast_JOLT_enabled}) /return
+    /declare i      int     local 0
+    /declare j      int     local 0
+    /declare dtype   string  local NULL
+    /declare key    string  local NULL
+    /call TargetNamedCheck
+    /declare targetIsNamed  bool    local   ${Macro.Return}
+                
+    /for i 1 to ${int_cast_JOLT_total}
+        /varset dtype    JOLT
+
+        | Check Settings for this type
+        /if (!${bln_cast_${dtype}_enabled}) /continue
+        /if (${timer_cast_${dtype}} || (${Me.PctMana} < ${int_cast_${dtype}_minMana} ||  ${Target.PctHPs} >= ${int_cast_${dtype}_startHP})) /continue
+
+        | Check Each entry for this typoe
+        /for j 1 to ${int_cast_${dtype}_total}
+            /varset key   ${dtype}_${j}
+
+            | Check Triggers for this entry
+            /if ((${Target.PctHPs} <= ${${key}_stopHP} && ${Target.PctHPs} >= ${${key}_startHP}) && !${${key}_enabled} || (!${targetIsNamed} && ${${key}_namedOnly}) || ${${key}_timer}) /continue
+            /call attemptCastingDefensiveSpell ${key} ${key}
+			/call RunAllEvents
+            /varset timer_cast_${key} ${timer_cast_${key}.OriginalValue}
+        /next j
+    /next i
+    /varset timer_cast_${dtype} ${timer_cast_${dtype}.OriginalValue}
+/return
+
+| Defensive spells can be ALT/DISC/SPELL
+Sub attemptCastingDefensiveSpell(string _key) 
+    /declare _type string local ${${_key}_type}
+
+   /if (${Me.Class.ShortName.Equal[BRD]}) {
+        /if (${_type.Equal[AA]}     &&   ${Me.AltAbilityReady[${_key}]})    /call MQ2Medley "${_key}" ALT  ${int_targetID} TRUE
+        /if (${_type.Equal[DISC]}   && ${Me.CombatAbilityReady[${_key}]})   /doability      "${_key}"
+        /if (${_type.Equal[ITEM]}   && !${FindItem[=${_key}].TimerReady})   /call MQ2Medley "${_key}" ITEM ${int_targetID} TRUE
+        /if (${_type.Equal[SPELL]})                                         /call MQ2Medley "${_key}" SONG
+    } else {
+        /if (${_type.Equal[AA]}     && ${Me.AltAbilityReady[${_key}]})      /call MQ2Cast   "${_key}" ALT
+        /if (${_type.Equal[DISC]}   && ${Me.CombatAbilityReady[${_key}]})   /doability      "${_key}"
+        /if (${_type.Equal[ITEM]}   && !${FindItem[=${_key}].TimerReady})   /call MQ2Cast   "${_key}" ITEM
+        /if (${_type.Equal[SPELL]})                                         /call MQ2Cast   "${_key}"
+    }
+    /varset ${_key}_hasCastOnce TRUE
+    /varset ${_key}_timer       ${${_key}_delay} 
+/return
+
+| Note defensive settings include AA|DISC|SPELL just like other AA/DISCS
+Sub processDefensiveSettings
+    /echo \awprocessDefensiveSettings \ay
+
+    /declare bln_cast_JOLT_enabled          bool    outer   FALSE
+    /declare int_cast_JOLT_total            int     outer   0
+    /declare timer_cast_JOLT                timer   outer   0
+    /declare int_cast_JOLT_minMana          int     outer   10
+    /declare int_cast_JOLT_startHP          int     outer   99
+    /declare int_cast_JOLT_stopHP           int     outer   0  
+    
+
+     |; _enabled|_delay|_minMana|_startHP|_stopHP
+    /if (${Ini[INI_CHAR,JOLT,settings].Arg[1,|]})  /varset bln_cast_JOLT_enabled    ${Ini[INI_CHAR,JOLT,settings].Arg[1,|]}
+    /if (${Ini[INI_CHAR,JOLT,settings].Arg[1,|]})  /varset timer_cast_JOLT          ${Ini[INI_CHAR,JOLT,settings].Arg[2,|]}
+    /if (${Ini[INI_CHAR,JOLT,settings].Arg[3,|]})  /varset int_cast_JOLT_minMana    ${Ini[INI_CHAR,JOLT,settings].Arg[3,|]}
+    /if (${Ini[INI_CHAR,JOLT,settings].Arg[4,|]})  /varset int_cast_JOLT_startHP    ${Ini[INI_CHAR,JOLT,settings].Arg[4,|]}
+    /if (${Ini[INI_CHAR,JOLT,settings].Arg[5,|]})  /varset int_cast_JOLT_stopHP     ${Ini[INI_CHAR,JOLT,settings].Arg[5,|]}
+
+        /echo \a-w    Settings Processed: \awJOLT Enabled:\ag${bln_cast_JOLT_enabled} \awTotal:\ag${int_cast_JOLT_total} \awMinMana:\ag${int_cast_JOLT_minMana} \awStart:\ag${int_cast_JOLT_startHP} \awStop:\ag${int_cast_JOLT_stopHP}
+    /if (!${bln_cast_JOLT_enabled}) {    
+        /varset int_cast_JOLT_total 0
+        /echo \a-w        JOLT Processed: Count:\ao[\ag${int_cast_JOLT_total}\ao] \awNo JOLT Spells
+        /return
+    }
+
+   | ; _jolt|_enabled|_gem|_maxTries|_namedOnly|_startHP|_stopHP|_hasCastOnce|_delay
+    /declare raw_jolt[12]		    string 	local NULL
+    /declare i						int 	local 0
+    /declare j                      int     local 0
+	/declare sz 					int     local 0
+    /declare test                   string  local   NULL
+
+    /for i 1 to ${raw_jolt.Size}
+        /varset test ${Ini[INI_CHAR,JOLT,JOLT_${i}]}
+        /if (${test.Arg[1,|].Equal[NULL]}) {
+            /varset  int_cast_JOLT_total ${sz}
+            /return
+        } 
+        | Not null, set the values for the buffs
+		/varcalc sz	${sz}+1
+        /declare JOLT_${i}		        string	outer   ${test.Arg[1,|]}
+		/declare JOLT_${i}_type		    string	outer   ${test.Arg[2,|]}
+        /declare JOLT_${i}_enabled	    string  outer   ${test.Arg[3,|]}
+		/declare JOLT_${i}_gem	        string  outer   ${test.Arg[4,|]}
+		/declare JOLT_${i}_maxTries	    string  outer   ${test.Arg[5,|]}
+        /declare JOLT_${i}_namedOnly	string  outer   ${test.Arg[6,|]}
+        /declare JOLT_${i}_startHP	    string  outer   ${test.Arg[7,|]}
+        /declare JOLT_${i}_stopHP	    string  outer   ${test.Arg[8,|]}
+        /declare JOLT_${i}_hasCastOnce  string  outer   ${test.Arg[9,|]}
+        /declare JOLT_${i}_delay	    string  outer   ${test.Arg[10,|]}
+        /declare JOLT_${i}_timer        timer   outer   ${JOLT${i}_delay}	
+        /echo \ao        JOLT[\ag${i}\ao]:\ag${JOLT_${i}} \awType:\ag${JOLT_${i}_type} \awUse:\ag${JOLT_${i}_enabled} 
+    /next i
+
+
+/return 
 
 Sub xbot_initialize_casting
 	/echo \aoxbot_initialize_casting
@@ -983,6 +1097,9 @@ Sub xbot_initialize_casting
 	/declare int_concCount				int     outer 	0
 	/declare int_temp_stopCastPoint		int 	outer   0
 	
+	|-- Setup defensive AA/SPELL/DISC
+	/call processDefensiveSettings
+
 	|-- Return out if not a caster
 	/if (${str_classArchetype.Equal[MELEE_END]} || ${Me.Class.ShortName.Equal[WAR]}) /return
 
@@ -992,13 +1109,15 @@ Sub xbot_initialize_casting
 	/declare NUKE_Template 				string outer  	_Spell|_Use|_Gem|_MaxTries|_NamedOnly|_StartHP|_StopHP|_Resist|_HasCastOnce|_RecastTimer
 	/declare QNUKE_Template 			string outer  	_Spell|_Use|_Gem|_MaxTries|_NamedOnly|_StartHP|_StopHP|_Resist|_HasCastOnce|_RecastTimer
 	/declare AENUKE_Template	 		string outer  	_Spell|_Use|_Gem|_MaxTries|_NamedOnly|_StartHP|_StopHP|_Resist|_HasCastOnce|_RecastTimer
-	/declare STUN_Template				string outer	_Spell|_Use|_Gem|_MaxTries|_NamedOnly|_StartHP|_StopHP|_Resist|_HasCastOnce|_RecastTimer
+	/declare STUN_Template				string outer	_Spell|_Use|_Gem|_MaxTries|_NamedOnly|_StartHP|_StopHP|_Resist|_HasCastOnce|_RecastTimer	
+	/declare JOLT_Template				string outer	_jolt|_type|_enabled|_gem|_maxTries|_namedOnly|_startHP|_stopHP|_hasCastOnce|_delay
 
 	|-- Load the spells set in the INI file
 	/call CreateCastingLineup
-
+	
+	
 	/call InitEvents_Casting
-	/echo \awNukes: \ag${NUKE_Total} \awAENukes: \ag${AENUKE_Total} \awQNuke: \ag${QNUKE_Total} \awStun: \ag${STUN_Total} \awDOT: \ag${DOT_Total} 
+	/echo \awNukes: \ag${NUKE_Total} \awAENukes: \ag${AENUKE_Total} \awQNuke: \ag${QNUKE_Total} \awStun: \ag${STUN_Total} \awDOT: \ag${DOT_Total} \awJOLT: \ag${int_cast_JOLT_total} 
 
 
 /return

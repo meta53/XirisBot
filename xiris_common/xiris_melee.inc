@@ -279,6 +279,7 @@ Sub chkDownshits
 					/varset itemName ${FindItem[${itemID}].Name}
 					/if (${dsType.Equal[ITEM]} && !${FindItem[${itemID}].ID}) {
 						/echo \arCannot find downflag_${df}: \aw${itemID}!
+						|/say Cannot find downflag_${df}  ${itemID} => ${itemName}
 						/goto :nextDF
 					}
 					/if (${Me.Class.ShortName.Equal[BRD]}) {
@@ -600,6 +601,7 @@ Sub chkCombatAbilities
 
 Sub chkCA_BER
 	/if (${Me.AbilityReady[Frenzy]}) /doability "Frenzy"
+	/if (${bln_cast_JOLT_enabled}) /call chkDefensiveSpells
 	/if (${Me.CombatAbilityReady[Rage Volley]}) /doability "Rage Volley"
 /return
 
@@ -622,6 +624,7 @@ Sub chkCA_PAL
 
 Sub chkCA_RNG 
 	/if (${Me.AbilityReady[Slam]} ) /doability "Slam"
+	/if (${bln_cast_JOLT_enabled}) /call chkDefensiveSpells
 /return 
 
 Sub chkCA_ROG

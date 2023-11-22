@@ -231,6 +231,12 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 
 	/call SetupRaid ${str_raidGroupMode}
 
+	|-- SQLite Testing
+	| character database
+	/declare _pathDB					string outer C:\Program Files (x86)\EQ\ROF2 MQNext\macros\xiris_common\sql\XirisBot.db
+
+
+
 	/declare timer_di_request timer outer 30s
 	/declare i int local 0
 	/for i 1 to ${RaidDIClerics.Size}
@@ -272,6 +278,12 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/declare 	str_TTName				string	outer 	${str_tankName3}
 
 	/echo \aw Tanks \ayMT:\ag${str_MTName} \ayST:\ag${str_STName} \ayTT:\ag${str_TTName}
+	| Create a string of group member names for SELECT statements
+	/declare	str_groupMembers		string  outer  	${Me.Name} 
+	/declare  	str_groupClerics		string  outer   NULL
+	/declare 	int_groupClerics 		int 	outer  	1
+	/call createGroupList
+	/echo \aw Group:\ag${str_groupMembers}
 
 	|-- [Settings] :Auto Assist Settings
 	/declare 	bln_autoAssist			bool	outer 	FALSE
@@ -360,6 +372,37 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 
 
 
+Sub createGroupList
+	/declare    g  int local 0
+	/declare 	sz int local 0
+	/varcalc 	sz ${Group.GroupSize}-1
+	/for g 1 to ${sz}
+		/varset str_groupMembers ${str_groupMembers},${Group.Member[${g}].Name}
+	/next g
+	/call updateClericCount
+/return
+
+Sub updateClericCount
+	/declare    g  int local 0
+	/declare 	sz int local 0
+	/varcalc 	sz ${Group.GroupSize}-1
+	/varset 	str_groupClerics NULL
+	/varset 	int_groupClerics 0
+
+	/for g 0 to ${sz}
+		/if (${Group.Member[${g}].Class.ShortName.Equal[CLR]} && ${Group.Member[${g}].Present}) {
+			/if (${str_groupClerics.Equal[NULL]}) {
+				/varset str_groupClerics ${Group.Member[${g}].Name}
+			} else {
+				/varset str_groupClerics ${str_groupClerics},${Group.Member[${g}].Name}
+			}
+			
+			/varcalc int_groupClerics ${int_groupClerics}+1
+		}
+	/next g
+	/echo \ar str_groupClerics: ${str_groupClerics} int_groupClerics: ${int_groupClerics}
+	
+/return 
 
 
 |**

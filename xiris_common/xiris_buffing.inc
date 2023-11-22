@@ -61,7 +61,7 @@ REVISION HISTORY
 #EVENT REMOVEALLBUFFS		"#1# tells the group#*#'removeallbuffs#*#'"
 #EVENT REMOVEALLBUFFS		"#1# tells you#*#'removeallbuffs#*#'"
 #EVENT REMOVEALLBUFFS		"#1# tells the raid#*#'removeallbuffs#*#'"
-#EVENT REMOVEALLBUFFS 		"[ #1# #*#]#*#removeallbuffs #*#"
+#EVENT REMOVEALLBUFFS 		"[ #1# #*#]#*#removeallbuffs#*#"
 
 
 

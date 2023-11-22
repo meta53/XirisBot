@@ -333,8 +333,7 @@ Sub variant_initialize
 	|-- set up default vars
 	/declare	int_CTGTID				int 	outer	0
 	/declare	int_currentFPoint		int		outer	30
-	/declare	bln_FHealReady			bool	outer	FALSE
-	/declare	bln_divineArbReady			bool	outer	FALSE
+
 	/declare    str_action				string	outer	Healing
 	/declare	str_currHeal			string	outer	NULL
 
