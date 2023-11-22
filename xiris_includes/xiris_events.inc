@@ -19,17 +19,16 @@ REVISION HISTORY
 ______________________________________________
 **|	
 
-#include xiris_includes/xiris_events_class.inc
-#include xiris_includes/xiris_events_raid_god.inc 
-#include xiris_includes/xiris_events_raid_dodh_demiplane.inc 
-#include xiris_includes/xiris_events_raid_epic.inc 
-#include xiris_includes/xiris_events_raid_oow_anguish.inc
-#include xiris_includes/xiris_events_raid_oow_mpg_adaptation.inc
-#include xiris_includes/xiris_events_raid_oow_mpg_corruption.inc 
-#include xiris_includes/xiris_events_raid_oow_mpg_endurance.inc
-#include xiris_includes/xiris_events_raid_oow_mpg_foresight.inc 
-#include xiris_includes/xiris_events_raid_oow_mpg_hatred.inc 
-#include xiris_includes/xiris_events_raid_oow_mpg_specialization.inc
+#include xiris_includes/events/xiris_events_raid_god.inc 
+#include xiris_includes/events/xiris_events_raid_dodh_demiplane.inc 
+#include xiris_includes/events/xiris_events_raid_epic.inc 
+#include xiris_includes/events/xiris_events_raid_oow_anguish.inc
+#include xiris_includes/events/xiris_events_raid_oow_mpg_adaptation.inc
+#include xiris_includes/events/xiris_events_raid_oow_mpg_corruption.inc 
+#include xiris_includes/events/xiris_events_raid_oow_mpg_endurance.inc
+#include xiris_includes/events/xiris_events_raid_oow_mpg_foresight.inc 
+#include xiris_includes/events/xiris_events_raid_oow_mpg_hatred.inc 
+#include xiris_includes/events/xiris_events_raid_oow_mpg_specialization.inc
 
 
 

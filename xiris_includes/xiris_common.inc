@@ -34,6 +34,7 @@ REVISION HISTORY
 	08.12.23	xiris	As past of the substantial v2.0 rewrite, refactored much of this library
 						Added raid builder, moved functionality from standalone macro
 						Removed auto assist as I never use it
+	11.22.23	xiris 	Added support for MQ2SQLite
 ______________________________________________
 
 **|
@@ -242,6 +243,14 @@ Sub xbot_initialize_common(string _t1, string _t2, string _t3, int _tankHealPoin
 	/declare	bln_taunting			bool 	outer	${If[${Me.ID} == ${int_MTID},TRUE,FALSE]}
 
 	/echo \ao        Tanks \awMT:\ag${str_MTName} \awST:\ag${str_STName} \awTT:\ag${str_TTName}
+
+	| Create a string of group member names for SELECT statements
+	/declare	str_groupMembers		string  outer  	${Me.Name} 
+	/declare  	str_groupClerics		string  outer   NULL
+	/declare 	int_groupClerics 		int 	outer  	1
+	/call createGroupList
+	/echo \ao        Group \awMembers:\ag${str_groupMembers} \awClerics:(\ag${int_groupClerics}\aw) \ag${str_groupClerics}
+
 
 	|-- [Settings] : Miscellaneous Defaults 
 	| Engaged is 'engagement' which means a tank has picked up an aggro NPC and is tanking it
@@ -1681,4 +1690,34 @@ Sub LoadFaceSlot
 	/echo \agSaved Faceslot Equipped 
 	/autoinventory
 	/if (${Me.Class.ShortName.Equal[BRD]}) /medley ${str_currentMedley}
+/return 
+
+Sub createGroupList
+	/declare    g  int local 0
+	/declare 	sz int local 0
+	/varcalc 	sz ${Group.GroupSize}-1
+	/for g 1 to ${sz}
+		/varset str_groupMembers ${str_groupMembers},${Group.Member[${g}].Name}
+	/next g
+	/call updateClericCount
+/return
+
+Sub updateClericCount
+	/declare    g  int local 0
+	/declare 	sz int local 0
+	/varcalc 	sz ${Group.GroupSize}-1
+	/varset 	str_groupClerics NULL
+	/varset 	int_groupClerics 0
+
+	/for g 0 to ${sz}
+		/if (${Group.Member[${g}].Class.ShortName.Equal[CLR]} && ${Group.Member[${g}].Present}) {
+			/if (${str_groupClerics.Equal[NULL]}) {
+				/varset str_groupClerics ${Group.Member[${g}].Name}
+			} else {
+				/varset str_groupClerics ${str_groupClerics},${Group.Member[${g}].Name}
+			}
+			
+			/varcalc int_groupClerics ${int_groupClerics}+1
+		}
+	/next g
 /return 

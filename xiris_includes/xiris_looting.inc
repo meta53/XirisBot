@@ -9,6 +9,7 @@ REVISION HISTORY
     03.24.16    xiris	INITIAL REVISION
 	06.29.22	xiris 	Updated all events to only be either generic, or [/gsay, /rsay, /tell, MQ2DanNet(dgt, dt)] only
 	07.29.22	xiris 	Updated to allow for 'beeping' if the item is lore and the looter already has it (useful for manual loots like mirrored mask)
+	11.12.23	xiris 	Added shake down method/event for raid cash management
 **|
 
 
@@ -46,8 +47,6 @@ REVISION HISTORY
 #EVENT GIMME_MONEY		"#1# tells you#*#'GimmeMoney #2#'"
 #EVENT GIMME_MONEY		"#1# tells the raid#*#GimmeMoney #2#'"
 #EVENT GIMME_MONEY 		"[ #1# #*#]#*#GimmeMoney #2#"
-
-
 
 Sub initEvents_Looting
     /call RegisterBackgroundEvents Events_Looting_Background
@@ -435,9 +434,14 @@ Sub Event_SHAKE_DOWN_RAIDFOR_MONEY(string _line, string _chatSender, string _eve
 	/doevents flush SHAKE_DOWN_RAIDFOR_MONEY
 	/if (${bln_engaged}) /return
 	/declare i int local 0
+	/declare pp int local 0
 	/if (${Raid.Members} == 0) /return
 	/for i 2 to ${Raid.Members}
 		/if (${Raid.Member[${i}].Name.Equal[${Me.Name}]}) /continue
+		/dquery ${Raid.Member[${i}]} -q "Me.Platinum" -o pp
+		/delay 20 ${DanNet.Query.Received}
+		/echo \ag ${Raid.Member[${i}]}  \aw${pp}
+		/if (${pp} < 2000) /continue
 		/dt ${Raid.Member[${i}]} ${i} => GimmeMoney VIG
 		/delay 20s
 	/next i

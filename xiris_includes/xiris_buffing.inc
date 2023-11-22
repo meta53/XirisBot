@@ -55,7 +55,7 @@ REVISION HISTORY
 #EVENT Buffing_Buff_RemoveAll   "#1# tells the group#*#'removeallbuffs#*#'"
 #EVENT Buffing_Buff_RemoveAll   "#1# tells you#*#'removeallbuffs#*#'"
 #EVENT Buffing_Buff_RemoveAll   "#1# tells the raid#*#'removeallbuffs#*#'"
-#EVENT Buffing_Buff_RemoveAll   "[ #1# #*#]#*#removeallbuffs #*#"
+#EVENT Buffing_Buff_RemoveAll   "[ #1# #*#]#*#removeallbuffs#*#"
 
 Sub initEvents_Buffing
 	/call RegisterBackgroundEvents  Events_Buffing_Background

@@ -19,6 +19,7 @@ REVISION HISTORY
 	02.02.23	xiris	Fixed long standing bug: chkHeal_MT would always call chkMTAlive, with targetting to TRUE, which would break cleric debuffing since it 
 						would always target the MT before trying to cast debuff
 	08.11.23	xiris	Rewrite for 2.0 INIs and performance issues
+	11.22.23	xiris	Reworked Divine Arbitration
 **|
 
 
@@ -409,8 +410,9 @@ Sub processHealSpellSettings
 			/varcalc sz ${sz}+1
 			/declare DIVINE_${i}			string	outer	${Ini[INI_CHAR,HEALS,DIVINE_${i}].Arg[1,|]}
 			/declare DIVINE_${i}_type		string	outer	${Ini[INI_CHAR,HEALS,DIVINE_${i}].Arg[2,|]}
-			/declare DIVINE_${i}_enabled		string	outer	${Ini[INI_CHAR,HEALS,DIVINE_${i}].Arg[3,|]}
+			/declare DIVINE_${i}_enabled	string	outer	${Ini[INI_CHAR,HEALS,DIVINE_${i}].Arg[3,|]}
 			/declare DIVINE_${i}_MinHP		string	outer	${Ini[INI_CHAR,HEALS,DIVINE_${i}].Arg[4,|]}
+			/declare DIVINE_${i}_Ready 		bool    outer   FALSE
 			/echo \ao        DIVINE_[\ag${i}\ao]: \awDA:\ag${DIVINE_${i}} \awType:\ag${DIVINE_${i}_type} \awUse:\ag${DIVINE_${i}_enabled} \awminHP:\ag${DIVINE_${i}_MinHP}
  
 		/next i
@@ -430,6 +432,8 @@ Sub processHealSpellSettings
 	}			
 
 /return
+
+
 
 Sub processHPRegenSettings
 	/echo \awprocessHPRegenSettings
@@ -611,6 +615,14 @@ Sub setHealingSpell(int _hp, string _targetType, int _range, string _targetName,
 	/declare eff 		string  local	${If[${bln_heal_useEfficient},_efficient,]}
 	| FRANTIC?
 	/if (${_hp} <= ${int_point_${_targetType}_frantic} && ${bln_heal_frantic} && (${_range} <= ${int_heal_range_frantic${eff}})) {
+		| DIVINE ARBITRATION
+		/call chkDivinearbitrationReady
+		/if (${bln_heal_useDivineArb} && ${Macro.Return}) {
+			/call castDivineArbitration ${Macro.Return}
+			/return CASTOK
+		}
+	
+		| FRANTIC
 		/varset		str_heal_current	${str_heal_frantic${eff}}
 		/varcalc	int_heal_interrupt	${Math.Clamp[${Math.Calc[${int_point_${_targetType}_frantic}*1.1]},0,100]}
 		/if (${_castOnReady}) /call castHealV2 ${_targetID} ${_targetName} "${str_heal_current}" FALSE FALSE
@@ -674,11 +686,18 @@ Sub castingHealLoop
 /return
 
 Sub chkDivinearbitrationReady
-	/declare ready int local 0
-	/declare i int local 0
+	/declare ready 	int local 0
+	/declare i 		int local 0
 	/for i 1 to ${int_DivineArbitration_total}
-		/if (${DIVINE_${i}_type.Equal[ITEM]} && ${DIVINE_${i}_enabled} && !${FindItem[=${DIVINE_${i}}].TimerReady}) /varset ready ${i}
-		/if (${DIVINE_${i}_type.Equal[AA]} && ${DIVINE_${i}_enabled} && ${Me.AltAbilityReady[${DIVINE_${i}}]}) /varset ready ${i}
+		/varset ${DIVINE_${i}_Ready} FALSE
+		/if (${DIVINE_${i}_type.Equal[ITEM]} && ${DIVINE_${i}_enabled} && !${FindItem[=${DIVINE_${i}}].TimerReady}) {
+			/varset ${DIVINE_${i}_Ready} TRUE
+			/varset ready ${i}
+		} 
+		/if (${DIVINE_${i}_type.Equal[AA]} && ${DIVINE_${i}_enabled} && ${Me.AltAbilityReady[${DIVINE_${i}}]}) {
+			/varset ${DIVINE_${i}_Ready} TRUE
+			/varset ready ${i}
+		}     
 	/next i
 /return ${ready}
 

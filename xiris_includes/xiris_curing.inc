@@ -25,6 +25,7 @@ REVISION HISTORY
 	06.29.22	xiris 	Updated all events to only be either generic, or [/gsay, /rsay, /tell, MQ2DanNet(dgt, dt)] only			
 	07.28.22	xiris   Updated the chkNeedCure request to have more must cure spells
 	07.24.23	xiris	V2.0 Rewrote majority of code to handle new INI implementations
+    11.22.23    xiris   Ported the prompt handleCureMarkOfDeath method from V1.5
 **|
 
 
@@ -804,6 +805,34 @@ Sub handleCureRequestV2(string _victim, int _id, string _debuffName, string _cur
     | Cast the spell
     /call castCureV2 ${_victim} ${_id} "${cureSpell}" ${castCount} ${_forced}
 /return
+
+Sub handleCureMarkOfDeath(string _name, int _id, bool _group, int _counters) 
+	/echo \ayhandleCureRequestV2: \ag${_name}\ao, \ag${_id}\ao, \ag${_group}\ao, \ag${_counters}
+	/declare str_cureToUse 		string local ${str_cure_disease}
+	/declare int_countersCured 	int    local 18
+	/declare int_startCount   	float    local 1
+	/declare int_finalCount     float    local 1
+
+	/varcalc int_startCount ${Math.Abs[${Math.Calc[${_counters} / ${int_countersCured}]}]}
+	/varcalc int_finalCount ${Math.Abs[${Math.Calc[${int_startCount} / ${int_groupClerics}]}]}
+
+    | Annoying math because there is no Math.Round
+	/varcalc int_finalCount ${int_finalCount} * 100
+	/varcalc int_finalCount ${int_finalCount} + 0.5
+	/varset  int_finalCount ${Int[${int_finalCount}]}
+	/varcalc int_finalCount ${Int[${Math.Calc[${int_finalCount}/100 + 1]}]}
+
+	/varcalc _counters ${Math.Calc[${_counters} / (${int_countersCured}*${int_finalCount})]}
+
+	| Note since the server is janky and not calculating counters except for the initial counter we
+	| have to cast more than once. All clerics in group will cast at least once.
+	/echo \ar int_startCount: ${int_startCount} int_groupClerics: ${int_groupClerics} int_finalCount: ${int_finalCount}
+
+	/if (${_group} && ${Me.Class.ShortName.Equal[CLR]}) /varset str_cureToUse ${str_heal_group}
+	/call castCureV2 ${_name} ${_id} "${str_cureToUse}" ${int_finalCount} disease ${_counters} TRUE
+	/call TrueTarget ${int_MTID}
+/return 
+
 
 
 Sub castCureV2(string _victim, int _id, string _spell, int _castCount, bool _forced)
