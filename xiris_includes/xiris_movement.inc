@@ -34,10 +34,10 @@ ______________________________________________
 
 
 Sub initEvents_Movement
-	/call RegisterBackgroundEvents Events_Movement_Background 5
+	/call RegisterPriorityEvents Events_Movement_Priority 5
 /return
 
-Sub Events_Movement_Background
+Sub Events_Movement_Priority
 	/doevents NavigateWP
 	/doevents Follow
 	/doevents Stop

@@ -33,7 +33,7 @@ Sub Events_Class_BRD
 /return
 
 Sub xbot_initialize_class_BRD
-
+    /echo \arxbot_initialize_class_BRD
     /declare str_currentMedley string outer MELEE
     /call SetupSongs
     /call SingSongs ${str_currentMedley}

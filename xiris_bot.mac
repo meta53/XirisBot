@@ -22,7 +22,7 @@ REVISION HISTORY
 **|
 
 #turbo 120
-#warning 
+
 
 #define INI_CHAR        	xiris_settings_character/BOT_${Me.Class.ShortName}_${Me.CleanName}.ini
 #define INI_COMMON      	xiris_settings_global/xiris_settings_common.ini
@@ -35,11 +35,13 @@ REVISION HISTORY
 #include                	xiris_includes/xiris_buffing.inc
 #include                	xiris_includes/xiris_burning.inc
 #include                	xiris_includes/xiris_casting.inc
+#include 					xiris_includes/xiris_charm.inc
+#include					xiris_includes/class/xiris_class_${Me.Class.ShortName}
 #include                	xiris_includes/xiris_clicks.inc
-#include 					xiris_includes/xiris_class.inc
 #include                	xiris_includes/xiris_common.inc
 #include                	xiris_includes/xiris_curing.inc
 #include                	xiris_includes/xiris_dannet.inc
+#include                	xiris_includes/xiris_debuffing.inc
 #include                	xiris_includes/xiris_events.inc
 #include                	xiris_includes/xiris_exclude.inc
 #include                	xiris_includes/xiris_healing.inc
@@ -54,7 +56,7 @@ REVISION HISTORY
 |SUB: Main
 |--------------------------------------------------------------------------------
 Sub Main(string _t1, string _t2, string _t3, int _tankHealPointOverride)
-	/mqclear
+	|/mqclear
 	/echo \awI am a \arXiris\ao_Bot \agBeep \atBoop
 	| set default values here in case we just started the loader with no args
 	/declare	str_defTank1		string	outer	${Ini[INI_COMMON,SETTINGS,defaultTank1,Xiris]}
@@ -62,12 +64,12 @@ Sub Main(string _t1, string _t2, string _t3, int _tankHealPointOverride)
 	/declare	str_defTank3		string	outer	${Ini[INI_COMMON,SETTINGS,defaultTank3,Xirea]}
 	/declare	int_defHealPoint	int		outer	${Ini[INI_COMMON,SETTINGS,defaultHealPoint,65]}
 	
-	/if (!${_t1}) /varset _tank1Name ${str_defTank1}
-	/if (!${_t2}) /varset _tank2Name ${str_defTank2}
-	/if (!${_t3}) /varset _tank3Name ${str_defTank3}
-	/if (!${_tankHealPointOverride}) /varset _tankHealPointOverride ${int_defHealPoint}
-
-	/call xbot_initialize_common ${_t1} ${_t2} ${_t3} ${_tankHealPointOverride}s 
+|** 	/if (!${Defined[_t1]} || !${_t1.Length}) /varset _t1 ${str_defTank1}
+	/if (!${Defined[_t2]} || !${_t2.Length}) /varset _t2 ${str_defTank2}
+	/if (!${Defined[_t3]} || !${_t3.Length}) /varset _t3 ${str_defTank3}
+	/if (!${Defined[_tankHealPointOverride]} || !${_tankHealPointOverride}) /varset _tankHealPointOverride ${int_defHealPoint}
+ **|
+	/call xbot_initialize_common ${_t1} ${_t2} ${_t3} ${_tankHealPointOverride}
 
 	:MainLoop
 		/if (${Me.Hovering} || ${Window[tradewnd].Open} || ${Window[lootwnd].Open}) /goto :MainLoop

@@ -35,7 +35,6 @@ Sub EVENT_MANABURN
 /return
 
 SUB EVENT_FIRETL
-	/if (!${bln_tlUse}) /return
 	/doevents flush
 	/dgt Firing TL ${Time.Time24}
 	/call MQ2Cast "${str_tlSpell}" ${str_tlGem}

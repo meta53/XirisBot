@@ -52,9 +52,6 @@ Sub xbot_initialize_events
     /declare PriorityEventsRaw[10]      string outer NULL
     /declare PriorityEvents[0]          string outer NULL
 
-    |--Setup Class Events
-    /if (${Me.Class.ShortName.Equal[BRD]}) /call xbot_initialize_class_BRD
-
     |--Check for Special Events
 
     |- Gates of Discord
@@ -165,7 +162,6 @@ Sub TrimRaidEvents(int _count)
 /return
 
 Sub RegisterClassEvents(string _EventSet)
-    /echo \arCLASS EVENTS ARE DEPRECATED
     /declare i int local -1
     /declare bound int local 0
     /for i 1 to ${ClassEventsRaw.Size}

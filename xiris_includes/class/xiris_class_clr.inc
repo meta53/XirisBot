@@ -38,8 +38,6 @@ Sub Events_Class_CLR
 	/doevents CombatRezON
 	/doevents CombatRezOFF
 	/doevents DivineInterventionRequest
-    /call chkArbitrationReady
-    /call chkDivineIntervention
 /return
 
 Sub xbot_initialize_class_CLR
@@ -107,27 +105,4 @@ Sub CombatRezOFF
 	/dgt ${Me.Name} is no longer auto rezzing during combat.
 	/varset bln_autoRez FALSE
 	/varset bln_combatRez FALSE
-/return
-
-|**
-----------------------------
-Check|Set to see if Divine Arbitration is Ready
-----------------------------  
-**|
-Sub chkArbitrationReady
-	/varset bln_ArbitrationReady	FALSE
-	/if (${Me.AltAbilityReady[divine arbitration]} || !${FindItem[${str_epicName}].Timer}) /varset bln_ArbitrationReady TRUE
-/return
-
-
-|**
-----------------------------
-Check|Set to see if Divine Intervention is Ready
-----------------------------  
-**|
-Sub chkDivineIntervention
-	/if (${FindItemCount[Emerald]} && ${Me.SpellReady[Divine Intervention]} && !${NetBots[${Target.Name}].Buff[Divine Intervention].Name.Equal[Divine Intervention]}) {
-		/say Casting Divine Intervention on ${Target.Name}!
-		/call MQ2Cast "Divine Intervention"
-	}
 /return

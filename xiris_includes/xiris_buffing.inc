@@ -258,9 +258,9 @@ Sub processDamageShields
  ----------------------------
 **|
 Sub chkSelfBuffs
-	/if (!${int_selfBuffs_total} || !${bln_selfBuffs_enabled} || (${SpawnCount[NPC raidus ${int_campRadius}]} && (${Zone.ID} != 340 && ${Zone.ID} != 344 && ${Zone.ID} != 345 && ${Zone.ShortName.Equal[${str_zone_bound}]}))) /return
+	/if (!${int_selfBuffs_total} || !${bln_selfBuffs_enabled} || (${SpawnCount[NPC radius ${int_campRadius}]} && (${Zone.ID} != 340 && ${Zone.ID} != 344 && ${Zone.ID} != 345 && ${Zone.ShortName.Equal[${str_zone_bound}]}))) /return
 
-    /echo \aochkSelfBuffs\aw(\ag${int_selfBuffs_total}\aw)
+    |/echo \aochkSelfBuffs\aw(\ag${int_selfBuffs_total}\aw)
     /declare i  int                 local 0
     /declare ds int                 local 0
     /declare bln_buffsCast  bool    local FALSE
@@ -278,7 +278,7 @@ Sub chkSelfBuffs
         /if (${bln_engaged} || ${bln_killing}) /return
 
         | Check to see if the buff is already applied
-        /echo \aw    Checking \ag${BUFFSELF_${i}} \aoStacks?\ag${Spell[${BUFFSELF_${i}}].Stacks}  \aoCurrently Have? \ag${Bool[${Me.Buff[${BUFFSELF_${i}}].ID}]}
+       | /echo \aw    Checking \ag${BUFFSELF_${i}} \aoStacks?\ag${Spell[${BUFFSELF_${i}}].Stacks}  \aoCurrently Have? \ag${Bool[${Me.Buff[${BUFFSELF_${i}}].ID}]}
         /if (${Spell[${BUFFSELF_${i}}].Stacks} && !${Me.Buff[${BUFFSELF_${i}}].ID}) {
             /target id ${Me.ID}
             | Handle the item type buff check

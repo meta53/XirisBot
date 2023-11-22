@@ -264,7 +264,7 @@ Sub processCureDebuffList
     /declare i                          int     local 0
     /declare sz                         int     local 0 
     /declare test                       string  local NULL
-    /declare str_queryCurable           string  outer   NULL
+    /declare str_queryCurable           string  outer NULL
 
     | Tracking information for all classes
     | Immediate Cure Requirments, clients keep a list of /counters per type
@@ -352,8 +352,6 @@ Sub determineMyCureCounters
     /varset int_required_disease    0
     /varset int_required_poison     0 
 
-    /varset str_queryCurable        NULL
-
     /for i 1 to ${int_immediateDebuffCures_total}
         |/echo IMMEDIATE: ${DEBUFF_IMMEDIATE_${i}} ${Me.Buff[${DEBUFF_IMMEDIATE_${i}}].ID} 
         /if (${DEBUFF_IMMEDIATE_${i}_targets.Equal[MT]} && (${Me.ID} != ${int_MTID})) /varset bln_MTApplies FALSE
@@ -386,8 +384,8 @@ Sub determineMyCureCounters
     :nextRequired
     /next i
 
-    /varset str_queryCurable ${has_immediate}~${int_immediate_curse},${int_immediate_disease},${int_immediate_poison}|${has_required}~${int_required_curse},${int_required_disease},${int_required_poison}
-    |/echo \aodetermineMyCureCounters \ag ${str_queryCurable} \aw${Time.Time24}
+    |/varset str_queryCurable ${has_immediate}~${int_immediate_curse},${int_immediate_disease},${int_immediate_poison}|${has_required}~${int_required_curse},${int_required_disease},${int_required_poison}
+    /echo \aodetermineMyCureCounters \ag ${str_queryCurable} \aw${Time.Time24}
    
 /return 
 
@@ -398,7 +396,7 @@ Sub determineMyCureCounters
 Sub chkCures
     /declare lazy bool local ${If[${bln_engaged},FALSE,TRUE]}
     /if (${bln_killing} || ${bln_engaged}) /varset lazy FALSE
-    /echo \aochkCures \a-wMT: \ap${bln_autoCureMT} \a-wSelf: \ap${bln_autoCureSelf} \a-wGroup: \ap${bln_autoCureGroup} \a-wLazy: \ap${lazy} \a-wEngaged?: \ap${bln_engaged} ${If[${bln_engaged},,\a-wTimer?: \ap${timer_check_cures.OriginalValue}]}
+   | /echo \aochkCures \a-wMT: \ap${bln_autoCureMT} \a-wSelf: \ap${bln_autoCureSelf} \a-wGroup: \ap${bln_autoCureGroup} \a-wLazy: \ap${lazy} \a-wEngaged?: \ap${bln_engaged} ${If[${bln_engaged},,\a-wTimer?: \ap${timer_check_cures.OriginalValue}]}
 	/if (${bln_autoCureMT}) 	/call chkCure_MT    ${lazy}
  	/if (${bln_autoCureSelf}) 	/call chkCure_Self  ${lazy}
 	/if (${bln_autoCureGroup})  /call chkCure_Group ${lazy}
@@ -468,7 +466,7 @@ Sub chkCure_Group(bool _lazyGroup)
     /for r 1 to ${g}
         /varcalc sz ${r}-1
         /if (!${Group.Member[${sz}].Present}) /continue
-        /dquery ${Group.Member[${sz}].Name} -q "str_queryCurable" -o str_debuffQueryResult -t 20
+        |/dquery ${Group.Member[${sz}].Name} -q "str_queryCurable" -o str_debuffQueryResult -t 20
 
         
         |Process the immediate results

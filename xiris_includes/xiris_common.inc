@@ -195,6 +195,7 @@ Sub EVENT_RaidBuildByTemplate(string _sender, string _line, string _eventParams)
 
 Sub xbot_initialize_common(string _t1, string _t2, string _t3, int _tankHealPointOverride) 
 	/echo \apInitialize: \aoCommon \aw-------------------------
+	/echo \a-w            ${_t1},${_t2},${_t3},${_tankHealPointOverride}
 
 	|-- [Telemetry]
 	/declare	float_startTime 		float	outer   ${EverQuest.Running}
@@ -287,14 +288,15 @@ Sub xbot_initialize_common(string _t1, string _t2, string _t3, int _tankHealPoin
 	/declare str_zone_bound 			string  outer 	${Me.BoundLocation[0]}
 
 	|-- INITIALIZE Libraries
+	/call xbot_initialize_events
     /call xbot_initialize_dannet
 	/call xbot_initialize_spellRoutines
-    /call xbot_initialize_events
+	/call xbot_initialize_casting
 	/call xbot_initialize_buffing
 	/call xbot_initialize_burning
-    /call xbot_initialize_casting
 	/call xbot_initialize_clicking
     /call xbot_initialize_curing
+	/call xbot_initialize_debuffing
 	/call xbot_initialize_exclusions
 	/call xbot_initialize_healing
     /call xbot_initialize_looting

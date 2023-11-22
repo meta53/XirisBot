@@ -34,23 +34,81 @@ REVISION HISTORY
 
 #EVENT TestDebuff   "#*#TestDebuff#*#"
 
-Sub initEvents_Debuffing
-	/if (${DEBUFF_total} > 0 ) {
-		/call RegisterRaidEvents Events_Debuffing 2
-	}	
+Sub initEvents_debuffing
+	/call RegisterRaidEvents Events_debuffing_Raid 3	
 /return
 
-Sub Events_Debuffing
+Sub Events_debuffing_Raid
 	/doevents DebuffTarget
 	/doevents SlowTarget
 	/doevents TestDebuff
 /return
 
-|-- Force casting debuffs on target (FORCED cast, will ignore checks)
-Sub EVENT_DebuffTarget(string _line, string _sender, string _eventParams)
-	/if (!${DEBUFF_total}) /return 
-	/call CastDebuffsOnTarget ${_eventParams.Arg[1, ]} TRUE
-	/doevents flush DebuffTarget
+
+
+Sub xbot_initialize_debuffing
+	/echo \n \apInitialize: \aoDeBuffing \aw-------------------------
+
+	| process the character ini file
+	/call processDebuffs
+
+	| initialize the buffing events
+	/call initEvents_debuffing
+/return
+
+
+Sub processDebuffs
+	/echo \awprocessDebuffs
+
+	/declare raw_debuff[100]		string 	local NULL
+	/declare i						int 	local 0
+	/declare sz 					int     local 0
+    /declare test                   string  local NULL
+
+	| debuffs
+    /declare timer_check_debuff		timer   outer   0
+    /declare int_debuff_total		int     outer   0
+	/declare bln_debuff_enabled		bool	outer	TRUE
+	/declare int_debuff_minMana		int     outer   0
+	/declare int_debuff_startHP		int     outer   99
+	/declare int_debuff_stopHP		int     outer   0
+	/declare bln_debuff_automatic  	bool    outer   TRUE
+
+	|; _enabled|_minMana|_startHP|_stopHP|_automatic
+	|settings=TRUE|0|99|5|TRUE
+    /if (${Ini[INI_CHAR,DEBUFFS,settings].Arg[1,|]})  /varset bln_targetedBuffs_enabled     ${Ini[INI_CHAR,DEBUFFS,settings].Arg[1,|]}
+    /if (${Ini[INI_CHAR,DEBUFFS,settings].Arg[2,|]})  /varset int_debuff_minMana  			${Ini[INI_CHAR,DEBUFFS,settings].Arg[2,|]}
+    /if (${Ini[INI_CHAR,DEBUFFS,settings].Arg[3,|]})  /varset int_debuff_startHP			${Ini[INI_CHAR,DEBUFFS,settings].Arg[3,|]}
+    /if (${Ini[INI_CHAR,DEBUFFS,settings].Arg[4,|]})  /varset int_debuff_stopHP  			${Ini[INI_CHAR,DEBUFFS,settings].Arg[4,|]}
+	/if (${Ini[INI_CHAR,DEBUFFS,settings].Arg[5,|]})  /varset bln_debuff_automatic  		${Ini[INI_CHAR,DEBUFFS,settings].Arg[5,|]}
+
+	/echo \a-w    Settings Processed: \awDEBUFF Enabled:\ag${bln_targetedBuffs_enabled}  \awMinMana:\ag${int_debuff_minMana} \awStart:\ag${int_debuff_startHP} \awStop:\ag${int_debuff_stopHP} \awAutomatic:\ag${bln_debuff_automatic}
+
+
+	|; _debuff|_enabled|_type|_gem|_maxTries|_namedOnly|_startHP|_stopHP|_hasCastOnce|_delay
+	|DEBUFF_1="Malos"|TRUE|MALOS|8|2|TRUE|99|10|FALSE|0|
+	
+	/for i 1 to ${raw_debuff.Size}
+        /varset test ${Ini[INI_CHAR,DEBUFFS,DEBUFF_${i}]}
+        /if (${test.Arg[1,|].Equal[NULL]}) {
+            /varset int_debuff_total ${sz}
+            /return
+        } 
+        | Not null, set the values for the buffs
+		/varcalc sz	${sz}+1
+		/declare DEBUFF_${i}				string	outer   ${test.Arg[1,|]}
+		/declare DEBUFF_${i}_enabled		string  outer   ${test.Arg[2,|]}
+		/declare DEBUFF_${i}_type			string  outer   ${test.Arg[3,|]}
+		/declare DEBUFF_${i}_gem			string  outer   ${test.Arg[4,|]}
+		/declare DEBUFF_${i}_maxTries		string  outer   ${test.Arg[5,|]}
+		/declare DEBUFF_${i}_namedOnly		string  outer   ${test.Arg[6,|]}
+		/declare DEBUFF_${i}_startHP		string  outer   ${test.Arg[7,|]}
+		/declare DEBUFF_${i}_stopHP			string  outer   ${test.Arg[8,|]}
+		/declare DEBUFF_${i}_hasCastOnce	string  outer   ${test.Arg[9,|]}
+		/declare DEBUFF_${i}_delay			string  outer   ${test.Arg[10,|]}
+        /echo \ao        DEBUFF_[\ag${i}\ao]: \awDEBUFF:\ag${DEBUFF_${i}} \awType:\ag${DEBUFF_${i}_type}
+	/next i
+	
 /return
 
 Sub EVENT_SlowTarget(string _line, string _sender, string _eventParams) 
@@ -62,7 +120,7 @@ Sub EVENT_SlowTarget(string _line, string _sender, string _eventParams)
 Sub SlowTarget(string _resist)
 	/if (${Me.Class.ShortName.NotEqual[SHM]} || ${Me.Class.ShortName.NotEqual[ENC]} || ${Me.Class.ShortName.NotEqual[BRD]}) /return
 	/declare db int local 
-	/for db 1 to ${DEBUFF_total}
+	/for db 1 to ${int_debuff_total}
 		/if (${DEBUFF_${db}_type.Find[SLOW]} && ${DEBUFF_${db}_ResistType.Find[${_resist}]} && ${DEBUFF_${db}_Trigger.Replace[#,$]}) {
 			/call chkSpellMemorized "DEBUFF_${db}" TRUE ${DEBUFF_${db}_gem} 
 			/call MQ2Cast "DEBUFF_${db}" gem${DEBUFF_${db}_gem} 
@@ -73,10 +131,8 @@ Sub SlowTarget(string _resist)
 |-- Do not use the target array to check the targets, lets just check a single (current) target
 |   Useful for bards, and others that do not need to AE/Mez/Slow whatever will check if engaged on current target
 |   Note we currently disabled the array of targets so this is the only debuff check method
-|   Additionally once debuffs have been cast (either sucesffully or through max tries) the str_debuffedTargets is updated
-|   with the target ID, so we don't continually try to debuff the thing
 Sub chkDebuffsOnSingleTarget(int _targetID)
-	/if (!${DEBUFF_total} || !${_targetID} || ${Target.Name.Find[s_corpse]} || !${Spawn[id ${_targetID}].LineOfSight}) /return
+	/if (!${int_debuff_total} || !${_targetID} || ${Target.Name.Find[s_corpse]} || !${Spawn[id ${_targetID}].LineOfSight}) /return
 	/if (${timer_check_debuffs}) /return
 	
 	/call CastDebuffsOnTarget ${_targetID} FALSE
@@ -89,8 +145,8 @@ Sub chkDebuffsOnSingleTarget(int _targetID)
 |   Will check to see if the target already has the debuff and if so has more than 30s left on it
 |**
 **|
-Sub chkDebuffTrigger(string _key)
-	|/echo \agDebuff Trigger \ao${_key}
+Sub chkDebuffTrigger(string _key, string _spell)
+	/echo \agDebuff Trigger \ao${_key} \ay${_spell}
 	/if (${_key.Equal[PUTRID_DECAY]}) {
 		|putrid decay
 		/if ((!${Target.Maloed.ID} || ${Target.Maloed.Duration.TotalSeconds} < 20) && ${str_useResistTypes.Find[disease]}) {
@@ -98,11 +154,13 @@ Sub chkDebuffTrigger(string _key)
 		}
 	} else /if (${_key.Equal[MALOS]}) { 
 		|malos
+		|/echo checking malos id?${Target.Maloed.ID} duration? ${Target.Maloed.Duration.TotalSeconds}
 		/if (!${Target.Maloed.ID} || ${Target.Maloed.Duration.TotalSeconds} < 30) {
 			/return TRUE
 		}
 	} else /if (${_key.Equal[TURGURS]}) { 
 		|turgur
+		|/echo checking malos id?${Target.Slowed.ID} duration? ${Target.Slowed.Duration.TotalSeconds} ${str_useResistTypes} ${Target.Maloed.ID}
 		/if ((!${Target.Slowed.ID} || ${Target.Slowed.Duration.TotalSeconds} < 10) && ${str_useResistTypes.Find[magic]} && ${Target.Maloed.ID}) {
 			/return TRUE
 		}
@@ -128,33 +186,42 @@ Sub chkDebuffTrigger(string _key)
 		}
 	} else /if (${_key.Equal[DRUID_SUN]}) { 
 		| sun's corona
-		/if ((!${Target.Buff[${DEBUFF_1_Spell}].ID} && ${Target.Buff[${DEBUFF_1_Spell}].Duration.TotalSeconds} < 20) && ${str_useResistTypes.Find[fire]} && ${Target.Maloed.ID}) {
+		/if ((!${Target.Buff[${_spell}].ID} && ${Target.Buff[${_spell}].Duration.TotalSeconds} < 20) && ${str_useResistTypes.Find[fire]} && ${Target.Maloed.ID}) {
 			/return TRUE
 		}
 	} else /if (${_key.Equal[DRUID_GLACIER]}) { 
 		| glacier breath
-		/if ((!${Target.Buff[${DEBUFF_2_Spell}].ID} && ${Target.Buff[${DEBUFF_2_Spell}].Duration.TotalSeconds} < 20) && ${str_useResistTypes.Find[cold]} && ${Target.Maloed.ID}) {
+		/if ((!${Target.Buff[${_spell}].ID} && ${Target.Buff[${_spell}].Duration.TotalSeconds} < 20) && ${str_useResistTypes.Find[cold]} && ${Target.Maloed.ID}) {
 			/return TRUE
 		}
 	} else /if (${_key.Equal[DRUID_VINES]}) { 
 		| hungry vines
-		/if ((!${Target.Buff[${DEBUFF_3_Spell}].ID} && ${Target.Buff[${DEBUFF_3_Spell}].Duration.TotalSeconds} < 20) && ${str_useResistTypes.Find[magic]} && ${Target.Maloed.ID} && ${Target.Tashed.ID}) {
+		/if ((!${Target.Buff[${_spell}].ID} && ${Target.Buff[${_spell}].Duration.TotalSeconds} < 20) && ${str_useResistTypes.Find[magic]} && ${Target.Maloed.ID} && ${Target.Tashed.ID}) {
 			/return TRUE
 		}
 	} else /if (${_key.Equal[HARMONY]}) {
 		| harmony of sound 
-		/if (${Target.Buff[${DEBUFF_1_Spell}].Duration.TotalSeconds} < 30) {
+		/if (${Target.Buff[${_spell}].Duration.TotalSeconds} < 30) {
 			/return TRUE
 		}
 	} else /if (${_key.Equal[REVERSE_DS]}) {
 		| mark of the blameless
-		/if ((!${Target.Buff[${DEBUFF_1_Spell}].ID} || ${Target.Buff[${DEBUFF_1_Spell}].Duration.TotalSeconds} < 10) && ${str_useResistTypes.Find[magic]}) {
+		/if ((!${Target.Buff[${_spell}].ID} || ${Target.Buff[${_spell}].Duration.TotalSeconds} < 10) && ${str_useResistTypes.Find[magic]}) {
 			/return TRUE
 		}
 	}
 /return FALSE
 
+|-- Force casting debuffs on target (FORCED cast, will ignore checks)
+Sub EVENT_DebuffTarget(string _line, string _sender, string _eventParams)
+	/echo Debuffing Target ${int_debuff_total}
+	/if (!${int_debuff_total}) /return 
+	/call CastDebuffsOnTarget ${_eventParams.Arg[1, ]} TRUE
+	/doevents flush DebuffTarget
+/return
+
 Sub CastDebuffsOnTarget(int _targetID, bool _forced)
+	/echo CastDebuffsOnTarget ${_targetID} ${_forced}
 	/if (!${Spawn[id ${_targetID}].LineOfSight}) /return
 	| Check if named, or we are forcing this
 	/call TargetNamedCheck ${_targetID}
@@ -163,36 +230,35 @@ Sub CastDebuffsOnTarget(int _targetID, bool _forced)
 	/if (${_forced}) /varset isNamed TRUE
 
 	|-- Global Checking for mana 
-	/if (${isNamed} && ${Me.PctMana} < ${DEBUFF_Mana_NamedMinimum}) /return
-	/if (!${isNamed} && ${Me.PctMana} < ${DEBUFF_Mana_Minimum}) /return
+	/if (${Me.PctMana} < ${int_debuff_minMana}) /return
 	
 	|-- Mana Check Passed, Check individual debuffs now
 	:debuffTarget
-	/declare	db		int		local	${DEBUFF_total}
+	/declare	db		int		local	${int_debuff_total}
 	/declare 	valid   bool    local   FALSE
-	/for db 1 to ${DEBUFF_total}
+	/for db 1 to ${int_debuff_total}
 		:debuffChecks
 
 		| Forcing Check - if this is forced, just cast the damn thing
 		/if (${_forced}) /goto :debuffSpellMemorized
 
-		| Named Check - If this is a named only debuff, and target is not named, skipp
-		/if (${DEBUFF_${db}_NamedOnly} && !${isNamed}) /goto :nextDB
+		| Named Check - If this is a named only debuff, and target is not named, skip
+		/if (${DEBUFF_${db}_namedOnly} && !${isNamed}) /goto :nextDB
 
 		| Start HP/Stop HP Check
 		/call TrueTarget ${_targetID}
 		/if (${Target.PctHPs} > ${DEBUFF_${db}_startHP} || ${Target.PctHPs} < ${DEBUFF_${db}_stopHP}) /goto :nextDB
 
 		| Trigger Check based on type (Calls chkCharmTrigger)
-		/call chkDebuffTrigger ${DEBUFF_${db}_type} 
+		/call chkDebuffTrigger ${DEBUFF_${db}_type} ${DEBUFF_${db}}
 		/if (!${Macro.Return}) /goto :nextDB
 
 		| Checks passed, check if the spell is memorized. Skip if not
 		:debuffSpellMemorized
-		/call chkSpellMemorized "${DEBUFF_${db}_Spell}" ${_forced} ${DEBUFF_${db}_gem}
+		/call chkSpellMemorized "${DEBUFF_${db}}" ${_forced} ${DEBUFF_${db}_gem}
 		:debuffSpellReadyWait 
 		| If this is a forced cast, wait for the spell to be ready
-		/if ((!${Me.SpellReady[${DEBUFF_${db}_Spell}]} && ${_forced}) || (${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]})) {
+		/if ((!${Me.SpellReady[${DEBUFF_${db}}]} && ${_forced}) || (${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]})) {
 			/delay 2
 			/goto :debuffSpellReadyWait
 		} 
@@ -200,10 +266,10 @@ Sub CastDebuffsOnTarget(int _targetID, bool _forced)
 		:debuffCast
 			/call TrueTarget ${_targetID}
 			/if (${Me.Class.ShortName.Equal[BRD]}) {
-				/call MQ2Medley "${DEBUFF_${db}_Spell}" SONG ${_targetID} TRUE
-				/docommand /${str_command_channel} << ${Target.Name} >> ${DEBUFF_${db}_Spell} 
+				/call MQ2Medley "${DEBUFF_${db}}" SONG ${_targetID} TRUE
+				/docommand /${str_command_channel} << ${Target.Name} >> ${DEBUFF_${db}} 
 			} else {
-				/call CastDebuff "${DEBUFF_${db}_Spell}" ${DEBUFF_${db}_gem} ${DEBUFF_${db}_maxTries} ${_targetID} ${_forced}
+				/call CastDebuff "${DEBUFF_${db}}" ${DEBUFF_${db}_gem} ${DEBUFF_${db}_maxTries} ${_targetID} ${_forced}
 			}
 		
 
@@ -278,7 +344,6 @@ Sub CastDebuff(string _debuff, string _gem,  int _maxTries, int _targetID, bool 
 	:DebuffSuccess
 		/dgt DEBUFF_SUCCESS::[${_debuff}] -> ${tgtName} (try:${try})
 :return
-	/varset str_debuffedTargets "${str_debuffedTargets},${_targetID}"
 /return
 
 | Reloads entire debuff lineup from INI
@@ -286,44 +351,20 @@ Sub CastDebuff(string _debuff, string _gem,  int _maxTries, int _targetID, bool 
 Sub CreateDebuffLineup
 	/declare i 							int		local
 	|-- Debuffs
-	/declare DEBUFF_total				int		outer	${Ini[INI_CHAR,DEBUFF,DEBUFF_total,0]}
+	/declare int_debuff_total				int		outer	${Ini[INI_CHAR,DEBUFF,int_debuff_total,0]}
 	/declare DEBUFF_HasCastOnce			bool 	outer	FALSE
 	/declare DEBUFF_Mana_Minimum		int 	outer	${Ini[INI_CHAR,DEBUFF,DEBUFF_Mana_Minimum,10]}
 	/declare DEBUFF_Mana_NamedMinimum	int		outer	${Ini[INI_CHAR,DEBUFF,DEBUFF_Mana_NamedMinimum,10]} 
 	/declare DEBUFF_startHP				int		outer	${Ini[INI_CHAR,DEBUFF,DEBUFF_startHP,100]}
 	/declare DEBUFF_stopHP				int		outer	${Ini[INI_CHAR,DEBUFF,DEBUFF_stopHP,10]}
 
-	/if (${Bool[${DEBUFF_total}]}) {
-		/for i 1 to ${DEBUFF_total} 
+	/if (${Bool[${int_debuff_total}]}) {
+		/for i 1 to ${int_debuff_total} 
 			/call addSpellToLineup DEBUFF ${i} ${Ini[INI_CHAR,DEBUFF,DEBUFF_${i}]}
 			/declare DEBUFF_${i}_type		string	outer	${Ini[INI_CHAR,DEBUFF,DEBUFF_${i}_type,RESIST_DEBUFF]}
 		/next i
 	}
 
-/return
-
-
-Sub xbot_initialize_debuffing
-	/echo \ao xbot_initialize_debuffing
-	|-- Timer
-	/declare timer_check_debuffs		timer  outer   30s
-
-	|-- Templates
-	/declare DEBUFF_Template			string outer	_Spell|_enabled|_gem|_maxTries|_NamedOnly|_startHP|_stopHP|_Resist|_hasCastOnce|_RecastTimer
-	
-	|-- Debuff Settings/Misc
-	/declare str_debuffedTargets		string  outer   NULL
-
-	|-- Return out if not a caster
-	/if (${str_class_type.Equal[MELEE_END]} || ${Me.Class.ShortName.Equal[WAR]}) /return
-
-	|-- Load the debuffs set in the INI file
-	/call CreateDebuffLineup
-
-	|-- Init Events
-	/call initEvents_Debuffing
-	/echo \awDebuffs: \ag${DEBUFF_total}
-	
 /return
 
 

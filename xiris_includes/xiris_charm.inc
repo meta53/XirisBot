@@ -78,7 +78,7 @@ Sub CharmNPC(int _targetID, bool _forced, bool _attack, int _attackID)
     
     | Trigger Check based on type (Calls chkCharmTrigger)		
     |** /call chkCharmTrigger ${CHARM_${i}_type}
-    /echo \ayChkCharmTrigger: \ao${CHARM_${i}_type} \ar${Macro.Return} "${CHARM_${i}_Spell}"
+    /echo \ayChkCharmTrigger: \ao${CHARM_${i}_type} \ar${Macro.Return} "${CHARM_${i}}"
     /if (!${Macro.Return}) {
         /if (${i} < ${CHARM_total}) {
             /echo \aoGoing to next charm since first failed!
@@ -92,24 +92,24 @@ Sub CharmNPC(int _targetID, bool _forced, bool _attack, int _attackID)
     **|      
     | Checks passed, check if the spell is memorized. Skip if not
     :charmSpellMemorized
-        /echo \awChecking if \ao"${CHARM_${i}_Spell}" \aw is memorized
-        /call chkSpellMemorized "${CHARM_${i}_Spell}" ${_forced} ${CHARM_${i}_gem}
+        /echo \awChecking if \ao"${CHARM_${i}}" \aw is memorized
+        /call chkSpellMemorized "${CHARM_${i}}" ${_forced} ${CHARM_${i}_gem}
         /goto :charmCast
     :charmSpellReadyWait 
         | If this is a forced cast, wait for the spell to be ready
-        /echo \awWaiting for \ao"${CHARM_${i}_Spell}" \aw is memorized
-        /if ((!${Me.SpellReady[${CHARM_${i}_Spell}]} && ${_forced}) || (${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]})) {
+        /echo \awWaiting for \ao"${CHARM_${i}}" \aw is memorized
+        /if ((!${Me.SpellReady[${CHARM_${i}}]} && ${_forced}) || (${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]})) {
             /delay 5
             /goto :charmSpellReadyWait
         } 
     :charmCast
-        |/echo \agCasting Charm:\ao"${CHARM_${i}_Spell}" \awID:\ay${_targetID}  \awforcing?:\ay${_forced}
+        |/echo \agCasting Charm:\ao"${CHARM_${i}}" \awID:\ay${_targetID}  \awforcing?:\ay${_forced}
         /call TrueTarget ${_targetID}
 
         /if (${Me.Class.ShortName.Equal[BRD]}) {
-            /call MQ2Medley "${CHARM_${i}_Spell}" SONG ${_targetID} TRUE
+            /call MQ2Medley "${CHARM_${i}}" SONG ${_targetID} TRUE
         } else {
-            /call CastCharm "${CHARM_${i}_Spell}" ${CHARM_${db}_gem} ${CHARM_${i}_maxTries} ${Target.ID} ${_forced}
+            /call CastCharm "${CHARM_${i}}" ${CHARM_${db}_gem} ${CHARM_${i}_maxTries} ${Target.ID} ${_forced}
         }  
         /call RunRaidEvents  
 
@@ -213,9 +213,9 @@ Sub CreateCharmLineup
 Sub chkCharmTrigger(string _key)
     /if (${Me.Class.ShortName.Equal[ENC]}) {
         | Charm 1 "True Name"
-        /if (${_key.Equal[NORMAL]} && (!${Pet.ID} || ${Target.Buff[${CHARM_1_SPELL}].Duration.TotalSeconds} < 5) && ${Me.SpellReady[${CHARM_1_Spell}]})  /return TRUE
+        /if (${_key.Equal[NORMAL]} && (!${Pet.ID} || ${Target.Buff[${CHARM_1_SPELL}].Duration.TotalSeconds} < 5) && ${Me.SpellReady[${CHARM_1}]})  /return TRUE
     } else /if (${Me.Class.ShortName.Equal[BRD]}) {
-        /if (${_key.Equal[NORMAL]} && (!${Pet.ID} || ${Target.Charmed.Duration.TotalSeconds} < 6) && ${Me.SpellReady[${CHARM_1_Spell}]})  /return TRUE
+        /if (${_key.Equal[NORMAL]} && (!${Pet.ID} || ${Target.Charmed.Duration.TotalSeconds} < 6) && ${Me.SpellReady[${CHARM_1}]})  /return TRUE
     }
 
 /return FALSE

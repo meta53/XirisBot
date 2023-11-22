@@ -169,7 +169,7 @@ Sub processDefensiveSettings
         /declare JOLT_${i}_stopHP	    string  outer   ${test.Arg[8,|]}
         /declare JOLT_${i}_hasCastOnce  string  outer   ${test.Arg[9,|]}
         /declare JOLT_${i}_delay	    string  outer   ${test.Arg[10,|]}
-        /declare JOLT_${i}_timer        timer   outer   ${JOLT${i}_delay}	
+        /declare JOLT_${i}_timer        timer   outer   ${JOLT_${i}_delay}	
         /echo \ao        JOLT[\ag${i}\ao]:\ag${JOLT_${i}} \awType:\ag${JOLT_${i}_type} \awUse:\ag${JOLT_${i}_enabled} 
     /next i
 
@@ -181,7 +181,6 @@ Sub processOffensiveSpellSettings(string _type)
 
     /declare bln_cast_${_type}_enabled      bool    outer   FALSE
     /declare int_cast_${_type}_total        int     outer   0
-    /declare timer_cast_${_type}            timer   outer   0
     /declare int_cast_${_type}_minMana      int     outer   10
     /declare int_cast_${_type}_startHP      int     outer   99
     /declare int_cast_${_type}_stopHP       int     outer   0
@@ -212,6 +211,7 @@ Sub processOffensiveSpellSettings(string _type)
     /declare pcount                 int     local ${template.Count[|]}
     /declare property               string  local NULL
     /declare key                    string  local NULL
+    /declare timer_cast_${_type}    int     outer 10
 
 	/varcalc pcount ${pcount}+1
 
@@ -234,8 +234,8 @@ Sub processOffensiveSpellSettings(string _type)
             /declare ${key} string outer ${property}
         /next j
         | Add the timer based on delay
-        /declare ${_type}_${i}_timer timer outer ${${_type}_${i}_delay}
-        
+        /declare timer_cast_${_type}_${i}            timer   outer   ${${_type}_${i}_delay}
+
         /varcalc int_cast_offense_total ${int_cast_offense_total} + 1 
         /echo \ao        ${_type}_[\ag${i}\ao]: \awspell:\ag${${_type}_${i}_spell} \awenabled:\ag${${_type}_${i}_enabled} \awgem:\ag${${_type}_${i}_gem} \awmaxtries:\ag${${_type}_${i}_maxTries} \awnamedOnly:\ag${${_type}_${i}_namedOnly} \awstartHP:\ag${${_type}_${i}_startHP} \awstopHP:\ag${${_type}_${i}_stopHP} \awhascastonce:\ag${${_type}_${i}_hasCastOnce} \awdelay:\ag${${_type}_${i}_delay}    
     /next i
@@ -331,7 +331,7 @@ Sub resetCastTimers
 **|
 Sub chkDefensiveSpells
     /if (!${Target.ID} || !${bln_engaged} || ${Target.Type.NotEqual[NPC]} || !${bln_cast_JOLT_enabled}) /return
-    /echo chkDefensiveSpells ${int_cast_JOLT_total}
+
     /declare i      int     local 0
     /declare j      int     local 0
     /declare dtype   string  local NULL
@@ -377,8 +377,7 @@ Sub attemptCastingDefensiveSpell(string _key){
     }
     /varset ${_key}_hasCastOnce TRUE
     /varset ${_key}_timer       ${${_key}_delay} 
-}
-
+/return
 
 |**
  ----------------------------

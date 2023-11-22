@@ -552,7 +552,7 @@ Sub EVENT_DebugCheckHeal(string _line, string _sender, string _eventParams)
 Sub chkHeals
 	/declare lazy bool local ${If[${bln_engaged},FALSE,TRUE]} 
 	/if (${bln_killing} || ${bln_engaged}) /varset lazy FALSE
-	/echo \aochkHeals \a-wMT: \ap${If[(${int_heal_mode} && ${int_heal_mode} < 3),TRUE,FALSE]} \a-wSelf:\ap${If[!${int_heal_mode},TRUE,FALSE]} \a-wGroup: \ap${bln_heal_useGroup} \a-wLazy:\ap${lazy} \a-wEngaged?:\ap ${bln_engaged} ${If[${bln_engaged},,\a-wTimer?: \ap${timer_check_heals.OriginalValue}]}
+	|/echo \aochkHeals \a-wMT: \ap${If[(${int_heal_mode} && ${int_heal_mode} < 3),TRUE,FALSE]} \a-wSelf:\ap${If[!${int_heal_mode},TRUE,FALSE]} \a-wGroup: \ap${bln_heal_useGroup} \a-wLazy:\ap${lazy} \a-wEngaged?:\ap ${bln_engaged} ${If[${bln_engaged},,\a-wTimer?: \ap${timer_check_heals.OriginalValue}]}
 	/if (${Select[${int_heal_mode},1,2]})							/call chkHeal_MT    ${lazy}
  	/if (!${int_heal_mode}) 										/call chkHeal_Self  ${lazy}
 	/if (${bln_heal_useGroup} && ${Select[${int_heal_mode},2,3]})	/call chkHeal_Group ${lazy}
@@ -561,9 +561,9 @@ Sub chkHeals
 /return 
 
 Sub chkHeal_MT(bool _lazyMT)
-    /echo \awchkHeal_MT(Lazy:\ao${_lazyMT}\aw)
+    |/echo \awchkHeal_MT(Lazy:\ao${_lazyMT}\aw)
 	/declare eff string  local	${If[${bln_heal_useEfficient},_efficient,]} 
-	/echo \aweff:\ag${eff} \aw(hp:\ag${Spawn[id ${int_MTID}].PctHPs} \aw< limit\ag${Math.Clamp[${Math.Calc[${int_point_tank_HoT}*1.025]},0,100]} \aw&& Dist:(\ag${Spawn[id ${int_MTID}].Distance3D} \aw<= \ag${int_heal_range_normal${eff}}\aw))
+	|/echo \aweff:\ag${eff} \aw(hp:\ag${Spawn[id ${int_MTID}].PctHPs} \aw< limit\ag${Math.Clamp[${Math.Calc[${int_point_tank_HoT}*1.025]},0,100]} \aw&& Dist:(\ag${Spawn[id ${int_MTID}].Distance3D} \aw<= \ag${int_heal_range_normal${eff}}\aw))
 	/if (${Spawn[id ${int_MTID}].PctHPs} < ${Math.Clamp[${Math.Calc[${int_point_tank_HoT}*1.025]},0,100]} && (${Spawn[id ${int_MTID}].Distance3D} <= ${int_heal_range_normal${eff}})) {
 		/call chkMTAlive TRUE 
 		/call setHealingSpell ${Spawn[id ${int_MTID}].PctHPs} tank ${Spawn[id ${int_MTID}].Distance3D} ${Spawn[id ${int_MTID}].CleanName} ${int_MTID} TRUE
@@ -571,12 +571,12 @@ Sub chkHeal_MT(bool _lazyMT)
 /return
 
 Sub chkHeal_Self(bool _lazySelf)
-	/echo \awchkHeal_Self(Lazy:\ao${_lazySelf}\aw)
+	|/echo \awchkHeal_Self(Lazy:\ao${_lazySelf}\aw)
 	/if (${Me.PctHPs} < ${Math.Clamp[${Math.Calc[${int_point_self_HoT}*1.025]},0,100]}) /call setHealingSpell ${Me.PctHPs} self 0 ${Me.CleanName} ${Me.ID} TRUE
 /return 
 
 Sub chkHeal_Group(bool _lazyGroup)
-    /echo \awchkHeal_Group(Lazy:\ao${_lazyGroup}\aw)
+   | /echo \awchkHeal_Group(Lazy:\ao${_lazyGroup}\aw)
 	/if (${Spawn[${WorstHurt[group,1,100,FALSE]}].PctHPs} > ${Math.Clamp[${Math.Calc[${int_point_group_HoT}*1.025]},0,100]} ) /return
 
 	| Determine the counts of major and minor hurt, using the Group.Injured TLO
@@ -1049,9 +1049,9 @@ Sub attemptRegen(string _type, string _regen, string _mgb)
 
 	| Cast the Regen
 	| Note bards are excluded because they have no AE regen ability
-	/if (${_type.Equal[AA]} && ${Me.AltAbilityReady[${_AA}]})           /call MQ2Cast   "${_regen}" ALT
-	/if (${_type.Equal[DISC]} && ${Me.CombatAbilityReady[${_AA}]})      /doability      "${_regen}"
-	/if (${_type.Equal[ITEM]} && !${FindItem[=${_burn}].TimerReady})    /call MQ2Cast   "${_regen}" ITEM
+	/if (${_type.Equal[AA]} && ${Me.AltAbilityReady[${_regen}]})		/call MQ2Cast   "${_regen}" ALT
+	/if (${_type.Equal[DISC]} && ${Me.CombatAbilityReady[${_regen}]})	/doability      "${_regen}"
+	/if (${_type.Equal[ITEM]} && !${FindItem[=${_regen}].TimerReady})	/call MQ2Cast   "${_regen}" ITEM
 	/if (${_type.Equal[SPELL]})                                         /call MQ2Cast   "${_regen}"
     
 /return 
