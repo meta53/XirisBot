@@ -111,3 +111,5 @@ common/cleanpacks.inc
 common/CommonSubs.inc
 common/packs.inc
 common/sell.inc
+sql.mac
+muffins.mac

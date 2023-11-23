@@ -1,13 +1,12 @@
 |**
 ----------------------------
-BOT_MAG.mac
+BOT_BST.mac
 ----------------------------
 This macro is configured for use by any melee class
 Modify the BOT_CLS_CHARNAME.ini file for use by a specific toon
 This was written ground up for usage with xiris's bots.
 
-Usage: /mac bot_mag ${_tank1Name} ${_tank2Name} ${_healPoint} ${_assistArgs}
-
+Usage: /mac bot_bst
 ______________________________________________
 REVISION HISTORY
 	11.14.22	xiris	INITIAL REVISION using modified bot_mag, and things from bot_shm
@@ -28,7 +27,7 @@ REQUIRED INCLUDES
 
 #TURBO 120
 
-#EVENT PARAGON 	"#*#paragonON"
+#EVENT PARAGON 				"#*#paragonON"
 #EVENT DOSHRINK 			"[#1#] doShrink#*#"
 #EVENT DOSHRINK 			"<#1#> doShrink#*#"
 #EVENT DOSHRINK				"#1# tells the group#*#'doShrink#*#'"
