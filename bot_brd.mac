@@ -31,10 +31,10 @@ REQUIRED INCLUDES
 
 #TURBO 120
 
-#EVENT Sing				"#1# tells the group#*#'SingSongs'"
-#EVENT Sing				"#1# tells you#*#'SingSongs'"
-#EVENT Sing				"#1# tells the raid#*#'SingSongs'"
-#EVENT Sing 			"[ #1# #*#]#*#SingSongs"
+#EVENT Sing				"#1# tells the group#*#'SingSongs#*#'"
+#EVENT Sing				"#1# tells you#*#'SingSongs#*#'"
+#EVENT Sing				"#1# tells the raid#*#'SingSongs#*#'"
+#EVENT Sing 			"[ #1# #*#]#*#SingSongs#*#"
 
 #EVENT Hush				"#1# tells the group#*#'Hush#*#'"
 #EVENT Hush				"#1# tells you#*#'Hush#*#'"

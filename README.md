@@ -39,11 +39,11 @@ Plugin available in modern compiles that replacing for loops looking at group, a
 #### Everquest Build
 While Xiris bot would work with UF, the MQ2 Plugin requirements mean that only the ROF2 build of Everquest will work properly without a huge degredation of service and code changes.
 ### Loading
-#### bot_loader.mac
-This macro will load the class specific macro. Think of this as a bootstrapper, or loader. The best way to accomplish loading the macro on all toons is to create a single hotkey on your tank wit the line: ```/dgza /mac bot_loader ${Me.Name} Xiria Xirea 85```  
+#### xiris_bot.mac
+This macro will load the class specific macro. Think of this as a bootstrapper, or loader. The best way to accomplish loading the macro on all toons is to create a single hotkey on your tank wit the line: ```/dgza /mac xiris_bot ${Me.Name} Xiria Xirea 85```  
 The arguments in that command can be described as
 1. `/dgza` this is a MQ2Dannet command that *everyone in zone do this command*
-2. `/mac bot_loader` load this macro
+2. `/mac xiris_bot` load this macro
 3. `${Me.Name}` This toon is MT - note this could be a hard set name, however, in a hotkey this will resolve to whomever clicked the hotkey. Allows for easy copying of UIs and hotkeys between your tanks and not having to edit every hotkey.
 4. `Xiria Xirea` These toons are ST and TT
 5. `85` This is the default healpoint for the MT

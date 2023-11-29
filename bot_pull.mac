@@ -4,6 +4,12 @@ BOT_PULL.mac
 ----------------------------
 This macro is configured for use by an SK, but may work for any class
 Modify the BOT_PULL_zoneinfo.ini file for use in a specific zone
+
+Usage:
+RAID:	/mac bot_pull rs camp TRUE TRUE TRUE
+GROUP:	/mac bot_pull gsay camp TRUE TRUE TRUE
+SOLO:	/mac bot_pull gsay camp TRUE FALSE TRUE
+
 ______________________________________________
 REVISION HISTORY
     09.16.10    xiris  	Initial Revision
@@ -45,22 +51,6 @@ REQUIRED INCLUDES
 #EVENT Zoned                "LOADING, PLEASE WAIT..."
 #EVENT NoLOS				"#*#you cannot see your target#*#"
 #EVENT TooClose				"#*#your target is too close#*#"
-
-
-Sub Event_TooClose
-	/doevents flush TooClose
-	/echo Event_TooClose
-	/varset bln_tooClose TRUE
-	
-/return
-
-Sub Event_NoLOS
-	/doevents flush NoLOS
-	/echo Event_NoLOS
-	/varset bln_noLOS TRUE
-	
-/return
-
 
 
 Sub Main(int _pull_dist, string _channel, string _campName, bool _useDownFlags,  bool _usePull, bool _useDS)
@@ -406,6 +396,7 @@ Sub pullTarget
 			} else {
 				/echo \arNo Path to Target, resetting at camp
 				/warp wp ${str_campName}
+				 /goto :return
 			}
 			
 		/if (!${Target.LineOfSight} || ${Target.Distance3D} > ${int_castDistance}) {
@@ -448,6 +439,11 @@ Sub pullTarget
 				| I am close enough, call aggro sub.
 				/echo \ao Attempting to Aggro Target
 				/call AggroTarget
+				/doevents
+				/if (${bln_noLOS}) {
+					/goto :RunningToTarget
+					/varset bln_noLOS FALSE
+				}
 				/varcalc attempt ${attempt} + 1
 				/echo \aoAggro Attempt return ${Macro.Return}
 				/if (${Me.TargetOfTarget.Name.Equal[${Me.Name}]}) 	/goto :ReturnWithPull
@@ -455,15 +451,7 @@ Sub pullTarget
 				/if (${Macro.Return.Equal[CAST_FIZZLE]})    		/goto :AggroCheck
 				/if (${Macro.Return.Equal[NOTARGET]}) 				/goto :return
 				/if (${Macro.Return.Equal[NOMANA]})					/goto :RunningToTarget
-				/if (${Macro.Return.Equal[SUCCESS]})  {
-					/doevents NoLoS 
-					/if (${bln_noLOS}) {
-						/varset bln_noLOS FALSE
-						/goto :RunningToTarget
-					} else {
-						/goto :ReturnWithPull 
-					}
-				}
+				/if (${Macro.Return.Equal[SUCCESS]})  				/goto :ReturnWithPull 
 			} else { 
 				/goto :RunningToTarget
 			}
@@ -657,6 +645,23 @@ Sub killTarget
 		}
 /return
 
+
+
+Sub Event_TooClose
+	/doevents flush TooClose
+	/echo Event_TooClose
+	/varset bln_tooClose TRUE
+	
+/return
+
+Sub Event_NoLOS
+	/doevents flush NoLOS
+	/echo Event_NoLOS
+	/nav target
+	/delay 10
+	/varset bln_noLOS TRUE
+	
+/return
 
 
 |**
@@ -1067,7 +1072,7 @@ Sub variant_initialize(int _pull_dist, string _channel, string _campName, bool _
 
 	|--target information
 	/declare int_maxPullCount		int		outer   4
-	/declare int_minTLevel			int		outer	8
+	/declare int_minTLevel			int		outer	1
 	/declare int_maxTLevel			int		outer	75
 	/declare bln_validTGT			bool	outer	FALSE
 	/declare bln_TGTDead			bool	outer	FALSE

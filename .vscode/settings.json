@@ -1,4 +1,9 @@
 {
+  "Lua.runtime.version": "LuaJIT",
+    "Lua.workspace.library": [
+      "C:/Program Files (x86)/EQ/EQ_INI/mq-definitions-1.1.0",
+      "C:/Program Files (x86)/EQ/ROF2 MQNext/lua",
+    ],
   "editor.bracketPairColorization.independentColorPoolPerBracketType": false,
   "files.exclude": {
     "bot_loader_zun.mac": true,

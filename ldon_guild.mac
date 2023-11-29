@@ -269,7 +269,7 @@ Sub requestLDON
 		| Navigate to Adventurer
 		/if (${Navigation.PathExists[spawn ${adventureGiver}]}) {
 			/docommand /${cmdChannel} /navigate spawn ${adventureGiver}
-			/delay 10
+			/delay 80
 		} else {
 			/docommand /${cmdChannelExcludingMe} /target id ${Spawn[npc ${adventureGiver}].ID}
 			/docommand /${cmdChannel} /warp target
@@ -476,8 +476,8 @@ Sub setupTask
 	/docommand /${cmdChannel} /toggledoors on
 	
 	|-- Tell rest of group to load their normal macroset;
-	/echo In ${Zone.Name}, setting up bot_loader and delaying 5s
-	/docommand /${cmdChannelExcludingMe} /mac bot_loader ${Me.Name} Mluian NULL 70
+	/echo In ${Zone.Name}, setting up xiris_bot and delaying 5s
+	/docommand /${cmdChannelExcludingMe} /mac xiris_bot ${Me.Name} Mluian NULL 70
 	
 	/delay 5s
 	|-- set up group variables, change here based on group makeup;
@@ -512,7 +512,7 @@ Sub zoneByMagus(string _zoneToRequest)
 		/delay 40
 		/goto :magusZoneWait
 	}
-	/delay 15s
+	/delay 45s
 
 /return 
 

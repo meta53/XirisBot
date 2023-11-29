@@ -235,8 +235,6 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	| character database
 	/declare _pathDB					string outer C:\Program Files (x86)\EQ\ROF2 MQNext\macros\xiris_common\sql\XirisBot.db
 
-
-
 	/declare timer_di_request timer outer 30s
 	/declare i int local 0
 	/for i 1 to ${RaidDIClerics.Size}
@@ -468,6 +466,9 @@ Sub EVENT_KillMob(_line, _sender, _eventParams)
 |-- Engage Target Sub, handles class specific modifications (minor)
 Sub EngageTarget(int _targetID)
 	/if (!${_targetID}) /return
+	| Don't switch targets if you are the MT on AMV or OMM, or it will suck for you
+	
+	/if (${Me.ID} == ${int_MTID} && (${bln_amvEngaged} || ${bln_OMMEngaged})) /return
 	/if (${bln_following}) /call StopFollowing
 	/echo \awEngaging Target \ag${Spawn[id ${_targetID}].Name} \ay(${_targetID}) \ao${Time.Time24} \ay${MacroQuest.Running}
 	
@@ -891,6 +892,8 @@ Sub SetupRaid(string _mode)
 	/declare DICount		int local
 	/declare DIList			string local
 
+	/declare myGroupNum		int outer 0
+
 	/declare i int local
 	/declare j int local
 
@@ -909,6 +912,7 @@ Sub SetupRaid(string _mode)
 			/for j 1 to ${groupCount}
 				/varset	RaidGroupLeaders[${j}]  ${leaderList.Arg[${j},|]}
 				/echo \ag Raid Group Leader \aw[\ag${j}\aw] \ay${RaidGroupLeaders[${j}]}
+				/if (${Group.Leader.Name.Equal[${RaidGroupLeaders[${j}]}]}) /varset myGroupNum ${j}
 			/next j
 
 			| Set the Divine Intervention Information

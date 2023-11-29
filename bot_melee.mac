@@ -187,7 +187,7 @@ Sub EVENT_FIRE_WARCRY(_line, _chatSender, _eventParams)
 
 Sub FireWarCry
 	/if (${Me.CombatAbilityReady[Ancient: Cry of Chaos]}) {
-		/echo \agFIRING WARCRY ${Time.Time24} ${Target.Name}
+		/shout \agFIRING WARCRY ${Time.Time24} ${Target.Name}
  		/doability "Ancient: Cry of Chaos"
 	}
 /return 
