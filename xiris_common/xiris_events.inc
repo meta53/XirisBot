@@ -56,7 +56,9 @@ Sub xbot_initialize_events
     /if (${Zone.ShortName.Equal[chambersd]})    /call InitEvents_OOW_MPG_Specialization
     /if (${Zone.ShortName.Equal[chamberse]})    /call InitEvents_OOW_MPG_Adaptation
     /if (${Zone.ShortName.Equal[chambersf]})    /call InitEvents_OOW_MPG_Corruption
-    /if (${Zone.ShortName.Equal[arena]} || ${Zone.ShortName.Equal[anguish]})      /call InitEvents_OOW_Anguish
+
+    | ANGUISH - We need to watch guildhall here to clear any mark of deaths that the clerics can't heal!
+    /if (${Zone.ShortName.Equal[arena]} || ${Zone.ShortName.Equal[anguish]} || ${Zone.ShortName.Equal[guildhall]})      /call InitEvents_OOW_Anguish
 
     |-- Epic 1.5 Fights
     /if (${Zone.ShortName.Equal[gfaydark]})     /call InitEvents_Epic

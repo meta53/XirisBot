@@ -79,7 +79,7 @@ Sub InitEvents_OOW_Anguish
 	/declare target_X				int 	outer 0
 	/declare target_Y				int 	outer 0
 	/declare target_Z				int 	outer 0
-	/declare rootDist				int		outer 0
+	/declare rootDist				int		outer 20
 
 	| Berserk Cry List
 	/declare	arr_bersekerList[10]	string	outer NULL
@@ -103,7 +103,7 @@ Sub InitEvents_OOW_Anguish
 /return
 
 Sub Events_OOW_Anguish 
-	/if (${Zone.ShortName.NotEqual[anguish]} && ${Zone.ShortName.NotEqual[arena]} ) /return
+	/if (${Zone.ShortName.NotEqual[anguish]} && ${Zone.ShortName.NotEqual[arena]} && ${Zone.ShortName.NotEqual[guildhall]}) /return
 	/if (${Select[${Me.Class.ShortName},WAR,SHD,PAL]} && ${bln_engaged}) /call chkDivineIntervention
 
 	| Ture Events
@@ -122,12 +122,12 @@ Sub Events_OOW_Anguish
 	}
 
 	| Vangl Events
-	/if (${Bool[${SpawnCount[npc Vangl]}]} && ${Spawn[npc Vangl].Distance3D} < 300) {
+	/if (${Bool[${SpawnCount[npc Vangl]}]} && ${Spawn[npc Vangl].Distance3D} < 300 || ${Zone.ShortName.Equal[arena]} || ${Zone.ShortName.Equal[guildhall]}) {
 		/call chkAMVEvents
 	}
 
 	| OMM Events
-	/if ((${Bool[${SpawnCount[npc Overlord]}]} && ${Spawn[npc Overlord].Distance3D} < 400) || ${Zone.ShortName.Equal[arena]}) {
+	/if ((${Bool[${SpawnCount[npc Overlord]}]} && ${Spawn[npc Overlord].Distance3D} < 400) || ${Zone.ShortName.Equal[arena]} || ${Zone.ShortName.Equal[guildhall]}) {
 		/call chkOMMActions
 		/call chkOMMEvents
 	} 
@@ -548,8 +548,9 @@ Sub chkOMMActions
 	/doevents GazeBurst
 	/doevents GazeDone 
 
-	
 	/call SQLCheckMark
+
+	/if (${Zone.ShortName.NotEqual[anguish]} && ${Zone.ShortName.NotEqual[arena]}) /return
 
 	/if (${Me.Class.ShortName.Equal[ENC]}) {
 		/doevents OMMWarCry
@@ -570,7 +571,9 @@ Sub chkOMMActions
 		/return
 	} else /if (${Me.Class.ShortName.Equal[WAR]} && (${int_MTID} == ${Me.ID})) {
 		:mt_loop
-			/if (${Math.Distance[${target_Y},${target_X},${target_Z}:${root_Y} ${root_X} ${root_Z}]} > ${rootDist} && ${bln_rootTank}) /warp loc ${root_Y} ${root_X} ${root_Z}
+			/if (${Math.Distance[${Target.Y},${Target.X},${Target.Z}:${Me.Y} ${Me.X} ${Me.Z}]} > ${rootDist} && ${bln_rootTank}) /warp loc ${root_Y} ${root_X} ${root_Z}
+			/doevents RootTankOn
+			/doevents RootTankOff
 			/doevents MarkOfDeath
 			/doevents MarkOfDeathFades
 			/doevents OMMStart
@@ -794,10 +797,9 @@ Sub chkOMMFrenzied
 			}
 		}
 	} else {
-		/if ((${Me.Class.ShortName.Equal[WIZ]} || ${Me.Class.ShortName.Equal[MAG]})) {
+		/if ((${Me.Class.ShortName.Equal[WIZ]} || ${Me.Class.ShortName.Equal[MAG]}) && ${AENUKE_Active}) {
 			/varset AENUKE_Active	FALSE
 		}
-		|/if (${bln_engaged}) /call EngageTarget ${Spawn[npc Overlord].ID}
 	}
 /return
 
@@ -905,55 +907,51 @@ Sub SQLCheckMark(bool _overrideTimer)
 	}
 
     |/sqlite advquery mycon dummy INSERT OR REPLACE INTO Characters(Name,SpawnID,ZoneID) VALUES ('${Me.Name}', ${Me.ID}, ${Zone.ID});
-    /if (${Me.Buff[Mark of Death].ID}) {
-		| /if (${Select[${Me.Class.ShortName},CLR,SHM]}) {
-		| 	/echo \agCuringSelf of Mark!
-		| 	/call handleCureMarkOfDeath ${Me.Name} ${Me.ID} FALSE ${Debuff.Diseased}
-		| } else {
-			/echo \agFlagging myself as having Mark
-			/sqlite open CheckMarkofDeath "${_pathDB}" SQLITE_OPEN_READWRITE|SQLITE_OPEN_CREATE 
-			/sqlite advquery CheckMarkofDeath markchk SELECT * FROM MarkOfDeath WHERE SpawnID = '${Me.ID}';
+    /if (${Me.Buff[Mark of Death].ID} && ${Zone.ShortName.Equal[anguish]}) {
+		/echo \agFlagging myself as having Mark
+		/sqlite open CheckMarkofDeath "${_pathDB}" SQLITE_OPEN_READWRITE|SQLITE_OPEN_CREATE 
+		/sqlite advquery CheckMarkofDeath markchk SELECT * FROM MarkOfDeath WHERE SpawnID = '${Me.ID}';
 
-			/if (!${sqlite.rows[markchk]}) {
-				/varset bln_isMarked TRUE
-				/echo \aoMarked for Death! \ar${Time.Time24} \a-wRemoving Timer, will autocheck for cure
-				/echo \awAttempting DB Entry \arINSERT \ayMark of Death
-				/echo \a-w  =>advquery mycon dummy INSERT OR REPLACE INTO MarkOfDeath(SpawnID,Name,Counters,CureInProcess) VALUES(${Me.ID},'${Me.Name}',${Debuff.Diseased},NULL)  
-				| INSERT OR REPLACE INTO MarkOfDeath(SpawnID, Name ,Counters,CureInProcess) VALUES (22, 'Xiris', 14, NULL);
-				/sqlite advquery CheckMarkofDeath markchk INSERT OR REPLACE INTO MarkOfDeath(SpawnID, Name ,Counters,CurerName,CurerID) VALUES(${Me.ID}, '${Me.Name}', ${Debuff.Diseased}, NULL,0);
-				/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]}) {
-					/if (${bln_amvEngaged} && ${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]}) {
-						/echo disengaging and moving to cleric
-						/call Disengage
-						/nav wp amvCleric
-					}
-					/if (${bln_OMMEngaged} && ${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]}) {
-						/echo disengaging and moving to cleric
-						/call Disengage
-						/nav wp ommCleric
-					}
+		/if (!${sqlite.rows[markchk]}) {
+			/varset bln_isMarked TRUE
+			/echo \aoMarked for Death! \ar${Time.Time24} \a-wRemoving Timer, will autocheck for cure
+			/echo \apSQLite \a-t=> \atadvquery \agCheckMarkofDeath \a-wmarkchk \ayINSERT OR REPLACE INTO \arMarkOfDeath\a-w(\awSpawnID,Name,Counters,CureInProcess\a-w) \aoVALUES\a-w(\ag${Me.ID},'${Me.Name}',${Debuff.Diseased},NULL\a-w)  
+			| INSERT OR REPLACE INTO MarkOfDeath(SpawnID, Name ,Counters,CureInProcess) VALUES (22, 'Xiris', 14, NULL);
+			/sqlite advquery CheckMarkofDeath markchk INSERT OR REPLACE INTO MarkOfDeath(SpawnID, Name ,Counters,CurerName,CurerID,ZoneID) VALUES(${Me.ID}, '${Me.Name}', ${Debuff.Diseased}, NULL,0,${Zone.ID});
+			/if (${Select[${Me.Class.ShortName},${MeleeClasses}]} && ${int_MTID} != ${Me.ID}) {
+				/if (${bln_amvEngaged}) {
+					/echo disengaging and moving to cleric
+					/call Disengage
+					/nav wp amvCleric
+				} else /if (${bln_OMMEngaged}) {
+					/echo disengaging and moving to cleric
+					/call Disengage
+					/nav wp ommCleric
 				}
-			|} 
+			}
 		}
 		/varset timer_markCheck 40
 		/sqlite clear markchk
     	/sqlite close CheckMarkofDeath
+		| If it's me and I am a priest, cure my shit!
+		/if (${Select[${Me.Class.ShortName},CLR,DRU,PAL,SHM]}) /call handleCureMarkOfDeath ${Me.Name} ${Me.ID} ${Me.Class.ShortName.Equal[SHM]} 14
     } else {
-		| No longer have mark of death, clearing if fentry still found.
+		| No longer have mark of death, clearing if fentry still found. We  can't check by ID< because if we died, we have a different ID!	
 		/sqlite open CheckMarkofDeath "${_pathDB}" SQLITE_OPEN_READWRITE|SQLITE_OPEN_CREATE 
-		/sqlite advquery CheckMarkofDeath markchk SELECT * FROM MarkOfDeath WHERE SpawnID = '${Me.ID}';
+		/sqlite advquery CheckMarkofDeath markchk SELECT * FROM MarkOfDeath WHERE Name = '${Me.Name}';
 		/if (${sqlite.rows[markchk]}) {
 			/echo \a-wAttempting DB Entry \agDELETE \ayMark of Death
-			/sqlite advquery CheckMarkofDeath markchk DELETE FROM MarkOfDeath WHERE SpawnID = '${Me.ID}';
+			/sqlite advquery CheckMarkofDeath markchk DELETE FROM MarkOfDeath WHERE Name = '${Me.Name}';
 		}
 
-		/if (${bln_amvEngaged} && ${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]}) {
+		/if (${bln_engaged} && ${bln_amvEngaged} && ${Select[${Me.Class.ShortName},${MeleeClasses}]}) {
 			/call EngageTarget ${Spawn[npc Vangl].ID}
 		}
+
 		/sqlite clear markchk
 		/sqlite close CheckMarkofDeath
 		|/echo \a-wResetting timer to 1s
-		/varset timer_markCheck 10
+		/varset timer_markCheck ${Math.Rand[10,40]}
 	}
 /return 
 
@@ -961,16 +959,15 @@ Sub SQLCureMark
 	/if (!${Select[${Me.Class.ShortName},CLR,DRU,SHM]}) /return
 	/call chkHasShaman
 	/if (${bln_groupHasShaman} && ${Me.Class.ShortName.NotEqual[SHM]}) {
-		/echo group has a shaman, I dont need to check
-		/return
+			/return
 	}
 
-	/declare d int local ${Math.Rand[0,40]}
+	/declare d int local ${Math.Rand[0,20]}
 	/delay ${d}
 
  	/sqlite close CureMarkOfDeath
     /sqlite open CureMarkOfDeath "${_pathDB}" SQLITE_OPEN_READWRITE|SQLITE_OPEN_CREATE 
-    /sqlite advquery CureMarkOfDeath docure SELECT * FROM MarkOfDeath;
+    /sqlite advquery CureMarkOfDeath docure SELECT * FROM MarkOfDeath WHERE ZoneID = '${Zone.ID}';
 
 	|/echo ${sqlite.rows[docure]} len
     /if (!${sqlite.rows[docure]}) /goto :return
@@ -987,10 +984,12 @@ Sub SQLCureMark
 	/declare cn 			string local NULL
 	/declare cid			int local 0
 	/declare uc 			int local 0
+	/declare l 				string outer 
     |/echo \a-w  Marked Rowcount: ${sqlite.rows[docure]} : Finding everyone that is in my group
 	/for i 1 to ${sqlite.rows[docure]}
 		/if (${Select[${sqlite.result[docure ${i} Name]},${str_groupMembers}]}) {
 			/varcalc g ${g}+1
+			/varset l ${sqlite.result[docure ${i} Name]} + "," +${l}
 			/if (${sqlite.result[docure ${i} Counters]} > ${maxCounters}) /varset maxCounters ${sqlite.result[docure ${i} Counters]}
 		}
 	/next i
@@ -1000,7 +999,7 @@ Sub SQLCureMark
 	| Cast Group Cure
 	/if (${g} > 2|| ${Me.Class.ShortName.Equal[SHM]} || ${bln_amvEngaged}) {
 		/varset useGroup TRUE
-		/rs ${myGroupNum}. => Casting GROUP cure on ${g} Chars ${Time.Time24}
+		/1 ${myGroupNum}. => Casting GROUP cure on ${g} Chars (${l}) ${Time.Time24}
 		/for i 1 to ${sqlite.rows[docure]}|
 			/if (${Select[${sqlite.result[docure ${i} Name]},${str_groupMembers}]}) {
 				/sqlite advquery CureMarkOfDeath doupdate UPDATE MarkOfDeath SET CurerName = '${Me.Name}', CurerID = ${Me.ID} WHERE SpawnID = ${sqlite.result[docure ${i} SpawnID]};
@@ -1010,7 +1009,7 @@ Sub SQLCureMark
 		/call handleCureMarkOfDeath ${Me.Name} ${Me.ID} TRUE ${maxCounters}
 		/call SQLCheckMark TRUE
 	} else {
-		/rs ${myGroupNum}. => Casting SINGLE cure on ${g} Chars ${Time.Time24}
+	
 		| Cast Single Cure
 		/for i 1 to ${sqlite.rows[docure]}
 		 
@@ -1030,18 +1029,13 @@ Sub SQLCureMark
 			} 
 			
 			/if (${c} > 0) {
-				/if (${Me.Class.ShortName.Equal[CLR]} && ${int_groupClerics} > 1) {
-					
-					/echo \a-wMore than 1 cleric in the group delaying \ag${d}
-					/say delaying ${d}
-					/delay ${d}
-				}
 				/varset cid ${sqlite.result[docure ${i} CurerID]}
 				/echo \awPC: \aoRow\aw[\ao${i}\aw].\aoName \ag${n} \awCounters: \ar${c} \awInProcess? \ao${cn}\aw(\ag${cid}\aw) 
 		
 				
 				/echo ${cid} != ${Me.ID} ${cid} > 0
-				/if (${cid} != ${Me.ID} && ${cid}>0) {
+				| Always blast the MT even if someone else claims to be curing
+				/if (${cid} != ${Me.ID} && ${cid}>0 && ${cid} != ${int_MTID}) {
 					/echo \aoSomone Already Curing ${n}! ${Time.Time24}
 					/continue
 				}
@@ -1050,7 +1044,7 @@ Sub SQLCureMark
 
 				/echo \ar${n} MARKED FOR DEATH
 				/echo \a-w    Curing ${c} Counters
-				
+				/1 ${myGroupNum}. => Casting SINGLE cure on ${n}! ${Time.Time24}
 				
 				/call TrueTarget ${id}
 				/doevents GazeYou
@@ -1070,7 +1064,12 @@ Sub SQLCureMark
 
 
 Sub EVENT_RootTankOn
-
+	/doevents flush RootTankOff
+	/echo \aoRooting myself!
+	/varset root_Y ${Me.Y}
+	/varset root_X ${Me.X}
+	/varset root_Z ${Me.Z}
+	/varset bln_rootTank TRUE
 /return 
 
 Sub EVENT_RootTankOff

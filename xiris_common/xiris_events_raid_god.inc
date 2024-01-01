@@ -161,7 +161,7 @@ Sub InkCurseDead
 Sub Event_NoqCurse(_line, _chatSender, _eventParams)
 	
 	/if (${bln_tanking}) {
-		/docommand /${announceChannel} I NEED TO RUN BUT TANKING!
+		|/docommand /${announceChannel} I NEED TO RUN BUT TANKING!
 		/return
 	} 
 	/echo Event_NoqCurse ${_eventParams}
@@ -175,7 +175,7 @@ Sub Event_NoqCurse(_line, _chatSender, _eventParams)
 
 Sub InkNoqRun(int _curseID)
 	/if (${bln_tanking}) {
-		/docommand /${announceChannel} I NEED TO RUN BUT TANKING!
+		|/docommand /${announceChannel} I NEED TO RUN BUT TANKING!
 		/return
 	} 
 	/docommand /${announceChannel} Running Noqufiel ${_curseID}
@@ -321,36 +321,42 @@ Sub InkCurseRun2
 	/if (!${inkRunning}) /return
 	/nav wp cb1
 	:cb1 
+	/if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /call InkDeath
 	/if (${Navigation.Active}) /goto :cb1
 		/doevents InkCurseSafe
 		/doevents NoqSafe
 	/if (!${inkRunning}) /return
 	/nav wp cb6	
 	:cb6 
+	/if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /call InkDeath
 	/if (${Navigation.Active}) /goto :cb6
 		/doevents InkCurseSafe
 		/doevents NoqSafe
 	/if (!${inkRunning}) /return	
 	/nav wp cb5	
 	:cb5
+	/if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /call InkDeath
 	/if (${Navigation.Active}) /goto :cb5
 		/doevents InkCurseSafe
 		/doevents NoqSafe
 	/if (!${inkRunning}) /return
 	/nav wp cb4
 	:cb4 
+	/if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /call InkDeath
 	/if (${Navigation.Active}) /goto :cb4
 		/doevents InkCurseSafe
 		/doevents NoqSafe
 	/if (!${inkRunning}) /return
 	/nav wp cb3
 	:cb3 
+	/if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /call InkDeath
 	/if (${Navigation.Active}) /goto :cb3
 		/doevents InkCurseSafe
 		/doevents NoqSafe
 	/if (!${inkRunning}) /return	
 	/nav wp cb2
 	:cb2
+	/if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /call InkDeath
 	/if (${Navigation.Active}) /goto :cb2
 		/doevents InkCurseSafe
 		/doevents NoqSafe

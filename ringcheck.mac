@@ -1,0 +1,75 @@
+|**
+----------------------------
+hastecheck.mac version 08.20.22
+----------------------------
+This macro creats the an output file (hastecheck.ini) with entries for each toon
+______________________________________________
+REVISION HISTORY
+    08.20.22	xiris	INITIAL REVISION
+	
+**|
+
+#define ringINI TestSuite/ringcheck.ini
+
+Sub Main
+	/echo hastecheck
+	/declare ringCount int outer 0
+	/call chkWorn
+	|/call chkInventory
+	|/call chkBagContents
+	/if (${ringCount} <= 1) {
+		/call dsWriter MISSING RINGS 0!
+	}
+/return
+
+Sub chkWorn
+	/echo chkWorn
+	/declare i int local
+	/declare name string local
+	/declare effect string local
+	/declare id int local
+
+
+    /if (${Me.Inventory[rightfinger].ID}) {
+        /varset name 	"${Me.Inventory[leftfinger].Name}"
+        /varset effect	"${Me.Inventory[leftfinger].Clicky}"
+        /varset id 		${Me.Inventory[leftfinger].ID}
+        /echo LeftRing Item found : ${Me.Inventory[leftfinger].Name} (${Me.Inventory[leftfinger].ID}) 
+        /call dsWriter ${name} ${effect} ${id} LEFTFINGER
+    } else {
+        /call dsWriter MISSING NONE 0 LEFTFINGER
+    }
+    /if (${Me.Inventory[rightfinger].ID}) {
+        /varset name 	"${Me.Inventory[rightfinger].Name}"
+        /varset effect	"${Me.Inventory[rightfinger].Clicky}"
+        /varset id 		${Me.Inventory[rightfinger].ID}
+        /echo RightRing  found : ${Me.Inventory[rightfinger].Name} (${Me.Inventory[rightfinger].ID}) 
+        /call dsWriter ${name} ${effect} ${id} RIGHTFINGER
+    } else {
+        /call dsWriter MISSING NONE 0 RIGHTFINGER
+    }
+    
+			
+/return
+
+
+
+
+Sub dsWriter(string itemName, string itemEffect, int itemID, string location)
+
+	/declare itemstring string local ${itemEffect} (${location}[${ringCount}])
+
+	/echo "${Me.CleanName}" "${itemName}(${itemID}) ${itemEffect}" "${itemstring}" 
+	/ini "ringINI" "${Me.CleanName}" "${location}" "${itemName}(${itemID}) ${itemEffect}"
+	/varcalc ringCount (${ringCount}+1)
+/return
+
+
+
+
+
+
+
+
+
+

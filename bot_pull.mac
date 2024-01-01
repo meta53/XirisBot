@@ -398,7 +398,8 @@ Sub pullTarget
 				/warp wp ${str_campName}
 				 /goto :return
 			}
-			
+		/if (${Target.Aggressive}) /goto :ReturnWithPull
+		
 		/if (!${Target.LineOfSight} || ${Target.Distance3D} > ${int_castDistance}) {
 			/delay 10
 			/goto :RunningToTarget
@@ -487,7 +488,9 @@ Sub AggroTarget
 	/if (${Navigation.Active}) /navigate stop
 	/declare ret string local FAILED
 	:TargetAggroCheck
-	/if (!${Target.ID}) {
+	/if (${Target.Aggressive}) {
+		/varset ret SUCCESS
+	} else /if (!${Target.ID}) {
 		/varset ret NOTARGET
 	} else /if (!${Target.LineOfSight}) {
 		/varset ret NOLOS
@@ -1065,14 +1068,14 @@ Sub variant_initialize(int _pull_dist, string _channel, string _campName, bool _
 	/declare int_minZHeight			int		outer 	0
 	/declare int_maxZHeight			int		outer	0
 	/declare int_zRadius			int     outer   0
-	/varcalc int_minZHeight			${Me.Z} - 50
+	/varcalc int_minZHeight			${Me.Z} - 500
 	/varcalc int_maxZHeight			${Me.Z} + 200
 	/varcalc int_zRadius ${int_maxZHeight} - ${int_minZHeight}
 	/declare int_closeEnoughRadius	int		outer   50
 
 	|--target information
 	/declare int_maxPullCount		int		outer   4
-	/declare int_minTLevel			int		outer	1
+	/declare int_minTLevel			int		outer	10
 	/declare int_maxTLevel			int		outer	75
 	/declare bln_validTGT			bool	outer	FALSE
 	/declare bln_TGTDead			bool	outer	FALSE

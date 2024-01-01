@@ -20,7 +20,8 @@
 -- Name TEXT UNIQUE,
 -- Counters TINYINT NOT NULL,
 -- CurerName TEXT DEFAULT NULL,
--- CurerID INTEGER DEFAULT 0);
+-- CurerID INTEGER DEFAULT 0,
+-- ZoneID INTEGER DEFAULT 0);
 
 --INSERT OR IGNORE INTO MarkOfDeath(SpawnID,Counters) VALUES (402,19);
 --INSERT OR REPLACE INTO MarkOfDeath(SpawnID, Name ,Counters,CurerName,CurerID) VALUES (22, 'Xiris', 14, NULL, 0);

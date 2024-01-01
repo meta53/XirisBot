@@ -104,7 +104,7 @@ ______________________________________________
 #EVENT ChangeAP				"#1# tell your raid#*#'ChangeAP #2#'"
 #EVENT ChangeAP 			"[ #1# #*#]#*#ChangeAP #2#"
 
-
+| These could be in BURN but leaving them here
 #EVENT UseStaunchRecovery   "#*#DoStaunchRecovery#*#"
 #EVENT UseIntensity			"#*#DoIntensity#*#"
 #EVENT UseServants			"#*#DoServants#*#"

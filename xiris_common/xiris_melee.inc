@@ -327,7 +327,6 @@ Sub chkComponentsAll
 				/varset count		${COMPONENT_${i}_Count}
 				/varset summoner	"${COMPONENT_${i}_Summoner}"
 				/varset reagent		"${COMPONENT_${i}_Reagent}"
-				/echo calling chkComponents
 				/call chkComponents ${component} ${count} ${compType} ${summoner} ${reagent}
 				/delay 10
 				/if (${Macro.Return.Equal[SUMMON_ITEM_NOT_FOUND]}) {
@@ -354,8 +353,8 @@ Sub EVENT_DISC_NOTAVAILABLE(string line)
 
 
 Sub chkComponents(string _component, int _count, string _type, string _summoner, string _reagent)
-	/echo chkComponents ${_component}, ${_count}, ${_type}, ${_summoner}, ${_reagent}
-	/echo (${FindItemCount[=${_component}]}>=${_count}?)
+	|/echo chkComponents ${_component}, ${_count}, ${_type}, ${_summoner}, ${_reagent}
+	|/echo (${FindItemCount[=${_component}]}>=${_count}?)
 	/if (${SpawnCount[npc radius ${int_campRadius}]} > 0 && ${Zone.ShortName.NotEqual[thundercrest]}  && ${Zone.ShortName.NotEqual[guildhall]}  && ${Zone.ShortName.NotEqual[guildlobby]}) {
 		/echo \a-rReturning due to spawn
 		/return
@@ -365,11 +364,11 @@ Sub chkComponents(string _component, int _count, string _type, string _summoner,
 	/if (!${Defined[message]})	/declare message string local SUCCCESS
 
 	:chkComponent
-		/echo \awChecking components: \aodesired:\ay${_count} \aohave: \ag${FindItemCount[=${_component}]}
+		|/echo \awChecking components: \aodesired:\ay${_count} \aohave: \ag${FindItemCount[=${_component}]}
 
 		/if (${FindItemCount[=${_component}]} >= ${_count}) {
 			/varset message COUNT_REACHED
-			/echo \agReturning, have ${_count} ${_component}
+			|/echo \agReturning, have ${_count} ${_component}
 			/goto :return
 		} 
 
