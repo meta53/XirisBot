@@ -96,16 +96,22 @@ Sub Main(int _pull_dist, string _channel, string _campName, bool _useDownFlags, 
 			/docommand /${cmdChannel} Disengage
 			/if (${bln_looting}) /call chkLoot
 			/if (!${bln_looting}) /hidecorpse npc
+			/if (${Me.Class.ShortName.Equal[SHD]} && ${Me.PctMana} < 10) {
+				/echo OUT OF MANA
+				/delay 10
+				/goto :MainLoop
+			}
 		}
 		
 		|-- run the pull/kill segment
 		:getAndKill
+
 			/attack off
 			/call getTarget
 			/if (${Target.Distance} > 20) /call pullTarget
 			/if (!${Target.ID}) /goto :getAndKill
 			/if (${Target.ID}) /call killTarget
-			/docommand /${cmdChannel} BackOff
+			|/docommand /${cmdChannel} BackOff
 			/echo We have killed ${int_killCount} mobs
 
 	/goto :MainLoop
@@ -140,7 +146,7 @@ Sub setRSTVars
 Sub setTGTAlert
 	/echo setTGTAlert ${Target.ID} ${Target.Name}
 	/alert add 1 id ${Target.ID}
-	/keypress esc
+	/target clear
 /return
 
 |**
@@ -255,6 +261,13 @@ Sub chkTargetValid
 	|--check if there is a path to the target
 	/if (!${Navigation.PathExists[target]}) {
 		/echo INVALID No Path to Target
+		/call setTGTAlert
+		/return
+	}
+
+	|--check if the path to target is too far
+	/if (${Navigation.PathLength[target]} > ${int_maxRadius}) {
+		/echo INVALID Path to Target too far!
 		/call setTGTAlert
 		/return
 	}
@@ -451,7 +464,7 @@ Sub pullTarget
 				/if (${Macro.Return.Equal[NOLOS]})    				/goto :RunningToTarget
 				/if (${Macro.Return.Equal[CAST_FIZZLE]})    		/goto :AggroCheck
 				/if (${Macro.Return.Equal[NOTARGET]}) 				/goto :return
-				/if (${Macro.Return.Equal[NOMANA]})					/goto :RunningToTarget
+				/if (${Macro.Return.Equal[NOMANA]})					/goto :NoMana
 				/if (${Macro.Return.Equal[SUCCESS]})  				/goto :ReturnWithPull 
 			} else { 
 				/goto :RunningToTarget
@@ -473,6 +486,7 @@ Sub pullTarget
 				/goto :return
 			}
 			
+			:NoMana
 			:ReturnLoop
 				/delay 10
 				/varcalc dist ${Math.Distance[${Me.Y},${Me.X},${Me.Z}:${D1Y},${D1X},${D1Z}]}
@@ -1046,6 +1060,9 @@ Sub variant_initialize(int _pull_dist, string _channel, string _campName, bool _
 	/declare D1X int outer ${Me.X}
 	/declare D1Y int outer ${Me.Y}
 	/declare D1Z int outer ${Me.Z}
+	
+	|-- yet at pet classes
+	/dga /pet hold on
 
 	|--set the camp spot
 	/call setCamp
@@ -1062,7 +1079,7 @@ Sub variant_initialize(int _pull_dist, string _channel, string _campName, bool _
 
 	|--how far we can go for alert 2 mobs (note, seperate from maxRadius)
 	/declare int_alert2Radius		int 	outer 	
-	/varcalc int_alert2Radius		${int_maxRadius}+500
+	/varcalc int_alert2Radius		${int_maxRadius}+1500
 
 	|-- use 40 for POFire
 	/declare int_minZHeight			int		outer 	0
@@ -1074,8 +1091,8 @@ Sub variant_initialize(int _pull_dist, string _channel, string _campName, bool _
 	/declare int_closeEnoughRadius	int		outer   50
 
 	|--target information
-	/declare int_maxPullCount		int		outer   4
-	/declare int_minTLevel			int		outer	10
+	/declare int_maxPullCount		int		outer   3
+	/declare int_minTLevel			int		outer	5
 	/declare int_maxTLevel			int		outer	75
 	/declare bln_validTGT			bool	outer	FALSE
 	/declare bln_TGTDead			bool	outer	FALSE

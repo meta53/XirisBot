@@ -365,7 +365,7 @@ Sub chkComponents(string _component, int _count, string _type, string _summoner,
 
 	:chkComponent
 		|/echo \awChecking components: \aodesired:\ay${_count} \aohave: \ag${FindItemCount[=${_component}]}
-
+		/varcalc _count ${_count} - 1
 		/if (${FindItemCount[=${_component}]} >= ${_count}) {
 			/varset message COUNT_REACHED
 			|/echo \agReturning, have ${_count} ${_component}
@@ -429,7 +429,7 @@ Sub chkComponents(string _component, int _count, string _type, string _summoner,
 		}
 		
 :return
-/varset timer_component 30s
+/varset timer_component 10m
 /return	${message}
 
 
@@ -530,7 +530,7 @@ Sub StickToTarget(bool _engageWhenInRange)
 		/if (${Target.ID} && !${Target.Name.Find['s_corpse']} && ${Target.Type.Equal[NPC]} && !${Me.Combat}) {
 			/echo  \awStickToTarget :tryKill \ag Attacking 
 			/attack on
-		} else /if (!${Target.ID} || ${Target.Name.Find['s_corpse']} || ${Target.Type.NotEqual[NPC]}) {
+		} else /if (!${Target.ID} || ${Target.Name.Find['s_corpse']} || (${Target.Type.NotEqual[NPC]} && !${Target.Name.Find[pet]})) {
 			/echo \awStickToTarget :tryKill \ar Failed! \awID?\ao${Target.ID} \awCorpse?\ao${Target.Name.Find['s_corpse']} \awNPC?\ao${Target.Type.NotEqual[NPC]}
 			/call Disengage
 		}

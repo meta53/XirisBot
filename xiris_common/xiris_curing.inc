@@ -98,6 +98,7 @@ Sub Events_Curing_Background
 
 Sub Event_AutoCureMTOn
 	/doevents flush AutoCureMTOn
+	/if (!${Select[${Me.Class.ShortName.},CLR,DRU,SHM]}) /return 
 	/echo \agNow Automatically Curing MT
 	/varset bln_autoCureMT TRUE
 /return 

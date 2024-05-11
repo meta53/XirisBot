@@ -53,6 +53,8 @@ REVISION HISTORY
 #EVENT GIMME_MONEY		"#1# tells the raid#*#GimmeMoney #2#'"
 #EVENT GIMME_MONEY 		"[ #1# #*#]#*#GimmeMoney #2#"
 
+#EVENT HANDIN_ITEM		"#1# HandInItem #2#"
+
 Sub InitEvents_Looting
 	/call RegisterBackgroundEvents Events_Looting 9
 /return
@@ -65,6 +67,7 @@ Sub Events_Looting
 	/doevents LOOT_SELF
 	/doevents SHAKE_DOWN_RAIDFOR_MONEY
 	/doevents GIMME_MONEY
+	/doevents HANDIN_ITEM
 	|- Only need to run these events if you are looting
 	/if (${bln_looting}) {	
 		/doevents LOOT_REFRESH
@@ -150,6 +153,33 @@ Sub EVENT_HIDE_LOOTED
 	/doevents flush HIDE_LOOTED
 	/hidecorpse looted
 /return
+
+Sub EVENT_ITEM_LORE
+	/doevents flush ITEM_LORE
+	/hidecorpse looted
+/return
+
+
+Sub EVENT_NotYourKill
+	/doevents flush NotYourKill
+	/echo NotYourKill: skipping loot;
+	/declare corpseName string 	local ${Spawn[id ${Target.ID}]}
+	/echo ${corpseName} ${Target.ID}
+/return LOOT_NO_RIGHTS
+
+
+Sub EVENT_LootTooFar
+	/doevents flush NotYourKill
+	/echo LootTooFar: corpse too far away;
+/return LOOT_TOO_FAR
+
+Sub EVENT_LootTooFar
+	/doevents flush NotYourKill
+	/echo LootTooFar: corpse too far away;
+/return LOOT_TOO_FAR
+
+
+
 
 |-------------------------------------------------------------------------------- 
 |SUB: Shake down the assholes in your raid for cash!
@@ -290,21 +320,6 @@ Sub chkLoot
     }
 	
 /return
-
-
-Sub EVENT_NotYourKill
-	/doevents flush NotYourKill
-	/echo NotYourKill: skipping loot;
-	/declare corpseName string 	local ${Spawn[id ${Target.ID}]}
-	/echo ${corpseName} ${Target.ID}
-/return LOOT_NO_RIGHTS
-
-
-Sub EVENT_LootTooFar
-	/doevents flush NotYourKill
-	/echo LootTooFar: corpse too far away;
-/return LOOT_TOO_FAR
-
 
 
 |-------------------------------------------------------------------------------- 
@@ -527,6 +542,7 @@ Sub LootTarget(int _corpseID)
 				/echo \arI shouldn't keep this (ex name: ${bln_excludedByCharName}, class: !${bln_includedByClass})
 				/varset keep FALSE
 				/varset reason EXCLUDED CHARACTER||CLASS
+				/docommand /${str_lootChannel} ${Target.Name}(${Target.ID}) has ${lootName} and I cannot loot it  ${reason}. (${Target.ID})
 				/goto :loot_gank
 			}
 
@@ -535,8 +551,8 @@ Sub LootTarget(int _corpseID)
 				/echo \awI may be able to keep this item
 
 				| Check to see if its lore and I already have one
-				/if (${Corpse.Item[${n}].Lore} && ${FindItemCount[${lootName}]} == 1) {
-					/echo \arItem is lore, and we have 1
+				/if (${Corpse.Item[${n}].Lore} && ${FindItemCount[${lootName}]} >= ${int_numberToLoot}) {
+					/echo \arItem is lore, and we have ${int_numberToLoot}
 					/varset keep FALSE
 					/varset reason LORE
 					/goto :loot_gank
@@ -557,9 +573,9 @@ Sub LootTarget(int _corpseID)
 
 			:loot_gank
 			/if (${keep}) {
-				/varcalc fCount ${FindItemCount[${lootName}]} + 1
+				/varcalc fCount ${FindItemCount[=${lootName}]} + 1
 				/echo \agKeeping ${lootName} ${lootType} ${fCount} of ${int_numberToLoot}
-				/docommand /${str_lootChannel} Keeping ${lootName} ${lootType} ${fCount} of ${int_numberToLoot}
+				/docommand /${str_lootChannel} Keeping ${lootName} ${lootType} ${fCount} of ${int_numberToLoot} (${Target.ID})
 				/itemnotify loot${n} leftmouseup
 				/delay 5 ${Cursor.ID} || ${Window[ConfirmationDialogBox].Open} || ${Window[QuantityWnd].Open}
 				/if (${Cursor.ID}) {
@@ -567,7 +583,7 @@ Sub LootTarget(int _corpseID)
 					/autoinv
 				}
 			} else {
-				/docommand /${str_lootChannel} ${Target.Name}(${Target.ID}) has ${lootName} and I cannot loot it  ${reason}.
+				/docommand /${str_lootChannel} ${Target.Name}(${Target.ID}) has ${lootName} and I cannot loot it  ${reason}. (${Target.ID})
 			}
 			/if (${bln_useBeep}) /beep
 			:nextItem
@@ -599,7 +615,7 @@ Sub SellVendor
 		/delay 1
 		/if (${Cursor.ID}) /autoinv
 	:check_inventory
-	/call openBags
+	/call OpenInventoryBags
 	/declare i int local
 	/for i 1 to ${loot_VENDOR.Size}
 		/if (${FindItemCount[${loot_VENDOR[${i},1]}]}) {
@@ -688,7 +704,7 @@ Sub Sell(string _item)
 |----------------------------------------|
 |- Opens all containers in inventory.	-|
 |----------------------------------------|
-SUB openBags
+SUB OpenInventoryBags
 	| Open all bags in inventory.
 	/declare i int local
 	/declare retryTimer timer local
@@ -719,12 +735,99 @@ SUB openBags
 /RETURN
 
 
+|----------------------------------------|
+|- Hands in Item X to NPC Y.			-|
+|----------------------------------------|
+| example : /dgt handinitem Stained Stone Chalice|Maroley
+|----------------------------------------|
+
+Sub EVENT_HANDIN_ITEM(_line, _chatSender, string _eventParams)
+    /echo Handing In Item line:${_line}| sender:${_chatSender}| params:${_eventParams}
+	
+    /doevents flush HANDIN_ITEM 
+    /declare itemName   string   outer ${_eventParams.Arg[1,|]}
+    /declare recipient string    outer ${_eventParams.Arg[2,|]}
+    /docommand /${announceChannel} ${_eventParams} 
+    /docommand /${announceChannel}  Giving ${itemName} to ${recipient}
+    /if (${FindItemCount[=${itemName}]} <1) {
+            /docommand /${announceChannel} cannot find ${itemName}
+            /end
+        } else {
+            /call GiveItem
+        }
+/return 
+
+Sub GiveItem
+    /target npc ${recipient}
+    
+    /delay 2
+    | Open Inventory to grab muffins
+    /if (!${Target.ID}) /return
+    /if (${Target.Distance3D} > 400) {
+        /docommand /${announceChannel}  ${recipient} is too far away!
+        /end
+    }
+	/keypress open_inv_bags
+	/delay 5
+
+    /declare givenCount int local 0
+    /declare packSlot   int local ${FindItem[=${itemName}].ItemSlot}
+    /varcalc packSlot ${packSlot}
+    /echo packSlot: ${packSlot}
+
+    | item notify uses old pack numbers 1-8
+    /declare notifyPackSlot int local 0
+    /varcalc notifyPackSlot ${packSlot} - 22
+    /echo \awnotifyPackSlot: \ag${notifyPackSlot}
+
+    /declare notifyItemSlot int local ${FindItem[=${itemName}].ItemSlot2}
+    /varcalc notifyItemSlot ${notifyItemSlot} + 1
+    /echo \awnotifyItemSlot: \ag${notifyItemSlot}
+
+    :moveLoop 
+    /if (${Target.Distance3D} < 400) {
+        | If you do not have mq2nav you could /stick here
+        /nav target
+
+        :distCheck 
+        /if (${Target.Distance3D} > 10) {
+            /delay 10
+            /goto :distCheck
+        }
+    }
+
+    :giveLoop
+    /keypress esc 
+    /delay 10
+    /hail
+    /target ${recipient}
+    
+    /delay 10
+    /nomodkey /ctrl /itemnotify in pack${notifyPackSlot} ${notifyItemSlot} leftmouseup
+
+    /delay 2
+    /hail
+    /click left target 
+
+    /delay 2 
+
+    /if (${Window[TradeWnd].Open}) /nomodkey /notify TradeWnd TRDW_Trade_Button leftmouseup
+    /varcalc givenCount ${givenCount}+1
+    /delay 5
+   
+    /echo trading
+    /nomodkey /notify TradeWnd TRDW_Trade_Button leftmouseup
+    /delay 10
+    /autoinv
+    /end
+/return 
+
 
 
 Sub xbot_initialize_looting
 
 	/declare bln_looting			bool	outer 	${Ini[INI_CHAR,Settings,lootUse,FALSE]}
-	/declare str_lootChannel		string  outer   rs
+	/declare str_lootChannel		string  outer   1
 	/declare bln_onlyQuest			bool 	outer	FALSE
 	/declare bln_lootAttuneable		bool	outer 	TRUE
 	/declare int_lootRadius			int 	outer 	100

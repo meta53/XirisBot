@@ -13,6 +13,18 @@ REVISION HISTORY
 ______________________________________________
 **|	
 |-- Gates of Discord events
+| BARINDU
+| Sewer Request
+#EVENT Crematory				"#*#RequestCrematory#*#"
+#EVENT Lair						"#*#RequestLair#*#" 
+#EVENT Pools					"#*#RequestPools#*#"
+#EVENT Plant					"#*#RequestPlant#*#"
+#EVENT LeaveBarinduInstance		"#*#LeaveBarinduInstance#*#"
+| Tipt and Vxed
+#EVENT Vxed 					"#*#RequestTipt#*#"
+#EVENT Tipt						"#*#RequestVxed#*#"
+
+
 
 | UQUA
 #EVENT UquaKey                  "The #1# Key must unlock the door to the next room."
@@ -31,7 +43,9 @@ ______________________________________________
 **|
 
 #EVENT NoqCurse 				"[ #1# #*#]#*#NoqCurse,#2#"
+#EVENT NoqCurse				    "#*#The thoughts of a cursed trusik#*#"
 #EVENT NoqSafe  				"#*#noqsafe#*#"
+#EVENT NoqSafe 					"#*#noqstop#*#"
 #EVENT InkCurse					"#*#The thoughts of a cursed trusik#*#"
 #EVENT InkCurseSafe				"#*#inkstop#*#"
 #EVENT InkCurseSafe				"#*#inksafe#*#"
@@ -56,6 +70,10 @@ ______________________________________________
 #EVENT BALANCEOFF			 	"#*#BalanceOFF#*#"
 #EVENT PIRIKDEAD				"#*#two heads face each other just before it falls to the floor#*#"
 
+Sub InitEvents_GoD_Barindu
+	/call RegisterBackgroundEvents Events_GoD_Barindu 6
+/return 
+
 Sub InitEvents_GoD_Ikkinz
 	/call RegisterRaidEvents Events_GoD_Ikkinz 18
 /return
@@ -74,6 +92,16 @@ Sub InitEvents_GoD_Tacvi
 	/declare balanceRapeHeal bool outer FALSE
 	/declare bln_balancing bool outer FALSE
 /return
+
+Sub Events_GoD_Barindu
+	/doevents Crematory
+	/doevents Lair
+	/doevents Pools
+	/doevents Plant
+	/doevents Vxed
+	/doevents Tipt
+	/doevents LeaveBarinduInstance
+/return 
 
 Sub Events_GoD_Ikkinz
 	/doevents KeeperPosition
@@ -693,6 +721,12 @@ Sub EVENT_BALANCERAPE
 	/goto :balanceRapeHeal
 	/doevents flush BALANCERAPE
 /return
+
+|**
+--------------------
+BARINDU
+--------------------
+**|
 	
 Sub EVENT_BALANCERAPEOFF
 	/echo Turning Spam Healing off.
@@ -700,10 +734,63 @@ Sub EVENT_BALANCERAPEOFF
 	/doevents flush BALANCERAPEOFF
 /return	
 
+Sub EVENT_Crematory
+	/call RequestBarinduInstance Crematory
+/return 
 
-	
+Sub EVENT_Lair
+	/call RequestBarinduInstance Lair
+/return 
 
+Sub EVENT_Pools
+	/call RequestBarinduInstance Pools
+/return 
+
+Sub EVENT_Plant
+	/call RequestBarinduInstance Plant
+/return 
+
+Sub EVENT_LeaveBarinduInstance
+	/call LeaveBarinduInstance
+/return 
+
+Sub EVENT_Vxed
+	/call RequestBarinduInstance Vxed
+/return 
+
+Sub EVENT_Tipt
+	/call RequestBarinduInstance Tipt
+/return 
 	
+Sub RequestBarinduInstance(string _zone)
+	/dgga /dzquit
+	/if (${Select[${_zone},Tipt,Vxed]}) {
+		/dgga /warp wp udrandi 
+		/delay 20
+		/tar undrani
+		/delay 20 
+		/say ${_zone}
+		/delay 20 
+		/dgga /warp wp Vxed
+	} else {
+		/dgge /warp wp sewer 
+		/warp wp gamesh
+		/delay 10 
+		/tar gamesh 
+		/delay 10
+		/say ${_zone}
+		/delay 50
+		/warp wp sewer1
+	}
+
+/return 
+	
+Sub LeaveBarinduInstance
+	/if (${Zone.ShortName.Equal[snpool]}) /dgga /switch 2 
+	/if (${Zone.ShortName.Equal[sncrematory]}) /dgga /switch 2 
+	/if (${Zone.ShortName.Equal[snlair]}) /dgga /switch 3 
+	/if (${Zone.ShortName.Equal[snplant]}) /dgga /switch 1 
+/return
 	
 	
 	

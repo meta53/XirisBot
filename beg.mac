@@ -1,0 +1,11 @@
+Sub Main
+:loop
+/delay 5s
+/if (${Me.AbilityReady[Begging]}) /doability Begging
+
+/autoinv
+/goto :loop
+
+/return
+
+}

@@ -14,7 +14,6 @@ ______________________________________________
 
 |-- Citadel of Anguish
 |	Keldovan
-#EVENT KeldovanStart	"#*##*#"
 
 |   Ture
 #EVENT TureRampOn       "#*#roars with fury#*#"
@@ -497,6 +496,9 @@ Sub chkAMVEvents
 	| AMV Events
 	/doevents AMVStart
 	/doevents AMVKill
+
+	| Force AMV to Engaged in case you are a dumbass and forget to trigger the event (and you will wipe if you don't!)
+	/if (${Zone.ShortName.Equal[anguish]} && ${Spawn[npc Vangl].PctHPs} < 100 && ${Spawn[npc Vangl].Distance3D} < 300 && !${bln_amvEngaged}) /varset bln_amvEngaged TRUE 
 	
 	/if ((${Me.Class.ShortName.Equal[CLR]} && !${bln_chChainMember})|| ${Me.Class.ShortName.Equal[SHM]}) /call SQLCureMark 
 	/call SQLCheckMark
@@ -658,6 +660,8 @@ Sub Event_GazeYou
 	/delay 20
 	/echo \arGAZE OF MATA MURAM on ME!
 	/echo \a-w Attempting Clicking \agMirrored Mask \a-w${Time.Time24}
+	/if (${Navigation.Active}) /nav stop
+	/rootme on
 	/if (!${FindItem[Mirrored Mask].ID} && ${Zone.ShortName.Equal[anguish]}) {
 		/shout NO MIRRORED MASK! WE ARE DOOOOMED!
 		/dgt FireTL
@@ -673,14 +677,14 @@ Sub Event_GazeYou
 
 		/echo \ao Mask in Slot\aw ${FindItem[Mirrored Mask].InvSlot}
 		/if (${FindItem[Mirrored Mask].InvSlot} != 3) {
-			/echo \ag Swapping Mask to Face!
+			/echo \ag Swapping Mask to Face! ${Time.Time24}
 			
 			/call Interrupt
 			/call Interrupt
 			/exchange "Mirrored Mask" face
 			/delay 10
 		}
-		/echo \agClicking the Mask!
+		/echo \agClicking the Mask! ${Time.Time24}
 		/if (${Me.Class.ShortName.Equal[BRD]}) {
 			/shout Clicking my Mirrored Mask!
 			/echo \ag Attempting Clicking \aoMirrored Mask \ag${Time.Time24}!
@@ -690,16 +694,21 @@ Sub Event_GazeYou
 			/echo \ag Attempting Clicking \aoMirrored Mask \ag${Time.Time24}!
 			/if (!${Defined[interruptFlag]}) /declare interruptFlag bool outer FALSE	
 			/call MQ2Cast "Mirrored Mask" ITEM
+			/delay 10
 			/call MQ2Cast "Mirrored Mask" ITEM
 		}
 		/delay 20
 		/call LoadFaceSlot
 	}
+	/rootme off
 /return 
 
 Sub Event_GazeBurst
 	/doevents flush GazeBurst
 	/echo \arGAZE BURST \aw${Time.Time24}
+	/if (${Me.ID} == ${int_MTID}) {
+		/if (${Me.CombatAbilityReady[Furious Discipline]}) /doability "Furious Discipline"
+	}
 /return 
 
 Sub Event_GazeDone
@@ -922,11 +931,11 @@ Sub SQLCheckMark(bool _overrideTimer)
 				/if (${bln_amvEngaged}) {
 					/echo disengaging and moving to cleric
 					/call Disengage
-					/nav wp amvCleric
+					/warp wp amvCleric
 				} else /if (${bln_OMMEngaged}) {
 					/echo disengaging and moving to cleric
 					/call Disengage
-					/nav wp ommCleric
+					/warp wp ommCleric
 				}
 			}
 		}
@@ -976,20 +985,20 @@ Sub SQLCureMark
     /declare i int local 0
     /declare c int local 0
 	/declare g int local 0
-	/declare maxCounters 	int local  0
-	/declare useGroup 		bool local FALSE
-	/declare alreadyCuring  bool local FALSE
-	/declare n 				string local NULL
-	/declare id  			int local 0
-	/declare cn 			string local NULL
-	/declare cid			int local 0
-	/declare uc 			int local 0
-	/declare l 				string outer 
+	/declare maxCounters 	int 	local  0
+	/declare useGroup 		bool 	local FALSE
+	/declare alreadyCuring  bool 	local FALSE
+	/declare n 				string 	local NULL
+	/declare id  			int 	local 0
+	/declare cn 			string 	local NULL
+	/declare cid			int 	local 0
+	/declare uc 			int 	local 0
+	/declare l 				string 	local 
     |/echo \a-w  Marked Rowcount: ${sqlite.rows[docure]} : Finding everyone that is in my group
 	/for i 1 to ${sqlite.rows[docure]}
 		/if (${Select[${sqlite.result[docure ${i} Name]},${str_groupMembers}]}) {
 			/varcalc g ${g}+1
-			/varset l ${sqlite.result[docure ${i} Name]} + "," +${l}
+			/varset l ${sqlite.result[docure ${i} Name]} + "," + ${l}
 			/if (${sqlite.result[docure ${i} Counters]} > ${maxCounters}) /varset maxCounters ${sqlite.result[docure ${i} Counters]}
 		}
 	/next i
@@ -997,9 +1006,9 @@ Sub SQLCureMark
 	/if (!${g}) /return
 	/echo \a-w		Found \ay${g} Mark of Death in Group
 	| Cast Group Cure
-	/if (${g} > 2|| ${Me.Class.ShortName.Equal[SHM]} || ${bln_amvEngaged}) {
+	/if (${g} > 2 || ${Me.Class.ShortName.Equal[SHM]}) {
 		/varset useGroup TRUE
-		/1 ${myGroupNum}. => Casting GROUP cure on ${g} Chars (${l}) ${Time.Time24}
+		/1 (g:${myGroupNum}) => Casting GROUP cure on ${g} Chars (${l}) ${Time.Time24}
 		/for i 1 to ${sqlite.rows[docure]}|
 			/if (${Select[${sqlite.result[docure ${i} Name]},${str_groupMembers}]}) {
 				/sqlite advquery CureMarkOfDeath doupdate UPDATE MarkOfDeath SET CurerName = '${Me.Name}', CurerID = ${Me.ID} WHERE SpawnID = ${sqlite.result[docure ${i} SpawnID]};

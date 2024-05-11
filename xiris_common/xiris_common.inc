@@ -662,7 +662,7 @@ Sub Disengage
 		/squelch /attack off
 		/stick off
 	}
-	/if (${str_classArchetype.Equal[CASTER]} && ${Pet.ID}) /pet back off
+	/if (${Pet.ID}) /pet back off
 /return
 
 
