@@ -1065,7 +1065,7 @@ Sub SQLCureMark
 			}
 		/next i
 	}
-    |/sqlite advquery mycon docure DELETE FROM MarkOfDeath WHERE Counters=0;
+    |/sqlite advquery CureMarkOfDeath doupdate DELETE FROM MarkOfDeath WHERE Counters=0;
     :return
 	/sqlite clear docure
    

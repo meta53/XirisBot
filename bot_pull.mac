@@ -6,9 +6,9 @@ This macro is configured for use by an SK, but may work for any class
 Modify the BOT_PULL_zoneinfo.ini file for use in a specific zone
 
 Usage:
-RAID:	/mac bot_pull rs camp TRUE TRUE TRUE
-GROUP:	/mac bot_pull gsay camp TRUE TRUE TRUE
-SOLO:	/mac bot_pull gsay camp TRUE FALSE TRUE
+RAID:	/mac bot_pull 1000 rs camp TRUE TRUE TRUE
+GROUP:	/mac bot_pull 1000 gsay camp TRUE TRUE TRUE
+SOLO:	/mac bot_pull 1000 gsay camp TRUE FALSE TRUE
 
 ______________________________________________
 REVISION HISTORY
@@ -447,7 +447,7 @@ Sub pullTarget
 			:AggroDistCheck 
 			| Am I close enough to aggro?
 			/if (${Target.Distance3D} > 200 && ${bln_usePull}) /goto :RunningToTarget
-			/if (${Target.Distance3D} > 25 && !${bln_usePull}) /goto :RunningToTarget
+			/if (${Target.Distance3D} > 15 && !${bln_usePull}) /goto :RunningToTarget
 
 			/if ((${bln_usePull} && (${Target.Distance} < ${int_castDistance}) && ${Target.LineOfSight}) || (!${bln_usePull} && (${Target.Distance} < 25 && ${Target.LineOfSight}))) {
 				| I am close enough, call aggro sub.
@@ -515,6 +515,7 @@ Sub AggroTarget
 		:AttemptAggro
 		/if (!${bln_usePull}) {
 			/attack on
+			/face fast
 			/varset ret SUCCESS
 			/goto :return
 		}
@@ -588,6 +589,7 @@ Sub killTarget
 			/if (${Navigation.Active}) /navigate stop
 		}
 	} else {
+		/face fast
 		/goto :killMob
 	}
 
@@ -637,6 +639,7 @@ Sub killTarget
 	
 	|--while in combat do these things
 	:combatLoop
+	
 		/call chkCombatState
 		/if (${int_targetID} != ${Target.ID}) /return
 		/if (${Target.Type.NotEqual[NPC]}) /return
@@ -656,8 +659,12 @@ Sub killTarget
 				/echo ${Me.SpellReady[${spell_aehate}]} Cast ${spell_aehate} ${spell_aehateGem} 5s
 				/call MQ2Cast "${spell_aehate}" ${spell_aehateGem}
 			}
+			/stick 10
+			/face fast
+			/attack on
 			/goto :combatLoop
 		} else {
+			/stick off
 			/echo \agTarget is dead, return
 		}
 /return
@@ -1092,7 +1099,7 @@ Sub variant_initialize(int _pull_dist, string _channel, string _campName, bool _
 
 	|--target information
 	/declare int_maxPullCount		int		outer   3
-	/declare int_minTLevel			int		outer	5
+	/declare int_minTLevel			int		outer	1
 	/declare int_maxTLevel			int		outer	75
 	/declare bln_validTGT			bool	outer	FALSE
 	/declare bln_TGTDead			bool	outer	FALSE

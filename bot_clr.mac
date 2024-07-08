@@ -120,7 +120,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 		/call chkHeal_Group
 		
 		|-- Check to see if we are autorezzing
-		/if ((${bln_autoRez} && !${bln_engaged}) || (${bln_combatRez} && ${bln_engaged})) /call chkRessurection
+		/if ((${bln_autoRez} && !${bln_engaged}) || (${bln_combatRez} && ${bln_engaged})) /call chkResurrection
 
 		|-- Check Divine Arbitration Flag
 		/if (!${bln_divineArbReady}) /call chkArbitrationReady

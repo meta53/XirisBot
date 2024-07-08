@@ -10,6 +10,7 @@ ______________________________________________
 REVISION HISTORY
     08.01.19    xiris 	INITIAL REVISION
 	06.29.22	xiris 	Changed the chkPet to only chkPetWeapons if its a new pet
+	07.07.24	xiris	Changed pet buffing/itemizing to be more modern
 **|
 
 
@@ -36,24 +37,42 @@ Sub chkPet
 	/call RunRaidEvents	
 	
 	|--Buff your pet
-	/if (${Me.Class.ShortName.NotEqual[SHM]} &&  ${Bool[${Pet.ID}]}) /call chkPetBuffs
+	/if (${Me.Class.ShortName.NotEqual[SHM]} && ${Bool[${Pet.ID}]}) /call chkPetBuffs
 
 	|--Weaponize your pet if its a new spawn
-	/if (${Me.Class.ShortName.Equal[MAG]} && !${hadPetOnInitialize}) /call chkPetWeaps
+	/if (${Me.Class.ShortName.Equal[MAG]} && !${hadPetOnInitialize}) /call chkPetEquipment
 	
 	|--Shrink your pet
 	/if (!${bln_petShrunk}) /call ShrinkPet
 	
 /return
 
+|**
+ ----------------------------
+ Pet Buff/Existence Checking
+ ----------------------------
+ Check your pet for buffs
+ ----------------------------
+**|
+
 Sub chkPetBuffs
-	/if (${bln_engaged}) /return
+	/if (${bln_engaged} || !${PETBUFF_Total}) /return
 	/if (${bln_petUseBuffs} && ${Pet.ID} && !${timer_petBuffRecheck} && ${Me.Pet.Distance} < 100) {
-		/declare i int local
-		/for i 1 to ${int_petBuffTotal}  
-			/if (!${Me.PetBuff[${petBuff_${i}}]}) {
-				/call chkSpellMemorized "${petBuff_${i}}" TRUE ${petBuff_${i}_Gem}
-				/call MQ2Cast "${petBuff_${i}}" 
+		/declare i	 int local
+		/declare st string local
+		/for i 1 to ${PETBUFF_Total}  
+	|/echo \ayPet Buffs: \awChecking \aw"${PETBUFF_${i}}"  \agHas:\aw${Me.PetBuff[${PETBUFF_${i}}]}
+			/if (!${Me.PetBuff[${PETBUFF_${i}}]}) {
+				/varset st ${PETBUFF_${i}_Type}
+				/if (${st.Equal[ITEM]} && ${FindItem[${PETBUFF_${i}_Summoner}].TimerReady} == 0) {
+					/echo \aw     Casting: \aw${PETBUFF_${i}_Summoner}
+					/call MQ2Cast "${PETBUFF_${i}_Summoner}" item
+					|/delay 10s ${Cursor.ID}	
+				} else /if (${st.Equal[SPELL]}) {
+					/echo \aw     Casting: \aw${PETBUFF_${i}}
+					/call MQ2Cast  "${PETBUFF_${i}_Summoner}"
+					|/delay 10s ${Cursor.ID}
+				} 
 			}
 		/next i
 		/memspellset ${str_spellset}
@@ -83,7 +102,7 @@ Sub chkPetSpawn
 	/if (!${Pet.ID} && ${bln_petUse}) {
 		/if ((${str_petReagent.Equal[NULL]}) || (${str_petReagent.NotEqual[NULL]} && ${FindItemCount[${str_petReagent}]} > 1)) {
 			/if (!${Me.Standing}) /stand on
-			/echo spawning pet ${str_petSpell} ${str_petGem}
+			/echo \aw     Spawning pet \ag${str_petSpell} \ayGem${str_petGem}
 			/if (${Me.AltAbility[Suspend Minion]}) /alt activate 176
 			/delay 5s !${Me.Casting.ID}
 			/delay 3s ${Pet.ID}
@@ -94,11 +113,10 @@ Sub chkPetSpawn
 					/delay 10
 					/if (${Me.Casting.ID}) /goto :castWait
 			} 
-			/delay 5s
+			/delay 5s ${Pet.ID}
 			
 			/if (${Pet.ID} && ${Me.AltAbility[Pet Discipline]}) /pet hold on
 			/varset bln_petShrunk FALSE
-			/delay 8s
 		} else {
 			/echo Cannot Summon Pet: Out of ${str_petReagent}
 			/varset bln_petUse FALSE
@@ -109,82 +127,71 @@ Sub chkPetSpawn
 /return
 
 
-Sub chkPetWeaps
-	/if (${bln_engaged} || !${Pet.ID} || ${bln_petWeaponized}) /goto :return
+Sub chkPetEquipment
+	/if (${bln_engaged} || !${Pet.ID} || ${bln_petItemized}) /goto :return
+	/echo \ag    Weaponizing Pet => \aw${PETITEM_Total}
 
 	|-- load 'petWeap' spell set
 	/delay 3s
 	/memspellset petweap
 	/delay 5s
 
-	|-- Belt
-	/call SummonItemForPet "Summoned: ${str_petBelt}" "Summon ${str_petBelt}" ${Pet.ID}
-	|-- Weapon 1
-	/call SummonItemForPet "Summoned: ${str_petWeap1}" "Summon ${str_petWeap1}" ${Pet.ID}
-	|-- Weapon 2
-	/call SummonItemForPet "Summoned: ${str_petWeap2}" "Summon ${str_petWeap2}" ${Pet.ID}
+	/declare i int local 0
+	/for i 1 to ${PETITEM_Total}
+		/echo "${PETITEM_${i}}" "${PETITEM_${i}_Type}" "${PETITEM_${i}_Summoner}"  
+		/if (${PETITEM_${i}_Use})	/call SummonItemForPet "${PETITEM_${i}}" "${PETITEM_${i}_Type}" "${PETITEM_${i}_Summoner}"  
+	/next i
+
+	| |-- Belt
+	| /call SummonItemForPet "Summoned: ${str_petBelt}" "Summon ${str_petBelt}" ${Pet.ID}
+	| |-- Weapon 1
+	| /call SummonItemForPet "Summoned: ${str_petWeap1}" "Summon ${str_petWeap1}" ${Pet.ID}
+	| |-- Weapon 2
+	| /call SummonItemForPet "Summoned: ${str_petWeap2}" "Summon ${str_petWeap2}" ${Pet.ID}
 	
 	/memspellset ${str_spellset}
 	/autoinv
-	/varset bln_petWeaponized TRUE
-
+	/varset bln_petItemized TRUE
+	/echo \agPet has been weaponized!
 	:return
 /return
 
-Sub WeaponizePet(int _petID)
+Sub SummonItemForPet(string _item, string _type, string _summoner)
+	/if (${SpawnCount[npc radius ${int_campRadius}]} > 0 && ${Zone.ShortName.NotEqual[thundercrest]}  && ${Zone.ShortName.NotEqual[guildhall]}  && ${Zone.ShortName.NotEqual[guildlobby]}) {
+		/echo \a-rReturning due to spawn
+		/return
+	} 
 
-/return
-
-Sub SummonItemForPet(string _itemName, string _spellName, int _petID)
-	/echo \ag Summoning Item \ay ${_itemName} \ag with \ay${_spellName}\ag for \aw${Spawn[id ${_petID}].CleanName}(${_petID})
+	| Look at the pet item index, and summon item, handing it to pet as we go
+	/echo \ag    Summoning Item \ay ${_item} \ag type \ay${_type}\ag with \ay${_summoner}\ag \ag  for \aw${Spawn[id ${Pet.ID}].CleanName}(${Pet.ID})
 	/autoinv
-	:summon_item
-	/if (!${FindItemCount[=${petItem}]}) {
-		| Pet item isn't in inventory, summon it
-		/call chkSpellMemorized "${_spellName}" TRUE
-		/call MQ2Cast "${_spellName}"
-		/delay 10
-	}
 
-	/call TrueTarget ${_petID}
+	/if (${_type.Equal[ITEM]}) {
+		/call MQ2Cast "${_summoner}" item
+		|/delay 10s ${Cursor.ID}	
+	} else /if (${_type.Equal[SPELL]}) {
+		/call MQ2Cast "${_summoner}" 
+		|/delay 10s ${Cursor.ID}
+	}
 
 	:moveToPet
-	/if (${Target.Distance} > 10) {
-		/if (${Target.Distance} < 100) {
-			/if (!${Navigation.Active}) /navigate target
-		} else {
-			/echo \arPet is too far away! Abort!
-			/goto :return
-		}
-		/delay 10
-		/goto :moveToPet
-	} else {
-		/if (${Navigation.Active}) /navigate stop
-	}
+	/call TrueTarget ${Pet.ID}
+	/call RunAllEvents
 
-	:checkCursor
-	/if (!${Cursor.ID}) {
-		| nothing on cursor, we need to find in packs
-		/declare i int local
-		/declare e int local 
-		/declare retryTimer timer local 
-		/declare petItem string local
-		/declare packItem string local 
-
-		/for i 1 to 8 
-			/if (${Bool[${Me.Inventory[pack${i}]}]}) {
-				| Look at each bag slot for item
-				/for e 1 to ${Me.Inventory[pack${i}].Container}
-					/varset packItem ${Me.Inventory[pack${i}].Item[${e}]}
-					/itemnotify in pack${i} ${e} leftmouseup
-					/delay 10
-					/goto :give_itemToPet
-				:next_item_in_pack
-				/delay 5
-				/next e
+	/if (${Cursor.ID}) {
+		/if (${Target.Distance} > 10) {
+			/if (${Target.Distance} < 100) {
+				/if (!${Navigation.Active}) /navigate spawn id ${Pet.ID}
+				/delay 10
+				/goto :moveToPet
+			} else {
+				/echo \arPet is too far away! Abort!
+				/return
 			}
-		:next_pack
-		/next i	
+		}
+	} else {
+		/echo \aw Summoning Item Failed, returning
+		/return
 	}
 
 	:give_itemToPet
@@ -195,6 +202,7 @@ Sub SummonItemForPet(string _itemName, string _spellName, int _petID)
 		/if (${Window[GiveWnd].Open}) /notify GiveWnd GVW_Give_Button leftmouseup 
 		/delay 10
 	}
+:return
 /return
 
 
@@ -237,6 +245,48 @@ Sub chkPetAttack
 /return
 
 
+Sub processPetItems
+	/declare PETITEM_Total				int		outer	${Ini[INI_CHAR,PET,PETITEM_Total,0]}	
+
+	/if (${PETITEM_Total}) {
+		/declare i int local 0
+		/declare test string local NULL
+		/echo \ay  Pet Items:
+		/for i 1 to ${PETITEM_Total}
+			/varset test ${Ini[INI_CHAR,PET,PETITEM_${i}]}
+			/echo \ag    Pet Item: \aw${test}
+			/declare PETITEM_${i} 					string	outer	${test.Arg[1,|]}
+			|/echo \aw    _Item:\ag${PETITEM_${i}} 
+
+			/declare PETITEM_${i}_Use 				bool	outer	${test.Arg[2,|]}
+			|/echo \aw    _Use:\ag${PETITEM_${i}_Use}
+
+			/declare PETITEM_${i}_Type 				string	outer	${test.Arg[3,|]}
+			|/echo \aw    _Type:\ag${PETITEM_${i}_Type}
+
+			/declare PETITEM_${i}_Summoner			string	outer	${test.Arg[4,|]}
+			|/echo \aw    _Summoner:\ag${PETITEM_${i}_Summoner}
+		/next i
+	}
+/return 
+
+
+Sub processPetBuffs
+	/declare PETBUFF_Total				int		outer	${Ini[INI_CHAR,PET,PETBUFF_Total,0]}	
+
+	/if (${PETBUFF_Total}) {
+		/declare i int local 0
+		/declare test string local NULL
+
+		/for i 1 to ${PETBUFF_Total}
+			/varset test ${Ini[INI_CHAR,PET,PETBUFF_${i}]}
+			/declare PETBUFF_${i} 					string	outer	${test.Arg[1,|]}
+			/declare PETBUFF_${i}_Use 				bool	outer	${test.Arg[2,|]}
+			/declare PETBUFF_${i}_Type 				string	outer	${test.Arg[3,|]}
+			/declare PETBUFF_${i}_Summoner			string	outer	${test.Arg[4,|]}
+		/next i
+	}
+/return
 
 Sub xbot_initialize_pets
 	/if (${str_classArchetype.Equal[MELEE_END]}) /return
@@ -254,25 +304,20 @@ Sub xbot_initialize_pets
 	/declare str_petGem					string	outer	${Ini[INI_CHAR,Pet,str_petGem,gem11]}
 	
 	/declare bln_petUseBuffs			bool	outer	${Ini[INI_CHAR,Pet,bln_petUseBuffs,FALSE]}
-	/declare int_petBuffTotal			int		outer   ${Ini[INI_CHAR,DOT,int_petBuffTotal,0]}
 	/declare timer_petBuffRecheck		timer	outer	0
 
-	/declare pb							int		local
 	|--Pet Shrinker
 	/declare str_petShrinker			string	outer  	${Ini[INI_CHAR,Pet,str_petShrinker,NULL]}
 	/declare bln_petShrunk				bool	outer	FALSE
 	
 	|--Pet Buffs
-	/for pb 1 to ${int_petBuffTotal} 
-		/declare petBuff_${pb} 				string	outer	${Ini[INI_CHAR,Pet,petBuff_${pb}]}
-		/declare petBuff_${pb}_Gem 			string	outer	${Ini[INI_CHAR,Pet,petBuff_${pb}_Gem]}
-	/next pb
+	/call processPetBuffs
+
 	
-	|--Pet Weapons
-	/declare str_petBelt				string	outer 	${Ini[INI_CHAR,Pet,str_petBelt,Girdle of Magi`Kot]}
-	/declare str_petWeap1				string  outer   ${Ini[INI_CHAR,Pet,str_petWeap1,Blade of the Kedge]}
-	/declare str_petWeap2				string  outer   ${Ini[INI_CHAR,Pet,str_petWeap2,Fist of Ixiblat]}
-	/declare bln_petWeaponized			bool	outer	FALSE
+	|--Pet Items
+	/declare bln_petItemized			bool	outer	FALSE
+	/call processPetItems
+
 	
 	
 /return
