@@ -108,6 +108,7 @@ Sub Main(string _channel, string _announce, string _theme, bool _useDownFlags, b
 			|-- remove yourself from any adventures that might be lingering
 			/echo \awKilling any previous LDON adventure that is active \ao${inMission} ${haveMission}
 			/if (${Window[ConfirmationDialogbox].Open}) {
+				/echo \ayConfirmationDialogbox Open
 				/squelch /${cmdChannel} /notify ConfirmationDialogbox CD_Yes_Button leftmouseup
 				/varset inMission 	FALSE 
 				/varset haveMission FALSE
@@ -121,6 +122,7 @@ Sub Main(string _channel, string _announce, string _theme, bool _useDownFlags, b
 				/call requestLDON
 			} else {
 			| I had a LDON mission, killing it
+				/echo \ay I had a LDON mission, killing it
 				/squelch /${cmdChannel} /notify AdventureRequestWnd AdvRqst_RequestButton leftmouseup
 				/varset inMission FALSE 
 				/varset haveMission FALSE
