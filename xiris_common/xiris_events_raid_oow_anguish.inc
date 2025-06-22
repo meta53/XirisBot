@@ -645,13 +645,13 @@ Sub OMM_MTEngage
 
 	/if (${Me.CombatAbilityReady[Stonewall Discipline]}) /doability "Stonewall Discipline"
     /delay 5
-	/echo Hammering aggro
 	/if (${Me.CombatAbilityReady[Ancient: Chaos Cry]}) /doability "Ancient: Chaos Cry"
 	/delay 10
 	/if (${Me.CombatAbilityReady[Bazu Bellow]}) /doability "Bazu Bellow"
 	/delay 10
 	/dgt SingSongs
 	/face fast
+	/attack on
 /return 
 
 Sub Event_GazeYou 
@@ -910,11 +910,13 @@ Sub Event_MarkOfDeathFades
 
 Sub SQLCheckMark(bool _overrideTimer)
 	|/echo \awSQLTest \aoSQLCheckMark \awOveride:\ag${_overrideTimer} \awTimer:\ag${timer_markCheck}
+	
 	/if (${_overrideTimer}) /varset timer_markCheck 0
 	/if (${timer_markCheck}) {
 			/return
 	}
 
+	:SQLCheckMark
     |/sqlite advquery mycon dummy INSERT OR REPLACE INTO Characters(Name,SpawnID,ZoneID) VALUES ('${Me.Name}', ${Me.ID}, ${Zone.ID});
     /if (${Me.Buff[Mark of Death].ID} && ${Zone.ShortName.Equal[anguish]}) {
 		/echo \agFlagging myself as having Mark
@@ -928,11 +930,11 @@ Sub SQLCheckMark(bool _overrideTimer)
 			| INSERT OR REPLACE INTO MarkOfDeath(SpawnID, Name ,Counters,CureInProcess) VALUES (22, 'Xiris', 14, NULL);
 			/sqlite advquery CheckMarkofDeath markchk INSERT OR REPLACE INTO MarkOfDeath(SpawnID, Name ,Counters,CurerName,CurerID,ZoneID) VALUES(${Me.ID}, '${Me.Name}', ${Debuff.Diseased}, NULL,0,${Zone.ID});
 			/if (${Select[${Me.Class.ShortName},${MeleeClasses}]} && ${int_MTID} != ${Me.ID}) {
-				/if (${bln_amvEngaged}) {
+				/if (${SpawnCount[npc Vangl]}) {
 					/echo disengaging and moving to cleric
 					/call Disengage
 					/warp wp amvCleric
-				} else /if (${bln_OMMEngaged}) {
+				} else /if (!${SpawnCount[npc Vangl]}) {
 					/echo disengaging and moving to cleric
 					/call Disengage
 					/warp wp ommCleric
@@ -944,6 +946,7 @@ Sub SQLCheckMark(bool _overrideTimer)
     	/sqlite close CheckMarkofDeath
 		| If it's me and I am a priest, cure my shit!
 		/if (${Select[${Me.Class.ShortName},CLR,DRU,PAL,SHM]}) /call handleCureMarkOfDeath ${Me.Name} ${Me.ID} ${Me.Class.ShortName.Equal[SHM]} 14
+
     } else {
 		| No longer have mark of death, clearing if fentry still found. We  can't check by ID< because if we died, we have a different ID!	
 		/sqlite open CheckMarkofDeath "${_pathDB}" SQLITE_OPEN_READWRITE|SQLITE_OPEN_CREATE 
@@ -953,7 +956,7 @@ Sub SQLCheckMark(bool _overrideTimer)
 			/sqlite advquery CheckMarkofDeath markchk DELETE FROM MarkOfDeath WHERE Name = '${Me.Name}';
 		}
 
-		/if (${bln_engaged} && ${bln_amvEngaged} && ${Select[${Me.Class.ShortName},${MeleeClasses}]}) {
+		/if (${bln_engaged} && ${SpawnCount[npc Vangl]} && ${Select[${Me.Class.ShortName},${MeleeClasses}]}) {
 			/call EngageTarget ${Spawn[npc Vangl].ID}
 		}
 

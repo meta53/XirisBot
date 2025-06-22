@@ -731,10 +731,11 @@ Sub handleCureMarkOfDeath(string _name, int _id, bool _group, int _dCount)
 			/shout Already cured ${_name} ${_id}
 			/return
 		}
+	} else {
+		/dgge /warp id ${Me.ID}
 	}
 	/call castCure ${_name} ${_id} "${str_cureToUse}" ${int_finalCount} disease ${_dCount} TRUE
 	/call TrueTarget ${int_MTID}
-	/delay ${Math.Rand[0,20]}
 /return 
 
 

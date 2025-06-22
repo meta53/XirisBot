@@ -88,7 +88,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 			/call RunAllEvents
 
 			|-- melee library
-			/if (!${mq2meleeEnabled}) /call chkCA_${Me.Class.ShortName}
+			/call chkCA_${Me.Class.ShortName}
 			
 			|-- dps library (casting hybrid)
 			/call chkNuke

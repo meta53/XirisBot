@@ -27,7 +27,7 @@ Sub InitEvents_OOW_MPG_Specialization
 	/echo \ag Initializing MPG Specialization
 	/declare str_currentMode string outer NORMAL
 	/call RegisterRaidEvents Events_OOW_MPG_Specialization 1
-	/call toggleMQ2Melee FALSE
+	|/call toggleMQ2Melee FALSE
 /return
 
 Sub Events_OOW_MPG_Specialization

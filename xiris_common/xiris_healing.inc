@@ -1161,8 +1161,8 @@ Sub ResurrectCorpses
 		/varset bln_skipCorpse FALSE
 		/echo \ag Checking on \ao${charName}\ag for Rez
 		| check to see if the pc is online
-		|/dquery ${charName} -q "Me.ID" -o online -t 20
-		|/if (!${online}) /goto :nextCorpse
+		/dquery ${charName} -q "Me.ID" -o online -t 20
+		/if (!${online}) /goto :nextCorpse
 
 		| target the corpse and check if cannot rez (conder and check result)
 		/call TrueTarget ${id}

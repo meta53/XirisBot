@@ -82,7 +82,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 
 	|-- initialize the macro specific libraries
 	/call variant_initialize
-
+	/varset bln_meleeOverride TRUE
 	|-- report my status
 	/dgt [${Me.Class.ShortName}] ${Me.Name} ${str_action} >> ${Spawn[${_tank1Name}].CleanName} <<  ${_assistArgs}
 
@@ -121,7 +121,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 			/call RunAllEvents
 	
 			|-- melee library
-			/if (!${mq2meleeEnabled}) /call chkCA_${Me.Class.ShortName}
+			/call chkCA_${Me.Class.ShortName}
 			|-- std library (burns/aa/clicks)
 			/call chkAA
 			/call chkBurn
@@ -172,7 +172,7 @@ Sub EVENT_WARCRYON_1
 Sub EVENT_WARCRYON_2
 	/doevents flush WARCRYON_2
 	/if (${BURN_Group}==2) {
-		/echo \agEnabling \arWarCry \agMode on CoHort \ao1
+		/echo \agEnabling \arWarCry \agMode on CoHort \ao2
 		/call FireWarCry
 	}
 /return 
@@ -187,7 +187,7 @@ Sub EVENT_FIRE_WARCRY(_line, _chatSender, _eventParams)
 
 Sub FireWarCry
 	/if (${Me.CombatAbilityReady[Ancient: Cry of Chaos]}) {
-		/shout \agFIRING WARCRY ${Time.Time24} ${Target.Name}
+		/shout FIRING WARCRY! ${Time.Time24} ${Target.Name}(${Target.ID})
  		/doability "Ancient: Cry of Chaos"
 	}
 /return 

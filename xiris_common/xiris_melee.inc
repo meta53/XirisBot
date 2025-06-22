@@ -48,6 +48,8 @@ REVISION HISTORY
 #EVENT UpdateStickCMD	"#1# tells the raid#*#'UpdateStick #2#'"
 #EVENT UpdateStickCMD	"[ #1# #*#]#*#UpdateStick #2#"
 
+
+
 #define dsINI xiris_common/xiris_damageshields.ini
 
 Sub InitEvents_Melee
@@ -99,6 +101,8 @@ Sub Event_UpdateStickCMD(_line, _sender, _eventParams)
 
 	/doevents flush UpdateStickCMD
 /return
+
+
 
 Sub EVENT_RiposteDisc(_line, _sender, _eventParams)
 	/echo turning riposte disc on
@@ -471,7 +475,6 @@ SUB EVENT_CANTNAVTARGET
 /return
 
 Sub StickAdjust
-	
 	/if (${int_currentStickDistance} > ${int_minStickDistance} && ${Target.Distance} <= ${int_currentStickDistance}) {
 		/echo \agStickAdjust \ao${int_currentStickDistance} \aw> \ao${int_minStickDistance} \ay(\aw${Target.Distance})
 		/varcalc int_currentStickDistance ${int_currentStickDistance} - 5
@@ -481,12 +484,13 @@ Sub StickAdjust
 /return
 
 Sub EngageTargetMelee
+/echo EngageTargetMelee
 	/call StickToTarget ${bln_engaged}
 /return
 
 
 Sub StickToTarget(bool _engageWhenInRange)
-	/if (${str_classArchetype.Equal[CASTER]} || ${str_classArchetype.Equal[PRIEST]}) /return
+	/if ((${str_classArchetype.Equal[CASTER]} || ${str_classArchetype.Equal[PRIEST]}) && !${bln_meleeOverride}) /return
 	/varset int_startStickDistance ${Spawn[id ${int_targetID}].MaxRangeTo}
 	/varset int_currentStickDistance ${int_startStickDistance}
 	/echo \aoStickToTarget \aw_engageWhenInRange:\ar ${_engageWhenInRange} \awdist: \ag${Target.Distance} \awcurrentstick: \ag${int_currentStickDistance} \awminstick: \ag${int_minStickDistance} \awmaxstick: \ag${int_startStickDistance} \n\awStick Command String:\ag ${stickCmd} ${int_currentStickDistance}
@@ -541,7 +545,7 @@ Sub StickToTarget(bool _engageWhenInRange)
 
 
 Sub EVENT_RESTICK
-	/if (${bln_engaged} && (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}))  {
+	/if (${bln_engaged} && (${bln_meleeOverride} || ${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}))  {
 		/call StickToTarget ${bln_engaged}
 	}
 	/doevents flush RESTICK
@@ -628,6 +632,9 @@ Sub chkCA_RNG
 
 Sub chkCA_ROG
 	/if (${Me.AbilityReady[Backstab]}) /doability "Backstab"
+/return
+
+Sub chkCA_SHM
 /return
 
 Sub chkCA_SHD
@@ -757,8 +764,6 @@ Sub xbot_initialize_melee
 			/declare COMPONENT_${comp}_Reagent 	string	outer ${Ini[INI_CHAR,Components,COMPONENT_${comp}_Reagent]}
 			|/echo \a-w${COMPONENT_${comp}} ${COMPONENT_${comp}_Check} ${COMPONENT_${comp}_Count} ${COMPONENT_${comp}_Type} ${COMPONENT_${comp}_Summoner} ${COMPONENT_${comp}_Reagent}
 		/next comp 
-	|/echo \awComponents:\ag${int_componentTotal} ${bln_componentCheck}
-	|/call chkComponentsAll
 
 	|--[Settings] : Spell & Support Definitions
 	/declare item_pull				string	outer	${Ini[INI_CHAR,Puller,item_pull,"Shuriken of Eternity"]}

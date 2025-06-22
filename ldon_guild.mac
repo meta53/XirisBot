@@ -32,6 +32,7 @@ REVISION HISTORY
 						Donor hall trivialized the movement to the LDON entrance, etc so culled some code	
 	05.15.23	xiris   Added checks for being pushed out of navigable areas, will warp to point if there is an issue
 	10.12.23	xiris	Added support for running this from guildhall in donor mode (using magus to get to thundercrest => ldon guys)
+	07.29.24	xiris	Small logic changes for pull/killTarget methods
 ______________________________________________
 REQUIRED PLUGINS
     mq2cast
@@ -50,13 +51,13 @@ REQUIRED INCLUDES
 
 
 #include xiris_common/xiris_common.inc
+|#include xiris_common/xiris_pull.inc
 
-#Turbo 120
+
+#TURBO 120
 
 #define INI_ldonInfo xiris_common/xiris_ldon_definitions.ini
 
-#EVENT RageOff              "#*#is no longer enraged#*#"
-#EVENT RageOn               "#*#has become ENRAGED#*#"
 #EVENT Zoned                "You have entered#*#"
 #EVENT Zoned                "LOADING, PLEASE WAIT..."
 #EVENT NoLOS				"#*#you cannot see your target#*#"
@@ -127,7 +128,7 @@ Sub Main(string _channel, string _announce, string _theme, bool _useDownFlags, b
 				/varset inMission FALSE 
 				/varset haveMission FALSE
 				/delay 10
-				/goto :SetupLoop
+				/call requestLDON
 			}
 			
 			/delay 5s
@@ -176,6 +177,7 @@ Sub Main(string _channel, string _announce, string _theme, bool _useDownFlags, b
 		/if (${MacroQuest.GameState.Equal[CHARSELECT]} || ${MacroQuest.GameState.Equal[PRECHARSELECT]} ) /end
 		/if (${Me.Casting.ID} && ${Me.Hovering}||${Window[tradewnd].Open}||${Window[lootwnd].Open}) /goto :mainLoop
 		
+		/call RunAllEvents
 		/doevents
 		
 		|-- utility checking
@@ -184,8 +186,10 @@ Sub Main(string _channel, string _announce, string _theme, bool _useDownFlags, b
 		
 		|-- reset variables, and make sure I am in the zone still and in mission
 		/call setRSTVars
+
+		|-- check that I am i n zone still
 		/call chkZone
-		/if (${Macro.Return.Equal[LOBBY]}) {
+		/if (${Macro.Return.Equal[DEAD]}) {
 			/dgt We seem to have gotten fucked up and are now in the lobby at ${Time.Time24}
 			/dgt Resetting everything and going again
 			/call OriginToGuildHall
@@ -202,7 +206,15 @@ Sub Main(string _channel, string _announce, string _theme, bool _useDownFlags, b
 		|-- reset group to camp spot (leash) if its empty
 		/if (${SpawnCount[npc radius ${int_campRadius} zradius 25]} == 0) {
 			/call resetCamp
-			/docommand /${announceChannel} RefreshXTarget
+			/call RefreshXTarget
+			/docommand /${cmdChannel} Disengage
+			/if (${bln_looting})	/call chkLoot
+			/if (!${bln_looting})	/hidecorpse npc
+			/if (${Me.Class.ShortName.Equal[SHD]} && ${Me.PctMana} < 10) {
+				/echo OUT OF MANA
+				/delay 10
+				/goto :MissionLoop
+			}
 		}
 		
 		|-- UI lock check
@@ -212,14 +224,15 @@ Sub Main(string _channel, string _announce, string _theme, bool _useDownFlags, b
 		}
 
 		|-- target hunter
-		/attack off
-		/call getTarget
-		/if (${Target.Distance} > 20) /call pullTarget
-		/call killTarget
+		:getAndKill
+			/attack off
+			/call chkLDONCompletion
+			/call getTarget
+			/if (${Target.Distance} > 20) /call pullTarget
+			/if (!${Target.ID}) /goto :getAndKill
+			/call killTarget
+			/echo We have killed ${int_killCount} mobs
 
-		/varcalc int_killCount ${int_killCount}+1
-		/varcalc int_totalKills ${int_totalKills}+1
-		
 		|-- am I still in mission?
 		/if (${inMission}) /goto :MissionLoop
 
@@ -479,7 +492,7 @@ Sub setupTask
 	
 	|-- Tell rest of group to load their normal macroset;
 	/echo In ${Zone.Name}, setting up xiris_bot and delaying 5s
-	/docommand /${cmdChannelExcludingMe} /mac xiris_bot ${Me.Name} Mluian NULL 70
+	/docommand /${cmdChannelExcludingMe} /mac xiris_bot ${Me.Name} Mluian NULL 60
 	
 	/delay 5s
 	|-- set up group variables, change here based on group makeup;
@@ -622,15 +635,7 @@ Sub RequestLobbyBuffs
 	
 /return
 
-Sub chkZone
-	/if (${Zone.ShortName.NotEqual[${str_startZone}]}) {
-		/if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) {
-			/docommand /${announceChannel}  I died! GTFO! ${Time.Time24}/
-			/delay 5s
-			/return LOBBY
-		}
-	}
-/return
+
 
 Sub OriginToGuildHall
 	/declare originAttempt int local 0
@@ -690,6 +695,7 @@ Sub moveCamp(int _campNumber)
 	/declare prevCamp int local 1
 	/varcalc prevCamp ${_campNumber}-1
 	/echo \aoMoving to Camp \ag${_campNumber}
+	:moveCampNavLoop
 	/if (${Navigation.PathExists[wp camp${_campNumber}]}) {
 		/nav wp camp${_campNumber}
 		/delay 5s
@@ -698,26 +704,13 @@ Sub moveCamp(int _campNumber)
 	} else {
 		/call clearNavStuck
 	}
+	:moveCampNavLoop
+	/if (${Navigation.Active}) /goto :moveCampNavLoop
 
 	:resume
 	/call setCamp
 /return
 
-
-
-Sub setRSTVars
-	/varset	bln_validTGT	FALSE
-	/varset bln_TGTDead		TRUE
-	/varset bln_TGTLocal	FALSE
-	/alert clear 3
-	/target clear
-/return
-
-Sub setTGTAlert
-	/echo setTGTAlert ${Target.ID} ${Target.Name}
-	/alert add 3 id ${Target.ID}
-	/keypress esc
-/return
 
 
 |**
@@ -732,11 +725,11 @@ Sub setTGTAlert
 Sub getTarget
 	/echo getTarget
 	/if (${Me.Sitting}) /sit off
-	/if (${Zone.ShortName.Equal[${zoneRequest}]}) /return
+	/if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /return
 	:acquireLoop
 		/call setRSTVars
 		/squelch /target clear
-		/call chkLDONCompletion
+
 		/if (!${inMission} || !${haveMission}) /return
 		|----------USE THIS FOR HUNTER (ALERT 2) and IGNORE ALERT 1, 3 --------
 		/if (${SpawnCount[npc radius ${int_campRadius} zradius 25]} > 0) {
@@ -751,10 +744,6 @@ Sub getTarget
 			/echo No NPCs on the alert 2 list are up, trying random NPC
 			/target npc range ${int_minTLevel} ${int_maxTLevel} radius ${int_maxRadius} noalert 1 
 			/delay 5
-		} else {
-			/echo no NPCs around, delaying 1m
-			/delay 1m
-			/goto :AcquireLoop
 		}
 		
 		/if (${Target.ID} && (${Target.Distance} <= ${int_campRadius})) {
@@ -881,19 +870,19 @@ Sub pullTarget
 
 		| Start the pull by running to the target
 		:RunningToTarget
+		/if (${Me.TargetOfTarget.Name.Equal[${Me.Name}]}) 	/goto :ReturnWithPull
 		/if (${Navigation.PathExists[target]}) {
-			/if (!${Navigation.Active}) /navigate target
-			/delay 15
+			/if (!${Navigation.Active}) {
+					/navigate target
+					/echo \agRunningToTarget
+					/delay 15
+				} else /if (${Navigation.Velocity} < 20) {
+					/echo \arPontentially Stuck
+					/warp id ${Me.ID} f 10
+				}
 		} else {
 			/call clearNavStuck
 			/goto :RunningToTarget
-		}
-
-
-		| Target in LOS, and in distance, going to aggrocheck
-		/if (${Target.LineOfSight} && ${Target.Distance3D} < ${int_castDistance}) {
-			/echo \a-w        Target in LOS, and in distance, going to aggrocheck
-			/goto :AggroCheck
 		}
 
 		| Target has me as aggrod, and in range, going to returnWithPull
@@ -910,6 +899,13 @@ Sub pullTarget
 			/goto :ReturnWithPull
 		} 
 
+		| Target in LOS, and in distance, going to aggrocheck
+		/if (${Target.LineOfSight} && ${Target.Distance3D} < ${int_castDistance}) {
+			/echo \a-w        Target in LOS, and in distance, going to aggrocheck
+			/goto :AggroCheck
+		}
+
+	
 		/if (!${Target.ID}) /goto :return
 
 		|-- check to see if I have aggro
@@ -925,8 +921,8 @@ Sub pullTarget
 				/call AggroTarget
 				/varcalc attempt ${attempt} + 1
 				/echo \aoAggro Attempt return ${Macro.Return}
-				/if (${Macro.Return.Equal[FAILED]})					/goto :AggroCheck
 				/if (${Me.TargetOfTarget.Name.Equal[${Me.Name}]}) 	/goto :ReturnWithPull
+				/if (${Macro.Return.Equal[FAILED]})					/goto :AggroCheck
 				/if (${Macro.Return.Equal[NOLOS]})    				/goto :RunningToTarget
 				/if (${Macro.Return.Equal[CAST_FIZZLE]})    		/goto :AggroCheck
 				/if (${Macro.Return.Equal[NOTARGET]}) 				/goto :return
@@ -1092,6 +1088,17 @@ Sub killTarget
 		/if (${Target.Type.NotEqual[NPC]}) 				/goto :return
 		/if (${Target.Distance} > ${int_campRadius}) 	/goto :distanceWaitLoop 
 
+		/if (${Me.Class.ShortName.Equal[PAL]}) {
+			/call chkHeal_Self
+			/call chkHeal_Group
+		}
+
+		/if (${Me.Class.ShortName.Equal[SHD]}) {
+			/call chkCA_${Me.Class.ShortName}
+			/if (${bln_lifetapUse} && (${Me.PctHPs} <= ${int_lifetapHP}))	/call chkLifetap
+		}
+
+
 		/if (!${bln_TGTDead}) {
 			/if ((${Me.TargetOfTarget.ID} != ${Me.ID}) && !${Target.Fleeing}) {
 				/if ((${Me.Class.ShortName.Equal[SHD]} || ${Me.Class.ShortName.Equal[PAL]}) && ${Me.SpellReady[${spell_hate}]}) {
@@ -1224,7 +1231,7 @@ Sub chkUtils
 
 Sub chkMana
 	/varset bln_wait4Mana FALSE
-	/if ((${bln_hasCLR}) && (${Group.Member[${str_cleric}].PctMana} < ${int_clrManaFloor})) {
+	/if ((${bln_hasCLR} && ${Group.Member[${str_cleric}].Present}) && (${Group.Member[${str_cleric}].PctMana} < ${int_clrManaFloor})) {
 		/echo Cleric mana ${Group.Member[${str_cleric}].PctMana} < ${int_clrManaFloor}
 		/varset bln_wait4Mana TRUE
 	}
@@ -1306,20 +1313,7 @@ Sub setGroupCommands
  The UI got locked up. need to fade and remake groups
  ----------------------------  
 **|
-Sub EVENT_UILocked
-	/varset bln_UILocked TRUE
-	/doevents flush
-/return
 
-Sub clearUILock
-	/if (${bln_UILocked}) {
-		/delay 20
-		/fade 
-		/delay 45s
-		/call chkGroup
-		/varset bln_UILocked FALSE
-	}
-/return 
 
 Sub EVENT_NavStuck
 	/echo \arNAVSTUCK Triggered
@@ -1608,12 +1602,69 @@ Sub setAlerts
 Sub Event_TooClose
 	/echo Event_TooClose
 	/varset bln_tooClose TRUE
+	/doevents flush TooClose
 /return
 
 Sub Event_NoLOS
 	/echo Event_NoLOS
 	/varset bln_noLOS TRUE
+	/doevents flush NoLOS
 /return
 
 
 
+Sub chkZone
+    /declare status string local NORMAL
+	/if (${Zone.ShortName.NotEqual[${str_startZone}]}) {
+		/if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) {
+			/docommand /${announceChannel}  I died! GTFO! ${Time.Time24}
+			/delay 5s
+			/varset status DEAD
+		}
+	}
+/return ${status}
+
+Sub MoveCamp
+
+/return
+
+Sub setCamp
+	/echo Setting camp at camp${int_currentCamp} out of ${int_campCount}
+
+	/varset D1X ${Me.X}
+	/varset D1Y ${Me.Y}
+	/varset D1Z ${Me.Z}
+
+	/delay 1s
+/return
+
+
+Sub setRSTVars
+	/varset	bln_validTGT	FALSE
+	/varset bln_TGTDead		TRUE
+	/varset bln_TGTLocal	FALSE
+	/alert clear 3
+	/target clear
+/return
+
+Sub setTGTAlert
+	/echo setTGTAlert ${Target.ID} ${Target.Name}
+	/alert add 3 id ${Target.ID}
+	/target clear
+/return
+
+
+Sub EVENT_UILocked
+	/varset bln_UILocked TRUE
+	/doevents flush
+/return
+
+Sub clearUILock
+	/if (${bln_UILocked}) {
+		/delay 20
+		/fade 
+		/delay 45s
+		/call chkGroup
+		/varset bln_UILocked FALSE
+	}
+/return 

@@ -2,14 +2,12 @@
 
 **|
 
-Sub chkZone
+Sub getTarget 
 /return
 
-Sub setRSTVars
+Sub pullTarget
+/return 
 
-Sub setTargetAlert
-
-Sub getPullTarget
-
-Sub chkPullTargetValidity
+Sub killTarget 
+/return 
 
