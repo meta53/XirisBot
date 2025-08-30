@@ -194,7 +194,7 @@ mq2cast, mq2dannet, mq2exchange, mq2melee
 9. `/dgt DoInfusion` Tells everyone to hit Infusion of the Faithful AA
 10. `/dgt SetupRaid` A mostly internal or event used event. Describes the raid mode currerntly running, defaults to.. DEFAULT. Calls SetupRaid which pulls from xiris_common INI. Sets lists of group leaders, and DI available clerics
 12. `/dgt RefreshXTarget` Used to manually force raid to refresh their XTarget list.
-13. `/dgt MeleeOverride TRUE|FALSE` Used to manually force a toon to start/stop meleeing (ie: casters/priests)
+13. `/dt MeleeOverride TRUE|FALSE` Used to manually force a toon to start/stop meleeing (ie: casters/priests)
 ### xiris_curing.inc
 #### Overview
 XirisBot curing handlers. This library has several events that can be fired via hotkey, or auto cures driven by the curing section in the toon ini files. Note that this file is responsible for a toons self-need-cure checks - something to be familiar with.

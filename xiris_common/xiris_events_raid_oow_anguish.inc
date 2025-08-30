@@ -81,17 +81,19 @@ Sub InitEvents_OOW_Anguish
 	/declare rootDist				int		outer 20
 
 	| Berserk Cry List
-	/declare	arr_bersekerList[10]	string	outer NULL
+	/declare	arr_bersekerList[12]	string	outer NULL
 	/varset		arr_bersekerList[1]		Ophidia 
 	/varset 	arr_bersekerList[2]		Ophelia
 	/varset		arr_bersekerList[3]		Ophemia
 	/varset 	arr_bersekerList[4]		Ophenia
 	/varset 	arr_bersekerList[5]		Opheoia
-	/varset 	arr_bersekerList[6]		Ophexia
-	/varset 	arr_bersekerList[7]		Opheyia
-	/varset 	arr_bersekerList[8]		Ophezia
-	/varset 	arr_bersekerList[9] 	Ophesia
-	/varset 	arr_bersekerList[10]	Opheria
+	/varset 	arr_bersekerList[6]	Opheria
+	/varset 	arr_bersekerList[7] 	Ophesia
+	/varset 	arr_bersekerList[8]	Ophetia
+	/varset 	arr_bersekerList[9]	Ophevia
+	/varset 	arr_bersekerList[10]		Opheyia
+	/varset 	arr_bersekerList[11]		Ophexia
+	/varset 	arr_bersekerList[12]		Ophezia
 
 	/declare 	bln_isMarked 			bool	outer FALSE
 	/declare    timer_markCheck			timer   outer 0
@@ -771,6 +773,7 @@ Sub chkOMMCharm
 			/echo \agSiccing pet!
 			/call TrueTarget ${Spawn[npc Overlord].ID}
 			/pet attack
+			|/call chkWarCry
 			/if (!${Me.Pet.Buff[Speed of Salik]}) {
 				/echo \agBuffing Pet!
 				/target id ${Pet.ID}
@@ -856,6 +859,14 @@ Sub EVENT_OMMWarCry
 /return
 
 
+Sub chkWarCry
+	/if (${Me.Class.ShortName.NotEqual[ENC]}) /return
+	/if (!${Pet.ID}) /return
+	/if (${Pet.Buff[Ancient: Cry of Chaos]}) /return
+	/shout Calling OMM War Cry on my Pet!
+	/call RequestBerserkerWarCry ${Pet.ID}
+/return
+
 Sub RequestBerserkerWarCry(int _targetID)
 	/echo \ag WARCRY CALLED! \ao${_targetID} \aw ${Time.Time24}
 	/declare bStatus 	string	local FALSE
@@ -880,8 +891,8 @@ Sub RequestBerserkerWarCry(int _targetID)
 		/if (${bStatus.Equal[TRUE]}) {
 			/varcalc foundCount ${foundCount}+1
 			/varset berName ${berTest}
+			/goto :CastCry
 		}
-		/if (${foundCount}) /goto :CastCry
 	/next i
 
 	:CastCry
