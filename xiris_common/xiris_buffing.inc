@@ -218,7 +218,7 @@ Sub cmbtBuffMT
  ----------------------------
 **|
 Sub cmbtBuffGRP
-	/if (${int_cmbtBuffTotal} == 0 || ${CMBTBUFF_1_Timer} || !${bln_cmbtBuffUse} || !${bln_engaged}) /return
+	/if (${int_cmbtBuffTotal} == 0 || ${timer_check_combatBuffs} || !${bln_cmbtBuffUse} || !${bln_engaged}) /return
 
 	|-- loop through group members that get combat buff
 	/declare i    		  int		local
@@ -288,6 +288,7 @@ Sub cmbtBuffGRP
 
 	/call RunRaidEvents
 	/call TrueTarget ${int_targetID}
+	/varset timer_check_combatBuffs 30s
 /return
 
 
@@ -789,6 +790,7 @@ Sub xbot_initialize_buffing
 	
 	|--Combat Buff(s)
 	|--eg: Spirit of the Jaguar
+	/declare timer_check_combatBuffs			timer   outer   30s
 	/declare bln_cmbtBuffUse					bool	outer	${Ini[INI_CHAR,CombatBuffs,bln_cmbtBuffUse,FALSE]}
 	/declare int_cmbtBuffTotal					int		outer	${Ini[INI_CHAR,CombatBuffs,int_cmbtBuffTotal,0]}
 	/declare j									int		local

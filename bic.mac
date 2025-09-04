@@ -1,0 +1,120 @@
+|**
+----------------------------
+Signets.machealINI
+----------------------------
+This macro is configured for use by the the puller for zones
+Sets the looters for Bic Object(s) by zone so I don't have to tell each toon to loot manuQUESTy
+______________________________________________
+REVISION HISTORY
+    08.31.22	xiris	INITIAL REVISION
+______________________________________________
+REQUIRED PLUGINS
+
+______________________________________________
+REQUIRED INCLUDES  
+	xiris_common/xiris_common.inc
+**|
+
+
+Sub Main
+    |switch by zone shortname
+    /call ${Zone.ShortName}
+/return
+
+Sub Qinimi 
+
+    /dt Ophemia looton QUEST
+    /dt Opheria looton QUEST
+    /dt Ophesia looton QUEST
+    /dt Shynxia looton QUEST
+    /dt Drexia looton QUEST
+    /dt Eurydice looton QUEST
+    /dt Erisa looton QUEST
+    /dt Mluian looton QUEST
+/return
+
+Sub Riwwi 
+    /dt Xunshia looton QUEST
+    /dt Ophemia looton QUEST
+    /dt Ophesia looton QUEST
+    /dt Ophexia looton QUEST
+    /dt Opheyia looton QUEST
+    /dt Ophezia looton QUEST
+    /dt Xiexa looton QUEST
+/return
+
+Sub Barindu 
+    /dt ophemia looton QUEST 
+    /dt Ophenia looton QUEST 
+    /dt Opheria looton QUEST 
+    /dt Ophezia looton QUEST 
+    /dt Shanxia looton QUEST 
+    /dt Shynxia looton QUEST 
+    /dt Ertris looton QUEST 
+    /dt Erinyas looton QUEST
+    /dt Mluian looton QUEST
+    
+/return
+
+Sub Yxtta
+
+/return
+
+Sub Vxed
+    /dt Xunshia looton QUEST
+    /dt Xonshia looton QUEST
+    /dt Ophezia looton QUEST
+    /dt Shenxia looton QUEST
+    /dt Shynxia looton QUEST
+    /dt Drexia looton QUEST
+    /dt Xiexa  looton QUEST
+    /dt Cereborn looton QUEST
+/return 
+
+
+Sub Tipt 
+    /dt Xinshia looton QUEST
+    /dt Xenshia looton QUEST
+    /dt Xunshia looton QUEST
+    /dt Xonshia looton QUEST
+    /dt Ophelia looton QUEST
+    /dt Ophemia looton QUEST
+    /dt Ophenia looton QUEST
+    /dt Opheoia looton QUEST
+    /dt Ophesia looton QUEST
+    /dt Opheyia looton QUEST
+    /dt Ophezia looton QUEST
+    /dt Shinxia looton QUEST
+    /dt Shenxia looton QUEST
+    /dt Shanxia looton QUEST
+    /dt Shynxia looton QUEST
+    /dt Drexia looton QUEST
+    /dt Xiexa  looton QUEST
+    /dt Cereborn looton QUEST
+    /dt Erinyas looton QUEST
+/return
+
+Sub KodTaz
+    /dt Sadelia looton QUEST
+    /dt Aergia looton ALL
+    /dt Xinshia looton QUEST
+    /dt Xenshia looton QUEST
+    /dt Xunshia looton QUEST
+    /dt Xonshia looton QUEST
+    /dt Xepatia looton QUEST
+    /dt Ophemia looton QUEST
+    /dt Ophenia looton QUEST
+    /dt Opheoia looton QUEST
+    /dt Ophesia looton QUEST
+    /dt Ophexia looton QUEST
+    /dt Opheyia looton QUEST
+    /dt Ophezia looton QUEST
+    /dt Shynxia looton QUEST
+    /dt Ertris looton QUEST
+    /dt Drexia looton QUEST
+    /dt Xiexa looton QUEST
+    /dt Cereborn looton QUEST
+    /dt Eurydice looton QUEST
+    /dt Erisa looton QUEST
+    /dt Mluian looton QUEST
+/return 

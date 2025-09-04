@@ -98,6 +98,7 @@ Sub Events_Curing_Background
 
 Sub Event_AutoCureMTOn
 	/doevents flush AutoCureMTOn
+	/if (!${Select[${Me.Class.ShortName.},CLR,DRU,SHM]}) /return 
 	/echo \agNow Automatically Curing MT
 	/varset bln_autoCureMT TRUE
 /return 
@@ -208,7 +209,7 @@ Sub resetCureState
 |-- Check if I need a cure (all classes)
 Sub chkNeedCure
 	|-- Check Need cure is disabled for OMM since we are only caring about Mark
-	/if (${bln_OMMEngaged}) /return
+	/if (${bln_OMMEngaged} || ${Zone.ShortName.Equal[arena]}) /return
 	|-- If I have bln_autoCureMT Set to TRUE, always check if the MT needs cure and do it proactively
 	/if (${bln_autoCureMT}) /call cureMTAuto
 	|-- Verify that I actually have debuffs even if it says i need to cure, reset that
@@ -700,14 +701,15 @@ Sub handleCureRequest(string _name, int _id, string _cureType, int _counters, bo
 
 
 |${Group.Member[${gm}].Name} ${Group.Member[${gm}].ID} disease ${gcount[${i}]} TRUE
-Sub handleCureMarkOfDeath(string _name, int _id, bool _group, int _counters) 
-	/echo \a-w      handleCureMarkOfDeath\aw(\ag${_name}\aw) Group? \ag${_group} \awCounters? \ag${_counters}
-	/declare str_cureToUse 		string local ${str_cure_disease}
-	/declare int_countersCured 	int    local 18
+Sub handleCureMarkOfDeath(string _name, int _id, bool _group, int _dCount) 
+	|/1	handleCureMarkOfDeath(${_name}) Group? ${_group} Counters? ${_dCount}
+	/echo \a-w      handleCureMarkOfDeath\aw(\ag${_name}\aw) Group? \ag${_group} \awCounters? \ag${_dCount}
+	/declare str_cureToUse 		string   local ${str_cure_disease}
+	/declare int_countersCured 	int      local 18
 	/declare int_startCount   	float    local 1
 	/declare int_finalCount     float    local 1
 
-	/varcalc int_startCount ${Math.Abs[${Math.Calc[${_counters} / ${int_countersCured}]}]}
+	/varcalc int_startCount ${Math.Abs[${Math.Calc[${_dCount} / ${int_countersCured}]}]}
 	/varcalc int_finalCount ${Math.Abs[${Math.Calc[${int_startCount} / ${int_groupClerics}]}]}
 
 	/varcalc int_finalCount ${int_finalCount} * 100
@@ -715,15 +717,24 @@ Sub handleCureMarkOfDeath(string _name, int _id, bool _group, int _counters)
 	/varset  int_finalCount ${Int[${int_finalCount}]}
 	/varcalc int_finalCount ${Int[${Math.Calc[${int_finalCount}/100 + 1]}]}
 
-	/varcalc _counters ${Math.Calc[${_counters} / (${int_countersCured}*${int_finalCount})]}
-
 	| Note since the server is janky and not calculating counters except for the initial counter we
 	| have to cast more than once. All clerics in group will cast at least once.
-	/echo \ar int_startCount: ${int_startCount} int_groupClerics: ${int_groupClerics} int_finalCount: ${int_finalCount}
-
+	
+	/doevents GazeYou
 	/if (${_group} && ${Me.Class.ShortName.Equal[CLR]}) /varset str_cureToUse ${str_heal_group}
-	/call castCure ${_name} ${_id} "${str_cureToUse}" ${int_finalCount} disease ${_counters} TRUE
-	/1 Attempted to cure ${_name} of Mark
+	/echo \ao CastCure =>\awstr_cureToUse \ag${str_cureToUse} \awint_startCount: \ag${int_startCount} \awint_groupClerics: \ag${int_groupClerics} \awint_finalCount: \ag${int_finalCount}
+	| recheck one last time so we don't double this up!
+	/if (!${_group}) {
+		/declare i int local 0
+		/sqlite advquery CureMarkOfDeath docure SELECT * FROM MarkOfDeath WHERE SpawnID = ${_id};
+		/if (!${sqlite.rows[docure]}) {
+			/shout Already cured ${_name} ${_id}
+			/return
+		}
+	} else {
+		/dgge /warp id ${Me.ID}
+	}
+	/call castCure ${_name} ${_id} "${str_cureToUse}" ${int_finalCount} disease ${_dCount} TRUE
 	/call TrueTarget ${int_MTID}
 /return 
 
@@ -735,9 +746,8 @@ Sub castCure(string _name, int _id, string _spell, int _castCount, string _cureT
 	/declare i 			int local 1
 	/declare c 			int local 0
 	/declare qs 		string 	local	NULL
+	/if (${Me.Casting.ID}) /call Interrupt
 
-	/call getDebuffPluginQuery ${_cureType}
-	/varset qs ${Macro.Return}
 
 	/for i 1 to ${_castCount}
 		/echo \agCasting ${i} =>  ${_castCount}
@@ -750,7 +760,8 @@ Sub castCure(string _name, int _id, string _spell, int _castCount, string _cureT
 		|-- Sanity check their cure request with a query *(if we arent forced!)
 		:counterCheck
 		/if (!${_isForced}) {
-			/call getCureCounters ${_name} "${qs}"
+			/call getDebuffPluginQuery ${_cureType}
+			/call getCureCounters ${_name} "${Macro.Return}"
 			/varset c ${Macro.Return}
 			/if (!${c}) {
 				/echo \ao${_name} \agdid NOT need further ${qs} curing, returning
@@ -763,7 +774,7 @@ Sub castCure(string _name, int _id, string _spell, int _castCount, string _cureT
 		| If I am a cleric and this is unforced, quickly check MT health
 		/if (${Me.Class.ShortName.Equal[CLR]} && !${_isForced}) /call chkHeal_MT
 		/call TrueTarget ${_id}
-		/if (${Me.Casting.ID}) /call Interrupt
+		/doevents GazeYou
 		/call MQ2Cast "${_spell}" gem4 8s
 	/next i 
 	:return

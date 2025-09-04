@@ -1,0 +1,111 @@
+|------------------------------------------------------------| 
+|          LangHelper.mac 
+| 
+|      Last Modified by: TheDroidUrLookingFor 
+| 
+|------------------------------------------------------------| 
+#turbo
+|------------------------------------------------------------| 
+|          Defines 
+|------------------------------------------------------------| 
+|#define CHATMETHOD       "/i say" 
+|#define CHATMETHOD       "/gsay" 
+#define CHATMETHOD1       "/echo" 
+|------------------------------------------------------------| 
+|          Events 
+|------------------------------------------------------------| 
+#Event SWITCH "#1# tells the group, in #2#, '#*#'"
+#Event CURLANG "Current Language is #1#. (#2#)"
+
+|------------------------------------------------------------| 
+|          Main Rountine 
+|------------------------------------------------------------| 
+Sub Main
+/call Declares
+   CHATMETHOD1 
+   CHATMETHOD1 "Newbie Language Bot: Version ${botversion} started!"
+   CHATMETHOD1 
+    
+   /if (!${Target.ID}) { 
+      CHATMETHOD1 "[NLB]: Target the Student when you run this macro to designate him."
+       CHATMETHOD1 "[NLB]: No master set."
+        CHATMETHOD1 "[NLB]: Shutting down"
+      /delay 20 
+      } else { 
+   /if (${Target.Type.Equal[PC]}) { 
+   /varset Master ${Target} 
+   /varset MasterID ${Target.ID}
+   /varset LangUser ${Target}
+      } else { 
+   /if (${Target.Type.Equal[NPC]}) { 
+      CHATMETHOD1 "[NLB]: Target the Student when you run this macro not an NPC to designate him."
+       CHATMETHOD1 "[NLB]: No master set."
+        CHATMETHOD1 "[NLB]: Shutting down"
+      /end 
+      } 
+   } 
+}
+	/language
+	:Langloop 
+   { 
+      /gsay "zOMG Learn faster faster faster" 
+      /gsay "zOMG Learn faster faster faster.... not fast enough!" 
+      /gsay "Do you have any idea how easy it is to learn a language?!" 
+      /gsay "Study Study Study Hard" 
+      /gsay "Practice makes stinkin perfect" 
+   } 
+   /delay 5
+   /doevents
+   /goto :Langloop 
+/return
+|------------------------------------------------------------| 
+|          End Main Rountine 
+|------------------------------------------------------------| 
+|------------------------------------------------------------| 
+|          Other Rountines
+|------------------------------------------------------------|
+Sub Declares
+	/declare BotLang         string outer
+	/declare BotLangNum      int outer
+	/declare LangUser        string outer
+	/declare UserLangName    string outer
+    /declare Master          string outer 
+    /declare MasterID        string outer
+    /declare botversion      string outer 1.0
+/return 
+|------------------------------------------------------------| 
+|          End Other Rountines
+|------------------------------------------------------------|
+|------------------------------------------------------------| 
+|          Events 
+|------------------------------------------------------------|
+Sub Event_SWITCH(Line,LngUser,LngName)
+/if (${LngUser.Equal[${Master}]} && ${UserLangName.NotEqual[${LngName}]}) {
+/varset UserLangName ${LngName}
+/varset LangUser ${LngUser}
+
+/if (${LngName.NotEqual[${BotLang}]}) {
+/declare i int local 1
+	/for i 0 to 25
+		/if (${Me.Language[${i}].Equal[${LngName}]}) {
+		/echo Switching Languages to: ${LngName}
+			/language ${i}
+			/varset BotLang $(LngName)
+			/varset BotLangNum ${i}
+		}
+	/next i
+}	
+}
+/return
+
+Sub Event_CURLANG(Line,LngName,LngNum)
+/varset BotLang $(LngName)
+/varset BotLangNum ${LngNum}
+/return
+
+Sub Event_SWITCHM
+/language
+/return
+|------------------------------------------------------------| 
+|          End Events 
+|------------------------------------------------------------|

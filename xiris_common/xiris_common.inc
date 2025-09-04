@@ -31,6 +31,7 @@ REVISION HISTORY
 	12.29.22	xiris 	Removed Bufflines init/file due to it not being used for the foreseeable future.
 	12.31.22	xiris	Moved Clicky/AA/Burns to their own file
 	01.05.23	xiris	Changed logic in chkTargetStatus method to be more streamlined
+	06.21.25	xiris	Added Melee Override Event (to turn on melee for any class)
 ______________________________________________
 
 **|
@@ -104,7 +105,7 @@ ______________________________________________
 #EVENT ChangeAP				"#1# tell your raid#*#'ChangeAP #2#'"
 #EVENT ChangeAP 			"[ #1# #*#]#*#ChangeAP #2#"
 
-
+| These could be in BURN but leaving them here
 #EVENT UseStaunchRecovery   "#*#DoStaunchRecovery#*#"
 #EVENT UseIntensity			"#*#DoIntensity#*#"
 #EVENT UseServants			"#*#DoServants#*#"
@@ -146,8 +147,13 @@ ______________________________________________
 #EVENT RefreshXTarget		"#1# tell your raid#*#'RefreshXTarget#*#'"
 #EVENT RefreshXTarget		"#*#RefreshXTarget#*#"
 
+#EVENT MELEE_OVERRIDE 	"#1# tells the group#*#'MeleeOverride #2#'"
+#EVENT MELEE_OVERRIDE	"#1# tells you#*#'MeleeOverride #2#'"
+#EVENT MELEE_OVERRIDE	"#1# tells the raid#*#'MeleeOverride #2#'"
+#EVENT MELEE_OVERRIDE	"[ #1# #*#]#*#MeleeOverride #2#"
+
 Sub InitEvents_Common
-	/call RegisterBackgroundEvents 	Events_Common 5
+	/call RegisterBackgroundEvents 	Events_Common 17
 	/call RegisterRaidEvents 		Events_Raid 9
 	/call RegisterRapidEvents 		Events_Rapid 2
 /return
@@ -189,6 +195,7 @@ Sub Events_Common
 	/doevents SetupRaid
 	/doevents RefreshXTarget
 	/doevents FixCorpses
+	/doevents MELEE_OVERRIDE
 /return
 
 Sub Events_Rapid
@@ -226,6 +233,7 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/declare 	CasterClasses 			string	outer	ENC,MAG,NEC,WIZ
 	/declare 	RangedClasses			string	outer	RNG
 	/declare 	str_raidGroupMode		string  outer   DEFAULT
+	/declare 	bln_meleeOverride		bool    outer   FALSE
 	/declare 	RaidGroupLeaders[9] 	string  outer 	NULL 
 	/declare 	RaidDIClerics[6] 		string  outer 	NULL
 
@@ -234,8 +242,6 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	|-- SQLite Testing
 	| character database
 	/declare _pathDB					string outer C:\Program Files (x86)\EQ\ROF2 MQNext\macros\xiris_common\sql\XirisBot.db
-
-
 
 	/declare timer_di_request timer outer 30s
 	/declare i int local 0
@@ -468,6 +474,9 @@ Sub EVENT_KillMob(_line, _sender, _eventParams)
 |-- Engage Target Sub, handles class specific modifications (minor)
 Sub EngageTarget(int _targetID)
 	/if (!${_targetID}) /return
+	| Don't switch targets if you are the MT on AMV or OMM, or it will suck for you
+	
+	/if (${Me.ID} == ${int_MTID} && (${bln_amvEngaged} || ${bln_OMMEngaged})) /return
 	/if (${bln_following}) /call StopFollowing
 	/echo \awEngaging Target \ag${Spawn[id ${_targetID}].Name} \ay(${_targetID}) \ao${Time.Time24} \ay${MacroQuest.Running}
 	
@@ -482,7 +491,7 @@ Sub EngageTarget(int _targetID)
 	
 	| Target NPC
 	/call TrueTarget ${_targetID}
-	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) /call EngageTargetMelee
+	/if (${bln_meleeOverride} || ${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) /call EngageTargetMelee
 
 	| Sicc Pet
 	/if ((${Select[${Me.Class.ShortName},MAG,BST,NEC,ENC,SHM]}) && ${Pet.ID}) /call chkPetAttack
@@ -661,7 +670,7 @@ Sub Disengage
 		/squelch /attack off
 		/stick off
 	}
-	/if (${str_classArchetype.Equal[CASTER]} && ${Pet.ID}) /pet back off
+	/if (${Pet.ID}) /pet back off
 /return
 
 
@@ -891,6 +900,8 @@ Sub SetupRaid(string _mode)
 	/declare DICount		int local
 	/declare DIList			string local
 
+	/declare myGroupNum		int local 0
+
 	/declare i int local
 	/declare j int local
 
@@ -909,6 +920,7 @@ Sub SetupRaid(string _mode)
 			/for j 1 to ${groupCount}
 				/varset	RaidGroupLeaders[${j}]  ${leaderList.Arg[${j},|]}
 				/echo \ag Raid Group Leader \aw[\ag${j}\aw] \ay${RaidGroupLeaders[${j}]}
+				/if (${Group.Leader.Name.Equal[${RaidGroupLeaders[${j}]}]}) /varset myGroupNum ${j}
 			/next j
 
 			| Set the Divine Intervention Information
@@ -1806,3 +1818,7 @@ Sub Event_SkillCheck(string _line, string _sender, string _eventParams)
 /return
 
 
+Sub EVENT_MELEE_OVERRIDE(_line, _sender, _eventParams)
+	/echo \agMELEE_OVERRIDE \aw${_sender} \ar${_eventParams}
+	/varset bln_meleeOverride ${_eventParams}
+/return

@@ -25,7 +25,7 @@ Sub Events_OOW_MPG_Endurance
     /if (${Me.Name.Equal[Xiris]} && ${SpawnCount[npc Ansdaicher]}) /call chkAncients 
     /if (${Me.Class.ShortName.Equal[ENC]}) /call chkEnduranceMez
     /if (${Me.Class.ShortName.Equal[PAL]}) /call chkEnduranceAdds
-    /if (${Me.Class.ShortName.Equal[WAR]}) /call chkEnduranceAdds
+    /if (${Me.Class.ShortName.Equal[WAR]} && ${Me.Name.NotEqual[Xiris]}) /call chkEnduranceAdds
 /return 
 
 Sub chkAncients

@@ -14,6 +14,7 @@ REVISION HISTORY
 	11.24.2021	xiris	Changed target looping to use XTarget since that is now supported on EMU
 	01.09.2022	xiris	Made sure to turn aggro off when only hitting one mob
 	09.15.2022	xiris	Slight re-write of the offtank logic to definitively fix the 'stuck on corpse' issue
+	02.09.2023	xiris 	Fixed the trying to offtank NPCs in area that aren't aggro.
 ______________________________________________
 **|	
 #EVENT OFFTANKON			"#1# tells the group#*#'OfftankOn#*#'"
@@ -125,9 +126,8 @@ Sub chkOffTanking
 		/doevents OFFTANKOFF
 		/call TrueTarget ${NearestSpawn[${i}, npc radius ${int_offtankRadius} range 46 80 noalert 5].ID}
 		:CheckAggro
-		/if (!${Bool[${Me.TargetOfTarget.ID}]} || (${ExcludeList.Find[${Target.CleanName}]})) /goto :nextTarget
+		/if (!${Bool[${Me.TargetOfTarget.ID}]} || !${Me.TargetOfTarget.ID} || (${ExcludeList.Find[${Target.CleanName}]})) /goto :nextTarget
 		/if (${Me.TargetOfTarget.Class.ShortName.Equal[WAR]} || ${Me.TargetOfTarget.Class.ShortName.Equal[PAL]} || ${Me.TargetOfTarget.Class.ShortName.Equal[SHD]}) /goto :nextTarget
-
 		/if ((${Target.Distance3D} < ${int_offtankRadius})) {
 			/call aggroByID ${Target.ID}
 		} else {

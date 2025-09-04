@@ -1,6 +1,6 @@
 |**
 ----------------------------
-BOT_LOADER.mac
+XIRIS_BOT.mac
 ----------------------------
 This macro is configured for use by my crew based on class
 Modify for specific toons
@@ -17,7 +17,7 @@ REVISION HISTORY
 	05.01.23	xiris	Consolidated the melee endurance classes into a single statement
 **|
 
-#turbo 60
+#TURBO 120
 #define INI_CHAR xiris_class_ini/BOT_${Me.Class.ShortName}_${Me.CleanName}.ini
 
 	
@@ -27,7 +27,7 @@ REVISION HISTORY
 Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint, string _assistArgs)
 	
 	
-	/echo \agYou are now in \arXIRIS: \aoBOT_LOADER.mac
+	/echo \agYou are now in \arXIRIS: \aoXIRIS_BOT.mac
 
 	| set default values here in case we just started the loader with no args
 	/declare	str_defTank1		string	outer	${Ini[INI_CHAR,Settings,defaultTank1,Xiris]}

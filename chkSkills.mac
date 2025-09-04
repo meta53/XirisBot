@@ -1,0 +1,55 @@
+|**
+----------------------------
+chkSkills.mac version 08.20.22
+----------------------------
+This macro creats the an output file (chkSkills.ini) with entries for each toon
+______________________________________________
+REVISION HISTORY
+    02.11.23	xiris	INITIAL REVISION
+	
+**|
+
+#define chkSkillINI TestSuite/chkSkills.ini
+
+Sub Main
+	/echo skill check
+	/call chkBeg
+/return
+
+Sub chkBeg 
+	/if (${Me.Skill[Begging]} < 350) /call dsWriter Begging ${Me.Skill[Begging]}
+/return 
+
+Sub chkWorn
+	/echo chkWorn
+	/declare i int local
+	/declare name string local
+	/declare effect string local
+	/declare id int local
+	/for i 1 to 22
+		/if (${Me.Inventory[${i}].ID} && ${Me.Inventory[${i}].Haste} ) {
+			/varset name 	"${Me.Inventory[${i}].Name}"
+			/varset effect	"${Me.Inventory[${i}].Haste}%"
+			/varset id 		${Me.Inventory[${i}].ID}
+			/echo Haste Item found : ${Me.Inventory[${i}].Name} (${Me.Inventory[${i}].ID}) 
+			/call dsWriter ${name} ${effect} ${id} WORN
+					
+		}
+	/next i
+/return
+
+
+
+Sub dsWriter(string skillName, int skillValue)
+	/ini "chkSkillINI" "${Me.CleanName}" "${skillName}" "${skillValue}"
+/return
+
+
+
+
+
+
+
+
+
+

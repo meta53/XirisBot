@@ -39,11 +39,11 @@ Plugin available in modern compiles that replacing for loops looking at group, a
 #### Everquest Build
 While Xiris bot would work with UF, the MQ2 Plugin requirements mean that only the ROF2 build of Everquest will work properly without a huge degredation of service and code changes.
 ### Loading
-#### bot_loader.mac
-This macro will load the class specific macro. Think of this as a bootstrapper, or loader. The best way to accomplish loading the macro on all toons is to create a single hotkey on your tank wit the line: ```/dgza /mac bot_loader ${Me.Name} Xiria Xirea 85```  
+#### xiris_bot.mac
+This macro will load the class specific macro. Think of this as a bootstrapper, or loader. The best way to accomplish loading the macro on all toons is to create a single hotkey on your tank wit the line: ```/dgza /mac xiris_bot ${Me.Name} Xiria Xirea 85```  
 The arguments in that command can be described as
 1. `/dgza` this is a MQ2Dannet command that *everyone in zone do this command*
-2. `/mac bot_loader` load this macro
+2. `/mac xiris_bot` load this macro
 3. `${Me.Name}` This toon is MT - note this could be a hard set name, however, in a hotkey this will resolve to whomever clicked the hotkey. Allows for easy copying of UIs and hotkeys between your tanks and not having to edit every hotkey.
 4. `Xiria Xirea` These toons are ST and TT
 5. `85` This is the default healpoint for the MT
@@ -96,6 +96,7 @@ Hotkey that is used on the MT to call assist on the MT's current target, and has
 ### Buffing
 Hotkey or command that is used to tell all available buffers to walk through the raid buffing each group (and single target buff defined memembers with special buffs)
 `/rs doraidbuff ALL`
+Note: You should create a spell set named "buff" that holds the buff spell setup, and "default" for your default setup.
 
 ### Debuffing
 Hotkey or command that is used to tell all available debuffers to debuff the current target. Note: usually debuffers will also debuff on the Attack call, but sometimes you want to predebuff a target (if its rooted like in Tacvi) or force them to re-debuff all at the same time.
@@ -193,6 +194,7 @@ mq2cast, mq2dannet, mq2exchange, mq2melee
 9. `/dgt DoInfusion` Tells everyone to hit Infusion of the Faithful AA
 10. `/dgt SetupRaid` A mostly internal or event used event. Describes the raid mode currerntly running, defaults to.. DEFAULT. Calls SetupRaid which pulls from xiris_common INI. Sets lists of group leaders, and DI available clerics
 12. `/dgt RefreshXTarget` Used to manually force raid to refresh their XTarget list.
+13. `/dt MeleeOverride TRUE|FALSE` Used to manually force a toon to start/stop meleeing (ie: casters/priests)
 ### xiris_curing.inc
 #### Overview
 XirisBot curing handlers. This library has several events that can be fired via hotkey, or auto cures driven by the curing section in the toon ini files. Note that this file is responsible for a toons self-need-cure checks - something to be familiar with.

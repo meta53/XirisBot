@@ -4,6 +4,12 @@ BOT_PULL.mac
 ----------------------------
 This macro is configured for use by an SK, but may work for any class
 Modify the BOT_PULL_zoneinfo.ini file for use in a specific zone
+
+Usage:
+RAID:	/mac bot_pull 1000 rs camp TRUE TRUE TRUE
+GROUP:	/mac bot_pull 1000 gsay camp TRUE TRUE TRUE
+SOLO:	/mac bot_pull 1000 gsay camp TRUE FALSE TRUE
+
 ______________________________________________
 REVISION HISTORY
     09.16.10    xiris  	Initial Revision
@@ -45,22 +51,6 @@ REQUIRED INCLUDES
 #EVENT Zoned                "LOADING, PLEASE WAIT..."
 #EVENT NoLOS				"#*#you cannot see your target#*#"
 #EVENT TooClose				"#*#your target is too close#*#"
-
-
-Sub Event_TooClose
-	/doevents flush TooClose
-	/echo Event_TooClose
-	/varset bln_tooClose TRUE
-	
-/return
-
-Sub Event_NoLOS
-	/doevents flush NoLOS
-	/echo Event_NoLOS
-	/varset bln_noLOS TRUE
-	
-/return
-
 
 
 Sub Main(int _pull_dist, string _channel, string _campName, bool _useDownFlags,  bool _usePull, bool _useDS)
@@ -106,16 +96,22 @@ Sub Main(int _pull_dist, string _channel, string _campName, bool _useDownFlags, 
 			/docommand /${cmdChannel} Disengage
 			/if (${bln_looting}) /call chkLoot
 			/if (!${bln_looting}) /hidecorpse npc
+			/if (${Me.Class.ShortName.Equal[SHD]} && ${Me.PctMana} < 10) {
+				/echo OUT OF MANA
+				/delay 10
+				/goto :MainLoop
+			}
 		}
 		
 		|-- run the pull/kill segment
 		:getAndKill
+
 			/attack off
 			/call getTarget
 			/if (${Target.Distance} > 20) /call pullTarget
 			/if (!${Target.ID}) /goto :getAndKill
 			/if (${Target.ID}) /call killTarget
-			/docommand /${cmdChannel} BackOff
+			|/docommand /${cmdChannel} BackOff
 			/echo We have killed ${int_killCount} mobs
 
 	/goto :MainLoop
@@ -150,7 +146,7 @@ Sub setRSTVars
 Sub setTGTAlert
 	/echo setTGTAlert ${Target.ID} ${Target.Name}
 	/alert add 1 id ${Target.ID}
-	/keypress esc
+	/target clear
 /return
 
 |**
@@ -170,7 +166,8 @@ Sub getTarget
 	:AcquireLoop
 		| set the vars like target validity to FALSE so we can check
 		/call setRSTVars
-		/echo SpawnCount: ${SpawnCount[npc radius ${int_campRadius} zradius ${int_zRadius}]}
+		/echo \agint_alert2Radius:\aw${int_alert2Radius} \ag int_campRadius:\aw${int_campRadius} \ag int_zRadius:\aw${int_zRadius} \ag int_minTLevel:\aw${int_maxTLevel} \ag int_maxTLevel:\aw${int_maxTLevel}
+		/echo \awSpawnCounts: \ag:Camp \aw${SpawnCount[npc radius ${int_campRadius} zradius ${int_zRadius}]} \ag:Alert2 \aw${SpawnCount[npc alert 2 radius ${int_alert2Radius} range ${int_minTLevel} ${int_maxTLevel} zradius ${int_zRadius}  noalert 1]} \ag:Normal \aw${SpawnCount[npc noalert 1 radius ${int_maxRadius} range ${int_minTLevel} ${int_maxTLevel} zradius ${int_zRadius}]}
 		/echo Target.ID: ${Target.ID}
 		|----------If I am getting smacked in camp, kill it
 		/if (${SpawnCount[npc radius ${int_campRadius} zradius ${int_zRadius}]} > 0) {
@@ -269,6 +266,13 @@ Sub chkTargetValid
 		/return
 	}
 
+	|--check if the path to target is too far
+	/if (${Navigation.PathLength[target]} > ${int_maxRadius}) {
+		/echo INVALID Path to Target too far!
+		/call setTGTAlert
+		/return
+	}
+
 	|--check to see if its a pet
 	/if (${Target.Name.Find[s_pet]}) { 
 		/echo INVALID Target a pet, next
@@ -337,6 +341,7 @@ Sub setCamp
 /return
 
 Sub resetCamp
+/if (!${bln_usePull}) /return
 	/echo \awResetting to Camp \ag${str_campName}
 	/docommand /${cmdChannel} NavToWP ${str_campName}
 	| -- don't run self back to camp its not necessary run to my pull spot instead
@@ -406,8 +411,10 @@ Sub pullTarget
 			} else {
 				/echo \arNo Path to Target, resetting at camp
 				/warp wp ${str_campName}
+				 /goto :return
 			}
-			
+		/if (${Target.Aggressive}) /goto :ReturnWithPull
+		
 		/if (!${Target.LineOfSight} || ${Target.Distance3D} > ${int_castDistance}) {
 			/delay 10
 			/goto :RunningToTarget
@@ -442,28 +449,25 @@ Sub pullTarget
 			:AggroDistCheck 
 			| Am I close enough to aggro?
 			/if (${Target.Distance3D} > 200 && ${bln_usePull}) /goto :RunningToTarget
-			/if (${Target.Distance3D} > 25 && !${bln_usePull}) /goto :RunningToTarget
+			/if (${Target.Distance3D} > 15 && !${bln_usePull}) /goto :RunningToTarget
 
 			/if ((${bln_usePull} && (${Target.Distance} < ${int_castDistance}) && ${Target.LineOfSight}) || (!${bln_usePull} && (${Target.Distance} < 25 && ${Target.LineOfSight}))) {
 				| I am close enough, call aggro sub.
 				/echo \ao Attempting to Aggro Target
 				/call AggroTarget
+				/doevents
+				/if (${bln_noLOS}) {
+					/goto :RunningToTarget
+					/varset bln_noLOS FALSE
+				}
 				/varcalc attempt ${attempt} + 1
 				/echo \aoAggro Attempt return ${Macro.Return}
 				/if (${Me.TargetOfTarget.Name.Equal[${Me.Name}]}) 	/goto :ReturnWithPull
 				/if (${Macro.Return.Equal[NOLOS]})    				/goto :RunningToTarget
 				/if (${Macro.Return.Equal[CAST_FIZZLE]})    		/goto :AggroCheck
 				/if (${Macro.Return.Equal[NOTARGET]}) 				/goto :return
-				/if (${Macro.Return.Equal[NOMANA]})					/goto :RunningToTarget
-				/if (${Macro.Return.Equal[SUCCESS]})  {
-					/doevents NoLoS 
-					/if (${bln_noLOS}) {
-						/varset bln_noLOS FALSE
-						/goto :RunningToTarget
-					} else {
-						/goto :ReturnWithPull 
-					}
-				}
+				/if (${Macro.Return.Equal[NOMANA]})					/goto :NoMana
+				/if (${Macro.Return.Equal[SUCCESS]})  				/goto :ReturnWithPull 
 			} else { 
 				/goto :RunningToTarget
 			}
@@ -484,6 +488,7 @@ Sub pullTarget
 				/goto :return
 			}
 			
+			:NoMana
 			:ReturnLoop
 				/delay 10
 				/varcalc dist ${Math.Distance[${Me.Y},${Me.X},${Me.Z}:${D1Y},${D1X},${D1Z}]}
@@ -499,7 +504,9 @@ Sub AggroTarget
 	/if (${Navigation.Active}) /navigate stop
 	/declare ret string local FAILED
 	:TargetAggroCheck
-	/if (!${Target.ID}) {
+	/if (${Target.Aggressive}) {
+		/varset ret SUCCESS
+	} else /if (!${Target.ID}) {
 		/varset ret NOTARGET
 	} else /if (!${Target.LineOfSight}) {
 		/varset ret NOLOS
@@ -510,6 +517,7 @@ Sub AggroTarget
 		:AttemptAggro
 		/if (!${bln_usePull}) {
 			/attack on
+			/face fast
 			/varset ret SUCCESS
 			/goto :return
 		}
@@ -583,6 +591,7 @@ Sub killTarget
 			/if (${Navigation.Active}) /navigate stop
 		}
 	} else {
+		/face fast
 		/goto :killMob
 	}
 
@@ -632,6 +641,7 @@ Sub killTarget
 	
 	|--while in combat do these things
 	:combatLoop
+	
 		/call chkCombatState
 		/if (${int_targetID} != ${Target.ID}) /return
 		/if (${Target.Type.NotEqual[NPC]}) /return
@@ -651,12 +661,33 @@ Sub killTarget
 				/echo ${Me.SpellReady[${spell_aehate}]} Cast ${spell_aehate} ${spell_aehateGem} 5s
 				/call MQ2Cast "${spell_aehate}" ${spell_aehateGem}
 			}
+			/stick 10
+			/face fast
+			/attack on
 			/goto :combatLoop
 		} else {
+			/stick off
 			/echo \agTarget is dead, return
 		}
 /return
 
+
+
+Sub Event_TooClose
+	/doevents flush TooClose
+	/echo Event_TooClose
+	/varset bln_tooClose TRUE
+	
+/return
+
+Sub Event_NoLOS
+	/doevents flush NoLOS
+	/echo Event_NoLOS
+	/nav target
+	/delay 10
+	/varset bln_noLOS TRUE
+	
+/return
 
 
 |**
@@ -1038,6 +1069,9 @@ Sub variant_initialize(int _pull_dist, string _channel, string _campName, bool _
 	/declare D1X int outer ${Me.X}
 	/declare D1Y int outer ${Me.Y}
 	/declare D1Z int outer ${Me.Z}
+	
+	|-- yet at pet classes
+	/dga /pet hold on
 
 	|--set the camp spot
 	/call setCamp
@@ -1050,24 +1084,34 @@ Sub variant_initialize(int _pull_dist, string _channel, string _campName, bool _
 	/if (${Defined[_pull_dist]}) {
 		/varset int_maxRadius ${_pull_dist}
 	}
+	
+	
 
 
 	|--how far we can go for alert 2 mobs (note, seperate from maxRadius)
 	/declare int_alert2Radius		int 	outer 	
-	/varcalc int_alert2Radius		${int_maxRadius}+500
+	/varcalc int_alert2Radius		${int_maxRadius}+1500
 
 	|-- use 40 for POFire
 	/declare int_minZHeight			int		outer 	0
 	/declare int_maxZHeight			int		outer	0
-	/declare int_zRadius			int     outer   0
-	/varcalc int_minZHeight			${Me.Z} - 50
-	/varcalc int_maxZHeight			${Me.Z} + 200
+	/declare int_zRadius			int     outer   80
+	/varcalc int_minZHeight			200
+	/varcalc int_maxZHeight			200
+
+
+	
 	/varcalc int_zRadius ${int_maxZHeight} - ${int_minZHeight}
+
+	/echo ${int_maxRadius} ${int_alert2Radius} ${int_zRadius}
+
 	/declare int_closeEnoughRadius	int		outer   50
 
 	|--target information
-	/declare int_maxPullCount		int		outer   4
-	/declare int_minTLevel			int		outer	8
+	/declare int_maxPullCount		int		outer   3
+  
+
+	/declare int_minTLevel			int		outer	1
 	/declare int_maxTLevel			int		outer	75
 	/declare bln_validTGT			bool	outer	FALSE
 	/declare bln_TGTDead			bool	outer	FALSE
@@ -1167,7 +1211,18 @@ Sub SetAlerts
 		/varset sz draniksewers
 	}
 
-    | handle setting maxpull from INI
+	| handle setting maxpull from INI
+	/declare zmin int local ${Ini[INI_zoneInfo,${sz},MIN_Z,${int_minZHeight}]}
+	/declare zmax int local ${Ini[INI_zoneInfo,${sz},MAX_Z,${int_maxZHeight}]}
+    /varcalc int_minZHeight ${Me.Z} - ${zmin}
+    /varcalc int_maxZHeight ${Me.Z} + ${zmax}
+	/varcalc int_zRadius ${int_maxZHeight} - ${int_minZHeight}
+	
+	/echo ${Ini[INI_zoneInfo,${sz},MIN_Z]} ${Ini[INI_zoneInfo,${sz},MAX_Z]}
+	/echo int_minZHeight ${int_minZHeight} int_maxZHeight ${int_maxZHeight} zmin ${zmin} zmax ${zmax}
+	
+
+	  | handle setting maxpull from INI
     /varset int_maxPullCount ${Ini[INI_zoneInfo,${sz},MAXPULL,3]}
 
 	| set the entry count

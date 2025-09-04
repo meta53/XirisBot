@@ -1127,7 +1127,7 @@ Sub heal_chSwitch(int _chainID, string _targetName)
 |-------------------------------------------------------------------------------- 
 |SUB: Check Resurrection
 |--------------------------------------------------------------------------------
-Sub chkRessurection
+Sub chkResurrection
 
 	| find all corpses in range	
 	/if (${timer_rezCheck}) /return
@@ -1137,13 +1137,13 @@ Sub chkRessurection
 	/if (!${SpawnCount[corpse radius ${int_range_rez}]}) /return
 	/echo \aoPerforming Rezzes
 	| if corpses, then aerez
-	/call RessurectCorpses ${int_corpses}
+	/call ResurrectCorpses ${int_corpses}
 	/varset timer_rezCheck 30s
 	/echo \agRessurections \awcomplete \ag${timer_rezCheck} \aountil recheck.
 /return
 
 
-Sub RessurectCorpses 
+Sub ResurrectCorpses 
 	/declare int_corpseCount 					int local ${SpawnCount[corpse radius ${int_range_rez}]}
 	/declare arr_corpses[${int_corpseCount}]	int	local 0
 	/declare i									int local 0
