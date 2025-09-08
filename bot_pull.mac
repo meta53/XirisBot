@@ -166,7 +166,7 @@ Sub getTarget
 	:AcquireLoop
 		| set the vars like target validity to FALSE so we can check
 		/call setRSTVars
-		/echo \agint_alert2Radius:\aw${int_alert2Radius} \ag int_campRadius:\aw${int_campRadius} \ag int_zRadius:\aw${int_zRadius} \ag int_minTLevel:\aw${int_maxTLevel} \ag int_maxTLevel:\aw${int_maxTLevel}
+		/echo \agint_alert2Radius:\aw${int_alert2Radius} \ag int_campRadius:\aw${int_campRadius} \ag int_zRadius:\aw${int_zRadius} \ag int_minTLevel:\aw${int_minTLevel} \ag int_maxTLevel:\aw${int_maxTLevel}
 		/echo \awSpawnCounts: \ag:Camp \aw${SpawnCount[npc radius ${int_campRadius} zradius ${int_zRadius}]} \ag:Alert2 \aw${SpawnCount[npc alert 2 radius ${int_alert2Radius} range ${int_minTLevel} ${int_maxTLevel} zradius ${int_zRadius}  noalert 1]} \ag:Normal \aw${SpawnCount[npc noalert 1 radius ${int_maxRadius} range ${int_minTLevel} ${int_maxTLevel} zradius ${int_zRadius}]}
 		/echo Target.ID: ${Target.ID}
 		|----------If I am getting smacked in camp, kill it
@@ -644,7 +644,7 @@ Sub killTarget
 	
 		/call chkCombatState
 		/if (${int_targetID} != ${Target.ID}) /return
-		/if (${Target.Type.NotEqual[NPC]}) /return
+		/if (${Target.Type.NotEqual[NPC]} && ${Target.Type.NotEqual[PET]}) /return
 		/if (${Target.Distance} > ${int_campRadius}) /goto :distanceWaitLoop 
 
 		/if (!${bln_TGTDead}) {
