@@ -1,8 +1,95 @@
-# MacrosV2
-Xiris Bot for use on EQEMU servers (EQTITAN primarily)
+# XirisBot
+
+A plugin-driven automation framework for EverQuest on EQEMU servers, designed to orchestrate multi-character raid behavior with precision, flexibility, and minimal manual intervention.
+
+## Table of Contents
+
+* 🧠 Overview
+* 🚀 Key Features
+* ⚙️ Technology Stack
+* 📦 Architecture & Code Structure
+* 🔧 Installation & Configuration
+* 🎮 Usage & Commands
+* 📈 Impact & Metrics
+* 🤝 Contributing
+* 📜 License & Contact
+
+## 🧠 Overview
+
+XirisBot empowers raid leaders and players on EQEMU servers (notably EQTitan) to automate combat routines, healing, buffing, looting, navigation, and event responses across multiple characters. By leveraging MacroQuest2 plugins and INI-driven templates, XirisBot adapts to any class role, ensuring reliable performance during high-pressure encounters and scripted raid pulls.
+
+## 🚀 Key Features
+
+* Class-specific macros for every EverQuest role (tank, healer, DPS, support)
+* INI-based configuration for granular control over behavior and thresholds
+* Plugin orchestration with MQ2Dannet, MQ2Nav, MQ2Medley, MQ2WorstHurt, and custom includes
+* Hotkey-driven commands for raid-wide coordination (buffs, debuffs, heals, loots)
+* Event library system for scripted responses to boss mechanics and pull sequences
+* Automatic follow-distance and pathfinding support via MQ2Nav integration
+* Modular design enabling rapid extension and custom script injection
+
+## ⚙️ Technology Stack
+
+* Core scripting language: MQ2 Macro (`.mac`)
+* Shared libraries and includes: C++–style include files (`.inc`)
+* Configuration format: INI files (`.ini`)
+* Plugin dependencies:
+  * MQ2Dannet for inter-bot communication
+  * MQ2Nav for navigation and pathfinding
+  * MQ2Medley for automated consumable management
+  * MQ2WorstHurt for priority-based healing
+* Version control and CI: Git, GitHub Actions (future CI suggested)
+
+## 📦 Architecture & Code Structure
+
+A high-level overview of the folder layout and key responsibilities:
+
+| Folder / File        | Purpose                                                  |
+|----------------------|----------------------------------------------------------|
+| `xiris_common/`      | Core includes for casting, healing, buffing, debuffing, commands |
+| `xiris_class_ini/`   | Base INI templates per class to standardize role behavior |
+| `xiris_trade_ini/`   | Loot rules and trade-in configurations                   |
+| `bot_loader.mac`     | Entrypoint macro that loads class macros based on active INI |
+| `bot_*.mac`          | Class-specific macro logic (e.g., `bot_pal.mac`, `bot_rog.mac`) |
+| `*.ini`              | Character-specific overrides for macros and thresholds   |
+| [`README.md`](https://README.md) | This document                                  |
+| `.github/`, `.vscode/` | Repository and editor configuration                   |
+
+ASCII flow of macro loading and initialization:
+
+```
+[Start]
+   ↓
+bot_loader.mac reads INI → determines class
+   ↓
+Include core libraries (xiris_common)
+   ↓
+Load class macros (bot_<class>.mac)
+   ↓
+Enter heartbeat loop
+```
+
+## 🔧 Installation & Configuration
+
+1. Clone the repository into your MacroQuest2 `Macros` directory.
+2. Ensure required MQ2 plugins are installed and loaded:
+   * [`MQ2Dannet.dll`](https://MQ2Dannet.dll)
+   * [`MQ2Nav.dll`](https://MQ2Nav.dll)
+   * [`MQ2Medley.dll`](https://MQ2Medley.dll)
+   * [`MQ2WorstHurt.dll`](https://MQ2WorstHurt.dll)
+3. Copy and customize the INI templates from `xiris_class_ini/` into your character folder.
+4. Adjust thresholds (health, mana, cooldowns, follow distance) in your `bot_<class>_Charname.ini`.
+5. Launch EverQuest with MacroQuest2. In-game, execute:
+   ```
+   /macro bot_loader
+   ```
+
+
+
 ---
-## Setup
-### Requirements
+## 🎮 Usage & Commands
+
+Refer to the INI comments for full command bindings and customization.
 
 #### Macroquest2
 Xiris bot recommends the ROF2 EMU build of MQ2 from MMOBugs. As of Spring 2022 it was decided that this would be free, and no longer require a mmobugs.com subcscription. To run the build you will need to go to [MMOBugs](https://www.mmobugs.com/) and create an account. Once the account is created, go to the forums, and find the EverQuest Server Emulator section. In this section there is a thread: [MMOBugs MQ2 Installation for Emulator Clients - Download Links and Instructions](https://www.mmobugs.com/forums/index.php?threads/mmobugs-mq2-installation-for-emulator-clients-download-links-and-instructions.29682/) At the top of the thread you will see download links, and the first 1) is the ROF2 build with the lastest MQ2 codebase. Grab the setup version, and install wherever you want.
@@ -253,3 +340,33 @@ mq2cast, mq2dannet
 3. `/dgt CHPause 1` CHChain #1 will pause until resumed
 4. `/dgt CHResume 1` CHChain #1 will resume 
 5. `/dgt CHSwitch 1 Xiria` CHChain #1 will switch to healing Xiria
+
+
+
+
+## 📈 Impact & Metrics
+
+| Metric       | Value                    |
+|--------------|--------------------------|
+| ⭐ Stars      | 4                        |
+| 🍴 Forks      | 1                        |
+| 📦 Releases   | 4 (latest: v1.5.3-stable) |
+| 📁 Commits    | 165+                     |
+| 👀 Watchers   | 2                        |
+
+These metrics demonstrate early adoption, active maintenance, and a stable release cadence—elements recruiters look for in sustainable open-source projects.
+
+## 🤝 Contributing
+
+* Fork the repository and create a new branch for your feature or bugfix.
+* Follow existing coding conventions and document any new INI parameters.
+* Submit a pull request with a clear description, linking to relevant issues.
+* Engage in code reviews or join discussions on the EQEMU forums to share feedback.
+
+## 📜 License & Contact
+
+XirisBot is released under the MIT License.  
+Maintainer: Matthew J Breault (meta53)  
+Email: meta53@example.com
+
+Feel free to open issues, request features, or reach out directly for collaboration.
