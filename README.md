@@ -49,7 +49,7 @@ A high-level overview of the folder layout and key responsibilities:
 | `xiris_common/`      | Core includes for casting, healing, buffing, debuffing, commands |
 | `xiris_class_ini/`   | Base INI templates per class to standardize role behavior |
 | `xiris_trade_ini/`   | Loot rules and trade-in configurations                   |
-| `bot_loader.mac`     | Entrypoint macro that loads class macros based on active INI |
+| `xiris_bot.mac`     | Entrypoint macro that loads class macros based on active INI |
 | `bot_*.mac`          | Class-specific macro logic (e.g., `bot_pal.mac`, `bot_rog.mac`) |
 | `*.ini`              | Character-specific overrides for macros and thresholds   |
 | [`README.md`](https://README.md) | This document                                  |
@@ -60,7 +60,7 @@ ASCII flow of macro loading and initialization:
 ```
 [Start]
    ↓
-bot_loader.mac reads INI → determines class
+xiris_bot.mac reads INI → determines class
    ↓
 Include core libraries (xiris_common)
    ↓
@@ -81,7 +81,7 @@ Enter heartbeat loop
 4. Adjust thresholds (health, mana, cooldowns, follow distance) in your `bot_<class>_Charname.ini`.
 5. Launch EverQuest with MacroQuest2. In-game, execute:
    ```
-   /macro bot_loader
+   /macro xiris_bot
    ```
 
 
