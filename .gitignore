@@ -20,6 +20,9 @@ bot.mac
 bot40.mac
 command_beg.mac
 druepic.mac
+fletching.ini
+handin.mac
+
 Brewing.mac
 BuyLow.mac
 Cams.mac
@@ -59,7 +62,13 @@ keldovan.mac
 keldPuller.mac
 kretv.mac
 ldon_donor.mac
+ldon_guild.mac
+muffins.mac
+ringcheck.mac
 ldon.mac
+sql.mac
+vasty.mac
+
 Lockpick.mac
 lootmycorpse.mac
 manacheck.mac
