@@ -309,7 +309,7 @@ Sub chkNeedCure
 		/call getGroupCurer ${cureType}
 		/varset str_myCurer ${Macro.Return}
 		/if (${str_myCurer.Equal[NOTFOUND]}) {
-			/echo \ar I HAVE NO CURER!
+			/shout \ar I HAVE NO CURER!
 			/call resetCureState
 			/varset timer_cure_request 60s
 			/varset bln_askedForCure TRUE
@@ -331,16 +331,6 @@ Sub chkNeedCure
 				/if (${Spawn[pc ${str_myCurer}].Distance3D} < ${cureRange}) {
 					/echo \aoCURE REQUESTED:\ay Counters:\ag${counters} \ayType:\ag${cureType} \ayForced:\ag${forceCure}
 					/call requestCure ${cureType} ${counters} ${forceCure}
-|} else /if (${Spawn[pc ${str_myCurer}].Distance3D} > ${cureRange} && ${Spawn[pc ${str_myCurer}].Distance3D} < 250 && !${bln_tanking} && !${bln_jelvanEngaged}) {
-|					/varset str_navCureStart ${Me.X} ${Me.Y} ${Me.Z}
-|					/echo \ayNavigating to Curer because range is too far for cure
-|					/varset bln_navCure TRUE
-|					/navigate spawn ${str_myCurer}
-|					:nav_curer
-|					/if (${Spawn[pc ${str_myCurer}].Distance3D} < ${cureRange}) /nav stop
-|					/if (${Navigation.Active}) /goto :nav_curer
-|					/echo \arCURE REQUESTING:\ay Counters:\ag${counters} \ayType:\ag${cureType} \ayForced:\ag${forceCure}
-|					/call requestCure ${cureType} ${counters} ${forceCure}
 				} else {
 					/echo \arMy Curer is too far away
 					/varset timer_cure_request 10s

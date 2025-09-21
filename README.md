@@ -198,7 +198,7 @@ Curing becomes *vitally* important in Txevu+ As such there are several commands 
 Healing is usually handled automatically. 
 Specifically healers, in the default healmode (2, this is settable in the ini file) will attempt to heal their MT, themselves, and then their group, in that order. You can set different MTs for various healers and they will watch that MT and that MT only. MTs do not need to be in the group to be healed.
 ### Looting
-Looting is fairly complex, and is based on  xiris_loot.ini (found in the /xiris_common subfolder in your macro folder)
+Looting is fairly complex, and is based on  xiris_loot_list.ini (found in the /xiris_common subfolder in your macro folder)
 I have an Excel spreadsheet that generates the ini file for myself through Excel macros, but you could do so manually as well. Loot is not auto added to the ini file - an entry must be created.
 `/dt Looter looton ALL` will tell looter, Looter to loot ALL items as defined as lootable in the ini file
 `/dt Looter looton QUEST` will tell looter, Looter to loot only QUEST items as defined as lootable in the ini file

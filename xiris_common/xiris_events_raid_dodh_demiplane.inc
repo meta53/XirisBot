@@ -206,7 +206,7 @@ Sub Event_TrisHuman
 			/if (${Target.PctHPs} >= 99) {
 				/call MQ2Cast "Remove Greater Curse" gem10 1s
 			} else {
-				/call MQ2Cast "Qirik's Mending Rk. II" gem5 1s
+				/call MQ2Cast "${str_currentHeal}" gem5 1s
 			}
 			/goto :priestAssist
 		} else /if (${Me.Class.ShortName.Equal[CLR]}) {

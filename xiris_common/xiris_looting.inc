@@ -135,7 +135,7 @@ Sub EVENT_LOOT_REFRESH
 Sub RefreshLoot
 	| Announce
 	/docommand /${str_lootChannel} ${Me.Name} is refreshing the loot ini file
-	/call ParseLootINI xiris_common/xiris_loot.ini
+	/call ParseLootINI xiris_common/xiris_loot_list.ini
 /return
 
 Sub EVENT_SELL_VENDOR
@@ -190,16 +190,22 @@ Sub Event_SHAKE_DOWN_RAIDFOR_MONEY(string _line, string _chatSender, string _eve
 	/declare i int local 0
 	/declare pp int local 0
 	/if (${Raid.Members} == 0) /return
+	/declare startPlat = ${Me.Platinum}
+	/declare endPlat = ${Me.Platinum}
+	/declare totalPlat = 0
 	/for i 2 to ${Raid.Members}
-		/if (${Raid.Member[${i}].Name.Equal[${Me.Name}]}) /continue
+		/if (${Raid.Member[${i}].Name.Equal[${Me.Name}]}) /goto :next
 		/dquery ${Raid.Member[${i}]} -q "Me.Platinum" -o pp
 		/delay 20 ${DanNet.Query.Received}
-		/echo \ag ${Raid.Member[${i}]}  \aw${pp}
-		/if (${pp} < 2000) /continue
-		/dt ${Raid.Member[${i}]} ${i} => GimmeMoney VIG
-		/delay 20s
+		/echo \ao(${i}) \ag ${Raid.Member[${i}]}  \aw${pp}
+		/if (${pp} <= 1000) /goto :next
+		/dt ${Raid.Member[${i}]} GimmeMoney VIG
+		/delay 10s
+	:next
 	/next i
-	/docommand /${announceChannel} Raid has given me ${givenPlat}! I now have ${Me.Platinum}!
+	/varset endPlat ${Me.Platinum}
+	/varcalc totalPlat ${endPlat} - ${startPlat}
+	/docommand /${announceChannel} Raid has given me ${totalPlat}! I now have ${Me.Platinum}!
 /return
 
 Sub Event_GIMME_MONEY(string _line, string _chatSender, string _eventParams)
@@ -229,7 +235,7 @@ Sub TransferCash(string _recipient, string _cashArgs)
 			| VIG means... well its a joke, but leave self with 1000pp
 			/varcalc givenPlat ${myPlat} - 1000
 			/echo givenPlat ${givenPlat}
-			/if (${givenPlat} < 1000) {
+			/if (${givenPlat} <= 0) {
 				/docommand /${announceChannel}  I don't have the VIG! 1000pp minimum remainder < (${myPlat}pp)
 				/return
 			}
@@ -323,7 +329,7 @@ Sub chkLoot
 
 
 |-------------------------------------------------------------------------------- 
-|SUB: Parsing the loot ini file (xiris_common/xiris_loot.ini)
+|SUB: Parsing the loot ini file (xiris_common/xiris_loot_list.ini)
 |-------------------------------------------------------------------------------- 
 Sub ParseLootINI 
 	/echo \agParseLootINI \aw${lootINIFile}
@@ -826,7 +832,7 @@ Sub GiveItem
 
 Sub xbot_initialize_looting
 
-	/declare bln_looting			bool	outer 	${Ini[INI_CHAR,Settings,lootUse,FALSE]}
+	/declare bln_looting			bool	outer 	${Ini[INI_CHAR,DEFAULT_SETTINGS,lootUse,FALSE]}
 	/declare str_lootChannel		string  outer   1
 	/declare bln_onlyQuest			bool 	outer	FALSE
 	/declare bln_lootAttuneable		bool	outer 	TRUE
@@ -836,7 +842,7 @@ Sub xbot_initialize_looting
 	/declare list_lootItemsForClass string  outer
 	/declare timer_check_loot		timer   outer   0
 
-	/declare lootINIFile			string  outer	xiris_common/xiris_loot.ini
+	/declare lootINIFile			string  outer	xiris_common/xiris_loot_list.ini
 
 	|-- turn on looting by default if the Bot's INI is set to true (unlikely)
 	|/if (${bln_looting}) /call EnableLooting

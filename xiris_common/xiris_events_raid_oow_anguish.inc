@@ -672,6 +672,21 @@ Sub Event_GazeYou
 		:gazeCastWait
 		/call Disengage
 		/if (${Navigation.Active}) /nav stop
+		| check to see if I am silenced!
+		/if (${Me.Silenced.NotEqual[NULL]}) {
+			/shout \arSILENCED! Cannot click Mirrored Mask!
+			/echo \arSILENCED! Cannot click Mirrored Mask!
+
+			| request cure of 24 disease counters;
+			/varset str_myCurer Tragic
+			/call requestCure disease 12 TRUE
+			/varset str_myCurer Drexia
+			/call requestCure disease 12 TRUE
+			/delay 10
+			/goto :gazeCastWait
+		}
+		
+
 		/if (${Me.Class.ShortName.NotEqual[BRD]}) {
 			/echo \arInterrupting cast!
 			/call Interrupt
@@ -1022,7 +1037,7 @@ Sub SQLCureMark
 	| Cast Group Cure
 	/if (${g} > 2 || ${Me.Class.ShortName.Equal[SHM]}) {
 		/varset useGroup TRUE
-		/1 (g:${myGroupNum}) => Casting GROUP cure on ${g} Chars (${l}) ${Time.Time24}
+		/1 => Casting GROUP cure on ${g} Chars (${l}) ${Time.Time24}
 		/for i 1 to ${sqlite.rows[docure]}|
 			/if (${Select[${sqlite.result[docure ${i} Name]},${str_groupMembers}]}) {
 				/sqlite advquery CureMarkOfDeath doupdate UPDATE MarkOfDeath SET CurerName = '${Me.Name}', CurerID = ${Me.ID} WHERE SpawnID = ${sqlite.result[docure ${i} SpawnID]};
@@ -1067,7 +1082,7 @@ Sub SQLCureMark
 
 				/echo \ar${n} MARKED FOR DEATH
 				/echo \a-w    Curing ${c} Counters
-				/1 ${myGroupNum}. => Casting SINGLE cure on ${n}! ${Time.Time24}
+				/1 => Casting SINGLE cure on ${n}! ${Time.Time24}
 				
 				/call TrueTarget ${id}
 				/doevents GazeYou

@@ -169,7 +169,7 @@ Sub variant_initialize
 	|--Archery
 	/declare	bln_archeryAuto			bool	outer	TRUE
 	/declare	bln_autoFireState		bool	outer	FALSE
-	/declare	int_archeryDist			int		outer	${Ini[INI_CHAR,Settings,archeryDist,200]}
+	/declare	int_archeryDist			int		outer	${Ini[INI_CHAR,DEFAULT_SETTINGS,archeryDist,200]}
 	
 	|--Concussion
 	/declare bln_concUse				bool	outer 	${Ini[INI_CHAR,JOLT,bln_concUse,TRUE]}

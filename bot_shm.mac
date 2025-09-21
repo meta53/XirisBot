@@ -209,9 +209,9 @@ Sub variant_initialize
 	/memspellset ${str_spellset}
 
 	|-- Cannibalization
-	/declare	int_canniManaThreshold	int		outer 	${Ini[INI_CHAR,Cannibalize,int_canni_mana_threshold,80]}
-	/declare	int_canniHPThreshold	int		outer 	${Ini[INI_CHAR,Cannibalize,int_canni_hp_threshold,40]}
-	/declare	str_canniSpell			string	outer 	${Ini[INI_CHAR,Cannibalize,str_canni_spell,Ancient:Chaotic Pain]}
+	/declare	int_canniManaThreshold	int		outer 	${Ini[INI_CHAR,CANNIBALIZE,int_canni_mana_threshold,80]}
+	/declare	int_canniHPThreshold	int		outer 	${Ini[INI_CHAR,CANNIBALIZE,int_canni_hp_threshold,40]}
+	/declare	str_canniSpell			string	outer 	${Ini[INI_CHAR,CANNIBALIZE,str_canni_spell,Ancient:Chaotic Pain]}
 	
 	/echo \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID}) HealPoint:${healPoint} ST: ${str_STName}(${int_STID})
 	/call InitEvents_Class

@@ -208,7 +208,7 @@ Sub chkBurn
 | When the toon has warcry on, then we need to make sure
 | we are using 2handers on MNK/RNG/SHD/PAL
 |**
-[Weaponsets]
+[WEAPS]
 	default=Flayed Flesh Handwraps|mainhand,Fangs of the Serpent|offhand
 	blunt=Mindreaper Club|mainhand,Death's Head Mace|offhand
 	h2h=Flayed Flesh Handwraps|mainhand,Fangs of the Serpent|offhand
@@ -453,7 +453,7 @@ Sub CreateClickyLineup
 
 Sub xbot_initialize_burns
     /echo \aoxbot_initialize_burns
-    |- [Settings] : BurnMode
+    |- [DEFAULT_SETTINGS] : BurnMode
 	/declare bln_burning			bool	outer FALSE
 	/declare bln_checkForCry		bool    outer FALSE
 	/declare bln_cry2Hander			bool  	outer FALSE

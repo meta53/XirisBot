@@ -9,7 +9,7 @@ Manual Downshits since mq2melee was being flakey at the time
 	note the second token area isd the casting arguments in full
 	Usage downflagX=BuffName|itemID item|(opt)Target
 
-	[Downflags]
+	[DOWNFLAGS]
 		downflagCount=6
 		downflag1=E'ci's Icy Familiar|"E'ci's Icy Familiar" alt
 		downflag2=Form of Endurance II|9435 item
@@ -735,23 +735,23 @@ Sub xbot_initialize_melee
 	/declare 	timer_component			timer   outer   0
 
 	|-- ALL CLASSES COMMON
-	|-- [Settings] : Downflags
-	/declare	downflagCount			int		outer	${Ini[INI_CHAR,Downflags,downflagCount,0]}
+	|-- [DEFAULT_SETTINGS] : Downflags
+	/declare	downflagCount			int		outer	${Ini[INI_CHAR,DOWNFLAGS,downflagCount,0]}
 	/declare df int local
 		/for df 1 to ${downflagCount} 
-			/declare downflag${df} 		string 	outer	${Ini[INI_CHAR,Downflags,downflag${df}]}
+			/declare downflag${df} 		string 	outer	${Ini[INI_CHAR,DOWNFLAGS,downflag${df}]}
 		/next df
 	
-	|-- [Settings] : Holyflags
-	/declare	holyflagCount			int		outer	${Ini[INI_CHAR,Holyflags,holyflagCount,0]}
+	|-- [DEFAULT_SETTINGS] : Holyflags
+	/declare	holyflagCount			int		outer	${Ini[INI_CHAR,HOLYFLAGS,holyflagCount,0]}
 	/declare hf int local
 		/for hf 1 to ${holyflagCount} 
-			/declare holyflag${hf} 		string 	outer	${Ini[INI_CHAR,Holyflags,holyflag${hf}]}
+			/declare holyflag${hf} 		string 	outer	${Ini[INI_CHAR,HOLYFLAGS,holyflag${hf}]}
 		/next hf
 
 
 	|-- MELEE AND HYBRID CLASSES ONLY
-	|- [Settings] : Components
+	|- [DEFAULT_SETTINGS] : Components
 	/declare	int_componentTotal		int		outer	${Ini[INI_CHAR,Components,int_componentTotal,0]}
 	/declare 	bln_componentCheck		bool	outer   ${If[${int_componentTotal}>0,TRUE,FALSE]}
 		/declare comp int local
@@ -765,7 +765,7 @@ Sub xbot_initialize_melee
 			|/echo \a-w${COMPONENT_${comp}} ${COMPONENT_${comp}_Check} ${COMPONENT_${comp}_Count} ${COMPONENT_${comp}_Type} ${COMPONENT_${comp}_Summoner} ${COMPONENT_${comp}_Reagent}
 		/next comp 
 
-	|--[Settings] : Spell & Support Definitions
+	|--[DEFAULT_SETTINGS] : Spell & Support Definitions
 	/declare item_pull				string	outer	${Ini[INI_CHAR,Puller,item_pull,"Shuriken of Eternity"]}
 	/declare item_pull_clean		string	outer	${Ini[INI_CHAR,Puller,item_pull_clean,Shuriken of Eternity]}
 	/declare item_summon			string	outer	${Ini[INI_CHAR,Puller,item_summon,"Ton Po's Mystical Pouch"]}
@@ -782,18 +782,18 @@ Sub xbot_initialize_melee
 	/declare war_ca_hate_2			string	outer 	${Ini[INI_CHAR,Puller,war_ca_hate_2,Bellow of the Mastruq]}
 	/declare int_castDistance		int		outer	${Ini[INI_CHAR,Puller,int_castDistance,120]}
 
-	|-- [Settings] : Melee Defaults
+	|-- [DEFAULT_SETTINGS] : Melee Defaults
 	/declare 	MinStrikeEndurance 		int		outer	200
 	/declare 	MinBellowEndurance		int		outer	200
 	/declare    provokeTimer            timer   outer   0
-	/declare 	stickCmd				string	outer   ${Ini[INI_CHAR,Sticking,stickCmd,snaproll rear]}
+	/declare 	stickCmd				string	outer   ${Ini[INI_CHAR,STICK,stickCmd,snaproll rear]}
 	/declare 	bln_chkComponents		bool	outer	TRUE
 	/declare 	bln_tgtDeadSoon			bool	outer	FALSE
 	/declare	timer_reAssist			timer	outer	5s
 	/declare    bln_riposting			bool    outer   FALSE
 
 	
-	|-- [Settings] Damage shield/ no damage shield (specifically for events like pixxt riel tavas)
+	|-- [DEFAULT_SETTINGS] Damage shield/ no damage shield (specifically for events like pixxt riel tavas)
 	/declare bln_useDS				bool	outer	TRUE	
 	/declare dsSpellTotal			int		outer   ${Ini[dsINI,Settings,SpellCount,0]}
 	/declare dsSpells[${dsSpellTotal}]	string outer

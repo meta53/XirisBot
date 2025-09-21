@@ -217,7 +217,7 @@ Sub chkHate
 
 Sub xbot_initialize_offtanking
 	/echo \ao xbot_initialize_offtanking
-	|-- [Settings] : Off Tanking
+	|-- [DEFAULT_SETTINGS] : Off Tanking
 	/declare bln_offTank		 	bool 	outer FALSE
 	/declare int_offtankRadius		int     outer 85
 	/declare bln_useDI				bool    outer FALSE

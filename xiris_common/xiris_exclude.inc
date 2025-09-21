@@ -82,7 +82,7 @@ Sub setExclusions
 
 Sub xbot_initialize_exclusions
 	/echo \ao xbot_initialize_exclusions
-	|-- [Settings] : Mob Exclusion List
+	|-- [DEFAULT_SETTINGS] : Mob Exclusion List
 	/declare 	ExcludeList string  outer   
 	/declare    ExcludeINI	string  outer   xiris_common/xiris_exclude.ini
 	/call InitEvents_Exclusions

@@ -30,9 +30,9 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 	/echo \agYou are now in \arXIRIS: \aoXIRIS_BOT.mac
 
 	| set default values here in case we just started the loader with no args
-	/declare	str_defTank1		string	outer	${Ini[INI_CHAR,Settings,defaultTank1,Xiris]}
-	/declare	str_defTank2		string	outer	${Ini[INI_CHAR,Settings,defaultTank2,Xiria]}
-	/declare	str_defTank3		string	outer	${Ini[INI_CHAR,Settings,defaultTank3,Xirea]}
+	/declare	str_defTank1		string	outer	${Ini[INI_CHAR,DEFAULT_SETTINGS,defaultTank1,Xiris]}
+	/declare	str_defTank2		string	outer	${Ini[INI_CHAR,DEFAULT_SETTINGS,defaultTank2,Xiria]}
+	/declare	str_defTank3		string	outer	${Ini[INI_CHAR,DEFAULT_SETTINGS,defaultTank3,Xirea]}
 	/declare	int_defHealPoint	int		outer	${Ini[INI_CHAR,Heal_Points,int_point_tank_normal,65]}
 	/declare    str_defAssistArgs	string	outer 	FALSE,98
 

@@ -48,6 +48,7 @@ Sub Events_Debuffing
 
 |-- Force casting debuffs on target (FORCED cast, will ignore checks)
 Sub EVENT_DebuffTarget(_line, _sender, _eventParams)
+	/varset ForceNamed TRUE
 	/if (!${DEBUFF_Total}) /return 
 	/call CastDebuffsOnTarget ${_eventParams.Arg[1, ]} TRUE
 	/doevents flush DebuffTarget

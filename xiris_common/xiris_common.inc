@@ -152,6 +152,12 @@ ______________________________________________
 #EVENT MELEE_OVERRIDE	"#1# tells the raid#*#'MeleeOverride #2#'"
 #EVENT MELEE_OVERRIDE	"[ #1# #*#]#*#MeleeOverride #2#"
 
+|FORCE NAMED
+#EVENT ForceNamed     		"#1# tells the group#*#'ForceNamed #*#'"
+#EVENT ForceNamed			"#1# tells you#*#'ForceNamed #*#'"
+#EVENT ForceNamed			"#1# tells the raid#*#ForceNamed #*#"
+#EVENT ForceNamed 			"[ #1# #*#]#*#ForceNamed #2*#"
+
 Sub InitEvents_Common
 	/call RegisterBackgroundEvents 	Events_Common 17
 	/call RegisterRaidEvents 		Events_Raid 9
@@ -169,6 +175,7 @@ Sub Events_Raid
 	/doevents UseIntensity
 	/doevents UseServants
 	/doevents UseInfusion
+	/doevents ForceNamed
 /return
 
 Sub Events_Common
@@ -216,7 +223,7 @@ Sub Events_Rapid
 Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint, string _assistArgs) 
 	/echo \aoxbot_initialize 1:${_tank1Name} 2:${_tank2Name} 3:${_tank3Name} 4:${_healPoint} 5:${_assistArgs}
 
-	|-- [Settings] : Communications & INI Declarations
+	|-- [DEFAULT_SETTINGS] : Communications & INI Declarations
 	/declare 	cmdChannel 				string	outer	dgt
 	/declare    announceChannel			string  outer   rsay
 	/declare 	mq2meleeEnabled			bool    outer   FALSE
@@ -224,7 +231,7 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/declare 	int_macroMaximumResponseDist	int outer 1000
 	/dnet fullnames off
 
-	|-- [Settings] : Class Archetype (used in case switching)
+	|-- [DEFAULT_SETTINGS] : Class Archetype (used in case switching)
 	/declare 	str_classArchetype		string	outer	UNKNOWN
 	/call 	 	getClassArchetype 		${Me.Class.ShortName}
 	/varset 	str_classArchetype		${Macro.Return}
@@ -249,7 +256,7 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 		/declare timer_di_${i}		timer outer 0
 	/next i
 	
-	|-- [Settings] :Tank Settings
+	|-- [DEFAULT_SETTINGS] :Tank Settings
 	/declare	bln_tanking				bool	outer	FALSE
 	/declare 	bln_taunting			bool 	outer	FALSE
 	/if (${Me.Combat}) /attack off
@@ -260,9 +267,9 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/if (${_tank1Name.Equal[${Me.Name}]}) 	/varset bln_tanking TRUE
 
 	|-- Set the default tanks
-	/declare	str_defTank1			string	outer	${Ini[INI_CHAR,Settings,defaultTank1,Xiris]}
-	/declare	str_defTank2			string	outer	${Ini[INI_CHAR,Settings,defaultTank2,Xiria]}
-	/declare	str_defTank3			string	outer	${Ini[INI_CHAR,Settings,defaultTank3,Xirea]}
+	/declare	str_defTank1			string	outer	${Ini[INI_CHAR,DEFAULT_SETTINGS,defaultTank1,Xiris]}
+	/declare	str_defTank2			string	outer	${Ini[INI_CHAR,DEFAULT_SETTINGS,defaultTank2,Xiria]}
+	/declare	str_defTank3			string	outer	${Ini[INI_CHAR,DEFAULT_SETTINGS,defaultTank3,Xirea]}
 	/declare 	str_tankName1			string	outer 	${str_defTank1}
 	/declare	str_tankName2			string	outer 	${str_defTank2}
 	/declare 	str_tankName3			string  outer	${str_defTank3}
@@ -291,9 +298,9 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/call createGroupList
 	/echo \aw Group:\ag${str_groupMembers}
 
-	|-- [Settings] :Auto Assist Settings
+	|-- [DEFAULT_SETTINGS] :Auto Assist Settings
 	/declare 	bln_autoAssist			bool	outer 	FALSE
-	/declare	int_defAssistAt			int		outer   ${Ini[INI_CHAR,Settings,assistAt,98]}
+	/declare	int_defAssistAt			int		outer   ${Ini[INI_CHAR,DEFAULT_SETTINGS,assistAt,98]}
 	/declare 	int_assistAt			int		outer   ${int_defAssistAt}
 	/if (${_assistArgs.Length}) {
 		/varset bln_autoAssist ${Bool[${_assistArgs.Token[1,,]}]}
@@ -301,8 +308,8 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	} 
 	/echo \ayAuto Assist settings: \awAuto?\ag${bln_autoAssist} \awAt?\ag${int_assistAt} \awArgs:\ag${_assistArgs}
 
-	|-- [Settings] : Miscellaneous Defaults
-	/declare	str_spellSet			string	outer	${Ini[INI_CHAR,Settings,str_spellSet,default]}
+	|-- [DEFAULT_SETTINGS] : Miscellaneous Defaults
+	/declare	str_spellSet			string	outer	${Ini[INI_CHAR,DEFAULT_SETTINGS,str_spellSet,default]}
 	/declare	bln_engaged				bool	outer	FALSE
 	/declare	bln_enraged				bool	outer	FALSE
 	/declare    bln_pulling		    	bool    outer   FALSE
@@ -314,17 +321,18 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/declare	timer_naked 			timer   outer	0
 	/declare 	timer_hott				timer   outer   20s
 	/declare 	timer_xtargetRefresh	timer	outer 	60s
+	/declare 	bln_forceNamed 			bool	outer	FALSE
 	| strFaceItem storage (for OMM event have to swap masks)
 	/declare 	strFaceItem				string  outer   ${InvSlot[3].Item}
 
-	|-- [Settings] : Meditation & Utilities
-	/declare int_sitRadius   		int     outer ${Ini[INI_CHAR,Settings,sitRadius,50]}
-	/declare int_medPercent       	int     outer ${Ini[INI_CHAR,Settings,medPercent,100]}
-	/declare timer_medDelay			timer	outer ${Ini[INI_CHAR,Settings,medDelay,45s]}
-	/declare timer_sitDelay			timer	outer ${Ini[INI_CHAR,Settings,sitDelay,10s]}
+	|-- [DEFAULT_SETTINGS] : Meditation & Utilities
+	/declare int_sitRadius   		int     outer ${Ini[INI_CHAR,DEFAULT_SETTINGS,sitRadius,50]}
+	/declare int_medPercent       	int     outer ${Ini[INI_CHAR,DEFAULT_SETTINGS,medPercent,100]}
+	/declare timer_medDelay			timer	outer ${Ini[INI_CHAR,DEFAULT_SETTINGS,medDelay,45s]}
+	/declare timer_sitDelay			timer	outer ${Ini[INI_CHAR,DEFAULT_SETTINGS,sitDelay,10s]}
 	/declare timer_check_utilities	timer   outer 0
 
-	|-- [Settings] : Camp
+	|-- [DEFAULT_SETTINGS] : Camp
 	/declare bln_useCAMP			bool	outer 	FALSE
 	/declare int_campX 				int 	outer 	${Me.X}
 	/declare int_campY 				int 	outer 	${Me.Y}
@@ -504,7 +512,7 @@ Sub EngageTarget(int _targetID)
 	
 	| Start Swinging
 
-	| Stop Sticking if you are MT, cause it's annoying
+	| Stop STICK if you are MT, cause it's annoying
 	/if (${Me.ID} == ${int_MTID} || ${bln_tanking}) /squelch /stick off
 /return
 
@@ -656,6 +664,7 @@ Sub Disengage
 	/varset int_targetID		0
 	/varset str_targetName		NULL
 	/varset str_debuffedTargets NULL
+	/varset bln_forceNamed		FALSE
 
 	/call RunRapidEvents
 	| Priests have nothing left to do here;
@@ -868,8 +877,8 @@ Sub Event_SetupRaid(_line, _sender, _eventParams)
 
 Sub SetupRaid(string _mode)
 	|-- Pull from the common ini settings file to grab the group leaders/di clerics etc
-	|/echo Setting raid group mode to ${_mode}
-	|/varset _mode TRIAD
+	/echo \ay Setting raid group mode to ${_mode}
+
 	/varset str_raidGroupMode ${_mode}
 
 	
@@ -1291,7 +1300,20 @@ SUB EVENT_shrinkGroup
 |-------------------------------------------------------------|
 |- @param TargetID: The ID of the spawn you wish to check on
 |-------------------------------------------------------------|
+Sub EVENT_ForceNamed(_line, _chatSender, _eventParams)
+	/if (${_eventParams.Equal[TRUE]}) {
+		/echo \aoForcing named only mode:\ag${_eventParams}
+		/varset bln_forceNamed TRUE
+	} else {
+		/echo \aoForcing named only mode:\ag${_eventParams}
+		/varset bln_forceNamed FALSE
+	}
+	/doevents flush ForceNamed
+/return
+
+
 Sub TargetNamedCheck(_id)
+	/if (${bln_forceNamed}) /return TRUE
 	/if ((${Spawn[npc id ${_id}].Named} || ${Spawn[npc id ${_id}].Name.Find[#]}) && ${Target.Level} >= 75) /return TRUE
 	/if (${Zone.ShortName.Equal[tacvi]} && ${Target.Level} >= 70) /return TRUE
 	/if (${Zone.ShortName.Equal[chambersa]} || ${Zone.ShortName.Equal[chambersb]} || ${Zone.ShortName.Equal[chambersc]} || ${Zone.ShortName.Equal[chambersd]} || ${Zone.ShortName.Equal[chamberse]}  && ${Target.Level} >= 70) /return TRUE
@@ -1677,7 +1699,7 @@ Sub EVENT_LoadWeaponset(string _line, string _sender, string _evtParams)
 Sub LoadWeaponset(string _weaponset)
 	|/if (${str_classArchetype.Equal[CASTER]} || ${str_classArchetype.Equal[PRIEST]} && ${_weaponset.NotEqual[default]}) /return
 	/if (${_weaponset.Equal[NULL]}) /varset _weaponset default
-	/declare set string local ${Ini[INI_CHAR,Weaponsets,${_weaponset}]}
+	/declare set string local ${Ini[INI_CHAR,WEAPS,${_weaponset}]}
 	/if (${set.Equal[NULL]}) /return
 	/if (${Me.Class.ShortName.Equal[BRD]}) /medley stop
 	/echo \aw ${_weaponset}: ${set}

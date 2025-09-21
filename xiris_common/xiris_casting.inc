@@ -61,6 +61,7 @@ REVISION HISTORY
 #EVENT SetUseFastOnly		"#1# tells the raid#*#UseFastOnly #2#'"
 #EVENT SetUseFastOnly 		"[ #1# #*#]#*#UseFastOnly #2#"
 
+
 Sub InitEvents_Casting
 	/if (${str_classArchetype.Equal[CASTER]} || ${str_classArchetype.Equal[PRIEST]}) {
 		/call RegisterBackgroundEvents Events_Casting_Background 2
@@ -748,7 +749,6 @@ Sub EVENT_SetUseFastOnly(_line, _chatSender, _eventParams)
 /return 
 
 
-
 |-------------------------------------------------------------------------------- 
 |EVENTS: RESISTS, ETC
 | Set the resist type for this specific NPC (usually for Anguish)
@@ -981,9 +981,14 @@ Sub chkDefensiveSpells
     /declare j      int     local 0
     /declare dtype   string  local NULL
     /declare key    string  local NULL
-    /call TargetNamedCheck
-    /declare targetIsNamed  bool    local   ${Macro.Return}
-                
+
+	|-- named check
+	:named_check
+	/declare isNamed bool local FALSE
+	/call TargetNamedCheck ${Target.ID}
+	/varset isNamed ${Macro.Return}
+    
+	:jolt_check
     /for i 1 to ${int_cast_JOLT_total}
         /varset dtype    JOLT
 
@@ -996,7 +1001,7 @@ Sub chkDefensiveSpells
             /varset key   ${dtype}_${j}
 
             | Check Triggers for this entry
-            /if ((${Target.PctHPs} <= ${${key}_stopHP} && ${Target.PctHPs} >= ${${key}_startHP}) && !${${key}_enabled} || (!${targetIsNamed} && ${${key}_namedOnly}) || ${${key}_timer}) /continue
+            /if ((${Target.PctHPs} <= ${${key}_stopHP} && ${Target.PctHPs} >= ${${key}_startHP}) && !${${key}_enabled} || (!${isNamed} && ${${key}_namedOnly}) || ${${key}_timer}) /continue
             /call attemptCastingDefensiveSpell ${key} ${key}
 			/call RunAllEvents
             /varset timer_cast_${key} ${timer_cast_${key}.OriginalValue}
@@ -1085,7 +1090,7 @@ Sub processDefensiveSettings
 Sub xbot_initialize_casting
 	/echo \aoxbot_initialize_casting
 
-	|- [Settings] : Casting 
+	|- [DEFAULT_SETTINGS] : Casting 
 	|-- Initial Spellset
 	/declare	str_spellset				string  outer 	default
 
@@ -1096,6 +1101,7 @@ Sub xbot_initialize_casting
 	/declare bln_useFastOnly			bool	outer	FALSE
 	/declare int_concCount				int     outer 	0
 	/declare int_temp_stopCastPoint		int 	outer   0
+
 	
 	|-- Setup defensive AA/SPELL/DISC
 	/call processDefensiveSettings
