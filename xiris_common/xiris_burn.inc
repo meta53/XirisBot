@@ -176,7 +176,7 @@ Sub chkBurn
 			| Item
 			| Check to see if  burn == item &&  useable && (item in inventory && there is no timer) && (I am not Casting || I am a bard)
 			| ---------------
-			} else /if (${BURN_${i}_Type.Equal[item]} && ${BURN_${i}_Use} && (${Bool[${FindItem[${BURN_${i}}].ID}]} && ${FindItem[=${BURN_${i}}].TimerReady} == 0) && (!${Bool[${Me.Casting.ID}]} || ${Me.Class.ShortName.Equal[BRD]})) {
+			} else /if (${BURN_${i}_Type.Equal[item]} && ${BURN_${i}_Use} && (${FindItem[${BURN_${i}}].ID} && ${FindItem[=${BURN_${i}}].TimerReady} == 0) && (!${Me.Casting.ID} || ${Me.Class.ShortName.Equal[BRD]})) {
 				/if (${Spell[${FindItem[${BURN_${i}}].Clicky}].SpellType.Equal[BENEFICIAL]} && !${Me.FreeBuffSlots}) /goto :nextBurn
 				/echo \awBurn_\ag${i} \ao${BURN_${i}} \awType:\ag${BURN_${i}_Type} \awUse:\ag${BURN_${i}_Use} \awAfter:\ag${BURN_${i}_AfterIndex} \awMGB:\ag${BURN_${i}_MGB} 
 				/echo \aoBurn is item type, trying ${BURN_${i}}
@@ -415,7 +415,7 @@ Sub CreateBurnLineup
 
 
     /declare i int local
-    /if (${Bool[${BURN_Total}]}) {
+    /if (${BURN_Total}) {
         /for i 1 to ${BURN_Total}
             /call AddBurnToLineup BURN ${i} ${Ini[INI_CHAR,BURN,BURN_${i}]}
         /next i
@@ -429,7 +429,7 @@ Sub CreateAALineup
     /declare AA_Total               int		outer	${Ini[INI_CHAR,AA,AA_Total,0]}
 
     /declare i int local
-    /if (${Bool[${AA_Total}]}) {
+    /if (${AA_Total}) {
         /for i 1 to ${AA_Total}
             /call AddAAToLineup AA ${i} ${Ini[INI_CHAR,AA,AA_${i}]}
         /next i
@@ -444,7 +444,7 @@ Sub CreateClickyLineup
     /declare CLICKY_Total		    int		outer	${Ini[INI_CHAR,CLICKY,CLICKY_Total,0]}
 
     /declare i int local
-    /if (${Bool[${CLICKY_Total}]}) {
+    /if (${CLICKY_Total}) {
         /for i 1 to ${CLICKY_Total}
             /call AddClickyToLineup CLICKY ${i} ${Ini[INI_CHAR,CLICKY,CLICKY_${i}]}
         /next i

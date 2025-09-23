@@ -643,7 +643,7 @@ Sub Sell(string _item)
 	/declare packItem string local 
 
 	/for i 1 to 8 
-		/if (${Bool[${Me.Inventory[pack${i}]}]}) {
+		/if (${Me.Inventory[pack${i}]}) {
 			
 
 
@@ -682,17 +682,17 @@ Sub Sell(string _item)
 					:SellItem_Pack
 					/notify MerchantWnd MW_Sell_Button leftmouseup
 					/delay 5
-					/delay ${retryTimer} ${Window[QuantityWnd].Open} || !${Bool[${Me.Inventory[pack${i}].Item[${e}]}]}
+					/delay ${retryTimer} ${Window[QuantityWnd].Open} || !${Me.Inventory[pack${i}].Item[${e}]}
 	
 					| Close the quantity window
 					/if (${Window[QuantityWnd].Open}) {
 						/notify QuantityWnd QTYW_Accept_Button leftmouseup
 						/delay ${retryTimer} !${Window[QuantityWnd].Open}
-						/delay ${retryTimer} !${Bool[${Me.Inventory[pack${i}]}]}
+						/delay ${retryTimer} !${Me.Inventory[pack${i}]}
 					}
 	
 					| If the item is still in my inventory
-					/if (${Bool[${Me.Inventory[pack${i}].Item[${e}]}]} && ${retryTimer}) {
+					/if (${Me.Inventory[pack${i}].Item[${e}]} && ${retryTimer}) {
 						/goto :SellItem
 					} else {
 						/echo ERROR: Failed to sell [${Me.Inventory[pack${i}].Item[${e}]}], skipping.

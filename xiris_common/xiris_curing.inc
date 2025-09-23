@@ -326,7 +326,7 @@ Sub chkNeedCure
 		/if (${str_myCurer.Equal[${Me.Name}]}) {
 			/call handleCureRequest ${Me.Name} ${Me.ID} ${cureType} ${counters} ${forceCure}
 		} else {
-			/if (${Bool[${Spawn[pc ${str_myCurer}].ID}]}) {
+			/if (${Spawn[pc ${str_myCurer}].ID}) {
 				/echo \aoCurer:\ag${str_myCurer} \aoDist:\ag${Spawn[pc ${str_myCurer}].Distance3D} \aoRange:\ag${cureRange}
 				/if (${Spawn[pc ${str_myCurer}].Distance3D} < ${cureRange}) {
 					/echo \aoCURE REQUESTED:\ay Counters:\ag${counters} \ayType:\ag${cureType} \ayForced:\ag${forceCure}
@@ -721,9 +721,7 @@ Sub handleCureMarkOfDeath(string _name, int _id, bool _group, int _dCount)
 			/shout Already cured ${_name} ${_id}
 			/return
 		}
-	} else {
-		/dgge /warp id ${Me.ID}
-	}
+	} 
 	/call castCure ${_name} ${_id} "${str_cureToUse}" ${int_finalCount} disease ${_dCount} TRUE
 	/call TrueTarget ${int_MTID}
 /return 

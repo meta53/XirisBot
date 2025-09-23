@@ -121,13 +121,13 @@ Sub Events_GoD_Inktuta
 	/doevents CC5
 	/doevents CC6
 	
-	/if (${Bool[${SpawnCount[npc Cursecaller]}]}) {
+	/if (${SpawnCount[npc Cursecaller]}) {
 		/doevents InkCurse
 		/doevents InkCurseSafe
 	}		
 
 	| Noqufiel
-	/if (${Bool[${SpawnCount[npc Noqufiel]}]} && !${Bool[${SpawnCount[npc Cursecaller]}]}) {
+	/if (${SpawnCount[npc Noqufiel]} && !${SpawnCount[npc Cursecaller]}) {
 		/doevents NoqCurse
 		/doevents NoqSafe
 		/if (${Me.Class.ShortName.Equal[WIZ]} || ${Me.Class.ShortName.Equal[MAG]}) /call chkNoqCursebearers
@@ -762,28 +762,6 @@ Sub EVENT_Tipt
 	/call RequestBarinduInstance Tipt
 /return 
 	
-Sub RequestBarinduInstance(string _zone)
-	/dgga /dzquit
-	/if (${Select[${_zone},Tipt,Vxed]}) {
-		/dgga /warp wp udrandi 
-		/delay 20
-		/tar undrani
-		/delay 20 
-		/say ${_zone}
-		/delay 20 
-		/dgga /warp wp Vxed
-	} else {
-		/dgge /warp wp sewer 
-		/warp wp gamesh
-		/delay 10 
-		/tar gamesh 
-		/delay 10
-		/say ${_zone}
-		/delay 50
-		/warp wp sewer1
-	}
-
-/return 
 	
 Sub LeaveBarinduInstance
 	/if (${Zone.ShortName.Equal[snpool]}) /dgga /switch 2 

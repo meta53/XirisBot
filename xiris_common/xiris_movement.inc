@@ -226,7 +226,9 @@ SUB EVENT_MoveHere(_line, _chatSender, _eventParams)
 				}
 			}
 		}
+		
 	}
+	
 	/doevents flush MoveHere
 /return
 
@@ -243,6 +245,7 @@ Sub MoveToPosition(int _y, int _x, int _z, int _adjustment, bool _warp)
 		/if (${Navigation.Active})  /goto :movement
 	:final
 	/nav stop
+	| DO NOT USE WARP UNLESS ABSOLUTELY NECESSARY! SERIOUSLY, DON'T.
 	/if (${_warp}) /warp loc ${_y} ${_x} ${_z}
 	/deletevar timer_movement
 /return 
@@ -327,7 +330,6 @@ SUB MoveTo(destinationInfo, int distCheck)
 						|/echo dist3D is still far, but 2d is close, I am above/below
 						/squelch  /stick off
 						/squelch  /moveto off
-						/goto :zwarp
 					}
 				} else {
 					/squelch /stick off
@@ -342,7 +344,6 @@ SUB MoveTo(destinationInfo, int distCheck)
 							|/echo dist3D is still far, but 2d is close, I am above/below
 							/squelch  /stick off
 							/squelch  /moveto off
-							/goto :zwarp
 						} else {
 							|/echo going to retry_MoveToLoc
 							/goto :retry_MoveToLoc
@@ -355,17 +356,6 @@ SUB MoveTo(destinationInfo, int distCheck)
 			}
 		}
 	}
-	:zwarp	
-	/squelch  /stick off
-	/squelch  /moveto off
-	/declare amt float local 
-	/if (${Z_Loc}> ${Me.Z}) {
-		/varcalc amt ${dist3D}
-	} else {
-		/varcalc amt ${dist3D}*-1
-	}
-	/zwarp ${amt}
-	/delay 30 !${Me.Moving}
 	:return
 /return
 

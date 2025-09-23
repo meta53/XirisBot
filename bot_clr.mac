@@ -194,7 +194,7 @@ Sub MGBCelestialRegeneration
 /return
 
 Sub EVENT_DivineInterventionRequest(_line, _sender, _eventParams) 
-	/if (${Bool[${Me.Spell[Divine Intervention].ID}]}) {
+	/if (${Me.Spell[Divine Intervention].ID}) {
 		/if (${Me.SpellReady[Divine Intervention]}) {
 			/declare tid int local ${Spawn[pc ${_sender}].ID}
 			/if (${Target.ID} != ${tid}) {

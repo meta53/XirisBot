@@ -203,7 +203,7 @@ Sub CreateCharmLineup
 
     /echo CHARM_Total: ${CHARM_Total}
 
-    /if (${Bool[${CHARM_Total}]}) {
+    /if (${CHARM_Total}) {
         /for i 1 to ${CHARM_Total}
             /call addSpellToLineup CHARM ${i} ${Ini[INI_CHAR,CHARM,CHARM_${i}]} 
             /declare CHARM_${i}_Type  		string	outer	${Ini[INI_CHAR,CHARM,CHARM_${i}_Type,NORMAL]}

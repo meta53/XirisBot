@@ -292,7 +292,7 @@ Sub CreateDebuffLineup
 	/declare DEBUFF_StartHP				int		outer	${Ini[INI_CHAR,DEBUFF,DEBUFF_StartHP,100]}
 	/declare DEBUFF_StopHP				int		outer	${Ini[INI_CHAR,DEBUFF,DEBUFF_StopHP,10]}
 
-	/if (${Bool[${DEBUFF_Total}]}) {
+	/if (${DEBUFF_Total}) {
 		/for i 1 to ${DEBUFF_Total} 
 			/call addSpellToLineup DEBUFF ${i} ${Ini[INI_CHAR,DEBUFF,DEBUFF_${i}]}
 			/declare DEBUFF_${i}_Type		string	outer	${Ini[INI_CHAR,DEBUFF,DEBUFF_${i}_Type,RESIST_DEBUFF]}

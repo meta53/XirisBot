@@ -303,7 +303,7 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/declare	int_defAssistAt			int		outer   ${Ini[INI_CHAR,DEFAULT_SETTINGS,assistAt,98]}
 	/declare 	int_assistAt			int		outer   ${int_defAssistAt}
 	/if (${_assistArgs.Length}) {
-		/varset bln_autoAssist ${Bool[${_assistArgs.Token[1,,]}]}
+		/varset bln_autoAssist ${_assistArgs.Token[1,,]}
 		/varset int_assistAt ${_assistArgs.Token[2,,]}
 	} 
 	/echo \ayAuto Assist settings: \awAuto?\ag${bln_autoAssist} \awAt?\ag${int_assistAt} \awArgs:\ag${_assistArgs}
@@ -543,14 +543,14 @@ Sub chkTargetStatus
 	:chkTargetValid
 	| Assumes bln_engaged == true
 	| Check for target being corpse or non-existant
-	/if ((!${Bool[SpawnCount npc id ${int_targetID}]} || ${Spawn[id ${int_targetID}].Type.Equal[corpse]} || ${Spawn[id ${int_targetID}].Name.Find[s_corpse]})) {
+	/if ((!${SpawnCount[npc id ${int_targetID}]} || ${Spawn[id ${int_targetID}].Type.Equal[corpse]} || ${Spawn[id ${int_targetID}].Name.Find[s_corpse]})) {
 		/echo \awNo Targets with ID(\ay${int_targetID}\aw) or is a CORPSE \aoDisengaging!
 		/varset reason TARGET_IS_CORPSE
 		/goto :disengage
 	} 
 	
 	| Check to see if my target is NPC and there is no NPCs around
-	/if (${Bool[${Target.ID}]} && ${Target.ID} == ${int_MTID} && (!${SpawnCount[npc id ${int_targetID} radius 200]} || ${Zone.ShortName.Equal[${Me.BoundLocation[0]}]})) {
+	/if (${Target.ID} && ${Target.ID} == ${int_MTID} && (!${SpawnCount[npc id ${int_targetID} radius 200]} || ${Zone.ShortName.Equal[${Me.BoundLocation[0]}]})) {
 		/echo \awTarget is MT, and No NPC in radius 200 (or at bind) \aoDisengaging!
 		/varset reason TARGETMT_or_ATBIND
 		/goto :disengage
@@ -564,7 +564,7 @@ Sub chkTargetStatus
 	} 
 
 	| If there is something on XTarget, and its over 400 away, ignore it.
-	/if (${Bool[${Me.XTarget}]} && (!${SpawnCount[npc radius 400]}  || ${Zone.ShortName.Equal[${Me.BoundLocation[0]}]})) {
+	/if (${Me.XTarget} && (!${SpawnCount[npc radius 400]}  || ${Zone.ShortName.Equal[${Me.BoundLocation[0]}]})) {
 		/echo \awNo Targets within 400, even if they are on XTarget \aoDisengaging!
 		/varset reason NOTARGETWITHIN400_AND_HASXTARGET
 		/goto :disengage
@@ -675,8 +675,6 @@ Sub Disengage
 	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
 		/echo \ag Disengage: Attack Off
 		/squelch /attack off
-		/delay 5
-		/squelch /attack off
 		/stick off
 	}
 	/if (${Pet.ID}) /pet back off
@@ -717,11 +715,11 @@ Sub TrueTarget(int _targetID)
 **|
 Sub chkMTAlive(bool _setAsTarget)
 	|--MT is a live and ID is correct
-	/if (${Bool[${SpawnCount[PC ${str_MTName}]}]} && (${int_MTID} == ${Spawn[PC ${str_MTName}].ID})) /goto :return 
+	/if (${SpawnCount[PC ${str_MTName}]} && (${int_MTID} == ${Spawn[PC ${str_MTName}].ID})) /goto :return 
 
 	|--MT, ST, and TT are not in zone or dead!
-	/if (${Bool[${SpawnCount[PC ${str_MTName}]}]} && ${Bool[${SpawnCount[PC ${str_STName}]}]} && ${Bool[${SpawnCount[PC ${str_TTName}]}]}) {
-		/if (${Bool[${Me.Casting.ID}]}) /call Interrupt
+	/if (!${SpawnCount[PC ${str_MTName}]} && !${SpawnCount[PC ${str_STName}]} && !${SpawnCount[PC ${str_TTName}]}) {
+		/if (${Me.Casting.ID}) /call Interrupt
 		/echo \arALL TANKS ARE DEAD!
 		/call getMTbyPrecedence
 		/varset int_MTID ${Spawn[PC ${Macro.Return}].ID}
@@ -730,15 +728,15 @@ Sub chkMTAlive(bool _setAsTarget)
 	}
 
 	|--MT is alive but ID is wrong; 
-	/if (${Bool[${SpawnCount[PC ${str_MTName}]}]} && (${int_MTID} != ${Spawn[PC ${str_MTName}].ID})) {
+	/if (${SpawnCount[PC ${str_MTName}]} && (${int_MTID} != ${Spawn[PC ${str_MTName}].ID})) {
 		/echo \ay MT ${str_MTName} is alive, and my MTID ${int_MTID} is wrong
 		/varset int_MTID ${Spawn[${str_MTName}].ID}
 		/goto :hasChanged
 	}
 
 	|--ST is still alive; 
-	/if (${Bool[${SpawnCount[PC ${str_STName}]}]} && (${int_MTID} != ${Spawn[PC ${str_STName}].ID})) {
-		/if (${Bool[${Me.Casting.ID}]}) /call Interrupt
+	/if (${SpawnCount[PC ${str_STName}]} && (${int_MTID} != ${Spawn[PC ${str_STName}].ID})) {
+		/if (${Me.Casting.ID}) /call Interrupt
 		/echo \ao ST  is still alive, switching!
 		/varset str_MTName ${str_STName}
 		/varset str_STName ${str_TTName}
@@ -747,8 +745,8 @@ Sub chkMTAlive(bool _setAsTarget)
 	}
 	
 	|--TT is still alive; 
-	/if (${Bool[${SpawnCount[PC ${str_TTName}]}]} && (${int_MTID} != ${Spawn[PC ${str_TTName}].ID})) {
-		/if (${Bool[${Me.Casting.ID}]}) /call Interrupt
+	/if (${SpawnCount[PC ${str_TTName}]} && (${int_MTID} != ${Spawn[PC ${str_TTName}].ID})) {
+		/if (${Me.Casting.ID}) /call Interrupt
 		/echo \ao TT is still alive, switching!
 		/varset str_MTName ${str_TTName}
 		/varset int_MTID ${Spawn[${str_TTName}].ID}
@@ -763,7 +761,7 @@ Sub chkMTAlive(bool _setAsTarget)
 	
 	|-- If set as target, target the new MT immediately
 	/if (${_setAsTarget} && (${Target.ID} != ${int_MTID})) {
-		/if (${Bool[${Me.Casting.ID}]}) /call Interrupt
+		/if (${Me.Casting.ID}) /call Interrupt
 		/call TrueTarget ${int_MTID}
 	}
 :return	
@@ -1354,9 +1352,8 @@ Sub Event_CheckNaked
 /return
 
 Sub chkNaked
-	|/echo chkNaked ${Bool[${Me.Inventory[2].Name}]} ${timer_naked}
 	/doevents flush chkNaked
-	/if (!${Bool[${Me.Inventory[2].Name}]} && !${timer_naked}) {
+	/if (!${Me.Inventory[2].ID} && !${timer_naked}) {
 		/docommand /${announceChannel} I am NAKED. 
 		/varset bln_naked TRUE
 		/varset timer_naked 30s

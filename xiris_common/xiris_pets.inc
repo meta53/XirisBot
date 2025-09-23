@@ -31,13 +31,13 @@ Sub chkPet
 	/if (${Pet.ID} && ${Me.Pet.Name.Find[familiar]}) /pet get lost
 	/if (${Me.Invis} || ${Me.Moving} || ${timer_petBuffRecheck}) /return
 
-	/declare hadPetOnInitialize bool local ${Bool[${Pet.ID}]}
+	/declare hadPetOnInitialize bool local ${Pet.ID}
 	|--Spawn your pet
 	/call chkPetSpawn
 	/call RunRaidEvents	
 	
 	|--Buff your pet
-	/if (${Me.Class.ShortName.NotEqual[SHM]} && ${Bool[${Pet.ID}]}) /call chkPetBuffs
+	/if (${Me.Class.ShortName.NotEqual[SHM]} && ${Pet.ID}) /call chkPetBuffs
 
 	|--Weaponize your pet if its a new spawn
 	/if (${Me.Class.ShortName.Equal[MAG]} && !${hadPetOnInitialize}) /call chkPetEquipment

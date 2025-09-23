@@ -641,7 +641,7 @@ Sub Event_ChkHasSpell(_line, _sender, _eventParams)
 Sub chkHasSpell(string _clz, string _spell)
 	/echo checking spell _clz: ${_clz} _spell:${_spell}
 	/if (${Me.Class.ShortName.Equal[${_clz}]}) {
-		/if (${Bool[${Me.Spell[${_spell}].ID}]}) {
+		/if (${Me.Spell[${_spell}].ID}) {
 			/docommand /${announceChannel} ${_spell} Found.
 		}
 	}
@@ -660,35 +660,35 @@ Sub ResetCastTimers
 
 	/declare i int local
 	:nuke
-	/if (!${Bool[${NUKE_Total}]}) /goto :return 
+	/if (!${NUKE_Total}) /goto :return 
 	/varset NUKE_HasCastOnce  FALSE
 	/for i 1 to ${NUKE_Total}
 		/varset NUKE_${i}_HasCastOnce FALSE
 	/next i
 
 	:qnuke
-	/if (!${Bool[${QNUKE_Total}]}) /goto :return 
+	/if (!${QNUKE_Total}) /goto :return 
 	/varset QNUKE_HasCastOnce  FALSE
 	/for i 1 to ${QNUKE_Total}
 		/varset QNUKE_${i}_HasCastOnce FALSE
 	/next i
 
 	:stuns
-	/if (!${Bool[${STUN_Total}]}) /goto :return 
+	/if (!${STUN_Total}) /goto :return 
 	/varset STUN_HasCastOnce  FALSE
 	/for i 1 to ${STUN_Total}
 		/varset STUN_${i}_HasCastOnce FALSE
 	/next i
 
 	:QDOT
-	/if (!${Bool[${QDOT_Total}]}) /goto :return 
+	/if (!${QDOT_Total}) /goto :return 
 	/varset QDOT_HasCastOnce  FALSE
 	/for i 1 to ${QDOT_Total}
 		/varset QDOT_${i}_HasCastOnce FALSE
 	/next i
 
 	:DoT
-	/if (!${Bool[${DOT_Total}]}) /goto :return 
+	/if (!${DOT_Total}) /goto :return 
 	/varset DOT_HasCastOnce  FALSE
 	/for i 1 to ${DOT_Total}
 		/varset DOT_${i}_HasCastOnce FALSE
@@ -853,7 +853,7 @@ Sub CreateCastingLineup
 	/declare NUKE_StopHP				int		outer	${Ini[INI_CHAR,NUKE,NUKE_StopHP,5]}
 	/declare NUKE_StartHPIfNamed		int 	outer 	${Ini[INI_CHAR,NUKE,NUKE_StartHPIfNamed,100]}
 	/declare NUKE_StopHPIfNamed			int 	outer 	${Ini[INI_CHAR,NUKE,NUKE_StopHPIfNamed,0]}
-	/if (${Bool[${NUKE_Total}]}) {
+	/if (${NUKE_Total}) {
 		/for i 1 to ${NUKE_Total} 
 			/call AddSpellToLineup NUKE ${i} ${Ini[INI_CHAR,NUKE,NUKE_${i}]}
 		/next i
@@ -866,7 +866,7 @@ Sub CreateCastingLineup
 	/declare AENUKE_Mana_Minimum		int		outer	${Ini[INI_CHAR,AENUKE,AENUKE_Mana_Minimum,10]}
 	/declare AENUKE_StartHP				int		outer	${Ini[INI_CHAR,AENUKE,AENUKE_StartHP,98]}
 	/declare AENUKE_StopHP				int		outer	${Ini[INI_CHAR,AENUKE,AENUKE_StopHP,0]}
-	/if (${Bool[${AENUKE_Total}]}) {
+	/if (${AENUKE_Total}) {
 		/for i 1 to ${AENUKE_Total} 
 			/call AddSpellToLineup AENUKE ${i} ${Ini[INI_CHAR,AENUKE,AENUKE_${i}]}
 		/next i
@@ -883,7 +883,7 @@ Sub CreateCastingLineup
 	/declare QNUKE_StopHP				int		outer	${Ini[INI_CHAR,QNUKE,QNUKE_StopHP,0]}
 	/declare QNUKE_StartHPIfNamed		int 	outer 	${Ini[INI_CHAR,QNUKE,QNUKE_StartHPIfNamed,100]}
 	/declare QNUKE_StopHPIfNamed		int 	outer 	${Ini[INI_CHAR,QNUKE,QNUKE_StopHPIfNamed,0]}
-	/if (${Bool[${QNUKE_Total}]}) {
+	/if (${QNUKE_Total}) {
 		/for i 1 to ${QNUKE_Total} 
 			/call AddSpellToLineup QNUKE ${i} ${Ini[INI_CHAR,QNUKE,QNUKE_${i}]}
 		/next i	
@@ -895,7 +895,7 @@ Sub CreateCastingLineup
 	/declare STUN_HasCastOnce			bool	outer   FALSE
 	/declare STUN_Mana_Minimum			int		outer	${Ini[INI_CHAR,STUN,STUN_Mana_Minimum,0]}
 	/declare STUN_UseLocking			bool	outer	FALSE
-	/if (${Bool[${STUN_Total}]}) {
+	/if (${STUN_Total}) {
 		/for i 1 to ${STUN_Total} 
 			/call AddSpellToLineup STUN ${i} ${Ini[INI_CHAR,STUN,STUN_${i}]}
 		/next i	
@@ -913,7 +913,7 @@ Sub CreateCastingLineup
 	/declare QDOT_StopHP				int		outer	${Ini[INI_CHAR,QDOT,QDOT_StopHP,10]}
 	/declare QDOT_StartHPIfNamed		int 	outer 	${Ini[INI_CHAR,QDOT,QDOT_StartHPIfNamed,100]}
 	/declare QDOT_StopHPIfNamed			int 	outer 	${Ini[INI_CHAR,QDOT,QDOT_StopHPIfNamed,5]}
-	/if (${Bool[${QDOT_Total}]}) {
+	/if (${QDOT_Total}) {
 		/for i 1 to ${QDOT_Total} 
 			/call AddSpellToLineup QDOT ${i} ${Ini[INI_CHAR,QDOT,QDOT_${i}]}
 		/next i	
@@ -930,7 +930,7 @@ Sub CreateCastingLineup
 	/declare DOT_StopHP					int		outer	${Ini[INI_CHAR,DOT,DOT_StopHP,10]}
 	/declare DOT_StartHPIfNamed			int 	outer 	${Ini[INI_CHAR,DOT,DOT_StartHPIfNamed,100]}
 	/declare DOT_StopHPIfNamed			int 	outer 	${Ini[INI_CHAR,DOT,DOT_StopHPIfNamed,0]}
-	/if (${Bool[${DOT_Total}]}) {	
+	/if (${DOT_Total}) {	
 		/for i 1 to ${DOT_Total} 
 			/call AddSpellToLineup DOT ${i} ${Ini[INI_CHAR,DOT,DOT_${i}]}
 		/next i
@@ -951,7 +951,7 @@ Sub chkCastTarget
 	|/echo \awchkCastTarget corpse? \ag${Target.Name.Find[s_corpse]}  \awstop? \ag${int_temp_stopCastPoint}
 	| I'm no longer casting, or no longer need to stop it ie, target is MT
 	/call RunRapidEvents
-	/if (!${Bool[${Me.Casting.ID}]}) /goto :return
+	/if (!${Me.Casting.ID}) /goto :return
 
 	| If the Target is Dead... stop
 	/if (${Target.Name.Find[s_corpse]}) /goto :interrupt

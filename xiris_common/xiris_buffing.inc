@@ -196,7 +196,7 @@ Sub cmbtBuffMT
 			/delay 20 ${DanNet.Query.Received}
 			/varset bDuration ${DanNet.Q}
 
-			/if (!${Bool[${bDuration}]} ) {
+			/if (!${bDuration} ) {
 				/call TrueTarget ${Spawn[pc =${str_MTName}].ID}
 				/call MQ2Cast "${bSpell}" ${bGem}
 				/if (${Cast.Result.Equal[CAST_SUCCESS]}) {
@@ -254,16 +254,10 @@ Sub cmbtBuffGRP
 				/dquery ${gName} -q "Me.Buff[${buffSpell}].Duration.TotalSeconds"
 				/delay 20 ${DanNet.Query.Received}
 				/varcalc bDuration ${DanNet.Q}
-				/echo cmbtBuffGRP: \aw${gName} -q \ag"Me.Buff[${buffSpell}].Duration" == \ar ${bDuration} \awbool \ag${Bool[${bDuration}]}
-				/if (${Bool[${bDuration}]} ) {
-					
-					/if (${bDuration} < 3 ) {
-						/echo \awbDuration: \ay${bDuration} \aw<3s, \agrecasting
-						/goto :castCMBTBuff
-					} else {
-						/echo \awDuration: \ay${bDuration} \aw>= 3s, \aoskipping 
-						/goto :nextGroupMember
-					}
+				/echo cmbtBuffGRP: \aw${gName} -q \ag"Me.Buff[${buffSpell}].Duration" == \ar ${bDuration} \awbool \ag${bDuration}
+				/if (${bDuration} < 3) {
+					/echo \awbDuration: \ay${bDuration} \aw<3s, \agrecasting
+					/goto :castCMBTBuff
 				} else {
 					/goto :castCMBTBuff
 				}
@@ -313,7 +307,7 @@ Sub doGroupBuffOnTarget(string tgt)
 	/delay 10
 
 	/for i 1 to ${int_oocBuffTotal}
-		/varset 	buffUse		 ${Bool[${OOCBUFF_${i}_Use}]} 
+		/varset 	buffUse		 ${OOCBUFF_${i}_Use}
 		/if (!${buffUse}) /goto :NextGB
 		/varset 	buffSpell    ${OOCBUFF_${i}}
 		/varcalc	buffDuration ${Spell[${OOCBUFF_${i}}].Duration.TotalSeconds}
@@ -650,10 +644,10 @@ Sub RemoveBuff(_badBuff)
 	/declare buffName ${_badBuff.Replace[|,']}
 	/echo \agRemoving Buff \ao${buffName} (was ${_badBuff})
 	/for i 0 to 24
-		/if (${Bool[${Window[BuffWindow].Child[BW_Buff${i}_Button].Tooltip}]} && ${Window[BuffWindow].Child[BW_Buff${i}_Button].Tooltip.Find[${buffName}]}) {
+		/if (${Window[BuffWindow].Child[BW_Buff${i}_Button].Tooltip} && ${Window[BuffWindow].Child[BW_Buff${i}_Button].Tooltip.Find[${buffName}]}) {
 			/varset buffName ${Window[BuffWindow].Child[BW_Buff${i}_Button].Tooltip.Arg[1,(]}
 			/varset buffName ${buffName.Left[${Math.Calc[${buffName.Length}-1]}]}
-			/if (${Bool[${buffName}]}) /nomodkey /notify BuffWindow Buff${Math.Calc[${Me.Buff[${buffName}].ID}-1].Int} leftmouseup
+			/if (${buffName}) /nomodkey /notify BuffWindow Buff${Math.Calc[${Me.Buff[${buffName}].ID}-1].Int} leftmouseup
 		}
 	/next i
 /return
@@ -717,16 +711,9 @@ Sub chkATTKBuffs
 		/if (${SpawnCount[pc ${bTarget}]} == 0 || ${Spawn[pc ${bTarget}].Distance3D} > 100) /goto :nextATTKTarget
 		/dquery ${bTarget} -q "Me.Buff[${ATTK_1_Spell}].Duration.TotalSeconds"
 		/delay 20 ${DanNet.Query.Received}
-		/varcalc bDuration ${DanNet.Q}
-		|/echo chkATTKBuffs: \aw${bTarget} -q \ag"Me.Buff[${ATTK_1_Spell}].Duration" == \ar ${bDuration} \awbool \ag${Bool[${bDuration}]}
-		/if (${Bool[${bDuration}]} ) {
-			/if (${bDuration} < 3 ) {
-				|/echo \arbDuration < 3! casting!
-				/goto :castATTKBuff
-			} else {
-				|/echo \aghas duration, skipping
-				/goto :nextATTKTarget
-			}
+		/varcalc bDuration ${DanNet.Q}	
+		/if (${bDuration} < 3 ) {
+			/goto :castATTKBuff
 		} else {
 			/goto :castATTKBuff
 		}
@@ -738,7 +725,7 @@ Sub chkATTKBuffs
 	/goto :return
 
 	:castATTKBuff 
-	/echo castATTKBuff: \aw${bTarget} -q \ag"Me.Buff[${ATTK_1_Spell}].Duration" == \ar ${bDuration} \awbool \ag${Bool[${bDuration}]}
+	/echo castATTKBuff: \aw${bTarget} -q \ag"Me.Buff[${ATTK_1_Spell}].Duration" == \ar ${bDuration} \awbool \ag${bDuration}
 	/call TrueTarget ${Spawn[pc =${bTarget}].ID}
 	/call MQ2Cast "${ATTK_1_Spell}"
 	/if (${Cast.Result.Equal[CAST_SUCCESS]}) {

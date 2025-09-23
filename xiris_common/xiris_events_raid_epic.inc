@@ -56,8 +56,8 @@ Sub chkGroupClockworkDoom
 		/if (${Group.Member[${gm}].CleanName.Equal[${str_MTName}]}) /varset tankIndex ${gm}
 		/dquery ${Group.Member[${gm}]} -q "Me.Buff[Clockwork Doom].ID"
 		/delay 20 ${DanNet.Query.Received}
-		/if (${Bool[${DanNet.Q}]}) {
-			/echo \ar${Group.Member[${gm}]} \awreply:${Bool[${DanNet.Q}]}
+		/if (${DanNet.Q}) {
+			/echo \ar${Group.Member[${gm}]} \awreply:${DanNet.Q}
 			/echo \ar CLOCKWORK DOOM FOUND
 			/varset  foundMark TRUE
 			/varcalc haveMark ${haveMark}+1
@@ -119,8 +119,8 @@ Sub chkGroupClockworkDoom
 		/dquery ${Group.Member[${tankIndex}]} -q "Me.Buff[Clockwork Doom].ID"
 		/delay 20 ${DanNet.Query.Received}
 		
-		/if (${Bool[${DanNet.Q}]}) {
-			/echo \ar${Group.Member[${tankIndex}]} \awreply: ${DanNet.Q} ${Bool[${DanNet.Q}]}
+		/if (${DanNet.Q}) {
+			/echo \ar${Group.Member[${tankIndex}]} \awreply: ${DanNet.Q} ${DanNet.Q}
 			/echo \ar CLOCKWORK DOOM FOUND on TANK
 			/call getCureCounters ${Group.Member[${tankIndex}].Name} poison
 			/call handleCureRequest ${Group.Member[${tankIndex}].Name} ${Group.Member[${tankIndex}].ID} poison ${Int[${Macro.Return}]} TRUE

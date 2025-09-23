@@ -30,8 +30,7 @@ REVISION HISTORY
 #EVENT RESTICK			"#*#restick#*#"
 #EVENT AERAMP			"#*#aerampON#*#"
 #EVENT GETCLOSER		"#*#Your target is too far away#*#"
-#EVENT CANTSEETARGET	"#*#You cannot see your target#*#"
-#EVENT CANTNAVTARGET	"#*#Could not locate#*#"
+
 
 #EVENT RiposteDisc		"#1# tells the group#*#'RiposteDisc#*#'"
 #EVENT RiposteDisc		"#1# tells you#*#'RiposteDisc#*#'"
@@ -61,7 +60,6 @@ Sub InitEvents_Melee
 Sub Events_Melee
 	/doevents Leashing
 	/doevents AutoAssist
-	/doevents CANTNAVTARGET
 /return
 
 Sub Events_Melee_Engaged
@@ -261,8 +259,7 @@ Sub chkDownshits
 				/if (${bln_engaged}) /return
 			
 				|/echo BuffName: ${buffName} castArg: ${castArg} tgtID: ${tgtID} ready: ${Me.SpellReady[${buffName}]} dsType: ${dsType} ?: ${castArg.Find[item]}
-				|/echo Stacks? ${Spell[${buffName}].Stacks} && Do I have it? ${Bool[${Me.Buff[${buffName}].ID}]}
-				/if (${Spell[${buffName}].Stacks} && !${Bool[${Me.Buff[${buffName}].ID}]}) {
+				/if (${Spell[${buffName}].Stacks} && !${Me.Buff[${buffName}].ID}) {
 					
 					/if (${dsType.Equal[SPELL]} && !${Me.SpellReady[${buffName}]}) {
 						/echo \ay${buffName} \awis \arNOT \awReady, Memorizing
@@ -307,7 +304,7 @@ Sub chkDownshits
 			|- return existing spellset
 			/if (${hadToMemBuffs}) /memspellset ${str_spellset}
 			|- return existing target
-			/if (${Bool[${svdTGTID}]}) /call TrueTarget ${svdTGTID}
+			/if (${svdTGTID}) /call TrueTarget ${svdTGTID}
 
 			}
 
@@ -452,27 +449,6 @@ SUB EVENT_CANTSEETARGET
 	/face fast
 /return
 
-SUB EVENT_CANTNAVTARGET
-	/if (!${Target.ID} || ${Target.PctHPs} == 0 || !${bln_engaged} || ${timer_cantNav}) /return 
-	/doevents flush CANTNAVTARGET
-	/varset timer_cantNav 4s 
-	/echo \ar Cannot NAVTARGET ${bln_following}
-	| If the target is less than 50 range
-	/if (!${bln_following}) {
-		/if (${Select[${Me.Class.ShortName},BRD,BER,MNK,ROG,RNG,PAL,SHD,WAR]} && ${Target.ID}) {
-			/if (!${bln_tanking})  {
-				/warp loc ${Target.Y} ${Target.X} ${Target.Z}
-			} else {
-				/warp f 10
-			} 
-		}
-	} else {
-		/echo \aoFollowing ${str_followTarget}
-		/call TrueTarget ${Spawn[pc ${str_followTarget}].ID}
-		/delay 5
-		/warp loc ${Target.Y} ${Target.X} ${Target.Z}
-	}
-/return
 
 Sub StickAdjust
 	/if (${int_currentStickDistance} > ${int_minStickDistance} && ${Target.Distance} <= ${int_currentStickDistance}) {
@@ -795,16 +771,16 @@ Sub xbot_initialize_melee
 	
 	|-- [DEFAULT_SETTINGS] Damage shield/ no damage shield (specifically for events like pixxt riel tavas)
 	/declare bln_useDS				bool	outer	TRUE	
-	/declare dsSpellTotal			int		outer   ${Ini[dsINI,Settings,SpellCount,0]}
+	/declare dsSpellTotal			int		outer   ${Ini[dsINI,DEFAULT_SETTINGS,SpellCount,0]}
 	/declare dsSpells[${dsSpellTotal}]	string outer
 
-	/declare ds int local 
+	/declare ds int local 0
 		/for ds 1 to ${dsSpellTotal}
 			/varset dsSpells[${ds}] ${Ini[dsINI,Spells,DS${ds}]}
 			|/echo Added DS${ds} spell ${dsSpells[${ds}]}
 		/next ds
 
-	/declare dsSongsTotal	int		outer   ${Ini[dsListINI,Settings,SongCount,0]}
+	/declare dsSongsTotal	int		outer   ${Ini[dsINI,Settings,SongCount,0]}
 	/declare dsSongs[${dsSongsTotal}]	string outer
 
 	| Initialize Library Events

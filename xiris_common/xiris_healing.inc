@@ -197,7 +197,7 @@ Sub chkTargetHoT
 	/echo \aw Checking HoT on Target \ao${Target.Name} \aw: \ay"Me.SPA[100]"
 	/dquery ${str_MTName} -q "Me.SPA[100]"  -o perTick
 	/delay 120 ${DanNet.Q.Received}
-	/echo \arReturned: ${Bool[${perTick}]}
+	/echo \arReturned: ${perTick}
 /return ${perTick}
 
 Sub EVENT_GroupHeal
@@ -559,7 +559,6 @@ Sub setHealingSpell(int _hp, string _targetType, int _range, string _targetName,
 	/if (${str_healMode.Equal[EFFICIENT]}) /varset str_currentHeal ${str_heal_normal_efficient}
 
 	/declare pt int local ${Math.Calc[${int_point_${_targetType}_HoT}*1.05]}
-	|/echo \awsetHealingSpell \ao${_targetType} \aw(\ag${_hp} \ao<> \ag${pt}\aw) \ar${Bool[${_hp}]} || ${Me.PctMana} == 0
 	
 	/declare response string local CASTOK
 	/declare perTick int local 0
@@ -883,7 +882,7 @@ Sub healCast(int _id, string _name, string _spell, bool _isGroup, bool _isHoT)
 **|
 Sub chkHP
 	| I'm no longer casting, or no longer need to stop it ie, target is MT
-	/if (!${Bool[${Me.Casting.ID}]}) /goto :return
+	/if (!${Me.Casting.ID}) /goto :return
 
 	| If the Target is Dead... stop
 	/if (${Target.Name.Find[s_corpse]}) /goto :interrupt
@@ -1253,7 +1252,7 @@ Sub InterruptOFF
 
 
 Sub chkDivineIntervention
-	/if (${Bool[${Me.Buff[Divine Intervention].ID}]} || ${timer_di_request}) /return
+	/if (${Me.Buff[Divine Intervention].ID} || ${timer_di_request}) /return
 	/echo \agDivine Intervention \ar NOT found. \ayRequesting!
 	| Check your first DI cleric
 	/declare i int local 0
@@ -1264,7 +1263,7 @@ Sub chkDivineIntervention
 		/varset pcName ${RaidDIClerics[${i}]}
 		/if (!${Defined[timer_di_${i}]}) /declare timer_di_${i} timer outer 0
 		/echo \awChecking \ay${pcName} \aw for DI
-		/if (${timer_di_${i}} || !${Bool[${SpawnCount[pc ${pcName}]}]}) {
+		/if (${timer_di_${i}} || !${SpawnCount[pc ${pcName}]}) {
 			/echo \ar${pcName} \awhas a DI timer or is out of zone!
 			/goto :next_cleric
 		} 
@@ -1314,7 +1313,7 @@ Sub CreateGroupHoTTimers
 	/declare k int local 1
 	/declare timerKey string local
 	/for i 0 to 5
-		/if (${Bool[${Group.Member[${i}].ID}]}) {
+		/if (${Group.Member[${i}].ID}) {
 			/varset timerKey timer_HoT_${Group.Member[${i}].ID}
 		} else {
 			/varset timerKey timer_HoT_NULL_${i}

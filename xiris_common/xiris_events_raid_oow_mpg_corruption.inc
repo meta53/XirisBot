@@ -103,7 +103,7 @@ Sub chkCorruptionAdds
 		| WAR
         /if (${${SpawnCount[npc WAR]}}) {
             /for i 1 to ${SpawnCount[npc WAR]}
-				/if (${Bool[${NearestSpawn[${i}, npc WAR].Name.Find[Huhn-Abram]}]}) /goto :nextWarrior
+				/if (${NearestSpawn[${i}, npc WAR].Name.Find[Huhn-Abram]}) /goto :nextWarrior
                 /call TrueTarget ${NearestSpawn[${i}, npc WAR].ID}
                 /say Aggroing Warrior ${Target.Name} (${Target.ID})
                 :aggroWarrior

@@ -108,27 +108,27 @@ Sub Events_OOW_Anguish
 	/if (${Select[${Me.Class.ShortName},WAR,SHD,PAL]} && ${bln_engaged}) /call chkDivineIntervention
 
 	| Ture Events
-	/if (${Bool[${SpawnCount[npc Ture]}]} && ${Spawn[npc Ture].Distance3D} < 400) {
+	/if (${SpawnCount[npc Ture]} && ${Spawn[npc Ture].Distance3D} < 400) {
 		/call chkTureEvents
 	}
 
 	| Jelvan Events
-	/if (${Bool[${SpawnCount[npc Jelvan]}]} && ${Spawn[npc Jelvan].Distance3D} < 400) {
+	/if (${SpawnCount[npc Jelvan]} && ${Spawn[npc Jelvan].Distance3D} < 400) {
 		/call chkJelvanEvents
 	}
 
 	| Hanvar Events
-	/if (${Bool[${SpawnCount[npc Hanvar]}]} && ${Spawn[npc Hanvar].Distance3D} < 300) {
+	/if (${SpawnCount[npc Hanvar]} && ${Spawn[npc Hanvar].Distance3D} < 300) {
 		/call chkHanvarEvents
 	}
 
 	| Vangl Events
-	/if (${Bool[${SpawnCount[npc Vangl]}]} && ${Spawn[npc Vangl].Distance3D} < 300 || ${Zone.ShortName.Equal[arena]} || ${Zone.ShortName.Equal[guildhall]}) {
+	/if (${SpawnCount[npc Vangl]} && ${Spawn[npc Vangl].Distance3D} < 300 || ${Zone.ShortName.Equal[arena]} || ${Zone.ShortName.Equal[guildhall]}) {
 		/call chkAMVEvents
 	}
 
 	| OMM Events
-	/if ((${Bool[${SpawnCount[npc Overlord]}]} && ${Spawn[npc Overlord].Distance3D} < 400) || ${Zone.ShortName.Equal[arena]} || ${Zone.ShortName.Equal[guildhall]}) {
+	/if ((${SpawnCount[npc Overlord]} && ${Spawn[npc Overlord].Distance3D} < 400) || ${Zone.ShortName.Equal[arena]} || ${Zone.ShortName.Equal[guildhall]}) {
 		/call chkOMMActions
 		/call chkOMMEvents
 	} 
@@ -369,13 +369,13 @@ Sub chkJelvanResists
 Sub chkJelvanSlows
 	/if (${str_targetName.Find[Tanthi]}) {
 		/call TrueTarget ${Target.ID}
-		/if (!${Bool[${Target.Slowed}]}) /call SlowTarget disease
+		/if (!${Target.Slowed}) /call SlowTarget disease
 	} else /if (${str_targetName.Find[Tanthu]}) {
 		/call TrueTarget ${Target.ID}
-		/if (!${Bool[${Target.Slowed}]}) /call SlowTarget magic
+		/if (!${Target.Slowed}) /call SlowTarget magic
 	} else /if (${str_targetName.Find[Tantho]}) {
 		/call TrueTarget ${Target.ID}
-		/if (!${Bool[${Target.Slowed}]}) /call SlowTarget magic
+		/if (!${Target.Slowed}) /call SlowTarget magic
 	}
 /return
 
@@ -575,7 +575,7 @@ Sub chkOMMActions
 		/return
 	} else /if (${Me.Class.ShortName.Equal[WAR]} && (${int_MTID} == ${Me.ID})) {
 		:mt_loop
-			/if (${Math.Distance[${Target.Y},${Target.X},${Target.Z}:${Me.Y} ${Me.X} ${Me.Z}]} > ${rootDist} && ${bln_rootTank}) /warp loc ${root_Y} ${root_X} ${root_Z}
+			|/if (${Math.Distance[${Target.Y},${Target.X},${Target.Z}:${Me.Y} ${Me.X} ${Me.Z}]} > ${rootDist} && ${bln_rootTank}) /warp loc ${root_Y} ${root_X} ${root_Z}
 			/doevents RootTankOn
 			/doevents RootTankOff
 			/doevents MarkOfDeath
@@ -959,11 +959,11 @@ Sub SQLCheckMark(bool _overrideTimer)
 				/if (${SpawnCount[npc Vangl]}) {
 					/echo disengaging and moving to cleric
 					/call Disengage
-					/warp wp amvCleric
+					
 				} else /if (!${SpawnCount[npc Vangl]}) {
 					/echo disengaging and moving to cleric
 					/call Disengage
-					/warp wp ommCleric
+					
 				}
 			}
 		}

@@ -126,7 +126,7 @@ Sub chkOffTanking
 		/doevents OFFTANKOFF
 		/call TrueTarget ${NearestSpawn[${i}, npc radius ${int_offtankRadius} range 46 80 noalert 5].ID}
 		:CheckAggro
-		/if (!${Bool[${Me.TargetOfTarget.ID}]} || !${Me.TargetOfTarget.ID} || (${ExcludeList.Find[${Target.CleanName}]})) /goto :nextTarget
+		/if (!${Me.TargetOfTarget.ID} || !${Me.TargetOfTarget.ID} || (${ExcludeList.Find[${Target.CleanName}]})) /goto :nextTarget
 		/if (${Me.TargetOfTarget.Class.ShortName.Equal[WAR]} || ${Me.TargetOfTarget.Class.ShortName.Equal[PAL]} || ${Me.TargetOfTarget.Class.ShortName.Equal[SHD]}) /goto :nextTarget
 		/if ((${Target.Distance3D} < ${int_offtankRadius})) {
 			/call aggroByID ${Target.ID}
@@ -142,7 +142,7 @@ Sub chkOffTanking
 	/if (${SpawnCount[npc radius ${int_offtankRadius} range 46 80  noalert 5]} == 1 && ${bln_engaged}) {
 		/if (${SpawnCount[npc id ${int_targetID}]}) {
 			/call TrueTarget ${int_targetID}
-			/if (!${Bool[${Me.TargetOfTarget.ID}]}) /return
+			/if (!${Me.TargetOfTarget.ID}) /return
 			/varset bln_tanking		FALSE
 			/varset bln_taunting	FALSE
 			/if (${Target.PctHPs} <=99  && ${Target.ID}) /attack on
