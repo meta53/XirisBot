@@ -152,7 +152,7 @@ Sub CastCharm(string _charm, string _gem, int _maxTries, int _targetID, bool _fo
 			/goto :CharmFailure
 		}
 		|pre-check before attempt
-		/if (${Target.PctHPs} == 0 || !${Target.ID} || (${Target.ID} != ${tgtID}) || ${Target.Name.Find['s_corpse']} || ${Target.Type.Equal[corpse]} || ${Target.Type.Equal[pc]}) {
+		/if (${Target.PctHPs} == 0 || !${Target.ID} || (${Target.ID} != ${tgtID}) || ${Target.Name.Find['s_corpse']} || ${cache_targetIsCorpse} || ${Target.Type.Equal[pc]}) {
 			/echo \ar Charm Failure\aw Target Error
 			/varset rslt TARGET_ERROR
 			/goto :CharmFailure

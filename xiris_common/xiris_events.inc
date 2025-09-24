@@ -44,7 +44,7 @@ Sub xbot_initialize_events
     |--Check for Special Events
 
     |- Gates of Discord
-    /if (${Select[${Zone.ShortName},barindu,snpool,snlair,sncrematory,snplant,vxed,tipt]})      /call InitEvents_GoD_Barindu
+    /if (${Select[${cache_zoneShort},barindu,snpool,snlair,sncrematory,snplant,vxed,tipt]})      /call InitEvents_GoD_Barindu
     /if (${Zone.ShortName.Equal[uqua]})         /call InitEvents_GoD_Uqua
     /if (${Zone.ShortName.Equal[ikkinz]})       /call InitEvents_GoD_Uqua
     /if (${Zone.ShortName.Equal[inktuta]})      /call InitEvents_GoD_Inktuta

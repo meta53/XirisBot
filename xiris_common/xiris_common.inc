@@ -1087,7 +1087,7 @@ Sub Event_RageOn(string line)
 	/if (!${mq2meleeEnabled} && !${Stick.Behind} && (${line.Find[${Spawn[${int_targetID}].DisplayName}]} || ${line.Find[${cache_targetName}]}) && (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]})) {
 		/attack off
 	}
-	/if (((${line.Find[${Spawn[${int_targetID}].DisplayName}]} || ${line.Find[${Target.DisplayName}]}) && ${Pet.ID}) && !${Me.PetBuff[Master's Aura Effect]}) {
+	/if (((${line.Find[${Spawn[${int_targetID}].DisplayName}]} || ${line.Find[${cache_targetName}]}) && ${Pet.ID}) && !${Me.PetBuff[Master's Aura Effect]}) {
 		/echo Enrage detected! Backing pet off.
 		/pet back off
 		/varset bln_enraged TRUE

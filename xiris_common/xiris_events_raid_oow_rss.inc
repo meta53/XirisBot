@@ -106,28 +106,28 @@ Sub KingRunning(int _bombID)
     /nav wp br1
     :br1 
         /if (!${bln_running}) /return
-        /if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /call KingDeath
+        /if (${Zone.ShortName.Equal[${cache_boundZone}]}) /call KingDeath
         /if (${Me.TargetOfTarget.ID} != ${Me.ID}) /goto :bombReset
         /if (${Navigation.Active}) /goto :br1 
 
     /nav wp br2
     :br2
         /if (!${bln_running}) /return
-        /if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /call KingDeath
+        /if (${Zone.ShortName.Equal[${cache_boundZone}]}) /call KingDeath
         /if (${Me.TargetOfTarget.ID} != ${Me.ID}) /goto :bombReset
         /if (${Navigation.Active}) /goto :br2 
 
     /nav wp br3
     :br3
         /if (!${bln_running}) /return
-        /if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /call KingDeath
+        /if (${Zone.ShortName.Equal[${cache_boundZone}]}) /call KingDeath
         /if (${Me.TargetOfTarget.ID} != ${Me.ID}) /goto :bombReset
         /if (${Navigation.Active}) /goto :br3
 
     /nav wp br4
     :br4
         /if (!${bln_running}) /return
-        /if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /call KingDeath
+        /if (${Zone.ShortName.Equal[${cache_boundZone}]}) /call KingDeath
         /if (${Me.TargetOfTarget.ID} != ${Me.ID}) /goto :bombReset
         /if (${Navigation.Active}) /goto :br4
 
@@ -151,7 +151,7 @@ Sub KingSafe
 Sub KingDeath 
     :kingDead
     /call RunAllEvents
-    /if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /goto :kingDead
+    /if (${Zone.ShortName.Equal[${cache_boundZone}]}) /goto :kingDead
 /return
 
 

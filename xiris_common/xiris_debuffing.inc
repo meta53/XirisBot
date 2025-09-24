@@ -241,7 +241,7 @@ Sub CastDebuff(string _debuff, string _gem,  int _maxTries, int _targetID, bool 
 			/goto :DebuffFailure
 		}
 		|pre-check before attempt
-		/if (${Target.PctHPs} == 0 || !${Target.ID} || (${Target.ID} != ${tgtID}) || ${Target.Name.Find['s_corpse']} || ${Target.Type.Equal[corpse]} || ${Target.Type.Equal[pc]}) {
+		/if (${Target.PctHPs} == 0 || !${Target.ID} || (${Target.ID} != ${tgtID}) || ${Target.Name.Find['s_corpse']} || ${cache_targetIsCorpse} || ${Target.Type.Equal[pc]}) {
 			/echo \ar Debuff Failure\aw Target Error
 			/varset rslt TARGET_ERROR
 			/goto :DebuffFailure

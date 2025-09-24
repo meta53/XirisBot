@@ -580,8 +580,8 @@ Sub chkSnare
 	
 	/if (${Cast.Result.Equal[CAST_IMMUNE]}) {
 		/echo \ar ${str_snareSpell} ${Cast.Result}
-		/ini "${IniFile}" "SnareImmunes.${Zone.ShortName}" "SnareImmune" "${list_immuneSnare}${Target.CleanName}|"
-		/varset list_immuneSnare ${Ini[${ignoreINI},"SnareImmunes.${Zone.ShortName}","SnareImmune"]}
+		/ini "${IniFile}" "SnareImmunes.${cache_zoneShort}" "SnareImmune" "${list_immuneSnare}${Target.CleanName}|"
+		/varset list_immuneSnare ${Ini[${ignoreINI},"SnareImmunes.${cache_zoneShort}","SnareImmune"]}
 		/varset bln_snareActive TRUE
 	}
 	/call RunRaidEvents
