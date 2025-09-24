@@ -225,7 +225,6 @@ Sub ForesightNavigation(string _wp, string _watch, string _event)
 		/echo Watching variable: ${_watch} ${${_watch}} from event ${_event}
 		/delay 20
 		/doevents ${_event}
-		/doevents flush ${_event}
 		/goto :movementDelay
 	}
 
@@ -246,27 +245,22 @@ Sub ForesightNavigation(string _wp, string _watch, string _event)
 /return
 
 Sub EVENT_ForesightNorth
-	/doevents flush ForesightNorth
 	|/call ForesightNavigation SafeNorth IsMovingNorth ForesightAESafe
 /return
 
 Sub EVENT_ForesightSouth
-	/doevents flush ForesightSouth
 	|/call ForesightNavigation SafeSouth IsMovingSouth ForesightAESafe
 /return
 
 Sub EVENT_ForesightEast
-	/doevents flush ForesightEast
 	|/call ForesightNavigation SafeEast IsMovingEast ForesightAESafe
 /return
 
 Sub EVENT_ForesightWest
-	/doevents flush ForesightWest
 	|/call ForesightNavigation SafeEast IsMovingWest ForesightAESafe
 /return
 
 Sub EVENT_ForesightCenter
-	/doevents flush ForesightCenter
 	|/call ForesightNavigation SafeCenter IsMovingCenter ForesightAESafe
 /return
 
@@ -279,13 +273,11 @@ Sub EVENT_ForesightAESafe
 	/if (${IsMovingWest}) 		/varset IsMovingWest 	FALSE
 	/if (${IsMovingCenter}) 	/varset IsMovingCenter 	FALSE
 	/if (${IsMovingAnywhere}) 	/varset IsMovingAnywhere FALSE	
-	/doevents flush EVENT_ForesightAESafe
 /return
 
 
 Sub EVENT_ForesightKyvMove
 	/say Kyv Moving
-	/doevents flush ForesightKyvMove
 	| The Kyv will cast spell 5694 Headshot 10000 DD, Feign Death
 	/if (${str_classArchetype.Equal[PRIEST]} || ${str_classArchetype.Equal[CASTER]}) {
 		| casters and healers need to move to SafeCenterCaster
@@ -309,7 +301,6 @@ Sub EVENT_ForesightKyvMoveSafe
 
 Sub EVENT_ForesightKyvStill
 	/say Kyv Holding Still
-	/doevents flush ForesightKyvStill
 	| The Kyv will cast spell 5694 Headshot 10000 DD, Feign Death
 	|- set initial states (to restore at end)
 	/declare atk bool local FALSE
@@ -329,7 +320,6 @@ Sub EVENT_ForesightKyvStill
 		/echo Watching variable: IsHoldingStill ${IsHoldingStill} from event ForesightKyvSafe
 		/delay 20
 		/doevents ForesightKyvStillSafe
-		/doevents flush ForesightKyvStillSafe
 		/if (!${kyvstill}) /goto :return
 		/goto :stillnessDelay
 	}
@@ -349,7 +339,6 @@ Sub EVENT_ForesightKyvStillSafe
 
 Sub EVENT_ForesightKyvDuck
 	/say Kyv Ducking
-	/doevents flush ForesightKyvDuck
 
 	| The Kyv will cast spell 5696 Kyv Arrow 7500 DD
 	|- set initial states (to restore at end)
@@ -373,7 +362,6 @@ Sub EVENT_ForesightKyvDuck
 		|/echo ${Me.Ducking} Watching variable: IsDucking ${IsDucking} from event ForesightKyvSafe
 		/delay 20
 		/doevents ForesightKyvDuckSafe
-		/doevents flush ForesightKyvDuckSafe
 		/if (!${kyvduck}) /goto :return
 		/goto :duckDelay
 	}
@@ -394,7 +382,6 @@ Sub EVENT_ForesightKyvDuckSafe
 
 Sub EVENT_ForesightAEClose
 	/say AEClose to Dragorn!
-	/doevents flush ForesightAEClose
 
 	| The dragorns will cast spell 5693 Flashfire 5000 AE DD
 	/if (${str_classArchetype.Equal[PRIEST]} || ${str_classArchetype.Equal[CASTER]}) {
@@ -414,7 +401,6 @@ Sub EVENT_ForesightAECloseSafe
 
 Sub EVENT_ForesightPlatform
 	/say Need to get on the platform!
-	/doevents flush ForesightPlatform
 
 	| The hazard will cast spell: 5697 Scalding Steam 5500 DD AE & 950/tick DOT
 	
@@ -433,7 +419,6 @@ Sub EVENT_ForesightPlatformSafe
 
 Sub EVENT_ForesightDS
 	/docommand /${announceChannel} !!Evading DamageShield!!
-	/doevents flush ForesightDS
 
 	| The dragorns will cast spell: 5698 Lacerating Aura 350pt DS
 	/if (${str_classArchetype.Equal[PRIEST]} || ${str_classArchetype.Equal[CASTER]}) {
@@ -463,7 +448,6 @@ Sub EVENT_ForesightDS
 
 Sub EVENT_ForesightWeapon
 	/say Removing Weapon
-	/doevents flush ForesightWeapon
 	/delay 10
 	| The Kyv will cast spell 2315 Searing Heat 2000 DD
 	| save the weapon and slot information (well, its allways primary weapon) and unequip
@@ -479,13 +463,11 @@ Sub EVENT_ForesightWeaponSafe
 	/echo \agSafe event fired, returning \ar${MainHandWeapon} \agto mainhand
 	/exchange "${MainHandWeapon}" mainhand
 	/varset HasRemovedWeapon	FALSE
-	/doevents flush ForesightWeaponSafe
 /return
 
 
 Sub EVENT_ForesightRing
 	/say Removing Rings
-	/doevents flush ForesightRing
 	| The Hazard will cast spell 5695 Crippling Clamp, 1200 DD, 25% slow, 60 disease counters
 	| save the ring information and unequip
 	/call RemoveRingset
@@ -496,7 +478,6 @@ Sub EVENT_ForesightRing
 Sub EVENT_ForesightRingSafe
 	/call LoadRingset
 	/varset HasRemovedRings		FALSE
-	/doevents flush ForesightRingSafe
 /return
 
 
@@ -506,13 +487,11 @@ Sub EVENT_ForesightKyvSafe
 	/varset IsDucking			FALSE
 	/varset IsMovingAnywhere	FALSE
 	/echo \ag: IsHoldingStill:${IsHoldingStill} IsDucking:${IsDucking} IsMovingAnywhere:${IsMovingAnywhere}
-	/doevents flush ForesightKyvSafe
 /return
 
 
 Sub EVENT_ForesightReflect
 	| The dragorns will cast spell: 5699
-	/doevents flush ForesightReflect
 	/if (${str_classArchetype.Equal[CASTER]}) {
 		/declare wait int local 0
 		/say stopping for Reflection
@@ -521,7 +500,6 @@ Sub EVENT_ForesightReflect
 		
 		:ReflectDelay
 		/varcalc wait ${wait}+1
-		/doevents flush ForesightReflect
 		/if (${wait} < 11) {
 			/echo Waiting for DS to fade (no emote)
 			/delay 10
@@ -534,14 +512,12 @@ Sub EVENT_ForesightReflect
 /return
 
 Sub EVENT_ForesightAEMaxDPS
-	/doevents flush ForesightAEMaxDPS
 	| do we want to do anything on this? likely not.
 /return
 
 
 
 Sub EVENT_D1
-	/doevents flush D1
 	/if (${Navigation.Active}) /nav stop
 	/nav wp D1
 	| moving to Destination Y,X,Z will movement loop until Distance between me, and destination < 50
@@ -559,7 +535,6 @@ Sub EVENT_D1
 /return
 
 Sub EVENT_D2
-	/doevents flush D2
 	/if (${Navigation.Active}) /nav stop
 	/nav wp D2
 	| moving to Destination Y,X,Z will movement loop until Distance between me, and destination < 50
@@ -577,7 +552,6 @@ Sub EVENT_D2
 /return
 
 Sub EVENT_D3
-	/doevents flush D3
 	/if (${Navigation.Active}) /nav stop
 	/nav wp D3
 	| moving to Destination Y,X,Z will movement loop until Distance between me, and destination < 50
@@ -595,7 +569,6 @@ Sub EVENT_D3
 /return
 
 Sub EVENT_D4
-	/doevents flush D4
 	/if (${Navigation.Active}) /nav stop
 	/nav wp D4
 	| moving to Destination Y,X,Z will movement loop until Distance between me, and destination < 50
@@ -613,7 +586,6 @@ Sub EVENT_D4
 /return
 
 Sub EVENT_D5
-	/doevents flush D5
 	/if (${Navigation.Active}) /nav stop
 	/nav wp D5
 	| moving to Destination Y,X,Z will movement loop until Distance between me, and destination < 50
@@ -630,7 +602,6 @@ Sub EVENT_D5
 /return
 
 Sub EVENT_D6
-	/doevents flush D6
 	/if (${Navigation.Active}) /nav stop
 	/nav wp D6
 	| moving to Destination Y,X,Z will movement loop until Distance between me, and destination < 50

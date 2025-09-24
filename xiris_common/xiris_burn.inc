@@ -53,7 +53,6 @@ Sub EVENT_BurnOn
 	/echo \agEnabling \arBurn \agMode
 	/varset bln_burning TRUE
 	/varset bln_checkForCry FALSE
-	/doevents flush BurnOn
 /return
 
 Sub EVENT_BurnOnAll
@@ -62,7 +61,6 @@ Sub EVENT_BurnOnAll
 	/echo \agEnabling \arBurn ALL \agMode
 	/varset bln_burning TRUE
 	/varset bln_checkForCry FALSE
-	/doevents flush BurnOnAll
 /return
 
 Sub EVENT_BurnOn1
@@ -72,7 +70,6 @@ Sub EVENT_BurnOn1
 		/varset bln_burning TRUE
 	}
 	/varset bln_checkForCry TRUE
-	/doevents flush BurnOn1
 /return
 
 Sub EVENT_BurnOn2
@@ -82,14 +79,12 @@ Sub EVENT_BurnOn2
 		/varset bln_burning TRUE
 	}
 	/varset bln_checkForCry FALSE
-	/doevents flush BurnOn2
 /return
 
 Sub EVENT_BurnOff
 	/echo \agDisablig \ayBurn \agMode
 	/varset bln_burning FALSE
 	/varset bln_checkForCry FALSE
-	/doevents flush BurnOff
 	|/call chkCryActive
 /return
 

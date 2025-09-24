@@ -632,7 +632,6 @@ Sub chkSpellMemorized(string _spell, bool _wait, string _gem)
 
 Sub Event_ChkHasSpell(_line, _sender, _eventParams)
 	/echo line: ${_line} sender: ${_sender} params:${_eventParams}
-	/doevents flush ChkHasSpell 
 	/declare clz   string local ${_eventParams.Arg[1,|]}
 	/declare sName string local ${_eventParams.Arg[2,|]}
 	/call chkHasSpell ${clz} "${sName}"
@@ -702,20 +701,17 @@ Sub ResetCastTimers
 |-- MEZ IMMUNE
 Sub Event_MezImmune
 	/${cmdChannel} mezimmunemob ${Target.CleanName}
-	/doevents flush MezImmune
 /return
 
 |-- SNARE IMMUNE-|
 Sub Event_SnareImmune
 	/varset bln_snareActive	TRUE
 	/${cmdChannel} snareimmunemob ${Target.CleanName}
-	/doevents flush SnareImmune
 /return
 
 Sub Event_Snareon
 	/varset bln_snareActive	TRUE
 	/if (${bln_snareUse}) /${cmdChannel} snared: ${Target.CleanName}
-	/doevents flush Snareon
 /return
 
 Sub Event_SnareResist
@@ -729,12 +725,10 @@ Sub Event_SnareResist
 		/varcalc int_snareCounter ${int_snareCounter}+1
 		/if (${bln_snareUse}) /${cmdChannel} snare resisted LTE 3: Trying Again
 	}
-	/doevents flush SnareResist
 /return
 
 Sub Event_SnareWornOff
 	/varset bln_snareActive FALSE
-	/doevents flush SnareWornOff
 /return
 
 Sub EVENT_SetUseFastOnly(_line, _chatSender, _eventParams)
@@ -745,7 +739,6 @@ Sub EVENT_SetUseFastOnly(_line, _chatSender, _eventParams)
 		/echo \aoSetting fast only:\ag${_eventParams}
 		/varset bln_useFastOnly FALSE
 	}
-	/doevents flush SetUseFastOnly
 /return 
 
 
@@ -762,7 +755,6 @@ Sub EVENT_SetResistType(_line, _chatSender, _eventParams)
 	
 	/if (${_strResists.Equal[ALL]}) /varset _strResists ${str_defaultResistTypes}
 	/call SetResistTypes ${_strResists}
-	/doevents flush SetResistType
 /return 
 
 Sub SetResistTypes(string _typesCSV)

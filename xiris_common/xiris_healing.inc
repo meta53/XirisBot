@@ -177,19 +177,16 @@ Sub EVENT_FocusHEALMT_OFF
 	/echo \aoFocus Healing MT \agOFF
 	/varset bln_focusHealMT FALSE
 	/call ChangeHealType 2
-	/doevents flush FocusHEALMT_OFF
 /return
 
 Sub EVENT_FocusHEALMT_ON
 	/echo \aoFocus Healing MT \agON
 	/varset bln_focusHealMT TRUE
 	/call ChangeHealType 1
-	/doevents flush FocusHEALMT_ON
 /return
 
 Sub EVENT_CheckHoTOnTarget
 	/call chkTargetHoT
-	/doevents flush CheckHoTOnTarget
 /return 
 
 Sub chkTargetHoT
@@ -203,7 +200,6 @@ Sub chkTargetHoT
 Sub EVENT_GroupHeal
 	/echo Blasting Group Heal!
 	/call MQ2Cast "${str_heal_group}" gem1 5s
-	/doevents flush GroupHeal
 /return
 
 Sub EVENT_ChangeHP(_line, _chatSender, _eventParams)
@@ -213,7 +209,6 @@ Sub EVENT_ChangeHP(_line, _chatSender, _eventParams)
 		/varset	int_point_tank_normal ${HP}
 		/dgt [${Me.Class.ShortName}] ${Me.Name} ${str_action} >> ${Spawn[id ${int_MTID}].CleanName} <<  @ ${int_point_tank_normal}
 	}
-	/doevents flush ChangeHP
 /return
 
 Sub EVENT_ChangeHPTank(_line, _chatSender, _eventParams)
@@ -259,7 +254,6 @@ Sub EVENT_ChangeHPGroup(_line, _chatSender, _eventParams)
 Sub EVENT_HealMode(_line, _chatSender, _eventParams)
 	/if (${Me.Class.ShortName.NotEqual[CLR]}) /return
 	/call ChangeHealMode ${_eventParams}
-	/doevents flush HealMode
 /return
 
 
@@ -293,7 +287,6 @@ Sub ChangeHealMode(string _strMode)
 Sub EVENT_HealPoints(_line, _chatSender, _eventParams)
 	/if (${Me.Class.ShortName.NotEqual[CLR]}) /return
 	/call ChangeHealPoints ${_eventParams}
-	/doevents flush HealMode
 /return
 
 Sub ChangeHealPoints(string _strHealPointKey)
@@ -333,7 +326,6 @@ Sub ChangeHealPoints(string _strHealPointKey)
 Sub EVENT_HealType(_line, _chatSender, _eventParams)
 	/if (${Me.Class.ShortName.NotEqual[CLR]}) /return
 	/call ChangeHealType ${_eventParams}
-	/doevents flush HealMode
 /return
 
 Sub ChangeHealType(int _type) 
@@ -439,12 +431,10 @@ Sub setCelRegenChain
 Sub EVENT_CelRegenStart
 	/varset bln_celRegenActive TRUE
 	/call chkCelRegen
-	/doevents flush CelRegenStart
 /return 
 
 Sub EVENT_CelRegenStop 
 	/varset bln_celRegenActive FALSE 
-	/doevents flush CelRegenStop
 /return 
 
 
@@ -1059,7 +1049,6 @@ Sub heal_chStart(string _chSettings, _position)
 		/goto :chLoop
 	:return
 	/varset bln_chChainMember FALSE
-	/doevents flush CHStart
 /return
 
 
@@ -1067,7 +1056,6 @@ Sub heal_chStart(string _chSettings, _position)
 Sub EVENT_CHPause(_line, _sender, _eventParams)
 	/echo \awPausing CH ${_eventParams}
 	/call heal_chPause ${_eventParams}
-	/doevents flush CHPause
 /return
 
 Sub heal_chPause(int _timeMS)
@@ -1080,7 +1068,6 @@ Sub heal_chPause(int _timeMS)
 Sub Event_CHResume
 	/echo \awResuming CH
 	/call heal_chResume
-	/doevents flush CHResume
 /return
 
 Sub heal_chResume
@@ -1094,7 +1081,6 @@ Sub EVENT_CHStop(_line, _sender, _eventParams)
 	/if (!${bln_chChainMember}) /return
 	/echo \awStopping CH ${_eventParams}
 	/call heal_chStop ${_eventParams}
-	/doevents flush CHStop
 /return
 
 Sub heal_chStop(int _chainID)

@@ -41,7 +41,6 @@ Sub Events_OOW_MPG_Adaptation
 /return
 
 Sub EVENT_DestructionActive 
-    /doevents flush DestructionActive
     /if (${glowTimer}) /return
     /echo \arDESTRUCTION Glow Triggered! ${Time.Time24}
     /gsay DESTRUCTION Glow Triggered! ${Time.Time24}

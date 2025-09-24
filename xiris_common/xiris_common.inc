@@ -475,7 +475,6 @@ Sub chkSit
 |--Engage Target EVENT, calls EngageTarget
 Sub EVENT_KillMob(_line, _sender, _eventParams)
 	/if (${_eventParams.Arg[1, ].Equal[NULL]}) /return
-	/doevents flush KillMob
 	/call EngageTarget ${_eventParams.Arg[1, ]}
 /return
 
@@ -653,7 +652,6 @@ Sub chkTargetStatus
 
 Sub Event_BackOff
 	/echo \ao Event Back Off Called
-	/doevents flush BackOff
 	/call Disengage
 /return
 
@@ -869,7 +867,6 @@ Sub Event_SKILLCHECK(_line, _sender, _eventParams)
 |--------------------------------------------------------------------------------
 Sub Event_SetupRaid(_line, _sender, _eventParams)
 	/call SetupRaid ${_eventParams.Arg[1,|]}
-	/doevents flush SetupRaid
 /return 
 
 
@@ -977,7 +974,6 @@ Sub Event_EndMac
 	/delay 2m
 	/camp desktop
 	/end
-	/doevents flush EndMac
 /return
 
 
@@ -1044,7 +1040,6 @@ Sub Event_RageOn(string line)
 		/pet back off
 		/varset bln_enraged TRUE
 	}
-	/doevents flush RageOn
 /return
 
 Sub Event_RageOff(string line)
@@ -1056,7 +1051,6 @@ Sub Event_RageOff(string line)
 		/pet attack
 		/varset bln_enraged FALSE
 	}
-	/doevents flush RageOff
 /return
 
 
@@ -1075,14 +1069,12 @@ Sub EVENT_DUCKON
 		/delay 1s
 		/goto :ducking
 	}
-	/doevents flush DuckOn
 /return
 
 Sub EVENT_DUCKOFF
 	/echo end ducking!
 	/if (${Me.Ducking}) /keypress x
 	/varset bln_ducking FALSE
-	/doevents flush DuckOff
 /return
 
 
@@ -1094,7 +1086,6 @@ Sub Event_Zoned
 	/echo \awEvent_Zoned ${Time.Time24}
 	/call setExclusions
 	/if (${MacroQuest.GameState.Equal[CHARSELECT]}) /end
-  	/doevents flush Zoned
 /return
 
 
@@ -1185,7 +1176,6 @@ Sub EVENT_ChangeMT(_line, _sender, _eventParams)
 		/varset bln_tanking 	FALSE
 		/varset bln_taunting 	FALSE
 	}
-	/doevents flush ChangeMT
 /return
 
 Sub setMT(string _tankName)
@@ -1200,7 +1190,6 @@ Sub EVENT_ChangeSA(_line, _sender, _eventParams)
 	/echo _eventParams:${_eventParams}
 	/declare SA string local ${_eventParams.Arg[1, ]}
 	/varset	int_STID ${Spawn[${SA}].ID}
-	/doevents flush ChangeSA
 /return
 
 
@@ -1213,7 +1202,6 @@ Sub EVENT_ChangeAP(_line, _sender, _eventParams)
 		/varset	int_assistAt ${AP}
 		/dgt [${Me.Class.ShortName}] ${Me.Name} ${str_action} >> ${Spawn[id ${int_MTID}].CleanName} <<  @ ${int_assistAt}
 	}
-	/doevents flush ChangeAP
 /return
 
 
@@ -1291,7 +1279,6 @@ SUB EVENT_shrinkGroup
 		/delay 5
 		/exchange "${originalItem}" ${FindItem[${shrink_ItemName}].WornSlot[1].Name}
 	}
-	/doevents flush shrinkGroup
 /return
 |-------------------------------------------------------------|
 |- Reliably determine if target is Named				     -|
@@ -1306,7 +1293,6 @@ Sub EVENT_ForceNamed(_line, _chatSender, _eventParams)
 		/echo \aoForcing named only mode:\ag${_eventParams}
 		/varset bln_forceNamed FALSE
 	}
-	/doevents flush ForceNamed
 /return
 
 
@@ -1348,11 +1334,9 @@ Sub chkDead
 |-- CHECK NAKED
 Sub Event_CheckNaked
 	/call chkNaked
-	/doevents flush CheckNaked
 /return
 
 Sub chkNaked
-	/doevents flush chkNaked
 	/if (!${Me.Inventory[2].ID} && !${timer_naked}) {
 		/docommand /${announceChannel} I am NAKED. 
 		/varset bln_naked TRUE
@@ -1363,7 +1347,6 @@ Sub chkNaked
 /return
 
 Sub Event_FixCorpses
-	/doevents flush FixCorpses
 	/hidecorpse all
 	/delay 2
 	/hidecorpse none
@@ -1494,24 +1477,20 @@ SUB RefreshXTarget
 |----------------------------------------------------|
 |--Save Events
 Sub EVENT_SaveJewelry
-	/doevents flush SaveJewelry 
 	/call SaveRingset
 	/call SaveFaceSlot
 	/call SaveEarrings
 /return 
 
 Sub EVENT_SaveRingset
-	/doevents flush SaveRingset
 	/call SaveRingset
 /return
 
 Sub EVENT_SaveFaceSlot
-	/doevents flush SaveFaceSlot 
 	/call SaveFaceSlot
 /return 
 
 Sub EVENT_SaveEarrings
-	/doevents flush SaveEarrings 
 	/call SaveEarrings
 /return 
 
@@ -1544,7 +1523,6 @@ Sub SaveEarrings
 |-----
 Sub EVENT_RemoveRingset
 	/echo removingRingset
-	/doevents flush RemoveRingset
 	/call RemoveRingset
 /return
 
@@ -1623,7 +1601,6 @@ Sub FindEmptyBagSlot
 
 |-- method to load the saved rings from INI (primarily for Trial of Foresight)
 Sub EVENT_LoadRingset
-	/doevents flush LoadRingset
 	/echo \ayLoading Ringset
 	/call LoadRingset
 /return
@@ -1659,7 +1636,6 @@ Sub LoadRingset
 /return 
 
 Sub Event_LoadFaceSlot
-	/doevents flush LoadFaceSlot
 	/call LoadFaceSlot
 /return 
 
@@ -1832,7 +1808,6 @@ Sub Event_SkillCheck(string _line, string _sender, string _eventParams)
 		/docommand /${announceChannel} ${Me.Skill[${_eventParams}]}
 		/nav wp lobby
 	}
-	/doevents flush SkillCheck
 
 /return
 
