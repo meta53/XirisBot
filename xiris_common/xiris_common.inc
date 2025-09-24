@@ -406,18 +406,18 @@ Sub UpdateEnvironmentCache
     /if (${timer_envCache}) /return
 	|/echo \agUpdating Environment Cache
 
-    /varset cache_zoneShort      ${cache_zoneShort}
-    /varset cache_boundZone      ${cache_boundZone}
-    /varset cache_npcR200        ${SpawnCount[npc radius 200]}
-    /varset cache_npcR400        ${cache_npcR400}
-    /varset cache_hasXTarget     ${cache_hasXTarget}
-    /varset cache_now            ${Time.Time24}
+    /varset cache_zoneShort   ${Zone.ShortName}
+    /varset cache_boundZone   ${Me.BoundLocation[0]}
+    /varset cache_npcR200     ${SpawnCount[npc radius 200]}
+    /varset cache_npcR400     ${SpawnCount[npc radius 400]}
+    /varset cache_hasXTarget  ${Me.XTarget}
+    /varset cache_now         ${Time.Time24}
 
     /if (${Target.ID}) {
-        /varset cache_targetID       ${cache_targetID}
-        /varset cache_targetType     ${cache_targetType}
-        /varset cache_targetName     ${cache_targetName}
-        /varset cache_targetIsCorpse ${cache_targetType.Equal[corpse]}
+        /varset cache_targetID       ${Target.ID}
+        /varset cache_targetType     ${Target.Type}
+        /varset cache_targetName     ${Target.DisplayName}
+        /varset cache_targetIsCorpse ${Target.Type.Equal[corpse]}
     } else {
         /varset cache_targetID       0
         /varset cache_targetType     
