@@ -674,14 +674,12 @@ Sub killTarget
 
 
 Sub Event_TooClose
-	/doevents flush TooClose
 	/echo Event_TooClose
 	/varset bln_tooClose TRUE
 	
 /return
 
 Sub Event_NoLOS
-	/doevents flush NoLOS
 	/echo Event_NoLOS
 	/nav target
 	/delay 10

@@ -79,7 +79,6 @@ Sub EVENT_ToggleMQ2Melee(string _pluginState)
 	} else {
 		/call toggleMQ2Melee FALSE
 	}
-	/doevents flush TOGGLEMQ2MELEE
 /return
 
 Sub toggleMQ2Melee(bool _state) 
@@ -96,8 +95,6 @@ Sub toggleMQ2Melee(bool _state)
 Sub Event_UpdateStickCMD(_line, _sender, _eventParams)
 	/echo updateStickCMD ${_sender}
 	/echo _eventParams	${_eventParams}
-
-	/doevents flush UpdateStickCMD
 /return
 
 
@@ -105,7 +102,6 @@ Sub Event_UpdateStickCMD(_line, _sender, _eventParams)
 Sub EVENT_RiposteDisc(_line, _sender, _eventParams)
 	/echo turning riposte disc on
 	/call FireRiposteDisc
-	/doevents flush RiposteDisc
 /return
 
 Sub FireRiposteDisc
@@ -349,7 +345,6 @@ Sub chkComponentsAll
 Sub EVENT_DISC_NOTAVAILABLE(string line)
 	/echo EVENT_DISC_NOTAVAILABLE 
 	/echo $(line)
-	/doevents flush DISC_NOTAVAILABLE
 /return
 
 
@@ -436,7 +431,6 @@ Sub chkComponents(string _component, int _count, string _type, string _summoner,
 
 Sub EVENT_GETCLOSER
 	/if (!${Target.ID} || ${Target.PctHPs} == 0 || !${bln_engaged} || ${timer_getCloser}) /return 
-	/doevents flush GETCLOSER
 	/varset timer_getCloser 4s
 	| If the target is less than max stick distance, adjust the stick
 	/call StickAdjust
@@ -444,7 +438,6 @@ Sub EVENT_GETCLOSER
 
 SUB EVENT_CANTSEETARGET
 	/if (!${Target.ID} || ${Target.PctHPs} == 0 || !${bln_engaged} || ${timer_cantSee}) /return 
-	/doevents flush CANTSEETARGET
 	/varset timer_cantSee 10s 
 	/face fast
 /return
@@ -524,7 +517,6 @@ Sub EVENT_RESTICK
 	/if (${bln_engaged} && (${bln_meleeOverride} || ${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}))  {
 		/call StickToTarget ${bln_engaged}
 	}
-	/doevents flush RESTICK
 /return
 
 
@@ -549,7 +541,6 @@ Sub EVENT_AERAMP
 			/call MQ2Cast "99" alt
 		}
 	}
-	/doevents flush AERAMP
 /return
 
 |-- Swap sets

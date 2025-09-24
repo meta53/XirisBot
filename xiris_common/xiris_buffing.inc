@@ -91,8 +91,6 @@ Sub EVENT_DORAIDBUFFS(_line, _chatSender, _eventParams)
 	/delay 10
 	| Restore the previous spellset
 	/memspellset ${str_spellset}
-
-	/doevents flush DORAIDBUFFS
 /return
 
 Sub EVENT_DOCHARBUFFS(_line, _chatSender, _eventParams)
@@ -106,8 +104,6 @@ Sub EVENT_DOCHARBUFFS(_line, _chatSender, _eventParams)
 	/delay 10
 	| Restore the previous spellset
 	/memspellset ${str_spellset}
-	
-	/doevents flush DOCHARBUFFS
 /return
 
 
@@ -121,8 +117,6 @@ Sub EVENT_DOSINGLETARGETBUFFS(_line, _chatSender, _eventParams)
 		/call doSingleTargetBuffOnChar ${_eventParams}
 	}
 	/memspellset ${str_spellset}
-	
-	/doevents flush DOSINGLETARGETBUFFS
 /return
 
 Sub EVENT_DOSPECIFICBUFFONCHAR(string _text, string _sender, string _buffer, string _spell);
@@ -138,7 +132,6 @@ Sub EVENT_DOSPECIFICBUFFONCHAR(string _text, string _sender, string _buffer, str
 	/memspellset buff
 	/call doSpecificBuffOnChar ${_sender} "${_spell}"
 	/memspellset ${str_spellset}
-	/doevents flush DOSPECIFICBUFFONCHAR
 /return
 
 
@@ -624,12 +617,10 @@ Sub EVENT_REMOVEBUFF(_line, _chatSender, _eventParams)
 	/declare buffToRemove string local ${_eventParams.Arg[1,-]}
 	/echo \awEvent Remove Buff called: ${_eventParams} -> ${buffToRemove}
 	/call RemoveBuff "${buffToRemove}"
-	/doevents flush REMOVEBUFF
 /return
 
 Sub EVENT_REMOVEALLBUFFS(_line, _chatSender, _eventParams)
 	/call RemoveAllBuffs
-	/doevents flush REMOVEALLBUFFS
 /return
 
 Sub RemoveAllBuffs
@@ -671,7 +662,6 @@ Sub RemoveDS
 		/medley ${str_currentMedley}
 	}	
 	:return
-	/doevents flush NoDS
 /return 
 
 
@@ -684,7 +674,6 @@ Sub EVENT_YesDS(_line, _sender, _eventParams)s
 		/medley ${str_savedMedley}
 	}
 	:return
-	/doevents flush YesDS
 /return
 
 

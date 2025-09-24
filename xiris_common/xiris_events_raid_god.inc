@@ -154,7 +154,6 @@ Sub Events_GoD_Tacvi
 |--------------------------------------------------------------------------------
 Sub Event_UquaKey(string line,string key)
   /docommand /${announceChannel} ${key}
-  /doevents flush UquaKey
 /return
 |--------------------------------------------------------------------------------
 
@@ -198,7 +197,6 @@ Sub Event_NoqCurse(_line, _chatSender, _eventParams)
 	/squelch /attack off 
 	/squelch /stick off
 	/call InkNoqRun ${curseID}
-	/doevents flush NoqCurse
 /return
 
 Sub InkNoqRun(int _curseID)
@@ -207,7 +205,6 @@ Sub InkNoqRun(int _curseID)
 		/return
 	} 
 	/docommand /${announceChannel} Running Noqufiel ${_curseID}
-	/doevents flush
 	/stick off
 	/call Disengage
 	|-- find which cursebearer has you on aggro;
@@ -260,7 +257,6 @@ Sub InkNoqRun(int _curseID)
 	/varset inkRunning FALSE
 	/nav spawn pc ${str_MTName}
 	|-- clear events queue so we dont get into an echo chamber
-	/doevents flush
 /return
 
 | Method for the nukers to check for Cursebearers during the Noqufiel events
@@ -334,7 +330,6 @@ Sub InkCurseRun
 			/doevents NoqSafe
 			/if (!${inkRunning}) {
 				/play off
-				/doevents flush
 				/return
 			}
 			/goto :movement
@@ -401,7 +396,6 @@ Sub InkDeath
 	/delay 30
     /keypress back
 	:InkDeathWait
-	/doevents flush
 	/if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) {
 		/delay 5s
 		/goto :InkDeathWait
@@ -411,32 +405,26 @@ Sub InkDeath
 
 Sub Event_CC1 
   /if (!${inkRunning}) /nav wp cc1
-  /doevents flush CC1
 /return
 
 Sub Event_CC2 
   /if (!${inkRunning}) /nav wp cc2
-  /doevents flush CC2
 /return
 
 Sub Event_CC3 
   /if (!${inkRunning}) /nav wp cc3
-  /doevents flush CC3
 /return
 
 Sub Event_CC4 
   /if (!${inkRunning}) /nav wp cc4
-  /doevents flush CC4
 /return
 
 Sub Event_CC5 
   /if (!${inkRunning}) /nav wp cc5
-  /doevents flush CC5
 /return
 
 Sub Event_CC6 
   /if (!${inkRunning}) /nav wp cc6
-  /doevents flush CC6
 /return
 
 |--Ikkinz4
@@ -450,7 +438,6 @@ Sub Event_KeeperPosition
 			/nav wp kclr
 		}
 	}
-	/doevents flush KeeperPosition
 /return
 
 
@@ -462,7 +449,6 @@ Sub EVENT_VORRAMP
 	} else {
 		/return
 	}
-	/doevents flush VORRAMP
 /return
 
 Sub EVENT_VORBLUR
@@ -476,7 +462,6 @@ Sub EVENT_VORBLUR
 			/attack on
 		}
 	}
-	/doevents flush VORBLUR
 /return 
 
 
@@ -489,7 +474,6 @@ SUB EVENT_PIRIKACTIVE
 	/if (${Me.Class.ShortName.Equal[CLR]}) {
 		/call InterruptOFF
 	}
-	/doevents flush PIRIKACTIVE
 /return
 
 SUB EVENT_BALANCE
@@ -591,7 +575,6 @@ SUB EVENT_BALANCE
 		/call BalancerReset
 	} 
 :return
-/doevents flush BALANCE
 /return	
 
 Sub BalancerKillMelee(string _targetName, int _targetID, int _balanceTo)
@@ -663,7 +646,6 @@ Sub BalancerKillCaster(string _targetName, int _targetID, int _balanceTo)
 
 Sub EVENT_BALANCEOFF
 	/call BalancerReset
-	/doevents flush BALANCEOFF
 /return
 
 Sub BalancerReset
@@ -671,8 +653,6 @@ Sub BalancerReset
 	/varset bln_balancing FALSE
 	
 	/if (${str_classArchetype.Equal[PRIEST]}) /return
-
-	/doevents flush
 	/call Disengage
 
 	|-- Kvxe
@@ -719,7 +699,6 @@ Sub EVENT_BALANCERAPE
 		/call MQ2Cast "${str_heal_normal}" gem2 1s
 		/if (!${SpawnCount[npc kvxe]}) /return
 	/goto :balanceRapeHeal
-	/doevents flush BALANCERAPE
 /return
 
 |**
@@ -731,7 +710,6 @@ BARINDU
 Sub EVENT_BALANCERAPEOFF
 	/echo Turning Spam Healing off.
 	/varset balanceRapeHeal FALSE
-	/doevents flush BALANCERAPEOFF
 /return	
 
 Sub EVENT_Crematory

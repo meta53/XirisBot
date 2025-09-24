@@ -145,7 +145,6 @@ Sub chkTureEvents
 /return 
 
 Sub Event_TureRampOn
-	/doevents flush TureRampOn
 	/echo \ao TURE RAMPAGE: \awengaged?\ag${bln_engaged} \awtanking?\ag${bln_tanking}
 	/if (${bln_tanking}) /return
 	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
@@ -181,13 +180,11 @@ Sub Event_TureRampOff
 	} else /if (${Me.Class.ShortName.Equal[NEC]} || ${Me.Class.ShortName.Equal[MAG]} || ${Me.Class.ShortName.Equal[BST]}) {
 		/pet attack
 	}
-	/doevents flush TureRampOn
 /return 
 
 Sub Event_TureWanton 
 	/echo \aw Warning! \arWanton Destruction \awon me!
 	/call chkNeedCure
-	/doevents flush TureWanton
 /return
 
 |----------------------------
@@ -432,7 +429,6 @@ Sub Event_HanvarStart
 	/echo \ag HANVAR EVENT STARTED \aw@ \ao${Time.Time24}
 	/varset eventTarget Hanvar
 	/varset bln_hanvarEngaged TRUE
-	/doevents flush HanvarStart
 /return
 
 Sub Event_HanvarSetup
@@ -448,7 +444,6 @@ Sub Event_HanvarSetup
 	}
 	| We need to light up the fucker with DOTs and Cold Nukes
 	|/if (${Me.Class.ShortName.Equal[SHM]}) /call setSpell
-	/doevents flush HanvarSetup
 /return
 
 Sub Event_HanvarRetreat(string _sender, string _line, string _eventParams)
@@ -459,8 +454,6 @@ Sub Event_HanvarRetreat(string _sender, string _line, string _eventParams)
 			/nav wp hanvarSafe
 		} 
 	}
-	/doevents flush HanvarKill
-	/doevents flush HanvarRetreat
 /return
 
 Sub Event_HanvarKill(string _sender, string _line, string _eventParams)
@@ -477,8 +470,6 @@ Sub Event_HanvarKill(string _sender, string _line, string _eventParams)
 	}
 
 	:return
-	/doevents flush HanvarKill
-	/doevents flush HanvarRetreat
 /return
 
 
@@ -510,7 +501,6 @@ Sub chkAMVEvents
 Sub Event_AMVStart
 	/varset bln_amvEngaged TRUE 
 	/varset eventTarget Vangl
-	/doevents flush AMVStart
 /return
 
 
@@ -526,12 +516,10 @@ Sub EVENT_AMVKill
 	}
 
 	:return
-	/doevents flush AMVKill
 /return 
 
 
 Sub EVENT_AMVRetreat
-	/doevents flush AMVRetreat
 	/call chkMarkedForDeathCureDist 
 /return
 
@@ -614,7 +602,6 @@ Sub chkOMMEvents
 /return 
 
 Sub Event_OMMStart 
-	/doevents flush OMMStart
 	/varset bln_OMMEngaged TRUE 
 	/varset eventTarget Overlord
 
@@ -657,7 +644,6 @@ Sub OMM_MTEngage
 /return 
 
 Sub Event_GazeYou 
-	/doevents flush GazeYou
 	/call Interrupt
 	/delay 20
 	/echo \arGAZE OF MATA MURAM on ME!
@@ -721,7 +707,6 @@ Sub Event_GazeYou
 /return 
 
 Sub Event_GazeBurst
-	/doevents flush GazeBurst
 	/echo \arGAZE BURST \aw${Time.Time24}
 	/if (${Me.ID} == ${int_MTID}) {
 		/if (${Me.CombatAbilityReady[Furious Discipline]}) /doability "Furious Discipline"
@@ -729,7 +714,6 @@ Sub Event_GazeBurst
 /return 
 
 Sub Event_GazeDone
-	/doevents flush GazeDone
 	/echo \arGAZE DONE \aw${Time.Time24}
 /return
 
@@ -865,7 +849,6 @@ Sub chkOMMAdds
 /return
 
 Sub EVENT_OMMWarCry
-	/doevents flush OMMWarCry 
 	/if (${Me.Class.ShortName.NotEqual[ENC]}) /return 
 	/if (!${Pet.ID}) /return
 	/if (${Pet.Buff[Ancient: Cry of Chaos]}) /return
@@ -921,7 +904,6 @@ Sub RequestBerserkerWarCry(int _targetID)
 |----------------------------
 
 Sub EVENT_MarkOfDeath
-	/doevents flush MarkOfDeath
 	/echo \arMarked via EVENT
 	/if (!${bln_amvEngaged} && ${eventTarget.Equal[Vangl]})    /varset bln_amvEngaged TRUE
 	/if (!${bln_OMMEngaged} && ${eventTarget.Equal[Overlord]}) /varset bln_OMMEngaged TRUE
@@ -929,7 +911,6 @@ Sub EVENT_MarkOfDeath
 /return
 
 Sub Event_MarkOfDeathFades 
-	/doevents flush MarkOfDeathFades  
 	/echo \agMarkFaded via EVENT
 	/call SQLCheckMark TRUE
 /return 
@@ -1102,7 +1083,6 @@ Sub SQLCureMark
 
 
 Sub EVENT_RootTankOn
-	/doevents flush RootTankOff
 	/echo \aoRooting myself!
 	/varset root_Y ${Me.Y}
 	/varset root_X ${Me.X}
@@ -1111,7 +1091,6 @@ Sub EVENT_RootTankOn
 /return 
 
 Sub EVENT_RootTankOff
-	/doevents flush RootTankOff
 	/echo \aoUn-rooting myself!
 	/varset bln_rootTank FALSE
 /return

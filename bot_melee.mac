@@ -162,7 +162,6 @@ Sub chkUtils
 /return
 
 Sub EVENT_WARCRYON_1
-	/doevents flush WARCRYON_1
 	/if (${BURN_Group}==1) {
 		/echo \agEnabling \arWarCry \agMode on CoHort \ao1
 		/call FireWarCry
@@ -170,7 +169,6 @@ Sub EVENT_WARCRYON_1
 /return 
 
 Sub EVENT_WARCRYON_2
-	/doevents flush WARCRYON_2
 	/if (${BURN_Group}==2) {
 		/echo \agEnabling \arWarCry \agMode on CoHort \ao2
 		/call FireWarCry

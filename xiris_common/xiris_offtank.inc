@@ -57,12 +57,10 @@ Sub Events_Offtanking
 
 Sub EVENT_OFFTANKON
 	/call ToggleOfftanking TRUE
-	/doevents flush OFFTANKON
 /return
 
 Sub EVENT_OFFTANKOFF
 	/call ToggleOfftanking FALSE
-	/doevents flush OFFTANKOFF
 /return
 
 Sub EVENT_OFFTANKRADIUS(_line, _chatSender, _eventParams) 
@@ -75,12 +73,10 @@ Sub ChangeOfftankRadius(_radius)
 
 SUB EVENT_DION
 	/varset bln_useDI TRUE
-	/doevents flush DION
 /return 
 
 Sub EVENT_DIOFF
 	/varset bln_useDI FALSE
-	/doevents flush DIOFF
 /return
 
 Sub ToggleOfftanking(bool _blnOT)

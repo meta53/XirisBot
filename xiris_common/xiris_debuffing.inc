@@ -51,13 +51,11 @@ Sub EVENT_DebuffTarget(_line, _sender, _eventParams)
 	/varset ForceNamed TRUE
 	/if (!${DEBUFF_Total}) /return 
 	/call CastDebuffsOnTarget ${_eventParams.Arg[1, ]} TRUE
-	/doevents flush DebuffTarget
 /return
 
 Sub EVENT_SlowTarget(_line, _chatSender, _eventParams) 
 	/if (${Me.Class.ShortName.NotEqual[SHM]} || ${Me.Class.ShortName.NotEqual[ENC]}) /return
 	/call SlowTarget ${_eventParams}
-	/doevents flush SlowTarget
 /return
 
 Sub SlowTarget(string _resist)
