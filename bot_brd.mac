@@ -115,6 +115,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 
 	:MainLoop
 		/if (${Me.Hovering} || ${Window[tradewnd].Open} || ${Window[lootwnd].Open}) /goto :MainLoop
+		
 		|-- Check all Events
 		/call RunAllEvents
 

@@ -215,6 +215,7 @@ Sub TrimRapidEvents(int _count)
 
 
 Sub RunBackgroundEvents
+    /call UpdateEnvironmentCache
     /if (${BackgroundEvents.Size} == 0) /return
     /declare i int local 1
     /for i 1 to ${BackgroundEvents.Size}
@@ -225,6 +226,7 @@ Sub RunBackgroundEvents
 /return
 
 Sub RunRaidEvents
+    /call UpdateEnvironmentCache
     /if (${RaidEvents.Size} == 0) /return
     /declare j int local 1
     /for j 1 to ${RaidEvents.Size}
@@ -235,6 +237,7 @@ Sub RunRaidEvents
 /return
 
 Sub RunClassEvents
+    /call UpdateEnvironmentCache
     /if (${ClassEvents.Size} == 0) /return
     /declare k int local 1
     /for k 1 to ${ClassEvents.Size}
@@ -245,6 +248,7 @@ Sub RunClassEvents
 /return
 
 Sub RunRapidEvents
+    /call UpdateEnvironmentCache
     /if (${RapidEvents.Size} == 0) /return
     /declare k int local 1
     /for k 1 to ${RapidEvents.Size}
@@ -256,6 +260,7 @@ Sub RunRapidEvents
 
 
 Sub RunAllEvents
+    /call UpdateEnvironmentCache
     /call RunBackgroundEvents
     /call RunRaidEvents
     /call RunClassEvents

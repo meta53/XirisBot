@@ -338,7 +338,7 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/declare int_campY 				int 	outer 	${Me.Y}
 	/declare int_campZ 				int 	outer 	${Me.Z}
 	/declare int_campRadius			int		outer	85			
-	/declare str_startZone			string	outer ${Zone.ShortName}
+	/declare str_startZone			string	outer ${cache_zoneShort}
 	
 	|--include the custom event initializations & other things
 	/declare bln_outside			bool	outer	TRUE
@@ -346,6 +346,23 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/declare bln_slowed				bool	outer	FALSE
 	/declare int_slowResisted		int		outer	0
 	/declare int_slowMaxTries		int		outer	3
+
+
+	|-------------------------------------------------
+	| Environment cache (update ~5x/sec, or on target change)
+	|-------------------------------------------------
+	/declare timer_envCache          timer   outer 0
+	/declare cache_zoneShort         string  outer
+	/declare cache_boundZone         string  outer
+	/declare cache_npcR200           int     outer
+	/declare cache_npcR400           int     outer
+	/declare cache_hasXTarget        bool    outer
+	/declare cache_targetIsCorpse    bool    outer
+	/declare cache_targetID          int     outer
+	/declare cache_targetType        string  outer
+	/declare cache_targetName        string  outer
+	/declare cache_now               string  outer
+
 	
 	:init_naked_wait
 	/call chkNaked 
@@ -385,6 +402,36 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 /return
 
 
+Sub InvalidateEnvironmentCache
+    /varset timer_envCache 0
+/return
+
+Sub UpdateEnvironmentCache
+    | fast-path: if target changed, force refresh now
+    /if (${Target.ID} != ${cache_targetID}) /varset timer_envCache 0
+    /if (${timer_envCache}) /return
+
+    /varset cache_zoneShort   ${Zone.ShortName}
+    /varset cache_boundZone   ${Me.BoundLocation[0]}
+    /varset cache_npcR200     ${SpawnCount[npc radius 200]}
+    /varset cache_npcR400     ${SpawnCount[npc radius 400]}
+    /varset cache_hasXTarget  ${Me.XTarget}
+    /varset cache_now         ${Time.Time24}
+
+    /if (${Target.ID}) {
+        /varset cache_targetID       ${Target.ID}
+        /varset cache_targetType     ${Target.Type}
+        /varset cache_targetName     ${Target.DisplayName}
+        /varset cache_targetIsCorpse ${Target.Type.Equal[corpse]}
+    } else {
+        /varset cache_targetID       0
+        /varset cache_targetType     
+        /varset cache_targetName     
+        /varset cache_targetIsCorpse FALSE
+    }
+
+    /varset timer_envCache 20   | ~0.2s at ~100 tps
+/return
 
 Sub createGroupList
 	/declare    g  int local 0
@@ -491,10 +538,10 @@ Sub EngageTarget(int _targetID)
 	/varset int_targetID ${_targetID}
 	/varset str_targetName ${Spawn[id ${_targetID}].Name}
 	/varset bln_engaged TRUE
+	/call InvalidateEnvironmentCache
 
 	/if (${Select[${Me.Class.ShortName},CLR,DRU]} || (${Me.Class.ShortName.Equal[CLR]} && !${bln_battleCleric})) /return
 
-	
 	
 	| Target NPC
 	/call TrueTarget ${_targetID}
@@ -525,6 +572,8 @@ Sub EngageTarget(int _targetID)
 
 Sub chkTargetStatus
 	/declare reason string local TARGET_VALID
+	/call UpdateEnvironmentCache
+
 	/if (!${bln_engaged}) /goto :return
 
 	| Target doesnt exist
@@ -534,7 +583,7 @@ Sub chkTargetStatus
 	}
 
 	| No target, or I am at my bound zone, if engaged, kill
-	/if (${int_targetID} == 0 || !${Target.ID} || ${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) {
+	/if (${int_targetID} == 0 || !${cache_targetID}  ||  ${cache_zoneShort.Equal[${cache_boundZone}]}) {
 		/varset reason NOTARGET_or_ATBIND
 		/goto :disengage
 	}
@@ -549,21 +598,21 @@ Sub chkTargetStatus
 	} 
 	
 	| Check to see if my target is NPC and there is no NPCs around
-	/if (${Target.ID} && ${Target.ID} == ${int_MTID} && (!${SpawnCount[npc id ${int_targetID} radius 200]} || ${Zone.ShortName.Equal[${Me.BoundLocation[0]}]})) {
+	/if (${cache_targetID} && ${cache_targetID} == ${int_MTID} && (!${SpawnCount[npc id ${int_targetID} radius 200]} || ${cache_zoneShort.Equal[${cache_boundZone}]})) {
 		/echo \awTarget is MT, and No NPC in radius 200 (or at bind) \aoDisengaging!
 		/varset reason TARGETMT_or_ATBIND
 		/goto :disengage
 	}
 
 	| Check to see if there are any NPCs on XTarget and Radius
-	/if ((${Me.XTarget}==0 && !${SpawnCount[npc radius 200]})) {
+	/if (!${cache_hasXTarget} && !${cache_npcR200}) {
 		/echo \awNo Targets within 200, or on XTarget \aoDisengaging!
 		/varset reason NOTARGETSWITHIN200_AND_NOXTARGET
 		/goto :disengage
 	} 
 
 	| If there is something on XTarget, and its over 400 away, ignore it.
-	/if (${Me.XTarget} && (!${SpawnCount[npc radius 400]}  || ${Zone.ShortName.Equal[${Me.BoundLocation[0]}]})) {
+	/if (${cache_hasXTarget} && (!${cache_npcR400} || ${cache_zoneShort.Equal[${cache_boundZone}]})) {
 		/echo \awNo Targets within 400, even if they are on XTarget \aoDisengaging!
 		/varset reason NOTARGETWITHIN400_AND_HASXTARGET
 		/goto :disengage
@@ -607,11 +656,11 @@ Sub chkTargetStatus
 			}
 		} else /if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
 			/declare use_riposte bool local FALSE
-			/if (${Zone.ShortName.Equal[tacvi]} && (${Target.Name.Find[Pirik]} || ${Target.Name.Find[Yihst]} || ${Target.Name.Find[Tunat]})) {
+			/if (${cache_zoneShort.Equal[tacvi]} && (${Target.Name.Find[Pirik]} || ${Target.Name.Find[Yihst]} || ${Target.Name.Find[Tunat]})) {
 				/varset use_riposte TRUE
-			} else /if (${Zone.ShortName.Equal[anguish]} && (${Target.Name.Find[Keldovan]} || ${Target.Name.Find[Ture]} || ${Target.Name.Find[Vangl]} || ${Target.Name.Find[Zun]} || ${Target.Name.Find[Hanvar]} || ${Target.Name.Find[Overlord]})) {
+			} else /if (${cache_zoneShort.Equal[anguish]} && (${Target.Name.Find[Keldovan]} || ${Target.Name.Find[Ture]} || ${Target.Name.Find[Vangl]} || ${Target.Name.Find[Zun]} || ${Target.Name.Find[Hanvar]} || ${Target.Name.Find[Overlord]})) {
 				/varset use_riposte TRUE
-			} else /if (${Zone.ShortName.Find[chambers]} &&  ${Target.Name.Find[Master]}) {
+			} else /if (${cache_zoneShort.Find[chambers]} &&  ${Target.Name.Find[Master]}) {
 				/varset use_riposte TRUE
 			} 
 			/if (${Me.Class.ShortName.Equal[SHD]}) {
@@ -663,6 +712,7 @@ Sub Disengage
 	/varset str_targetName		NULL
 	/varset str_debuffedTargets NULL
 	/varset bln_forceNamed		FALSE
+	/call InvalidateEnvironmentCache
 
 	/call RunRapidEvents
 	| Priests have nothing left to do here;
@@ -680,8 +730,9 @@ Sub Disengage
 
 
 Sub chkMobDead
-	/if ((${SpawnCount[npc radius 200]} == 0 || ${Me.XTarget} == 0) && ${bln_engaged} ) {
-		/echo chkMobDead triggered XTarget:${Me.XTarget} || SpawnCount:!${SpawnCount[npc id ${int_targetID} radius 250]}  && engaged:${bln_engaged}
+	/call UpdateEnvironmentCache
+	/if ((!${cache_npcR200} || !${cache_hasXTarget}) && ${bln_engaged}) {
+		/echo chkMobDead triggered XTarget:${cache_hasXTarget} || SpawnCount:!${SpawnCount[npc id ${int_targetID} radius 250]}  && engaged:${bln_engaged}
 		/call Disengage
 	}
 /return
@@ -701,6 +752,7 @@ Sub TrueTarget(int _targetID)
 			}
 		}
 	}
+    /call InvalidateEnvironmentCache	
 /return
 
 
@@ -982,7 +1034,7 @@ Sub Event_EndMac
 | AA Special Events
 Sub EVENT_UseStaunchRecovery
 	| Do not use if at bind point (ie: dead)
-	/if (${Zone.ID} == 340 || ${Zone.ID} == 344 || ${Zone.ID} == 345 || ${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /return
+	/if (${Zone.ID} == 340 || ${Zone.ID} == 344 || ${Zone.ID} == 345 || ${cache_zoneShort.Equal[${cache_boundZone}]}) /return
 
 	/if ((${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[TANK]}) && ${Me.PctEndurance} < 20) {
 		/casting "Staunch Recovery" alt 
@@ -997,7 +1049,7 @@ Sub EVENT_UseStaunchRecovery
 
 Sub EVENT_UseIntensity
 	| Do not use if at bind point (ie: dead)
-	/if (${Zone.ID} == 340 || ${Zone.ID} == 344 || ${Zone.ID} == 345 || ${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /return
+	/if (${Zone.ID} == 340 || ${Zone.ID} == 344 || ${Zone.ID} == 345 || ${cache_zoneShort.Equal[${cache_boundZone}]}) /return
 	/if (${Me.Class.ShortName.Equal[BRD]}) {
 		/call MQ2Medley ALT "Intensity of the Resolute" ${int_targetID} TRUE
 	} else {
@@ -1007,7 +1059,7 @@ Sub EVENT_UseIntensity
 
 Sub EVENT_UseServants
 	| Do not use if at bind point (ie: dead)
-	/if (${Zone.ID} == 340 || ${Zone.ID} == 344 || ${Zone.ID} == 345 || ${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /return
+	/if (${Zone.ID} == 340 || ${Zone.ID} == 344 || ${Zone.ID} == 345 || ${cache_zoneShort.Equal[${cache_boundZone}]}) /return
 	/if (${Me.Class.ShortName.Equal[BRD]}) {
 		/call MQ2Medley ALT "Steadfast Servant" ${int_targetID} FALSE
 	} else {
@@ -1017,7 +1069,7 @@ Sub EVENT_UseServants
 
 Sub EVENT_UseInfusion
 	| Do not use if at bind point (ie: dead)
-	/if (${Zone.ID} == 340 || ${Zone.ID} == 344 || ${Zone.ID} == 345 || ${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /return
+	/if (${Zone.ID} == 340 || ${Zone.ID} == 344 || ${Zone.ID} == 345 || ${cache_zoneShort.Equal[${cache_boundZone}]}) /return
 	/if (${Me.Class.ShortName.Equal[BRD]}) {
 		/call MQ2Medley ALT "Infusion of the Faithful" ${int_targetID} FALSE
 	} else {
@@ -1032,7 +1084,7 @@ Sub EVENT_UseInfusion
 
 
 Sub Event_RageOn(string line)
-	/if (!${mq2meleeEnabled} && !${Stick.Behind} && (${line.Find[${Spawn[${int_targetID}].DisplayName}]} || ${line.Find[${Target.DisplayName}]}) && (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]})) {
+	/if (!${mq2meleeEnabled} && !${Stick.Behind} && (${line.Find[${Spawn[${int_targetID}].DisplayName}]} || ${line.Find[${cache_targetName}]}) && (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]})) {
 		/attack off
 	}
 	/if (((${line.Find[${Spawn[${int_targetID}].DisplayName}]} || ${line.Find[${Target.DisplayName}]}) && ${Pet.ID}) && !${Me.PetBuff[Master's Aura Effect]}) {
@@ -1043,11 +1095,11 @@ Sub Event_RageOn(string line)
 /return
 
 Sub Event_RageOff(string line)
-	/if (!${mq2meleeEnabled} && (${line.Find[${Spawn[${int_targetID}].DisplayName}]} || ${line.Find[${Target.DisplayName}]}) && (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) && ${Target.ID}) {
+	/if (!${mq2meleeEnabled} && (${line.Find[${Spawn[${int_targetID}].DisplayName}]} || ${line.Find[${cache_targetName}]}) && (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) && ${cache_targetID}) {
 		/echo  \awRageOff :tryKill \ag Attacking 
 		/attack on
 	}
-	/if ((${line.Find[${Spawn[${int_targetID}].DisplayName}]} || ${line.Find[${Target.DisplayName}]}) && ${Pet.ID}) {
+	/if ((${line.Find[${Spawn[${int_targetID}].DisplayName}]} || ${line.Find[${cache_targetName}]}) && ${Pet.ID}) {
 		/pet attack
 		/varset bln_enraged FALSE
 	}
@@ -1064,6 +1116,7 @@ Sub EVENT_DUCKON
 	/duck
 	:ducking
 	/if (!${Me.Ducking}) /keypress x
+	/call UpdateEnvironmentCache
 	/call RunRaidEvents
 	/if (${bln_ducking}) {
 		/delay 1s
@@ -1085,6 +1138,7 @@ Sub EVENT_DUCKOFF
 Sub Event_Zoned
 	/echo \awEvent_Zoned ${Time.Time24}
 	/call setExclusions
+	/call InvalidateEnvironmentCache
 	/if (${MacroQuest.GameState.Equal[CHARSELECT]}) /end
 /return
 
@@ -1299,11 +1353,11 @@ Sub EVENT_ForceNamed(_line, _chatSender, _eventParams)
 Sub TargetNamedCheck(_id)
 	/if (${bln_forceNamed}) /return TRUE
 	/if ((${Spawn[npc id ${_id}].Named} || ${Spawn[npc id ${_id}].Name.Find[#]}) && ${Target.Level} >= 75) /return TRUE
-	/if (${Zone.ShortName.Equal[tacvi]} && ${Target.Level} >= 70) /return TRUE
-	/if (${Zone.ShortName.Equal[chambersa]} || ${Zone.ShortName.Equal[chambersb]} || ${Zone.ShortName.Equal[chambersc]} || ${Zone.ShortName.Equal[chambersd]} || ${Zone.ShortName.Equal[chamberse]}  && ${Target.Level} >= 70) /return TRUE
-	/if (${Zone.ShortName.Equal[anguish]}  && ${Target.Level} >= 75) /return TRUE
-	/if (${Zone.ShortName.Equal[arena]}) /return TRUE
-	/if (${Zone.ShortName.Equal[thundercrest]}) /return TRUE
+	/if (${cache_zoneShort.Equal[tacvi]} && ${Target.Level} >= 70) /return TRUE
+	/if (${cache_zoneShort.Equal[chambersa]} || ${cache_zoneShort.Equal[chambersb]} || ${cache_zoneShort.Equal[chambersc]} || ${cache_zoneShort.Equal[chambersd]} || ${cache_zoneShort.Equal[chamberse]}  && ${Target.Level} >= 70) /return TRUE
+	/if (${cache_zoneShort.Equal[anguish]}  && ${Target.Level} >= 75) /return TRUE
+	/if (${cache_zoneShort.Equal[arena]}) /return TRUE
+	/if (${cache_zoneShort.Equal[thundercrest]}) /return TRUE
 /return FALSE
 	
 
