@@ -90,9 +90,9 @@ Sub chkCorruptionAdds
         /if (${${SpawnCount[npc ROG]}}) {
             /for i 1 to ${SpawnCount[npc ROG]}
                 /call TrueTarget ${NearestSpawn[${i}, npc ROG].ID}
-                /say Aggroing Rogue ${Target.Name} (${Target.ID})
+                /say Aggroing Rogue ${Target.Name} (${cache_targetID})
                 :aggroRogue
-                /if ((${Me.TargetOfTarget.ID} != ${Me.ID}) && (${Me.TargetOfTarget.Class.ShortName.NotEqual[WAR]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[PAL]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[SHD]}) && ${Target.Distance3D} < 150) {
+                /if ((${Me.TargetOfcache_targetID} != ${Me.ID}) && (${Me.TargetOfTarget.Class.ShortName.NotEqual[WAR]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[PAL]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[SHD]}) && ${Target.Distance3D} < 150) {
                     /attack on
                     /delay 10
                     /goto :aggroRogue
@@ -105,9 +105,9 @@ Sub chkCorruptionAdds
             /for i 1 to ${SpawnCount[npc WAR]}
 				/if (${NearestSpawn[${i}, npc WAR].Name.Find[Huhn-Abram]}) /goto :nextWarrior
                 /call TrueTarget ${NearestSpawn[${i}, npc WAR].ID}
-                /say Aggroing Warrior ${Target.Name} (${Target.ID})
+                /say Aggroing Warrior ${Target.Name} (${cache_targetID})
                 :aggroWarrior
-                /if ((${Me.TargetOfTarget.ID} != ${Me.ID}) && (${Me.TargetOfTarget.Class.ShortName.NotEqual[WAR]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[PAL]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[SHD]}) && ${Target.Distance3D} < 150) {
+                /if ((${Me.TargetOfcache_targetID} != ${Me.ID}) && (${Me.TargetOfTarget.Class.ShortName.NotEqual[WAR]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[PAL]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[SHD]}) && ${Target.Distance3D} < 150) {
                     /attack on
                     /delay 10
                     /goto :aggroWarrior
@@ -119,9 +119,9 @@ Sub chkCorruptionAdds
         /if (${${SpawnCount[npc ENC]}}) {
             /for i 1 to ${SpawnCount[npc ENC]}
                 /call TrueTarget ${NearestSpawn[${i}, npc ENC].ID}
-                /say Aggroing Enchanter ${Target.Name} (${Target.ID})
+                /say Aggroing Enchanter ${Target.Name} (${cache_targetID})
                 :aggroEnchanter
-                /if ((${Me.TargetOfTarget.ID} != ${Me.ID}) && (${Me.TargetOfTarget.Class.ShortName.NotEqual[WAR]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[PAL]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[SHD]}) && ${Target.Distance3D} < 150) {
+                /if ((${Me.TargetOfcache_targetID} != ${Me.ID}) && (${Me.TargetOfTarget.Class.ShortName.NotEqual[WAR]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[PAL]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[SHD]}) && ${Target.Distance3D} < 150) {
                     /attack on
                     /delay 10
                     /goto :aggroEnchanter

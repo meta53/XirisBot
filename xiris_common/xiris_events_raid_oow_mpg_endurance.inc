@@ -33,7 +33,7 @@ Sub chkAncients
     
     :checkAnsdaicher
     /call TrueTarget ${Spawn[npc Ansdaicher]}
-    /if (${Me.TargetOfTarget.ID} != ${Me.ID}) {
+    /if (${Me.TargetOfcache_targetID} != ${Me.ID}) {
         /call chk_warProvoke Ancient: Chaos Cry
         /call chk_warProvoke Bazu Bellow
         /call chk_taunt
@@ -41,7 +41,7 @@ Sub chkAncients
 
     :checkZellucheraz
     /call TrueTarget ${Spawn[npc Zellucheraz]}
-    /if (${Me.TargetOfTarget.ID} != ${Me.ID}) {
+    /if (${Me.TargetOfcache_targetID} != ${Me.ID}) {
         /call chk_warProvoke Ancient: Chaos Cry
         /call chk_warProvoke Bazu Bellow
         /call chk_taunt  
@@ -77,15 +77,15 @@ Sub chkEnduranceAdds
         /if (${${SpawnCount[npc frantic]}}) {
             /for i 1 to ${SpawnCount[npc frantic]}
                 /call TrueTarget ${NearestSpawn[${i}, npc frantic].ID}
-                /say Aggro Frantic ${Target.ID}
+                /say Aggro Frantic ${cache_targetID}
                 :aggroFrantic
-                /if ((${Me.TargetOfTarget.ID} != ${Me.ID}) && (${Me.TargetOfTarget.Class.ShortName.NotEqual[WAR]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[PAL]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[SHD]})) {
+                /if ((${Me.TargetOfcache_targetID} != ${Me.ID}) && (${Me.TargetOfTarget.Class.ShortName.NotEqual[WAR]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[PAL]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[SHD]})) {
                     /attack on
                     /delay 10
                     /goto :aggroFrantic
-                } else /if (${Me.TargetOfTarget.ID} != ${Me.ID}) {
+                } else /if (${Me.TargetOfcache_targetID} != ${Me.ID}) {
                     | We want to immediately call kill on Frantic Discordlings (they rape)
-                    /rs KillMob ${Target.ID} "${Target.Name}" ${Time.Time24}
+                    /rs KillMob ${cache_targetID} "${Target.Name}" ${Time.Time24}
                 }
             :nextFrantic
             /next i
@@ -96,7 +96,7 @@ Sub chkEnduranceAdds
             /for i 1 to ${SpawnCount[npc antagonist]}
                 /call TrueTarget ${NearestSpawn[${i}, npc antagonist].ID}
                 :aggroAntagonist
-                /if ((${Me.TargetOfTarget.ID} != ${Me.ID}) && (${Me.TargetOfTarget.Class.ShortName.NotEqual[WAR]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[PAL]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[SHD]})) {
+                /if ((${Me.TargetOfcache_targetID} != ${Me.ID}) && (${Me.TargetOfTarget.Class.ShortName.NotEqual[WAR]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[PAL]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[SHD]})) {
                     /attack on
                     /delay 10
                     /goto :aggroAntagonist
@@ -110,7 +110,7 @@ Sub chkEnduranceAdds
             /for i 1 to ${SpawnCount[npc sentinel]}
                 /call TrueTarget ${NearestSpawn[${i}, npc sentinel].ID}
                 :aggroSentinel
-                /if ((${Me.TargetOfTarget.ID} != ${Me.ID}) && (${Me.TargetOfTarget.Class.ShortName.NotEqual[WAR]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[PAL]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[SHD]})) {
+                /if ((${Me.TargetOfcache_targetID} != ${Me.ID}) && (${Me.TargetOfTarget.Class.ShortName.NotEqual[WAR]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[PAL]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[SHD]})) {
                     /attack on
                     /delay 10
                     /goto :aggroSentinel
@@ -124,7 +124,7 @@ Sub chkEnduranceAdds
             /for i 1 to ${SpawnCount[npc champion]}
                 /call TrueTarget ${NearestSpawn[${i}, npc champion].ID}
                 :aggroChampion
-                /if ((${Me.TargetOfTarget.ID} != ${Me.ID}) && (${Me.TargetOfTarget.Class.ShortName.NotEqual[WAR]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[PAL]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[SHD]})) {
+                /if ((${Me.TargetOfcache_targetID} != ${Me.ID}) && (${Me.TargetOfTarget.Class.ShortName.NotEqual[WAR]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[PAL]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[SHD]})) {
                     /attack on
                     /delay 10
                     /goto :aggroChampion

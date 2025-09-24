@@ -55,7 +55,6 @@ Sub Events_BRD
 
 Sub EVENT_Sing(_line, _sender, _eventParams)	
 	/call SingSongs ${str_currentMedley}
-	/doevents flush Sing
 /return
 
 Sub SingSongs(string _type)
@@ -67,13 +66,11 @@ Sub SingSongs(string _type)
 
 Sub EVENT_Hush(_line, _sender, _eventParams)
 	/medley stop
-	/doevents flush Hush
 /return
 
 Sub Event_BardSlow
 	/echo \awToggling Bard Slow \ag${bln_bardSlow} \awto TRUE
 	/call ToggleBardSlow TRUE
-	/doevents flush BardSlow
 /return
 
 
@@ -208,8 +205,8 @@ Sub SetupSongs
 
 Sub chkBardSlow
 	
-	/if (${bln_bardSlow} && !${timer_bardSlow} && ${Target.Type.Equal[NPC]}) {
-		/echo \aw Slow? \aoUse? \ag${bln_bardSlow} \aoTimer? \ag${timer_bardSlow} \aoTargetType? \ag${Target.Type.Equal[NPC]}
+	/if (${bln_bardSlow} && !${timer_bardSlow} && ${cache_targetType.Equal[NPC]}) {
+		/echo \aw Slow? \aoUse? \ag${bln_bardSlow} \aoTimer? \ag${timer_bardSlow} \aoTargetType? \ag${cache_targetType.Equal[NPC]}
 		/medley queue ${str_bardSlow}
 		/varset timer_bardSlow 10s
 	}

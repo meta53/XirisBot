@@ -77,7 +77,7 @@ Sub chkPetBuffs
 		/next i
 		/memspellset ${str_spellset}
 	}
-	/if (${Target.ID}==${Pet.ID}) /squelch /target clear
+	/if (${cache_targetID}==${Pet.ID}) /squelch /target clear
 	/if (!${timer_petBuffRecheck})	 /varset timer_petBuffRecheck 30s
 
 	
@@ -123,7 +123,7 @@ Sub chkPetSpawn
 		}
 		
 	}
-	/if (${Target.ID}==${Pet.ID}) /squelch /target clear
+	/if (${cache_targetID}==${Pet.ID}) /squelch /target clear
 /return
 
 
@@ -157,7 +157,7 @@ Sub chkPetEquipment
 /return
 
 Sub SummonItemForPet(string _item, string _type, string _summoner)
-	/if (${SpawnCount[npc radius ${int_campRadius}]} > 0 && ${Zone.ShortName.NotEqual[thundercrest]}  && ${Zone.ShortName.NotEqual[guildhall]}  && ${Zone.ShortName.NotEqual[guildlobby]}) {
+	/if (${SpawnCount[npc radius ${int_campRadius}]} > 0 && ${cache_zoneShort.NotEqual[thundercrest]}  && ${cache_zoneShort.NotEqual[guildhall]}  && ${cache_zoneShort.NotEqual[guildlobby]}) {
 		/echo \a-rReturning due to spawn
 		/return
 	} 
@@ -241,7 +241,7 @@ Sub chkPetHeal
 
 Sub chkPetAttack
 	/if (!${bln_engaged} || !${Target.PctHPs} ) /return
-	/if (${Pet.ID} && !${Me.Pet.Combat} && ${Target.ID}==${int_targetID} && ${Target.PctHPs}<${int_petAttackHP} && ${Target.Distance}<=100) 	/squelch /pet attack
+	/if (${Pet.ID} && !${Me.Pet.Combat} && ${cache_targetID}==${int_targetID} && ${Target.PctHPs}<${int_petAttackHP} && ${Target.Distance}<=100) 	/squelch /pet attack
 /return
 
 

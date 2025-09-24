@@ -132,7 +132,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 **|
 
 Sub chkLifetap
-	/if (${Target.ID}==${int_targetID}) /call MQ2Cast "${str_lifetapSpell}" ${str_lifetapGem} 2s
+	/if (${cache_targetID}==${int_targetID}) /call MQ2Cast "${str_lifetapSpell}" ${str_lifetapGem} 2s
 /return
 
 

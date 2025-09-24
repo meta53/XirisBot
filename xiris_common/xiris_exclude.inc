@@ -66,10 +66,10 @@ Sub setExclusions
 	
 	| Add zone specific Exclusions
 	| If Zone entry not found, add it.
-	/declare ExcludeZone string  local ${Ini[${ExcludeINI},"Excludes.${Zone.ShortName}","Exclude"]}
+	/declare ExcludeZone string  local ${Ini[${ExcludeINI},"Excludes.${cache_zoneShort}","Exclude"]}
 	/if (${ExcludeZone.Equal[NULL]}) {
-		/ini "${ExcludeZone}" "Excludes.${Zone.ShortName}" "Exclude" "|"
-		/varset ExcludeZone ${Ini[${ExcludeINI},"Excludes.${Zone.ShortName}","Exclude"]}
+		/ini "${ExcludeZone}" "Excludes.${cache_zoneShort}" "Exclude" "|"
+		/varset ExcludeZone ${Ini[${ExcludeINI},"Excludes.${cache_zoneShort}","Exclude"]}
 		/echo \ayZone Exclusions: ${ExcludeZone}
 	} else /if (${ExcludeZone.Equal[|]}) {
 		/varset ExcludeZone 

@@ -51,13 +51,11 @@ Sub EVENT_DebuffTarget(_line, _sender, _eventParams)
 	/varset ForceNamed TRUE
 	/if (!${DEBUFF_Total}) /return 
 	/call CastDebuffsOnTarget ${_eventParams.Arg[1, ]} TRUE
-	/doevents flush DebuffTarget
 /return
 
 Sub EVENT_SlowTarget(_line, _chatSender, _eventParams) 
 	/if (${Me.Class.ShortName.NotEqual[SHM]} || ${Me.Class.ShortName.NotEqual[ENC]}) /return
 	/call SlowTarget ${_eventParams}
-	/doevents flush SlowTarget
 /return
 
 Sub SlowTarget(string _resist)
@@ -226,7 +224,7 @@ Sub CastDebuff(string _debuff, string _gem,  int _maxTries, int _targetID, bool 
 	/declare    tgtID   int     local ${_targetID}
 	/declare 	rslt	string  local
 
-	/if (!${Target.ID} || (${Target.ID}  && (${Target.ID} != ${_targetID}))) {
+	/if (!${cache_targetID} || (${cache_targetID}  && (${cache_targetID} != ${_targetID}))) {
 		/echo \aoWRONG TARGET\aw Re-target ${Spawn[npc id ${_targetID}]}(${_targetID})
 		/call TrueTarget ${_targetID}
 	} 
@@ -243,7 +241,7 @@ Sub CastDebuff(string _debuff, string _gem,  int _maxTries, int _targetID, bool 
 			/goto :DebuffFailure
 		}
 		|pre-check before attempt
-		/if (${Target.PctHPs} == 0 || !${Target.ID} || (${Target.ID} != ${tgtID}) || ${Target.Name.Find['s_corpse']} || ${Target.Type.Equal[corpse]} || ${Target.Type.Equal[pc]}) {
+		/if (${Target.PctHPs} == 0 || !${cache_targetID} || (${cache_targetID} != ${tgtID}) || ${Target.Name.Find['s_corpse']} || ${cache_targetType.Equal[corpse]} || ${cache_targetType.Equal[pc]}) {
 			/echo \ar Debuff Failure\aw Target Error
 			/varset rslt TARGET_ERROR
 			/goto :DebuffFailure

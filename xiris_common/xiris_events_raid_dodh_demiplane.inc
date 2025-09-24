@@ -160,7 +160,7 @@ Sub Events_DODH_Demiplane
 
 |--TRIS EVENTS
 Sub Event_TrisStare
-	/if (${Zone.ShortName.NotEqual[dreadspire_raid]}) /return
+	/if (${cache_zoneShort.NotEqual[dreadspire_raid]}) /return
 	/varset tStare	TRUE
 	/stick off
 	/target Tris
@@ -172,7 +172,7 @@ Sub Event_TrisStare
 /return
 
 Sub Event_TrisStareEnd
-	/if (${Zone.ShortName.NotEqual[dreadspire_raid]}) /return
+	/if (${cache_zoneShort.NotEqual[dreadspire_raid]}) /return
 	/varset tStare FALSE
 	
 	/if (${strArchetype.Equal[MELEE]} || ${strArchetype.Equal[CASTER]}) {
@@ -242,7 +242,7 @@ Sub Event_TrisWere
 
 |--HATCHET EVENTS
 Sub Event_HatchetDuck
-	/if (${Zone.ShortName.NotEqual[dreadspire_raid]}) /return
+	/if (${cache_zoneShort.NotEqual[dreadspire_raid]}) /return
 	/varset hDuck	TRUE
 	/stick off
 	/attack off
@@ -255,13 +255,13 @@ Sub Event_HatchetDuck
 
 
 Sub Event_HatchetStand
-	/if (${Zone.ShortName.NotEqual[dreadspire_raid]}) /return
+	/if (${cache_zoneShort.NotEqual[dreadspire_raid]}) /return
 	/varset hDuck	FALSE
 	/if (${Me.Ducking}) /keypress duck
 /return
 
 Sub Event_HatchetClose
-	/if (${Zone.ShortName.NotEqual[dreadspire_raid]}) /return
+	/if (${cache_zoneShort.NotEqual[dreadspire_raid]}) /return
 	/dgt Hatchet needs me under his legs.
 	/varset hClose	TRUE
 	/waypoint update ${Me.Name}_Hatchet
@@ -271,7 +271,7 @@ Sub Event_HatchetClose
 /return
 
 Sub Event_HatchetCloseEnd
-	/if (${Zone.ShortName.NotEqual[dreadspire_raid]}) /return
+	/if (${cache_zoneShort.NotEqual[dreadspire_raid]}) /return
 	/dgt Hatchet no longer needs me under his legs.
 	/varset hClose	FALSE
 	/warp wp ${Me.Name}_Hatchet
@@ -279,7 +279,7 @@ Sub Event_HatchetCloseEnd
 /return
 
 Sub Event_HatchetFar
-	/if (${Zone.ShortName.NotEqual[dreadspire_raid]}) /return
+	/if (${cache_zoneShort.NotEqual[dreadspire_raid]}) /return
 	/dgt Hatchet has me running away
 	/varset hFar	TRUE
 	/waypoint update ${Me.Name}_Hatchet
@@ -287,20 +287,20 @@ Sub Event_HatchetFar
 /return
 
 Sub Event_HatchetFarEnd
-	/if (${Zone.ShortName.NotEqual[dreadspire_raid]}) /return
+	/if (${cache_zoneShort.NotEqual[dreadspire_raid]}) /return
 	/dgt Hatchet no longer needs me a zone in
 	/varset hFar	FALSE
 	/warp wp ${Me.Name}_Hatchet
 /return
 
 Sub Event_HatchetBugged
-	/if (${Zone.ShortName.NotEqual[dreadspire_raid]}) /return
+	/if (${cache_zoneShort.NotEqual[dreadspire_raid]}) /return
 	/fade
 	/delay 5s
 /return
 
 Sub Event_HatchetRun
-	/if (${Zone.ShortName.NotEqual[dreadspire_raid]}) /return
+	/if (${cache_zoneShort.NotEqual[dreadspire_raid]}) /return
 	/varset hRun	TRUE
 	/waypoint update ${Me.Name}_Hatchet
 	/setgrav 0
@@ -314,14 +314,14 @@ Sub Event_HatchetRun
 /return
 
 Sub Event_HatchetRunEnd
-	/if (${Zone.ShortName.NotEqual[dreadspire_raid]}) /return
+	/if (${cache_zoneShort.NotEqual[dreadspire_raid]}) /return
 	/varset hRun	FALSE
 	/warp wp ${Me.Name}_Hatchet
 	/setgrav .4
 /return
 
 Sub EventWait
-	/if (${Zone.ShortName.NotEqual[dreadspire_raid]}) /return
+	/if (${cache_zoneShort.NotEqual[dreadspire_raid]}) /return
 	| check for the wait conditions
 	
 	:event_waitLoop
@@ -357,7 +357,7 @@ Sub PerformVerse
 	/if (${Select[${Me.Class.ShortName},CLR,DRU,SHM]})	/varset archetype PRIEST
 	/if (${Select[${Me.Class.ShortName},NEC]}) 			/varset archetype CASTER
 	/declare	oldAssistID int local
-	/varset		oldAssistID ${Target.ID}
+	/varset		oldAssistID ${cache_targetID}
 	/stick off
 	/attack off
 	/delay 10
@@ -366,7 +366,7 @@ Sub PerformVerse
 	/saytarget ${TriggerRespond}
 	/delay 10
 	/target ID ${oldAssistID}
-	/if (${Target.ID} == ${oldAssistID}) {
+	/if (${cache_targetID} == ${oldAssistID}) {
 		/if (${archetype.Equal[MELEE]}) {
 			/if (${Select[${Target.Race},Skeleton]}) {
 				/keypress escape

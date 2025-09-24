@@ -53,7 +53,6 @@ Sub EVENT_BurnOn
 	/echo \agEnabling \arBurn \agMode
 	/varset bln_burning TRUE
 	/varset bln_checkForCry FALSE
-	/doevents flush BurnOn
 /return
 
 Sub EVENT_BurnOnAll
@@ -62,7 +61,6 @@ Sub EVENT_BurnOnAll
 	/echo \agEnabling \arBurn ALL \agMode
 	/varset bln_burning TRUE
 	/varset bln_checkForCry FALSE
-	/doevents flush BurnOnAll
 /return
 
 Sub EVENT_BurnOn1
@@ -72,7 +70,6 @@ Sub EVENT_BurnOn1
 		/varset bln_burning TRUE
 	}
 	/varset bln_checkForCry TRUE
-	/doevents flush BurnOn1
 /return
 
 Sub EVENT_BurnOn2
@@ -82,14 +79,12 @@ Sub EVENT_BurnOn2
 		/varset bln_burning TRUE
 	}
 	/varset bln_checkForCry FALSE
-	/doevents flush BurnOn2
 /return
 
 Sub EVENT_BurnOff
 	/echo \agDisablig \ayBurn \agMode
 	/varset bln_burning FALSE
 	/varset bln_checkForCry FALSE
-	/doevents flush BurnOff
 	|/call chkCryActive
 /return
 
@@ -105,14 +100,14 @@ Sub EVENT_BurnOff
 
 Sub chkBurn
 	/if (!${bln_engaged} || !${bln_burning} || (${BURN_Total} == 0)) /return
-	/if (!${Target.ID} || ${Target.Type.NotEqual[NPC]}) /return
+	/if (!${cache_targetID} || ${cache_targetType.NotEqual[NPC]}) /return
 	/if (${Me.Casting.ID} || ${Me.Moving} || ${Me.Invis} || ${Me.Feigning}) /return
 
 
 
 	/declare i int local
 	/for i 1 to ${BURN_Total} 
-		/if (${Target.ID} && ${Target.Type.Equal[NPC]}) {
+		/if (${cache_targetID} && ${cache_targetType.Equal[NPC]}) {
 			
 			| ---------------
 			| Combat Ability
@@ -257,7 +252,7 @@ Sub AddBurnToLineup(string _type, int _index, string _line)
 
 Sub chkAA
 	/if (${AA_Total} == 0) 	/return 
-	/if (!${Target.ID} || ${Target.Type.NotEqual[NPC]}) /return
+	/if (!${cache_targetID} || ${cache_targetType.NotEqual[NPC]}) /return
 	/if ((${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]}) || ${Me.Moving} || ${Me.Invis} || ${Me.Feigning}) /return
 	
     | Check AA Type, if offensive we do the standard targetchecks
@@ -293,7 +288,7 @@ Sub chkAA
             /if (${AA_${i}_Type.Equal[DEFENSE]} && ${Me.FreeBuffSlots}) {
                 /target id ${Me.ID}
             } else {
-                /if (${Target.ID} != ${int_targetID}) /call TrueTarget ${int_targetID}
+                /if (${cache_targetID} != ${int_targetID}) /call TrueTarget ${int_targetID}
             }
             /call MQ2Cast "${AA_${i}}" alt
         }
@@ -332,7 +327,7 @@ Sub AddAAToLineup(string _type, int _index, string _line)
 
 Sub chkClicky
 	/if (${CLICKY_Total} == 0) 	/return 
-	/if (!${Target.ID} || ${Target.Type.NotEqual[NPC]}) /return
+	/if (!${cache_targetID} || ${cache_targetType.NotEqual[NPC]}) /return
 	/if ((${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]}) || ${Me.Moving} || ${Me.Invis} || ${Me.Feigning}) /return
 	
 
@@ -369,7 +364,7 @@ Sub chkClicky
             /if (${CLICKY_${i}_Type.Equal[DEFENSE]}) {
                 /target id ${Me.ID}
             } else {
-                /if (${Target.ID} != ${int_targetID}) /call TrueTarget ${int_targetID}
+                /if (${cache_targetID} != ${int_targetID}) /call TrueTarget ${int_targetID}
             }
             /call MQ2Cast "${CLICKY_${i}}" item
         }

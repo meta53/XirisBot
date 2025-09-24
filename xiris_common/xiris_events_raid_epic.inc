@@ -21,9 +21,9 @@ Sub InitEvents_Epic
 
 Sub Events_Epic
     | Rogue 1.5 fight in Greater Faydark
-    /if (${Zone.ShortName.Equal[gfaydark]}) /call chkMarsingerCursor
+    /if (${cache_zoneShort.Equal[gfaydark]}) /call chkMarsingerCursor
     | Rogue 1.5 fight in Steamfont
-    /if (${Zone.ShortName.Equal[steamfont]}) /call chkClockworkDoom
+    /if (${cache_zoneShort.Equal[steamfont]}) /call chkClockworkDoom
 /return 
 
 

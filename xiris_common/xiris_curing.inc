@@ -97,20 +97,17 @@ Sub Events_Curing_Background
 /return
 
 Sub Event_AutoCureMTOn
-	/doevents flush AutoCureMTOn
 	/if (!${Select[${Me.Class.ShortName.},CLR,DRU,SHM]}) /return 
 	/echo \agNow Automatically Curing MT
 	/varset bln_autoCureMT TRUE
 /return 
 
 Sub Event_AutoCureMTOff
-	/doevents flush AutoCureMTOff
 	/echo \awNo Longer Automatically Curing MT
 	/varset bln_autoCureMT FALSE
 /return
 
 Sub Event_FireNadox
-	/doevents flush FireNadox 
 	/echo \agFiring Group: Blood of Nadox!
 	/call TrueTarget ${Me.ID}
 	/call MQ2Cast "${str_cure_poison}" gem4 8s
@@ -120,7 +117,6 @@ Sub Event_FireNadox
 |   Counters determined by Dannet query
 |	string _pcName, string _type
 Sub Event_cureMe(_line, _sender, _eventParams)
-	/doevents flush cureMe
 	/declare name		string local ${_sender}
 	/declare curetype	string local ${_eventParams}
 	/declare qs 		string 	local	NULL
@@ -139,7 +135,6 @@ Sub Event_cureMe(_line, _sender, _eventParams)
 |-- Single target cure, generated syntax (for macro call)
 |   Counters determined by DanNet query
 Sub Event_cureRequest(_line, _sender, _eventParams)	
-	/doevents flush cureRequest
 	/declare name 		string	local	${_eventParams.Arg[1, ]}
 	/declare id 		int 	local	${_eventParams.Arg[2, ]}
 	/declare curetype 	string 	local	${_eventParams.Arg[3, ]}
@@ -158,14 +153,12 @@ Sub Event_cureRequest(_line, _sender, _eventParams)
 /return
 
 Sub Event_cureReceived(_line, _sender, _eventParams)
-	/doevents flush cureReceived
 	/declare id int local ${Int[${_eventParams}]}
 	/if (${id} == ${Me.ID}) /call resetCureState
 	
 /return
 
 Sub Event_cureGroupPoison(_line, _sender, _eventParams)
-	/doevents flush cureGroupPoison
 	/if (${Me.Class.ShortName.NotEqual[CLR]} && ${Me.Class.ShortName.NotEqual[DRU]} && ${Me.Class.ShortName.NotEqual[SHM]} && ${Me.Class.ShortName.NotEqual[PAL]}) /return
 	/docommand /${announceChannel} Curing Group of Poisons with: ${str_cure_poison}
 	/call cureGroup poison ${_eventParams}
@@ -173,7 +166,6 @@ Sub Event_cureGroupPoison(_line, _sender, _eventParams)
 /return
 
 Sub Event_cureGroupDisease(_line, _sender, _eventParams)
-	/doevents flush cureGroupDisease
 	/if (${Me.Class.ShortName.NotEqual[CLR]} && ${Me.Class.ShortName.NotEqual[DRU]} && ${Me.Class.ShortName.NotEqual[SHM]} && ${Me.Class.ShortName.NotEqual[PAL]}) /return
 	/docommand /${announceChannel} Curing Group of Disease with: ${str_cure_disease}
 	/call cureGroup disease ${_eventParams}
@@ -181,7 +173,6 @@ Sub Event_cureGroupDisease(_line, _sender, _eventParams)
 /return
 
 Sub Event_cureGroupCurse(_line, _sender, _eventParams)
-	/doevents flush cureGroupCurse
 	/if (${Me.Class.ShortName.NotEqual[CLR]} &&${Me.Class.ShortName.NotEqual[DRU]} && ${Me.Class.ShortName.NotEqual[SHM]} && ${Me.Class.ShortName.NotEqual[PAL]}) /return
 	/docommand /${announceChannel} Curing Group of Curses with: ${str_cure_curse}
 	/call cureGroup curse ${_eventParams}
@@ -189,7 +180,6 @@ Sub Event_cureGroupCurse(_line, _sender, _eventParams)
 /return
 
 Sub Event_cureGroupCorruptiuon(_line, _sender, _eventParams)
-	/doevents flush cureGroupCorruptiuon
 	/if (${Me.Class.ShortName.NotEqual[CLR]} &&${Me.Class.ShortName.NotEqual[DRU]} && ${Me.Class.ShortName.NotEqual[SHM]} && ${Me.Class.ShortName.NotEqual[PAL]}) /return
 	/docommand /${announceChannel} Curing Group of Corruption with: ${str_cure_corruption}
 	/call cureGroup corruption ${_eventParams}
@@ -209,7 +199,7 @@ Sub resetCureState
 |-- Check if I need a cure (all classes)
 Sub chkNeedCure
 	|-- Check Need cure is disabled for OMM since we are only caring about Mark
-	/if (${bln_OMMEngaged} || ${Zone.ShortName.Equal[arena]}) /return
+	/if (${bln_OMMEngaged} || ${cache_zoneShort.Equal[arena]}) /return
 	|-- If I have bln_autoCureMT Set to TRUE, always check if the MT needs cure and do it proactively
 	/if (${bln_autoCureMT}) /call cureMTAuto
 	|-- Verify that I actually have debuffs even if it says i need to cure, reset that
@@ -367,7 +357,6 @@ Sub requestCure(string _type, int _counters, bool _force)
 /return
 
 Sub EVENT_ResetGroupCurer 
-	/doevents flush ResetGroupCurer
 	/call getGroupCurer DEFAULT
 	/varset str_myCurer ${Macro.Return}
 /return 

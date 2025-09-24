@@ -73,14 +73,12 @@ SUB EVENT_Follow(_line, _chatSender, _eventParams)
 	/if (${Bool[${Macro.Return.Arg[2,_]}]} && ${Bool[${Macro.Return.Arg[3,_]}]} && ${Bool[${Macro.Return.Arg[4,_]}]}) {
 		/call StartFollowing ${_chatSender} ${followType}
 	}
-	/doevents flush Follow
 /return
 
 
 SUB EVENT_Stop(_line, _chatSender, _eventParams)
 	| -Check if I'm bln_following.
 	/if (${bln_following}) /call StopFollowing
-	/doevents flush Stop
 /return
 
 
@@ -88,7 +86,6 @@ SUB EVENT_NavigateWP(_line, _chatSender, _eventParams)
 	/echo \ayNavigate to waypoint: \ag${_eventParams}
 	/declare wp string local ${_eventParams.Arg[1]}
 	/nav wp ${wp}
-	/doevents flush NavigateWP
 /return
 
 
@@ -99,7 +96,6 @@ SUB EVENT_CreateCamp(_line, _chatSender, _eventParams)
 	/varset int_campY ${Me.Y}
 	/varset int_campX ${Me.X}
 	/varset int_campZ ${Me.Z}
-	/doevents flush CreateCamp
 /return
 
 
@@ -228,8 +224,6 @@ SUB EVENT_MoveHere(_line, _chatSender, _eventParams)
 		}
 		
 	}
-	
-	/doevents flush MoveHere
 /return
 
 Sub MoveToPosition(int _y, int _x, int _z, int _adjustment, bool _warp)
@@ -260,7 +254,7 @@ Sub MoveToPosition(int _y, int _x, int _z, int _adjustment, bool _warp)
 |- @param1 destination: Destinations can be provided as an ID, or loc, using the bln_following syntax:	-|
 |-																									-|
 |- Move to a Spawn ID use, -SpawnID|#																-|
-|-		Ex.  /call MoveTo -SpawnID|${Target.ID}														-|
+|-		Ex.  /call MoveTo -SpawnID|${cache_targetID}														-|
 |-																									-|
 |- Move to a Location use, -Loc|Y,X																	-|
 |-		Ex.  /call MoveTo -Loc|${Target.Y},${Target.X}												-|

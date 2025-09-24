@@ -109,7 +109,7 @@ Sub CharmNPC(int _targetID, bool _forced, bool _attack, int _attackID)
 				/call MQ2Medley SONG "${CHARM_${i}_Spell}" ${_targetID} TRUE
                 /goto :return
 			} else {
-				/call CastCharm "${CHARM_${i}_Spell}" ${CHARM_${i}_Gem} ${CHARM_${i}_MaxTries} ${Target.ID} ${_forced}
+				/call CastCharm "${CHARM_${i}_Spell}" ${CHARM_${i}_Gem} ${CHARM_${i}_MaxTries} ${cache_targetID} ${_forced}
                 /goto :return
             }  
         /call RunRaidEvents      
@@ -137,7 +137,7 @@ Sub CastCharm(string _charm, string _gem, int _maxTries, int _targetID, bool _fo
 	/declare    tgtID   int     local ${_targetID}
 	/declare 	rslt	string  local
 
-    /if (!${Target.ID} || (${Target.ID}  && (${Target.ID} != ${_targetID}))) {
+    /if (!${cache_targetID} || (${cache_targetID}  && (${cache_targetID} != ${_targetID}))) {
 		/echo \aoWRONG TARGET\aw Re-target ${Spawn[npc id ${_targetID}]}(${_targetID})
 		/call TrueTarget ${_targetID}
 	} 
@@ -152,7 +152,7 @@ Sub CastCharm(string _charm, string _gem, int _maxTries, int _targetID, bool _fo
 			/goto :CharmFailure
 		}
 		|pre-check before attempt
-		/if (${Target.PctHPs} == 0 || !${Target.ID} || (${Target.ID} != ${tgtID}) || ${Target.Name.Find['s_corpse']} || ${Target.Type.Equal[corpse]} || ${Target.Type.Equal[pc]}) {
+		/if (${Target.PctHPs} == 0 || !${cache_targetID} || (${cache_targetID} != ${tgtID}) || ${Target.Name.Find['s_corpse']} || ${cache_targetType.Equal[corpse]} || ${cache_targetType.Equal[pc]}) {
 			/echo \ar Charm Failure\aw Target Error
 			/varset rslt TARGET_ERROR
 			/goto :CharmFailure

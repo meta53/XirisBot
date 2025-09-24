@@ -57,12 +57,10 @@ Sub Events_Offtanking
 
 Sub EVENT_OFFTANKON
 	/call ToggleOfftanking TRUE
-	/doevents flush OFFTANKON
 /return
 
 Sub EVENT_OFFTANKOFF
 	/call ToggleOfftanking FALSE
-	/doevents flush OFFTANKOFF
 /return
 
 Sub EVENT_OFFTANKRADIUS(_line, _chatSender, _eventParams) 
@@ -75,12 +73,10 @@ Sub ChangeOfftankRadius(_radius)
 
 SUB EVENT_DION
 	/varset bln_useDI TRUE
-	/doevents flush DION
 /return 
 
 Sub EVENT_DIOFF
 	/varset bln_useDI FALSE
-	/doevents flush DIOFF
 /return
 
 Sub ToggleOfftanking(bool _blnOT)
@@ -106,7 +102,7 @@ Sub ToggleOfftanking(bool _blnOT)
 
 
 Sub chkOffTanking
-	/if (${Zone.ID} == 340 || ${Zone.ID} == 344 || ${Zone.ID} == 345 || ${Zone.ShortName.Equal[${Me.BoundLocation[0]}]} || ${bln_following}) /return
+	/if (${Zone.ID} == 340 || ${Zone.ID} == 344 || ${Zone.ID} == 345 || ${cache_zoneShort.Equal[${cache_boundZone}]} || ${bln_following}) /return
 	/if (${bln_engaged} && ${bln_useDI}) /call chkDivineIntervention
 
 	| If there are no spawns within OT Distance, return
@@ -126,10 +122,10 @@ Sub chkOffTanking
 		/doevents OFFTANKOFF
 		/call TrueTarget ${NearestSpawn[${i}, npc radius ${int_offtankRadius} range 46 80 noalert 5].ID}
 		:CheckAggro
-		/if (!${Me.TargetOfTarget.ID} || !${Me.TargetOfTarget.ID} || (${ExcludeList.Find[${Target.CleanName}]})) /goto :nextTarget
+		/if (!${Me.TargetOfcache_targetID} || !${Me.TargetOfcache_targetID} || (${ExcludeList.Find[${Target.CleanName}]})) /goto :nextTarget
 		/if (${Me.TargetOfTarget.Class.ShortName.Equal[WAR]} || ${Me.TargetOfTarget.Class.ShortName.Equal[PAL]} || ${Me.TargetOfTarget.Class.ShortName.Equal[SHD]}) /goto :nextTarget
 		/if ((${Target.Distance3D} < ${int_offtankRadius})) {
-			/call aggroByID ${Target.ID}
+			/call aggroByID ${cache_targetID}
 		} else {
 			/squelch /target clear
 		}
@@ -142,10 +138,10 @@ Sub chkOffTanking
 	/if (${SpawnCount[npc radius ${int_offtankRadius} range 46 80  noalert 5]} == 1 && ${bln_engaged}) {
 		/if (${SpawnCount[npc id ${int_targetID}]}) {
 			/call TrueTarget ${int_targetID}
-			/if (!${Me.TargetOfTarget.ID}) /return
+			/if (!${Me.TargetOfcache_targetID}) /return
 			/varset bln_tanking		FALSE
 			/varset bln_taunting	FALSE
-			/if (${Target.PctHPs} <=99  && ${Target.ID}) /attack on
+			/if (${Target.PctHPs} <=99  && ${cache_targetID}) /attack on
 		}
 	}
 /return
@@ -172,13 +168,13 @@ Sub aggroByID(int _targetID)
 	:aggroSmack
 	/squelch /varset bln_tanking TRUE
 	/squelch /varset bln_taunting TRUE
-	/if (${Target.ID} != ${_targetID}) /call TrueTarget ${_targetID}
+	/if (${cache_targetID} != ${_targetID}) /call TrueTarget ${_targetID}
 
 	/squelch /stick off
 	/squelch /stick front 20
 	/if (${Me.AbilityReady[Taunt]}) /doability taunt
 	/squelch /face fast
-	/if (!${Me.Combat}  && ${Target.ID}) {
+	/if (!${Me.Combat}  && ${cache_targetID}) {
 		/echo  \awaggroByID \ag Attacking 
 		/attack on
 	} 
@@ -186,7 +182,7 @@ Sub aggroByID(int _targetID)
 
 	
 	/if (${Me.TargetOfTarget.Class.ShortName.Equal[WAR]} || ${Me.TargetOfTarget.Class.ShortName.Equal[PAL]} || ${Me.TargetOfTarget.Class.ShortName.Equal[SHD]}) /goto :return		
-	/if ((${Me.TargetOfTarget.ID} == ${Me.ID}) || (${Me.TargetOfTarget.ID} == ${int_MTID}) || !${Target.ID} || ${Target.Name.Find['s_corpse']} || ${Target.Type.Equal[corpse]}) /goto :return
+	/if ((${Me.TargetOfcache_targetID} == ${Me.ID}) || (${Me.TargetOfcache_targetID} == ${int_MTID}) || !${cache_targetID} || ${Target.Name.Find['s_corpse']} || ${cache_targetType.Equal[corpse]}) /goto :return
 	
 	/goto :aggroLoop
 
@@ -207,7 +203,7 @@ Sub aggroByID(int _targetID)
 
 Sub chkHate
 	/if (!${bln_engaged}) /return
-	/if (!${Target.ID}) /return
+	/if (!${cache_targetID}) /return
 	/if ( ${Me.SpellReady[${spell_hate}]}) {
 		/echo chkHate: Hating with ${spell_hate}
 		/call MQ2Cast "${spell_hate}" ${spell_hateGem} 2s

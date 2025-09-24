@@ -169,7 +169,6 @@ Sub Events_Raid
 	/doevents RageOff
 	/doevents BackOff
 	/doevents ChangeMT
-	|/doevents ChangeSA
 	/doevents ChangeAP
 	/doevents UseStaunchRecovery
 	/doevents UseIntensity
@@ -179,6 +178,10 @@ Sub Events_Raid
 /return
 
 Sub Events_Common
+	| Updating the Environment Cache
+	/call UpdateEnvironmentCache
+
+	| Generic Events
 	/doevents Zoned	
 	/doevents CheckNaked
 
@@ -338,7 +341,7 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/declare int_campY 				int 	outer 	${Me.Y}
 	/declare int_campZ 				int 	outer 	${Me.Z}
 	/declare int_campRadius			int		outer	85			
-	/declare str_startZone			string	outer ${Zone.ShortName}
+	/declare str_startZone			string	outer ${cache_zoneShort}
 	
 	|--include the custom event initializations & other things
 	/declare bln_outside			bool	outer	TRUE
@@ -346,6 +349,21 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/declare bln_slowed				bool	outer	FALSE
 	/declare int_slowResisted		int		outer	0
 	/declare int_slowMaxTries		int		outer	3
+
+	|-------------------------------------------------
+	| Environment cache (update this once per tick)
+	|-------------------------------------------------
+	/declare timer_envCache          timer   outer 0
+	/declare cache_zoneShort         string  outer
+	/declare cache_boundZone         string  outer
+	/declare cache_npcR200           int     outer
+	/declare cache_npcR400           int     outer
+	/declare cache_hasXTarget        bool    outer
+	/declare cache_targetIsCorpse    bool    outer
+	/declare cache_targetID          int     outer
+	/declare cache_targetType        string  outer
+	/declare cache_targetName        string  outer
+	/declare cache_now               string  outer
 	
 	:init_naked_wait
 	/call chkNaked 
@@ -384,6 +402,32 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/echo \agXBOT_INITIALIZE COMPLETE
 /return
 
+Sub UpdateEnvironmentCache
+    /if (${timer_envCache}) /return
+	|/echo \agUpdating Environment Cache
+
+    /varset cache_zoneShort      ${cache_zoneShort}
+    /varset cache_boundZone      ${cache_boundZone}
+    /varset cache_npcR200        ${SpawnCount[npc radius 200]}
+    /varset cache_npcR400        ${cache_npcR400}
+    /varset cache_hasXTarget     ${cache_hasXTarget}
+    /varset cache_now            ${Time.Time24}
+
+    /if (${Target.ID}) {
+        /varset cache_targetID       ${cache_targetID}
+        /varset cache_targetType     ${cache_targetType}
+        /varset cache_targetName     ${cache_targetName}
+        /varset cache_targetIsCorpse ${cache_targetType.Equal[corpse]}
+    } else {
+        /varset cache_targetID       0
+        /varset cache_targetType     
+        /varset cache_targetName     
+        /varset cache_targetIsCorpse FALSE
+    }
+
+    | ~0.1s at ~100 ticks/sec; tune as needed
+    /varset timer_envCache 10
+/return
 
 
 Sub createGroupList
@@ -475,7 +519,6 @@ Sub chkSit
 |--Engage Target EVENT, calls EngageTarget
 Sub EVENT_KillMob(_line, _sender, _eventParams)
 	/if (${_eventParams.Arg[1, ].Equal[NULL]}) /return
-	/doevents flush KillMob
 	/call EngageTarget ${_eventParams.Arg[1, ]}
 /return
 
@@ -535,7 +578,7 @@ Sub chkTargetStatus
 	}
 
 	| No target, or I am at my bound zone, if engaged, kill
-	/if (${int_targetID} == 0 || !${Target.ID} || ${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) {
+	/if (${int_targetID} == 0 || !${cache_targetID} || ${cache_zoneShort.Equal[${cache_boundZone}]}) {
 		/varset reason NOTARGET_or_ATBIND
 		/goto :disengage
 	}
@@ -550,21 +593,21 @@ Sub chkTargetStatus
 	} 
 	
 	| Check to see if my target is NPC and there is no NPCs around
-	/if (${Target.ID} && ${Target.ID} == ${int_MTID} && (!${SpawnCount[npc id ${int_targetID} radius 200]} || ${Zone.ShortName.Equal[${Me.BoundLocation[0]}]})) {
+	/if (${cache_targetID} && ${cache_targetID} == ${int_MTID} && (!${SpawnCount[npc id ${int_targetID} radius 200]} || ${cache_zoneShort.Equal[${cache_boundZone}]})) {
 		/echo \awTarget is MT, and No NPC in radius 200 (or at bind) \aoDisengaging!
 		/varset reason TARGETMT_or_ATBIND
 		/goto :disengage
 	}
 
 	| Check to see if there are any NPCs on XTarget and Radius
-	/if ((${Me.XTarget}==0 && !${SpawnCount[npc radius 200]})) {
+	/if ((${cache_hasXTarget}==0 && !${cache_npcR200})) {
 		/echo \awNo Targets within 200, or on XTarget \aoDisengaging!
 		/varset reason NOTARGETSWITHIN200_AND_NOXTARGET
 		/goto :disengage
 	} 
 
 	| If there is something on XTarget, and its over 400 away, ignore it.
-	/if (${Me.XTarget} && (!${SpawnCount[npc radius 400]}  || ${Zone.ShortName.Equal[${Me.BoundLocation[0]}]})) {
+	/if (${cache_hasXTarget} && (!${cache_npcR400}  || ${cache_zoneShort.Equal[${cache_boundZone}]})) {
 		/echo \awNo Targets within 400, even if they are on XTarget \aoDisengaging!
 		/varset reason NOTARGETWITHIN400_AND_HASXTARGET
 		/goto :disengage
@@ -574,18 +617,18 @@ Sub chkTargetStatus
 	/if (${Me.Class.ShortName.Equal[SHM]} && ${Me.Class.ShortName.Equal[CLR]} && ${Me.Class.ShortName.Equal[DRU]}) /goto :chkTargetTarget
 
 	| I am engaged, check we are targetting correct NPC (not if we are tanking becausse that is annoying)
-	/if ((${Target.ID} != ${int_targetID}) && (${Spawn[id ${int_targetID}].PctHPs} >= 0 && !${Spawn[id ${int_targetID}].Name.Find[s_corpse]}) && !${bln_tanking} && !${bln_activeCharming}) {
+	/if ((${cache_targetID} != ${int_targetID}) && (${Spawn[id ${int_targetID}].PctHPs} >= 0 && !${Spawn[id ${int_targetID}].Name.Find[s_corpse]}) && !${bln_tanking} && !${bln_activeCharming}) {
 		| I am not targetting the correct NPC
 		/echo \aoCurrent Target \arNOT \ao${Spawn[id ${int_targetID}].Name}(${int_targetID})\aw, re-targetting
 		/call TrueTarget ${int_targetID}
-	} else /if ((${Target.ID} != ${int_targetID}) && (${Target.PctHPs} >= 0 && !${Spawn[id ${int_targetID}].Name.Find[s_corpse]}) && ${bln_tanking}) {
-		/varset int_targetID ${Target.ID}
+	} else /if ((${cache_targetID} != ${int_targetID}) && (${Target.PctHPs} >= 0 && !${Spawn[id ${int_targetID}].Name.Find[s_corpse]}) && ${bln_tanking}) {
+		/varset int_targetID ${cache_targetID}
 	}
 	
 	:chkTargetTarget
 	/call TargetNamedCheck ${int_targetID}
     /declare isNamed bool local ${Macro.Return}
-	/if (${Target.Type.Equal[NPC]} && ${Me.TargetOfTarget.CleanName.Equal[${Me.CleanName}]} && !${bln_tanking} && ${isNamed}) {
+	/if (${cache_targetType.Equal[NPC]} && ${Me.TargetOfTarget.CleanName.Equal[${Me.CleanName}]} && !${bln_tanking} && ${isNamed}) {
 		| Priest/Caster (with some sort of a aggro dump ability)
 		/if (${str_classArchetype.Equal[PRIEST]} || ${str_classArchetype.Equal[CASTER]}) {
 			| Wizard
@@ -608,11 +651,11 @@ Sub chkTargetStatus
 			}
 		} else /if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
 			/declare use_riposte bool local FALSE
-			/if (${Zone.ShortName.Equal[tacvi]} && (${Target.Name.Find[Pirik]} || ${Target.Name.Find[Yihst]} || ${Target.Name.Find[Tunat]})) {
+			/if (${cache_zoneShort.Equal[tacvi]} && (${Target.Name.Find[Pirik]} || ${Target.Name.Find[Yihst]} || ${Target.Name.Find[Tunat]})) {
 				/varset use_riposte TRUE
-			} else /if (${Zone.ShortName.Equal[anguish]} && (${Target.Name.Find[Keldovan]} || ${Target.Name.Find[Ture]} || ${Target.Name.Find[Vangl]} || ${Target.Name.Find[Zun]} || ${Target.Name.Find[Hanvar]} || ${Target.Name.Find[Overlord]})) {
+			} else /if (${cache_zoneShort.Equal[anguish]} && (${Target.Name.Find[Keldovan]} || ${Target.Name.Find[Ture]} || ${Target.Name.Find[Vangl]} || ${Target.Name.Find[Zun]} || ${Target.Name.Find[Hanvar]} || ${Target.Name.Find[Overlord]})) {
 				/varset use_riposte TRUE
-			} else /if (${Zone.ShortName.Find[chambers]} &&  ${Target.Name.Find[Master]}) {
+			} else /if (${cache_zoneShort.Find[chambers]} &&  ${Target.Name.Find[Master]}) {
 				/varset use_riposte TRUE
 			} 
 			/if (${Me.Class.ShortName.Equal[SHD]}) {
@@ -653,7 +696,6 @@ Sub chkTargetStatus
 
 Sub Event_BackOff
 	/echo \ao Event Back Off Called
-	/doevents flush BackOff
 	/call Disengage
 /return
 
@@ -682,20 +724,20 @@ Sub Disengage
 
 
 Sub chkMobDead
-	/if ((${SpawnCount[npc radius 200]} == 0 || ${Me.XTarget} == 0) && ${bln_engaged} ) {
-		/echo chkMobDead triggered XTarget:${Me.XTarget} || SpawnCount:!${SpawnCount[npc id ${int_targetID} radius 250]}  && engaged:${bln_engaged}
+	/if ((${cache_npcR200} == 0 || ${cache_hasXTarget} == 0) && ${bln_engaged} ) {
+		/echo chkMobDead triggered XTarget:${cache_hasXTarget} || SpawnCount:!${SpawnCount[npc id ${int_targetID} radius 250]}  && engaged:${bln_engaged}
 		/call Disengage
 	}
 /return
 
 Sub TrueTarget(int _targetID)
-	/if (${SpawnCount[id ${_targetID}]} && ${Target.ID} != ${_targetID} ) {
+	/if (${SpawnCount[id ${_targetID}]} && ${cache_targetID} != ${_targetID} ) {
 		/declare retryTimer timer local 30
 		:Target_Loop
 		/squelch /target id ${_targetID}
-		/delay 2 ${Target.ID} == ${_targetID}
+		/delay 2 ${cache_targetID} == ${_targetID}
 		
-		/if (${Target.ID} != ${_targetID} && ${SpawnCount[id ${_targetID}]}) {
+		/if (${cache_targetID} != ${_targetID} && ${SpawnCount[id ${_targetID}]}) {
 			/if (${retryTimer}) {
 				/goto :Target_Loop
 			} else {
@@ -760,7 +802,7 @@ Sub chkMTAlive(bool _setAsTarget)
 	}
 	
 	|-- If set as target, target the new MT immediately
-	/if (${_setAsTarget} && (${Target.ID} != ${int_MTID})) {
+	/if (${_setAsTarget} && (${cache_targetID} != ${int_MTID})) {
 		/if (${Me.Casting.ID}) /call Interrupt
 		/call TrueTarget ${int_MTID}
 	}
@@ -869,7 +911,6 @@ Sub Event_SKILLCHECK(_line, _sender, _eventParams)
 |--------------------------------------------------------------------------------
 Sub Event_SetupRaid(_line, _sender, _eventParams)
 	/call SetupRaid ${_eventParams.Arg[1,|]}
-	/doevents flush SetupRaid
 /return 
 
 
@@ -977,7 +1018,6 @@ Sub Event_EndMac
 	/delay 2m
 	/camp desktop
 	/end
-	/doevents flush EndMac
 /return
 
 
@@ -986,7 +1026,7 @@ Sub Event_EndMac
 | AA Special Events
 Sub EVENT_UseStaunchRecovery
 	| Do not use if at bind point (ie: dead)
-	/if (${Zone.ID} == 340 || ${Zone.ID} == 344 || ${Zone.ID} == 345 || ${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /return
+	/if (${Zone.ID} == 340 || ${Zone.ID} == 344 || ${Zone.ID} == 345 || ${cache_zoneShort.Equal[${cache_boundZone}]}) /return
 
 	/if ((${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[TANK]}) && ${Me.PctEndurance} < 20) {
 		/casting "Staunch Recovery" alt 
@@ -1001,7 +1041,7 @@ Sub EVENT_UseStaunchRecovery
 
 Sub EVENT_UseIntensity
 	| Do not use if at bind point (ie: dead)
-	/if (${Zone.ID} == 340 || ${Zone.ID} == 344 || ${Zone.ID} == 345 || ${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /return
+	/if (${Zone.ID} == 340 || ${Zone.ID} == 344 || ${Zone.ID} == 345 || ${cache_zoneShort.Equal[${cache_boundZone}]}) /return
 	/if (${Me.Class.ShortName.Equal[BRD]}) {
 		/call MQ2Medley ALT "Intensity of the Resolute" ${int_targetID} TRUE
 	} else {
@@ -1011,7 +1051,7 @@ Sub EVENT_UseIntensity
 
 Sub EVENT_UseServants
 	| Do not use if at bind point (ie: dead)
-	/if (${Zone.ID} == 340 || ${Zone.ID} == 344 || ${Zone.ID} == 345 || ${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /return
+	/if (${Zone.ID} == 340 || ${Zone.ID} == 344 || ${Zone.ID} == 345 || ${cache_zoneShort.Equal[${cache_boundZone}]}) /return
 	/if (${Me.Class.ShortName.Equal[BRD]}) {
 		/call MQ2Medley ALT "Steadfast Servant" ${int_targetID} FALSE
 	} else {
@@ -1021,7 +1061,7 @@ Sub EVENT_UseServants
 
 Sub EVENT_UseInfusion
 	| Do not use if at bind point (ie: dead)
-	/if (${Zone.ID} == 340 || ${Zone.ID} == 344 || ${Zone.ID} == 345 || ${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /return
+	/if (${Zone.ID} == 340 || ${Zone.ID} == 344 || ${Zone.ID} == 345 || ${cache_zoneShort.Equal[${cache_boundZone}]}) /return
 	/if (${Me.Class.ShortName.Equal[BRD]}) {
 		/call MQ2Medley ALT "Infusion of the Faithful" ${int_targetID} FALSE
 	} else {
@@ -1036,27 +1076,25 @@ Sub EVENT_UseInfusion
 
 
 Sub Event_RageOn(string line)
-	/if (!${mq2meleeEnabled} && !${Stick.Behind} && (${line.Find[${Spawn[${int_targetID}].DisplayName}]} || ${line.Find[${Target.DisplayName}]}) && (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]})) {
+	/if (!${mq2meleeEnabled} && !${Stick.Behind} && (${line.Find[${Spawn[${int_targetID}].DisplayName}]} || ${line.Find[${cache_targetName}]}) && (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]})) {
 		/attack off
 	}
-	/if (((${line.Find[${Spawn[${int_targetID}].DisplayName}]} || ${line.Find[${Target.DisplayName}]}) && ${Pet.ID}) && !${Me.PetBuff[Master's Aura Effect]}) {
+	/if (((${line.Find[${Spawn[${int_targetID}].DisplayName}]} || ${line.Find[${cache_targetName}]}) && ${Pet.ID}) && !${Me.PetBuff[Master's Aura Effect]}) {
 		/echo Enrage detected! Backing pet off.
 		/pet back off
 		/varset bln_enraged TRUE
 	}
-	/doevents flush RageOn
 /return
 
 Sub Event_RageOff(string line)
-	/if (!${mq2meleeEnabled} && (${line.Find[${Spawn[${int_targetID}].DisplayName}]} || ${line.Find[${Target.DisplayName}]}) && (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) && ${Target.ID}) {
+	/if (!${mq2meleeEnabled} && (${line.Find[${Spawn[${int_targetID}].DisplayName}]} || ${line.Find[${cache_targetName}]}) && (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) && ${cache_targetID}) {
 		/echo  \awRageOff :tryKill \ag Attacking 
 		/attack on
 	}
-	/if ((${line.Find[${Spawn[${int_targetID}].DisplayName}]} || ${line.Find[${Target.DisplayName}]}) && ${Pet.ID}) {
+	/if ((${line.Find[${Spawn[${int_targetID}].DisplayName}]} || ${line.Find[${cache_targetName}]}) && ${Pet.ID}) {
 		/pet attack
 		/varset bln_enraged FALSE
 	}
-	/doevents flush RageOff
 /return
 
 
@@ -1075,14 +1113,12 @@ Sub EVENT_DUCKON
 		/delay 1s
 		/goto :ducking
 	}
-	/doevents flush DuckOn
 /return
 
 Sub EVENT_DUCKOFF
 	/echo end ducking!
 	/if (${Me.Ducking}) /keypress x
 	/varset bln_ducking FALSE
-	/doevents flush DuckOff
 /return
 
 
@@ -1094,7 +1130,6 @@ Sub Event_Zoned
 	/echo \awEvent_Zoned ${Time.Time24}
 	/call setExclusions
 	/if (${MacroQuest.GameState.Equal[CHARSELECT]}) /end
-  	/doevents flush Zoned
 /return
 
 
@@ -1185,7 +1220,6 @@ Sub EVENT_ChangeMT(_line, _sender, _eventParams)
 		/varset bln_tanking 	FALSE
 		/varset bln_taunting 	FALSE
 	}
-	/doevents flush ChangeMT
 /return
 
 Sub setMT(string _tankName)
@@ -1200,7 +1234,6 @@ Sub EVENT_ChangeSA(_line, _sender, _eventParams)
 	/echo _eventParams:${_eventParams}
 	/declare SA string local ${_eventParams.Arg[1, ]}
 	/varset	int_STID ${Spawn[${SA}].ID}
-	/doevents flush ChangeSA
 /return
 
 
@@ -1213,7 +1246,6 @@ Sub EVENT_ChangeAP(_line, _sender, _eventParams)
 		/varset	int_assistAt ${AP}
 		/dgt [${Me.Class.ShortName}] ${Me.Name} ${str_action} >> ${Spawn[id ${int_MTID}].CleanName} <<  @ ${int_assistAt}
 	}
-	/doevents flush ChangeAP
 /return
 
 
@@ -1238,7 +1270,7 @@ Sub LoadPlugin(string _pluginName, bool _load)
 Sub chkAutoAssist
 	/if (!${bln_autoAssist}) /return
 	/declare tgtID int local
-	/dquery ${str_MTName} -q "Target.ID"
+	/dquery ${str_MTName} -q "cache_targetID"
 	/delay 20 ${DanNet.Query.Received}
 	/varset tgtID ${DanNet.Q}
 	/call TrueTarget ${tgtID}
@@ -1291,7 +1323,6 @@ SUB EVENT_shrinkGroup
 		/delay 5
 		/exchange "${originalItem}" ${FindItem[${shrink_ItemName}].WornSlot[1].Name}
 	}
-	/doevents flush shrinkGroup
 /return
 |-------------------------------------------------------------|
 |- Reliably determine if target is Named				     -|
@@ -1306,18 +1337,17 @@ Sub EVENT_ForceNamed(_line, _chatSender, _eventParams)
 		/echo \aoForcing named only mode:\ag${_eventParams}
 		/varset bln_forceNamed FALSE
 	}
-	/doevents flush ForceNamed
 /return
 
 
 Sub TargetNamedCheck(_id)
 	/if (${bln_forceNamed}) /return TRUE
 	/if ((${Spawn[npc id ${_id}].Named} || ${Spawn[npc id ${_id}].Name.Find[#]}) && ${Target.Level} >= 75) /return TRUE
-	/if (${Zone.ShortName.Equal[tacvi]} && ${Target.Level} >= 70) /return TRUE
-	/if (${Zone.ShortName.Equal[chambersa]} || ${Zone.ShortName.Equal[chambersb]} || ${Zone.ShortName.Equal[chambersc]} || ${Zone.ShortName.Equal[chambersd]} || ${Zone.ShortName.Equal[chamberse]}  && ${Target.Level} >= 70) /return TRUE
-	/if (${Zone.ShortName.Equal[anguish]}  && ${Target.Level} >= 75) /return TRUE
-	/if (${Zone.ShortName.Equal[arena]}) /return TRUE
-	/if (${Zone.ShortName.Equal[thundercrest]}) /return TRUE
+	/if (${cache_zoneShort.Equal[tacvi]} && ${Target.Level} >= 70) /return TRUE
+	/if (${cache_zoneShort.Equal[chambersa]} || ${cache_zoneShort.Equal[chambersb]} || ${cache_zoneShort.Equal[chambersc]} || ${cache_zoneShort.Equal[chambersd]} || ${cache_zoneShort.Equal[chamberse]}  && ${Target.Level} >= 70) /return TRUE
+	/if (${cache_zoneShort.Equal[anguish]}  && ${Target.Level} >= 75) /return TRUE
+	/if (${cache_zoneShort.Equal[arena]}) /return TRUE
+	/if (${cache_zoneShort.Equal[thundercrest]}) /return TRUE
 /return FALSE
 	
 
@@ -1348,11 +1378,9 @@ Sub chkDead
 |-- CHECK NAKED
 Sub Event_CheckNaked
 	/call chkNaked
-	/doevents flush CheckNaked
 /return
 
 Sub chkNaked
-	/doevents flush chkNaked
 	/if (!${Me.Inventory[2].ID} && !${timer_naked}) {
 		/docommand /${announceChannel} I am NAKED. 
 		/varset bln_naked TRUE
@@ -1363,7 +1391,6 @@ Sub chkNaked
 /return
 
 Sub Event_FixCorpses
-	/doevents flush FixCorpses
 	/hidecorpse all
 	/delay 2
 	/hidecorpse none
@@ -1494,24 +1521,20 @@ SUB RefreshXTarget
 |----------------------------------------------------|
 |--Save Events
 Sub EVENT_SaveJewelry
-	/doevents flush SaveJewelry 
 	/call SaveRingset
 	/call SaveFaceSlot
 	/call SaveEarrings
 /return 
 
 Sub EVENT_SaveRingset
-	/doevents flush SaveRingset
 	/call SaveRingset
 /return
 
 Sub EVENT_SaveFaceSlot
-	/doevents flush SaveFaceSlot 
 	/call SaveFaceSlot
 /return 
 
 Sub EVENT_SaveEarrings
-	/doevents flush SaveEarrings 
 	/call SaveEarrings
 /return 
 
@@ -1544,7 +1567,6 @@ Sub SaveEarrings
 |-----
 Sub EVENT_RemoveRingset
 	/echo removingRingset
-	/doevents flush RemoveRingset
 	/call RemoveRingset
 /return
 
@@ -1623,7 +1645,6 @@ Sub FindEmptyBagSlot
 
 |-- method to load the saved rings from INI (primarily for Trial of Foresight)
 Sub EVENT_LoadRingset
-	/doevents flush LoadRingset
 	/echo \ayLoading Ringset
 	/call LoadRingset
 /return
@@ -1659,7 +1680,6 @@ Sub LoadRingset
 /return 
 
 Sub Event_LoadFaceSlot
-	/doevents flush LoadFaceSlot
 	/call LoadFaceSlot
 /return 
 
@@ -1832,7 +1852,6 @@ Sub Event_SkillCheck(string _line, string _sender, string _eventParams)
 		/docommand /${announceChannel} ${Me.Skill[${_eventParams}]}
 		/nav wp lobby
 	}
-	/doevents flush SkillCheck
 
 /return
 

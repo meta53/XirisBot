@@ -38,7 +38,7 @@ Sub InitEvents_OOW_RSS
 
 
 Sub EVENTS_OOW_Riftseekers 
-    /if (${Zone.ShortName.NotEqual[riftseekers]} && ${Zone.ShortName.NotEqual[arena]} && ${Zone.ShortName.NotEqual[guildhall]}) /return
+    /if (${cache_zoneShort.NotEqual[riftseekers]} && ${cache_zoneShort.NotEqual[arena]} && ${cache_zoneShort.NotEqual[guildhall]}) /return
     /if (${Select[${Me.Class.ShortName},WAR,SHD,PAL]} && ${bln_engaged}) /call chkDivineIntervention
 
     | King Gelaqua Evetns
@@ -77,12 +77,12 @@ Sub KingStart
 /return
 
 Sub KingBombCheck
-    /declare sTID   int local ${Target.ID}
+    /declare sTID   int local ${cache_targetID}
     /declare i      int local 0
     | Loop through all the spawns of icy orbs and see if they are targetting me
     /for i 0 to ${SpawnCount[npc "icy orb"]}
        /target ID ${NearestSpawn[${i}, npc "icy orb"].ID}
-       /if (${Me.TargetOfTarget.ID} == ${Me.ID} && !${bln_kingRunning}) {
+       /if (${Me.TargetOfcache_targetID} == ${Me.ID} && !${bln_kingRunning}) {
             /varset bln_kingRunning TRUE 
             /goto :kingRunning
        }    
@@ -90,7 +90,7 @@ Sub KingBombCheck
     /varset bln_kingRunning FALSE
 
     :kingRunning
-    /if (${bln_kingRunning}) /call KingRunning ${Me.TargetOfTarget.ID}
+    /if (${bln_kingRunning}) /call KingRunning ${Me.TargetOfcache_targetID}
     /target id ${sTID}
 /return 
 
@@ -100,35 +100,35 @@ Sub KingRunning(int _bombID)
     /nav recordwaypoint bombStart
     :bombCheck
     /if (!${SpawnCount[id ${_bombID}]})         /goto :bombReset 
-    /if (${Target.ID} !=${_bombID})             /target id ${_bombID}
-    /if (${Me.TargetOfTarget.ID} != ${Me.ID})   /goto :bombReset
+    /if (${cache_targetID} !=${_bombID})             /target id ${_bombID}
+    /if (${Me.TargetOfcache_targetID} != ${Me.ID})   /goto :bombReset
 
     /nav wp br1
     :br1 
         /if (!${bln_running}) /return
-        /if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /call KingDeath
-        /if (${Me.TargetOfTarget.ID} != ${Me.ID}) /goto :bombReset
+        /if (${cache_zoneShort.Equal[${cache_boundZone}]}) /call KingDeath
+        /if (${Me.TargetOfcache_targetID} != ${Me.ID}) /goto :bombReset
         /if (${Navigation.Active}) /goto :br1 
 
     /nav wp br2
     :br2
         /if (!${bln_running}) /return
-        /if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /call KingDeath
-        /if (${Me.TargetOfTarget.ID} != ${Me.ID}) /goto :bombReset
+        /if (${cache_zoneShort.Equal[${cache_boundZone}]}) /call KingDeath
+        /if (${Me.TargetOfcache_targetID} != ${Me.ID}) /goto :bombReset
         /if (${Navigation.Active}) /goto :br2 
 
     /nav wp br3
     :br3
         /if (!${bln_running}) /return
-        /if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /call KingDeath
-        /if (${Me.TargetOfTarget.ID} != ${Me.ID}) /goto :bombReset
+        /if (${cache_zoneShort.Equal[${cache_boundZone}]}) /call KingDeath
+        /if (${Me.TargetOfcache_targetID} != ${Me.ID}) /goto :bombReset
         /if (${Navigation.Active}) /goto :br3
 
     /nav wp br4
     :br4
         /if (!${bln_running}) /return
-        /if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /call KingDeath
-        /if (${Me.TargetOfTarget.ID} != ${Me.ID}) /goto :bombReset
+        /if (${cache_zoneShort.Equal[${cache_boundZone}]}) /call KingDeath
+        /if (${Me.TargetOfcache_targetID} != ${Me.ID}) /goto :bombReset
         /if (${Navigation.Active}) /goto :br4
 
     /nav wp br1
@@ -151,7 +151,7 @@ Sub KingSafe
 Sub KingDeath 
     :kingDead
     /call RunAllEvents
-    /if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /goto :kingDead
+    /if (${cache_zoneShort.Equal[${cache_boundZone}]}) /goto :kingDead
 /return
 
 

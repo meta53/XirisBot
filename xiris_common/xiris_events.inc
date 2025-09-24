@@ -44,31 +44,31 @@ Sub xbot_initialize_events
     |--Check for Special Events
 
     |- Gates of Discord
-    /if (${Select[${Zone.ShortName},barindu,snpool,snlair,sncrematory,snplant,vxed,tipt]})      /call InitEvents_GoD_Barindu
-    /if (${Zone.ShortName.Equal[uqua]})         /call InitEvents_GoD_Uqua
-    /if (${Zone.ShortName.Equal[ikkinz]})       /call InitEvents_GoD_Uqua
-    /if (${Zone.ShortName.Equal[inktuta]})      /call InitEvents_GoD_Inktuta
-    /if (${Zone.ShortName.Equal[tacvi]})        /call InitEvents_GoD_Tacvi
+    /if (${Select[${cache_zoneShort},barindu,snpool,snlair,sncrematory,snplant,vxed,tipt]})      /call InitEvents_GoD_Barindu
+    /if (${cache_zoneShort.Equal[uqua]})         /call InitEvents_GoD_Uqua
+    /if (${cache_zoneShort.Equal[ikkinz]})       /call InitEvents_GoD_Uqua
+    /if (${cache_zoneShort.Equal[inktuta]})      /call InitEvents_GoD_Inktuta
+    /if (${cache_zoneShort.Equal[tacvi]})        /call InitEvents_GoD_Tacvi
 
     |-- Omens of War
-    /if (${Zone.ShortName.Equal[chambersa]})    /call InitEvents_OOW_MPG_Hatred
-    /if (${Zone.ShortName.Equal[chambersb]})    /call InitEvents_OOW_MPG_Endurance
-    /if (${Zone.ShortName.Equal[chambersc]})    /call InitEvents_OOW_MPG_Foresight
-    /if (${Zone.ShortName.Equal[chambersd]})    /call InitEvents_OOW_MPG_Specialization
-    /if (${Zone.ShortName.Equal[chamberse]})    /call InitEvents_OOW_MPG_Adaptation
-    /if (${Zone.ShortName.Equal[chambersf]})    /call InitEvents_OOW_MPG_Corruption
+    /if (${cache_zoneShort.Equal[chambersa]})    /call InitEvents_OOW_MPG_Hatred
+    /if (${cache_zoneShort.Equal[chambersb]})    /call InitEvents_OOW_MPG_Endurance
+    /if (${cache_zoneShort.Equal[chambersc]})    /call InitEvents_OOW_MPG_Foresight
+    /if (${cache_zoneShort.Equal[chambersd]})    /call InitEvents_OOW_MPG_Specialization
+    /if (${cache_zoneShort.Equal[chamberse]})    /call InitEvents_OOW_MPG_Adaptation
+    /if (${cache_zoneShort.Equal[chambersf]})    /call InitEvents_OOW_MPG_Corruption
 
     | ANGUISH - We need to watch guildhall here to clear any mark of deaths that the clerics can't heal!
-    /if (${Zone.ShortName.Equal[arena]} || ${Zone.ShortName.Equal[anguish]} || ${Zone.ShortName.Equal[guildhall]})      /call InitEvents_OOW_Anguish
+    /if (${cache_zoneShort.Equal[arena]} || ${cache_zoneShort.Equal[anguish]} || ${cache_zoneShort.Equal[guildhall]})      /call InitEvents_OOW_Anguish
 
     |-- Epic 1.5 Fights
-    /if (${Zone.ShortName.Equal[gfaydark]})     /call InitEvents_Epic
+    /if (${cache_zoneShort.Equal[gfaydark]})     /call InitEvents_Epic
     
     |-- Dragons of Norrath
-    /if (${Zone.ShortName.Equal[thenest]})      /call InitEvents_DoN_Vishimtar
+    /if (${cache_zoneShort.Equal[thenest]})      /call InitEvents_DoN_Vishimtar
 
     |-- Depths of Darkhollow
-    /if (${Zone.ShortName.Equal[dreadspire]})   /call InitEvents_DoDH_Demiplane
+    /if (${cache_zoneShort.Equal[dreadspire]})   /call InitEvents_DoDH_Demiplane
 
     /echo \aoxbot_initialize_events
 

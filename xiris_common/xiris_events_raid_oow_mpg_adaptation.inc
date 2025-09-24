@@ -41,7 +41,6 @@ Sub Events_OOW_MPG_Adaptation
 /return
 
 Sub EVENT_DestructionActive 
-    /doevents flush DestructionActive
     /if (${glowTimer}) /return
     /echo \arDESTRUCTION Glow Triggered! ${Time.Time24}
     /gsay DESTRUCTION Glow Triggered! ${Time.Time24}
@@ -54,7 +53,7 @@ Sub chkAdaptationMez
     /if (${SpawnCount[npc dimunitive]}) {
         /for i 1 to ${SpawnCount[npc dimunitive]}
             /call TrueTarget ${NearestSpawn[${i}, npc dimunitive].ID}
-            /call CastDebuffsOnTarget ${Target.ID} TRUE
+            /call CastDebuffsOnTarget ${cache_targetID} TRUE
             /if (!${Target.Buff[${str_mezSingle}].ID}) {
                 /call MQ2Cast "${str_mezSingle}" ${int_mezSingleGem}
             } 
@@ -73,9 +72,9 @@ Sub chkAdaptationAdds
     /if (${${SpawnCount[npc dimunitive]}}) {
         /for i 1 to ${SpawnCount[npc dimunitive]}
             /call TrueTarget ${NearestSpawn[${i}, npc dimunitive].ID}
-            /say Aggroing dimunitive ${Target.Name} (${Target.ID})
+            /say Aggroing dimunitive ${Target.Name} (${cache_targetID})
             :aggroDimunitive
-            /if ((${Me.TargetOfTarget.ID} != ${Me.ID}) && (${Me.TargetOfTarget.Class.ShortName.NotEqual[WAR]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[PAL]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[SHD]}) && ${Target.Distance3D} < 150) {
+            /if ((${Me.TargetOfcache_targetID} != ${Me.ID}) && (${Me.TargetOfTarget.Class.ShortName.NotEqual[WAR]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[PAL]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[SHD]}) && ${Target.Distance3D} < 150) {
                 /attack on
                 /delay 10
                 /goto :aggroDimunitive
@@ -87,9 +86,9 @@ Sub chkAdaptationAdds
     /if (${${SpawnCount[npc lick of flame]}}) {
         /for i 1 to ${SpawnCount[npc lick of flame]}
             /call TrueTarget ${NearestSpawn[${i}, npc lick of flame].ID}
-            /say Aggroing lick of flame ${Target.Name} (${Target.ID})
+            /say Aggroing lick of flame ${Target.Name} (${cache_targetID})
             :aggroLick
-            /if ((${Me.TargetOfTarget.ID} != ${Me.ID}) && (${Me.TargetOfTarget.Class.ShortName.NotEqual[WAR]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[PAL]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[SHD]}) && ${Target.Distance3D} < 150) {
+            /if ((${Me.TargetOfcache_targetID} != ${Me.ID}) && (${Me.TargetOfTarget.Class.ShortName.NotEqual[WAR]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[PAL]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[SHD]}) && ${Target.Distance3D} < 150) {
                 /attack on
                 /delay 10
                 /goto :aggroLick
@@ -102,9 +101,9 @@ Sub chkAdaptationAdds
     /if (${${SpawnCount[npc mote of frost]}}) {
         /for i 1 to ${SpawnCount[npc mote of frost]}
             /call TrueTarget ${NearestSpawn[${i}, npc mote of frost].ID}
-            /say Aggroing mote of frost ${Target.Name} (${Target.ID})
+            /say Aggroing mote of frost ${Target.Name} (${cache_targetID})
             :aggroMote
-            /if ((${Me.TargetOfTarget.ID} != ${Me.ID}) && (${Me.TargetOfTarget.Class.ShortName.NotEqual[WAR]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[PAL]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[SHD]}) && ${Target.Distance3D} < 150) {
+            /if ((${Me.TargetOfcache_targetID} != ${Me.ID}) && (${Me.TargetOfTarget.Class.ShortName.NotEqual[WAR]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[PAL]} || ${Me.TargetOfTarget.Class.ShortName.NotEqual[SHD]}) && ${Target.Distance3D} < 150) {
                 /attack on
                 /delay 10
                 /goto :aggroMote

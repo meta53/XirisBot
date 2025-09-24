@@ -104,7 +104,7 @@ Sub InitEvents_OOW_Anguish
 /return
 
 Sub Events_OOW_Anguish 
-	/if (${Zone.ShortName.NotEqual[anguish]} && ${Zone.ShortName.NotEqual[arena]} && ${Zone.ShortName.NotEqual[guildhall]}) /return
+	/if (${cache_zoneShort.NotEqual[anguish]} && ${cache_zoneShort.NotEqual[arena]} && ${cache_zoneShort.NotEqual[guildhall]}) /return
 	/if (${Select[${Me.Class.ShortName},WAR,SHD,PAL]} && ${bln_engaged}) /call chkDivineIntervention
 
 	| Ture Events
@@ -123,12 +123,12 @@ Sub Events_OOW_Anguish
 	}
 
 	| Vangl Events
-	/if (${SpawnCount[npc Vangl]} && ${Spawn[npc Vangl].Distance3D} < 300 || ${Zone.ShortName.Equal[arena]} || ${Zone.ShortName.Equal[guildhall]}) {
+	/if (${SpawnCount[npc Vangl]} && ${Spawn[npc Vangl].Distance3D} < 300 || ${cache_zoneShort.Equal[arena]} || ${cache_zoneShort.Equal[guildhall]}) {
 		/call chkAMVEvents
 	}
 
 	| OMM Events
-	/if ((${SpawnCount[npc Overlord]} && ${Spawn[npc Overlord].Distance3D} < 400) || ${Zone.ShortName.Equal[arena]} || ${Zone.ShortName.Equal[guildhall]}) {
+	/if ((${SpawnCount[npc Overlord]} && ${Spawn[npc Overlord].Distance3D} < 400) || ${cache_zoneShort.Equal[arena]} || ${cache_zoneShort.Equal[guildhall]}) {
 		/call chkOMMActions
 		/call chkOMMEvents
 	} 
@@ -145,7 +145,6 @@ Sub chkTureEvents
 /return 
 
 Sub Event_TureRampOn
-	/doevents flush TureRampOn
 	/echo \ao TURE RAMPAGE: \awengaged?\ag${bln_engaged} \awtanking?\ag${bln_tanking}
 	/if (${bln_tanking}) /return
 	/if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
@@ -181,13 +180,11 @@ Sub Event_TureRampOff
 	} else /if (${Me.Class.ShortName.Equal[NEC]} || ${Me.Class.ShortName.Equal[MAG]} || ${Me.Class.ShortName.Equal[BST]}) {
 		/pet attack
 	}
-	/doevents flush TureRampOn
 /return 
 
 Sub Event_TureWanton 
 	/echo \aw Warning! \arWanton Destruction \awon me!
 	/call chkNeedCure
-	/doevents flush TureWanton
 /return
 
 |----------------------------
@@ -227,9 +224,9 @@ Sub Event_JelvanStart
 				/delay 20
 				/if (${Me.CombatAbilityReady[Ancient: Chaos Cry]}) /doability "Ancient: Chaos Cry"
 				/squelch /attack on 
-				|/rs KillMob ${Target.ID}
+				|/rs KillMob ${cache_targetID}
 				|/delay 5s 
-				|/docommand /${announceChannel} DebuffTarget ${Target.ID}
+				|/docommand /${announceChannel} DebuffTarget ${cache_targetID}
 				|/docommand /${announceChannel} singsongs
 				
 				/stick off
@@ -271,7 +268,7 @@ Sub Event_JelvanStart
 				/if (${Me.CombatAbilityReady[Ancient: Chaos Cry]}) /doability "Ancient: Chaos Cry"
 				 
 				|/delay 5s 
-				|/docommand /${announceChannel} DebuffTarget ${Target.ID}
+				|/docommand /${announceChannel} DebuffTarget ${cache_targetID}
 				|/docommand /${announceChannel} singsongs
 				
 				/stick off
@@ -319,7 +316,7 @@ Sub Event_JelvanStart
 				/if (${Me.CombatAbilityReady[Ancient: Chaos Cry]}) /doability "Ancient: Chaos Cry"
 				/squelch /attack on 
 				/delay 5s 
-				|/docommand /${announceChannel} DebuffTarget ${Target.ID}
+				|/docommand /${announceChannel} DebuffTarget ${cache_targetID}
 				|/docommand /${announceChannel} singsongs
 				
 				/stick off
@@ -354,7 +351,7 @@ Sub Event_JelvanStart
 		}
 
 		| Loop de derp
-		/if ((${bln_jelvanEngaged} && !${Target.ID}) || !${bln_jelvanEngaged}) {
+		/if ((${bln_jelvanEngaged} && !${cache_targetID}) || !${bln_jelvanEngaged}) {
 			/goto :Tormentor_Checks
 		}
 	}
@@ -368,13 +365,13 @@ Sub chkJelvanResists
 
 Sub chkJelvanSlows
 	/if (${str_targetName.Find[Tanthi]}) {
-		/call TrueTarget ${Target.ID}
+		/call TrueTarget ${cache_targetID}
 		/if (!${Target.Slowed}) /call SlowTarget disease
 	} else /if (${str_targetName.Find[Tanthu]}) {
-		/call TrueTarget ${Target.ID}
+		/call TrueTarget ${cache_targetID}
 		/if (!${Target.Slowed}) /call SlowTarget magic
 	} else /if (${str_targetName.Find[Tantho]}) {
-		/call TrueTarget ${Target.ID}
+		/call TrueTarget ${cache_targetID}
 		/if (!${Target.Slowed}) /call SlowTarget magic
 	}
 /return
@@ -432,7 +429,6 @@ Sub Event_HanvarStart
 	/echo \ag HANVAR EVENT STARTED \aw@ \ao${Time.Time24}
 	/varset eventTarget Hanvar
 	/varset bln_hanvarEngaged TRUE
-	/doevents flush HanvarStart
 /return
 
 Sub Event_HanvarSetup
@@ -448,7 +444,6 @@ Sub Event_HanvarSetup
 	}
 	| We need to light up the fucker with DOTs and Cold Nukes
 	|/if (${Me.Class.ShortName.Equal[SHM]}) /call setSpell
-	/doevents flush HanvarSetup
 /return
 
 Sub Event_HanvarRetreat(string _sender, string _line, string _eventParams)
@@ -459,8 +454,6 @@ Sub Event_HanvarRetreat(string _sender, string _line, string _eventParams)
 			/nav wp hanvarSafe
 		} 
 	}
-	/doevents flush HanvarKill
-	/doevents flush HanvarRetreat
 /return
 
 Sub Event_HanvarKill(string _sender, string _line, string _eventParams)
@@ -477,8 +470,6 @@ Sub Event_HanvarKill(string _sender, string _line, string _eventParams)
 	}
 
 	:return
-	/doevents flush HanvarKill
-	/doevents flush HanvarRetreat
 /return
 
 
@@ -500,7 +491,7 @@ Sub chkAMVEvents
 	/doevents AMVKill
 
 	| Force AMV to Engaged in case you are a dumbass and forget to trigger the event (and you will wipe if you don't!)
-	/if (${Zone.ShortName.Equal[anguish]} && ${Spawn[npc Vangl].PctHPs} < 100 && ${Spawn[npc Vangl].Distance3D} < 300 && !${bln_amvEngaged}) /varset bln_amvEngaged TRUE 
+	/if (${cache_zoneShort.Equal[anguish]} && ${Spawn[npc Vangl].PctHPs} < 100 && ${Spawn[npc Vangl].Distance3D} < 300 && !${bln_amvEngaged}) /varset bln_amvEngaged TRUE 
 	
 	/if ((${Me.Class.ShortName.Equal[CLR]} && !${bln_chChainMember})|| ${Me.Class.ShortName.Equal[SHM]}) /call SQLCureMark 
 	/call SQLCheckMark
@@ -510,7 +501,6 @@ Sub chkAMVEvents
 Sub Event_AMVStart
 	/varset bln_amvEngaged TRUE 
 	/varset eventTarget Vangl
-	/doevents flush AMVStart
 /return
 
 
@@ -526,12 +516,10 @@ Sub EVENT_AMVKill
 	}
 
 	:return
-	/doevents flush AMVKill
 /return 
 
 
 Sub EVENT_AMVRetreat
-	/doevents flush AMVRetreat
 	/call chkMarkedForDeathCureDist 
 /return
 
@@ -554,7 +542,7 @@ Sub chkOMMActions
 
 	/call SQLCheckMark
 
-	/if (${Zone.ShortName.NotEqual[anguish]} && ${Zone.ShortName.NotEqual[arena]}) /return
+	/if (${cache_zoneShort.NotEqual[anguish]} && ${cache_zoneShort.NotEqual[arena]}) /return
 
 	/if (${Me.Class.ShortName.Equal[ENC]}) {
 		/doevents OMMWarCry
@@ -614,7 +602,6 @@ Sub chkOMMEvents
 /return 
 
 Sub Event_OMMStart 
-	/doevents flush OMMStart
 	/varset bln_OMMEngaged TRUE 
 	/varset eventTarget Overlord
 
@@ -635,7 +622,7 @@ Sub Event_OMMStart
 Sub OMM_MTEngage
 	| Engagement sub for MT
 	:OMMTarget
-	/if (!${Target.ID}) {
+	/if (!${cache_targetID}) {
 		/target Overlord
 		/goto :OMMTarget
 	}
@@ -657,14 +644,13 @@ Sub OMM_MTEngage
 /return 
 
 Sub Event_GazeYou 
-	/doevents flush GazeYou
 	/call Interrupt
 	/delay 20
 	/echo \arGAZE OF MATA MURAM on ME!
 	/echo \a-w Attempting Clicking \agMirrored Mask \a-w${Time.Time24}
 	/if (${Navigation.Active}) /nav stop
 	/rootme on
-	/if (!${FindItem[Mirrored Mask].ID} && ${Zone.ShortName.Equal[anguish]}) {
+	/if (!${FindItem[Mirrored Mask].ID} && ${cache_zoneShort.Equal[anguish]}) {
 		/shout NO MIRRORED MASK! WE ARE DOOOOMED!
 		/dgt FireTL
 		/shout Calling for TL!
@@ -721,7 +707,6 @@ Sub Event_GazeYou
 /return 
 
 Sub Event_GazeBurst
-	/doevents flush GazeBurst
 	/echo \arGAZE BURST \aw${Time.Time24}
 	/if (${Me.ID} == ${int_MTID}) {
 		/if (${Me.CombatAbilityReady[Furious Discipline]}) /doability "Furious Discipline"
@@ -729,7 +714,6 @@ Sub Event_GazeBurst
 /return 
 
 Sub Event_GazeDone
-	/doevents flush GazeDone
 	/echo \arGAZE DONE \aw${Time.Time24}
 /return
 
@@ -753,12 +737,12 @@ Sub chkOMMCharm
 				/if (${Spawn[npc Coerced_Lieutenant_000].Distance3D} < 200 && ${Spawn[npc Coerced_Lieutenant_000].LineOfSight}) {
 					/call TrueTarget ${Spawn[npc Coerced_Lieutenant_000].ID}
 					/if (!${timer_charmAnnounce}) {
-						/shout Attempting Charm! ${Target.Name} (${Target.ID}) d:${Target.Distance3D}
-						/echo \ar CHARMING ${Target.Name} (${Target.ID}) d:${Target.Distance3D}
+						/shout Attempting Charm! ${Target.Name} (${cache_targetID}) d:${Target.Distance3D}
+						/echo \ar CHARMING ${Target.Name} (${cache_targetID}) d:${Target.Distance3D}
 						/varset timer_charmAnnounce 10s
 					}
 					/call chkOMMEvents
-					/call CharmNPC ${Target.ID} TRUE TRUE ${Spawn[npc Overlord].ID}
+					/call CharmNPC ${cache_targetID} TRUE TRUE ${Spawn[npc Overlord].ID}
 					/goto :petattack_check
 				}
 			}
@@ -771,12 +755,12 @@ Sub chkOMMCharm
 					/call TrueTarget ${Spawn[npc Coerced_Lieutenant000].ID}
 					/if (${Target.Charmed.ID}) /goto :Charm_1
 					/if (!${timer_charmAnnounce}) {
-						/shout Attempting Charm! ${Target.Name} (${Target.ID}) d:${Target.Distance3D}
-						/echo \ar CHARMING ${Target.Name} (${Target.ID}) d:${Target.Distance3D}
+						/shout Attempting Charm! ${Target.Name} (${cache_targetID}) d:${Target.Distance3D}
+						/echo \ar CHARMING ${Target.Name} (${cache_targetID}) d:${Target.Distance3D}
 						/varset timer_charmAnnounce 10s
 					}
 					/call chkOMMEvents
-					/call CharmNPC ${Target.ID} TRUE TRUE ${Spawn[npc Overlord].ID}
+					/call CharmNPC ${cache_targetID} TRUE TRUE ${Spawn[npc Overlord].ID}
 					/goto :petattack_check
 				}
 			}
@@ -784,7 +768,7 @@ Sub chkOMMCharm
 	} else {
 		:petattack_check
 		/if (!${bln_hasCharmedPet}) /varset bln_hasCharmedPet TRUE
-		/if (${Pet.ID} && (${Pet.Target.ID} != ${Spawn[npc Overlord].ID})) {
+		/if (${Pet.ID} && (${Pet.cache_targetID} != ${Spawn[npc Overlord].ID})) {
 			/echo \agSiccing pet!
 			/call TrueTarget ${Spawn[npc Overlord].ID}
 			/pet attack
@@ -815,7 +799,7 @@ Sub chkOMMFrenzied
 				/call chkAENuke
 			} else /if (${Select[${Me.Class.ShortName},${MeleeClasses}]}) {
 				/call TrueTarget ${NearestSpawn[1, npc lasher].ID}
-				/call EngageTarget ${Target.ID}
+				/call EngageTarget ${cache_targetID}
 			} else {
 				/declare lx int local ${NearestSpawn[1, npc lasher].X}
 				/declare ly int local ${NearestSpawn[1, npc lasher].Y}
@@ -839,7 +823,7 @@ Sub chkOMMAdds
 	/for i 1 to ${SpawnCount[npc Coerced radius 140]}
 		/call TrueTarget ${NearestSpawn[${i}, npc Coerced].ID}
 		/if (${Me.TargetOfTarget.Class.ShortName.Equal[WAR]} || ${Me.TargetOfTarget.Class.ShortName.Equal[PAL]} || ${Me.TargetOfTarget.Class.ShortName.Equal[SHD]}) /goto :nextTarget
-		/if (!${Target.Charmed.ID}) /call aggroByID ${Target.ID}
+		/if (!${Target.Charmed.ID}) /call aggroByID ${cache_targetID}
 		/nav wp ommCleric
 		/squelch /target clear
 	:nextTarget	
@@ -851,7 +835,7 @@ Sub chkOMMAdds
 		/call TrueTarget ${NearestSpawn[${i}, npc lasher].ID}
 		/if (${Me.TargetOfTarget.Class.ShortName.Equal[WAR]} || ${Me.TargetOfTarget.Class.ShortName.Equal[PAL]} || ${Me.TargetOfTarget.Class.ShortName.Equal[SHD]}) /goto :nextTarget2
 		/if ((${Target.Distance3D} < 200)) {
-			/call aggroByID ${Target.ID}
+			/call aggroByID ${cache_targetID}
 			/if (${Spawn[pc Xanshia].Distance3D} > 50) {
 				/nav wp ommCleric
 				/delay 20
@@ -865,7 +849,6 @@ Sub chkOMMAdds
 /return
 
 Sub EVENT_OMMWarCry
-	/doevents flush OMMWarCry 
 	/if (${Me.Class.ShortName.NotEqual[ENC]}) /return 
 	/if (!${Pet.ID}) /return
 	/if (${Pet.Buff[Ancient: Cry of Chaos]}) /return
@@ -921,7 +904,6 @@ Sub RequestBerserkerWarCry(int _targetID)
 |----------------------------
 
 Sub EVENT_MarkOfDeath
-	/doevents flush MarkOfDeath
 	/echo \arMarked via EVENT
 	/if (!${bln_amvEngaged} && ${eventTarget.Equal[Vangl]})    /varset bln_amvEngaged TRUE
 	/if (!${bln_OMMEngaged} && ${eventTarget.Equal[Overlord]}) /varset bln_OMMEngaged TRUE
@@ -929,7 +911,6 @@ Sub EVENT_MarkOfDeath
 /return
 
 Sub Event_MarkOfDeathFades 
-	/doevents flush MarkOfDeathFades  
 	/echo \agMarkFaded via EVENT
 	/call SQLCheckMark TRUE
 /return 
@@ -944,7 +925,7 @@ Sub SQLCheckMark(bool _overrideTimer)
 
 	:SQLCheckMark
     |/sqlite advquery mycon dummy INSERT OR REPLACE INTO Characters(Name,SpawnID,ZoneID) VALUES ('${Me.Name}', ${Me.ID}, ${Zone.ID});
-    /if (${Me.Buff[Mark of Death].ID} && ${Zone.ShortName.Equal[anguish]}) {
+    /if (${Me.Buff[Mark of Death].ID} && ${cache_zoneShort.Equal[anguish]}) {
 		/echo \agFlagging myself as having Mark
 		/sqlite open CheckMarkofDeath "${_pathDB}" SQLITE_OPEN_READWRITE|SQLITE_OPEN_CREATE 
 		/sqlite advquery CheckMarkofDeath markchk SELECT * FROM MarkOfDeath WHERE SpawnID = '${Me.ID}';
@@ -1102,7 +1083,6 @@ Sub SQLCureMark
 
 
 Sub EVENT_RootTankOn
-	/doevents flush RootTankOff
 	/echo \aoRooting myself!
 	/varset root_Y ${Me.Y}
 	/varset root_X ${Me.X}
@@ -1111,7 +1091,6 @@ Sub EVENT_RootTankOn
 /return 
 
 Sub EVENT_RootTankOff
-	/doevents flush RootTankOff
 	/echo \aoUn-rooting myself!
 	/varset bln_rootTank FALSE
 /return

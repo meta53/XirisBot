@@ -79,7 +79,6 @@ Sub EVENT_ToggleMQ2Melee(string _pluginState)
 	} else {
 		/call toggleMQ2Melee FALSE
 	}
-	/doevents flush TOGGLEMQ2MELEE
 /return
 
 Sub toggleMQ2Melee(bool _state) 
@@ -96,8 +95,6 @@ Sub toggleMQ2Melee(bool _state)
 Sub Event_UpdateStickCMD(_line, _sender, _eventParams)
 	/echo updateStickCMD ${_sender}
 	/echo _eventParams	${_eventParams}
-
-	/doevents flush UpdateStickCMD
 /return
 
 
@@ -105,7 +102,6 @@ Sub Event_UpdateStickCMD(_line, _sender, _eventParams)
 Sub EVENT_RiposteDisc(_line, _sender, _eventParams)
 	/echo turning riposte disc on
 	/call FireRiposteDisc
-	/doevents flush RiposteDisc
 /return
 
 Sub FireRiposteDisc
@@ -199,7 +195,7 @@ Sub doBandolier(string _bando)
 /return
 
 Sub chkDownshits
-	/if ((${Target.ID} && ${Target.Type.Equal[NPC]}) || ${bln_engaged} || ${timer_check_downshits}) /return
+	/if ((${cache_targetID} && ${cache_targetType.Equal[NPC]}) || ${bln_engaged} || ${timer_check_downshits}) /return
 	|-- we don't buff at bind point because we might be naked.
 	/call chkNaked
 	/if (${bln_naked}) /return
@@ -214,7 +210,7 @@ Sub chkDownshits
 		/if (${downflagCount} > 0) {
 			|- run through array of downshits
 			/declare df 		int 	local
-			/declare tid 		int 	local ${Target.ID}
+			/declare tid 		int 	local ${cache_targetID}
 			/declare ds			int		local 
 			/declare buffName 	string 	local
 			/declare itemArgs	string  local
@@ -222,7 +218,7 @@ Sub chkDownshits
 			/declare itemName	string  local
 			/declare castArg 	string 	local
 			/declare castTime	int     local
-			/declare svdTGTID 	string 	local	${Target.ID}
+			/declare svdTGTID 	string 	local	${cache_targetID}
 			/declare tgtID 		int 	local
 			/declare dsType  	string  local   SPELL
 			/declare wornSlot   string  local 
@@ -349,14 +345,13 @@ Sub chkComponentsAll
 Sub EVENT_DISC_NOTAVAILABLE(string line)
 	/echo EVENT_DISC_NOTAVAILABLE 
 	/echo $(line)
-	/doevents flush DISC_NOTAVAILABLE
 /return
 
 
 Sub chkComponents(string _component, int _count, string _type, string _summoner, string _reagent)
 	|/echo chkComponents ${_component}, ${_count}, ${_type}, ${_summoner}, ${_reagent}
 	|/echo (${FindItemCount[=${_component}]}>=${_count}?)
-	/if (${SpawnCount[npc radius ${int_campRadius}]} > 0 && ${Zone.ShortName.NotEqual[thundercrest]}  && ${Zone.ShortName.NotEqual[guildhall]}  && ${Zone.ShortName.NotEqual[guildlobby]}) {
+	/if (${SpawnCount[npc radius ${int_campRadius}]} > 0 && ${cache_zoneShort.NotEqual[thundercrest]}  && ${cache_zoneShort.NotEqual[guildhall]}  && ${cache_zoneShort.NotEqual[guildlobby]}) {
 		/echo \a-rReturning due to spawn
 		/return
 	} 
@@ -435,16 +430,14 @@ Sub chkComponents(string _component, int _count, string _type, string _summoner,
 
 
 Sub EVENT_GETCLOSER
-	/if (!${Target.ID} || ${Target.PctHPs} == 0 || !${bln_engaged} || ${timer_getCloser}) /return 
-	/doevents flush GETCLOSER
+	/if (!${cache_targetID} || ${Target.PctHPs} == 0 || !${bln_engaged} || ${timer_getCloser}) /return 
 	/varset timer_getCloser 4s
 	| If the target is less than max stick distance, adjust the stick
 	/call StickAdjust
 /return
 
 SUB EVENT_CANTSEETARGET
-	/if (!${Target.ID} || ${Target.PctHPs} == 0 || !${bln_engaged} || ${timer_cantSee}) /return 
-	/doevents flush CANTSEETARGET
+	/if (!${cache_targetID} || ${Target.PctHPs} == 0 || !${bln_engaged} || ${timer_cantSee}) /return 
 	/varset timer_cantSee 10s 
 	/face fast
 /return
@@ -507,11 +500,11 @@ Sub StickToTarget(bool _engageWhenInRange)
 
 	:tryKill
 	/if (${_engageWhenInRange}) {
-		/if (${Target.ID} && !${Target.Name.Find['s_corpse']} && ${Target.Type.Equal[NPC]} && !${Me.Combat}) {
+		/if (${cache_targetID} && !${Target.Name.Find['s_corpse']} && ${cache_targetType.Equal[NPC]} && !${Me.Combat}) {
 			/echo  \awStickToTarget :tryKill \ag Attacking 
 			/attack on
-		} else /if (!${Target.ID} || ${Target.Name.Find['s_corpse']} || (${Target.Type.NotEqual[NPC]} && !${Target.Name.Find[pet]})) {
-			/echo \awStickToTarget :tryKill \ar Failed! \awID?\ao${Target.ID} \awCorpse?\ao${Target.Name.Find['s_corpse']} \awNPC?\ao${Target.Type.NotEqual[NPC]}
+		} else /if (!${cache_targetID} || ${Target.Name.Find['s_corpse']} || (${cache_targetType.NotEqual[NPC]} && !${Target.Name.Find[pet]})) {
+			/echo \awStickToTarget :tryKill \ar Failed! \awID?\ao${cache_targetID} \awCorpse?\ao${Target.Name.Find['s_corpse']} \awNPC?\ao${cache_targetType.NotEqual[NPC]}
 			/call Disengage
 		}
 	}
@@ -524,7 +517,6 @@ Sub EVENT_RESTICK
 	/if (${bln_engaged} && (${bln_meleeOverride} || ${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}))  {
 		/call StickToTarget ${bln_engaged}
 	}
-	/doevents flush RESTICK
 /return
 
 
@@ -549,7 +541,6 @@ Sub EVENT_AERAMP
 			/call MQ2Cast "99" alt
 		}
 	}
-	/doevents flush AERAMP
 /return
 
 |-- Swap sets

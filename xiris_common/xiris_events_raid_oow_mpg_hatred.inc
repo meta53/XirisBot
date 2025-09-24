@@ -71,7 +71,6 @@ Sub Events_OOW_MPG_Hatred
 /return
 
 Sub EVENT_D1
-	/doevents flush D1
 	/if (!${Me.Standing}) /stand on
 	/if (${Navigation.Active}) /nav stop
 	/nav wp D1
@@ -80,7 +79,6 @@ Sub EVENT_D1
 /return
 
 Sub EVENT_D2
-	/doevents flush D2
 	/if (!${Me.Standing}) /stand on
 	/if (${Navigation.Active}) /nav stop
 	/nav wp D2
@@ -89,7 +87,6 @@ Sub EVENT_D2
 /return
 
 Sub EVENT_D3
-	/doevents flush D3
 	/if (!${Me.Standing}) /stand on
 	/if (${Navigation.Active}) /nav stop
 	/nav wp D3
@@ -98,7 +95,6 @@ Sub EVENT_D3
 /return
 
 Sub EVENT_D4
-	/doevents flush D4
 	/if (!${Me.Standing}) /stand on
 	/if (${Navigation.Active}) /nav stop
 	/nav wp D4
@@ -107,7 +103,6 @@ Sub EVENT_D4
 /return
 
 Sub EVENT_D5
-	/doevents flush D5
 	/if (!${Me.Standing}) /stand on
 	/if (${Navigation.Active}) /nav stop
 	/nav wp D5
@@ -116,7 +111,6 @@ Sub EVENT_D5
 /return
 
 Sub EVENT_D6
-	/doevents flush D6
 	/if (!${Me.Standing}) /stand on
 	/if (${Navigation.Active}) /nav stop
 	/nav wp D6

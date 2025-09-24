@@ -76,13 +76,11 @@ Sub Events_Looting
 /return
 
 Sub EVENT_LOOT_ON(string _line, string _chatSender, string _eventParams)
-	/doevents flush LOOT_ON
 	/call EnableLooting "${_eventParams}"
 	
 /return 
 
 Sub EVENT_LOOT_SELF
-	/doevents flush LOOT_SELF
 	/if (${bln_naked}) {
 		/call LootSelf
 	}
@@ -116,7 +114,6 @@ Sub EnableLooting(string _eventParams)
 /return
 
 Sub EVENT_LOOT_OFF
-	/doevents flush LOOT_OFF
 	/call DisableLooting
 /return
 
@@ -128,7 +125,6 @@ Sub DisableLooting
 /return 
 
 Sub EVENT_LOOT_REFRESH
-	/doevents flush LOOT_REFRESH
 	/call RefreshLoot 
 /return
 
@@ -139,42 +135,35 @@ Sub RefreshLoot
 /return
 
 Sub EVENT_SELL_VENDOR
-	/doevents flush SELL_VENDOR
 	/call SellVendor
 /return
 
 
 Sub EVENT_HIDE_CORPSES
-	/doevents flush HIDE_CORPSES
 	/hidecorpse npc
 /return 
 
 Sub EVENT_HIDE_LOOTED 
-	/doevents flush HIDE_LOOTED
 	/hidecorpse looted
 /return
 
 Sub EVENT_ITEM_LORE
-	/doevents flush ITEM_LORE
 	/hidecorpse looted
 /return
 
 
 Sub EVENT_NotYourKill
-	/doevents flush NotYourKill
 	/echo NotYourKill: skipping loot;
-	/declare corpseName string 	local ${Spawn[id ${Target.ID}]}
-	/echo ${corpseName} ${Target.ID}
+	/declare corpseName string 	local ${Spawn[id ${cache_targetID}]}
+	/echo ${corpseName} ${cache_targetID}
 /return LOOT_NO_RIGHTS
 
 
 Sub EVENT_LootTooFar
-	/doevents flush NotYourKill
 	/echo LootTooFar: corpse too far away;
 /return LOOT_TOO_FAR
 
 Sub EVENT_LootTooFar
-	/doevents flush NotYourKill
 	/echo LootTooFar: corpse too far away;
 /return LOOT_TOO_FAR
 
@@ -185,7 +174,6 @@ Sub EVENT_LootTooFar
 |SUB: Shake down the assholes in your raid for cash!
 |-------------------------------------------------------------------------------- 
 Sub Event_SHAKE_DOWN_RAIDFOR_MONEY(string _line, string _chatSender, string _eventParams)
-	/doevents flush SHAKE_DOWN_RAIDFOR_MONEY
 	/if (${bln_engaged}) /return
 	/declare i int local 0
 	/declare pp int local 0
@@ -209,7 +197,6 @@ Sub Event_SHAKE_DOWN_RAIDFOR_MONEY(string _line, string _chatSender, string _eve
 /return
 
 Sub Event_GIMME_MONEY(string _line, string _chatSender, string _eventParams)
-	/doevents flush GIMME_MONEY
 	/call TransferCash ${_chatSender} ${_eventParams}
 /return 
 
@@ -548,7 +535,7 @@ Sub LootTarget(int _corpseID)
 				/echo \arI shouldn't keep this (ex name: ${bln_excludedByCharName}, class: !${bln_includedByClass})
 				/varset keep FALSE
 				/varset reason EXCLUDED CHARACTER||CLASS
-				/docommand /${str_lootChannel} ${Target.Name}(${Target.ID}) has ${lootName} and I cannot loot it  ${reason}. (${Target.ID})
+				/docommand /${str_lootChannel} ${Target.Name}(${cache_targetID}) has ${lootName} and I cannot loot it  ${reason}. (${cache_targetID})
 				/goto :loot_gank
 			}
 
@@ -581,7 +568,7 @@ Sub LootTarget(int _corpseID)
 			/if (${keep}) {
 				/varcalc fCount ${FindItemCount[=${lootName}]} + 1
 				/echo \agKeeping ${lootName} ${lootType} ${fCount} of ${int_numberToLoot}
-				/docommand /${str_lootChannel} Keeping ${lootName} ${lootType} ${fCount} of ${int_numberToLoot} (${Target.ID})
+				/docommand /${str_lootChannel} Keeping ${lootName} ${lootType} ${fCount} of ${int_numberToLoot} (${cache_targetID})
 				/itemnotify loot${n} leftmouseup
 				/delay 5 ${Cursor.ID} || ${Window[ConfirmationDialogBox].Open} || ${Window[QuantityWnd].Open}
 				/if (${Cursor.ID}) {
@@ -589,7 +576,7 @@ Sub LootTarget(int _corpseID)
 					/autoinv
 				}
 			} else {
-				/docommand /${str_lootChannel} ${Target.Name}(${Target.ID}) has ${lootName} and I cannot loot it  ${reason}. (${Target.ID})
+				/docommand /${str_lootChannel} ${Target.Name}(${cache_targetID}) has ${lootName} and I cannot loot it  ${reason}. (${cache_targetID})
 			}
 			/if (${bln_useBeep}) /beep
 			:nextItem
@@ -749,8 +736,6 @@ SUB OpenInventoryBags
 
 Sub EVENT_HANDIN_ITEM(_line, _chatSender, string _eventParams)
     /echo Handing In Item line:${_line}| sender:${_chatSender}| params:${_eventParams}
-	
-    /doevents flush HANDIN_ITEM 
     /declare itemName   string   outer ${_eventParams.Arg[1,|]}
     /declare recipient string    outer ${_eventParams.Arg[2,|]}
     /docommand /${announceChannel} ${_eventParams} 
@@ -768,7 +753,7 @@ Sub GiveItem
     
     /delay 2
     | Open Inventory to grab muffins
-    /if (!${Target.ID}) /return
+    /if (!${cache_targetID}) /return
     /if (${Target.Distance3D} > 400) {
         /docommand /${announceChannel}  ${recipient} is too far away!
         /end

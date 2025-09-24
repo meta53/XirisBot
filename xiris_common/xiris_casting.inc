@@ -98,7 +98,7 @@ Sub Events_Casting_DOT
 **|
 
 Sub chkNuke
-	/if (!${bln_engaged} || !${Target.ID}) 		/return
+	/if (!${bln_engaged} || !${cache_targetID}) 		/return
 	/if (${bln_useFastOnly})	/return
 	/if (${NUKE_Total} == 0)    /return 
 	/if (${AENUKE_Active}) 		/return
@@ -112,7 +112,7 @@ Sub chkNuke
 	|-- named check
 	:named_check
 	/declare isNamed bool local FALSE
-	/call TargetNamedCheck ${Target.ID}
+	/call TargetNamedCheck ${cache_targetID}
 	/varset isNamed ${Macro.Return}
 
 	|-- target HP and my mana check
@@ -128,7 +128,7 @@ Sub chkNuke
 	/if (${Me.Feigning}) /stand
 	
 	|-- Final Check before casting
-	/if (${Target.ID} && ${Target.Type.Equal[NPC]} && ${Target.LineOfSight}) {
+	/if (${cache_targetID} && ${cache_targetType.Equal[NPC]} && ${Target.LineOfSight}) {
 		/declare i 			int 	local
 		/declare gemStr 	string 	local 	
 		/declare gem		string  local
@@ -203,7 +203,7 @@ Sub chkNuke
 /return
 
 Sub chkQNuke
-	/if (!${bln_engaged} || !${Target.ID}) 		/return
+	/if (!${bln_engaged} || !${cache_targetID}) 		/return
 	/if (${QNUKE_Total} == 0) /return 
 	/if (${AENUKE_Active}) 		 /return
 	/if (${QNUKE_DelayTimer} && ${QNUKE_HasCastOnce})	 	/return 
@@ -216,7 +216,7 @@ Sub chkQNuke
 	|-- named check
 	:named_check
 	/declare isNamed bool local FALSE
-	/call TargetNamedCheck ${Target.ID}
+	/call TargetNamedCheck ${cache_targetID}
 	/varset isNamed ${Macro.Return}
 
 	|-- target HP and my mana check
@@ -230,7 +230,7 @@ Sub chkQNuke
 
 
 	|-- Final Check before casting
-	/if (${Target.ID} && ${Target.Type.Equal[NPC]} && ${Target.LineOfSight}) {
+	/if (${cache_targetID} && ${cache_targetType.Equal[NPC]} && ${Target.LineOfSight}) {
 
 		/declare i 			int 	local
 		/declare gemStr 	string 	local 	
@@ -363,7 +363,7 @@ Sub chkAENuke
  ----------------------------
 **|
 Sub chkStun(bool _memorize)
-	/if (!${bln_engaged} || !${Target.ID}) 		/return
+	/if (!${bln_engaged} || !${cache_targetID}) 		/return
 	/if (${STUN_Total} == 0)  /return 
 	/if (${STUN_DelayTimer} && ${STUN_HasCastOnce})	 	/return 
 
@@ -371,7 +371,7 @@ Sub chkStun(bool _memorize)
 	/if ((${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]}) || ${Me.Moving} || ${Me.Invis} || ${ExcludeList.Find[${Spawn[${Target.CleanName}]}]}) /return
 	
 	|-- Final Check before casting
-	/if (${Target.ID} && ${Target.Type.Equal[NPC]} && ${Target.LineOfSight}) {
+	/if (${cache_targetID} && ${cache_targetType.Equal[NPC]} && ${Target.LineOfSight}) {
 
 		/declare i 			int 	local
 		/declare gemStr 	string 	local 	
@@ -448,7 +448,7 @@ Sub chkStunLockStop
 **|
 
 Sub chkDOT
-	/if (!${bln_engaged} || !${Target.ID}) 		/return
+	/if (!${bln_engaged} || !${cache_targetID}) 		/return
 	/if (${bln_useFastOnly}) 	/return
 	/if (${DOT_Total} == 0)		/return 
 	/if (${AENUKE_Active}) 		/return
@@ -462,7 +462,7 @@ Sub chkDOT
 	|-- named check
 	:named_check
 	/declare isNamed bool local FALSE
-	/call TargetNamedCheck ${Target.ID}
+	/call TargetNamedCheck ${cache_targetID}
 	/varset isNamed ${Macro.Return}
 
 	|-- target HP and my mana check
@@ -478,7 +478,7 @@ Sub chkDOT
 	/if (${Me.Feigning}) /stand
 
 	|-- Final Check before casting
-	/if (${Target.ID} && ${Target.Type.Equal[NPC]} && ${Target.LineOfSight}) {
+	/if (${cache_targetID} && ${cache_targetType.Equal[NPC]} && ${Target.LineOfSight}) {
 		/declare i 				int 	local
 		/declare dotDuration 	int 	local 	0
 		/declare gemStr 		string 	local 	
@@ -567,7 +567,7 @@ Sub chkDOT
 **|
 Sub chkSnare
 	/if (${Me.Invis}||${Me.Moving}|| ${Me.Song[${GoM}].ID}||${list_immuneSnare.Find[${Spawn[${Target.CleanName}]}]}||${ExcludeList.Find[${Spawn[${Target.CleanName}]}]}) /return
-	/if (${Target.PctHPs}<=${int_snareHP} && ${Target.ID} && ${Target.Type.Equal[NPC]} && !${bln_snareActive} && ${bln_snareUse} && ${SpawnCount[npc radius 50 zradius 10]}<=${int_snareLocalNPC}) {
+	/if (${Target.PctHPs}<=${int_snareHP} && ${cache_targetID} && ${cache_targetType.Equal[NPC]} && !${bln_snareActive} && ${bln_snareUse} && ${SpawnCount[npc radius 50 zradius 10]}<=${int_snareLocalNPC}) {
 		/call chkSpellMemorized "${str_snareSpell}" TRUE ${str_snareGem} 
 		/varset int_temp_stopCastPoint 10
 		/call MQ2Cast "${str_snareSpell}" gem5 1s chkCastTarget
@@ -580,8 +580,8 @@ Sub chkSnare
 	
 	/if (${Cast.Result.Equal[CAST_IMMUNE]}) {
 		/echo \ar ${str_snareSpell} ${Cast.Result}
-		/ini "${IniFile}" "SnareImmunes.${Zone.ShortName}" "SnareImmune" "${list_immuneSnare}${Target.CleanName}|"
-		/varset list_immuneSnare ${Ini[${ignoreINI},"SnareImmunes.${Zone.ShortName}","SnareImmune"]}
+		/ini "${IniFile}" "SnareImmunes.${cache_zoneShort}" "SnareImmune" "${list_immuneSnare}${Target.CleanName}|"
+		/varset list_immuneSnare ${Ini[${ignoreINI},"SnareImmunes.${cache_zoneShort}","SnareImmune"]}
 		/varset bln_snareActive TRUE
 	}
 	/call RunRaidEvents
@@ -632,7 +632,6 @@ Sub chkSpellMemorized(string _spell, bool _wait, string _gem)
 
 Sub Event_ChkHasSpell(_line, _sender, _eventParams)
 	/echo line: ${_line} sender: ${_sender} params:${_eventParams}
-	/doevents flush ChkHasSpell 
 	/declare clz   string local ${_eventParams.Arg[1,|]}
 	/declare sName string local ${_eventParams.Arg[2,|]}
 	/call chkHasSpell ${clz} "${sName}"
@@ -702,20 +701,17 @@ Sub ResetCastTimers
 |-- MEZ IMMUNE
 Sub Event_MezImmune
 	/${cmdChannel} mezimmunemob ${Target.CleanName}
-	/doevents flush MezImmune
 /return
 
 |-- SNARE IMMUNE-|
 Sub Event_SnareImmune
 	/varset bln_snareActive	TRUE
 	/${cmdChannel} snareimmunemob ${Target.CleanName}
-	/doevents flush SnareImmune
 /return
 
 Sub Event_Snareon
 	/varset bln_snareActive	TRUE
 	/if (${bln_snareUse}) /${cmdChannel} snared: ${Target.CleanName}
-	/doevents flush Snareon
 /return
 
 Sub Event_SnareResist
@@ -729,12 +725,10 @@ Sub Event_SnareResist
 		/varcalc int_snareCounter ${int_snareCounter}+1
 		/if (${bln_snareUse}) /${cmdChannel} snare resisted LTE 3: Trying Again
 	}
-	/doevents flush SnareResist
 /return
 
 Sub Event_SnareWornOff
 	/varset bln_snareActive FALSE
-	/doevents flush SnareWornOff
 /return
 
 Sub EVENT_SetUseFastOnly(_line, _chatSender, _eventParams)
@@ -745,7 +739,6 @@ Sub EVENT_SetUseFastOnly(_line, _chatSender, _eventParams)
 		/echo \aoSetting fast only:\ag${_eventParams}
 		/varset bln_useFastOnly FALSE
 	}
-	/doevents flush SetUseFastOnly
 /return 
 
 
@@ -762,7 +755,6 @@ Sub EVENT_SetResistType(_line, _chatSender, _eventParams)
 	
 	/if (${_strResists.Equal[ALL]}) /varset _strResists ${str_defaultResistTypes}
 	/call SetResistTypes ${_strResists}
-	/doevents flush SetResistType
 /return 
 
 Sub SetResistTypes(string _typesCSV)
@@ -976,7 +968,7 @@ Sub chkCastTarget
  ----------------------------
 **|
 Sub chkDefensiveSpells
-    /if (!${Target.ID} || !${bln_engaged} || ${Target.Type.NotEqual[NPC]} || !${bln_cast_JOLT_enabled}) /return
+    /if (!${cache_targetID} || !${bln_engaged} || ${cache_targetType.NotEqual[NPC]} || !${bln_cast_JOLT_enabled}) /return
     /declare i      int     local 0
     /declare j      int     local 0
     /declare dtype   string  local NULL
@@ -985,7 +977,7 @@ Sub chkDefensiveSpells
 	|-- named check
 	:named_check
 	/declare isNamed bool local FALSE
-	/call TargetNamedCheck ${Target.ID}
+	/call TargetNamedCheck ${cache_targetID}
 	/varset isNamed ${Macro.Return}
     
 	:jolt_check
@@ -1097,7 +1089,7 @@ Sub xbot_initialize_casting
 	|-- Misc (resist types, fast only, etc)
 	/declare str_defaultResistTypes	string	outer	Chromatic,Corruption,Cold,Disease,Fire,Magic,Poison,Prismatic
 	/declare str_useResistTypes		string	outer	${str_defaultResistTypes}
-	/if (${Zone.ShortName.Equal[pofire]}) /call SetResistTypes Cold,Magic,Poison,Disease
+	/if (${cache_zoneShort.Equal[pofire]}) /call SetResistTypes Cold,Magic,Poison,Disease
 	/declare bln_useFastOnly			bool	outer	FALSE
 	/declare int_concCount				int     outer 	0
 	/declare int_temp_stopCastPoint		int 	outer   0

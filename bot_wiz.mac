@@ -196,7 +196,6 @@ Sub variant_initialize(string _strTankName, int _intAssistAt, int _intTankHealPo
 Sub EVENT_MANABURN
 	/echo MBURN CALLED
 	/call MQ2Cast "Mana Burn" alt
-	/doevents flush
 /return
 
 Sub EVENT_AEON
@@ -211,7 +210,6 @@ SUB EVENT_AEOFF
 
 SUB EVENT_FIRETL
 	/if (!${bln_tlUse}) /return
-	/doevents flush
 	/dgt Firing TL
 	/call MQ2Cast "${str_tlSpell}" ${str_tlGem}
 	/delay 1m

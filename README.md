@@ -178,7 +178,7 @@ While there are *many* commands built into XirisBot, only a few are generally ne
 
 ### Attack
 Hotkey that is used on the MT to call assist on the MT's current target, and has the MT attack the target as well. 
-`/multiline ; /rs KillMob ${Target.ID} "${Target.Name}" ${Time.Time24} ; /attack on`
+`/multiline ; /rs KillMob ${cache_targetID} "${Target.Name}" ${Time.Time24} ; /attack on`
 
 ### Buffing
 Hotkey or command that is used to tell all available buffers to walk through the raid buffing each group (and single target buff defined memembers with special buffs)
@@ -187,7 +187,7 @@ Note: You should create a spell set named "buff" that holds the buff spell setup
 
 ### Debuffing
 Hotkey or command that is used to tell all available debuffers to debuff the current target. Note: usually debuffers will also debuff on the Attack call, but sometimes you want to predebuff a target (if its rooted like in Tacvi) or force them to re-debuff all at the same time.
-`/rs DebuffTarget ${Target.ID}`
+`/rs DebuffTarget ${cache_targetID}`
 
 ### Curing
 Curing becomes *vitally* important in Txevu+ As such there are several commands to force curing. Note: for the majority of the time, all toons will request the appropriate cure from their assigned curers. However, there are times when you want to force it.
@@ -270,7 +270,7 @@ XirisBot common handlers. Contains the links to all other includes. Has the comm
 #### Requirements
 mq2cast, mq2dannet, mq2exchange, mq2melee
 #### Events
-1. `/dgt KillMob ${Target.ID} "${Target.Name}" ${Time.Time24}` Directs everyone to kill your target
+1. `/dgt KillMob ${cache_targetID} "${Target.Name}" ${Time.Time24}` Directs everyone to kill your target
 2. `/dgt BackOff` Directs everyone to reset melee, stop casting, etc.
 3. `/dgt ChangeMT *MTNAME*` Changes the current Main Tank  (MT) to the new MT via name
 4. `/dgt ChangeSA *SANAME*` Changes the current Secondary Assist (SA) to the new SA via name
@@ -299,14 +299,14 @@ XirisBot debuffing handlers. This library has several events that can be fired v
 #### Requirements
 mq2cast, mq2dannet, mq2debuffs
 #### Events
-1. `/dgt DebuffTarget ${Target.ID}` Will force raid debuffers to cycle through debuffs on target. 
+1. `/dgt DebuffTarget ${cache_targetID}` Will force raid debuffers to cycle through debuffs on target. 
 ### xiris_debuffing.inc
 #### Overview
 XirisBot debuffing handlers. This library has several events that can be fired via hotkey. Much of the debuffing is automatic and is controlled by character ini file.
 #### Requirements
 mq2cast, mq2dannet, mq2debuffs
 #### Events
-1. `/dgt DebuffTarget ${Target.ID}` Will force raid debuffers to cycle through debuffs on target. 
+1. `/dgt DebuffTarget ${cache_targetID}` Will force raid debuffers to cycle through debuffs on target. 
 ### xiris_events.inc
 #### Overview
 XirisBot event handler(s). This library has several sub libraries. These contain all the handlers for specific raid/mob events, such as MPG trials, or Anguish events. Each of those files is specific to the raid, and should be familiarized before attempting those raids.

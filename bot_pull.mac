@@ -109,8 +109,8 @@ Sub Main(int _pull_dist, string _channel, string _campName, bool _useDownFlags, 
 			/attack off
 			/call getTarget
 			/if (${Target.Distance} > 20) /call pullTarget
-			/if (!${Target.ID}) /goto :getAndKill
-			/if (${Target.ID}) /call killTarget
+			/if (!${cache_targetID}) /goto :getAndKill
+			/if (${cache_targetID}) /call killTarget
 			|/docommand /${cmdChannel} BackOff
 			/echo We have killed ${int_killCount} mobs
 
@@ -118,10 +118,10 @@ Sub Main(int _pull_dist, string _channel, string _campName, bool _useDownFlags, 
 /return
 
 Sub chkZone
-	/if (${Zone.ShortName.NotEqual[${str_startZone}]}) {
-		/if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) {
+	/if (${cache_zoneShort.NotEqual[${str_startZone}]}) {
+		/if (${cache_zoneShort.Equal[${cache_boundZone}]}) {
 			/delay 30s
-			/if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) {
+			/if (${cache_zoneShort.Equal[${cache_boundZone}]}) {
 				/docommand /${cmdChannel}  I died! GTFO! ${Time.Time24}
 				/docommand /${cmdChannel} firetl
 				/delay 45s
@@ -144,8 +144,8 @@ Sub setRSTVars
 
 
 Sub setTGTAlert
-	/echo setTGTAlert ${Target.ID} ${Target.Name}
-	/alert add 1 id ${Target.ID}
+	/echo setTGTAlert ${cache_targetID} ${Target.Name}
+	/alert add 1 id ${cache_targetID}
 	/target clear
 /return
 
@@ -168,11 +168,11 @@ Sub getTarget
 		/call setRSTVars
 		/echo \agint_alert2Radius:\aw${int_alert2Radius} \ag int_campRadius:\aw${int_campRadius} \ag int_zRadius:\aw${int_zRadius} \ag int_minTLevel:\aw${int_minTLevel} \ag int_maxTLevel:\aw${int_maxTLevel}
 		/echo \awSpawnCounts: \ag:Camp \aw${SpawnCount[npc radius ${int_campRadius} zradius ${int_zRadius}]} \ag:Alert2 \aw${SpawnCount[npc alert 2 radius ${int_alert2Radius} range ${int_minTLevel} ${int_maxTLevel} zradius ${int_zRadius}  noalert 1]} \ag:Normal \aw${SpawnCount[npc noalert 1 radius ${int_maxRadius} range ${int_minTLevel} ${int_maxTLevel} zradius ${int_zRadius}]}
-		/echo Target.ID: ${Target.ID}
+		/echo cache_targetID: ${cache_targetID}
 		|----------If I am getting smacked in camp, kill it
 		/if (${SpawnCount[npc radius ${int_campRadius} zradius ${int_zRadius}]} > 0) {
 			/call TrueTarget ${NearestSpawn[npc radius ${int_campRadius} zradius ${int_zRadius}].ID} 
-			/if (${Target.ID} && ${Target.Type.Equal[NPC]} || ${Target.Type.Equal[PET]}) {
+			/if (${cache_targetID} && ${cache_targetType.Equal[NPC]} || ${cache_targetType.Equal[PET]}) {
 				/echo Something is hitting me, killing it!
 				/varset bln_validTGT	TRUE
 				/goto :return
@@ -192,12 +192,12 @@ Sub getTarget
 			}
 
 			|----------Target Validation
-			/if (${Target.ID} && (${Target.Distance} <= ${int_campRadius}) && ${Target.DistanceZ} < 25) {
+			/if (${cache_targetID} && (${Target.Distance} <= ${int_campRadius}) && ${Target.DistanceZ} < 25) {
 				|--if it is close, its valid;
 				/varset bln_validTGT	TRUE
 			} else {
 				|--check the target
-				/if (${Target.ID}) /call chkTargetValid
+				/if (${cache_targetID}) /call chkTargetValid
 			}
 			
 			
@@ -235,7 +235,7 @@ Sub getTarget
 
 		:return
 		|--target is valid, continue
-		/varset int_targetID 	${Target.ID}
+		/varset int_targetID 	${cache_targetID}
 		/varset bln_TGTDead		FALSE
 		/varset int_distTGT 	${Int[${Target.Distance}]}
 		/echo Acquired ${Target.Name} at range ${Int[${Target.Distance}]}
@@ -253,7 +253,7 @@ Sub getTarget
 Sub chkTargetValid
 	/echo chkTargetValid ${Target.Name}
 
-	/if (${Target.Type.NotEqual[NPC]} && ${Target.Type.NotEqual[PET]}) {
+	/if (${cache_targetType.NotEqual[NPC]} && ${cache_targetType.NotEqual[PET]}) {
 		/echo INVALID Not NPC
 		/call setTGTAlert
 		/return
@@ -288,25 +288,25 @@ Sub chkTargetValid
 	}
 	
 	|--check my target is the apropriate level
-	/if ((${Target.ID}) && (${Target.Level} < ${int_minTLevel})) {
+	/if ((${cache_targetID}) && (${Target.Level} < ${int_minTLevel})) {
 		/echo INVALID Target.Level (${Target.Level} < ${int_minTLevel})
 		/call setTGTAlert
 		/return
 	}
-	/if (${Target.Underwater} && ${Zone.ShortName.NotEqual[powater]}) {
+	/if (${Target.Underwater} && ${cache_zoneShort.NotEqual[powater]}) {
 		/echo INVALID Target.Underwater
 		/call setTGTAlert
 		/return
 	}
 	
 	|--check my target is the above the apropriate z-radius floor
-	/if ((${Target.ID}) && ${Int[${Target.Z}]}<${int_minZHeight}) { 
+	/if ((${cache_targetID}) && ${Int[${Target.Z}]}<${int_minZHeight}) { 
 		/echo INVALID Target.Z ${Int[${Target.Z}]}<${int_minZHeight}
 		/call setTGTAlert
 		/return
 	} 
 	|--check my target is the above the apropriate z-radius ceiling
-	/if ((${Target.ID}) && ${Int[${Target.Z}]}>${int_maxZHeight}) { 
+	/if ((${cache_targetID}) && ${Int[${Target.Z}]}>${int_maxZHeight}) { 
 		/echo INVALID Target.Z ${Int[${Target.Z}]}>${int_maxZHeight}
 		/call setTGTAlert
 		/return
@@ -397,8 +397,8 @@ Sub pullTarget
 	
 	:pullLoop
 		/if (!${bln_validTGT}) 				/goto :return
-		/if (!${Target.ID}) 				/goto :return
-		/if (${Target.Type.NotEqual[NPC]}) 	/goto :return
+		/if (!${cache_targetID}) 				/goto :return
+		/if (${cache_targetType.NotEqual[NPC]}) 	/goto :return
 	
 		| Start the pull by running to the target
 		:RunningToTarget
@@ -435,17 +435,17 @@ Sub pullTarget
 		| Too many attempts, returnwithpull
 		/if (${attempt} > 10) {
 			/echo Too many attempts, returnwithpull
-			/alert add 1 "${Target.ID}"
+			/alert add 1 "${cache_targetID}"
 			/target clear
 			/goto :ReturnWithPull
 		} 
 
-		/if (!${Target.ID}) /goto :return
+		/if (!${cache_targetID}) /goto :return
 		
 
 		|-- Check to see if I don't yet have aggro
 		:AggroCheck
-		/if (!${Me.TargetOfTarget.ID} && ((${bln_usePull} && ${Me.XTarget} < ${int_maxPullCount}) || (!${bln_usePull}))) {
+		/if (!${Me.TargetOfcache_targetID} && ((${bln_usePull} && ${cache_hasXTarget} < ${int_maxPullCount}) || (!${bln_usePull}))) {
 			:AggroDistCheck 
 			| Am I close enough to aggro?
 			/if (${Target.Distance3D} > 200 && ${bln_usePull}) /goto :RunningToTarget
@@ -475,7 +475,7 @@ Sub pullTarget
 			| I have aggro, returning to camp
 			:ReturnWithPull
 			/if (${bln_usePull}) {
-				/echo \agReturning to Camp with \ay${Me.XTarget}+ \agmobs.
+				/echo \agReturning to Camp with \ay${cache_hasXTarget}+ \agmobs.
 				/if (${Navigation.PathExists[waypoint ${str_campName}]}) {
 					/navigate waypoint ${str_campName} 
 				} else {
@@ -484,7 +484,7 @@ Sub pullTarget
 				/goto :ReturnLoop
 			} else {
 				/if (!${Target.Aggressive}) /call AggroTarget
-				/echo \agPulling is disabled, killing \ay${Me.XTarget}+ \agmobs.
+				/echo \agPulling is disabled, killing \ay${cache_hasXTarget}+ \agmobs.
 				/goto :return
 			}
 			
@@ -506,7 +506,7 @@ Sub AggroTarget
 	:TargetAggroCheck
 	/if (${Target.Aggressive}) {
 		/varset ret SUCCESS
-	} else /if (!${Target.ID}) {
+	} else /if (!${cache_targetID}) {
 		/varset ret NOTARGET
 	} else /if (!${Target.LineOfSight}) {
 		/varset ret NOLOS
@@ -568,7 +568,7 @@ Sub AggroTarget
 **|
 
 Sub killTarget
-	/if (!${Target.ID} || ${Target.Type.Equal[PC]}) /return
+	/if (!${cache_targetID} || ${cache_targetType.Equal[PC]}) /return
 	/if (!${bln_validTGT}) /return
 	/if (${bln_TGTDead})   /return
 	/if (${Navigation.Active}) /navigate stop
@@ -601,12 +601,12 @@ Sub killTarget
 	:distanceWaitLoop
 		/varcalc int_waited ${int_waited}+1
 		/if (${int_waited} > 15) /return
-		/if (!${Target.ID}) 	 /return
+		/if (!${cache_targetID}) 	 /return
 		/if (${Target.Distance} > ${int_campRadius}) {
 			/if (${SpawnCount[npc radius ${int_campRadius} zradius ${int_zRadius}]} > 0) {
 				/echo \aySomething already in camp, changing target!
 				/call TrueTarget ${NearestSpawn[npc radius ${int_campRadius} zradius ${int_zRadius}].ID}
-				/varset int_targetID ${Target.ID}
+				/varset int_targetID ${cache_targetID}
 				/varset str_targetName ${Spawn[id ${int_targetID}].Name}
 				/varset bln_engaged TRUE
 				/varset bln_validTGT	TRUE
@@ -622,11 +622,11 @@ Sub killTarget
 	|--issue kill command
 	/varcalc int_killCount ${int_killCount}+1
 
-	/docommand /${cmdChannel} KillMob ${Target.ID} "${Target.Name}" ${Time.Time24}
+	/docommand /${cmdChannel} KillMob ${cache_targetID} "${Target.Name}" ${Time.Time24}
 	/call ResetCastTimers
 	/face fast
 	/attack on
-	/g Called Kill ${Target.ID} ${Target.Name} ${Time.Time24}
+	/g Called Kill ${cache_targetID} ${Target.Name} ${Time.Time24}
 	
 	/if ((${SpawnCount[npc radius ${int_campRadius} zradius ${int_zRadius}]} > 1) && ${Me.Class.ShortName.Equal[SHD]}  && ${Me.SpellReady[${spell_aehate}]} ) {
 		/echo ${Me.SpellReady[${spell_aehate}]} Cast ${spell_aehate} ${spell_aehateGem} 5s
@@ -643,12 +643,12 @@ Sub killTarget
 	:combatLoop
 	
 		/call chkCombatState
-		/if (${int_targetID} != ${Target.ID}) /return
-		/if (${Target.Type.NotEqual[NPC]} && ${Target.Type.NotEqual[PET]}) /return
+		/if (${int_targetID} != ${cache_targetID}) /return
+		/if (${cache_targetType.NotEqual[NPC]} && ${cache_targetType.NotEqual[PET]}) /return
 		/if (${Target.Distance} > ${int_campRadius}) /goto :distanceWaitLoop 
 
 		/if (!${bln_TGTDead}) {
-			/if ((${Me.TargetOfTarget.ID} != ${Me.ID}) && !${Target.Fleeing}) {
+			/if ((${Me.TargetOfcache_targetID} != ${Me.ID}) && !${Target.Fleeing}) {
 				/if ((${Me.Class.ShortName.Equal[SHD]} || ${Me.Class.ShortName.Equal[PAL]}) && ${Me.SpellReady[${spell_hate}]}) {
 					/call MQ2Cast "${spell_hate}" ${spell_hateGem}
 				} else /if (${Me.Class.ShortName.Equal[WAR]} && (${Me.CombatAbilityReady[${war_ca_hate_1}]})) {
@@ -674,14 +674,12 @@ Sub killTarget
 
 
 Sub Event_TooClose
-	/doevents flush TooClose
 	/echo Event_TooClose
 	/varset bln_tooClose TRUE
 	
 /return
 
 Sub Event_NoLOS
-	/doevents flush NoLOS
 	/echo Event_NoLOS
 	/nav target
 	/delay 10
@@ -699,9 +697,9 @@ Sub Event_NoLOS
  ----------------------------
 **|
 Sub chkCombatState
-	/if (${Target.Type.NotEqual[NPC]}) 		 /varset bln_TGTDead TRUE
-	/if (${Target.Type.Equal[Item]})		 /varset bln_TGTDead TRUE
-	/if (!${Target.ID}) 					 /varset bln_TGTDead TRUE
+	/if (${cache_targetType.NotEqual[NPC]}) 		 /varset bln_TGTDead TRUE
+	/if (${cache_targetType.Equal[Item]})		 /varset bln_TGTDead TRUE
+	/if (!${cache_targetID}) 					 /varset bln_TGTDead TRUE
 	/if (${bln_TGTDead} && ${SpawnCount[npc radius ${int_campRadius} zradius ${int_zRadius}]} == 0 && ${bln_looting}) /call chkLoot
 /return
 
@@ -1200,7 +1198,7 @@ Sub SetAlerts
     /echo \aoSetAlerts \aw---------------
 	/declare i		int		local 0
 	/declare test	string 	local NULL
-	/declare sz  	string 	local ${Zone.ShortName}
+	/declare sz  	string 	local ${cache_zoneShort}
 
 	| handle the OOW instances
 	/if (${sz.Find[dranikcatacombs]}) {
