@@ -13,6 +13,7 @@ REVISION HISTORY
 	04.05.22    xiris   INITIAL REVISION
 	06.13.22	xiris   Updated events (minor)
 	06.29.22	xiris 	Updated all events to only be either generic, or [/gsay, /rsay, /tell, MQ2DanNet(dgt, dt)] only	
+	09.24.25	xiris	Added movement throttling to prevent nav/spawn spam
 ______________________________________________
 **|	
 
@@ -61,6 +62,12 @@ Sub xbot_initialize_movement
 	/declare bln_following 			bool 	outer FALSE
 	/declare int_maxFollowDistance	int 	outer 1000
 	/declare str_followTarget		string  outer 
+	/declare timer_moveCooldown     timer 	outer 0
+	/declare timer_navSpawnCooldown timer  	outer 0
+	/declare timer_stickCooldown    timer  	outer 0
+	/declare last_navWP             string 	outer
+	/declare last_navSpawn          string 	outer
+	/declare last_stickMode         string 	outer
 	/call InitEvents_Movement
 /return
 
@@ -73,22 +80,19 @@ SUB EVENT_Follow(_line, _chatSender, _eventParams)
 	/if (${Bool[${Macro.Return.Arg[2,_]}]} && ${Bool[${Macro.Return.Arg[3,_]}]} && ${Bool[${Macro.Return.Arg[4,_]}]}) {
 		/call StartFollowing ${_chatSender} ${followType}
 	}
-	/doevents flush Follow
 /return
 
 
 SUB EVENT_Stop(_line, _chatSender, _eventParams)
 	| -Check if I'm bln_following.
 	/if (${bln_following}) /call StopFollowing
-	/doevents flush Stop
 /return
 
 
 SUB EVENT_NavigateWP(_line, _chatSender, _eventParams)
 	/echo \ayNavigate to waypoint: \ag${_eventParams}
 	/declare wp string local ${_eventParams.Arg[1]}
-	/nav wp ${wp}
-	/doevents flush NavigateWP
+	/call NavThrottled ${wp}
 /return
 
 
@@ -99,10 +103,57 @@ SUB EVENT_CreateCamp(_line, _chatSender, _eventParams)
 	/varset int_campY ${Me.Y}
 	/varset int_campX ${Me.X}
 	/varset int_campZ ${Me.Z}
-	/doevents flush CreateCamp
 /return
 
+|------------------------------------------------------------
+| Movement throttling helpers (nav/stick spam protection)
+|------------------------------------------------------------
+Sub NavThrottled(string _wp)
+    /if (${timer_moveCooldown}) /return
+    /if (${Navigation.Active} && ${last_navWP.Equal[${_wp}]}) /return
+    /varset last_navWP ${_wp}
+    /nav wp ${_wp}
+    /varset timer_moveCooldown 15
+/return
 
+Sub NavLocThrottled(int _y, int _x, int _z)
+	/if (${timer_moveCooldown}) /return
+	/if (${Navigation.Active} && ${last_navWP.Equal[loc:${_y}:${_x}:${_z}]}) /return
+	/varset last_navWP loc:${_y}:${_x}:${_z}
+	/nav loc ${_y} ${_x} ${_z}
+	/varset timer_moveCooldown 15
+/return
+
+Sub NavSpawnThrottled(string _spawnQuery)
+    /if (${timer_navSpawnCooldown}) /return
+    /if (${Navigation.Active} && ${last_navSpawn.Equal[${_spawnQuery}]}) /return
+    /varset last_navSpawn ${_spawnQuery}
+    /nav spawn ${_spawnQuery}
+    /varset timer_navSpawnCooldown 10
+/return
+
+Sub NavStopIfActive
+    /if (${Navigation.Active}) /squelch /nav stop
+    /varset last_navWP
+    /varset last_navSpawn
+/return
+
+Sub StickOffThrottled
+    /if (${Stick.Active}) /squelch /stick off
+    /varset last_stickMode
+/return
+
+Sub StickBehindThrottled(int _dist, bool _uw)
+    /declare _opts string local ${If[${_uw},uw,]}
+    /if (${last_stickMode.Equal[behind:${_dist}:${_opts}]}) /return
+    /squelch /stick hold behind ${_dist} ${_opts}
+    /varset last_stickMode behind:${_dist}:${_opts}
+    /varset timer_stickCooldown 10
+/return
+
+|------------------------------------------------------------
+| Movement
+|------------------------------------------------------------
 Sub StartFollowing(string _leader, string _followType)
 	/varset bln_following TRUE
 	/echo \ao Following \awLeader: \ag${_leader} \awFollowType: \ag${_followType}
@@ -124,8 +175,8 @@ Sub StartFollowing(string _leader, string _followType)
 
 Sub StopFollowing
 	/varset bln_following 	 FALSE
-	/squelch /stick off
-	/if (${Navigation.Active}) 		/squelch /nav stop
+	/call StickOffThrottled
+    /call NavStopIfActive
 /return
 
 
@@ -134,21 +185,21 @@ SUB AquireFollow(string _type, string _leader)
 		
 		| store the follow target in case we need it in another sub (unlikely)
 		/varset str_followTarget		${_leader}
-		/if (${Stick.Active}) 			/squelch /stick off
-		/if (${Navigation.Active}) 		/squelch /nav stop
+		/call StickOffThrottled
+        /call NavStopIfActive
 		
 
 		| If the str_followTarget declares that you need to use MQ2Nav...
 		|-- We do not need to use LOS for MQ2Nav nor do we need to use target
 		/if (${_type.Equal[NAV]}) {
-			/nav spawn ${Spawn[pc =${_leader}]}
+			/call NavSpawnThrottled ${Spawn[pc =${_leader}]}
 		} else {
 			/if (${Spawn[pc ${_leader}].LineOfSight}) {
 				/call TrueTarget ${Spawn[pc ${_leader}].ID}
 				/if (${Me.Underwater}) {
-					/squelch /stick hold behind 0 uw
+					/call StickBehindThrottled 0 TRUE
 				} else {
-					/squelch /stick hold behind 10 uw
+					/call StickBehindThrottled 10 TRUE
 				}
 			}
 		}
@@ -160,8 +211,7 @@ SUB AquireFollow(string _type, string _leader)
 	/call RunAllEvents
 	/if (${bln_following}) {
 		/if (${_type.Equal[NAV]} && !${Navigation.Active} && (${Spawn[pc =${_leader}].Distance3D} > ${distCheck} )) {
-			/nav spawn ${Spawn[pc =${_leader}]}
-			/delay 10
+			/call NavSpawnThrottled ${Spawn[pc =${_leader}]}
 		}
 		/goto :movingLoop
 	}
@@ -228,14 +278,13 @@ SUB EVENT_MoveHere(_line, _chatSender, _eventParams)
 		}
 		
 	}
-	
-	/doevents flush MoveHere
 /return
 
 Sub MoveToPosition(int _y, int _x, int _z, int _adjustment, bool _warp)
 	/echo \ayMoveToPosition: \ag${_y},${_x},${_z} \aw@\ag${_adjustment}
 	/declare timer_movement timer local 30s
 	/declare dist int local ${Math.Distance[${Me.Y},${Me.X},${Me.Z}:${_y},${_x},${_z}]}
+	/call NavLocThrottled ${_y} ${_x} ${_z}
 	:movement 
 		/delay 10
 		/varcalc dist ${Math.Distance[${Me.Y},${Me.X},${Me.Z}:${_y},${_x},${_z}]}
@@ -244,7 +293,7 @@ Sub MoveToPosition(int _y, int _x, int _z, int _adjustment, bool _warp)
 		/if (!${timer_movement}) /goto :final
 		/if (${Navigation.Active})  /goto :movement
 	:final
-	/nav stop
+	/call NavStopIfActive
 	| DO NOT USE WARP UNLESS ABSOLUTELY NECESSARY! SERIOUSLY, DON'T.
 	/if (${_warp}) /warp loc ${_y} ${_x} ${_z}
 	/deletevar timer_movement
@@ -260,7 +309,7 @@ Sub MoveToPosition(int _y, int _x, int _z, int _adjustment, bool _warp)
 |- @param1 destination: Destinations can be provided as an ID, or loc, using the bln_following syntax:	-|
 |-																									-|
 |- Move to a Spawn ID use, -SpawnID|#																-|
-|-		Ex.  /call MoveTo -SpawnID|${Target.ID}														-|
+|-		Ex.  /call MoveTo -SpawnID|${cache_targetID}														-|
 |-																									-|
 |- Move to a Location use, -Loc|Y,X																	-|
 |-		Ex.  /call MoveTo -Loc|${Target.Y},${Target.X}												-|
