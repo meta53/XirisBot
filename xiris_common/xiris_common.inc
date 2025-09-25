@@ -572,6 +572,7 @@ Sub EngageTarget(int _targetID)
 
 Sub chkTargetStatus
 	/declare reason string local TARGET_VALID
+	/call InvalidateEnvironmentCache
 	/call UpdateEnvironmentCache
 
 	/if (!${bln_engaged}) /goto :return
