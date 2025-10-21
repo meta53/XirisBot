@@ -355,6 +355,9 @@ Sub resetCamp
 			/goto :campReturn
 		}
 		/nav stop
+		/warp wp ${str_campName}
+	} else {
+		/warp wp ${str_campName}
 	}
 	
 /return
@@ -407,7 +410,8 @@ Sub pullTarget
 				}
 			} else {
 				/echo \arNo Path to Target, resetting at camp
-				/goto :return
+				/warp wp ${str_campName}
+				 /goto :return
 			}
 		/if (${Target.Aggressive}) /goto :ReturnWithPull
 		
@@ -474,7 +478,9 @@ Sub pullTarget
 				/echo \agReturning to Camp with \ay${Me.XTarget}+ \agmobs.
 				/if (${Navigation.PathExists[waypoint ${str_campName}]}) {
 					/navigate waypoint ${str_campName} 
-				} 
+				} else {
+					/warp wp ${str_campName} 
+				}
 				/goto :ReturnLoop
 			} else {
 				/if (!${Target.Aggressive}) /call AggroTarget
@@ -575,6 +581,9 @@ Sub killTarget
 			/if (${Navigation.PathExists[waypoint ${str_campName}]}) {
 				/echo \agMoving back to \ao${str_campName}
 				/if (!${Navigation.Active}) /navigate waypoint ${str_campName}
+			} else {
+				/echo \arNo Path to ${str_campName}! /awWarping
+				/warp wp ${str_campName}
 			}
 			/delay 20
 			/goto :campCheck
