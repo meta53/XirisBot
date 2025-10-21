@@ -36,7 +36,7 @@ XirisBot empowers raid leaders and players on EQEMU servers (notably EQTitan) to
 * Plugin dependencies:
   * MQ2Dannet for inter-bot communication
   * MQ2Nav for navigation and pathfinding
-  * MQ2Medley for automated consumable management
+  * MQ2Medley for automated bard things
   * MQ2WorstHurt for priority-based healing
 * Version control and CI: Git, GitHub Actions (future CI suggested)
 
@@ -368,5 +368,6 @@ These metrics demonstrate early adoption, active maintenance, and a stable relea
 XirisBot is released under the MIT License.  
 Maintainer: Matthew J Breault (meta53)  
 Email: meta53@example.com
+
 
 Feel free to open issues, request features, or reach out directly for collaboration.
