@@ -102,7 +102,7 @@ Sub ToggleOfftanking(bool _blnOT)
 
 
 Sub chkOffTanking
-	/if (${Zone.ID} == 340 || ${Zone.ID} == 344 || ${Zone.ID} == 345 || ${Zone.ShortName.Equal[${Me.BoundLocation[0]}]} || ${bln_following}) /return
+	/if (${Zone.ID} == 340 || ${Zone.ID} == 344 || ${Zone.ID} == 345 || ${Zone.ShortName.Equal[${cache_boundZone}]} || ${bln_following}) /return
 	/if (${bln_engaged} && ${bln_useDI}) /call chkDivineIntervention
 
 	| If there are no spawns within OT Distance, return
@@ -182,7 +182,7 @@ Sub aggroByID(int _targetID)
 
 	
 	/if (${Me.TargetOfTarget.Class.ShortName.Equal[WAR]} || ${Me.TargetOfTarget.Class.ShortName.Equal[PAL]} || ${Me.TargetOfTarget.Class.ShortName.Equal[SHD]}) /goto :return		
-	/if ((${Me.TargetOfTarget.ID} == ${Me.ID}) || (${Me.TargetOfTarget.ID} == ${int_MTID}) || !${Target.ID} || ${Target.Name.Find['s_corpse']} || ${Target.Type.Equal[corpse]}) /goto :return
+	/if ((${Me.TargetOfTarget.ID} == ${Me.ID}) || (${Me.TargetOfTarget.ID} == ${int_MTID}) || !${Target.ID} || ${Target.Name.Find['s_corpse']} || ${cache_targetIsCorpse}) /goto :return
 	
 	/goto :aggroLoop
 

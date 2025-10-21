@@ -563,7 +563,6 @@ Sub chkOMMActions
 		/return
 	} else /if (${Me.Class.ShortName.Equal[WAR]} && (${int_MTID} == ${Me.ID})) {
 		:mt_loop
-			|/if (${Math.Distance[${Target.Y},${Target.X},${Target.Z}:${Me.Y} ${Me.X} ${Me.Z}]} > ${rootDist} && ${bln_rootTank}) /warp loc ${root_Y} ${root_X} ${root_Z}
 			/doevents RootTankOn
 			/doevents RootTankOff
 			/doevents MarkOfDeath

@@ -227,7 +227,7 @@ Sub InkNoqRun(int _curseID)
 	
 	| DOUBLE CHECK THIS RUN LOOP  TODO MAKE IT WORK LIKE CURSECALLERS
 	:startLoop
-	/if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /call InkDeath
+	/if (${Zone.ShortName.Equal[${cache_boundZone}]}) /call InkDeath
 	/if (${Me.TargetOfTarget.Name.Equal[${Me.Name}]}) {
 		|/if (${Target.Distance} < 50) {
 			/nav wp cb3
@@ -243,7 +243,7 @@ Sub InkNoqRun(int _curseID)
 	:farLoop2
 	/if (${Navigation.Active}) /goto :farLoop2
 
-	/if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /call InkDeath
+	/if (${Zone.ShortName.Equal[${cache_boundZone}]}) /call InkDeath
 	/if (${Me.TargetOfTarget.Name.Equal[${Me.Name}]} || !${Target.Name.Find[_corpse]}) {
 		/if (${Target.Distance} < 50) {
 			/varset inkRunning TRUE
@@ -252,7 +252,7 @@ Sub InkNoqRun(int _curseID)
 	}
 	|-- no longer targeted or you dont have a target. safe now
 
-	/if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /call InkDeath
+	/if (${Zone.ShortName.Equal[${cache_boundZone}]}) /call InkDeath
 	|-- insert some return logic here	
 	/varset inkRunning FALSE
 	/nav spawn pc ${str_MTName}
@@ -319,11 +319,11 @@ Sub InkCurseRun
 	/nav wp cc1
     /delay 3s
 	:start
-		/if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /call InkDeath
+		/if (${Zone.ShortName.Equal[${cache_boundZone}]}) /call InkDeath
 		/if (${AdvPath.State} == 0) /play cursecallers
 	:movement
 		/if (!${Me.Inventory[17].ID} && !${Me.Inventory[18].ID}) /call InkDeath
-		/if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /call InkDeath
+		/if (${Zone.ShortName.Equal[${cache_boundZone}]}) /call InkDeath
 		/if (${AdvPath.State} == 2) {
 			/delay 10
 			/doevents InkCurseSafe
@@ -344,42 +344,42 @@ Sub InkCurseRun2
 	/if (!${inkRunning}) /return
 	/nav wp cb1
 	:cb1 
-	/if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /call InkDeath
+	/if (${Zone.ShortName.Equal[${cache_boundZone}]}) /call InkDeath
 	/if (${Navigation.Active}) /goto :cb1
 		/doevents InkCurseSafe
 		/doevents NoqSafe
 	/if (!${inkRunning}) /return
 	/nav wp cb6	
 	:cb6 
-	/if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /call InkDeath
+	/if (${Zone.ShortName.Equal[${cache_boundZone}]}) /call InkDeath
 	/if (${Navigation.Active}) /goto :cb6
 		/doevents InkCurseSafe
 		/doevents NoqSafe
 	/if (!${inkRunning}) /return	
 	/nav wp cb5	
 	:cb5
-	/if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /call InkDeath
+	/if (${Zone.ShortName.Equal[${cache_boundZone}]}) /call InkDeath
 	/if (${Navigation.Active}) /goto :cb5
 		/doevents InkCurseSafe
 		/doevents NoqSafe
 	/if (!${inkRunning}) /return
 	/nav wp cb4
 	:cb4 
-	/if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /call InkDeath
+	/if (${Zone.ShortName.Equal[${cache_boundZone}]}) /call InkDeath
 	/if (${Navigation.Active}) /goto :cb4
 		/doevents InkCurseSafe
 		/doevents NoqSafe
 	/if (!${inkRunning}) /return
 	/nav wp cb3
 	:cb3 
-	/if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /call InkDeath
+	/if (${Zone.ShortName.Equal[${cache_boundZone}]}) /call InkDeath
 	/if (${Navigation.Active}) /goto :cb3
 		/doevents InkCurseSafe
 		/doevents NoqSafe
 	/if (!${inkRunning}) /return	
 	/nav wp cb2
 	:cb2
-	/if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) /call InkDeath
+	/if (${Zone.ShortName.Equal[${cache_boundZone}]}) /call InkDeath
 	/if (${Navigation.Active}) /goto :cb2
 		/doevents InkCurseSafe
 		/doevents NoqSafe
@@ -396,7 +396,7 @@ Sub InkDeath
 	/delay 30
     /keypress back
 	:InkDeathWait
-	/if (${Zone.ShortName.Equal[${Me.BoundLocation[0]}]}) {
+	/if (${Zone.ShortName.Equal[${cache_boundZone}]}) {
 		/delay 5s
 		/goto :InkDeathWait
 	}

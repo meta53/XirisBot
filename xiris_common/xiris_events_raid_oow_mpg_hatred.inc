@@ -74,7 +74,7 @@ Sub EVENT_D1
 	/if (!${Me.Standing}) /stand on
 	/if (${Navigation.Active}) /nav stop
 	/nav wp D1
-	/call MoveToPosition ${D1Y} ${D1X} ${D1Z} 30 TRUE
+	/call MoveToPosition ${D1Y} ${D1X} ${D1Z} 30 FALSE
 	/if (${str_classArchetype.NotEqual[PRIEST]}) /call TrueTarget ${NearestSpawn[NPC Voracious].ID}	
 /return
 
@@ -82,7 +82,7 @@ Sub EVENT_D2
 	/if (!${Me.Standing}) /stand on
 	/if (${Navigation.Active}) /nav stop
 	/nav wp D2
-	/call MoveToPosition ${D2Y} ${D2X} ${D2Z} 30 TRUE
+	/call MoveToPosition ${D2Y} ${D2X} ${D2Z} 30 FALSE
 	/if (${str_classArchetype.NotEqual[PRIEST]}) /call TrueTarget ${NearestSpawn[NPC Voracious].ID}	
 /return
 
@@ -90,7 +90,7 @@ Sub EVENT_D3
 	/if (!${Me.Standing}) /stand on
 	/if (${Navigation.Active}) /nav stop
 	/nav wp D3
-	/call MoveToPosition ${D3Y} ${D3X} ${D3Z} 30 TRUE
+	/call MoveToPosition ${D3Y} ${D3X} ${D3Z} 30 FALSE
 	/if (${str_classArchetype.NotEqual[PRIEST]}) /call TrueTarget ${NearestSpawn[NPC Voracious].ID}	
 /return
 
@@ -98,7 +98,7 @@ Sub EVENT_D4
 	/if (!${Me.Standing}) /stand on
 	/if (${Navigation.Active}) /nav stop
 	/nav wp D4
-	/call MoveToPosition ${D4Y} ${D4X} ${D4Z} 30 TRUE
+	/call MoveToPosition ${D4Y} ${D4X} ${D4Z} 30 FALSE
 	/if (${str_classArchetype.NotEqual[PRIEST]}) /call TrueTarget ${NearestSpawn[NPC Voracious].ID}	
 /return
 
@@ -106,7 +106,7 @@ Sub EVENT_D5
 	/if (!${Me.Standing}) /stand on
 	/if (${Navigation.Active}) /nav stop
 	/nav wp D5
-	/call MoveToPosition ${D5Y} ${D5X} ${D5Z} 30 TRUE
+	/call MoveToPosition ${D5Y} ${D5X} ${D5Z} 30 FALSE
 	/if (${str_classArchetype.NotEqual[PRIEST]}) /call TrueTarget ${NearestSpawn[NPC Voracious].ID}			
 /return
 
@@ -114,6 +114,6 @@ Sub EVENT_D6
 	/if (!${Me.Standing}) /stand on
 	/if (${Navigation.Active}) /nav stop
 	/nav wp D6
-	/call MoveToPosition ${D6Y} ${D6X} ${D6Z} 30 TRUE
+	/call MoveToPosition ${D6Y} ${D6X} ${D6Z} 30 FALSE
 	/if (${str_classArchetype.NotEqual[PRIEST]}) /call TrueTarget ${NearestSpawn[NPC Voracious].ID}			
 /return

@@ -127,3 +127,4 @@ common/packs.inc
 common/sell.inc
 sql.mac
 muffins.mac
+bot_pull.mac
