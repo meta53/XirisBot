@@ -295,6 +295,7 @@ Sub MoveToPosition(int _y, int _x, int _z, int _adjustment, bool _warp)
 	:final
 	/call NavStopIfActive
 	| DO NOT USE WARP UNLESS ABSOLUTELY NECESSARY! SERIOUSLY, DON'T.
+	| I am only leaving this here for emergency use cases where the bot gets stuck.
 	/if (${_warp}) /warp loc ${_y} ${_x} ${_z}
 	/deletevar timer_movement
 /return 

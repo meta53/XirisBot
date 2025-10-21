@@ -5,8 +5,7 @@ xiris_events_raid_dodh_demiplane.inc
 Event Handlers for the DODH raids in Demiplane of Blood
 ______________________________________________
 REQUIRED PLUGINS
-    mq2mmoreachit
-    mq2mmowarp
+  
 ______________________________________________
 REVISION HISTORY
 	12.04.11    xiris  INITIAL REVISION
@@ -267,14 +266,14 @@ Sub Event_HatchetClose
 	/waypoint update ${Me.Name}_Hatchet
 	/tar Hatchet
 	/delay 1s
-	/warp t
+	|--DEPRECATED /warp t
 /return
 
 Sub Event_HatchetCloseEnd
 	/if (${Zone.ShortName.NotEqual[dreadspire_raid]}) /return
 	/dgt Hatchet no longer needs me under his legs.
 	/varset hClose	FALSE
-	/warp wp ${Me.Name}_Hatchet
+	|--DEPRECATED /warp wp ${Me.Name}_Hatchet
 	/delay 1
 /return
 
@@ -283,14 +282,14 @@ Sub Event_HatchetFar
 	/dgt Hatchet has me running away
 	/varset hFar	TRUE
 	/waypoint update ${Me.Name}_Hatchet
-	/warp s
+	|--DEPRECATED /warp s
 /return
 
 Sub Event_HatchetFarEnd
 	/if (${Zone.ShortName.NotEqual[dreadspire_raid]}) /return
 	/dgt Hatchet no longer needs me a zone in
 	/varset hFar	FALSE
-	/warp wp ${Me.Name}_Hatchet
+	|--DEPRECATED /warp wp ${Me.Name}_Hatchet
 /return
 
 Sub Event_HatchetBugged
@@ -303,12 +302,10 @@ Sub Event_HatchetRun
 	/if (${Zone.ShortName.NotEqual[dreadspire_raid]}) /return
 	/varset hRun	TRUE
 	/waypoint update ${Me.Name}_Hatchet
-	/setgrav 0
-	/zwarp 1000
 	/keypress forward hold
 	/delay 15s
 	/keypress forward
-	/warp wp ${Me.Name}_Hatchet
+	|--DEPRECATED /warp wp ${Me.Name}_Hatchet
 	/setgrav .4
 	/varset hRun	FALSE
 /return
@@ -316,7 +313,7 @@ Sub Event_HatchetRun
 Sub Event_HatchetRunEnd
 	/if (${Zone.ShortName.NotEqual[dreadspire_raid]}) /return
 	/varset hRun	FALSE
-	/warp wp ${Me.Name}_Hatchet
+	|--DEPRECATED /warp wp ${Me.Name}_Hatchet
 	/setgrav .4
 /return
 
@@ -560,9 +557,9 @@ Sub Event_MayongSlash
 	/declare archetype string local
 	/if (${Select[${Me.Class.ShortName},MNK,ROG,BER]})	/varset archetype MELEE
 	/if (${archetype.Equal[MELEE]}) {
-		/warp s
+		|--DEPRECATED /warp s
 		/delay 12s
-		/warp b 10
+		|--DEPRECATED /warp b 10
 	}	
 /return
 		
