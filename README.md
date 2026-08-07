@@ -36,7 +36,7 @@ XirisBot empowers raid leaders and players on EQEMU servers (notably EQTitan) to
 * Plugin dependencies:
   * MQ2Dannet for inter-bot communication
   * MQ2Nav for navigation and pathfinding
-  * MQ2Medley for automated consumable management
+  * MQ2Medley for automated bard things
   * MQ2WorstHurt for priority-based healing
 * Version control and CI: Git, GitHub Actions (future CI suggested)
 
@@ -119,8 +119,8 @@ song3=Verse of Vesagran^18^1
 song4=War March of Muram^18^1
 song5=Psalm of Mystic Shielding^18^1 
 ```
-###### MQ2Melee
-Standard plugin generally. Used to handle the auto skills portion of meleeing, such as backstab/frenzy/kick etc. Note: if there is a desire, I can eliminate this and run it entirely within the macro. 
+~~###### MQ2Melee
+Standard plugin generally. Used to handle the auto skills portion of meleeing, such as backstab/frenzy/kick etc. Note: if there is a desire, I can eliminate this and run it entirely within the macro.~~ 
 ###### MQ2WorstHurt
 Plugin available in modern compiles that replacing for loops looking at group, and xtarget members hp points. See https://www.redguides.com/wiki/MQ2WorstHurt
 #### Everquest Build
@@ -369,4 +369,6 @@ XirisBot is released under the MIT License.
 Maintainer: Matthew J Breault (meta53)  
 Email: meta53@example.com
 
+
 Feel free to open issues, request features, or reach out directly for collaboration.
+
