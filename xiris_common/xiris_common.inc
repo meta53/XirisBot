@@ -330,6 +330,10 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/declare timer_medDelay			timer	outer ${Ini[INI_CHAR,DEFAULT_SETTINGS,medDelay,45s]}
 	/declare timer_sitDelay			timer	outer ${Ini[INI_CHAR,DEFAULT_SETTINGS,sitDelay,10s]}
 	/declare timer_check_utilities	timer   outer 0
+	/declare timer_autoAssist      timer   outer 0
+	/declare timer_assistQuery     timer   outer 0
+	/declare bln_assistQueryPending bool  outer FALSE
+	/declare int_assistQueryResult int    outer 0
 
 	|-- [DEFAULT_SETTINGS] : Camp
 	/declare bln_useCAMP			bool	outer 	FALSE
@@ -765,7 +769,7 @@ Sub TrueTarget(int _targetID)
 **|
 Sub chkMTAlive(bool _setAsTarget)
 	|--MT is a live and ID is correct
-	/if (${SpawnCount[PC ${str_MTName}]} && (${int_MTID} == ${Spawn[PC ${str_MTName}].ID})) /goto :return 
+	/if (${int_MTID} && ${Spawn[id ${int_MTID}].Type.Equal[PC]} && ${Spawn[id ${int_MTID}].CleanName.Equal[${str_MTName}]}) /goto :return
 
 	|--MT, ST, and TT are not in zone or dead!
 	/if (!${SpawnCount[PC ${str_MTName}]} && !${SpawnCount[PC ${str_STName}]} && !${SpawnCount[PC ${str_TTName}]}) {
@@ -1279,12 +1283,31 @@ Sub LoadPlugin(string _pluginName, bool _load)
 
 Sub chkAutoAssist
 	/if (!${bln_autoAssist}) /return
-	/declare tgtID int local
-	/dquery ${str_MTName} -q "Target.ID"
-	/delay 20 ${DanNet.Query.Received}
-	/varset tgtID ${DanNet.Q}
-	/call TrueTarget ${tgtID}
-	/call EngageTarget ${tgtID}
+	/declare tgtID int local 0
+
+	| Never block the main loop waiting on DanNet. Complete a pending
+	| query on a later pass, or abandon it after the timeout.
+	/if (${bln_assistQueryPending}) {
+		/if (${DanNet[${str_MTName}].Query["Target.ID"].Received}) {
+			/varset tgtID ${int_assistQueryResult}
+			/varset bln_assistQueryPending FALSE
+			/varset timer_autoAssist 5
+			/if (${tgtID} && (${Target.ID} != ${tgtID} || !${bln_engaged})) {
+				/call TrueTarget ${tgtID}
+				/call EngageTarget ${tgtID}
+			}
+		} else /if (!${timer_assistQuery}) {
+			/varset bln_assistQueryPending FALSE
+			/varset timer_autoAssist 5
+		}
+		/return
+	}
+
+	/if (${timer_autoAssist}) /return
+	/varset int_assistQueryResult 0
+	/dquery ${str_MTName} -q "Target.ID" -o int_assistQueryResult
+	/varset bln_assistQueryPending TRUE
+	/varset timer_assistQuery 20
 /return
 
 

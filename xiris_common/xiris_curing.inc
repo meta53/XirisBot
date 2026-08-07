@@ -207,7 +207,7 @@ Sub chkNeedCure
 	|-- Verify need if I havent asked and recently
 	/if (${Debuff.Count} == 0 || ${Debuff.Counters} > 200 || ${timer_cure_request}) 	/return
 	|-- Skip if nocure mode is on
-	/if (!${bln_useCures} && ${Me.Class.ShortName.NotEqual[CLR]} || ${Me.Class.ShortName.NotEqual[SHM]}) /return
+	/if (!${bln_useCures} && ${Me.Class.ShortName.NotEqual[CLR]} && ${Me.Class.ShortName.NotEqual[SHM]}) /return
 	
 	|-- Force the cure?
 	/declare forceCure		bool 	local	FALSE

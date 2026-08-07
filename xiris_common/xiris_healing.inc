@@ -853,7 +853,6 @@ Sub healCast(int _id, string _name, string _spell, bool _isGroup, bool _isHoT)
 			/call MQ2Cast "${_spell}" gem2 1s chkHP
 		}
 		
-		/delay 5
 		/if (!${Defined[timer_HoT_${_id}]}) /declare timer_HoT_${_id} timer outer 30s
 		/if (${_isHoT} && ${Macro.Return.Equal[CAST_SUCCESS]}) /varset timer_HoT_${_id} 30s
 		/if (${Macro.Return.Equal[CAST_SUCCESS]} && ${bln_annouce}) /${cmdChannel} ${_spell} > ${Target.Name} hp:${Target.PctHPs} m:${Me.PctMana} d:${Target.Distance}

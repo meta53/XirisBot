@@ -77,7 +77,11 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 	**|
 	
 	:MainLoop
-		/if (${Me.Hovering}||${Window[tradewnd].Open}||${Window[lootwnd].Open}) /goto :MainLoop
+		/if (${Me.Hovering}||${Window[tradewnd].Open}||${Window[lootwnd].Open}) {
+			/call RunRapidEvents
+			/delay 1
+			/goto :MainLoop
+		}
 		|-- Check all Events
 		/call RunAllEvents
 
@@ -95,8 +99,6 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 		
 		/if (${bln_engaged}) {
 			|-- check all events
-			/call RunAllEvents
-
 			|-- melee library
 		    /call chkCA_${Me.Class.ShortName}
 

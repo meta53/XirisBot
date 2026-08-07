@@ -173,7 +173,7 @@ Sub chkNuke
 			|   Additionally spell might not be memmed due to swapping		
 			/call chkSpellMemorized "${NUKE_${i}_Spell}" TRUE ${NUKE_${i}_Gem}
 			:NukeCastWait
-			/delay 5s (${Me.SpellReady[${NUKE_${i}_Spell}]} && (!${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]}))
+			/call WaitForSpellReady "${NUKE_${i}_Spell}" 5s
 
 			|-- All this ready, check for LOS/Distance/Mana
 			/if (${Target.PctHPs}<=${NUKE_${i}_StartHP} && ${Target.PctHPs}>=${NUKE_${i}_StopHP}) {
@@ -276,7 +276,7 @@ Sub chkQNuke
 			|   Additionally spell might not be memmed due to swapping		
 			/call chkSpellMemorized "${QNUKE_${i}_Spell}" FALSE ${QNUKE_${i}_Gem}
 			:QnukeNukeCastWait
-			/delay 5s (${Me.SpellReady[${QNUKE_${i}_Spell}]} && (!${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]}))
+			/call WaitForSpellReady "${QNUKE_${i}_Spell}" 5s
 			
 			|-- All this ready, check for LOS/Distance/Mana
 			/if (${Target.PctHPs}<=${QNUKE_${i}_StartHP} && ${Target.PctHPs}>=${QNUKE_${i}_StopHP}) {
@@ -336,7 +336,7 @@ Sub chkAENuke
 		}
 		/call chkSpellMemorized "${AENUKE_${i}_Spell}" TRUE ${AENUKE_${i}_Gem}
 		:AENukeCastWait
-		/delay 5s (${Me.SpellReady[${AENUKE_${i}_Spell}]} && (!${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]}))
+		/call WaitForSpellReady "${AENUKE_${i}_Spell}" 5s
 
 		/call MQ2Cast "${AENUKE_${i}_Spell}"	
 		/if (${Macro.Return.Equal[CAST_SUCCESS]}) {
@@ -524,7 +524,7 @@ Sub chkDOT
 			/call chkSpellMemorized "${DOT_${i}_Spell}" FALSE ${DOT_${i}_Gem}
 			
 			:DotReadyWait
-			/delay 5s (${Me.SpellReady[${DOT_${i}_Spell}]} && (!${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]}))
+			/call WaitForSpellReady "${DOT_${i}_Spell}" 5s
 
 			|-- All this ready, check for LOS/Distance/Mana
 			|-- Think about adding the named stop point here at some point in future
@@ -1122,4 +1122,15 @@ Sub xbot_initialize_casting
 	
 	
 	
-	
+
+| Wait for a refreshed gem without starving raid and emergency events.
+Sub WaitForSpellReady(string _spell, string _timeout)
+	/declare timer_spellReadyWait timer local ${_timeout}
+	:spellReadyWait
+		/if (${Me.SpellReady[${_spell}]} && (!${Me.Casting.ID} || ${Me.Class.ShortName.Equal[BRD]})) /return TRUE
+		/call RunRaidEvents
+		/call RunRapidEvents
+		/if (!${timer_spellReadyWait}) /return FALSE
+		/delay 1
+	/goto :spellReadyWait
+/return FALSE

@@ -78,7 +78,11 @@ Sub Main(int _pull_dist, string _channel, string _campName, bool _useDownFlags, 
 	**|
 	:MainLoop
 		/if (${MacroQuest.GameState.Equal[CHARSELECT]} || ${MacroQuest.GameState.Equal[PRECHARSELECT]} ) /end
-		/if (${Me.Casting.ID} && ${Me.Hovering}||${Window[tradewnd].Open}||${Window[lootwnd].Open}) /goto :mainLoop
+		/if (${Me.Hovering} || ${Window[tradewnd].Open} || ${Window[lootwnd].Open}) {
+			/call RunRapidEvents
+			/delay 1
+			/goto :MainLoop
+		}
 		
 		|-- Check to see if self needs to be cured (xiris_curing.inc)
 		/call RunAllEvents

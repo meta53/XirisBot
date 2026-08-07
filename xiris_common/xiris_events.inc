@@ -260,7 +260,6 @@ Sub RunRapidEvents
 
 
 Sub RunAllEvents
-    /call UpdateEnvironmentCache
     /call RunBackgroundEvents
     /call RunRaidEvents
     /call RunClassEvents
