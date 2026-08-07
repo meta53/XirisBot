@@ -103,8 +103,6 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 			/call chkAENuke
 
 			|-- std library (burns/aa/clicks)
-			/call RunRaidEvents
-    		/call RunClassEvents
 			/call chkAA
 			/call chkBurn
 			/call chkClicky

@@ -332,8 +332,24 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/declare timer_check_utilities	timer   outer 0
 	/declare timer_autoAssist      timer   outer 0
 	/declare timer_assistQuery     timer   outer 0
+	/declare timer_slowTargetStatus timer outer 0
 	/declare bln_assistQueryPending bool  outer FALSE
 	/declare int_assistQueryResult int    outer 0
+	/declare bln_debug             bool    outer ${Ini[INI_CHAR,PERFORMANCE,Debug,FALSE]}
+	/declare bln_verboseCombat     bool    outer ${Ini[INI_CHAR,PERFORMANCE,VerboseCombat,FALSE]}
+	/declare bln_perfStats         bool    outer ${Ini[INI_CHAR,PERFORMANCE,Stats,FALSE]}
+	/declare timer_perfReport      timer   outer 60s
+	/declare int_perfCombatLoops   int     outer 0
+	/declare int_perfAAScans       int     outer 0
+	/declare int_perfClickyScans   int     outer 0
+	/declare int_perfBurnScans     int     outer 0
+	/declare int_perfNamedChecks   int     outer 0
+
+	| Class/archetype decisions are invariant for the life of the macro.
+	/declare bln_isBard            bool    outer ${Me.Class.ShortName.Equal[BRD]}
+	/declare bln_isPriest          bool    outer ${str_classArchetype.Equal[PRIEST]}
+	/declare bln_isCaster          bool    outer ${str_classArchetype.Equal[CASTER]}
+	/declare bln_isTank            bool    outer ${str_classArchetype.Equal[TANK]}
 
 	|-- [DEFAULT_SETTINGS] : Camp
 	/declare bln_useCAMP			bool	outer 	FALSE
@@ -360,6 +376,8 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 	/declare cache_npcR200           int     outer
 	/declare cache_npcR400           int     outer
 	/declare cache_hasXTarget        bool    outer
+	/declare cache_namedTargetID     int     outer 0
+	/declare cache_isNamed           bool    outer FALSE
 	/declare cache_targetIsCorpse    bool    outer
 	/declare cache_targetID          int     outer
 	/declare cache_targetType        string  outer
@@ -575,8 +593,13 @@ Sub EngageTarget(int _targetID)
 
 Sub chkTargetStatus
 	/declare reason string local TARGET_VALID
-	/call InvalidateEnvironmentCache
+	/declare slowStatusDue bool local ${Bool[!${timer_slowTargetStatus}]}
+	/if (${slowStatusDue}) /varset timer_slowTargetStatus 2
 	/call UpdateEnvironmentCache
+	/if (${bln_perfStats}) {
+		/varcalc int_perfCombatLoops ${int_perfCombatLoops}+1
+		/call ReportPerformance
+	}
 
 	/if (!${bln_engaged}) /goto :return
 
@@ -601,29 +624,29 @@ Sub chkTargetStatus
 		/goto :disengage
 	} 
 	
-	| Check to see if my target is NPC and there is no NPCs around
-	/if (${cache_targetID} && ${cache_targetID} == ${int_MTID} && (!${SpawnCount[npc id ${int_targetID} radius 200]} || ${cache_zoneShort.Equal[${cache_boundZone}]})) {
+	| Radius and XTarget validation only needs to run five times per second.
+	/if (${slowStatusDue} && ${cache_targetID} && ${cache_targetID} == ${int_MTID} && (!${SpawnCount[npc id ${int_targetID} radius 200]} || ${cache_zoneShort.Equal[${cache_boundZone}]})) {
 		/echo \awTarget is MT, and No NPC in radius 200 (or at bind) \aoDisengaging!
 		/varset reason TARGETMT_or_ATBIND
 		/goto :disengage
 	}
 
 	| Check to see if there are any NPCs on XTarget and Radius
-	/if (!${cache_hasXTarget} && !${cache_npcR200}) {
+	/if (${slowStatusDue} && !${cache_hasXTarget} && !${cache_npcR200}) {
 		/echo \awNo Targets within 200, or on XTarget \aoDisengaging!
 		/varset reason NOTARGETSWITHIN200_AND_NOXTARGET
 		/goto :disengage
 	} 
 
 	| If there is something on XTarget, and its over 400 away, ignore it.
-	/if (${cache_hasXTarget} && (!${cache_npcR400} || ${cache_zoneShort.Equal[${cache_boundZone}]})) {
+	/if (${slowStatusDue} && ${cache_hasXTarget} && (!${cache_npcR400} || ${cache_zoneShort.Equal[${cache_boundZone}]})) {
 		/echo \awNo Targets within 400, even if they are on XTarget \aoDisengaging!
 		/varset reason NOTARGETWITHIN400_AND_HASXTARGET
 		/goto :disengage
 	}
 
 	| Priests can skip next check and just go to check hott aggro
-	/if (${Me.Class.ShortName.Equal[SHM]} && ${Me.Class.ShortName.Equal[CLR]} && ${Me.Class.ShortName.Equal[DRU]}) /goto :chkTargetTarget
+	/if (${Me.Class.ShortName.Equal[SHM]} || ${Me.Class.ShortName.Equal[CLR]} || ${Me.Class.ShortName.Equal[DRU]}) /goto :chkTargetTarget
 
 	| I am engaged, check we are targetting correct NPC (not if we are tanking becausse that is annoying)
 	/if ((${Target.ID} != ${int_targetID}) && (${Spawn[id ${int_targetID}].PctHPs} >= 0 && !${Spawn[id ${int_targetID}].Name.Find[s_corpse]}) && !${bln_tanking} && !${bln_activeCharming}) {
@@ -635,11 +658,12 @@ Sub chkTargetStatus
 	}
 	
 	:chkTargetTarget
+	/if (!${slowStatusDue}) /goto :return
 	/call TargetNamedCheck ${int_targetID}
     /declare isNamed bool local ${Macro.Return}
 	/if (${Target.Type.Equal[NPC]} && ${Me.TargetOfTarget.CleanName.Equal[${Me.CleanName}]} && !${bln_tanking} && ${isNamed}) {
 		| Priest/Caster (with some sort of a aggro dump ability)
-		/if (${str_classArchetype.Equal[PRIEST]} || ${str_classArchetype.Equal[CASTER]}) {
+		/if (${bln_isPriest} || ${bln_isCaster}) {
 			| Wizard
 			/if (${Me.Class.ShortName.Equal[WIZ]}) {
 				/if (${Me.AltAbilityReady[Mind Crash]})   	/call MQ2Cast "Mind Crash" alt
@@ -658,7 +682,7 @@ Sub chkTargetStatus
 			} else /if (${Me.Class.ShortName.Equal[DRU]}) { 
 
 			}
-		} else /if (${str_classArchetype.Equal[MELEE_END]} || ${str_classArchetype.Equal[MELEE_MANA]} || ${str_classArchetype.Equal[TANK]}) {
+		} else /if (!${bln_isPriest} && !${bln_isCaster}) {
 			/declare use_riposte bool local FALSE
 			/if (${cache_zoneShort.Equal[tacvi]} && (${Target.Name.Find[Pirik]} || ${Target.Name.Find[Yihst]} || ${Target.Name.Find[Tunat]})) {
 				/varset use_riposte TRUE
@@ -1363,6 +1387,7 @@ SUB EVENT_shrinkGroup
 |- @param TargetID: The ID of the spawn you wish to check on
 |-------------------------------------------------------------|
 Sub EVENT_ForceNamed(_line, _chatSender, _eventParams)
+	/varset cache_namedTargetID 0
 	/if (${_eventParams.Equal[TRUE]}) {
 		/echo \aoForcing named only mode:\ag${_eventParams}
 		/varset bln_forceNamed TRUE
@@ -1375,13 +1400,27 @@ Sub EVENT_ForceNamed(_line, _chatSender, _eventParams)
 
 Sub TargetNamedCheck(_id)
 	/if (${bln_forceNamed}) /return TRUE
-	/if ((${Spawn[npc id ${_id}].Named} || ${Spawn[npc id ${_id}].Name.Find[#]}) && ${Target.Level} >= 75) /return TRUE
-	/if (${cache_zoneShort.Equal[tacvi]} && ${Target.Level} >= 70) /return TRUE
-	/if (${cache_zoneShort.Equal[chambersa]} || ${cache_zoneShort.Equal[chambersb]} || ${cache_zoneShort.Equal[chambersc]} || ${cache_zoneShort.Equal[chambersd]} || ${cache_zoneShort.Equal[chamberse]}  && ${Target.Level} >= 70) /return TRUE
-	/if (${cache_zoneShort.Equal[anguish]}  && ${Target.Level} >= 75) /return TRUE
-	/if (${cache_zoneShort.Equal[arena]}) /return TRUE
-	/if (${cache_zoneShort.Equal[thundercrest]}) /return TRUE
-/return FALSE
+	/if (${_id} == ${cache_namedTargetID}) /return ${cache_isNamed}
+	/if (${bln_perfStats}) /varcalc int_perfNamedChecks ${int_perfNamedChecks}+1
+	/varset cache_namedTargetID ${_id}
+	/varset cache_isNamed FALSE
+	/if ((${Spawn[npc id ${_id}].Named} || ${Spawn[npc id ${_id}].Name.Find[#]}) && ${Spawn[id ${_id}].Level} >= 75) /varset cache_isNamed TRUE
+	/if (${cache_zoneShort.Equal[tacvi]} && ${Spawn[id ${_id}].Level} >= 70) /varset cache_isNamed TRUE
+	/if ((${cache_zoneShort.Equal[chambersa]} || ${cache_zoneShort.Equal[chambersb]} || ${cache_zoneShort.Equal[chambersc]} || ${cache_zoneShort.Equal[chambersd]} || ${cache_zoneShort.Equal[chamberse]}) && ${Spawn[id ${_id}].Level} >= 70) /varset cache_isNamed TRUE
+	/if (${cache_zoneShort.Equal[anguish]} && ${Spawn[id ${_id}].Level} >= 75) /varset cache_isNamed TRUE
+	/if (${cache_zoneShort.Equal[arena]} || ${cache_zoneShort.Equal[thundercrest]}) /varset cache_isNamed TRUE
+/return ${cache_isNamed}
+
+Sub ReportPerformance
+	/if (${timer_perfReport}) /return
+	/echo \atXirisPerf(60s) \awloops:\ag${int_perfCombatLoops} \awAA:\ag${int_perfAAScans} \awclicky:\ag${int_perfClickyScans} \awburn:\ag${int_perfBurnScans} \awnamed recalcs:\ag${int_perfNamedChecks}
+	/varset int_perfCombatLoops 0
+	/varset int_perfAAScans 0
+	/varset int_perfClickyScans 0
+	/varset int_perfBurnScans 0
+	/varset int_perfNamedChecks 0
+	/varset timer_perfReport 60s
+/return
 	
 
 | --------------------------------------------------------------------------------------------------------|

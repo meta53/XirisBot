@@ -734,8 +734,7 @@ Sub healGRP
 	| Determine if we should use group heal
 	| Check the range of the majorhurt
 	/if (${int_majorHurt} >=3 && (${Me.Class.ShortName.Equal[CLR]} || ${Me.Class.ShortName.Equal[PAL]}) && ${use_heal_group} && (${Me.CurrentMana} > ${Spell[${str_heal_group}].Mana})) {
-		/call updateGroupRangeCount ${int_range_group}
-		/varset int_inRange ${Int[${Macro.Return}]}
+		/varset int_inRange ${int_groupInRange}
 		/if (${int_inRange}>=3) {
 			/if (${use_heal_divineArb} && ${bln_divineArbReady} && ${Me.Class.ShortName.Equal[CLR]}) {
 				/call healDivineArbitration
@@ -751,8 +750,7 @@ Sub healGRP
 		}
 	} else /if (${int_minorHurt} >=3 && ${Me.Class.ShortName.Equal[CLR]} && ${use_heal_groupHoT} && (${Me.CurrentMana} > ${Spell[${str_heal_groupHoT}].Mana})) {
 		/if (${timer_groupHoT}) /goto :CastSingleTargetHeals
-		/call updateGroupRangeCount ${int_range_groupHoT}
-		/varset int_inRange ${Int[${Macro.Return}]}
+		/varset int_inRange ${int_groupHoTInRange}
 		/if (${int_inRange}>=3 ) {
 			/echo  \apGROUP_HOT \ap${str_heal_groupHoT} \awon \ay${Me.Name}
 			/call healCast ${Me.ID} ${Me.Name} "${str_heal_groupHoT}" TRUE
@@ -811,9 +809,13 @@ Sub determineHurtCounts
 	/declare 	i 			 		int local	0
 	/varset int_minorHurt 0
 	/varset int_majorHurt 0
+	/varset int_groupInRange 0
+	/varset int_groupHoTInRange 0
 	/for i 0 to 5
-		/if (${Group.Member[${i}].Present} && (${Group.Member[${i}].PctHPs}< 100) && (${Group.Member[${i}].PctHPs}>=${int_point_group_normal})) /varcalc int_minorHurt ${int_minorHurt}+1 
-		/if (${Group.Member[${i}].Present} && (${Group.Member[${i}].PctHPs}< 100) && (${Group.Member[${i}].PctHPs}< ${int_point_group_normal})) /varcalc int_majorHurt ${int_majorHurt}+1 
+		/if (${Group.Member[${i}].Present} && (${Group.Member[${i}].PctHPs}< 100) && (${Group.Member[${i}].PctHPs}>=${int_point_group_normal})) /varcalc int_minorHurt ${int_minorHurt}+1
+		/if (${Group.Member[${i}].Present} && (${Group.Member[${i}].PctHPs}< 100) && (${Group.Member[${i}].PctHPs}< ${int_point_group_normal})) /varcalc int_majorHurt ${int_majorHurt}+1
+		/if (${Group.Member[${i}].Present} && ${Group.Member[${i}].Distance3D} <= ${int_range_group}) /varcalc int_groupInRange ${int_groupInRange}+1
+		/if (${Group.Member[${i}].Present} && ${Group.Member[${i}].Distance3D} <= ${int_range_groupHoT}) /varcalc int_groupHoTInRange ${int_groupHoTInRange}+1
 	/next i
 /return
 
@@ -1536,6 +1538,8 @@ Sub xbot_initialize_healing(int _healPoint)
 	/declare	arr_groupHP[6,4]		int     outer   100   
 	/declare	int_minorHurt			int 	outer	0
 	/declare	int_majorHurt	   		int 	outer	0
+	/declare	int_groupInRange       int     outer   0
+	/declare	int_groupHoTInRange    int     outer   0
 	/declare 	str_groupIDs            string  outer   
 	/declare 	arr_hotTimerKeys[6]     string  outer   NULL
 

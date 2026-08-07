@@ -100,6 +100,9 @@ Sub EVENT_BurnOff
 
 Sub chkBurn
 	/if (!${bln_engaged} || !${bln_burning} || (${BURN_Total} == 0)) /return
+	/if (${timer_scanBurn}) /return
+	/varset timer_scanBurn 2
+	/if (${bln_perfStats}) /varcalc int_perfBurnScans ${int_perfBurnScans}+1
 	/if (!${Target.ID} || ${Target.Type.NotEqual[NPC]}) /return
 	/if (${Me.Casting.ID} || ${Me.Moving} || ${Me.Invis} || ${Me.Feigning}) /return
 
@@ -114,8 +117,8 @@ Sub chkBurn
 			| Note: Run the DISC if it is a combat type, it is ready, and we aren't already discing
 			| ---------------
 			/if (${BURN_${i}_Type.Equal[combat]} && ${Me.CombatAbilityReady[${BURN_${i}}]} && ${BURN_${i}_Use} && !${Me.ActiveDisc.ID}) {
-				/echo \awBurn_\ag${i} \ao${BURN_${i}} \awType:\ag${BURN_${i}_Type} \awUse:\ag${BURN_${i}_Use} \awAfter:\ag${BURN_${i}_AfterIndex} \awMGB:\ag${BURN_${i}_MGB} 
-				/echo \aoBurn is combat type, trying ${BURN_${i}}
+				/if (${bln_verboseCombat}) /echo \awBurn_\ag${i} \ao${BURN_${i}} \awType:\ag${BURN_${i}_Type} \awUse:\ag${BURN_${i}_Use} \awAfter:\ag${BURN_${i}_AfterIndex} \awMGB:\ag${BURN_${i}_MGB}
+				/if (${bln_verboseCombat}) /echo \aoBurn is combat type, trying ${BURN_${i}}
 				| Check to see if the burn Before disc/alt (0 if not) is already run
 				|/if (${BURN_${i}_AfterIndex} > 0) {
 				|	| Check to see if the burn Before is an alt or combatdisc (two different ways of checking)
@@ -149,15 +152,15 @@ Sub chkBurn
 						/goto :doAltAbility
 					}
 				} else {
-					/echo \awBurn_\ag${i} \ao${BURN_${i}} \awType:\ag${BURN_${i}_Type} \awUse:\ag${BURN_${i}_Use} \awAfter:\ag${BURN_${i}_AfterIndex} \awMGB:\ag${BURN_${i}_MGB} 
-					/echo \aoBurn is altability type, trying ${BURN_${i}}
+					/if (${bln_verboseCombat}) /echo \awBurn_\ag${i} \ao${BURN_${i}} \awType:\ag${BURN_${i}_Type} \awUse:\ag${BURN_${i}_Use} \awAfter:\ag${BURN_${i}_AfterIndex} \awMGB:\ag${BURN_${i}_MGB}
+					/if (${bln_verboseCombat}) /echo \aoBurn is altability type, trying ${BURN_${i}}
 					:doAltAbility
 						/if (${BURN_${i}_MGB}) {
 							/call MQ2Cast "Mass Group Buff" alt
 							/delay 5
 							/echo \ag Mass Group Buff Activated!
 						}
-						/if (${Me.Class.ShortName.Equal[BRD]}) {
+						/if (${bln_isBard}) {
                             /call MQ2Medley ALT "${BURN_${i}}" ${int_targetID} TRUE
 						} else {
 							/call MQ2Cast "${BURN_${i}}" alt
@@ -173,8 +176,8 @@ Sub chkBurn
 			| ---------------
 			} else /if (${BURN_${i}_Type.Equal[item]} && ${BURN_${i}_Use} && (${FindItem[${BURN_${i}}].ID} && ${FindItem[=${BURN_${i}}].TimerReady} == 0) && (!${Me.Casting.ID} || ${Me.Class.ShortName.Equal[BRD]})) {
 				/if (${Spell[${FindItem[${BURN_${i}}].Clicky}].SpellType.Equal[BENEFICIAL]} && !${Me.FreeBuffSlots}) /goto :nextBurn
-				/echo \awBurn_\ag${i} \ao${BURN_${i}} \awType:\ag${BURN_${i}_Type} \awUse:\ag${BURN_${i}_Use} \awAfter:\ag${BURN_${i}_AfterIndex} \awMGB:\ag${BURN_${i}_MGB} 
-				/echo \aoBurn is item type, trying ${BURN_${i}}
+				/if (${bln_verboseCombat}) /echo \awBurn_\ag${i} \ao${BURN_${i}} \awType:\ag${BURN_${i}_Type} \awUse:\ag${BURN_${i}_Use} \awAfter:\ag${BURN_${i}_AfterIndex} \awMGB:\ag${BURN_${i}_MGB}
+				/if (${bln_verboseCombat}) /echo \aoBurn is item type, trying ${BURN_${i}}
 				:doItemClick
 					
 					/if (${Me.Class.ShortName.Equal[BRD]} ) {
@@ -211,7 +214,7 @@ Sub chkBurn
 **|
 Sub chkCryActive
 	/if (!${Select[${Me.Class.ShortName},MNK,RNG,SHD,PAL]} || ${timer_cryCheck} || !${bln_checkForCry}) /return
-	/echo \aoChecking for Cry! \ag${Me.Song[Ancient: Cry of Chaos].ID} \ao2H Equipped? \ay${bln_cry2Hander}
+	/if (${bln_verboseCombat}) /echo \aoChecking for Cry! \ag${Me.Song[Ancient: Cry of Chaos].ID} \ao2H Equipped? \ay${bln_cry2Hander}
 	/if (${Me.Song[Ancient: Cry of Chaos].ID} && !${bln_cry2Hander}) {
 		/call LoadWeaponset 2HANDER
 		/varset bln_cry2Hander TRUE
@@ -251,7 +254,10 @@ Sub AddBurnToLineup(string _type, int _index, string _line)
 /return
 
 Sub chkAA
-	/if (${AA_Total} == 0) 	/return 
+	/if (${AA_Total} == 0) 	/return
+	/if (${timer_scanAA}) /return
+	/varset timer_scanAA 2
+	/if (${bln_perfStats}) /varcalc int_perfAAScans ${int_perfAAScans}+1
 	/if (!${Target.ID} || ${Target.Type.NotEqual[NPC]}) /return
 	/if ((${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]}) || ${Me.Moving} || ${Me.Invis} || ${Me.Feigning}) /return
 	
@@ -278,7 +284,7 @@ Sub chkAA
 		}
            
         :castingAA
-        /if (${Me.Class.ShortName.Equal[BRD]}) {
+        /if (${bln_isBard}) {
             /if (${AA_${i}_Type.Equal[DEFENSE]} && ${Me.FreeBuffSlots}) {
                 /call MQ2Medley ALT "${AA_${i}}" ${Me.ID} TRUE
             } else {
@@ -326,7 +332,11 @@ Sub AddAAToLineup(string _type, int _index, string _line)
 /return 
 
 Sub chkClicky
-	/if (${CLICKY_Total} == 0) 	/return 
+	/if (${CLICKY_Total} == 0) 	/return
+	/if (${timer_scanClicky}) /return
+	/varset timer_scanClicky 5
+	/if (${bln_perfStats}) /varcalc int_perfClickyScans ${int_perfClickyScans}+1
+	/if (!${timer_refreshClickyIDs}) /call RefreshClickyIDs
 	/if (!${Target.ID} || ${Target.Type.NotEqual[NPC]}) /return
 	/if ((${Me.Casting.ID} && ${Me.Class.ShortName.NotEqual[BRD]}) || ${Me.Moving} || ${Me.Invis} || ${Me.Feigning}) /return
 	
@@ -339,7 +349,7 @@ Sub chkClicky
     /declare isNamed bool local ${Macro.Return}
     /for i 1 to ${CLICKY_Total}
 		| If the timer isn't ready, skip
-		/if (${FindItem[${CLICKY_${i}}].TimerReady} > 0) /goto :nextClicky
+		/if (!${CLICKY_${i}_ID} || ${FindItem[id ${CLICKY_${i}_ID}].TimerReady} > 0) /goto :nextClicky
 		
 		| If Offense, make sure we are engaged | If Defense, doesn't matter
 		/if ((${CLICKY_${i}_Type.Equal[OFFENSE]} && ${bln_engaged}) || ${CLICKY_${i}_Type.Equal[DEFENSE]} ) {
@@ -353,7 +363,7 @@ Sub chkClicky
         | Passed the above checks, cast the clicky   
         :castingClicky
         /echo \ag ${CLICKY_${i}} : FIRED	
-        /if (${Me.Class.ShortName.Equal[BRD]}) {
+        /if (${bln_isBard}) {
             | We need to make sure BARDs (with medley) have the item in a worn slot or slot 30
             /if (${CLICKY_${i}_Type.Equal[DEFENSE]}) {
                 /call MQ2Medley ITEM "${CLICKY_${i}}" ${Me.ID} TRUE
@@ -374,6 +384,14 @@ Sub chkClicky
 	/call RunRaidEvents
 	/call RunRapidEvents	
     /next i
+/return
+
+Sub RefreshClickyIDs
+	/declare refreshIndex int local 1
+	/for refreshIndex 1 to ${CLICKY_Total}
+		/varset CLICKY_${refreshIndex}_ID ${FindItem[${CLICKY_${refreshIndex}}].ID}
+	/next refreshIndex
+	/varset timer_refreshClickyIDs 30s
 /return
 
 Sub AddClickyToLineup(string _type, int _index, string _line)
@@ -442,6 +460,7 @@ Sub CreateClickyLineup
     /if (${CLICKY_Total}) {
         /for i 1 to ${CLICKY_Total}
             /call AddClickyToLineup CLICKY ${i} ${Ini[INI_CHAR,CLICKY,CLICKY_${i}]}
+			/declare CLICKY_${i}_ID int outer ${FindItem[${CLICKY_${i}}].ID}
         /next i
     }
 /return
@@ -453,6 +472,10 @@ Sub xbot_initialize_burns
 	/declare bln_checkForCry		bool    outer FALSE
 	/declare bln_cry2Hander			bool  	outer FALSE
 	/declare timer_cryCheck			timer   outer 0
+	/declare timer_scanBurn         timer   outer 0
+	/declare timer_scanAA           timer   outer 0
+	/declare timer_scanClicky       timer   outer 0
+	/declare timer_refreshClickyIDs timer   outer 30s
 
     | Template
     /declare BURN_Template          string  outer _Burn|_Type|_Use|_AfterIndex|_MGB
