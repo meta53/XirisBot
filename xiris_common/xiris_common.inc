@@ -264,7 +264,6 @@ Sub xbot_initialize(string _tank1Name, string _tank2Name, string _tank3Name, int
 
 	/declare    bln_battleCleric		bool    outer   FALSE
 	/if (${_tank1Name.Equal[${Me.Name}]}) 	/varset bln_tanking TRUE
-	/if (${_tank1Name.Equal[${Me.Name}]}) 	/varset bln_tanking TRUE
 
 	|-- Set the default tanks
 	/declare	str_defTank1			string	outer	${Ini[INI_CHAR,DEFAULT_SETTINGS,defaultTank1,Xiris]}
