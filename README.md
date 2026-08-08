@@ -81,6 +81,7 @@ These are message-driven commands. Sending the text through a supported channel 
 - [Recommended hotkeys](docs/hotkeys.md)
 - [Architecture and extension points](docs/architecture.md)
 - [Troubleshooting](docs/troubleshooting.md)
+- [Future roadmap](docs/roadmap.md)
 
 ## Repository layout
 
@@ -105,4 +106,3 @@ These are message-driven commands. Sending the text through a supported channel 
 ## Contributing
 
 Keep command names synchronized with their `#EVENT` definitions, document new INI keys, and include a short test description with behavior changes. Avoid committing account credentials, server login information, or private character data.
-
