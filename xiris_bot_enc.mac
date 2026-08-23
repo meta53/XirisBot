@@ -1,13 +1,13 @@
 |**
 ----------------------------
-BOT_ENC.mac 
+XIRIS_BOT_ENC.mac 
 ----------------------------
 This macro is configured for use by the enchanter class
 Modify the BOT_CLS_CHARNAME.ini file for use by a specific toon
 This was written ground up for usage with xiris's bots.
 
 
-Usage: /mac bot_enc ${intTankID} ${intAssistHP} ${RV_healpoint} ${RV_secondassist}
+Usage: /mac xiris_bot_enc ${intTankID} ${intAssistHP} ${RV_healpoint} ${RV_secondassist}
 
 ______________________________________________
 REVISION HISTORY

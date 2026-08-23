@@ -5,8 +5,8 @@
 ```text
 xiris_bot.mac
   -> resolves default tanks and heal point
-  -> selects bot_<CLASS>.mac
-  -> routes BER/MNK/ROG to bot_melee.mac
+  -> selects xiris_bot_<CLASS>.mac
+  -> routes BER/MNK/ROG to xiris_bot_melee.mac
   -> class macro calls xbot_initialize
   -> shared libraries load INI-driven lineups and events
   -> class macro enters MainLoop

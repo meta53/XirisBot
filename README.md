@@ -56,22 +56,22 @@ These are message-driven commands. Sending the text through a supported channel 
 
 | Class | Macro | Major capabilities |
 |---|---|---|
-| Bard | `bot_brd.mac` | Medley, melee, nukes, DoTs, debuffs |
-| Beastlord | `bot_bst.mac` | Pet, melee, spells, attack buffs |
-| Cleric | `bot_clr.mac` | Healing, curing, buffs, rez, battle-cleric mode |
-| Druid | `bot_dru.mac` | Healing, curing, buffs, nukes, DoTs |
-| Enchanter | `bot_enc.mac` | Debuffs, buffs, charm, runes, pet |
-| Magician | `bot_mag.mac` | Pet, buffs, nukes, AE nukes |
-| Necromancer | `bot_nec.mac` | Pet, nukes, DoTs, feign death |
-| Paladin | `bot_pal.mac` | Tanking, healing, stuns, offtanking |
-| Ranger | `bot_rng.mac` | Melee, spells, self/group healing |
-| Shadowknight | `bot_shd.mac` | Tanking, lifetaps, DoTs, feign death |
-| Shaman | `bot_shm.mac` | Healing, curing, buffs, slows, DoTs |
-| Warrior | `bot_war.mac` | Tanking, disciplines, offtanking |
-| Wizard | `bot_wiz.mac` | Nukes, quick nukes, AE nukes, aggro reduction |
-| Berserker, Monk, Rogue | `bot_melee.mac` | Shared endurance-melee routine |
+| Bard | `xiris_bot_brd.mac` | Medley, melee, nukes, DoTs, debuffs |
+| Beastlord | `xiris_bot_bst.mac` | Pet, melee, spells, attack buffs |
+| Cleric | `xiris_bot_clr.mac` | Healing, curing, buffs, rez, battle-cleric mode |
+| Druid | `xiris_bot_dru.mac` | Healing, curing, buffs, nukes, DoTs |
+| Enchanter | `xiris_bot_enc.mac` | Debuffs, buffs, charm, runes, pet |
+| Magician | `xiris_bot_mag.mac` | Pet, buffs, nukes, AE nukes |
+| Necromancer | `xiris_bot_nec.mac` | Pet, nukes, DoTs, feign death |
+| Paladin | `xiris_bot_pal.mac` | Tanking, healing, stuns, offtanking |
+| Ranger | `xiris_bot_rng.mac` | Melee, spells, self/group healing |
+| Shadowknight | `xiris_bot_shd.mac` | Tanking, lifetaps, DoTs, feign death |
+| Shaman | `xiris_bot_shm.mac` | Healing, curing, buffs, slows, DoTs |
+| Warrior | `xiris_bot_war.mac` | Tanking, disciplines, offtanking |
+| Wizard | `xiris_bot_wiz.mac` | Nukes, quick nukes, AE nukes, aggro reduction |
+| Berserker, Monk, Rogue | `xiris_bot_melee.mac` | Shared endurance-melee routine |
 
-`xiris_bot.mac` is only the loader. It selects `bot_<CLASS>.mac`, with BER/MNK/ROG routed to `bot_melee.mac`.
+`xiris_bot.mac` is only the loader. It selects `xiris_bot_<CLASS>.mac`, with BER/MNK/ROG routed to `xiris_bot_melee.mac`.
 
 ## Documentation
 
@@ -87,7 +87,7 @@ These are message-driven commands. Sending the text through a supported channel 
 | Path | Purpose |
 |---|---|
 | `xiris_bot.mac` | Loader and class router |
-| `bot_*.mac` | Class main loops and class-specific behavior |
+| `xiris_bot_*.mac` | Class main loops and class-specific behavior |
 | `xiris_common/*.inc` | Shared behavior libraries |
 | `xiris_common/xiris_events_raid_*.inc` | Zone and encounter reactions |
 | `xiris_class_ini/` | Per-character behavior configuration |

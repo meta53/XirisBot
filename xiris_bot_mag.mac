@@ -1,24 +1,23 @@
 |**
 ----------------------------
-BOT_PAL.mac
+XIRIS_BOT_MAG.mac
 ----------------------------
-This macro is configured for use by the PALADIN class
+This macro is configured for use by any melee class
 Modify the BOT_CLS_CHARNAME.ini file for use by a specific toon
 This was written ground up for usage with xiris's bots.
 
-
-Usage: /mac bot_pal ${_tank1Name} ${_tank2Name} ${_healPoint} ${_assistArgs}
+Usage: /mac xiris_bot_mag ${_tank1Name} ${_tank2Name} ${_healPoint} ${_assistArgs}
 
 ______________________________________________
 REVISION HISTORY
-    10.09.16	xiris	INITIAL REVISION
-	10.27.16	xiris	ADDED curing/healing/buffing subs
-	11.11.17	xiris   Added support for removal of mq2melee
+	11.16.10	xiris	INITIAL REVISION using modified xiris_bot_nec
+	09.04.15	xiris	Changed the variant_initialize to better handle the output from the loader	
+	12.04.15	xiris 	Further modifications to variant_initialize
+	12.17.15	xiris 	Removed some extraneous /doevents calls
+	07.05.16	xiris 	Brought inline with latest events/assist calls
 	09.17.18    xiris   Included ALL xiris bot libraries in common instead of in individual macros
 	04.05.22 	xiris	Added new Events aggregator and handlers
-	04.16.22	xiris	Overhauled group heal method and variable names
-						Moved commons healing functions to the include
-						Added methods for stunning and stun-locking
+	04.16.22	xiris	Cleaned up some older code, normalized all vars/name
 ______________________________________________
 REQUIRED PLUGINS
     mq2cast
@@ -36,33 +35,16 @@ REQUIRED INCLUDES
 
 #TURBO 120
 
-#EVENT STUNMOB "<#1#> stunThis #2#"
-#EVENT STUNMOB "[#1#(msg)] stunThis #2#"
-#EVENT STUNMOB "#1# tells you,#*#'stunThis #2#'"
-#EVENT STUNMOB "#1# tells the group#*#'stunThis #2#'"
-#EVENT STUNMOB "#1#tells the raid,#*#'stunThis #2#'"
-
-#EVENT STUNLOCK "<#1#> stunLock #2#"
-#EVENT STUNLOCK "[#1#(msg)] stunLock #2#"
-#EVENT STUNLOCK "#1# tells you,#*#'stunLock #2#'"
-#EVENT STUNLOCK "#1# tells the group#*#'stunLock #2#'"
-#EVENT STUNLOCK "#1#tells the raid,#*#'stunLock #2#'"
-
-#EVENT STUNSTOP "<#1#> stunStop#*#"
-#EVENT STUNSTOP "[#1#(msg)] stunStop#*#"
-#EVENT STUNSTOP "#1# tells you,#*#'stunStop#*#'"
-#EVENT STUNSTOP "#1# tells the group#*#'stunStop#*#'"
-#EVENT STUNSTOP "#1#tells the raid,#*#'stunStop#*#'"
-
+#EVENT AEON 	"#*#aeNukeON"
+#EVENT AEOFF	"#*#aeNukeOFF"
 
 Sub InitEvents_Class
-	/call RegisterClassEvents Events_PAL 3
+	/call RegisterClassEvents Events_MAG 2
 /return
 
-Sub Events_PAL
-	/doevents STUNMOB
-	/doevents STUNLOCK
-	/doevents STUNSTOP
+Sub Events_MAG
+	/doevents AEON
+	/doevents AEOFF
 /return 
 
 Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint, string _assistArgs)
@@ -75,7 +57,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 	/call variant_initialize
 
 	|-- report my status
-	/dgt [${Me.Class.ShortName}] ${Me.Name} ${str_action} >> ${Spawn[${_tank1Name}].CleanName} <<
+	/dgt [${Me.Class.ShortName}] ${Me.Name} ${str_action} >> ${Spawn[${_tank1Name}].CleanName} << 
 
 	|-- target the MT
 	/call TrueTarget ${int_MTID}
@@ -101,36 +83,32 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 		|-- Check to make sure MT is still alive, if not, find another
 		/call chkMTAlive FALSE
 		
-		|-- Check Offtanking Situation (xiris_offtanking.inc)
-		/if (${bln_offTank}) /call chkOffTanking
-		
 		|-- Check to see if self needs to be cured (xiris_curing.inc)
 		/call chkNeedCure
-	
-		|-- Check the two main groupings of heal classes (xiris_healing.inc)
-		/call chkHeal_Self
-		/call chkHeal_Group
 
 		|-- Check Auto Assist if its on
 		/if (${bln_autoAssist}) /call chkAutoAssist
-		
+
 		/if (${bln_engaged}) {
 			|-- check all events
-			|-- dps library (caster)
-			/if (${bln_tanking}) /call chkStun FALSE
+			|-- debuff lib
+			/if (${${DEBUFF_Total}}) 	/call chkDebuffsOnSingleTarget ${int_targetID}
 
-			|-- melee library
-		    /call chkCA_${Me.Class.ShortName}
+			|-- class specific
+			/if (${Pet.ID}) 			/call chkPetAttack	
+			/if (${bln_cmbtBuffUse} && ${int_cmbtBuffTotal}) /call cmbtBuffMT
 			
+			|-- dps library (AE caster)
+			/call chkNuke
+			/call chkAENuke
+
 			|-- std library (burns/aa/clicks)
 			/call chkAA
 			/call chkBurn
-			|/call chkCryActive
 			/call chkClicky
 
 			|-- verify target status
 			/call chkTargetStatus
-
 		} else {
 			|-- check utilities, includes: sit,loot,leash (out of combat only) and only once every 10 seconds
 			/if (!${timer_check_utilities}) /call chkUtils
@@ -139,7 +117,7 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 		}
 	|-- start again	
     /goto :MainLoop
-/return	
+/return
 
 
 |**
@@ -148,56 +126,58 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
  ----------------------------
  Checks the utilities such as fail states (GM, Lobby, etc)
  Checks to see if we should med, loot, leash
+ note: these routines are defined in xiris_common for the most part
  ----------------------------
 **|
 Sub chkUtils
+	|-- Class Methods
+	/call chkPet
+
 	|-- Standard Methods
-	/if (!${bln_tanking}) /call chkSit
+	/call chkSit
 	/varset timer_check_utilities 20s
+
 /return
 
-Sub EVENT_STUNMOB(_line, _chatSender, _eventParams)
-	/echo \ayI should stun this mob
-	/call TrueTarget(${_eventParams.Arg[1, ]})
-	/call chkStun TRUE
+
+Sub EVENT_AEON
+	/echo AE Nuking ACTIVE
+	/varset AENUKE_Active TRUE
 /return
 
-Sub EVENT_STUNLOCK(_line, _chatSender, _eventParams)
-	/echo \aoI am Stun Locking this mob
-	/call TrueTarget(${_eventParams.Arg[1, ]})
-	/call chkStunLock
-/return
-
-Sub EVENT_STUNSTOP(_line, _chatSender, _eventParams)
-	/echo \agI am no lnger Stun Locking the mob
-	/call chkStunLockStop
+SUB EVENT_AEOFF
+	/echo AE Nuking DISABLED
+	/varset AENUKE_Active FALSE
 /return
 
 
 |**
  ----------------------------
- INITIALIZATION Sub
+ INITIALIZATION Subs
  ----------------------------
  Initialization of values for this specific macro variant
  ----------------------------
 **| 
-Sub variant_initialize	
+
+Sub variant_initialize
+
 	|-- set up default vars
 	/declare    str_action				string	outer	Assisting	
+	
 	/memspellset ${str_spellset}
-
 	/echo \at${Me.Class.Name} Loaded: MT: ${str_MTName}(${int_MTID}) HealPoint:${healPoint} ST: ${str_STName}(${int_STID})
 	/call InitEvents_Class
-
-	/if (${str_MTName.Equal[${Me.Name}]}) {	
-		/echo \agI am tanking, turning aggro on
-		/varset bln_tanking		TRUE
-		/varset bln_taunting	TRUE
-		/varset stickCmd front
-	} else {
-		/varset bln_tanking		FALSE
-		/varset bln_taunting	FALSE
-	}
 /return
+
+
+
+
+
+
+
+
+
+
+
 
 

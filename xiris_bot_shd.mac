@@ -1,13 +1,13 @@
 |**
 ----------------------------
-BOT_SHD.mac
+XIRIS_BOT_SHD.mac
 ----------------------------
 This macro is configured for use by the SHADOWKNIGHT class
 Modify the BOT_CLS_CHARNAME.ini file for use by a specific toon
 This was written ground up for usage with xiris's bots.
 
 
-Usage: /mac bot_shd ${_tank1Name} ${_tank2Name} ${_healPoint} ${_assistArgs}
+Usage: /mac xiris_bot_shd ${_tank1Name} ${_tank2Name} ${_healPoint} ${_assistArgs}
 
 ______________________________________________
 REVISION HISTORY
