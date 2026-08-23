@@ -3,563 +3,616 @@
 xiris_events_raid_dodh_demiplane.inc
 ----------------------------
 Event Handlers for the DODH raids in Demiplane of Blood
+Server contract: EQXiris content/dodh/quests/dreadspire encounter Lua
 ______________________________________________
 REQUIRED PLUGINS
-  
+	mq2nav
 ______________________________________________
 REVISION HISTORY
 	12.04.11    xiris  INITIAL REVISION
+	08.23.26    xiris  Updated for current xirisbot event, movement, and state APIs
+	08.23.26    xiris  Aligned handlers with current xirisbot event structure
+	08.23.26    xiris  Restored all Performer medleys and Hatchet trap luring
+	08.23.26    xiris  Added support for the new event structure
 ______________________________________________
-**|	
+**|
 |-- DEMI events
 
 |-- Hatchet The Torturer
-#EVENT HatchetDuck			"#*#levels his axe at your upper#*#"
-#EVENT HatchetStand			"#*#passes harmlessly overhead#*#"
-#EVENT HatchetClose			"#*#lifts his axe high#*#"
-#EVENT HatchetCloseEnd		"#*#darting between#*#"
-#EVENT HatchetFar			"#*#hefts a weighted throwing#*#"
-#EVENT HatchetFarEnd		"#*#outdistance the reach of the#*#"
-#EVENT HatchetRun			"#*#about to charge directly at you#*#"
-#EVENT HatchetRunEnd		"#*#stops to catch his breath#*#"
-#EVENT HatchetBugged		"You are too distracted to use a skill"
+#EVENT HatchetDuck			"Duck before Hatchet's axe reaches you!"
+#EVENT HatchetClose			"Hide between Hatchet's legs!"
+#EVENT HatchetFar			"Get as far away from Hatchet as possible!"
+#EVENT HatchetRun			"Run from Hatchet's charge!"
+#EVENT HatchetAttackMiss	"Hatchet's attack misses you."
+#EVENT HatchetChargeFail	"Hatchet catches you and unleashes Minotaur Gore!"
+#EVENT HatchetEvadeFail		"You fail to evade Hatchet's Decapitating Chop!"
 
 |-- Tris Wallow III
-#EVENT TrisStare			"#*#stares deeply into your eyes#*#"
-#EVENT TrisStareEnd			"#*#averted your eyes from#*#"
-#EVENT TrisHuman			"#*#claws retract as Tris reverts#*#"
-#EVENT TrisWere				"#*#screams as her flesh peels#*#"
+#EVENT TrisStare			"Turn away from Tris before her gaze takes hold!"
+#EVENT TrisStareEnd			"You avert your eyes before Tris can seize your mind."
+#EVENT TrisHuman			"#*#Hair, fangs, and claws retract as Tris collapses in her human form.#*#"
+#EVENT TrisWere				"#*#My beauty gives way to the beast once more!#*#"
 
 |-- Performer
 #EVENT FailStats    "[MQ2] stat#*#"
 
-#EVENT Flawless      "#*#Your performance is flawless.  The skeletal musician nods their head approvingly.#*#"
-#EVENT Failed        "The Performer says 'Come on, #1#, stay with us.  I'm counting on you to help perform this medley.  No more mistakes!'"
+#EVENT PerformerBegin   "#*#Hold the hall for eighteen minutes, and answer my musicians when they beckon!#*#"
+#EVENT PerformerWave    "#*#A bell sounds through the hall. Wave #1# approaches!#*#"
+#EVENT PerformerBeckon  "#1# beckons for #2# to approach and complete the song."
+#EVENT PerformerRetry   "Turn attack off and target #1# before completing the lyric."
+#EVENT PerformerSuccess "#1# completes #2#'s lyric perfectly."
+#EVENT PerformerFailed  "A missed lyric wounds The Performer."
+#EVENT PerformerComplete "#*#The final chord rings out. The Performer and his ensemble survive the night!#*#"
+#EVENT PerformerReset   "#*#The music dies. The ensemble will regroup before another attempt.#*#"
 
-
-#EVENT Aelfric_0    "#*#Aelfric recites a line of his song and beckons for you to approach him and sing the next line.#*#"
-#EVENT Aelfric_1    "#*#Touched tenderly.#*#"
-#EVENT Aelfric_2    "#*#Where will you be?#*#"
-#EVENT Aelfric_3    "#*#Dreaming with me.#*#"
-#EVENT Aelfric_4    "#*#Please,#*#"
-#EVENT Aelfric_5    "#*#everybody, hear the music.#*#"
-
-
-#EVENT Britton_0    "#*#Britton recites a line of her song and beckons for you to approach her and sing the next line.#*#"
-#EVENT Britton_1    "#*#When she and I split ways,#*#"
-#EVENT Britton_2    "#*#it felt like the end of my days.#*#"
-#EVENT Britton_3    "#*#Until I suddenly,#*#"
-#EVENT Britton_4    "#*#suddenly realized#*#"
-#EVENT Britton_5    "#*#this life was better off alone.#*#"
-#EVENT Britton_6    "#*#Solitude was the best gift you ever gave me.#*#"
-
-
-#EVENT Randal_0     "#*#Randal recites a line of his song and beckons for you to approach him and sing the next line.#*#"
-#EVENT Randal_1     "#*#Ol' Nilipus hailed from Misty Thicket.#*#"
-#EVENT Randal_2     "#*#Where'er he smelled Jumjum he'd pick it.#*#"
-#EVENT Randal_3     "#*#The halflings grew cross#*#"
-#EVENT Randal_4     "#*#when their profits were lost,#*#"
-#EVENT Randal_5     "#*#screamin', 'Where is that brownie?  I'll kick it!'#*#"
-
-
-#EVENT Seth_0        "#*#Seth recites a line of his song and beckons for you to approach him and sing the next line#*#"
-#EVENT Seth_1        "#*#Another night, in eternal darkness#*#"
-#EVENT Seth_2        "#*#Time bleeds like a wound that's lost all meaning#*#"
-#EVENT Seth_3        "#*#It's a long winter in the swirling chaotic void#*#"
-#EVENT Seth_4        "#*#This is my torture#*#"
-#EVENT Seth_5        "#*#my pain and suffering!#*#"
-#EVENT Seth_6        "#*#Pinch me#*#"
+#EVENT AelfricTouched   "#*#Aelfric the Flautist sings, 'Touched tenderly.'#*#"
+#EVENT AelfricWhere     "#*#Aelfric the Flautist sings, 'Where will you be?'#*#"
+#EVENT AelfricDreaming  "#*#Aelfric the Flautist sings, 'Dreaming with me.'#*#"
+#EVENT AelfricPlease    "#*#Aelfric the Flautist sings, 'Please,'#*#"
+#EVENT AelfricEverybody "#*#Aelfric the Flautist sings, 'everybody, hear the music.'#*#"
+#EVENT BrittonSplit     "#*#Britton Harmony sings, 'When she and I split ways,'#*#"
+#EVENT BrittonEndDays   "#*#Britton Harmony sings, 'it felt like the end of my days.'#*#"
+#EVENT BrittonSuddenly  "#*#Britton Harmony sings, 'Until I suddenly,'#*#"
+#EVENT BrittonRealized  "#*#Britton Harmony sings, 'suddenly realized'#*#"
+#EVENT BrittonAlone     "#*#Britton Harmony sings, 'this life was better off alone.'#*#"
+#EVENT BrittonSolitude  "#*#Britton Harmony sings, 'Solitude was the best gift you ever gave me.'#*#"
+#EVENT RandalNilipus    "#*#Randal Reedsea sings, 'Ol' Nilipus hailed from Misty Thicket.'#*#"
+#EVENT RandalJumjum     "#*#Randal Reedsea sings, 'Where'er he smelled Jumjum he'd pick it.'#*#"
+#EVENT RandalCross      "#*#Randal Reedsea sings, 'The halflings grew cross'#*#"
+#EVENT RandalProfits    "#*#Randal Reedsea sings, 'when their profits were lost,'#*#"
+#EVENT RandalBrownie    "#*#Randal Reedsea sings, 'screamin', 'Where is that brownie?  I'll kick it!''#*#"
+#EVENT SethNight        "#*#Seth Kimble sings, 'Another night, in eternal darkness'#*#"
+#EVENT SethTime         "#*#Seth Kimble sings, 'Time bleeds like a wound that's lost all meaning'#*#"
+#EVENT SethWinter       "#*#Seth Kimble sings, 'It's a long winter in the swirling chaotic void'#*#"
+#EVENT SethTorture      "#*#Seth Kimble sings, 'This is my torture'#*#"
+#EVENT SethPain         "#*#Seth Kimble sings, 'my pain and suffering!'#*#"
+#EVENT SethPinch        "#*#Seth Kimble sings, 'Pinch me'#*#"
 
 
 |--Mayong
-#EVENT MayongSlash	 "#*#The Master raises his sword#*#"
-
-
-
-
-
+#EVENT MayongSlash	 "#*#The Master raises his sword! All but his foremost foe must break line of sight or flee the platform.#*#"
 Sub InitEvents_DoDH_Demiplane
-	/declare sEventWait	bool	outer	FALSE
-	/declare hDuck		bool	outer 	FALSE
-	/declare hClose		bool	outer	FALSE
-	/declare hFar		bool	outer	FALSE
-	/declare hRun		bool	outer	FALSE
-	
-	/declare tStare		bool	outer	FALSE
-	/declare tHuman		bool	outer	FALSE
+	/echo \agInitializing Demiplane of Blood raid events
+	/declare bln_demiHatchetDuck		bool	outer FALSE
+	/declare bln_demiHatchetClose	bool	outer FALSE
+	/declare bln_demiHatchetFar		bool	outer FALSE
+	/declare bln_demiHatchetRun		bool	outer FALSE
+	/declare bln_demiTrisStare		bool	outer FALSE
+	/declare bln_demiTrisHuman		bool	outer FALSE
+	/declare bln_demiPerformerActive	bool	outer FALSE
+	/declare bln_demiPerformerPending bool	outer FALSE
 
-    /declare pTrigger	bool	outer	FALSE
+	/declare int_demiSavedTargetID	int		outer 0
+	/declare int_demiHatchetID		int		outer 0
+	/declare int_demiHatchetTrapID	int		outer 0
+	/declare flt_demiReturnX		float	outer 0
+	/declare flt_demiReturnY		float	outer 0
+	/declare flt_demiReturnZ		float	outer 0
+	/declare flt_demiHatchetX		float	outer 0
+	/declare flt_demiHatchetY		float	outer 0
+	/declare flt_demiHatchetZ		float	outer 0
+	/declare flt_demiHatchetTrapX	float	outer 0
+	/declare flt_demiHatchetTrapY	float	outer 0
+	/declare flt_demiHatchetTrapZ	float	outer 0
+	/declare timer_demiHatchetRun	timer	outer 0
+	/declare timer_demiPerformerAnswer timer	outer 0
+	/declare timer_demiPerformerRetry timer	outer 0
+	/declare str_demiPerformerMusician string	outer NULL
+	/declare str_demiPerformerAnswer	string	outer NULL
+	/declare int_demiPerformerWave	int		outer 0
+	/declare int_demiPerformerPrompts int		outer 0
+	/declare int_demiPerformerRetries int		outer 0
+	/declare int_demiPerformerSuccess int		outer 0
+	/declare int_demiPerformerFailed	int		outer 0
 
-    /declare TriggerNPC			string		outer
-    /declare TriggerRespond		string		outer
-    /declare Flawless			int			outer    0
-    /declare Failed[54,2]		string		outer    NA	
-    
-    /declare mSlash		bool	outer	FALSE
-
-	/call RegisterRaidEvents Events_DODH_Demiplane 42
+	/call RegisterRaidEvents Events_DODH_Demiplane 43
 /return
 
 
-Sub Events_DODH_Demiplane 
+Sub Events_DODH_Demiplane
 	|-- Hatchet The Torturer
-	/doevents HatchetDuck		"#*#levels his axe at your upper#*#"
-	/doevents HatchetStand		"#*#passes harmlessly overhead#*#"
-	/doevents HatchetClose		"#*#lifts his axe high#*#"
-	/doevents HatchetCloseEnd	"#*#darting between#*#"
-	/doevents HatchetFar		"#*#hefts a weighted throwing#*#"
-	/doevents HatchetFarEnd		"#*#outdistance the reach of the#*#"
-	/doevents HatchetRun		"#*#about to charge directly at you#*#"
-	/doevents HatchetRunEnd		"#*#stops to catch his breath#*#"
-	/doevents HatchetBugged		"You are too distracted to use a skill"
+	/doevents HatchetDuck			"Duck before Hatchet's axe reaches you!"
+	/doevents HatchetClose			"Hide between Hatchet's legs!"
+	/doevents HatchetFar			"Get as far away from Hatchet as possible!"
+	/doevents HatchetRun			"Run from Hatchet's charge!"
+	/doevents HatchetAttackMiss	"Hatchet's attack misses you."
+	/doevents HatchetChargeFail	"Hatchet catches you and unleashes Minotaur Gore!"
+	/doevents HatchetEvadeFail	"You fail to evade Hatchet's Decapitating Chop!"
 
 	|-- Tris Wallow III
-	/doevents TrisStare			"#*#stares deeply into your eyes#*#"
-	/doevents TrisStareEnd		"#*#averted your eyes from#*#"
-	/doevents TrisHuman			"#*#claws retract as Tris reverts#*#"
-	/doevents TrisWere			"#*#screams as her flesh peels#*#"
+	/doevents TrisStare			"Turn away from Tris before her gaze takes hold!"
+	/doevents TrisStareEnd		"You avert your eyes before Tris can seize your mind."
+	/doevents TrisHuman			"#*#Hair, fangs, and claws retract as Tris collapses in her human form.#*#"
+	/doevents TrisWere			"#*#My beauty gives way to the beast once more!#*#"
 
 	|-- Performer
 	/doevents FailStats    "[MQ2] stat#*#"
-	/doevents Flawless     "#*#Your performance is flawless.  The skeletal musician nods their head approvingly.#*#"
-	/doevents Failed       "The Performer says 'Come on, #1#, stay with us.  I'm counting on you to help perform this medley.  No more mistakes!'"
-
-	/doevents Aelfric_0    "#*#Aelfric recites a line of his song and beckons for you to approach him and sing the next line.#*#"
-	/doevents Aelfric_1    "#*#Touched tenderly.#*#"
-	/doevents Aelfric_2    "#*#Where will you be?#*#"
-	/doevents Aelfric_3    "#*#Dreaming with me.#*#"
-	/doevents Aelfric_4    "#*#Please,#*#"
-	/doevents Aelfric_5    "#*#everybody, hear the music.#*#"
-
-	/doevents Britton_0    "#*#Britton recites a line of her song and beckons for you to approach her and sing the next line.#*#"
-	/doevents Britton_1    "#*#When she and I split ways,#*#"
-	/doevents Britton_2    "#*#it felt like the end of my days.#*#"
-	/doevents Britton_3    "#*#Until I suddenly,#*#"
-	/doevents Britton_4    "#*#suddenly realized#*#"
-	/doevents Britton_5    "#*#this life was better off alone.#*#"
-	/doevents Britton_6    "#*#Solitude was the best gift you ever gave me.#*#"
-
-	/doevents Randal_0     "#*#Randal recites a line of his song and beckons for you to approach him and sing the next line.#*#"
-	/doevents Randal_1     "#*#Where'er he smelled Jumjum he'd pick it.#*#"
-	/doevents Randal_2     "#*#The halflings grew cross#*#"
-	/doevents Randal_3     "#*#when their profits were lost,#*#"
-	/doevents Randal_4     "#*#screamin', 'Where is that brownie?  I'll kick it!'#*#"
-
-	/doevents Seth_0        "#*#Seth recites a line of his song and beckons for you to approach him and sing the next line#*#"
-	/doevents Seth_1        "#*#Another night, in eternal darkness#*#"
-	/doevents Seth_2        "#*#Time bleeds like a wound that's lost all meaning#*#"
-	/doevents Seth_3        "#*#It's a long winter in the swirling chaotic void#*#"
-	/doevents Seth_4        "#*#This is my torture#*#"
-	/doevents Seth_5        "#*#my pain and suffering!#*#"
-	/doevents Seth_6        "#*#Pinch me#*#"
-
+	/doevents PerformerBegin   "#*#Hold the hall for eighteen minutes, and answer my musicians when they beckon!#*#"
+	/doevents PerformerWave    "#*#A bell sounds through the hall. Wave #1# approaches!#*#"
+	/doevents PerformerBeckon  "#1# beckons for #2# to approach and complete the song."
+	/doevents PerformerRetry   "Turn attack off and target #1# before completing the lyric."
+	/doevents PerformerSuccess "#1# completes #2#'s lyric perfectly."
+	/doevents PerformerFailed  "A missed lyric wounds The Performer."
+	/doevents PerformerComplete "#*#The final chord rings out. The Performer and his ensemble survive the night!#*#"
+	/doevents PerformerReset   "#*#The music dies. The ensemble will regroup before another attempt.#*#"
+	/doevents AelfricTouched   "#*#Aelfric the Flautist sings, 'Touched tenderly.'#*#"
+	/doevents AelfricWhere     "#*#Aelfric the Flautist sings, 'Where will you be?'#*#"
+	/doevents AelfricDreaming  "#*#Aelfric the Flautist sings, 'Dreaming with me.'#*#"
+	/doevents AelfricPlease    "#*#Aelfric the Flautist sings, 'Please,'#*#"
+	/doevents AelfricEverybody "#*#Aelfric the Flautist sings, 'everybody, hear the music.'#*#"
+	/doevents BrittonSplit     "#*#Britton Harmony sings, 'When she and I split ways,'#*#"
+	/doevents BrittonEndDays   "#*#Britton Harmony sings, 'it felt like the end of my days.'#*#"
+	/doevents BrittonSuddenly  "#*#Britton Harmony sings, 'Until I suddenly,'#*#"
+	/doevents BrittonRealized  "#*#Britton Harmony sings, 'suddenly realized'#*#"
+	/doevents BrittonAlone     "#*#Britton Harmony sings, 'this life was better off alone.'#*#"
+	/doevents BrittonSolitude  "#*#Britton Harmony sings, 'Solitude was the best gift you ever gave me.'#*#"
+	/doevents RandalNilipus    "#*#Randal Reedsea sings, 'Ol' Nilipus hailed from Misty Thicket.'#*#"
+	/doevents RandalJumjum     "#*#Randal Reedsea sings, 'Where'er he smelled Jumjum he'd pick it.'#*#"
+	/doevents RandalCross      "#*#Randal Reedsea sings, 'The halflings grew cross'#*#"
+	/doevents RandalProfits    "#*#Randal Reedsea sings, 'when their profits were lost,'#*#"
+	/doevents RandalBrownie    "#*#Randal Reedsea sings, 'screamin', 'Where is that brownie?  I'll kick it!''#*#"
+	/doevents SethNight        "#*#Seth Kimble sings, 'Another night, in eternal darkness'#*#"
+	/doevents SethTime         "#*#Seth Kimble sings, 'Time bleeds like a wound that's lost all meaning'#*#"
+	/doevents SethWinter       "#*#Seth Kimble sings, 'It's a long winter in the swirling chaotic void'#*#"
+	/doevents SethTorture      "#*#Seth Kimble sings, 'This is my torture'#*#"
+	/doevents SethPain         "#*#Seth Kimble sings, 'my pain and suffering!'#*#"
+	/doevents SethPinch        "#*#Seth Kimble sings, 'Pinch me'#*#"
 	|--Mayong
-	/doevents MayongSlash	 "#*#The Master raises his sword#*#"
-/return
+	/doevents MayongSlash	 "#*#The Master raises his sword! All but his foremost foe must break line of sight or flee the platform.#*#"
 
+	| Tris's human phase needs repeated casts, but event handlers should not
+	| monopolize the macro thread with an unbounded /goto loop.
+	/if (${bln_demiTrisHuman}) /call HandleDemiTrisHuman
+	/if (${bln_demiHatchetRun}) /call HandleDemiHatchetRun
+	/if (${bln_demiPerformerPending}) /call HandleDemiPerformerPending
+/return
 |--TRIS EVENTS
 Sub Event_TrisStare
-	/if (${Zone.ShortName.NotEqual[dreadspire_raid]}) /return
-	/varset tStare	TRUE
-	/stick off
-	/target Tris
-	/delay 1
+	/if (${cache_zoneShort.NotEqual[dreadspire]}) /return
+	/varset bln_demiTrisStare TRUE
+	/varset int_demiSavedTargetID ${Target.ID}
+	/call Disengage
+	/if (${Navigation.Active}) /nav stop
+	/squelch /stick off
+	/target clear
+	/target npc "Tris Wallow III"
+	/delay 5 ${Target.ID}
+	/if (!${Target.ID}) /return
 	/face fast
-	/delay 1
+	/delay 2
 	/face away
-	/delay 1
 /return
 
 Sub Event_TrisStareEnd
-	/if (${Zone.ShortName.NotEqual[dreadspire_raid]}) /return
-	/varset tStare FALSE
-	
-	/if (${strArchetype.Equal[MELEE]} || ${strArchetype.Equal[CASTER]}) {
-		/assist ${Spawn[id ${int_MTID}]}
-	} else /if (${strArchetype.Equal[PRIEST]}) {
-		/target id ${int_MTID}
-	}
-/return
-	
-Sub Event_TrisHuman
-	/echo Tris is Human!
-	/declare archetype string local
-	/if (${Select[${Me.Class.ShortName},MNK,ROG,BER]}) /varset archetype MELEE
-	/if (${Select[${Me.Class.ShortName},CLR,DRU,SHM]}) /varset archetype PRIEST
-	/if (${Select[${Me.Class.ShortName},NEC]}) /varset archetype CASTER
-	/varset tHuman TRUE
-	/if (${archetype.Equal[MELEE]}) {
-		:meleeAssist
-		/if (${Select[${Target.Race},Human]}) {
-			/assist ${Spawn[id ${int_MTID}]}
-			/goto :meleeAssist
-		} else {
-			/return
-		}
-	} else /if (${archetype.Equal[PRIEST]}) {
-		/echo I am a priest, and I am healing/curing Tris!
-		:priestAssist
-		/target Tris
-		/if (${Select[${Target.Race},Werewolf]}) /return
-		/if (${Me.Class.ShortName.Equal[SHM]}) {
-			/if (${Target.PctHPs} >= 99) {
-				/call MQ2Cast "Remove Greater Curse" gem10 1s
-			} else {
-				/call MQ2Cast "${str_currentHeal}" gem5 1s
-			}
-			/goto :priestAssist
-		} else /if (${Me.Class.ShortName.Equal[CLR]}) {
-			/varset str_currentHeal ${str_heal_normal_efficient}
-			/if (${Target.PctHPs} >= 99) {
-				/call MQ2Cast "Remove Greater Curse" gem10 1s
-			} else {
-				/call MQ2Cast "${str_currentHeal}" gem1 1s
-			}
-			/goto :priestAssist
-		}
-	}
+	/if (${cache_zoneShort.NotEqual[dreadspire]}) /return
+	/varset bln_demiTrisStare FALSE
+	/call RestoreDemiTarget
 /return
 
+Sub Event_TrisHuman
+	/if (${cache_zoneShort.NotEqual[dreadspire]}) /return
+	/echo \aoTris entered her human phase
+	/varset bln_demiTrisHuman TRUE
+/return
 
 Sub Event_TrisWere
-	/echo triswere
-	
-	/varset tHuman FALSE
-	/if (${strArchetype.Equal[MELEE]} || ${strArchetype.Equal[CASTER]}) {
-		:targetCheck
-		/if (${Target.Name.Equal[Tris Wallow III]} && ${Target.PctHPs} < 8) {
-			/attack off
-			/assist ${Spawn[id ${int_MTID}]}
-			/goto :targetCheck
-		} else {
-			/attack on
-			/return
-		}
+	/if (${cache_zoneShort.NotEqual[dreadspire]}) /return
+	/echo \aoTris returned to werewolf form
+	/varset bln_demiTrisHuman FALSE
+	/if (${Target.CleanName.Equal[Tris Wallow III]} && ${Target.PctHPs} < 8) /call Disengage
+	/call RestoreDemiTarget
+/return
+
+Sub HandleDemiTrisHuman
+	/if (${cache_zoneShort.NotEqual[dreadspire]} || !${bln_demiTrisHuman}) /return
+	/if (${Me.Class.ShortName.NotEqual[CLR]} && ${Me.Class.ShortName.NotEqual[SHM]}) /return
+	/declare str_demiCastSpell string local NULL
+	/declare str_demiCastGem string local gem5
+	/target clear
+	/target npc "Tris Wallow III"
+	/delay 3 ${Target.ID}
+	/if (!${Target.ID} || ${Target.Race.Equal[Werewolf]}) {
+		/varset bln_demiTrisHuman FALSE
+		/return
 	}
+	/if (${Target.PctHPs} >= 99) {
+		| EQXiris advances the wounded phase through Tris's exact say-link phrase.
+		/say remove greater curse
+		/return
+	} else /if (${Target.PctHPs} < 99 && ${str_heal_normal_efficient.NotEqual[NULL]}) {
+		/varset str_demiCastSpell ${str_heal_normal_efficient}
+		/if (${Me.Class.ShortName.Equal[CLR]}) /varset str_demiCastGem gem1
+	}
+	/if (${str_demiCastSpell.Equal[NULL]}) /return
+	/if (${Me.Gem[${str_demiCastSpell}]}) /varset str_demiCastGem gem${Me.Gem[${str_demiCastSpell}]}
+	/call MQ2Cast "${str_demiCastSpell}" ${str_demiCastGem} 1s
 /return
 
 
 |--HATCHET EVENTS
 Sub Event_HatchetDuck
-	/if (${Zone.ShortName.NotEqual[dreadspire_raid]}) /return
-	/varset hDuck	TRUE
-	/stick off
-	/attack off
+	/if (${cache_zoneShort.NotEqual[dreadspire]}) /return
+	/varset bln_demiHatchetDuck TRUE
+	/call Disengage
+	/if (${Navigation.Active}) /nav stop
+	/squelch /stick off
 	/if (!${Me.Ducking}) /keypress duck
 	/delay 1s
 	/if (!${Me.Ducking}) /keypress duck
-	/stick off
-
 /return
-
-
-Sub Event_HatchetStand
-	/if (${Zone.ShortName.NotEqual[dreadspire_raid]}) /return
-	/varset hDuck	FALSE
-	/if (${Me.Ducking}) /keypress duck
-/return
-
 Sub Event_HatchetClose
-	/if (${Zone.ShortName.NotEqual[dreadspire_raid]}) /return
+	/if (${cache_zoneShort.NotEqual[dreadspire]}) /return
 	/dgt Hatchet needs me under his legs.
-	/varset hClose	TRUE
-	/waypoint update ${Me.Name}_Hatchet
-	/tar Hatchet
-	/delay 1s
-	|--DEPRECATED /warp t
-/return
-
-Sub Event_HatchetCloseEnd
-	/if (${Zone.ShortName.NotEqual[dreadspire_raid]}) /return
-	/dgt Hatchet no longer needs me under his legs.
-	/varset hClose	FALSE
-	|--DEPRECATED /warp wp ${Me.Name}_Hatchet
-	/delay 1
+	/varset bln_demiHatchetClose TRUE
+	/call SaveDemiPosition
+	/call Disengage
+	/target clear
+	/target npc "Hatchet the Torturer"
+	/delay 5 ${Target.ID}
+	/if (${Target.ID}) /nav target
 /return
 
 Sub Event_HatchetFar
-	/if (${Zone.ShortName.NotEqual[dreadspire_raid]}) /return
+	/if (${cache_zoneShort.NotEqual[dreadspire]}) /return
 	/dgt Hatchet has me running away
-	/varset hFar	TRUE
-	/waypoint update ${Me.Name}_Hatchet
-	|--DEPRECATED /warp s
-/return
-
-Sub Event_HatchetFarEnd
-	/if (${Zone.ShortName.NotEqual[dreadspire_raid]}) /return
-	/dgt Hatchet no longer needs me a zone in
-	/varset hFar	FALSE
-	|--DEPRECATED /warp wp ${Me.Name}_Hatchet
-/return
-
-Sub Event_HatchetBugged
-	/if (${Zone.ShortName.NotEqual[dreadspire_raid]}) /return
-	/fade
-	/delay 5s
+	/varset bln_demiHatchetFar TRUE
+	/call SaveDemiPosition
+	/call Disengage
+	/target clear
+	/target npc "Hatchet the Torturer"
+	/delay 5 ${Target.ID}
+	/if (${Target.ID}) /face fast
+	/keypress back hold
 /return
 
 Sub Event_HatchetRun
-	/if (${Zone.ShortName.NotEqual[dreadspire_raid]}) /return
-	/varset hRun	TRUE
-	/waypoint update ${Me.Name}_Hatchet
-	/keypress forward hold
-	/delay 15s
-	/keypress forward
-	|--DEPRECATED /warp wp ${Me.Name}_Hatchet
-	/setgrav .4
-	/varset hRun	FALSE
+	/if (${cache_zoneShort.NotEqual[dreadspire]}) /return
+	/call SaveDemiPosition
+	/call Disengage
+	/if (${Navigation.Active}) /nav stop
+	/target clear
+	/target npc "Hatchet the Torturer"
+	/delay 5 ${Target.ID}
+	/if (!${Target.ID}) /return
+	/varset int_demiHatchetID ${Target.ID}
+	/varset flt_demiHatchetX ${Target.X}
+	/varset flt_demiHatchetY ${Target.Y}
+	/varset flt_demiHatchetZ ${Target.Z}
+	/varset bln_demiHatchetRun TRUE
+	/varset timer_demiHatchetRun 0
+	/call HandleDemiHatchetRun
 /return
 
-Sub Event_HatchetRunEnd
-	/if (${Zone.ShortName.NotEqual[dreadspire_raid]}) /return
-	/varset hRun	FALSE
-	|--DEPRECATED /warp wp ${Me.Name}_Hatchet
-	/setgrav .4
+Sub Event_HatchetAttackMiss
+	/call FinishDemiHatchetResponse
 /return
 
-Sub EventWait
-	/if (${Zone.ShortName.NotEqual[dreadspire_raid]}) /return
-	| check for the wait conditions
-	
-	:event_waitLoop
-	|Hatchet
-	/if (${hDuck} || ${hClose} || ${hFar} || ${hRun}) {
-		/varset sEventWait TRUE
-	|Tris
-	} else /if (${tStare}) {
-		/varset sEventWait TRUE
-	} else /if (${pTrigger}) {
-		/varset sEventWait TRUE
+Sub Event_HatchetChargeFail
+	/call FinishDemiHatchetResponse
+/return
+
+Sub Event_HatchetEvadeFail
+	/call FinishDemiHatchetResponse
+/return
+
+Sub FinishDemiHatchetResponse
+	/declare bln_demiMoved bool local ${If[${bln_demiHatchetClose} || ${bln_demiHatchetFar} || ${bln_demiHatchetRun},TRUE,FALSE]}
+	/if (${Me.Ducking}) /keypress duck
+	/keypress back
+	/varset bln_demiHatchetDuck FALSE
+	/varset bln_demiHatchetClose FALSE
+	/varset bln_demiHatchetFar FALSE
+	/varset bln_demiHatchetRun FALSE
+	/varset timer_demiHatchetRun 0
+	/varset int_demiHatchetTrapID 0
+	/if (${Navigation.Active}) /nav stop
+	/if (${bln_demiMoved}) {
+		/call ReturnToDemiPosition
 	} else {
-		/varset sEventWait FALSE
+		/call RestoreDemiTarget
 	}
-	
-	| create the waiting loop
-	/call RunRaidEvents	
-	/if (${sEventWait}) {
-		/delay 10
-		/goto :event_waitLoop
-	} else {
+/return
+
+Sub HandleDemiHatchetRun
+	/if (!${bln_demiHatchetRun} || ${timer_demiHatchetRun}) /return
+	/declare flt_demiHatchetDistance float local 0
+	/declare flt_demiTrapDistance float local 0
+	/declare flt_demiEscapeX float local 0
+	/declare flt_demiEscapeY float local 0
+	/if (!${int_demiHatchetID} || !${Spawn[id ${int_demiHatchetID}].ID}) {
+		/varset int_demiHatchetID ${NearestSpawn[npc =Hatchet the Torturer].ID}
+		/if (!${int_demiHatchetID}) /return
+	}
+
+	| Keep a current fix on Hatchet as he chases us, then extend the vector
+	| from Hatchet through our position by another 125 units.
+	/varset flt_demiHatchetX ${Spawn[id ${int_demiHatchetID}].X}
+	/varset flt_demiHatchetY ${Spawn[id ${int_demiHatchetID}].Y}
+	/varset flt_demiHatchetZ ${Spawn[id ${int_demiHatchetID}].Z}
+	/varset flt_demiHatchetDistance ${Math.Distance[${Me.Y},${Me.X}:${flt_demiHatchetY},${flt_demiHatchetX}]}
+	/if (${flt_demiHatchetDistance} < 5) {
+		/call TrueTarget ${int_demiHatchetID}
+		/face fast
+		/keypress back hold
+		/varset timer_demiHatchetRun 1s
 		/return
 	}
-/return
 
-|--PERFORMER EVENTS
-Sub PerformVerse
-	/if (!${pTrigger}) /return
-	/echo PerformVerse
-	/varset pTrigger FALSE
-	/declare archetype string local
-	/if (${Select[${Me.Class.ShortName},MNK,ROG,BER]})	/varset archetype MELEE
-	/if (${Select[${Me.Class.ShortName},CLR,DRU,SHM]})	/varset archetype PRIEST
-	/if (${Select[${Me.Class.ShortName},NEC]}) 			/varset archetype CASTER
-	/declare	oldAssistID int local
-	/varset		oldAssistID ${Target.ID}
-	/stick off
-	/attack off
-	/delay 10
-	/target npc "${TriggerNPC}"
-	/delay 10
-	/saytarget ${TriggerRespond}
-	/delay 10
-	/target ID ${oldAssistID}
-	/if (${Target.ID} == ${oldAssistID}) {
-		/if (${archetype.Equal[MELEE]}) {
-			/if (${Select[${Target.Race},Skeleton]}) {
-				/keypress escape
-			} else {
-				/attack on
-			}
+	/keypress back
+
+	| EQXiris spawns NPC type 2100250 as "a_rusted_floor_trap" at lure distance
+	| from Hatchet at each HP gate. Route beyond it so the chase line crosses
+	| the trap, then use the trap's scripted phrase once Hatchet is over it.
+	/varset int_demiHatchetTrapID ${NearestSpawn[npc =a rusted floor trap].ID}
+	/if (${int_demiHatchetTrapID} && ${Spawn[id ${int_demiHatchetTrapID}].Distance3D} < 350) {
+		/varset flt_demiHatchetTrapX ${Spawn[id ${int_demiHatchetTrapID}].X}
+		/varset flt_demiHatchetTrapY ${Spawn[id ${int_demiHatchetTrapID}].Y}
+		/varset flt_demiHatchetTrapZ ${Spawn[id ${int_demiHatchetTrapID}].Z}
+		/varset flt_demiTrapDistance ${Math.Distance[${flt_demiHatchetTrapY},${flt_demiHatchetTrapX}:${flt_demiHatchetY},${flt_demiHatchetX}]}
+		/if (${flt_demiTrapDistance} <= 18) {
+			/if (${Navigation.Active}) /nav stop
+			/target id ${int_demiHatchetTrapID}
+			/delay 3 ${Target.ID} == ${int_demiHatchetTrapID}
+			/if (${Target.ID} == ${int_demiHatchetTrapID}) /say spring the trap
+			/varset timer_demiHatchetRun 1s
+			/return
 		}
-	} 
-	/varset pTrigger FALSE
-	/varset TriggerNPC
-	/varset TriggerRespond
-/return
-		
-Sub Event_Flawless
-    /varcalc Flawless ${Flawless}+1
-    /popup ${If[${Flawless}>1,Another ,]}FLAWLESS performance! (${Flawless})
-    /varset pTrigger FALSE
+		/if (${flt_demiTrapDistance} >= 5) {
+			/varset flt_demiEscapeX ${Math.Calc[${flt_demiHatchetTrapX}+((${flt_demiHatchetTrapX}-${flt_demiHatchetX})/${flt_demiTrapDistance}*150)]}
+			/varset flt_demiEscapeY ${Math.Calc[${flt_demiHatchetTrapY}+((${flt_demiHatchetTrapY}-${flt_demiHatchetY})/${flt_demiTrapDistance}*150)]}
+			/if (${Navigation.Active}) /nav stop
+			/nav loc ${flt_demiEscapeY} ${flt_demiEscapeX} ${flt_demiHatchetTrapZ}
+			/varset timer_demiHatchetRun 1s
+			/return
+		}
+	}
+
+	| No usable trap is up, so continue extending the line directly away from
+	| Hatchet until a trap appears or the charge ends.
+	/varset flt_demiEscapeX ${Math.Calc[${Me.X}+((${Me.X}-${flt_demiHatchetX})/${flt_demiHatchetDistance}*125)]}
+	/varset flt_demiEscapeY ${Math.Calc[${Me.Y}+((${Me.Y}-${flt_demiHatchetY})/${flt_demiHatchetDistance}*125)]}
+	/if (${Navigation.Active}) /nav stop
+	/nav loc ${flt_demiEscapeY} ${flt_demiEscapeX} ${Me.Z}
+	/varset timer_demiHatchetRun 1s
 /return
 
-Sub Event_Failed(string Line, string Actor)
-    /declare i                int        local    0
-    /for i 1 to ${Failed.Size}
-        /if (${Failed[${i},1].Equal[NA]}) {
-            /varset Failed[${i},1] ${Actor}
-            /varset Failed[${i},2] 1
-            /goto :break
-        }
-        /if (${Failed[${i},1].Equal[${Actor}]}) {
-            /varcalc Failed[${i},2] ${Failed[${i},2]}+1
-            /goto :break
-        }
-    /next i
-    :break
-    /popup ${Failed[${i},1]} made a MISTAKE!${If[${Failed[${i},2]} > 1, (${Int[${Failed[${i},2]}]} TIMES NOW!),]}
-    /varset pTrigger FALSE
+Sub SaveDemiPosition
+	/varset int_demiSavedTargetID ${Target.ID}
+	/varset flt_demiReturnX ${Me.X}
+	/varset flt_demiReturnY ${Me.Y}
+	/varset flt_demiReturnZ ${Me.Z}
+/return
+
+Sub ReturnToDemiPosition
+	/if (${Navigation.Active}) /nav stop
+	/nav loc ${flt_demiReturnY} ${flt_demiReturnX} ${flt_demiReturnZ}
+	/call RestoreDemiTarget
+/return
+
+Sub RestoreDemiTarget
+	/if (${int_demiSavedTargetID} && ${Spawn[id ${int_demiSavedTargetID}].ID}) {
+		/call TrueTarget ${int_demiSavedTargetID}
+	} else /if (${int_targetID} && ${Spawn[id ${int_targetID}].ID}) {
+		/call TrueTarget ${int_targetID}
+	}
+/return
+|--PERFORMER EVENTS
+Sub Event_PerformerBegin
+	/varset bln_demiPerformerActive TRUE
+	/varset int_demiPerformerWave 1
+	/varset int_demiPerformerPrompts 0
+	/varset int_demiPerformerRetries 0
+	/varset int_demiPerformerSuccess 0
+	/varset int_demiPerformerFailed 0
+	/varset bln_demiPerformerPending FALSE
+	/varset timer_demiPerformerAnswer 0
+/return
+
+Sub Event_PerformerWave(string _line, int _wave)
+	/varset bln_demiPerformerActive TRUE
+	/varset int_demiPerformerWave ${_wave}
+/return
+
+Sub Event_PerformerBeckon(string _line, string _musician, string _client)
+	/if (${_client.NotEqual[${Me.CleanName}]}) /return
+	/popup ${_musician} selected me for the next lyric.
+	/varset str_demiPerformerMusician ${_musician}
+/return
+
+Sub Event_PerformerRetry(string _line, string _musician)
+	/if (!${bln_demiPerformerPending}) /return
+	/if (${_musician.NotEqual[${str_demiPerformerMusician}]}) /return
+	/varcalc int_demiPerformerRetries ${int_demiPerformerRetries}+1
+	/varset timer_demiPerformerRetry 0
+	/call SubmitDemiPerformerAnswer
+/return
+
+Sub Event_AelfricTouched
+	/call BeginDemiPerformerResponse "Aelfric the Flautist" "Where will you be?"
+/return
+
+Sub Event_AelfricWhere
+	/call BeginDemiPerformerResponse "Aelfric the Flautist" "Dreaming with me"
+/return
+
+Sub Event_AelfricDreaming
+	/call BeginDemiPerformerResponse "Aelfric the Flautist" "Please,"
+/return
+
+Sub Event_AelfricPlease
+	/call BeginDemiPerformerResponse "Aelfric the Flautist" "everybody, hear the music."
+/return
+
+Sub Event_AelfricEverybody
+	/call BeginDemiPerformerResponse "Aelfric the Flautist" "Touched tenderly"
+/return
+
+Sub Event_BrittonSplit
+	/call BeginDemiPerformerResponse "Britton Harmony" "it felt like the end of my days."
+/return
+
+Sub Event_BrittonEndDays
+	/call BeginDemiPerformerResponse "Britton Harmony" "Until I suddenly,"
+/return
+
+Sub Event_BrittonSuddenly
+	/call BeginDemiPerformerResponse "Britton Harmony" "suddenly realized"
+/return
+
+Sub Event_BrittonRealized
+	/call BeginDemiPerformerResponse "Britton Harmony" "this life was better off alone."
+/return
+
+Sub Event_BrittonAlone
+	/call BeginDemiPerformerResponse "Britton Harmony" "Solitude was the best gift you ever gave me."
+/return
+
+Sub Event_BrittonSolitude
+	/call BeginDemiPerformerResponse "Britton Harmony" "When she and I split ways,"
+/return
+
+Sub Event_RandalNilipus
+	/call BeginDemiPerformerResponse "Randal Reedsea" "Where'er he smelled Jumjum he'd pick it."
+/return
+
+Sub Event_RandalJumjum
+	/call BeginDemiPerformerResponse "Randal Reedsea" "The halflings grew cross."
+/return
+
+Sub Event_RandalCross
+	/call BeginDemiPerformerResponse "Randal Reedsea" "when their profits were lost,"
+/return
+
+Sub Event_RandalProfits
+	/call BeginDemiPerformerResponse "Randal Reedsea" "screamin', where is that brownie? I'll kick it!"
+/return
+
+Sub Event_RandalBrownie
+	/call BeginDemiPerformerResponse "Randal Reedsea" "Ol' Nilipus hailed from Misty Thicket."
+/return
+
+Sub Event_SethNight
+	/call BeginDemiPerformerResponse "Seth Kimble" "Time bleeds like a wound that's lost all meaning."
+/return
+
+Sub Event_SethTime
+	/call BeginDemiPerformerResponse "Seth Kimble" "It's a long winter in the swirling chaotic void"
+/return
+
+Sub Event_SethWinter
+	/call BeginDemiPerformerResponse "Seth Kimble" "This is my torture,"
+/return
+
+Sub Event_SethTorture
+	/call BeginDemiPerformerResponse "Seth Kimble" "my pain and suffering!"
+/return
+
+Sub Event_SethPain
+	/call BeginDemiPerformerResponse "Seth Kimble" "Pinch me, O' Death. . ."
+/return
+
+Sub Event_SethPinch
+	/call BeginDemiPerformerResponse "Seth Kimble" "Another night, in eternal darkness."
+/return
+
+Sub BeginDemiPerformerResponse(string _musician, string _answer)
+	/if (${cache_zoneShort.NotEqual[dreadspire]}) /return
+	/if (${bln_demiPerformerPending} && ${str_demiPerformerMusician.Equal[${_musician}]}) /return
+	/varset int_demiSavedTargetID ${Target.ID}
+	/varset str_demiPerformerMusician ${_musician}
+	/varset str_demiPerformerAnswer ${_answer}
+	/varset bln_demiPerformerPending TRUE
+	/varset timer_demiPerformerAnswer 16s
+	/varset timer_demiPerformerRetry 0
+	/varcalc int_demiPerformerPrompts ${int_demiPerformerPrompts}+1
+	/call SubmitDemiPerformerAnswer
+/return
+
+Sub SubmitDemiPerformerAnswer
+	/if (!${bln_demiPerformerPending} || ${timer_demiPerformerRetry}) /return
+	/call Disengage
+	/autofire off
+	/if (${Navigation.Active}) /nav stop
+	/squelch /stick off
+	/target clear
+	/target npc "${str_demiPerformerMusician}"
+	/delay 10 ${Target.ID}
+	/if (!${Target.ID}) {
+		/echo \arCould not target ${str_demiPerformerMusician}; retrying before the lyric deadline.
+		/varset timer_demiPerformerRetry 1s
+		/return
+	}
+	/say ${str_demiPerformerAnswer}
+	/varset timer_demiPerformerRetry 2s
+/return
+
+Sub HandleDemiPerformerPending
+	/if (!${bln_demiPerformerPending}) /return
+	/if (!${timer_demiPerformerAnswer}) {
+		/varcalc int_demiPerformerFailed ${int_demiPerformerFailed}+1
+		/call ClearDemiPerformerPending TRUE
+		/return
+	}
+	/if (!${timer_demiPerformerRetry}) /call SubmitDemiPerformerAnswer
+/return
+
+Sub Event_PerformerSuccess(string _line, string _player, string _musician)
+	/if (${_player.NotEqual[${Me.CleanName}]}) /return
+	/varcalc int_demiPerformerSuccess ${int_demiPerformerSuccess}+1
+	/popup Correct lyric for ${_musician}! (${int_demiPerformerSuccess}/${int_demiPerformerPrompts})
+	/call ClearDemiPerformerPending TRUE
+/return
+
+Sub Event_PerformerFailed
+	/if (!${bln_demiPerformerPending}) /return
+	/varcalc int_demiPerformerFailed ${int_demiPerformerFailed}+1
+	/popup MISSED lyric! (${int_demiPerformerFailed})
+	/call ClearDemiPerformerPending TRUE
+/return
+
+Sub Event_PerformerComplete
+	/varset bln_demiPerformerActive FALSE
+	/call ClearDemiPerformerPending TRUE
+/return
+
+Sub Event_PerformerReset
+	/varset bln_demiPerformerActive FALSE
+	/varset int_demiPerformerWave 0
+	/call ClearDemiPerformerPending TRUE
+/return
+
+Sub ClearDemiPerformerPending(bool _restoreTarget)
+	/varset bln_demiPerformerPending FALSE
+	/varset timer_demiPerformerAnswer 0
+	/varset timer_demiPerformerRetry 0
+	/varset str_demiPerformerMusician NULL
+	/varset str_demiPerformerAnswer NULL
+	/if (${_restoreTarget}) /call RestoreDemiTarget
 /return
 
 Sub Event_FailStats
-    /declare i                int        local    0
-    /declare Fails            int        local    0
-    /for i 1 to ${Failed.Size}
-        /if (${Failed[${i},1].Equal[NA]}) /goto :break
-        /if (${Failed[${i},2]}) {
-            /echo ${Failed[${i},1]} have failed ${Int[${Failed[${i},2]}]} times.
-            /varcalc Fails ${Fails}+${Failed[${i},2]}
-        }
-    /next i
-    :break
-    /echo Total (personal) flawless: ${Flawless}
-    /echo Total fails: ${Fails}
-/return		
-		
-Sub Event_Aelfric_0
-	/varset pTrigger TRUE
+	/echo Performer active: ${bln_demiPerformerActive}; wave: ${int_demiPerformerWave}/16
+	/echo Personal prompts: ${int_demiPerformerPrompts}; correct: ${int_demiPerformerSuccess}; missed: ${int_demiPerformerFailed}; validation retries: ${int_demiPerformerRetries}
+	/echo Pending lyric: ${bln_demiPerformerPending}; musician: ${str_demiPerformerMusician}; answer deadline: ${timer_demiPerformerAnswer}
 /return
-
-Sub Event_Randal_0
-	/varset pTrigger TRUE
-/return
-
-Sub Event_Britton_0
-	/varset pTrigger TRUE
-/return
-
-Sub Event_Seth_0
-	/varset pTrigger TRUE
-/return
-		
-Sub Event_Aelfric_1
-	/echo aelfric_1
-    /varset TriggerNPC Aelfric the Flautist
-    /varset TriggerRespond Where will you be?
-    /call PerformVerse
-/return
-Sub Event_Aelfric_2
-    /varset TriggerNPC Aelfric the Flautist
-    /varset TriggerRespond Dreaming with me
-    /call PerformVerse
-/return
-Sub Event_Aelfric_3
-    /varset TriggerNPC Aelfric the Flautist
-    /varset TriggerRespond Please,
-    /call PerformVerse
-/return
-Sub Event_Aelfric_4
-    /varset TriggerNPC Aelfric the Flautist
-    /varset TriggerRespond everybody, hear the music.
-    /call PerformVerse
-/return
-Sub Event_Aelfric_5
-    /varset TriggerNPC Aelfric the Flautist
-    /varset TriggerRespond Touched tenderly
-    /call PerformVerse
-/return
-
-
-Sub Event_Britton_1
-    /varset TriggerNPC Britton Harmony
-    /varset TriggerRespond it felt like the end of my days.
-    /call PerformVerse
-/return
-Sub Event_Britton_2
-    /varset TriggerNPC Britton Harmony
-    /varset TriggerRespond Until I suddenly,
-    /call PerformVerse
-/return
-Sub Event_Britton_3
-    /varset TriggerNPC Britton Harmony
-    /varset TriggerRespond suddenly realized
-    /call PerformVerse
-/return
-Sub Event_Britton_4
-    /varset TriggerNPC Britton Harmony
-    /varset TriggerRespond this life was better off alone.
-    /call PerformVerse
-/return
-Sub Event_Britton_5
-    /varset TriggerNPC Britton Harmony
-    /varset TriggerRespond Solitude was the best gift you ever gave me.
-    /call PerformVerse
-/return
-Sub Event_Britton_6
-    /varset TriggerNPC Britton Harmony
-    /varset TriggerRespond When she and I split ways,
-    /call PerformVerse
-/return
-
-
-Sub Event_Randal_1
-    /varset TriggerNPC Randal Reedsea
-    /varset TriggerRespond Where'er he smelled Jumjum he'd pick it.
-    /call PerformVerse
-/return
-Sub Event_Randal_2
-    /varset TriggerNPC Randal Reedsea
-    /varset TriggerRespond The halflings grew cross.
-    /call PerformVerse
-/return
-Sub Event_Randal_3
-    /varset TriggerNPC Randal Reedsea
-    /varset TriggerRespond when their profits were lost,
-    /call PerformVerse
-/return
-Sub Event_Randal_4
-    /varset TriggerNPC Randal Reedsea
-    /varset TriggerRespond screamin', where is that brownie? I'll kick it!
-    /call PerformVerse
-/return
-Sub Event_Randal_5
-    /varset TriggerNPC Randal Reedsea
-    /varset TriggerRespond Ol' Nilipus hailed from Misty Thicket.
-    /call PerformVerse
-/return
-
-
-Sub Event_Seth_1
-    /varset TriggerNPC Seth Kimble
-    /varset TriggerRespond Time bleeds like a wound that's lost all meaning.
-    /call PerformVerse
-/return
-Sub Event_Seth_2
-    /varset TriggerNPC Seth Kimble
-    /varset TriggerRespond It's a long winter in the swirling chaotic void
-    /call PerformVerse
-/return
-Sub Event_Seth_3
-    /varset TriggerNPC Seth Kimble
-    /varset TriggerRespond This is my torture,
-    /call PerformVerse
-/return
-Sub Event_Seth_4
-    /varset TriggerNPC Seth Kimble
-    /varset TriggerRespond my pain and suffering!
-    /call PerformVerse
-/return
-Sub Event_Seth_5
-    /varset TriggerNPC Seth Kimble
-    /varset TriggerRespond Pinch me, O' Death. . .
-    /call PerformVerse
-/return
-Sub Event_Seth_6
-    /varset TriggerNPC Seth Kimble
-    /varset TriggerRespond Another night, in eternal darkness.
-    /call PerformVerse
-/return		
-
-
 
 |--MAYONG EVENTS
 Sub Event_MayongSlash
-	/declare archetype string local
-	/if (${Select[${Me.Class.ShortName},MNK,ROG,BER]})	/varset archetype MELEE
-	/if (${archetype.Equal[MELEE]}) {
-		|--DEPRECATED /warp s
-		/delay 12s
-		|--DEPRECATED /warp b 10
-	}	
+	/if (${cache_zoneShort.NotEqual[dreadspire]}) /return
+	| EQXiris fires the sword strike after five seconds against every client
+	| except Mayong's foremost foe. The configured MT holds position.
+	/if (${Me.ID} == ${int_MTID}) /return
+	/call SaveDemiPosition
+	/call Disengage
+	/if (${Navigation.Active}) /nav stop
+	/if (${Target.CleanName.NotEqual[Mayong Mistmoore]}) {
+		/target clear
+		/target npc "Mayong Mistmoore"
+		/delay 5 ${Target.ID}
+	}
+	/if (${Target.ID}) /face fast
+	/keypress back hold
+	/delay 6s
+	/keypress back
+	/call ReturnToDemiPosition
 /return
-		

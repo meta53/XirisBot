@@ -130,3 +130,8 @@ common/sell.inc
 sql.mac
 muffins.mac
 bot_pull.mac
+bot_custom_events.inc
+DODHBuffs.mac
+AshengateGM.mac
+XirisTank.mac
+
