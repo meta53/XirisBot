@@ -8,7 +8,7 @@ REVISION HISTORY
 	01.17.22	xiris	INITIAL REVISION
 ______________________________________________
 
-Example: Macro runner running bot_pull.mac routine 
+Example: Macro runner invoking this buffing routine
 Calls internal method -> chkBuffs | Which calls library methods:
 
 ->chkHasBuffLine AEGO ${Me.Name}
