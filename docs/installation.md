@@ -23,7 +23,7 @@ Place the repository contents in the MacroQuest macros directory so these paths 
 
 ```text
 Macros/xiris_bot.mac
-Macros/bot_clr.mac
+Macros/xiris_bot_clr.mac
 Macros/xiris_common/xiris_common.inc
 Macros/xiris_class_ini/BOT_CLR_Character.ini
 ```

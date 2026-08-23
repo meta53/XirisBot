@@ -1,13 +1,13 @@
 |**
 ----------------------------
-BOT_BRD.mac
+XIRIS_BOT_BRD.mac
 ----------------------------
 This macro is configured for use by the BARD class
 Modify the BOT_CLS_CHARNAME.ini file for use by a specific toon
 This was written ground up for usage with xiris's bots.
 
 
-Usage: /mac bot_brd ${_tank1Name} ${_tank2Name} ${_healPoint} ${_assistArgs}
+Usage: /mac xiris_bot_brd ${_tank1Name} ${_tank2Name} ${_healPoint} ${_assistArgs}
 
 ______________________________________________
 REVISION HISTORY

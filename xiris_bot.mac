@@ -46,11 +46,11 @@ Sub Main(string _tank1Name, string _tank2Name, string _tank3Name, int _healPoint
 	/echo LOADER: MT: ${_tank1Name}(${Spawn[PC ${_tank1Name}]}) @ HealPoint:${_healPoint} Tank2: ${_tank2Name}(${Spawn[PC ${_tank2Name}]}) Tank3: ${_tank3Name}
 	
 	| Determine which  macro to load
-	| note: melee endurance classes will run bot_melee
-	/declare 	macroName	string 	outer bot_${Me.Class.ShortName}
+	| note: melee endurance classes will run xiris_bot_melee
+	/declare 	macroName	string 	outer xiris_bot_${Me.Class.ShortName}
 	
 	/if (${Me.Class.ShortName.Equal[ROG]} || ${Me.Class.ShortName.Equal[MNK]} || ${Me.Class.ShortName.Equal[BER]}) {
-		/varset macroName bot_melee
+		/varset macroName xiris_bot_melee
 	} 
 
 	| Load the class macro

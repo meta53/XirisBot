@@ -1,12 +1,12 @@
 |**
 ----------------------------
-BOT_CLR.mac
+XIRIS_BOT_CLR.mac
 ----------------------------
 This macro is configured for use by the CLERIC class
 Modify the BOT_CLR_CHARNAME.ini file for use by a specific toon
 This was written ground up for usage with xiris's bots
     
-Usage: /mac bot_clr ${_tank1Name} ${_tank2Name} ${_healPoint} ${_assistArgs}
+Usage: /mac xiris_bot_clr ${_tank1Name} ${_tank2Name} ${_healPoint} ${_assistArgs}
 ______________________________________________
 REVISION HISTORY
     08.10.10    xiris	INITIAL REVISION

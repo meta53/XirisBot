@@ -2,7 +2,7 @@
 
 ## Macro does not select the expected class file
 
-Check `${Me.Class.ShortName}` and confirm the corresponding `bot_<class>.mac` exists. Berserkers, monks, and rogues intentionally load `bot_melee.mac`.
+Check `${Me.Class.ShortName}` and confirm the corresponding `xiris_bot_<class>.mac` exists. Berserkers, monks, and rogues intentionally load `xiris_bot_melee.mac`.
 
 ## Character INI is not found
 
